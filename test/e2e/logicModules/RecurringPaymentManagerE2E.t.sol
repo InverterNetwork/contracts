@@ -179,16 +179,16 @@ contract RecurringPaymentManagerE2E is E2ETest {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IPP_Streaming_v1.VestingWallet[] memory wallets =
-        streamingPaymentProcessor.viewAllPaymentOrders(
+        IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
+            .viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver1
         );
         //One Paymentorder for the current epoch and one for all past payment orders -> 2 orders
-        assertEq(wallets.length, 2);
-        wallets = streamingPaymentProcessor.viewAllPaymentOrders(
+        assertEq(streams.length, 2);
+        streams = streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver2
         );
-        assertEq(wallets.length, 4);
+        assertEq(streams.length, 4);
 
         vm.prank(paymentReceiver2);
         streamingPaymentProcessor.claimAll(address(recurringPaymentManager));

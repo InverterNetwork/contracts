@@ -281,9 +281,10 @@ contract LM_PC_RecurringPayments_v1 is
                                 orchestrator().fundingManager().token()
                             ),
                             amount: currentPayment.amount,
-                            createdAt: block.timestamp,
-                            //End of current epoch is the dueTo Date
-                            dueTo: (currentEpoch + 1) * epochLength
+                            start: block.timestamp,
+                            cliff: 0,
+                            //End of current epoch is the end date
+                            end: (currentEpoch + 1) * epochLength
                         })
                     );
 
@@ -298,9 +299,10 @@ contract LM_PC_RecurringPayments_v1 is
                                 ),
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
-                                createdAt: block.timestamp,
-                                //Payment was already due so dueDate is start of this epoch which should already have passed
-                                dueTo: currentEpoch * epochLength
+                                start: block.timestamp,
+                                cliff: 0,
+                                //Payment was already due so end is start of this epoch which should already have passed
+                                end: currentEpoch * epochLength
                             })
                         );
                     }

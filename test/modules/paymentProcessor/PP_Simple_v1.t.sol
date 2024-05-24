@@ -40,16 +40,19 @@ contract PP_SimpleV1Test is ModuleTest {
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
+    /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
+    /// @param start Timestamp at which the payment should start being paid out.
+    /// @param cliff Duration of the cliff period.
+    /// @param end Timestamp at which the payment should finished being paid out.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
-        address indexed token,
+        address indexed paymentToken,
         uint amount,
-        uint createdAt,
-        uint dueTo
+        uint start,
+        uint cliff,
+        uint end
     );
 
     /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
@@ -118,8 +121,9 @@ contract PP_SimpleV1Test is ModuleTest {
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
-                createdAt: block.timestamp,
-                dueTo: block.timestamp
+                start: block.timestamp,
+                cliff: 0,
+                end: block.timestamp
             })
         );
 
@@ -133,6 +137,7 @@ contract PP_SimpleV1Test is ModuleTest {
             address(_token),
             amount,
             block.timestamp,
+            0,
             block.timestamp
         );
         emit TokensReleased(recipient, address(_token), amount);

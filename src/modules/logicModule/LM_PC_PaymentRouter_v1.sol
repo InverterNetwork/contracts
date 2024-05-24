@@ -61,11 +61,18 @@ contract LM_PC_PaymentRouter_v1 is
         address recipient,
         address paymentToken,
         uint amount,
-        uint dueTo
+        uint start,
+        uint cliff,
+        uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
         _addPaymentOrder(
             PaymentOrder(
-                recipient, paymentToken, amount, block.timestamp, dueTo
+                recipient,
+                paymentToken,
+                amount,
+                start == 0 ? block.timestamp : start,
+                cliff,
+                end
             )
         );
 
@@ -81,13 +88,15 @@ contract LM_PC_PaymentRouter_v1 is
         address[] calldata recipients,
         address[] calldata paymentTokens,
         uint[] calldata amounts,
-        uint[] calldata dueTos
+        uint start,
+        uint cliff,
+        uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
         // Validate all arrays have the same length
         if (
             recipients.length != numOfOrders
                 || paymentTokens.length != numOfOrders
-                || amounts.length != numOfOrders || dueTos.length != numOfOrders
+                || amounts.length != numOfOrders
         ) {
             revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
         }
@@ -99,8 +108,9 @@ contract LM_PC_PaymentRouter_v1 is
                     recipients[i],
                     paymentTokens[i],
                     amounts[i],
-                    block.timestamp,
-                    dueTos[i]
+                    start == 0 ? block.timestamp : start,
+                    cliff,
+                    end
                 )
             );
         }

@@ -51,7 +51,9 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
     address po_recipient = makeAddr("recipient");
     address po_paymentToken = address(_token);
     uint po_amount = 100;
-    uint po_dueTo = block.timestamp + 1000;
+    uint po_start = block.timestamp;
+    uint po_cliff = 100;
+    uint po_end = block.timestamp + 1000;
 
     // Events
     event PaymentOrderAdded(
@@ -63,8 +65,9 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         address indexed recipient,
         address indexed token,
         uint amount,
-        uint createdAt,
-        uint dueTo
+        uint start,
+        uint cliff,
+        uint end
     );
 
     function setUp() public virtual {
@@ -151,7 +154,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
                 caller
             )
         );
-        paymentRouter.pushPayment(address(0), address(0), 0, 0);
+        paymentRouter.pushPayment(address(0), address(0), 0, 0, 0, 0);
         vm.stopPrank();
     }
 
@@ -168,7 +171,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
             )
         );
         paymentRouter.pushPayment(
-            address(0), po_paymentToken, po_amount, po_dueTo
+            address(0), po_paymentToken, po_amount, po_start, po_cliff, po_end
         );
     }
 
@@ -184,7 +187,9 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
                     .selector
             )
         );
-        paymentRouter.pushPayment(po_recipient, address(0), po_amount, po_dueTo);
+        paymentRouter.pushPayment(
+            po_recipient, address(0), po_amount, po_start, po_cliff, po_end
+        );
     }
 
     function test_WhenTheAmountIsIncorrect()
@@ -199,7 +204,9 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
                     .selector
             )
         );
-        paymentRouter.pushPayment(po_recipient, po_paymentToken, 0, po_dueTo);
+        paymentRouter.pushPayment(
+            po_recipient, po_paymentToken, 0, po_start, po_cliff, po_end
+        );
     }
 
     function test_WhenThePaymentOrderIsCorrect()
@@ -217,10 +224,12 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
         vm.expectEmit(true, true, true, true);
         emit PaymentOrderAdded(po_recipient, po_paymentToken, po_amount);
         vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(address(0), address(0), address(0), 0, 0, 0); // since we are using a mock.
+        emit PaymentOrderProcessed(
+            address(0), address(0), address(0), 0, 0, 0, 0
+        ); // since we are using a mock.
 
         paymentRouter.pushPayment(
-            po_recipient, po_paymentToken, po_amount, po_dueTo
+            po_recipient, po_paymentToken, po_amount, po_start, po_cliff, po_end
         );
 
         assertEq(
@@ -253,7 +262,9 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
     address[] recipients = new address[](2);
     address[] paymentTokens = new address[](2);
     uint[] amounts = new uint[](2);
-    uint[] dueTos = new uint[](2);
+    uint[] starts = new uint[](2);
+    uint[] cliffs = new uint[](2);
+    uint[] ends = new uint[](2);
 
     function setUp() public override {
         super.setUp();
@@ -263,8 +274,12 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         paymentTokens[1] = address(_token);
         amounts[0] = po_amount;
         amounts[1] = po_amount * 2;
-        dueTos[0] = po_dueTo;
-        dueTos[1] = po_dueTo + 500;
+        starts[0] = po_start;
+        starts[1] = po_start + 100;
+        cliffs[0] = po_cliff;
+        cliffs[1] = po_cliff + 100;
+        ends[0] = po_end;
+        ends[1] = po_end + 500;
     }
 
     modifier whenTheCallerHasThePAYMENT_PUSHER_ROLE() {
@@ -288,7 +303,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             )
         );
         paymentRouter.pushPaymentBatched(
-            0, new address[](0), new address[](0), new uint[](0), new uint[](0)
+            0, new address[](0), new address[](0), new uint[](0), 0, 0, 0
         );
         vm.stopPrank();
     }
@@ -307,7 +322,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             )
         );
         paymentRouter.pushPaymentBatched(
-            3, recipients, paymentTokens, amounts, dueTos
+            3, recipients, paymentTokens, amounts, po_start, po_cliff, po_end
         );
 
         vm.expectRevert(
@@ -318,7 +333,13 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             )
         );
         paymentRouter.pushPaymentBatched(
-            2, new address[](0), paymentTokens, amounts, dueTos
+            2,
+            new address[](0),
+            paymentTokens,
+            amounts,
+            po_start,
+            po_cliff,
+            po_end
         );
 
         vm.expectRevert(
@@ -329,7 +350,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             )
         );
         paymentRouter.pushPaymentBatched(
-            2, recipients, new address[](0), amounts, dueTos
+            2, recipients, new address[](0), amounts, po_start, po_cliff, po_end
         );
 
         vm.expectRevert(
@@ -340,18 +361,13 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             )
         );
         paymentRouter.pushPaymentBatched(
-            2, recipients, paymentTokens, new uint[](0), dueTos
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
-                    .selector
-            )
-        );
-        paymentRouter.pushPaymentBatched(
-            2, recipients, paymentTokens, amounts, new uint[](0)
+            2,
+            recipients,
+            paymentTokens,
+            new uint[](0),
+            po_start,
+            po_cliff,
+            po_end
         );
     }
 
@@ -374,9 +390,11 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         address[] memory recipients;
         address[] memory paymentTokens;
         uint[] memory amounts;
-        uint[] memory dueTos;
+        uint start;
+        uint cliff;
+        uint end;
 
-        (recipients, paymentTokens, amounts, dueTos) =
+        (recipients, paymentTokens, amounts, start, cliff, end) =
             _generateRandomValidOrders(numOfOrders);
 
         uint paymentsTriggeredBefore =
@@ -387,10 +405,12 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             emit PaymentOrderAdded(recipients[i], paymentTokens[i], amounts[i]);
         }
         vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(address(0), address(0), address(0), 0, 0, 0); // since we are using a mock.
+        emit PaymentOrderProcessed(
+            address(0), address(0), address(0), 0, 0, 0, 0
+        ); // since we are using a mock.
 
         paymentRouter.pushPaymentBatched(
-            numOfOrders, recipients, paymentTokens, amounts, dueTos
+            numOfOrders, recipients, paymentTokens, amounts, start, cliff, end
         );
 
         assertEq(
@@ -405,19 +425,26 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             address[] memory recipients,
             address[] memory paymentTokens,
             uint[] memory amounts,
-            uint[] memory dueTos
+            uint start,
+            uint cliff,
+            uint end
         )
     {
         recipients = new address[](numOfOrders);
         paymentTokens = new address[](numOfOrders);
         amounts = new uint[](numOfOrders);
-        dueTos = new uint[](numOfOrders);
+        starts = new uint[](numOfOrders);
+        cliffs = new uint[](numOfOrders);
+        ends = new uint[](numOfOrders);
 
         for (uint i = 0; i < numOfOrders; i++) {
             recipients[i] = makeAddr(Strings.toString(i));
             paymentTokens[i] = makeAddr(Strings.toString(i + numOfOrders));
             amounts[i] = i * 100 + 1;
-            dueTos[i] = block.timestamp + i * 1000;
         }
+
+        start = block.timestamp;
+        cliff = 100;
+        end = block.timestamp + 1000;
     }
 }

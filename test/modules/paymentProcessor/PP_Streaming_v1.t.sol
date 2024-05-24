@@ -50,73 +50,77 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The address of the token that is being used for the payment
+    /// @param streamId ID of the streaming payment order that was added.
     /// @param amount The amount of tokens the payment consists of.
-    /// @param start Timestamp at which the vesting starts.
-    /// @param dueTo Timestamp at which the full amount should be claimable.
-    /// @param walletId ID of the payment order that was added
+    /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
+    /// @param end The ending of the streaming period.
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
+        uint streamId,
         uint amount,
         uint start,
-        uint dueTo,
-        uint walletId
+        uint cliff,
+        uint end
     );
 
-    /// @notice Emitted when the vesting to an address is removed.
+    /// @notice Emitted when the stream to an address is removed.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will stop receiving payment.
-    /// @param walletId ID of the payment order removed
+    /// @param streamId ID of the streaming payment order that was removed.
     event StreamingPaymentRemoved(
-        address indexed paymentClient,
-        address indexed recipient,
-        uint indexed walletId
+        address indexed paymentClient, address indexed recipient, uint streamId
     );
 
-    /// @notice Emitted when a running vesting schedule gets updated.
+    /// @notice Emitted when a running stream schedule gets updated.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The address of the token that will be used for the payment
     /// @param amount The amount of tokens the payment consists of.
-    /// @param start Timestamp at which the vesting starts.
-    /// @param dueTo Timestamp at which the full amount should be claimable.
+    /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
+    /// @param end The ending of the streaming period.
     event InvalidStreamingOrderDiscarded(
         address indexed recipient,
         address indexed paymentToken,
         uint amount,
         uint start,
-        uint dueTo
+        uint cliff,
+        uint end
     );
 
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The address of the token that will be used for the payment
+    /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
-    /// @param walletId ID of the payment order that was processed
+    /// @param start The start date of the streaming period.
+    /// @param cliff The duration of the cliff period.
+    /// @param end The ending of the streaming period.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
+        uint streamId,
         uint amount,
-        uint createdAt,
-        uint dueTo,
-        uint walletId
+        uint start,
+        uint cliff,
+        uint end
     );
 
     /// @notice Emitted when a payment was unclaimable due to a token error.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that wshould have received the payment.
     /// @param paymentToken The address of the token that will be used for the payment
-    /// @param walletId ID of the payment order that was processed
+    /// @param streamId ID of the streaming payment order that was processed
     /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
         address paymentToken,
-        uint walletId,
+        uint streamId,
         uint amount
     );
 
@@ -200,8 +204,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
 
@@ -217,19 +222,21 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 address(paymentClient),
                 recipients[i],
                 address(_token),
+                1,
                 amounts[i],
                 block.timestamp,
-                block.timestamp + durations[i],
-                1
+                0,
+                block.timestamp + durations[i]
             );
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
+                1,
                 amounts[i],
                 block.timestamp,
-                block.timestamp + durations[i],
-                1
+                0,
+                block.timestamp + durations[i]
             );
         }
 
@@ -242,13 +249,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 )
             );
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient),
                     recipients[i],
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
                 0,
-                "Nothing would have vested at the start of the vesting duration"
+                "Nothing would have vested at the start of the streaming duration"
             );
             unchecked {
                 ++i;
@@ -258,7 +265,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
     }
 
-    function test_claimVestedAmounts_fullVesting(
+    function test_claimStreamedAmounts_fullVesting(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
@@ -286,8 +293,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
 
@@ -305,13 +313,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 )
             );
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient),
                     recipients[i],
                     1 // 1 is the first default wallet ID for all unique recepients
                 ),
                 0,
-                "Nothing would have vested at the start of the vesting duration"
+                "Nothing would have vested at the start of the streaming duration"
             );
             unchecked {
                 ++i;
@@ -320,7 +328,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
 
-        // Moving ahead in time, past the longest vesting period
+        // Moving ahead in time, past the longest streaming period
         vm.warp(block.timestamp + (max_time + 1));
 
         // All recepients try to claim their vested tokens
@@ -342,7 +350,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             );
 
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient),
                     recipients[i],
                     1 // 1 is the first default wallet ID for all unique recepients
@@ -358,14 +366,224 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         assertEq(totalAmount, paymentClient.amountPaidCounter());
     }
 
-    // @dev Assume recipient can withdraw full amount immediately if dueTo is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForDueTimeThatIsPlacedBeforeStartTime(
+    // test cannot claim before cliff ends
+
+    function test_claimStreamedAmounts_cannotClaimBeforeCliff(
         address[] memory recipients,
-        uint[] memory dueTimes
+        uint128[] memory amounts,
+        uint64[] memory durations
+    ) public {
+        vm.assume(recipients.length <= 10);
+        vm.assume(recipients.length <= amounts.length);
+        vm.assume(recipients.length <= durations.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+        assumeValidDurations(durations, recipients.length);
+
+        uint max_time = uint(durations[0]);
+        uint totalAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            durations[i] = uint64(bound(durations[i], 100, 100_000_000)); // by setting the minimum duration to 100, we ensure that the cliff period is always lower than the total duration
+            uint amount = uint(amounts[i]);
+            uint time = uint(durations[i]);
+
+            if (time > max_time) {
+                max_time = time;
+            }
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    paymentToken: address(_token),
+                    amount: amount,
+                    start: block.timestamp,
+                    cliff: 50,
+                    end: block.timestamp + time
+                })
+            );
+
+            totalAmount += amount;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        assertEq(totalAmount, _token.balanceOf(address(paymentClient)));
+
+        // Moving ahead in time, before the cliff period ends
+        vm.warp(block.timestamp + 49);
+
+        // All recepients try to claim their vested tokens
+        for (uint i; i < recipients.length;) {
+            uint balanceBefore = _token.balanceOf(recipients[i]);
+
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+            assertTrue(
+                paymentProcessor.isActivePaymentReceiver(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested before the cliff period ends"
+            );
+            assertEq(_token.balanceOf(recipients[i]), balanceBefore);
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now we move past the end of the longest streaming period
+        vm.warp(block.timestamp + max_time);
+
+        // All recepients try to claim their vested tokens
+        for (uint i; i < recipients.length;) {
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now, all recipients should have their entire vested amount with them
+        for (uint i; i < recipients.length;) {
+            // Check recipient balance
+            assertEq(
+                _token.balanceOf(recipients[i]),
+                uint(amounts[i]),
+                "Vested tokens not received by the paymentReceiver"
+            );
+
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "All vested amount is already released"
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+        assertEq(totalAmount, paymentClient.amountPaidCounter());
+    }
+
+    function test_claimStreamedAmounts_CliffDoesNotInfluencePayout(
+        address[] memory recipients,
+        uint128[] memory amounts
+    ) public {
+        vm.assume(recipients.length <= 10);
+        vm.assume(recipients.length <= amounts.length);
+        assumeValidRecipients(recipients);
+        assumeValidAmounts(amounts, recipients.length);
+
+        uint expectedHalfAmount;
+
+        for (uint i; i < recipients.length; i++) {
+            uint amount = uint(amounts[i]);
+
+            // Add payment order to client.
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    paymentToken: address(_token),
+                    amount: amount,
+                    start: block.timestamp,
+                    cliff: 50_000,
+                    end: block.timestamp + 100_000
+                })
+            );
+
+            expectedHalfAmount += amount / 2;
+        }
+
+        // Call processPayments.
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // Moving ahead in time, before the cliff period ends
+        vm.warp(block.timestamp + 49_999);
+
+        // All recepients try to claim their vested tokens without success
+        for (uint i; i < recipients.length;) {
+            uint balanceBefore = _token.balanceOf(recipients[i]);
+
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+            assertTrue(
+                paymentProcessor.isActivePaymentReceiver(
+                    address(paymentClient), recipients[i]
+                )
+            );
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "Nothing would have vested before the cliff period ends"
+            );
+            assertEq(_token.balanceOf(recipients[i]), balanceBefore);
+            unchecked {
+                ++i;
+            }
+        }
+
+        // Now we move to just the end of the cliff. Half of tokens should become unlocked
+        vm.warp(block.timestamp + 1);
+
+        // Now, all recipients should claim their entire vested amount
+        for (uint i; i < recipients.length;) {
+            uint balanceBefore = _token.balanceOf(recipients[i]);
+
+            vm.prank(recipients[i]);
+            paymentProcessor.claimAll(address(paymentClient));
+
+            // Check recipient balance
+            assertEq(
+                _token.balanceOf(recipients[i]),
+                (uint(amounts[i]) / 2 + balanceBefore),
+                "Vested tokens not received by the paymentReceiver"
+            );
+
+            assertEq(
+                paymentProcessor.releasableForSpecificStream(
+                    address(paymentClient),
+                    recipients[i],
+                    1 // 1 is the first default wallet ID for all unique recepients
+                ),
+                0,
+                "All vested amount is already released"
+            );
+
+            unchecked {
+                ++i;
+            }
+        }
+        assertEq(expectedHalfAmount, paymentClient.amountPaidCounter());
+    }
+
+    // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
+        address[] memory recipients,
+        uint[] memory endTimes
     ) public {
         uint length = recipients.length;
         vm.assume(length < 50); //Restrict to reasonable size
-        vm.assume(length <= dueTimes.length);
+        vm.assume(length <= endTimes.length);
 
         assumeValidRecipients(recipients);
 
@@ -382,8 +600,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: payoutAmount,
-                    createdAt: block.timestamp,
-                    dueTo: dueTimes[i]
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: endTimes[i]
                 })
             );
         }
@@ -399,10 +618,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address recipient = recipients[i];
             IERC20PaymentClientBase_v1.PaymentOrder memory order = orders[i];
 
-            //If dueTo is before currentTimestamp evereything should be releasable
-            if (order.dueTo <= block.timestamp) {
+            //If end is before currentTimestamp evereything should be releasable
+            if (order.end <= block.timestamp) {
                 assertEq(
-                    paymentProcessor.releasableForSpecificWalletId(
+                    paymentProcessor.releasableForSpecificStream(
                         address(paymentClient), address(recipient), 1
                     ),
                     payoutAmount
@@ -414,7 +633,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 // Check correct balances.
                 assertEq(_token.balanceOf(recipient), payoutAmount);
                 assertEq(
-                    paymentProcessor.releasableForSpecificWalletId(
+                    paymentProcessor.releasableForSpecificStream(
                         address(paymentClient), recipient, 1
                     ),
                     0
@@ -430,6 +649,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         vm.warp(1000);
         vm.startPrank(address(paymentClient));
+
+        // Check addinng invalid recipients
+
         //we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
             paymentClient.addPaymentOrderUnchecked(
@@ -437,8 +659,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 100,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + 100
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + 100
                 })
             );
         }
@@ -450,6 +673,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 address(_token),
                 100,
                 block.timestamp,
+                0,
                 block.timestamp + 100
             );
         }
@@ -457,13 +681,16 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // Call processPayments and expect emits
         paymentProcessor.processPayments(paymentClient);
 
+        // Check adding an invalid amount
+
         paymentClient.addPaymentOrderUnchecked(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: address(0xB0B),
                 paymentToken: address(_token),
                 amount: invalidAmt,
-                createdAt: block.timestamp,
-                dueTo: block.timestamp + 100
+                start: block.timestamp,
+                cliff: 0,
+                end: block.timestamp + 100
             })
         );
         vm.expectEmit(true, true, true, true);
@@ -472,6 +699,30 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address(_token),
             invalidAmt,
             block.timestamp,
+            0,
+            block.timestamp + 100
+        );
+        paymentProcessor.processPayments(paymentClient);
+
+        // Check adding an invalid end time
+
+        paymentClient.addPaymentOrderUnchecked(
+            IERC20PaymentClientBase_v1.PaymentOrder({
+                recipient: address(0xB0B),
+                paymentToken: address(_token),
+                amount: invalidAmt,
+                start: block.timestamp,
+                cliff: 500,
+                end: block.timestamp + 100
+            })
+        );
+        vm.expectEmit(true, true, true, true);
+        emit InvalidStreamingOrderDiscarded(
+            address(0xB0B),
+            address(_token),
+            invalidAmt,
+            block.timestamp,
+            500,
             block.timestamp + 100
         );
         paymentProcessor.processPayments(paymentClient);
@@ -479,7 +730,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.stopPrank();
     }
 
-    function test_processPayments_vestingInfoGetsDeletedPostFullPayment(
+    function test_processPayments_streamInfoGetsDeletedPostFullPayment(
         address[] memory recipients,
         uint128[] memory amounts,
         uint64[] memory durations
@@ -499,13 +750,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         for (uint i; i < recipients.length; i++) {
             address recipient = recipients[i];
 
-            // Check that the vesting information is deleted once vested tokens are claimed after total vesting duration
+            // Check that the stream information is deleted once vested tokens are claimed after total streaming duration
             assertEq(
-                paymentProcessor.vestedAmountForSpecificWalletId(
+                paymentProcessor.streamedAmountForSpecificStream(
                     address(paymentClient),
                     address(recipient),
-                    block.timestamp,
-                    1
+                    1,
+                    block.timestamp
                 ),
                 0
             );
@@ -555,8 +806,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
         }
@@ -597,8 +849,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
         }
@@ -607,58 +860,58 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
-        // Now, let's check whether all vesting informations exist or not
+        // Now, let's check whether all streaming informations exist or not
         // checking for paymentReceiver2
-        IPP_Streaming_v1.VestingWallet[] memory paymentReceiverWallets;
-        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+        IPP_Streaming_v1.Stream[] memory paymentReceiverStreams;
+        paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver2
         );
 
-        assertTrue(paymentReceiverWallets.length == 2);
+        assertTrue(paymentReceiverStreams.length == 2);
         assertEq(
             (
-                paymentReceiverWallets[0]._salary
-                    + paymentReceiverWallets[1]._salary
+                paymentReceiverStreams[0]._total
+                    + paymentReceiverStreams[1]._total
             ),
             (amounts_1[1] + amounts_2[0]),
             "Improper accounting of orders"
         );
 
         // checking for paymentReceiver3
-        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+        paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver3
         );
 
-        assertTrue(paymentReceiverWallets.length == 2);
+        assertTrue(paymentReceiverStreams.length == 2);
         assertEq(
             (
-                paymentReceiverWallets[0]._salary
-                    + paymentReceiverWallets[1]._salary
+                paymentReceiverStreams[0]._total
+                    + paymentReceiverStreams[1]._total
             ),
             (amounts_1[2] + amounts_2[1]),
             "Improper accounting of orders"
         );
 
         // checking for paymentReceiver 4
-        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+        paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver4
         );
 
-        assertTrue(paymentReceiverWallets.length == 1);
+        assertTrue(paymentReceiverStreams.length == 1);
         assertEq(
-            (paymentReceiverWallets[0]._salary),
+            (paymentReceiverStreams[0]._total),
             (amounts_2[2]),
             "Improper accounting of orders"
         );
 
         // checking for paymentReceiver 1
-        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+        paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
 
-        assertTrue(paymentReceiverWallets.length == 1);
+        assertTrue(paymentReceiverStreams.length == 1);
         assertEq(
-            (paymentReceiverWallets[0]._salary),
+            (paymentReceiverStreams[0]._total),
             (amounts_1[0]),
             "Improper accounting of orders"
         );
@@ -666,11 +919,11 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
     uint initialNumWallets;
     uint initialPaymentReceiverBalance;
-    uint initialWalletIdAtIndex1;
+    uint initialStreamIdAtIndex1;
     uint finalNumWallets;
     uint finalPaymentReceiverBalance;
 
-    function test_removePaymentForSpecificWalletId_halfVestingDoneMultipleOrdersForSingleBeneficiary(
+    function test_removePaymentForSpecificStream_halfVestingDoneMultipleOrdersForSingleBeneficiary(
         uint randomDuration,
         uint randomAmount,
         uint randomDuration_2,
@@ -716,8 +969,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
         }
@@ -730,54 +984,53 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // are 1/2 vested.
         vm.warp(block.timestamp + (durations[3] / 2));
 
-        // This means, that when we call removePaymentForSpecificWalletId, that should increase the balance of the
+        // This means, that when we call removePaymentForSpecificStream, that should increase the balance of the
         // paymentReceiver by 1/2 of the vested token amount
-        IPP_Streaming_v1.VestingWallet[] memory paymentReceiverWallets =
+        IPP_Streaming_v1.Stream[] memory paymentReceiverStreams =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
 
         // We are interested in finding the details of the 2nd wallet of paymentReceiver1
-        uint expectedSalary = paymentReceiverWallets[1]._salary;
-        uint walletId = paymentReceiverWallets[1]._vestingWalletID;
+        uint expectedTotal = paymentReceiverStreams[1]._total;
+        uint walletId = paymentReceiverStreams[1]._streamId;
 
-        initialNumWallets = paymentReceiverWallets.length;
+        initialNumWallets = paymentReceiverStreams.length;
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
-        initialWalletIdAtIndex1 = walletId;
+        initialStreamIdAtIndex1 = walletId;
 
-        assertTrue(expectedSalary != 0);
+        assertTrue(expectedTotal != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
-        paymentProcessor.removePaymentForSpecificWalletId(
+        paymentProcessor.removePaymentForSpecificStream(
             address(paymentClient), paymentReceiver1, walletId
         );
 
-        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+        paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
 
-        finalNumWallets = paymentReceiverWallets.length;
+        finalNumWallets = paymentReceiverStreams.length;
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertEq(finalNumWallets + 1, initialNumWallets);
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            (expectedSalary / 2)
+            (expectedTotal / 2)
         );
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), expectedSalary);
+        assertEq(paymentClient.amountPaidCounter(), expectedTotal);
         assertTrue(
-            initialWalletIdAtIndex1
-                != paymentReceiverWallets[1]._vestingWalletID
+            initialStreamIdAtIndex1 != paymentReceiverStreams[1]._streamId
         );
     }
 
-    uint salary1;
-    uint salary2;
-    uint salary3;
+    uint total1;
+    uint total2;
+    uint total3;
     uint amountPaidAlready;
 
-    function test_removePaymentAndClaimForSpecificWalletId(
+    function test_removePaymentAndClaimForSpecificStream(
         uint randomDuration,
         uint randomAmount,
         uint randomDuration_2,
@@ -806,7 +1059,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             durations[i] = (randomDuration * (i + 1));
         }
 
-        // we want the durations of vesting for paymentReceiver 1 to be double of the initial one
+        // we want the durations of the stream for paymentReceiver 1 to be double of the initial one
         // and the last payment order to have the same duration as the middle one
         durations[3] = durations[0] * 2;
         durations[5] = durations[3];
@@ -828,8 +1081,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
         }
@@ -839,23 +1093,23 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentProcessor.processPayments(paymentClient);
 
         // Let's travel in time, to the point after paymentReceiver1's tokens for the second payment order
-        // are 1/2 vested, or the complete vesting of duration of the first payment order
+        // are 1/2 vested, or the complete streaming of duration of the first payment order
         vm.warp(block.timestamp + durations[0]);
 
         // Let's note down the current balance of the paymentReceiver1
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        IPP_Streaming_v1.VestingWallet[] memory paymentReceiverWallets =
+        IPP_Streaming_v1.Stream[] memory paymentReceiverStreams =
         paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
 
-        salary1 = paymentReceiverWallets[0]._salary;
+        total1 = paymentReceiverStreams[0]._total;
 
-        // Now we claim the entire salary from the first payment order
+        // Now we claim the entire total amount from the first payment order
         vm.prank(paymentReceiver1);
-        paymentProcessor.claimForSpecificWalletId(
-            address(paymentClient), paymentReceiverWallets[0]._vestingWalletID
+        paymentProcessor.claimForSpecificStream(
+            address(paymentClient), paymentReceiverStreams[0]._streamId
         );
 
         // Now we note down the balance of the paymentReceiver1 again after claiming for the first wallet.
@@ -863,64 +1117,64 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            salary1
+            total1
         );
 
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), salary1);
+        assertEq(paymentClient.amountPaidCounter(), total1);
         amountPaidAlready += paymentClient.amountPaidCounter();
 
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
-        salary2 = (paymentReceiverWallets[1]._salary) / 2; // since we are at half the vesting duration
+        total2 = (paymentReceiverStreams[1]._total) / 2; // since we are at half the streaming duration
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        assertTrue(salary2 != 0);
+        assertTrue(total2 != 0);
 
         vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
-        paymentProcessor.removePaymentForSpecificWalletId(
+        paymentProcessor.removePaymentForSpecificStream(
             address(paymentClient),
             paymentReceiver1,
-            paymentReceiverWallets[1]._vestingWalletID
+            paymentReceiverStreams[1]._streamId
         );
 
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(
             paymentClient.amountPaidCounter(),
-            paymentReceiverWallets[1]._salary + salary1
+            paymentReceiverStreams[1]._total + total1
         );
         amountPaidAlready = paymentClient.amountPaidCounter();
 
-        paymentReceiverWallets = paymentProcessor.viewAllPaymentOrders(
+        paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
         );
 
-        finalNumWallets = paymentReceiverWallets.length;
+        finalNumWallets = paymentReceiverStreams.length;
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
-        assertEq(finalNumWallets, 1); // One was deleted because the vesting was completed and claimed. The other was deleted because of removePayment
+        assertEq(finalNumWallets, 1); // One was deleted because the streaming was completed and claimed. The other was deleted because of removePayment
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            salary2
+            total2
         );
 
         // Now we try and claim the 3rd payment order for paymentReceiver1
-        // we are at half it's vesting period, so the salary3 should be half of the total salary
-        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete vesting.
-        salary3 = (paymentReceiverWallets[0]._salary) / 2;
+        // we are at half it's streaming period, so the total3 should be half of the total amount
+        // The third wallet is at the 0th index now, since the other 2 have been deleted due to removal and complete streaming.
+        total3 = (paymentReceiverStreams[0]._total) / 2;
         initialPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         vm.prank(paymentReceiver1);
-        paymentProcessor.claimForSpecificWalletId(
-            address(paymentClient), paymentReceiverWallets[0]._vestingWalletID
+        paymentProcessor.claimForSpecificStream(
+            address(paymentClient), paymentReceiverStreams[0]._streamId
         );
         //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, salary3);
+        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, total3);
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
-            salary3
+            total3
         );
     }
 
@@ -988,8 +1242,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: amounts[i],
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + duration
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + duration
                 })
             );
         }
@@ -1000,19 +1255,21 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 address(paymentClient),
                 recipients[i],
                 address(_token),
+                1,
                 amounts[i],
                 block.timestamp,
-                duration + block.timestamp,
-                1
+                0,
+                duration + block.timestamp
             );
             emit PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
+                1,
                 amounts[i],
                 block.timestamp,
-                duration + block.timestamp,
-                1
+                0,
+                duration + block.timestamp
             );
         }
 
@@ -1043,31 +1300,31 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address recipient = recipients[i];
 
             assertEq(
-                paymentProcessor.startForSpecificWalletId(
+                paymentProcessor.startForSpecificStream(
                     address(paymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.dueToForSpecificWalletId(
+                paymentProcessor.endForSpecificStream(
                     address(paymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.releasedForSpecificWalletId(
+                paymentProcessor.releasedForSpecificStream(
                     address(paymentClient), recipient, 1
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.vestedAmountForSpecificWalletId(
-                    address(paymentClient), recipient, block.timestamp, 1
+                paymentProcessor.streamedAmountForSpecificStream(
+                    address(paymentClient), recipient, 1, block.timestamp
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient), recipient, 1
                 ),
                 0
@@ -1151,8 +1408,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amounts[i],
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + durations[i]
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + durations[i]
                 })
             );
         }
@@ -1199,7 +1457,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
             assertEq(balancesBefore[i], balanceAfter);
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient), recipient, 1
                 ),
                 0
@@ -1231,8 +1489,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipient,
                     paymentToken: address(_token),
                     amount: amount,
-                    createdAt: block.timestamp,
-                    dueTo: start + duration
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: start + duration
                 })
             );
         }
@@ -1250,7 +1509,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
                 assertEq(
                     claimableAmt,
-                    paymentProcessor.releasableForSpecificWalletId(
+                    paymentProcessor.releasableForSpecificStream(
                         address(paymentClient), recipient, 1
                     )
                 );
@@ -1281,8 +1540,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 1,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp
                 })
             );
             vm.prank(address(paymentClient));
@@ -1311,7 +1571,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 paymentProcessor.unclaimable(address(paymentClient), recipient);
 
             //Grab Unclaimable Wallet Ids array
-            uint[] memory ids = paymentProcessor.getUnclaimableWalletIds(
+            uint[] memory ids = paymentProcessor.getUnclaimableStreams(
                 address(paymentClient), recipient
             );
 
@@ -1327,7 +1587,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             //Unclaimable amount for Wallet Ids empty (mapping)
             for (uint j = 0; j < ids.length; j++) {
                 assertEq(
-                    paymentProcessor.getUnclaimableAmountForWalletIds(
+                    paymentProcessor.getUnclaimableAmountForStreams(
                         address(paymentClient), recipient, ids[j]
                     ),
                     0
@@ -1336,7 +1596,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
             //Check Unclaimable Wallet Ids array empty
             assertEq(
-                paymentProcessor.getUnclaimableWalletIds(
+                paymentProcessor.getUnclaimableStreams(
                     address(paymentClient), recipient
                 ).length,
                 0
@@ -1393,13 +1653,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
             assertEq(_token.balanceOf(address(recipient)), amount);
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient), address(recipient), 1
                 ),
                 0
             );
             assertEq(
-                paymentProcessor.releasableForSpecificWalletId(
+                paymentProcessor.releasableForSpecificStream(
                     address(paymentClient), address(recipient), 2
                 ),
                 0
@@ -1434,8 +1694,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
-                createdAt: block.timestamp,
-                dueTo: block.timestamp + duration
+                start: block.timestamp,
+                cliff: 0,
+                end: block.timestamp + duration
             })
         );
         vm.prank(address(paymentClient));
@@ -1456,7 +1717,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(
+            paymentProcessor.releasableForSpecificStream(
                 address(paymentClient), recipient, 1
             ),
             0
@@ -1479,7 +1740,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 4);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(
+            paymentProcessor.releasableForSpecificStream(
                 address(paymentClient), recipient, 1
             ),
             0
@@ -1505,8 +1766,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
-                createdAt: block.timestamp,
-                dueTo: block.timestamp + duration
+                start: block.timestamp,
+                cliff: 0,
+                end: block.timestamp + duration
             })
         );
         vm.prank(address(paymentClient));
@@ -1524,7 +1786,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // while VPP should move recipient's balances from 'releasable' to 'unclaimable'
         assertEq(_token.balanceOf(address(recipient)), 0);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(
+            paymentProcessor.releasableForSpecificStream(
                 address(paymentClient), recipient, 1
             ),
             0
@@ -1547,7 +1809,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // while both 'releasable' and 'unclaimable' recipient's amounts should be 0
         assertEq(_token.balanceOf(address(recipient)), amount / 4);
         assertEq(
-            paymentProcessor.releasableForSpecificWalletId(
+            paymentProcessor.releasableForSpecificStream(
                 address(paymentClient), recipient, 1
             ),
             0
@@ -1578,8 +1840,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 1,
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp
                 })
             );
             vm.prank(address(paymentClient));
@@ -1612,17 +1875,17 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     //--------------------------------------------------------------------------
     // Helper functions
 
-    // Speedruns a round of vesting + claiming
+    // Speedruns a round of streaming + claiming
     // note Neither checks the inputs nor verifies results
     function speedRunStreamingAndClaim(
         address[] memory recipients,
         uint128[] memory amounts,
-        uint64[] memory dueTos
+        uint64[] memory ends
     ) internal {
-        uint max_time = dueTos[0];
+        uint max_time = ends[0];
 
         for (uint i; i < recipients.length; i++) {
-            uint time = dueTos[i];
+            uint time = ends[i];
 
             if (time > max_time) {
                 max_time = time;
@@ -1634,8 +1897,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: amounts[i],
-                    createdAt: block.timestamp,
-                    dueTo: block.timestamp + time
+                    start: block.timestamp,
+                    cliff: 0,
+                    end: block.timestamp + time
                 })
             );
         }
@@ -1697,7 +1961,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         invalids[1] = address(_orchestrator);
         invalids[2] = address(paymentProcessor);
         invalids[3] = address(paymentClient);
-        invalids[4] = address(this);
+        invalids[4] = address(_token);
 
         return invalids;
     }
