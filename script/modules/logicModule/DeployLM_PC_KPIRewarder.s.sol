@@ -1,4 +1,5 @@
 pragma solidity ^0.8.0;
+
 import "forge-std/Script.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 /**
@@ -9,12 +10,14 @@ import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
  *
  * @author Inverter Network
  */
+
 contract DeployLM_PC_KPIRewarder_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
     LM_PC_KPIRewarder_v1 kpiRewarder;
+
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {

@@ -43,6 +43,8 @@ import {DeployLM_PC_RecurringPayments_v1} from
     "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
 import {DeployLM_PC_PaymentRouter_v1} from
     "script/modules/logicModule/DeployLM_PC_PaymentRouter_v1.s.sol";
+import {DeployLM_PC_KPIRewarder_v1} from
+    "script/modules/logicModule/DeployLM_PC_KPIRewarder_v1.s.sol";
 import {DeployAUT_EXT_VotingRoles_v1} from
     "script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol";
 
@@ -83,6 +85,8 @@ contract DeploymentScript is Script {
         new DeployLM_PC_RecurringPayments_v1();
     DeployLM_PC_PaymentRouter_v1 deployPaymentRouter =
         new DeployLM_PC_PaymentRouter_v1();
+    Deploy_LM_PC_KPIRewarder_v1 deployKPIRewarder =
+        new Deploy_LM_PC_KPIRewarder_v1();
     // Utils
     DeployAUT_EXT_VotingRoles_v1 deploySingleVoteGovernor =
         new DeployAUT_EXT_VotingRoles_v1();
@@ -122,6 +126,7 @@ contract DeploymentScript is Script {
     address bountyManager;
     address recurringPaymentManager;
     address paymentRouter;
+    address kpiRewarder;
     // Utils
     address singleVoteGovernor;
 
@@ -144,6 +149,7 @@ contract DeploymentScript is Script {
     address bountyManagerBeacon;
     address recurringPaymentManagerBeacon;
     address paymentRouterBeacon;
+    address kpiRewarderBeacon;
     // Utils
     address singleVoteGovernorBeacon;
 
@@ -256,6 +262,13 @@ contract DeploymentScript is Script {
         "LM_PC_PaymentRouter_v1"
     );
 
+    IModule_v1.Metadata kpiRewarderMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "LM_PC_KPIRewarder_v1"
+    );
+
     // ------------------------------------------------------------------------
     // Utils
 
@@ -360,6 +373,7 @@ contract DeploymentScript is Script {
         bountyManager = deployBountyManager.run();
         recurringPaymentManager = deployRecurringPaymentManager.run();
         paymentRouter = deployPaymentRouter.run();
+        kpiRewarder = deployKPIRewarder.run();
         // Utils
         singleVoteGovernor = deploySingleVoteGovernor.run();
 
@@ -414,6 +428,10 @@ contract DeploymentScript is Script {
                         .minorVersion
                 )
             )
+        );
+        kpiRewarderBeacon = deployAndSetupInverterBeacon_v1
+            .deployAndRegisterInFactory(
+            deployer, kpiRewarder, moduleFactory, kpiRewarderMetadata
         );
 
         // Authorizer
