@@ -17,24 +17,6 @@ interface ILM_PC_PaymentRouter_v1 {
         uint end
     ) external;
 
-    /*
-    /// @notice Adds multiple Payment Orders.
-    /// @dev Reverts if an argument invalid. The number of orders to be added in one batch is capped at 255
-    /// @param numOfOrders The number of orders to add.
-    /// @param recipients The addresses that will receive the payments.
-    /// @param paymentTokens The tokens in which to pay.
-    /// @param amounts The amounts of tokens the payments consist of.
-    /// @param dueTos The timestamps at which the payments SHOULD be fulfilled.
-    function pushPaymentBatched(
-        uint8 numOfOrders,
-        address[] calldata recipients,
-        address[] calldata paymentTokens,
-        uint[] calldata amounts,
-        uint[] calldata starts,
-        uint[] calldata cliffs,
-        uint[] calldata dueTos
-    ) external;
-    */
     /// @notice Adds multiple Payment Orders in one batch. These PaymentOrders will share start, cliff and end timestamps.
     /// @dev Reverts if an argument invalid. The number of orders to be added in one batch is capped at 255
     /// @param numOfOrders The number of orders to add.
