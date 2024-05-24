@@ -31,16 +31,18 @@ import {DeployFM_Rebasing_v1} from
     "script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol";
 import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
+import {DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "script/modules/fundingManager/DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployAUT_Role_v1} from
     "script/modules/authorizer/DeployAUT_Role_v1.s.sol";
-import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployAUT_TokenGated_Role_v1} from
     "script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol";
 import {DeployPP_Streaming_v1} from
     "script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol";
 import {DeployLM_PC_RecurringPayments_v1} from
     "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
+import {DeployLM_PC_PaymentRouter_v1} from
+    "script/modules/logicModule/DeployLM_PC_PaymentRouter_v1.s.sol";
 import {DeployAUT_EXT_VotingRoles_v1} from
     "script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol";
 
@@ -64,6 +66,9 @@ contract DeploymentScript is Script {
     DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1
         deployBancorVirtualSupplyBondingCurveFundingManager =
             new DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1();
+    DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
+        deployRestrictedBancorVirtualSupplyBondingCurveFundingManager =
+            new DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1();
     // Authorizer
     DeployAUT_Role_v1 deployRoleAuthorizer = new DeployAUT_Role_v1();
     DeployAUT_TokenGated_Role_v1 deployTokenGatedRoleAuthorizer =
@@ -76,6 +81,8 @@ contract DeploymentScript is Script {
     DeployLM_PC_Bounties_v1 deployBountyManager = new DeployLM_PC_Bounties_v1();
     DeployLM_PC_RecurringPayments_v1 deployRecurringPaymentManager =
         new DeployLM_PC_RecurringPayments_v1();
+    DeployLM_PC_PaymentRouter_v1 deployPaymentRouter =
+        new DeployLM_PC_PaymentRouter_v1();
     // Utils
     DeployAUT_EXT_VotingRoles_v1 deploySingleVoteGovernor =
         new DeployAUT_EXT_VotingRoles_v1();
@@ -104,6 +111,7 @@ contract DeploymentScript is Script {
     // Funding Manager
     address rebasingFundingManager;
     address bancorBondingCurveFundingManager;
+    address restrictedBancorVirtualSupplyBondingCurveFundingManager;
     // Authorizer
     address roleAuthorizer;
     address tokenGatedRoleAuthorizer;
@@ -113,6 +121,7 @@ contract DeploymentScript is Script {
     // Logic Module
     address bountyManager;
     address recurringPaymentManager;
+    address paymentRouter;
     // Utils
     address singleVoteGovernor;
 
@@ -124,6 +133,7 @@ contract DeploymentScript is Script {
     // Funding Manager
     address rebasingFundingManagerBeacon;
     address bancorBondingCurveFundingManagerBeacon;
+    address restrictedBancorBondingCurveFundingManagerBeacon;
     // Authorizer
     address roleAuthorizerBeacon;
     address tokenGatedRoleAuthorizerBeacon;
@@ -133,6 +143,7 @@ contract DeploymentScript is Script {
     // Logic Module
     address bountyManagerBeacon;
     address recurringPaymentManagerBeacon;
+    address paymentRouterBeacon;
     // Utils
     address singleVoteGovernorBeacon;
 
@@ -177,6 +188,15 @@ contract DeploymentScript is Script {
         "https://github.com/InverterNetwork/inverter-contracts",
         "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
     );
+
+    IModule_v1.Metadata
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata =
+        IModule_v1.Metadata(
+            1,
+            0,
+            "https://github.com/InverterNetwork/inverter-contracts",
+            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
+        );
 
     // ------------------------------------------------------------------------
     // Authorizer
@@ -227,6 +247,13 @@ contract DeploymentScript is Script {
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "LM_PC_Bounties_v1"
+    );
+
+    IModule_v1.Metadata paymentRouterMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "LM_PC_PaymentRouter_v1"
     );
 
     // ------------------------------------------------------------------------
@@ -311,6 +338,8 @@ contract DeploymentScript is Script {
         rebasingFundingManager = deployRebasingFundingManager.run();
         bancorBondingCurveFundingManager =
             deployBancorVirtualSupplyBondingCurveFundingManager.run();
+        restrictedBancorVirtualSupplyBondingCurveFundingManager =
+            deployRestrictedBancorVirtualSupplyBondingCurveFundingManager.run();
         // Authorizer
         roleAuthorizer = deployRoleAuthorizer.run();
         tokenGatedRoleAuthorizer = deployTokenGatedRoleAuthorizer.run();
@@ -320,6 +349,7 @@ contract DeploymentScript is Script {
         // Logic Module
         bountyManager = deployBountyManager.run();
         recurringPaymentManager = deployRecurringPaymentManager.run();
+        paymentRouter = deployPaymentRouter.run();
         // Utils
         singleVoteGovernor = deploySingleVoteGovernor.run();
 
@@ -359,6 +389,23 @@ contract DeploymentScript is Script {
                 )
             )
         );
+                initialMetadataRegistration.push(
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
+        );
+        
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    restrictedBancorBondingCurveFundingManager,
+                    restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
+                        .majorVersion,
+                    restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
+                        .minorVersion
+                )
+            )
+        );
+
         // Authorizer
         initialMetadataRegistration.push(roleAuthorizerMetadata);
         initialBeaconRegistration.push(
