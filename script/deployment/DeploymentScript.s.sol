@@ -85,8 +85,8 @@ contract DeploymentScript is Script {
         new DeployLM_PC_RecurringPayments_v1();
     DeployLM_PC_PaymentRouter_v1 deployPaymentRouter =
         new DeployLM_PC_PaymentRouter_v1();
-    Deploy_LM_PC_KPIRewarder_v1 deployKPIRewarder =
-        new Deploy_LM_PC_KPIRewarder_v1();
+    DeployLM_PC_KPIRewarder_v1 deployKPIRewarder =
+        new DeployLM_PC_KPIRewarder_v1();
     // Utils
     DeployAUT_EXT_VotingRoles_v1 deploySingleVoteGovernor =
         new DeployAUT_EXT_VotingRoles_v1();
