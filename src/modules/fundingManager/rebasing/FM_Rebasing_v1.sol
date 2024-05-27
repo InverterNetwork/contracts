@@ -81,7 +81,7 @@ contract FM_Rebasing_v1 is
     IERC20 private _token;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_RebasingFM;
 
     //--------------------------------------------------------------------------
     // Init Function

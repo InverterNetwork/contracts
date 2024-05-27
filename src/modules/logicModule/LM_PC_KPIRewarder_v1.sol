@@ -67,7 +67,7 @@ contract LM_PC_KPIRewarder_v1 is
     uint public constant MAX_QUEUE_LENGTH = 50;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_KPIRewarder;
 
     /*
     Tranche Example:

@@ -45,7 +45,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
     uint private constant MAX_UINT = type(uint).max;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_VirtualIssuanceSupply;
 
     //--------------------------------------------------------------------------
     // Public Functions

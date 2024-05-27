@@ -80,7 +80,7 @@ contract OrchestratorFactory_v1 is
     uint private _orchestratorIdCounter;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_OrchestratorFactory;
 
     //--------------------------------------------------------------------------------
     // Modifier

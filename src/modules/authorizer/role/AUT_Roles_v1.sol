@@ -59,7 +59,7 @@ contract AUT_Roles_v1 is
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_Roles;
 
     //--------------------------------------------------------------------------
     // Modifiers

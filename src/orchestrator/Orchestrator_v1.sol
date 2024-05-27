@@ -104,7 +104,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     IGovernor_v1 public override(IOrchestrator_v1) governor;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_Orchestrator;
 
     //--------------------------------------------------------------------------
     // Initializer

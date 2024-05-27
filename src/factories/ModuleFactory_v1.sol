@@ -95,7 +95,7 @@ contract ModuleFactory_v1 is
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_ModuleFactory;
 
     //--------------------------------------------------------------------------
     // Constructor & Initializer

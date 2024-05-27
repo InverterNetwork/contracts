@@ -90,7 +90,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     mapping(bytes32 => uint) public thresholdMap;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_tokenRoles;
 
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions

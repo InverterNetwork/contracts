@@ -55,7 +55,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     uint public sellFee;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_RedeemingBondingCurveBase;
 
     //--------------------------------------------------------------------------
     // Modifiers

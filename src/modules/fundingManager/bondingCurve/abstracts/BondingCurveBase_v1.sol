@@ -62,7 +62,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     uint public projectCollateralFeeCollected;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_BondingCurveBase;
 
     //--------------------------------------------------------------------------
     // Modifiers

@@ -44,7 +44,7 @@ contract MetadataManager_v1 is IMetadataManager_v1, Module_v1 {
     MemberMetadata[] private _teamMetadata;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
+    uint[50] __gap_MetadataManager;
 
     //--------------------------------------------------------------------------
     // Initialization

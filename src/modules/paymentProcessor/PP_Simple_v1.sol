@@ -67,7 +67,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     // Storage
 
     // Gap for possible future upgrades
-    uint[50] __gap;
+    uint[50] __gap_SimplePP;
 
     /// @inheritdoc Module_v1
     function init(
