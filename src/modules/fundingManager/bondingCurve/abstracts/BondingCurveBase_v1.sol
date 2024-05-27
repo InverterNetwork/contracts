@@ -61,9 +61,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// when engaging with the bonding curve-based funding manager. Collected in collateral
     uint public projectCollateralFeeCollected;
 
-        // Storage gap for future upgrades
+    // Storage gap for future upgrades
     uint[50] __gap;
-
 
     //--------------------------------------------------------------------------
     // Modifiers
