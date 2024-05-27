@@ -314,7 +314,7 @@ contract LM_PC_KPIRewarder_v1 is
     // ============================================================
     // Optimistic Oracle Overrides:
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully
@@ -372,7 +372,7 @@ contract LM_PC_KPIRewarder_v1 is
         );
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         //Do nothing
