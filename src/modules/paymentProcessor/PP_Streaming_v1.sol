@@ -79,6 +79,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @dev client => paymentReceiver => arrayOfWalletIdsWithPendingPayment(uint[])
     mapping(address => mapping(address => uint[])) private activeVestingWallets;
 
+    // Storage gap for future upgrades
+    uint[50] __gap;
+
     //--------------------------------------------------------------------------
     // Modifiers
 

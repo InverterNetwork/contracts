@@ -119,6 +119,9 @@ abstract contract ModuleManagerBase_v1 is
     mapping(address module => ModuleUpdateTimelock timelock) public
         moduleAddressToTimelock;
 
+    // Storage gap for future upgrades
+    uint[50] __gap;
+    
     //--------------------------------------------------------------------------
     // Initializer
 
