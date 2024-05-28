@@ -55,7 +55,7 @@ contract OrchestratorFactoryV1Test is Test {
     IOrchestratorFactory_v1.WorkflowConfig workflowConfigIndependentUpdates = //@todo
     IOrchestratorFactory_v1.WorkflowConfig({
         independentUpdates: false,
-        independentUpdateAdmin: address(0)
+        independentUpdateAdmin: makeAddr("IndependentUpdateAdmin")
     });
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
@@ -142,11 +142,27 @@ contract OrchestratorFactoryV1Test is Test {
             moduleConfigs
         );
 
+        //Check that workflowConfig was properly forwarded
+        (bool independentUpdates, address independentUpdateAdmin) =
+            moduleFactory.givenWorkflowConfig();
+
+        assertEq(
+            workflowConfigNoIndependentUpdates.independentUpdates,
+            independentUpdates
+        );
+        assertEq(
+            workflowConfigNoIndependentUpdates.independentUpdateAdmin,
+            independentUpdateAdmin
+        );
+
         // Check that orchestrator's strorage correctly initialized.
         assertEq(orchestrator.orchestratorId(), 1);
         assertTrue(address(orchestrator.authorizer()) != address(0));
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
         assertTrue(address(orchestrator.governor()) == moduleFactory.governor());
+
+        //Module size should be the 3 enforced contracts + whatever is in the module config
+        assertEq(orchestrator.modulesSize(), 3 + moduleConfigs.length);
 
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(2, address(0)); //since we don't know the address of the orchestrator
