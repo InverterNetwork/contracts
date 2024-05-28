@@ -73,7 +73,7 @@ abstract contract Module_v1 is
     Metadata internal __Module_metadata;
 
     // Storage gap for future upgrades
-    uint[50] __gap_Module;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers

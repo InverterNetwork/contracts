@@ -104,7 +104,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     uint8 internal issuanceTokenDecimals;
 
     // Storage gap for future upgrades
-    uint[50] __gap_BancorRedeemingVirtualSupply;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Init Function

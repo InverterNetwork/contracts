@@ -74,7 +74,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     uint internal _outstandingTokenAmount;
 
     // Storage gap for future upgrades
-    uint[50] __gap_ERC20PaymentClientBase;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions

@@ -109,7 +109,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     mapping(address => IGovernor_v1.Timelock) private beaconTimelock;
 
     // Storage gap for future upgrades
-    uint[50] __gap_Governor;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Initialization

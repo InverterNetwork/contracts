@@ -120,8 +120,8 @@ abstract contract ModuleManagerBase_v1 is
         moduleAddressToTimelock;
 
     // Storage gap for future upgrades
-    uint[50] __gap;
-    
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initializer
 

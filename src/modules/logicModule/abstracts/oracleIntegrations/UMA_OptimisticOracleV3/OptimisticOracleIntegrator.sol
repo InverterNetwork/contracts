@@ -48,7 +48,7 @@ abstract contract OptimisticOracleIntegrator is
     mapping(bytes32 => DataAssertion) public assertionData;
 
     // Storage gap for future upgrades
-    uint[50] __gap_OptimisticOracleIntegrator;
+    uint[50] private __gap;
 
     //==========================================================================
     // Initialization

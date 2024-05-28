@@ -45,7 +45,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     uint private constant MAX_UINT = type(uint).max;
 
     // Storage gap for future upgrades
-    uint[50] __gap_VirtualCollateralSupply;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Public Functions

@@ -65,7 +65,7 @@ contract LM_PC_Staking_v1 is
     mapping(address => uint) internal rewards;
 
     // Storage gap for future upgrades
-    uint[50] _Staking;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Initialization

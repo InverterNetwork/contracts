@@ -94,7 +94,7 @@ contract VotingRoleManager_v1 is IVotingRoleManager_v1, Module_v1 {
     uint public voteDuration;
 
     // Storage gap for future upgrades
-    uint[50] __gap_VotingRoleManager;
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Initialization
