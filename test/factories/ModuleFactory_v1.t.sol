@@ -199,8 +199,10 @@ contract ModuleFactoryV1Test is Test {
                 metadata, IOrchestrator_v1(orchestrator), configData
             )
         );
-        
-        assertEq(factory.getOrchestratorOfProxy(address(newModule)), orchestrator);
+
+        assertEq(
+            factory.getOrchestratorOfProxy(address(newModule)), orchestrator
+        );
         assertEq(address(newModule.orchestrator()), address(orchestrator));
         assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
     }

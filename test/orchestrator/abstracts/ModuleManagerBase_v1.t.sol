@@ -140,8 +140,9 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager.init(address(0), modules);
     }
 
-
-    function testInitFailsForInvalidModuleFactory(address[] memory modules) public {
+    function testInitFailsForInvalidModuleFactory(address[] memory modules)
+        public
+    {
         vm.assume(modules.length > MAX_MODULES);
 
         //we don't need to check for validity since it should revert before

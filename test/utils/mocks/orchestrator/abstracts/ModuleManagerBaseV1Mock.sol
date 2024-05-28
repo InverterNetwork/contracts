@@ -25,7 +25,9 @@ contract ModuleManagerBaseV1Mock is ModuleManagerBase_v1 {
         _allAuthorized = to;
     }
 
-    function __ModuleManager_setRegisteredProxyCheckShouldFail(bool to) external {
+    function __ModuleManager_setRegisteredProxyCheckShouldFail(bool to)
+        external
+    {
         _registeredProxyCheckShouldFail = to;
     }
 
@@ -51,7 +53,7 @@ contract ModuleManagerBaseV1Mock is ModuleManagerBase_v1 {
         __ModuleManager_init(moduleManager, modules);
     }
 
-    function getOrchestratorOfProxy(address /*proxy*/)
+    function getOrchestratorOfProxy(address /*proxy*/ )
         external
         view
         returns (address)
