@@ -99,6 +99,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function init(
         uint orchestratorId_,
+        address moduleFactory_,
         address[] calldata modules,
         IFundingManager_v1 fundingManager_,
         IAuthorizer_v1 authorizer_,
@@ -106,7 +107,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         IGovernor_v1 governor_
     ) external override(IOrchestrator_v1) initializer {
         // Initialize upstream contracts.
-        __ModuleManager_init(modules);
+        __ModuleManager_init(moduleFactory_, modules);
 
         // Set storage variables.
         orchestratorId = orchestratorId_;

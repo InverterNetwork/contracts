@@ -66,6 +66,14 @@ interface IModuleFactory_v1 {
         view
         returns (IInverterBeacon_v1, bytes32);
 
+    /// @notice Returns the orchestrator address of a beacon proxy.
+    /// @param proxy The beacon proxy address.
+    /// @return The corresponding orchestrator address for the provided proxy.
+    function getOrchestratorOfProxy(address proxy)
+        external
+        view
+        returns (address);
+
     /// @notice Registers metadata `metadata` with {IInverterBeacon_v1} implementation
     ///         `beacon`.
     /// @dev Only callable by owner.

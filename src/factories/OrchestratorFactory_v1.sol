@@ -167,6 +167,7 @@ contract OrchestratorFactory_v1 is
         // Initialize orchestrator.
         IOrchestrator_v1(clone).init(
             _orchestratorIdCounter,
+            moduleFactory,
             modules,
             IFundingManager_v1(fundingManager),
             IAuthorizer_v1(authorizer),
