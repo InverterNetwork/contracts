@@ -53,6 +53,7 @@ interface IModuleFactory_v1 {
     /// @param orchestrator The orchestrator's instance of the module.
     /// @param configData The configData of the module
     /// @param workflowConfig The configData of the workflow
+    /// @return Returns the address of the created module proxy
     function createModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,

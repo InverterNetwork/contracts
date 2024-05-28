@@ -13,6 +13,8 @@ import {IOrchestratorFactory_v1} from
 
 // Internal Dependencies
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
+import {InverterTransparentUpgradeableProxy_v1} from
+    "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Internal Libraries
@@ -131,18 +133,29 @@ contract ModuleFactory_v1 is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        //@todo make this beacon / TransparentUpgradeProxy + test
-        address implementation = address(new InverterBeaconProxy_v1(beacon));
+        address proxy;
+        //If the workflow should fetch their updates themselves
+        if (workflowConfig.independentUpdates) {
+            //Use a InverterTransparentUpgradeableProxy as a proxy
+            proxy = address(
+                new InverterTransparentUpgradeableProxy_v1(
+                    beacon, workflowConfig.independentUpdateAdmin, bytes("")
+                )
+            );
+        }
+        //If not then
+        else {
+            //Instead use the Beacon Structure Proxy
+            proxy = address(new InverterBeaconProxy_v1(beacon));
+        }
 
-        IModule_v1(implementation).init(orchestrator, metadata, configData);
+        IModule_v1(proxy).init(orchestrator, metadata, configData);
 
         emit ModuleCreated(
-            address(orchestrator),
-            implementation,
-            LibMetadata.identifier(metadata)
+            address(orchestrator), proxy, LibMetadata.identifier(metadata)
         );
 
-        return implementation;
+        return proxy;
     }
 
     //--------------------------------------------------------------------------
