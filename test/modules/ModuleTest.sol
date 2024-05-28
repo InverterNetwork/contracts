@@ -16,6 +16,8 @@ import {FeeManager_v1} from "src/external/fees/FeeManager_v1.sol";
 import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
+import {ModuleFactoryV1Mock} from
+    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
@@ -43,6 +45,7 @@ abstract contract ModuleTest is Test {
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
 
     GovernorV1Mock governor = new GovernorV1Mock();
+    ModuleFactoryV1Mock moduleFactory = new ModuleFactoryV1Mock();
 
     FeeManager_v1 feeManager;
     address treasury = makeAddr("treasury");
@@ -84,6 +87,7 @@ abstract contract ModuleTest is Test {
 
         _orchestrator.init(
             _ORCHESTRATOR_ID,
+            address(moduleFactory),
             modules,
             _fundingManager,
             _authorizer,

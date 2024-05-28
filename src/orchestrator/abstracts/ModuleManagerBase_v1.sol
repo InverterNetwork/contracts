@@ -4,6 +4,10 @@ pragma solidity 0.8.23;
 // Interfaces
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
+import {
+    IOrchestratorFactory_v1,
+    IModuleFactory_v1
+} from "src/factories/OrchestratorFactory_v1.sol";
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -110,10 +114,13 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Module Factory
+    address public moduleFactory;
+
     /// @dev List of modules.
     address[] private _modules;
 
-    mapping(address => bool) _isModule;
+    mapping(address => bool) private _isModule;
 
     /// @dev Mapping to keep track of active timelocks for updating modules
     mapping(address module => ModuleUpdateTimelock timelock) public
@@ -135,10 +142,15 @@ abstract contract ModuleManagerBase_v1 is
 
     constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {}
 
-    function __ModuleManager_init(address[] calldata modules)
-        internal
-        onlyInitializing
-    {
+    function __ModuleManager_init(
+        address _moduleFactory,
+        address[] calldata modules
+    ) internal onlyInitializing {
+        if (_moduleFactory == address(0)) {
+            revert ModuleManagerBase__ModuleFactoryInvalid();
+        }
+        moduleFactory = _moduleFactory;
+
         address module;
         uint len = modules.length;
 
@@ -316,6 +328,12 @@ abstract contract ModuleManagerBase_v1 is
     function _ensureValidModule(address module) private view {
         if (module == address(0) || module == address(this)) {
             revert ModuleManagerBase__InvalidModuleAddress();
+        }
+        if (
+            IModuleFactory_v1(moduleFactory).getOrchestratorOfProxy(module)
+                != address(this)
+        ) {
+            revert ModuleManagerBase__ModuleNotRegistered();
         }
     }
 

@@ -43,7 +43,7 @@ contract ModuleManagerBaseV1Test is Test {
 
     function setUp() public {
         moduleManager = new ModuleManagerBaseV1Mock(address(0));
-        moduleManager.init(EMPTY_LIST);
+        moduleManager.init(address(0), EMPTY_LIST);
 
         types = new TypeSanityHelper(address(moduleManager));
 
@@ -67,9 +67,9 @@ contract ModuleManagerBaseV1Test is Test {
                     .selector
             );
 
-            moduleManager.init(modules);
+            moduleManager.init(address(0), modules);
         } else {
-            moduleManager.init(modules);
+            moduleManager.init(address(0), modules);
 
             // List of modules should be size of modules array.
             address[] memory modulesAdded = moduleManager.listModules();
@@ -84,12 +84,12 @@ contract ModuleManagerBaseV1Test is Test {
 
     function testReinitFails() public {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        moduleManager.init(EMPTY_LIST);
+        moduleManager.init(address(0), EMPTY_LIST);
     }
 
     function testInitFailsForNonInitializerFunction() public {
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        moduleManager.initNoInitializer(EMPTY_LIST);
+        moduleManager.initNoInitializer(address(0), EMPTY_LIST);
     }
 
     function testInitFailsForInvalidModules() public {
@@ -108,7 +108,7 @@ contract ModuleManagerBaseV1Test is Test {
                     .ModuleManagerBase__InvalidModuleAddress
                     .selector
             );
-            moduleManager.init(modules);
+            moduleManager.init(address(0), modules);
         }
     }
 
@@ -123,7 +123,7 @@ contract ModuleManagerBaseV1Test is Test {
         vm.expectRevert(
             IModuleManagerBase_v1.ModuleManagerBase__IsModule.selector
         );
-        moduleManager.init(modules);
+        moduleManager.init(address(0), modules);
     }
 
     function testInitFailsForTooManyModules(address[] memory modules) public {
@@ -137,7 +137,23 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__ModuleAmountOverLimits
                 .selector
         );
-        moduleManager.init(modules);
+        moduleManager.init(address(0), modules);
+    }
+
+    function testInitFailsForInvalidModuleFactory(address[] memory modules)
+        public
+    {
+        vm.assume(modules.length > MAX_MODULES);
+
+        //we don't need to check for validity since it should revert before
+
+        moduleManager = new ModuleManagerBaseV1Mock(address(0));
+        vm.expectRevert(
+            IModuleManagerBase_v1
+                .ModuleManagerBase__ModuleFactoryInvalid
+                .selector
+        );
+        moduleManager.unmockedInit(address(0), modules);
     }
 
     //--------------------------------------------------------------------------
@@ -308,6 +324,33 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__CallerNotAuthorized
                 .selector
         );
+        moduleManager.call_executeAddModule(who);
+    }
+
+    function testInitiateAddModuleWithTimelock_FailsIfProxyNotRegistered(
+        address who
+    ) public {
+        types.assumeValidModule(who);
+
+        // Test whether the initiation fails
+        moduleManager.__ModuleManager_setRegisteredProxyCheckShouldFail(true);
+
+        vm.expectRevert(
+            IModuleManagerBase_v1
+                .ModuleManagerBase__ModuleNotRegistered
+                .selector
+        );
+        moduleManager.call_initiateAddModuleWithTimelock(who);
+
+        // Afterwards, tests if it works once the proxy is registered properly
+        moduleManager.__ModuleManager_setRegisteredProxyCheckShouldFail(false);
+
+        moduleManager.call_initiateAddModuleWithTimelock(who);
+        vm.warp(block.timestamp + timelock);
+
+        vm.expectEmit(true, true, true, true);
+        emit ModuleAdded(who);
+
         moduleManager.call_executeAddModule(who);
     }
 
