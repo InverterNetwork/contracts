@@ -151,16 +151,8 @@ contract OrchestratorFactory_v1 is
         );
 
         // Deploy and cache optional modules.
-        uint modulesLen = moduleConfigs.length;
-        address[] memory modules = new address[](modulesLen);
-        for (uint i; i < modulesLen; ++i) {
-            modules[i] = IModuleFactory_v1(moduleFactory).createModule(
-                moduleConfigs[i].metadata,
-                IOrchestrator_v1(clone),
-                moduleConfigs[i].configData,
-                workflowConfig
-            );
-        }
+        address[] memory modules =
+            createModules(moduleConfigs, clone, workflowConfig);
 
         emit OrchestratorCreated(_orchestratorIdCounter, clone);
 
@@ -189,6 +181,25 @@ contract OrchestratorFactory_v1 is
 
     function getOrchestratorIDCounter() external view returns (uint) {
         return _orchestratorIdCounter;
+    }
+
+    function createModules( //@todo test
+        ModuleConfig[] memory moduleConfigs,
+        address clone,
+        WorkflowConfig memory workflowConfig
+    ) internal returns (address[] memory) {
+        // Deploy and cache optional modules.
+
+        address[] memory modules = new address[](moduleConfigs.length);
+        for (uint i; i < moduleConfigs.length; ++i) {
+            modules[i] = IModuleFactory_v1(moduleFactory).createModule(
+                moduleConfigs[i].metadata,
+                IOrchestrator_v1(clone),
+                moduleConfigs[i].configData,
+                workflowConfig
+            );
+        }
+        return modules;
     }
 
     //--------------------------------------------------------------------------
