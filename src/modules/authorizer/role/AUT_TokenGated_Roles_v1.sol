@@ -144,7 +144,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         returns (bool)
     {
         if (isTokenGated[role]) {
-            // set the threshold to 0 before revoking the role from the token
+            // Set the threshold to 0 before revoking the role from the token
             _setThreshold(role, who, 0);
         }
         return super._revokeRole(role, who);
