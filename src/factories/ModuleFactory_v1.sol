@@ -119,7 +119,7 @@ contract ModuleFactory_v1 is
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData,
-        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig //@todo Do smth with workflowConfig
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
@@ -131,6 +131,7 @@ contract ModuleFactory_v1 is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
+        //@todo make this beacon / TransparentUpgradeProxy + test
         address implementation = address(new InverterBeaconProxy_v1(beacon));
 
         IModule_v1(implementation).init(orchestrator, metadata, configData);
