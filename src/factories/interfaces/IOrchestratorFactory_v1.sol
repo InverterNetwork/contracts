@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -62,8 +63,8 @@ interface IOrchestratorFactory_v1 {
         ModuleConfig[] memory moduleConfigs
     ) external returns (IOrchestrator_v1);
 
-    /// @notice Returns the {IOrchestrator_v1} target implementation address.
-    function target() external view returns (address);
+    /// @notice Returns the {IOrchestrator_v1} beacon address.
+    function beacon() external view returns (IInverterBeacon_v1);
 
     /// @notice Returns the {IModuleFactory_v1} implementation address.
     function moduleFactory() external view returns (address);

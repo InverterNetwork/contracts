@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Internal Dependencies
+
+import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
+import {InverterTransparentUpgradeableProxy_v1} from
+    "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
@@ -28,9 +35,6 @@ import {
     Ownable2StepUpgradeable,
     Initializable
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
-
-// External Libraries
-import {Clones} from "@oz/proxy/Clones.sol";
 
 /**
  * @title   Orchestrator Factory
@@ -67,7 +71,7 @@ contract OrchestratorFactory_v1 is
     // Storage
 
     /// @inheritdoc IOrchestratorFactory_v1
-    address public override target;
+    IInverterBeacon_v1 public override beacon;
 
     /// @inheritdoc IOrchestratorFactory_v1
     address public override moduleFactory;
@@ -99,14 +103,15 @@ contract OrchestratorFactory_v1 is
 
     /// @notice The factories initializer function.
     /// @param governor_ The address of the governor contract.
-    /// @param target_ The address of the governor contract.
+    /// @param beacon_ The address of the beacon containing the orchestrator implementation.
     /// @param moduleFactory_ The address of the module factory contract.
-    function init(address governor_, address target_, address moduleFactory_)
-        external
-        initializer
-    {
+    function init(
+        address governor_,
+        IInverterBeacon_v1 beacon_,
+        address moduleFactory_
+    ) external initializer {
         __Ownable_init(governor_);
-        target = target_;
+        beacon = beacon_;
         moduleFactory = moduleFactory_;
     }
 
@@ -121,15 +126,31 @@ contract OrchestratorFactory_v1 is
         ModuleConfig memory paymentProcessorConfig,
         ModuleConfig[] memory moduleConfigs
     ) external returns (IOrchestrator_v1) {
-        address clone = Clones.clone(target);
+        address proxy;
+        //If the workflow should fetch their updates themselves
+        if (workflowConfig.independentUpdates) {
+            //Use a InverterTransparentUpgradeableProxy as a proxy
+            proxy = address(
+                new InverterTransparentUpgradeableProxy_v1(
+                    beacon,
+                    workflowConfig.independentUpdateAdmin,
+                    bytes("") //@todo test
+                )
+            );
+        }
+        //If not then
+        else {
+            //Instead use the Beacon Structure Proxy
+            proxy = address(new InverterBeaconProxy_v1(beacon));
+        }
 
-        //Map orchestrator clone
-        _orchestrators[++_orchestratorIdCounter] = clone;
+        //Map orchestrator proxy
+        _orchestrators[++_orchestratorIdCounter] = proxy;
 
         // Deploy and cache {IFundingManager_v1} module.
         address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
             fundingManagerConfig.metadata,
-            IOrchestrator_v1(clone),
+            IOrchestrator_v1(proxy),
             fundingManagerConfig.configData,
             workflowConfig
         );
@@ -137,7 +158,7 @@ contract OrchestratorFactory_v1 is
         // Deploy and cache {IAuthorizer_v1} module.
         address authorizer = IModuleFactory_v1(moduleFactory).createModule(
             authorizerConfig.metadata,
-            IOrchestrator_v1(clone),
+            IOrchestrator_v1(proxy),
             authorizerConfig.configData,
             workflowConfig
         );
@@ -145,19 +166,19 @@ contract OrchestratorFactory_v1 is
         // Deploy and cache {IPaymentProcessor_v1} module.
         address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
             paymentProcessorConfig.metadata,
-            IOrchestrator_v1(clone),
+            IOrchestrator_v1(proxy),
             paymentProcessorConfig.configData,
             workflowConfig
         );
 
         // Deploy and cache optional modules.
         address[] memory modules =
-            createModules(moduleConfigs, clone, workflowConfig);
+            createModules(moduleConfigs, proxy, workflowConfig);
 
-        emit OrchestratorCreated(_orchestratorIdCounter, clone);
+        emit OrchestratorCreated(_orchestratorIdCounter, proxy);
 
         // Initialize orchestrator.
-        IOrchestrator_v1(clone).init(
+        IOrchestrator_v1(proxy).init(
             _orchestratorIdCounter,
             modules,
             IFundingManager_v1(fundingManager),
@@ -166,7 +187,7 @@ contract OrchestratorFactory_v1 is
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
-        return IOrchestrator_v1(clone);
+        return IOrchestrator_v1(proxy);
     }
 
     /// @inheritdoc IOrchestratorFactory_v1
@@ -185,7 +206,7 @@ contract OrchestratorFactory_v1 is
 
     function createModules(
         ModuleConfig[] memory moduleConfigs,
-        address clone,
+        address proxy,
         WorkflowConfig memory workflowConfig
     ) internal returns (address[] memory) {
         // Deploy and cache optional modules.
@@ -194,7 +215,7 @@ contract OrchestratorFactory_v1 is
         for (uint i; i < moduleConfigs.length; ++i) {
             modules[i] = IModuleFactory_v1(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
-                IOrchestrator_v1(clone),
+                IOrchestrator_v1(proxy),
                 moduleConfigs[i].configData,
                 workflowConfig
             );
