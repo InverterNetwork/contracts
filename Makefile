@@ -93,7 +93,9 @@ testScripts: ## Run e2e test suite
 
 	## factories
 	@forge script script/factories/DeployModuleFactory_v1.s.sol
-	@forge script script/factories/DeployOrchestratorFactory_v1.s.sol
+	
+	## @note Because the Beacon doesnt allow to be passed addresses without implementations we cant test the script properly anymore without breaking the script testing structure we used up until now.
+	## @forge script script/factories/DeployOrchestratorFactory_v1.s.sol
 	
 	## modules
 
