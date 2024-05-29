@@ -110,7 +110,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param role The role to grant
     /// @param who The address to grant the role to
     /// @return bool Returns if the role has been granted succesful
-    /// @dev Overrides {_grantRole} from AccesControl to enforce interface implementation when role is token-gated
+    /// @dev Overrides {_grantRole} from AccesControl to enforce interface implementation and threshold existence when role is token-gated
     function _grantRole(bytes32 role, address who)
         internal
         virtual
@@ -133,10 +133,11 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         return super._grantRole(role, who);
     }
 
-    /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
+
     /// @param role The id number of the role
     /// @param who The user we want to check on
     /// @return bool Returns if revoke has been succesful
+    /// @dev Overrides {_revokeRole} to clean up threshold data on revoking
     function _revokeRole(bytes32 role, address who)
         internal
         virtual
