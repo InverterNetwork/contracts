@@ -136,7 +136,8 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     function _setDefaultAssertionLiveness(uint64 _newLiveness) internal {
-        if (_newLiveness == 0) {
+        if (_newLiveness < 21_600) {
+            // 21600 seconds = 6 hours
             revert Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
         }
         assertionLiveness = _newLiveness;
