@@ -111,6 +111,15 @@ contract OrchestratorFactory_v1 is
         address moduleFactory_
     ) external initializer {
         __Ownable_init(governor_);
+
+        if (
+            !ERC165(address(beacon_)).supportsInterface(
+                type(IInverterBeacon_v1).interfaceId
+            )
+        ) {
+            revert OrchestratorFactory__InvalidBeacon();
+        }
+
         beacon = beacon_;
         moduleFactory = moduleFactory_;
     }

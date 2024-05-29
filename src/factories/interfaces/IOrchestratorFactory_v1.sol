@@ -12,6 +12,9 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice The provided beacon address doesnt support the interface {IInverterBeacon_v1}
+    error OrchestratorFactory__InvalidBeacon();
+
     /// @notice Given id is invalid.
     error OrchestratorFactory__InvalidId();
 
