@@ -19,6 +19,8 @@ import {
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleFactoryV1Mock} from
     "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -53,16 +55,10 @@ contract OrchestratorFactoryV1Test is Test {
     ModuleFactoryV1Mock moduleFactory;
 
     // Metadata
-    IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates = //@todo
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates =
     IOrchestratorFactory_v1.WorkflowConfig({
         independentUpdates: false,
         independentUpdateAdmin: address(0)
-    });
-
-    IOrchestratorFactory_v1.WorkflowConfig workflowConfigIndependentUpdates = //@todo
-    IOrchestratorFactory_v1.WorkflowConfig({
-        independentUpdates: false,
-        independentUpdateAdmin: makeAddr("IndependentUpdateAdmin")
     });
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
@@ -127,7 +123,11 @@ contract OrchestratorFactoryV1Test is Test {
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateOrchestrator(uint modulesLen) public {
+    function testCreateOrchestrator(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        uint modulesLen
+    ) public {
+        _assumeValidWorkflowConfig(workflowConfig);
         // Note to stay reasonable
         modulesLen = bound(modulesLen, 0, 50);
 
@@ -143,7 +143,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1 with id=1
         IOrchestrator_v1 orchestrator = factory.createOrchestrator(
-            workflowConfigNoIndependentUpdates,
+            workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
@@ -154,14 +154,8 @@ contract OrchestratorFactoryV1Test is Test {
         (bool independentUpdates, address independentUpdateAdmin) =
             moduleFactory.givenWorkflowConfig();
 
-        assertEq(
-            workflowConfigNoIndependentUpdates.independentUpdates,
-            independentUpdates
-        );
-        assertEq(
-            workflowConfigNoIndependentUpdates.independentUpdateAdmin,
-            independentUpdateAdmin
-        );
+        assertEq(workflowConfig.independentUpdates, independentUpdates);
+        assertEq(workflowConfig.independentUpdateAdmin, independentUpdateAdmin);
 
         // Check that orchestrator's strorage correctly initialized.
         assertEq(orchestrator.orchestratorId(), 1);
@@ -177,7 +171,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1 with id=2
         orchestrator = factory.createOrchestrator(
-            workflowConfigNoIndependentUpdates,
+            workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
@@ -188,6 +182,26 @@ contract OrchestratorFactoryV1Test is Test {
 
         //check that orchestratorFactory idCounter is correct.
         assertEq(factory.getOrchestratorIDCounter(), 2);
+
+        //Check for proper Proxy setup
+
+        beacon.overrideImplementation(address(new ModuleImplementationV1Mock()));
+
+        //If it is independent then the beacon change should not be represented
+        if (workflowConfig.independentUpdates) {
+            vm.expectRevert();
+            ModuleImplementationV1Mock(address(orchestrator)).getMockVersion();
+
+            assertEq(orchestrator.orchestratorId(), 2);
+        } else {
+            assertEq(
+                ModuleImplementationV1Mock(address(orchestrator)).getMockVersion(
+                ),
+                1
+            );
+            vm.expectRevert();
+            orchestrator.orchestratorId();
+        }
     }
 
     function testOrchestratorMapping(uint orchestratorAmount) public {
@@ -218,5 +232,16 @@ contract OrchestratorFactoryV1Test is Test {
         );
 
         return address(orchestrator);
+    }
+
+    function _assumeValidWorkflowConfig(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+    ) internal view {
+        if (workflowConfig.independentUpdates) {
+            vm.assume(workflowConfig.independentUpdateAdmin != address(0));
+            vm.assume(
+                address(workflowConfig.independentUpdateAdmin).code.length == 0
+            );
+        }
     }
 }

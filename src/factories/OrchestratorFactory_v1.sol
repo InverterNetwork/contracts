@@ -141,9 +141,7 @@ contract OrchestratorFactory_v1 is
             //Use a InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
                 new InverterTransparentUpgradeableProxy_v1(
-                    beacon,
-                    workflowConfig.independentUpdateAdmin,
-                    bytes("") //@todo test
+                    beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
         }
