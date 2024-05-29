@@ -13,10 +13,12 @@ interface IERC20PaymentClientBase_v1 {
         address paymentToken;
         /// @dev The amount of tokens to pay.
         uint amount;
-        /// @dev Timestamp at which the order got created.
-        uint createdAt;
-        /// @dev Timestamp at which the payment SHOULD be fulfilled.
-        uint dueTo;
+        /// @dev Timestamp at which the payment should start.
+        uint start;
+        /// @dev Duration of the payment cliff.
+        uint cliff;
+        /// @dev Timestamp at which the payment should be fulfilled.
+        uint end;
     }
 
     //--------------------------------------------------------------------------
@@ -40,8 +42,8 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given amount invalid.
     error Module__ERC20PaymentClientBase__InvalidAmount();
 
-    /// @notice Given dueTo invalid.
-    error Module__ERC20PaymentClientBase__InvalidDueTo();
+    /// @notice Given end invalid.
+    error Module__ERC20PaymentClientBase__Invalidend();
 
     /// @notice Given arrays' length mismatch.
     error Module__ERC20PaymentClientBase__ArrayLengthMismatch();

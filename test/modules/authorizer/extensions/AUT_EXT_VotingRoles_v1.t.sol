@@ -976,6 +976,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     function testOnlyGovernanceIsAuthorized(address _other) public {
         vm.assume(_other != address(_governor));
+        vm.assume(_other != address(this));
 
         vm.expectRevert(
             abi.encodeWithSelector(

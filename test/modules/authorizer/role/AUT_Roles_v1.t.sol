@@ -33,6 +33,8 @@ import {FundingManagerV1Mock} from
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
+import {ModuleFactoryV1Mock} from
+    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 
 contract AUT_RolesV1Test is Test {
     // Mocks
@@ -41,7 +43,8 @@ contract AUT_RolesV1Test is Test {
     ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
-    GovernorV1Mock internal governor = new GovernorV1Mock();
+    GovernorV1Mock internal _governor = new GovernorV1Mock();
+    ModuleFactoryV1Mock internal _moduleFactory = new ModuleFactoryV1Mock();
     TransactionForwarder_v1 _forwarder =
         new TransactionForwarder_v1("TransactionForwarder_v1");
     address ALBA = address(0xa1ba); //default authorized person
@@ -109,11 +112,12 @@ contract AUT_RolesV1Test is Test {
         modules[0] = address(module);
         _orchestrator.init(
             _ORCHESTRATOR_ID,
+            address(_moduleFactory),
             modules,
             _fundingManager,
             _authorizer,
             _paymentProcessor,
-            governor
+            _governor
         );
 
         address initialAuth = ALBA;

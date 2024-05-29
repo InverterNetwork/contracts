@@ -25,13 +25,13 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /**
  * @title   Linear Streaming Payment Processor
  *
- * @notice  Manages continuous and linear vesting payment streams within the Inverter
- *          Network, allowing multiple concurrent vestings per recipient. Provides tools
- *          to claim vested amounts and manage payment schedules dynamically.
+ * @notice  Manages continuous and linear streaming payment streams within the Inverter
+ *          Network, allowing multiple concurrent streams per recipient. Provides tools
+ *          to claim streamed amounts and manage payment schedules dynamically.
  *
- * @dev     Supports complex payment interactions including vesting based on time for
+ * @dev     Supports complex payment interactions including streaming based on time for
  *          multiple clients and recipients, integrated with error handling for
- *          payments and managing active vesting schedules and their cancellations.
+ *          payments and managing active streaming schedules and their cancellations.
  *
  * @author  Inverter Network
  */
@@ -53,30 +53,30 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     // Storage
 
     /// @notice provides a unique id for new payment orders added for a specific client & paymentReceiver combo
-    /// @dev paymentClient => paymentReceiver => walletId(uint)
-    mapping(address => mapping(address => uint)) public numVestingWallets;
+    /// @dev paymentClient => paymentReceiver => streamId(uint)
+    mapping(address => mapping(address => uint)) public numStreams;
 
-    /// @notice tracks all vesting details for all payment orders of a paymentReceiver for a specific paymentClient
-    /// @dev paymentClient => paymentReceiver => vestingWalletID => Wallet
-    mapping(address => mapping(address => mapping(uint => VestingWallet)))
-        private vestings;
+    /// @notice tracks all stream details for all payment orders of a paymentReceiver for a specific paymentClient
+    /// @dev paymentClient => paymentReceiver => streamId => Wallet
+    mapping(address => mapping(address => mapping(uint => Stream))) private
+        streams;
 
-    /// @notice tracks all walletIds for payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => paymentReceiver => walletId array
-    mapping(address => mapping(address => uint[])) internal unclaimableWalletIds;
+    /// @notice tracks all streams for payments that could not be made to the paymentReceiver due to any reason
+    /// @dev paymentClient => paymentReceiver => streamId array
+    mapping(address => mapping(address => uint[])) internal unclaimableStreams;
 
     /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => paymentReceiver => vestingWalletID => unclaimable Amount
+    /// @dev paymentClient => paymentReceiver => streamId => unclaimable Amount
     mapping(address => mapping(address => mapping(uint => uint))) internal
-        unclaimableAmountsForWalletId;
+        unclaimableAmountsForStream;
 
     /// @notice list of addresses with open payment Orders per paymentClient
     /// @dev paymentClient => listOfPaymentReceivers(address[]). Duplicates are not allowed.
     mapping(address => address[]) private activePaymentReceivers;
 
-    /// @notice list of walletIDs of all payment orders of a particular paymentReceiver for a particular paymentClient
-    /// @dev client => paymentReceiver => arrayOfWalletIdsWithPendingPayment(uint[])
-    mapping(address => mapping(address => uint[])) private activeVestingWallets;
+    /// @notice list of streamIds of all payment orders of a particular paymentReceiver for a particular paymentClient
+    /// @dev client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[])
+    mapping(address => mapping(address => uint[])) private activeStreams;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -98,7 +98,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     modifier activePaymentReceiver(address client, address paymentReceiver) {
-        if (activeVestingWallets[client][paymentReceiver].length == 0) {
+        if (activeStreams[client][paymentReceiver].length == 0) {
             revert Module__PP_Streaming__InvalidPaymentReceiver(
                 client, paymentReceiver
             );
@@ -120,7 +120,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @inheritdoc IPP_Streaming_v1
     function claimAll(address client) external {
-        if (activeVestingWallets[client][_msgSender()].length == 0) {
+        if (activeStreams[client][_msgSender()].length == 0) {
             revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }
 
@@ -138,26 +138,24 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function claimForSpecificWalletId(address client, uint walletId) external {
+    function claimForSpecificStream(address client, uint streamId) external {
         if (
-            activeVestingWallets[client][_msgSender()].length == 0
-                || walletId > numVestingWallets[client][_msgSender()]
+            activeStreams[client][_msgSender()].length == 0
+                || streamId > numStreams[client][_msgSender()]
         ) {
-            revert Module__PP_Streaming__InvalidWallet(
-                client, _msgSender(), walletId
+            revert Module__PP_Streaming__InvalidStream(
+                client, _msgSender(), streamId
             );
         }
 
-        if (
-            _findActiveWalletId(client, _msgSender(), walletId)
-                == type(uint).max
-        ) {
-            revert Module__PP_Streaming__InactiveWallet(
-                client, _msgSender(), walletId
+        if (_findActiveStream(client, _msgSender(), streamId) == type(uint).max)
+        {
+            revert Module__PP_Streaming__InactiveStream(
+                client, _msgSender(), streamId
             );
         }
 
-        _claimForSpecificWalletId(client, _msgSender(), walletId);
+        _claimForSpecificStream(client, _msgSender(), streamId);
     }
 
     /// @inheritdoc IPaymentProcessor_v1
@@ -186,39 +184,43 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             // Generate Streaming Payments for all orders
             address _recipient;
             address _token;
+            uint _streamId;
             uint _amount;
             uint _start;
-            uint _dueTo;
-            uint _walletId;
+            uint _cliff;
+            uint _end;
 
             uint numOrders = orders.length;
 
             for (uint i; i < numOrders;) {
                 _recipient = orders[i].recipient;
                 _token = orders[i].paymentToken;
+                _streamId = numStreams[address(client)][_recipient] + 1;
                 _amount = orders[i].amount;
-                _start = orders[i].createdAt;
-                _dueTo = orders[i].dueTo;
-                _walletId = numVestingWallets[address(client)][_recipient] + 1;
+                _start = orders[i].start;
+                _cliff = orders[i].cliff;
+                _end = orders[i].end;
 
                 _addPayment(
                     address(client),
                     _recipient,
                     _token,
+                    _streamId,
                     _amount,
                     _start,
-                    _dueTo,
-                    _walletId
+                    _cliff,
+                    _end
                 );
 
                 emit PaymentOrderProcessed(
                     address(client),
-                    _token,
                     _recipient,
+                    _token,
+                    _streamId,
                     _amount,
                     _start,
-                    _dueTo,
-                    _walletId
+                    _cliff,
+                    _end
                 );
 
                 unchecked {
@@ -243,7 +245,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address paymentReceiver
     ) external onlyOrchestratorOwner {
         if (
-            _findAddressInActiveVestings(client, paymentReceiver)
+            _findAddressInActiveStreams(client, paymentReceiver)
                 == type(uint).max
         ) {
             revert Module__PP_Streaming__InvalidPaymentReceiver(
@@ -254,21 +256,21 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function removePaymentForSpecificWalletId(
+    function removePaymentForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) external onlyOrchestratorOwner {
-        // First, we give the vested funds from this specific walletId to the beneficiary
-        _claimForSpecificWalletId(client, paymentReceiver, walletId);
+        // First, we give the streamed funds from this specific streamId to the beneficiary
+        _claimForSpecificStream(client, paymentReceiver, streamId);
 
-        // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this wallet or not
+        // Now, we need to check when this function was called to determine if we need to delete the details pertaining to this stream or not
         // We will delete the payment order in question, if it hasn't already reached the end of its duration.
         if (
             block.timestamp
-                < dueToForSpecificWalletId(client, paymentReceiver, walletId)
+                < endForSpecificStream(client, paymentReceiver, streamId)
         ) {
-            _afterClaimCleanup(client, paymentReceiver, walletId);
+            _afterClaimCleanup(client, paymentReceiver, streamId);
         }
     }
 
@@ -281,57 +283,66 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         view
         returns (bool)
     {
-        return activeVestingWallets[client][paymentReceiver].length > 0;
+        return activeStreams[client][paymentReceiver].length > 0;
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function startForSpecificWalletId(
+    function startForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) public view returns (uint) {
-        return vestings[client][paymentReceiver][walletId]._start;
+        return streams[client][paymentReceiver][streamId]._start;
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function dueToForSpecificWalletId(
+    function cliffForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) public view returns (uint) {
-        return vestings[client][paymentReceiver][walletId]._dueTo;
+        return streams[client][paymentReceiver][streamId]._cliff;
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function releasedForSpecificWalletId(
+    function endForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) public view returns (uint) {
-        return vestings[client][paymentReceiver][walletId]._released;
+        return streams[client][paymentReceiver][streamId]._end;
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function vestedAmountForSpecificWalletId(
+    function releasedForSpecificStream(
         address client,
         address paymentReceiver,
-        uint timestamp,
-        uint walletId
+        uint streamId
     ) public view returns (uint) {
-        return _vestingAmountForSpecificWalletId(
-            client, paymentReceiver, timestamp, walletId
+        return streams[client][paymentReceiver][streamId]._released;
+    }
+
+    /// @inheritdoc IPP_Streaming_v1
+    function streamedAmountForSpecificStream(
+        address client,
+        address paymentReceiver,
+        uint streamId,
+        uint timestamp
+    ) public view returns (uint) {
+        return _streamAmountForSpecificStream(
+            client, paymentReceiver, streamId, timestamp
         );
     }
 
     /// @inheritdoc IPP_Streaming_v1
-    function releasableForSpecificWalletId(
+    function releasableForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) public view returns (uint) {
-        return vestedAmountForSpecificWalletId(
-            client, paymentReceiver, block.timestamp, walletId
-        ) - releasedForSpecificWalletId(client, paymentReceiver, walletId);
+        return streamedAmountForSpecificStream(
+            client, paymentReceiver, streamId, block.timestamp
+        ) - releasedForSpecificStream(client, paymentReceiver, streamId);
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -340,7 +351,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         view
         returns (uint amount)
     {
-        uint[] memory ids = unclaimableWalletIds[client][paymentReceiver];
+        uint[] memory ids = unclaimableStreams[client][paymentReceiver];
         uint length = ids.length;
 
         if (length == 0) {
@@ -349,7 +360,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         for (uint i = 0; i < length; i++) {
             amount +=
-                unclaimableAmountsForWalletId[client][paymentReceiver][ids[i]];
+                unclaimableAmountsForStream[client][paymentReceiver][ids[i]];
         }
     }
 
@@ -358,59 +369,58 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         external
         view
         activePaymentReceiver(client, paymentReceiver)
-        returns (VestingWallet[] memory)
+        returns (Stream[] memory)
     {
-        uint[] memory vestingWalletsArray =
-            activeVestingWallets[client][paymentReceiver];
-        uint vestingWalletsArrayLength = vestingWalletsArray.length;
+        uint[] memory streamIdsArray = activeStreams[client][paymentReceiver];
+        uint streamIdsArrayLength = streamIdsArray.length;
 
         uint index;
-        VestingWallet[] memory paymentReceiverVestingWallets =
-            new VestingWallet[](vestingWalletsArrayLength);
+        Stream[] memory paymentReceiverStreams =
+            new Stream[](streamIdsArrayLength);
 
-        for (index; index < vestingWalletsArrayLength;) {
-            paymentReceiverVestingWallets[index] =
-                vestings[client][paymentReceiver][vestingWalletsArray[index]];
+        for (index; index < streamIdsArrayLength;) {
+            paymentReceiverStreams[index] =
+                streams[client][paymentReceiver][streamIdsArray[index]];
 
             unchecked {
                 ++index;
             }
         }
 
-        return paymentReceiverVestingWallets;
+        return paymentReceiverStreams;
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice common set of steps to be taken after everything has been claimed from a specific wallet
+    /// @notice common set of steps to be taken after everything has been claimed from a specific stream
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver
-    /// @param walletId ID of the wallet that was fully claimed
+    /// @param streamId ID of the stream that was fully claimed
     function _afterClaimCleanup(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) internal {
-        // 1. remove walletId from the activeVestingWallets mapping
-        _removePaymentForSpecificWalletId(client, paymentReceiver, walletId);
+        // 1. remove streamId from the activeStreams mapping
+        _removePaymentForSpecificStream(client, paymentReceiver, streamId);
 
-        // 2. delete the vesting information for this specific walletId
-        _removeVestingInformationForSpecificWalletId(
-            client, paymentReceiver, walletId
+        // 2. delete the stream information for this specific streamId
+        _removeStreamInformationForSpecificStream(
+            client, paymentReceiver, streamId
         );
 
-        // 3. activePaymentReceivers and isActive would be updated if this was the last wallet that was associated with the paymentReceiver was claimed.
+        // 3. activePaymentReceivers and isActive would be updated if this was the last stream that was associated with the paymentReceiver was claimed.
         //    This would also mean that, it is possible for a paymentReceiver to be inactive and still have money owed to them (unclaimableAmounts)
-        if (activeVestingWallets[client][paymentReceiver].length == 0) {
-            _removePaymentReceiverFromActiveVestings(client, paymentReceiver);
+        if (activeStreams[client][paymentReceiver].length == 0) {
+            _removePaymentReceiverFromActiveStreams(client, paymentReceiver);
         }
 
         // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the `transferFrom` call.
-        // Note Also, we do not need to update numVestingWallets, as claiming completely from a wallet does not affect this mapping.
+        // Note Also, we do not need to update numStreams, as claiming completely from a stream does not affect this mapping.
 
         // 4. emit an event broadcasting that a particular payment has been removed
-        emit StreamingPaymentRemoved(client, paymentReceiver, walletId);
+        emit StreamingPaymentRemoved(client, paymentReceiver, streamId);
     }
 
     /// @notice used to find whether a particular paymentReceiver has pending payments with a client
@@ -419,7 +429,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver
     /// @return the index of the paymentReceiver in the activePaymentReceivers[client] array. Returns type(uint256).max otherwise.
-    function _findAddressInActiveVestings(
+    function _findAddressInActiveStreams(
         address client,
         address paymentReceiver
     ) internal view returns (uint) {
@@ -437,25 +447,24 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return type(uint).max;
     }
 
-    /// @notice used to find whether a particular payment order associated with a paymentReceiver and paymentClient with id = walletId is active or not
-    /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the walletId
-    ///      in the activeVestingWallets[client][paymentReceiver] array, but that is fine as the array does not allow duplicates.
+    /// @notice used to find whether a particular payment order associated with a paymentReceiver and paymentClient with id = streamId is active or not
+    /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the streamId
+    ///      in the activeStreams[client][paymentReceiver] array, but that is fine as the array does not allow duplicates.
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver
-    /// @param walletId ID of the payment order that needs to be searched
-    /// @return the index of the paymentReceiver in the activeVestingWallets[client][paymentReceiver] array. Returns type(uint256).max otherwise.
-    function _findActiveWalletId(
+    /// @param streamId ID of the payment order that needs to be searched
+    /// @return the index of the paymentReceiver in the activeStreams[client][paymentReceiver] array. Returns type(uint256).max otherwise.
+    function _findActiveStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) internal view returns (uint) {
-        uint[] memory vestingWalletsArray =
-            activeVestingWallets[client][paymentReceiver];
-        uint vestingWalletsArrayLength = vestingWalletsArray.length;
+        uint[] memory streamIdsArray = activeStreams[client][paymentReceiver];
+        uint streamIdsArrayLength = streamIdsArray.length;
 
         uint index;
-        for (index; index < vestingWalletsArrayLength;) {
-            if (vestingWalletsArray[index] == walletId) {
+        for (index; index < streamIdsArrayLength;) {
+            if (streamIdsArray[index] == streamId) {
                 return index;
             }
             unchecked {
@@ -484,30 +493,29 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @notice Deletes all payments related to a paymentReceiver & leaves unvested tokens in the ERC20PaymentClientBase_v1.
+    /// @notice Deletes all payments related to a paymentReceiver & leaves currently streaming tokens in the ERC20PaymentClientBase_v1.
     /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver. For the payment orders
-    ///      that are completely vested, their details are deleted in the _claimForSpecificWalletId function and for others it is
-    ///      deleted in the _removePayment function only, leaving the unvested tokens as balance of the paymentClient itself.
+    ///      that are completely streamed, their details are deleted in the _claimForSpecificStream function and for others it is
+    ///      deleted in the _removePayment function only, leaving the currently streaming tokens as balance of the paymentClient itself.
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver
     function _removePayment(address client, address paymentReceiver) internal {
-        uint[] memory vestingWalletsArray =
-            activeVestingWallets[client][paymentReceiver];
-        uint vestingWalletsArrayLength = vestingWalletsArray.length;
+        uint[] memory streamIdsArray = activeStreams[client][paymentReceiver];
+        uint streamIdsArrayLength = streamIdsArray.length;
 
         uint index;
-        uint walletId;
-        for (index; index < vestingWalletsArrayLength;) {
-            walletId = vestingWalletsArray[index];
-            _claimForSpecificWalletId(client, paymentReceiver, walletId);
+        uint streamId;
+        for (index; index < streamIdsArrayLength;) {
+            streamId = streamIdsArray[index];
+            _claimForSpecificStream(client, paymentReceiver, streamId);
 
-            // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificWalletId call
+            // If the paymentOrder being removed was already past its duration, then it would have been removed in the earlier _claimForSpecificStream call
             // Otherwise, we would remove that paymentOrder in the following lines.
             if (
                 block.timestamp
-                    < dueToForSpecificWalletId(client, paymentReceiver, walletId)
+                    < endForSpecificStream(client, paymentReceiver, streamId)
             ) {
-                _afterClaimCleanup(client, paymentReceiver, walletId);
+                _afterClaimCleanup(client, paymentReceiver, streamId);
             }
 
             unchecked {
@@ -516,30 +524,30 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @notice used to remove the payment order with id = walletId from the activeVestingWallets[client][paymentReceiver] array.
+    /// @notice used to remove the payment order with id = streamId from the activeStreams[client][paymentReceiver] array.
     /// @dev This function simply removes a particular payment order from the earlier mentioned array. The implications of removing a payment order
     ///      from this array have to be handled outside of this function, such as checking whether the paymentReceiver is still active or not, etc.
     /// @param client Address of the payment client
     /// @param paymentReceiver Address of the paymentReceiver
-    /// @param walletId Id of the payment order that needs to be removed
-    function _removePaymentForSpecificWalletId(
+    /// @param streamId Id of the payment order that needs to be removed
+    function _removePaymentForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) internal {
-        uint walletIdIndex =
-            _findActiveWalletId(client, paymentReceiver, walletId);
+        uint streamIdIndex =
+            _findActiveStream(client, paymentReceiver, streamId);
 
-        if (walletIdIndex == type(uint).max) {
-            revert Module__PP_Streaming__InactiveWallet(
-                address(client), _msgSender(), walletId
+        if (streamIdIndex == type(uint).max) {
+            revert Module__PP_Streaming__InactiveStream(
+                address(client), _msgSender(), streamId
             );
         }
 
         address _token =
-            vestings[client][paymentReceiver][walletId]._paymentToken;
-        uint remainingReleasable = vestings[client][paymentReceiver][walletId] //The whole salary
-            ._salary - vestings[client][paymentReceiver][walletId]._released; //Minus what has already been "released"
+            streams[client][paymentReceiver][streamId]._paymentToken;
+        uint remainingReleasable = streams[client][paymentReceiver][streamId] //The total amount
+            ._total - streams[client][paymentReceiver][streamId]._released; //Minus what has already been "released"
 
         //In case there is still something to be released
         if (remainingReleasable > 0) {
@@ -551,27 +559,26 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
 
         // Standard deletion process.
-        // Unordered removal of PaymentReceiver payment with walletId WalletIdIndex
+        // Unordered removal of PaymentReceiver payment with streamId StreamIdIndex
         // Move the last element to the index which is to be deleted and then pop the last element of the array.
-        activeVestingWallets[client][paymentReceiver][walletIdIndex] =
-        activeVestingWallets[client][paymentReceiver][activeVestingWallets[client][paymentReceiver]
+        activeStreams[client][paymentReceiver][streamIdIndex] = activeStreams[client][paymentReceiver][activeStreams[client][paymentReceiver]
             .length - 1];
 
-        activeVestingWallets[client][paymentReceiver].pop();
+        activeStreams[client][paymentReceiver].pop();
     }
 
-    /// @notice used to remove the vesting info of the payment order with id = walletId.
-    /// @dev This function simply removes the vesting details of a particular payment order. The implications of removing the vesting info of
+    /// @notice used to remove the stream info of the payment order with id = streamId.
+    /// @dev This function simply removes the stream details of a particular payment order. The implications of removing the stream info of
     ///      payment order have to be handled outside of this function.
     /// @param client Address of the payment client
     /// @param paymentReceiver Address of the paymentReceiver
-    /// @param walletId Id of the payment order whose vesting information needs to be removed
-    function _removeVestingInformationForSpecificWalletId(
+    /// @param streamId Id of the payment order whose stream information needs to be removed
+    function _removeStreamInformationForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) internal {
-        delete vestings[client][paymentReceiver][walletId];
+        delete streams[client][paymentReceiver][streamId];
     }
 
     /// @notice used to remove a paymentReceiver as one of the beneficiaries of the payment client
@@ -579,13 +586,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///      Also signals that the paymentReceiver is no longer an active paymentReceiver according to the payment client
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver
-    function _removePaymentReceiverFromActiveVestings(
+    function _removePaymentReceiverFromActiveStreams(
         address client,
         address paymentReceiver
     ) internal {
         // Find the paymentReceiver's index in the array of activePaymentReceivers mapping.
         uint paymentReceiverIndex =
-            _findAddressInActiveVestings(client, paymentReceiver);
+            _findAddressInActiveStreams(client, paymentReceiver);
 
         if (paymentReceiverIndex == type(uint).max) {
             revert Module__PP_Streaming__InvalidPaymentReceiver(
@@ -607,71 +614,73 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @dev This function can handle multiple payment orders associated with a particular paymentReceiver for the same payment client
     ///      without overriding the earlier ones. The maximum payment orders for a paymentReceiver MUST BE capped at (2**256-1).
     /// @param _paymentReceiver PaymentReceiver's address.
-    /// @param _salary Salary paymentReceiver will receive per epoch.
-    /// @param _start Start vesting timestamp.
-    /// @param _dueTo Streaming dueTo timestamp.
-    /// @param _walletId ID of the new wallet of the a particular paymentReceiver being added
+    /// @param _total Total amount the paymentReceiver will receive per epoch.
+    /// @param _start Streaming start timestamp.
+    /// @param _cliff The duration of the cliff period.
+    /// @param _end Streaming end timestamp.
+    /// @param _streamId ID of the new stream of the a particular paymentReceiver being added
     function _addPayment(
         address client,
         address _paymentReceiver,
         address _token,
-        uint _salary,
+        uint _streamId,
+        uint _total,
         uint _start,
-        uint _dueTo,
-        uint _walletId
+        uint _cliff,
+        uint _end
     ) internal {
         if (
-            !validAddress(_paymentReceiver) || !validSalary(_salary)
-                || !validStart(_start) || !validPaymentToken(_token)
+            !validPaymentReceiver(_paymentReceiver) || !validTotal(_total)
+                || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
         ) {
             emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _token, _salary, _start, _dueTo
+                _paymentReceiver, _token, _total, _start, _cliff, _end
             );
         } else {
-            ++numVestingWallets[client][_paymentReceiver];
+            ++numStreams[client][_paymentReceiver];
 
-            vestings[client][_paymentReceiver][_walletId] =
-                VestingWallet(_token, _salary, 0, _start, _dueTo, _walletId);
+            streams[client][_paymentReceiver][_streamId] =
+                Stream(_token, _streamId, _total, 0, _start, _cliff, _end);
 
             // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
             // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
             if (
-                _findAddressInActiveVestings(client, _paymentReceiver)
+                _findAddressInActiveStreams(client, _paymentReceiver)
                     == type(uint).max
             ) {
                 activePaymentReceivers[client].push(_paymentReceiver);
             }
 
-            activeVestingWallets[client][_paymentReceiver].push(_walletId);
+            activeStreams[client][_paymentReceiver].push(_streamId);
 
             emit StreamingPaymentAdded(
                 client,
                 _paymentReceiver,
                 _token,
-                _salary,
+                _streamId,
+                _total,
                 _start,
-                _dueTo,
-                _walletId
+                _cliff,
+                _end
             );
         }
     }
 
     /// @notice used to claim all the payment orders associated with a particular paymentReceiver for a given payment client
-    /// @dev Calls the _claimForSpecificWalletId function for all the active wallets of a particular paymentReceiver for the
-    ///      given payment client. Depending on the time this function is called, the vested payments are transferred to the
+    /// @dev Calls the _claimForSpecificStream function for all the active streams of a particular paymentReceiver for the
+    ///      given payment client. Depending on the time this function is called, the steamed payments are transferred to the
     ///      paymentReceiver.
-    ///      For payment orders that are fully vested, their details are deleted and changes are made to the state of the contract accordingly.
+    ///      For payment orders that are fully steamed, their details are deleted and changes are made to the state of the contract accordingly.
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed
     function _claimAll(address client, address paymentReceiver) internal {
-        uint[] memory vestingWalletsArray =
-            activeVestingWallets[client][paymentReceiver];
-        uint vestingWalletsArrayLength = vestingWalletsArray.length;
+        uint[] memory streamIdsArray = activeStreams[client][paymentReceiver];
+        uint streamIdsArrayLength = streamIdsArray.length;
 
         uint index;
-        for (index; index < vestingWalletsArrayLength;) {
-            _claimForSpecificWalletId(
-                client, paymentReceiver, vestingWalletsArray[index]
+        for (index; index < streamIdsArrayLength;) {
+            _claimForSpecificStream(
+                client, paymentReceiver, streamIdsArray[index]
             );
 
             unchecked {
@@ -680,24 +689,24 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @notice used to claim the payment order of a particular paymentReceiver for a given payment client with id = walletId
-    /// @dev Depending on the time this function is called, the vested payments are transferred to the paymentReceiver or accounted in unclaimableAmounts.
-    ///      For payment orders that are fully vested, their details are deleted and changes are made to the state of the contract accordingly.
+    /// @notice used to claim the payment order of a particular paymentReceiver for a given payment client with id = streamId
+    /// @dev Depending on the time this function is called, the steamed payments are transferred to the paymentReceiver or accounted in unclaimableAmounts.
+    ///      For payment orders that are fully steamed, their details are deleted and changes are made to the state of the contract accordingly.
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed
-    /// @param walletId ID of the payment order that is to be claimed
-    function _claimForSpecificWalletId(
+    /// @param streamId ID of the payment order that is to be claimed
+    function _claimForSpecificStream(
         address client,
         address paymentReceiver,
-        uint walletId
+        uint streamId
     ) internal {
         uint amount =
-            releasableForSpecificWalletId(client, paymentReceiver, walletId);
+            releasableForSpecificStream(client, paymentReceiver, streamId);
 
-        vestings[client][paymentReceiver][walletId]._released += amount;
+        streams[client][paymentReceiver][streamId]._released += amount;
 
         address _token =
-            vestings[client][paymentReceiver][walletId]._paymentToken;
+            streams[client][paymentReceiver][streamId]._paymentToken;
 
         (bool success, bytes memory data) = _token.call(
             abi.encodeWithSelector(
@@ -717,39 +726,39 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             );
         } else {
             emit UnclaimableAmountAdded(
-                client, paymentReceiver, address(_token), walletId, amount
+                client, paymentReceiver, address(_token), streamId, amount
             );
-            //Adds the walletId to the array of unclaimable wallet ids
+            //Adds the streamId to the array of unclaimable stream ids
 
-            uint[] memory ids = unclaimableWalletIds[client][paymentReceiver];
+            uint[] memory ids = unclaimableStreams[client][paymentReceiver];
             bool containsId = false;
 
             for (uint i = 0; i < ids.length; i++) {
-                if (walletId == ids[i]) {
+                if (streamId == ids[i]) {
                     containsId = true;
                     break;
                 }
             }
             //If it doesnt contain id than add it to array
             if (!containsId) {
-                unclaimableWalletIds[client][paymentReceiver].push(walletId);
+                unclaimableStreams[client][paymentReceiver].push(streamId);
             }
 
-            unclaimableAmountsForWalletId[client][paymentReceiver][walletId] +=
+            unclaimableAmountsForStream[client][paymentReceiver][streamId] +=
                 amount;
         }
 
-        uint dueToPaymentReceiver =
-            dueToForSpecificWalletId(client, paymentReceiver, walletId);
-
-        // This if conditional block represents that nothing more remains to be vested from the specific walletId
-        if (block.timestamp >= dueToPaymentReceiver) {
-            _afterClaimCleanup(client, paymentReceiver, walletId);
+        // This if conditional block represents that nothing more remains to be steamed from the specific streamId
+        if (
+            block.timestamp
+                >= endForSpecificStream(client, paymentReceiver, streamId)
+        ) {
+            _afterClaimCleanup(client, paymentReceiver, streamId);
         }
     }
 
     /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
-    /// @dev assumes that the walletId array is not empty
+    /// @dev assumes that the streamId array is not empty
     /// @param client address of the payment client
     /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
     function _claimPreviouslyUnclaimable(
@@ -757,21 +766,20 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address paymentReceiver
     ) internal {
         //get amount
-
         uint amount;
 
         address sender = _msgSender();
-        uint[] memory ids = unclaimableWalletIds[client][sender];
+        uint[] memory ids = unclaimableStreams[client][sender];
         uint length = ids.length;
 
         for (uint i = 0; i < length; i++) {
             //Add the unclaimable amount of each id to the current amount
-            amount += unclaimableAmountsForWalletId[client][sender][ids[i]];
-            //Delete value of wallet id
-            delete unclaimableAmountsForWalletId[client][sender][ids[i]];
+            amount += unclaimableAmountsForStream[client][sender][ids[i]];
+            //Delete value of stream id
+            delete unclaimableAmountsForStream[client][sender][ids[i]];
         }
-        //As all of the wallet ids should have been claimed we can delete the wallet id array
-        delete unclaimableWalletIds[client][sender];
+        //As all of the stream ids should have been claimed we can delete the stream id array
+        delete unclaimableStreams[client][sender];
 
         IERC20 _token = orchestrator().fundingManager().token();
 
@@ -784,57 +792,70 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         IERC20PaymentClientBase_v1(client).amountPaid(address(_token), amount);
     }
 
-    /// @notice Virtual implementation of the vesting formula.
-    ///         Returns the amount vested, as a function of time,
+    /// @notice Virtual implementation of the stream formula.
+    ///         Returns the amount steamed, as a function of time,
     ///         for an asset given its total historical allocation.
     /// @param paymentReceiver The paymentReceiver to check on.
-    /// @param timestamp the time upto which we want the vested amount
-    /// @param walletId ID of a particular paymentReceiver's wallet whose vesting schedule needs to be checked
-    function _vestingAmountForSpecificWalletId(
+    /// @param streamId ID of a particular paymentReceiver's stream whose stream schedule needs to be checked
+    /// @param timestamp the time upto which we want the steamed amount
+    function _streamAmountForSpecificStream(
         address client,
         address paymentReceiver,
-        uint timestamp,
-        uint walletId
+        uint streamId,
+        uint timestamp
     ) internal view virtual returns (uint) {
-        uint totalAllocation =
-            vestings[client][paymentReceiver][walletId]._salary;
-        uint startPaymentReceiver =
-            startForSpecificWalletId(client, paymentReceiver, walletId);
-        uint dueToPaymentReceiver =
-            dueToForSpecificWalletId(client, paymentReceiver, walletId);
+        uint total = streams[client][paymentReceiver][streamId]._total;
+        uint start = startForSpecificStream(client, paymentReceiver, streamId);
+        uint end = endForSpecificStream(client, paymentReceiver, streamId);
 
-        if (timestamp < startPaymentReceiver) {
+        if (
+            timestamp
+                < (
+                    start
+                        + cliffForSpecificStream(client, paymentReceiver, streamId)
+                )
+        ) {
+            // if current time is smaller than starting date plus
+            // optional cliff duration, return 0
             return 0;
-        } else if (timestamp >= dueToPaymentReceiver) {
-            return totalAllocation;
+        } else if (timestamp >= end) {
+            return total;
         } else {
-            return (totalAllocation * (timestamp - startPaymentReceiver))
-                / (dueToPaymentReceiver - startPaymentReceiver);
+            // here the cliff is not applied, as it is just delaying
+            // the start of the release, not the vesting part itself
+            return (total * (timestamp - start)) / (end - start);
         }
     }
 
     /// @notice validate address input.
     /// @param addr Address to validate.
     /// @return True if address is valid.
-    function validAddress(address addr) internal view returns (bool) {
+    function validPaymentReceiver(address addr) internal view returns (bool) {
         return !(
             addr == address(0) || addr == _msgSender() || addr == address(this)
                 || addr == address(orchestrator())
+                || addr == address(orchestrator().fundingManager().token())
         );
     }
 
-    /// @notice validate uint salary input.
-    /// @param _salary uint to validate.
+    /// @notice validate uint total amount input.
+    /// @param _total uint to validate.
     /// @return True if uint is valid.
-    function validSalary(uint _salary) internal pure returns (bool) {
-        return !(_salary == 0);
+    function validTotal(uint _total) internal pure returns (bool) {
+        return !(_total == 0);
     }
 
     /// @notice validate uint start input.
     /// @param _start uint to validate.
+    /// @param _cliff uint to validate.
+    /// @param _end uint to validate.
     /// @return True if uint is valid.
-    function validStart(uint _start) internal view returns (bool) {
-        return !(_start < block.timestamp || _start >= type(uint).max);
+    function validTimes(uint _start, uint _cliff, uint _end)
+        internal
+        pure
+        returns (bool)
+    {
+        return !(_start >= type(uint).max && _start + _cliff > _end);
     }
 
     /// @notice validate payment token input.

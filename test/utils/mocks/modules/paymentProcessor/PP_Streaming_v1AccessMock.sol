@@ -8,20 +8,20 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    function getUnclaimableWalletIds(address client, address sender)
+    function getUnclaimableStreams(address client, address sender)
         public
         view
         returns (uint[] memory ids)
     {
-        return unclaimableWalletIds[client][sender];
+        return unclaimableStreams[client][sender];
     }
 
-    function getUnclaimableAmountForWalletIds(
+    function getUnclaimableAmountForStreams(
         address client,
         address sender,
         uint id
     ) public view returns (uint amount) {
-        return unclaimableAmountsForWalletId[client][sender][id];
+        return unclaimableAmountsForStream[client][sender][id];
     }
 
     //--------------------------------------------------------------------------

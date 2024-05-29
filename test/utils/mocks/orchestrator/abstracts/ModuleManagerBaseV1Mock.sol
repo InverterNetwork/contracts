@@ -11,6 +11,7 @@ contract ModuleManagerBaseV1Mock is ModuleManagerBase_v1 {
     mapping(address => bool) private _authorized;
 
     bool private _allAuthorized;
+    bool private _registeredProxyCheckShouldFail;
 
     constructor(address _trustedForwarder)
         ModuleManagerBase_v1(_trustedForwarder)
@@ -24,13 +25,40 @@ contract ModuleManagerBaseV1Mock is ModuleManagerBase_v1 {
         _allAuthorized = to;
     }
 
-    function init(address[] calldata modules) external initializer {
-        __ModuleManager_init(modules);
+    function __ModuleManager_setRegisteredProxyCheckShouldFail(bool to)
+        external
+    {
+        _registeredProxyCheckShouldFail = to;
+    }
+
+    function init(address, /*moduleManager*/ address[] calldata modules)
+        external
+        initializer
+    {
+        __ModuleManager_init(address(this), modules);
     }
 
     // Note that the `initializer` modifier is missing.
-    function initNoInitializer(address[] calldata modules) external {
-        __ModuleManager_init(modules);
+    function initNoInitializer(
+        address, /*moduleManager*/
+        address[] calldata modules
+    ) external {
+        __ModuleManager_init(address(this), modules);
+    }
+
+    function unmockedInit(address moduleManager, address[] calldata modules)
+        external
+        initializer
+    {
+        __ModuleManager_init(moduleManager, modules);
+    }
+
+    function getOrchestratorOfProxy(address /*proxy*/ )
+        external
+        view
+        returns (address)
+    {
+        return _registeredProxyCheckShouldFail ? address(0) : address(this);
     }
 
     function call_cancelModuleUpdate(address module) external {

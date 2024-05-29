@@ -75,7 +75,7 @@ contract OrchestratorE2E is E2ETest {
     }
 
     //We're adding and removing a Module during the lifetime of the orchestrator
-    function testManageModulesLiveOnPorposal() public {
+    function testManageModulesLiveOnOrchestrator() public {
         // address(this) creates a new orchestrator.
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({

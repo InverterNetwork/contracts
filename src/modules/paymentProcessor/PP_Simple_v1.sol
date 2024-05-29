@@ -113,8 +113,9 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
                 recipient,
                 address(token_),
                 amount,
-                orders[i].createdAt,
-                orders[i].dueTo
+                orders[i].start,
+                0,
+                orders[i].end
             );
         }
     }

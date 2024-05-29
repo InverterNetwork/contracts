@@ -219,6 +219,9 @@ contract ModuleFactoryV1Test is Test {
             )
         );
 
+        assertEq(
+            factory.getOrchestratorOfProxy(address(newModule)), orchestrator
+        );
         assertEq(address(newModule.orchestrator()), address(orchestrator));
         assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
 

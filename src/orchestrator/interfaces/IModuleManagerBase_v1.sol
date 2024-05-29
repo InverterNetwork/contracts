@@ -48,6 +48,12 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Module update is already in progress.
     error ModuleManagerBase__ModuleUpdateAlreadyStarted();
 
+    /// @notice Module has not bee registered in our factory.
+    error ModuleManagerBase__ModuleNotRegistered();
+
+    /// @notice Referenced Module Factory is invalid.
+    error ModuleManagerBase__ModuleFactoryInvalid();
+
     //--------------------------------------------------------------------------
     // Events
 

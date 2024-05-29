@@ -99,6 +99,9 @@ contract ModuleFactory_v1 is
     /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
+    /// @dev Mapping of proxy address to orchestrator address.
+    mapping(address => address) private _orchestratorOfProxy;
+
     //--------------------------------------------------------------------------
     // Constructor & Initializer
 
@@ -151,6 +154,8 @@ contract ModuleFactory_v1 is
 
         IModule_v1(proxy).init(orchestrator, metadata, configData);
 
+        _orchestratorOfProxy[proxy] = address(orchestrator);
+
         emit ModuleCreated(
             address(orchestrator), proxy, LibMetadata.identifier(metadata)
         );
@@ -170,6 +175,15 @@ contract ModuleFactory_v1 is
         bytes32 id = LibMetadata.identifier(metadata);
 
         return (_beacons[id], id);
+    }
+
+    /// @inheritdoc IModuleFactory_v1
+    function getOrchestratorOfProxy(address proxy)
+        public
+        view
+        returns (address)
+    {
+        return _orchestratorOfProxy[proxy];
     }
 
     //--------------------------------------------------------------------------

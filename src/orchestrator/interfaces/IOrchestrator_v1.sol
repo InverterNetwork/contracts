@@ -75,6 +75,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice Initialization function.
     function init(
         uint orchestratorId,
+        address moduleFactory_,
         address[] calldata modules,
         IFundingManager_v1 fundingManager,
         IAuthorizer_v1 authorizer,
