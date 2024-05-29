@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
@@ -13,7 +14,7 @@ import {DeployAndSetUpInverterBeacon_v1} from
  * @dev Script to deploy a new OrchestratorFactory_v1.
  *
  *      The implementation and moduleFactory_v1 addresses can be supplied directly or read from the following environment variables:
- *      - DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET
+ *      - DEPLOYMENT_ORCHESTRATOR_FACTORY_BEACON
  *      - DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY
  *
  * @author Inverter Network
@@ -30,15 +31,15 @@ contract DeployOrchestratorFactory_v1 is Script {
 
     function run() external returns (address) {
         // Read deployment settings from environment variables.
-        address target = vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_TARGET");
+        address beacon = vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_BEACON");
         address moduleFactory =
             vm.envAddress("DEPLOYMENT_ORCHESTRATOR_FACTORY_MODULE_FACTORY");
         address governor = vm.envAddress("GOVERNOR_ADDRESS");
         address forwarder = vm.envAddress("FORWARDER_ADDRESS");
         // Check settings.
         require(
-            target != address(0),
-            "DeployOrchestratorFactory_v1: Missing env variable: target"
+            beacon != address(0),
+            "DeployOrchestratorFactory_v1: Missing env variable: beacon"
         );
         require(
             moduleFactory != address(0),
@@ -54,12 +55,12 @@ contract DeployOrchestratorFactory_v1 is Script {
         );
 
         // Deploy the orchestratorFactory.
-        return run(governor, target, moduleFactory, forwarder);
+        return run(governor, beacon, moduleFactory, forwarder);
     }
 
     function run(
         address governor,
-        address target,
+        address beacon,
         address moduleFactory,
         address forwarder
     ) public returns (address) {
@@ -84,7 +85,9 @@ contract DeployOrchestratorFactory_v1 is Script {
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            orchestratorFactory.init(governor, target, moduleFactory);
+            orchestratorFactory.init(
+                governor, IInverterBeacon_v1(beacon), moduleFactory
+            );
         }
         vm.stopBroadcast();
 

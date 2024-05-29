@@ -23,6 +23,9 @@ import {ModuleFactoryV1Mock} from
     "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
+import {InverterBeaconV1OwnableMock} from
+    "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -31,6 +34,10 @@ contract OrchestratorFactoryV1Test is Test {
     OrchestratorFactory_v1 factory;
 
     Orchestrator_v1 target;
+
+    InverterBeaconV1OwnableMock beacon;
+
+    address governanceContract = makeAddr("GovernorContract");
 
     //--------------------------------------------------------------------------
     // Events
@@ -90,10 +97,11 @@ contract OrchestratorFactoryV1Test is Test {
 
         target = new Orchestrator_v1(address(0));
 
+        beacon = new InverterBeaconV1OwnableMock(governanceContract);
+        beacon.overrideImplementation(address(target));
+
         factory = new OrchestratorFactory_v1(address(0));
-        factory.init(
-            moduleFactory.governor(), address(target), address(moduleFactory)
-        );
+        factory.init(moduleFactory.governor(), beacon, address(moduleFactory));
     }
 
     function testValidOrchestratorId(uint getId, uint orchestratorsCreated)
@@ -115,7 +123,7 @@ contract OrchestratorFactoryV1Test is Test {
     }
 
     function testDeploymentInvariants() public {
-        assertEq(factory.target(), address(target));
+        assertEq(address(factory.beacon()), address(beacon));
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 

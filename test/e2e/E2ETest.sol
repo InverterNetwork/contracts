@@ -13,6 +13,11 @@ import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
+import {
+    InverterBeacon_v1,
+    IInverterBeacon_v1
+} from "src/proxies/InverterBeacon_v1.sol";
+
 // Factories
 import {
     ModuleFactory_v1,
@@ -49,6 +54,9 @@ contract E2ETest is E2EModuleRegistry {
 
     // Orchestrator_v1 implementation.
     Orchestrator_v1 orchestratorImpl;
+
+    // Beacon of the Orchestrator_v1 implementation
+    InverterBeacon_v1 orchestratorBeacon;
 
     // Mock token for funding.
     ERC20Mock token;
@@ -93,15 +101,16 @@ contract E2ETest is E2EModuleRegistry {
         // Deploy Orchestrator_v1 implementation.
         orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
+        orchestratorBeacon =
+            new InverterBeacon_v1(address(gov), 1, address(orchestratorImpl), 0); //@note This needs to be updated
+
         // Deploy Factories.
         moduleFactory = new ModuleFactory_v1(address(forwarder));
         moduleFactory.init(address(gov));
 
         orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
         orchestratorFactory.init(
-            moduleFactory.governor(),
-            address(orchestratorImpl),
-            address(moduleFactory)
+            moduleFactory.governor(), orchestratorBeacon, address(moduleFactory)
         );
     }
 
