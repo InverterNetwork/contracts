@@ -557,7 +557,6 @@ contract TokenGatedAUT_RoleV1Test is Test {
         vm.stopPrank();
     }
 
-
     // Threshold is zero after revoking role
 
     function testThresholdStateGetsDeletedOnRevoke() public {
