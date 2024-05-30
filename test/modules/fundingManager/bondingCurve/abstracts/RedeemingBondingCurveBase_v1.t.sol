@@ -53,11 +53,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     event SellingEnabled();
     event SellingDisabled();
-    event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
+    event SellFeeUpdated(uint newSellFee, uint oldSellFee);
     event TokensSold(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address seller
     );
 

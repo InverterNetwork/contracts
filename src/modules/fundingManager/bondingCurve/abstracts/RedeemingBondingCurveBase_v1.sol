@@ -118,7 +118,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function getStaticPriceForSelling() external virtual returns (uint);
+    function getStaticPriceForSelling() external view virtual returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
@@ -273,6 +273,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     ///     being deposited, expressed in BPS
     function _getSellFeesAndTreasuryAddresses()
         internal
+        view
         virtual
         returns (
             address collateralTreasury,
@@ -297,6 +298,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
     function _calculateSaleReturn(uint _depositAmount)
         internal
+        view
         virtual
         returns (uint redeemAmount)
     {

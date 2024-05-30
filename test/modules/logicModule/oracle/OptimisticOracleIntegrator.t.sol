@@ -34,7 +34,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     OptimisticOracleIntegratorMock ooIntegrator;
     OptimisticOracleV3Mock ooV3;
 
-    uint64 immutable DEFAULT_LIVENESS = 5000;
+    uint64 immutable DEFAULT_LIVENESS = 25_000;
 
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
@@ -222,24 +222,27 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         When the caller is not the owner
             reverts (tested in module tests)
         When the caller is the owner
-            when the liveness is 0
+            when the liveness is below 6 hours
                 reverts
             when the liveness is valid 
                 sets the new liveness
                 emits an event
     */
 
-    function testSetDefaultAssertionLivenessFails_whenLivenessIsZero() public {
+    function testSetDefaultAssertionLivenessFails_whenLivenessLessThanSixHours(
+        uint64 newLiveness
+    ) public {
+        vm.assume(newLiveness < 21_600);
         vm.expectRevert(
             IOptimisticOracleIntegrator
                 .Module__OptimisticOracleIntegrator__InvalidDefaultLiveness
                 .selector
         );
-        ooIntegrator.setDefaultAssertionLiveness(0);
+        ooIntegrator.setDefaultAssertionLiveness(newLiveness);
     }
 
     function testSetDefaultAssertionLiveness(uint64 newLiveness) public {
-        vm.assume(newLiveness > 0);
+        vm.assume(newLiveness >= 21_600);
         ooIntegrator.setDefaultAssertionLiveness(newLiveness);
         assertEq(ooIntegrator.assertionLiveness(), newLiveness);
     }

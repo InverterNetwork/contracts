@@ -56,7 +56,10 @@ interface IOptimisticOracleIntegrator is
     /// @param assertionId The id of the Assertion to return.
     /// @return bool Wether the assertion is resolved.
     /// @return bytes32 The Assertion Data.
-    function getData(bytes32 assertionId) external returns (bool, bytes32);
+    function getData(bytes32 assertionId)
+        external
+        view
+        returns (bool, bytes32);
 
     /// @notice For a given assertionId, returns the assserion itself.
     /// @param assertionId The id of the Assertion to return.
@@ -90,15 +93,4 @@ interface IOptimisticOracleIntegrator is
     function assertDataFor(bytes32 dataId, bytes32 data, address asserter)
         external
         returns (bytes32 assertionId);
-
-    /// @notice Callback function for the moment the OptimisticOracleV3 assertion resolves.
-    /// @param assertionId The id of the Assertion generating the callback.
-    function assertionResolvedCallback(
-        bytes32 assertionId,
-        bool assertedTruthfully
-    ) external;
-
-    /// @notice Callback function for the moment the OptimisticOracleV3 assertion is disputed.
-    /// @param assertionId The id of the Assertion generating the callback.
-    function assertionDisputedCallback(bytes32 assertionId) external;
 }
