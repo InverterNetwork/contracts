@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
