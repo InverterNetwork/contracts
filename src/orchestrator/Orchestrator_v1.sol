@@ -224,7 +224,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             _initiateAddModuleWithTimelock(authorizerContract);
             _initiateRemoveModuleWithTimelock(address(authorizer));
         } else {
-            revert Orchestrator__InvalidModuleType(address(authorizer_));
+            revert Orchestrator__InvalidModuleType(authorizerContract);
         }
     }
 
@@ -262,10 +262,10 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     fundingManagerContract, fundingManagerInterfaceId
                 )
         ) {
-            _initiateAddModuleWithTimelock(address(fundingManager_));
+            _initiateAddModuleWithTimelock(fundingManagerContract);
             _initiateRemoveModuleWithTimelock(address(fundingManager));
         } else {
-            revert Orchestrator__InvalidModuleType(address(fundingManager_));
+            revert Orchestrator__InvalidModuleType(fundingManagerContract);
         }
     }
 
@@ -304,10 +304,10 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     paymentProcessorContract, paymentProcessorInterfaceId
                 )
         ) {
-            _initiateAddModuleWithTimelock(address(paymentProcessor_));
+            _initiateAddModuleWithTimelock(paymentProcessorContract);
             _initiateRemoveModuleWithTimelock(address(paymentProcessor));
         } else {
-            revert Orchestrator__InvalidModuleType(address(paymentProcessor_));
+            revert Orchestrator__InvalidModuleType(paymentProcessorContract);
         }
     }
 
