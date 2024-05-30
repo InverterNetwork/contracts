@@ -152,6 +152,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
             _METADATA,
             abi.encode(initialAuth, initialManager)
         );
+
         assertEq(
             _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
@@ -523,6 +524,74 @@ contract TokenGatedAUT_RoleV1Test is Test {
             )
         );
         _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 500);
+    }
+
+    // Threshold state checks:
+    // Cannot grant role if threshold is set to zero
+
+    function testGrantTokenRoleFailsIfThresholdWouldBeZero() public {
+        bytes32 role = ROLE_TOKEN;
+
+        //Make the role token-gated, but don't set a token with grantRoleFromModule()
+        vm.prank(address(mockModule));
+        _authorizer.makeRoleTokenGatedFromModule(role);
+
+        bytes32 storedRoleId =
+            _authorizer.generateRoleId(address(mockModule), role);
+
+        // Now we make BOB admin of the role
+        makeAddressDefaultAdmin(BOB);
+
+        vm.startPrank(BOB);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold
+                    .selector,
+                storedRoleId,
+                address(roleToken)
+            )
+        );
+        _authorizer.grantRole(storedRoleId, address(roleToken)); // BOB tries to circumvent setting a threshold
+
+        vm.stopPrank();
+    }
+
+    // Threshold is zero after revoking role
+
+    function testThresholdStateGetsDeletedOnRevoke() public {
+        bytes32 role = ROLE_TOKEN;
+        bytes32 moduleRoleId =
+            _authorizer.generateRoleId(address(mockModule), role);
+
+        assertEq(
+            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 0
+        );
+
+        vm.startPrank(address(mockModule));
+
+        //Make the role token-gated with a threshold of 500
+        _authorizer.makeRoleTokenGatedFromModule(role);
+        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 500);
+
+        assertEq(
+            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 500
+        );
+
+        _authorizer.revokeRoleFromModule(role, address(roleToken));
+
+        assertEq(
+            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 0
+        );
+
+        // Grant the same role again, with different Threshold
+        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 250);
+
+        assertEq(
+            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 250
+        );
+
+        vm.stopPrank();
     }
 
     //Test Authorization

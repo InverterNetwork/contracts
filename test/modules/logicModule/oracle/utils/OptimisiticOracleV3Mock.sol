@@ -357,6 +357,7 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
     // checks it from the identifier whitelist contract and caches result.
     function _validateAndCacheIdentifier(bytes32 identifier)
         internal
+        pure
         returns (bool)
     {
         return true;
@@ -366,6 +367,7 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
     // checks it from the collateral whitelist contract and caches whitelist status and final fee.
     function _validateAndCacheCurrency(address currency)
         internal
+        view
         returns (bool)
     {
         WhitelistedCurrency memory buf = cachedCurrencies[currency];

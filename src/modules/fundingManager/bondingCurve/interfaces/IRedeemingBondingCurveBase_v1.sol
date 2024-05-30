@@ -88,7 +88,7 @@ interface IRedeemingBondingCurveBase_v1 {
 
     /// @notice Calculates and returns the static price for selling the issuance token.
     /// @return uint The static price for selling the issuance token.
-    function getStaticPriceForSelling() external returns (uint);
+    function getStaticPriceForSelling() external view returns (uint);
 
     /// @notice Calculates the amount of tokens to be redeemed based on a given deposit amount.
     /// @dev This function takes into account any applicable sell fees before computing the

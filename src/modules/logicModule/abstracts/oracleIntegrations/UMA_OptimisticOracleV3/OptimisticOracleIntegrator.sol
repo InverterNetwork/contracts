@@ -136,7 +136,8 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     function _setDefaultAssertionLiveness(uint64 _newLiveness) internal {
-        if (_newLiveness == 0) {
+        if (_newLiveness < 21_600) {
+            // 21600 seconds = 6 hours
             revert Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
         }
         assertionLiveness = _newLiveness;
@@ -197,7 +198,7 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Virtual Futcions to be overriden by Downstream Contracts
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This updates status on local storage (or deletes the assertion if it was deemed false). Any additional functionalities can be appended by the inheriting contract.
     function assertionResolvedCallback(
         bytes32 assertionId,
@@ -225,7 +226,7 @@ abstract contract OptimisticOracleIntegrator is
         } // Else delete the data assertion if it was false to save gas.
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public virtual;
 }
