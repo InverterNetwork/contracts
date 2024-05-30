@@ -96,7 +96,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    function hasRole(bytes32 roleId, address account)
+    function hasRole(bytes32 roleId, address who)
         public
         view
         virtual
@@ -104,31 +104,56 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         returns (bool)
     {
         if (isTokenGated[roleId]) {
-            return _hasTokenRole(roleId, account);
+            return _hasTokenRole(roleId, who);
         } else {
-            return super.hasRole(roleId, account);
+            return super.hasRole(roleId, who);
         }
     }
 
     /// @notice Grants a role to an address
     /// @param role The role to grant
-    /// @param account The address to grant the role to
+    /// @param who The address to grant the role to
     /// @return bool Returns if the role has been granted succesful
-    /// @dev Overrides {_grantRole} from AccesControl to enforce interface implementation when role is token-gated
-    function _grantRole(bytes32 role, address account)
+    /// @dev Overrides {_grantRole} from AccessControl to enforce interface implementation and threshold existence when role is token-gated
+    function _grantRole(bytes32 role, address who)
         internal
         virtual
         override
         returns (bool)
     {
         if (isTokenGated[role]) {
-            try TokenInterface(account).balanceOf(address(this)) {}
+            // Make sure that a threshold has been set before granting the role
+            if (getThresholdValue(role, who) == 0) {
+                revert Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold(
+                    role, who
+                );
+            }
+            try TokenInterface(who).balanceOf(address(this)) {}
             catch {
-                revert Module__AUT_TokenGated_Roles__InvalidToken(account);
+                revert Module__AUT_TokenGated_Roles__InvalidToken(who);
             }
         }
 
-        return super._grantRole(role, account);
+        return super._grantRole(role, who);
+    }
+
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @return bool Returns if revoke has been succesful
+    /// @dev Overrides {_revokeRole} to clean up threshold data on revoking
+    function _revokeRole(bytes32 role, address who)
+        internal
+        virtual
+        override
+        returns (bool)
+    {
+        if (isTokenGated[role]) {
+            // Set the threshold to 0 before revoking the role from the token
+            bytes32 thresholdId = keccak256(abi.encodePacked(role, who));
+            thresholdMap[thresholdId] = 0;
+            emit ChangedTokenThreshold(role, who, 0);
+        }
+        return super._revokeRole(role, who);
     }
 
     //--------------------------------------------------------------------------
@@ -176,8 +201,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         uint threshold
     ) external onlyModule(_msgSender()) {
         bytes32 roleId = generateRoleId(_msgSender(), role);
-        _grantRole(roleId, token);
         _setThreshold(roleId, token, threshold);
+        _grantRole(roleId, token);
     }
 
     /// @inheritdoc IAUT_TokenGated_Roles_v1
