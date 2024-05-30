@@ -19,18 +19,14 @@ interface IVirtualCollateralSupplyBase_v1 {
     // Events
 
     /// @notice Event emitted when virtual collateral supply has been set
-    event VirtualCollateralSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
+    event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
 
     /// @notice Event emitted when virtual collateral amount has been added
-    event VirtualCollateralAmountAdded(
-        uint indexed amountAdded, uint indexed newSupply
-    );
+    event VirtualCollateralAmountAdded(uint amountAdded, uint newSupply);
 
     /// @notice Event emitted when virtual collateral amount has been subtracted
     event VirtualCollateralAmountSubtracted(
-        uint indexed amountSubtracted, uint indexed newSupply
+        uint amountSubtracted, uint newSupply
     );
 
     //--------------------------------------------------------------------------
