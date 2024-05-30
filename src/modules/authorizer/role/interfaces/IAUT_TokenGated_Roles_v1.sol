@@ -39,7 +39,10 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice Checks if an account qualifies for a token-gated role.
     /// @param role The role to be checked.
     /// @param who The account to be checked.
-    function hasTokenRole(bytes32 role, address who) external returns (bool);
+    function hasTokenRole(bytes32 role, address who)
+        external
+        view
+        returns (bool);
 
     /// @notice Returns the threshold amount necessary to qualify for a given token role
     /// @param roleId The role to be checked on.

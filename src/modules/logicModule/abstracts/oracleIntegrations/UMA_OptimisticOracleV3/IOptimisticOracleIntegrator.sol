@@ -56,7 +56,10 @@ interface IOptimisticOracleIntegrator is
     /// @param assertionId The id of the Assertion to return.
     /// @return bool Wether the assertion is resolved.
     /// @return bytes32 The Assertion Data.
-    function getData(bytes32 assertionId) external returns (bool, bytes32);
+    function getData(bytes32 assertionId)
+        external
+        view
+        returns (bool, bytes32);
 
     /// @notice For a given assertionId, returns the assserion itself.
     /// @param assertionId The id of the Assertion to return.
