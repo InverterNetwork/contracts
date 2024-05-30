@@ -76,7 +76,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     );
 
     event KPICreated(
-        uint KPI_Id,
+        uint indexed KPI_Id,
         uint numOfTranches,
         uint totalKPIRewards,
         bool continuous,

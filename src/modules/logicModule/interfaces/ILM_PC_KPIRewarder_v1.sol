@@ -77,14 +77,14 @@ interface ILM_PC_KPIRewarder_v1 {
     // Events
 
     /// @notice Event emitted when a user stake is enqueued
-    event StakeEnqueued(address user, uint amount);
+    event StakeEnqueued(address indexed user, uint amount);
 
     /// @notice Event emitted when a user stake is dequeued before staking
-    event StakeDequeued(address user, uint amount);
+    event StakeDequeued(address indexed user, uint amount);
 
     /// @notice Event emitted when a KPI is created
     event KPICreated(
-        uint KPI_Id,
+        uint indexed KPI_Id,
         uint numOfTranches,
         uint totalKPIRewards,
         bool continuous,
@@ -100,7 +100,7 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
-    event FeeFundsDeposited(address token, uint amount);
+    event FeeFundsDeposited(address indexed token, uint amount);
 
     //--------------------------------------------------------------------------
     // Functions
