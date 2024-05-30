@@ -11,7 +11,7 @@ contract InverterTransparentUpgradeableProxyV1AccessMock is
     bool public upgradeToNewestVersionActive = true;
     uint public upgradeToNewestVersionCalledCounter;
 
-    function flipUpgradeToNewestVersionActive() external {
+    function flipUpgradeToNewestVersionActive() external view {
         upgradeToNewestVersionActive != upgradeToNewestVersionActive;
     }
 
@@ -21,15 +21,15 @@ contract InverterTransparentUpgradeableProxyV1AccessMock is
         bytes memory _data
     ) InverterTransparentUpgradeableProxy_v1(beacon, initialOwner, _data) {}
 
-    function direct__admin() external returns (address) {
+    function direct__admin() external view returns (address) {
         return _admin;
     }
 
-    function direct__beacon() external returns (address) {
+    function direct__beacon() external view returns (address) {
         return address(_beacon);
     }
 
-    function direct__implementation() external returns (address) {
+    function direct__implementation() external view returns (address) {
         return _implementation();
     }
 
