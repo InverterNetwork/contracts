@@ -20,9 +20,7 @@ library LibMetadata {
         returns (bytes32)
     {
         return keccak256(
-            abi.encodePacked(
-                metadata.majorVersion, metadata.url, metadata.title
-            )
+            abi.encode(metadata.majorVersion, metadata.url, metadata.title)
         );
     }
 

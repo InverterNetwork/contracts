@@ -17,7 +17,7 @@ contract LibMetadataTest is Test {
     function testIdentifier(IModule_v1.Metadata memory data) public {
         bytes32 got = LibMetadata.identifier(data);
         bytes32 want =
-            keccak256(abi.encodePacked(data.majorVersion, data.url, data.title));
+            keccak256(abi.encode(data.majorVersion, data.url, data.title));
 
         assertEq(got, want);
     }

@@ -113,7 +113,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev List of modules.
     address[] private _modules;
 
-    mapping(address => bool) _isModule;
+    mapping(address => bool) private _isModule;
 
     /// @dev Mapping to keep track of active timelocks for updating modules
     mapping(address module => ModuleUpdateTimelock timelock) public
