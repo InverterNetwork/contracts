@@ -33,6 +33,11 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice The given threshold is invalid
     error Module__AUT_TokenGated_Roles__InvalidThreshold(uint threshold);
 
+    /// @notice The role is token-gated but no threshold is set.
+    error Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold(
+        bytes32 role, address token
+    );
+
     //--------------------------------------------------------------------------
     // Public functions
 
