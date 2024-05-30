@@ -171,6 +171,7 @@ contract LM_PC_Staking_v1 is
         emit Unstaked(sender, amount);
     }
 
+    /// @inheritdoc ILM_PC_Staking_v1
     function claimRewards() external virtual nonReentrant {
         address recipient = _msgSender();
 
