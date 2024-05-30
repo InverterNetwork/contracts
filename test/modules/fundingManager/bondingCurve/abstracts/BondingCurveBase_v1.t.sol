@@ -47,21 +47,21 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     event BuyingEnabled();
     event BuyingDisabled();
-    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
+    event BuyFeeUpdated(uint newBuyFee, uint oldBuyFee);
     event TokensBought(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address buyer
     );
     event IssuanceTokenUpdated(
         address indexed oldToken, address indexed issuanceToken
     );
     event ProtocolFeeTransferred(
-        address indexed token, address indexed treasury, uint indexed feeAmount
+        address indexed token, address indexed treasury, uint feeAmount
     );
     event ProtocolFeeMinted(
-        address indexed token, address indexed treasury, uint indexed feeAmount
+        address indexed token, address indexed treasury, uint feeAmount
     );
     event ProjectCollateralFeeWithdrawn(address receiver, uint amount);
 

@@ -14,14 +14,10 @@ contract VirtualIssuanceSupplyBaseV1Test is Test {
     uint internal constant INITIAL_SUPPLY = 1000e18;
     uint internal constant MAX_UINT = type(uint).max;
 
-    event VirtualIssuanceSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
-    event VirtualIssuanceAmountAdded(
-        uint indexed amountAdded, uint indexed newSupply
-    );
+    event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
+    event VirtualIssuanceAmountAdded(uint amountAdded, uint newSupply);
     event VirtualIssuanceAmountSubtracted(
-        uint indexed amountSubtracted, uint indexed newSupply
+        uint amountSubtracted, uint newSupply
     );
 
     function setUp() public {

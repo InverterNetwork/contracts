@@ -24,7 +24,7 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Event emitted when sell fee is updated
     /// @param newSellFee The new sell fee
     /// @param oldSellFee The old sell fee
-    event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
+    event SellFeeUpdated(uint newSellFee, uint oldSellFee);
 
     /// @notice Event emitted when tokens have been succesfully redeemed
     /// @param receiver The address that will receive the redeemed tokens.
@@ -33,8 +33,8 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @param seller The address that initiated the sell order.
     event TokensSold(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address seller
     );
 
