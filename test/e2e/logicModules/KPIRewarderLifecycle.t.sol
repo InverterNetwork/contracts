@@ -407,7 +407,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     function _getExpectedRewardAmount(
         ILM_PC_KPIRewarder_v1.KPI memory resolvedKPI,
         uint assertedValue
-    ) internal view returns (uint) {
+    ) internal pure returns (uint) {
         uint rewardAmount;
 
         for (uint i; i < resolvedKPI.numOfTranches; i++) {

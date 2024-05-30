@@ -126,6 +126,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
 
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
         external
+        view
         onlyModule
         validClient(client)
     {

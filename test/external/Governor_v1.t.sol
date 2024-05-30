@@ -254,7 +254,7 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: Getter Functions
 
-    function testGetBeaconTimelock() public {
+    function testGetBeaconTimelock() public view {
         //Tivial Test
         //100% Testcoverage here we go xD
         gov.getBeaconTimelock(address(0));
@@ -263,7 +263,7 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: FeeManager Functions
 
-    function testGetFeeManager() public {
+    function testGetFeeManager() public view {
         //Tivial Test
         gov.getFeeManager();
     }

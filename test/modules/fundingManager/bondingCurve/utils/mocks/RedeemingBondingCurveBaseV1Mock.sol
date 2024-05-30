@@ -74,6 +74,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     function call_calculateSaleReturn(uint _depositAmount)
         external
+        view
         returns (uint)
     {
         return calculateSaleReturn(_depositAmount);
@@ -113,6 +114,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     function call_getSellFeesAndTreasuryAddresses()
         external
+        view
         returns (
             address collateralTreasury,
             address issuanceTreasury,

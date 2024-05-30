@@ -369,6 +369,50 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _mint(_treasury, _feeAmount);
             emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
         }
+
+        // mint fee amount
+        _mint(_treasury, _feeAmount);
+        emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
+    }
+
+    /// @dev This function takes into account any applicable buy fees before computing the
+    /// token amount to be minted. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
+    function _calculatePurchaseReturn(uint _depositAmount)
+        internal
+        view
+        virtual
+        returns (uint mintAmount)
+    {
+        if (_depositAmount == 0) {
+            revert Module__BondingCurveBase__InvalidDepositAmount();
+        }
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralBuyFeePercentage,
+            uint issuanceBuyFeePercentage
+        ) = _getBuyFeesAndTreasuryAddresses();
+
+        // Deduct protocol and project buy fee from collateral, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            _depositAmount, collateralBuyFeePercentage, buyFee
+        );
+
+        // Calculate issuance token return from formula
+        mintAmount = _issueTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol buy fee from issuance, if applicable
+        (mintAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+            _calculateNetAndSplitFees(mintAmount, issuanceBuyFeePercentage, 0);
+
+        // Return expected purchase return amount
+        return mintAmount;
     }
 
     /// @dev Sets the issuance token for the FundingManager.

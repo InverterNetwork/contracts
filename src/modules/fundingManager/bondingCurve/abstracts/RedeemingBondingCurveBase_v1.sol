@@ -146,7 +146,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function getStaticPriceForSelling() external virtual returns (uint);
+    function getStaticPriceForSelling() external view virtual returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
@@ -276,5 +276,75 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _validateWorkflowFee(_fee);
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
+    }
+
+    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
+    ///     sell operations
+    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
+    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
+    /// @return collateralSellFeePercentage The percentage fee to be collected from the collateral
+    ///     token being redeemed, expressed in BPS
+    /// @return issuanceSellFeePercentage The percentage fee to be collected from the issuance token
+    ///     being deposited, expressed in BPS
+    function _getSellFeesAndTreasuryAddresses()
+        internal
+        view
+        virtual
+        returns (
+            address collateralTreasury,
+            address issuanceTreasury,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        )
+    {
+        (collateralSellFeePercentage, collateralTreasury) =
+        _getFeeManagerCollateralFeeData(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
+        (issuanceSellFeePercentage, issuanceTreasury) =
+        _getFeeManagerIssuanceFeeData(
+            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+        );
+    }
+
+    /// @dev This function takes into account any applicable sell fees before computing the
+    /// collateral amount to be redeemed. Revert when depositAmount is zero.
+    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
+    function _calculateSaleReturn(uint _depositAmount)
+        internal
+        view
+        virtual
+        returns (uint redeemAmount)
+    {
+        if (_depositAmount == 0) {
+            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
+        }
+
+        // Get protocol fee percentages
+        (
+            /* collateralreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint collateralSellFeePercentage,
+            uint issuanceSellFeePercentage
+        ) = _getSellFeesAndTreasuryAddresses();
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
+
+        // Calculate redeem amount from formula
+        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
+
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount, collateralSellFeePercentage, sellFee
+        );
+
+        // Return redeem amount
+        return redeemAmount;
     }
 }
