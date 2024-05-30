@@ -308,6 +308,24 @@ contract AUT_RolesV1Test is Test {
         );
     }
 
+    function testGrantOwnerRoleFailsIfOrchestratorWillBeOwner() public {
+        vm.startPrank(address(ALBA));
+
+        bytes32 ownerRole = _authorizer.getOwnerRole();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1
+                    .Module__Authorizer__OrchestratorCannotHaveOwnerRole
+                    .selector
+            )
+        );
+
+        _authorizer.grantRole(ownerRole, address(_orchestrator));
+
+        vm.stopPrank();
+    }
+
     function testRevokeOwnerRole() public {
         //Add Bob as owner
         vm.startPrank(address(ALBA));
