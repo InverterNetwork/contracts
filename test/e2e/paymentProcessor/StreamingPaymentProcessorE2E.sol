@@ -97,7 +97,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
             independentUpdateAdmin: address(0)
         });
 
-        IOrchestrator_v1 orchestrator =
+        orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
