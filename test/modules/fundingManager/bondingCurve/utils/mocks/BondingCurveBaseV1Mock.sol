@@ -43,7 +43,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
         _setBuyFee(_buyFee);
 
-        if (_buyIsOpen == true) _openBuy();
+        if (_buyIsOpen) _openBuy();
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
