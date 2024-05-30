@@ -48,6 +48,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         returns (bool)
     {
         return interfaceId == type(IPP_Streaming_v1).interfaceId
+            || interfaceId == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
