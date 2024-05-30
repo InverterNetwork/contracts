@@ -192,12 +192,13 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
+        // Cache Collateral Token
+        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
+
         // Require that enough collateral token is held to be redeemable
         if (
             (collateralRedeemAmount + projectCollateralFeeCollected)
-                > __Module_orchestrator.fundingManager().token().balanceOf(
-                    address(this)
-                )
+                > collateralToken.balanceOf(address(this))
         ) {
             revert
                 Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
@@ -211,9 +212,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralreasury,
-            __Module_orchestrator.fundingManager().token(),
-            protocolFeeAmount
+            collateralreasury, collateralToken, protocolFeeAmount
         );
 
         // Add workflow fee if applicable
@@ -226,9 +225,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             revert Module__RedeemingBondingCurveBase__InsufficientOutputAmount();
         }
         // Transfer tokens to receiver
-        __Module_orchestrator.fundingManager().token().transfer(
-            _receiver, collateralRedeemAmount
-        );
+        collateralToken.transfer(_receiver, collateralRedeemAmount);
         // Emit event
         emit TokensSold(
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
