@@ -21,9 +21,6 @@ interface ILM_PC_Staking_v1 {
         uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
     );
 
-    /// @notice Event emitted when the reward duration is updated.
-    event RewardsDurationUpdated(uint newDuration);
-
     /// @notice Event emitted when a user stakes an amount.
     event Staked(address indexed user, uint amount);
 
