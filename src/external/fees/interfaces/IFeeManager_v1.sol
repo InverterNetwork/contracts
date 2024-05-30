@@ -84,13 +84,14 @@ interface IFeeManager_v1 {
 
     /// @notice Returns the default treasury for all workflows
     /// @return The address of the treasury
-    function getDefaultProtocolTreasury() external returns (address);
+    function getDefaultProtocolTreasury() external view returns (address);
 
     /// @notice Returns the treasury assigned to the given workflow
     /// @param workflow The address of the workflow
     /// @return The address of the treasury
     function getWorkflowTreasuries(address workflow)
         external
+        view
         returns (address);
 
     //---------------------------
@@ -98,11 +99,11 @@ interface IFeeManager_v1 {
 
     /// @notice Returns the default collateral fee for all workflows
     /// @return The collateral fee amount in relation to the BPS
-    function getDefaultCollateralFee() external returns (uint);
+    function getDefaultCollateralFee() external view returns (uint);
 
     /// @notice Returns the default issuance fee for all workflows
     /// @return The issuance fee amount in relation to the BPS
-    function getDefaultIssuanceFee() external returns (uint);
+    function getDefaultIssuanceFee() external view returns (uint);
 
     /// @notice Returns the collateral fee for a specific workflow module function
     /// @param workflow The address of the workflow that contains the module function
@@ -113,7 +114,7 @@ interface IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee);
+    ) external view returns (uint fee);
 
     /// @notice Returns the issuance fee for a specific workflow module function
     /// @param workflow The address of the workflow that contains the module function
@@ -124,7 +125,7 @@ interface IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee);
+    ) external view returns (uint fee);
 
     /// @notice Returns the collateral fee for a specific workflow module function and the according treasury address of the workflow
     /// @param workflow The address of the workflow that contains the module function
@@ -136,7 +137,7 @@ interface IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury);
+    ) external view returns (uint fee, address treasury);
 
     /// @notice Returns the issuance fee for a specific workflow module function and the according treasury address of the workflow
     /// @param workflow The address of the workflow that contains the module function
@@ -148,7 +149,7 @@ interface IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury);
+    ) external view returns (uint fee, address treasury);
 
     //--------------------------------------------------------------------------
     // Setter Functions

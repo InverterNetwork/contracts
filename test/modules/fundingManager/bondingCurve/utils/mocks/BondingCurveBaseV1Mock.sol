@@ -77,6 +77,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function call_calculatePurchaseReturn(uint _depositAmount)
         external
+        view
         returns (uint)
     {
         return _calculatePurchaseReturn(_depositAmount);
@@ -120,6 +121,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function call_getBuyFeesAndTreasuryAddresses()
         external
+        view
         returns (
             address collateralTreasury,
             address issuanceTreasury,

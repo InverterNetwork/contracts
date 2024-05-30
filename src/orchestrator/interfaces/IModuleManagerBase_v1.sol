@@ -84,7 +84,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Returns whether the address `module` is added as module.
     /// @param module The module to check.
     /// @return True if module added, false otherwise.
-    function isModule(address module) external returns (bool);
+    function isModule(address module) external view returns (bool);
 
     /// @notice Returns the list of all modules.
     /// @return List of all modules.

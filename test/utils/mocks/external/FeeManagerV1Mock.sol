@@ -9,43 +9,44 @@ contract FeeManagerV1Mock is IFeeManager_v1 {
     //---------------------------
     // Treasuries
 
-    function getDefaultProtocolTreasury() external returns (address) {}
+    function getDefaultProtocolTreasury() external view returns (address) {}
 
     function getWorkflowTreasuries(address workflow)
         external
+        view
         returns (address)
     {}
 
     //---------------------------
     // Fees
 
-    function getDefaultCollateralFee() external returns (uint) {}
+    function getDefaultCollateralFee() external view returns (uint) {}
 
-    function getDefaultIssuanceFee() external returns (uint) {}
+    function getDefaultIssuanceFee() external view returns (uint) {}
 
     function getCollateralWorkflowFee(
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee) {}
+    ) external view returns (uint fee) {}
 
     function getIssuanceWorkflowFee(
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee) {}
+    ) external view returns (uint fee) {}
 
     function getCollateralWorkflowFeeAndTreasury(
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury) {}
+    ) external view returns (uint fee, address treasury) {}
 
     function getIssuanceWorkflowFeeAndTreasury(
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury) {}
+    ) external view returns (uint fee, address treasury) {}
 
     //--------------------------------------------------------------------------
     // Setter Functions
