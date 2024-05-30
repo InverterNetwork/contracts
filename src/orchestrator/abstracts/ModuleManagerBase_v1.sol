@@ -275,7 +275,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev Expects `module` to be valid module address.
     /// @dev Expects `module` to not be enabled module.
-    function _commitAddModule(address module) private {
+    function _commitAddModule(address module) internal {
         // Add address to _modules list.
         _modules.push(module);
         _isModule[module] = true;
