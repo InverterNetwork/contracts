@@ -99,7 +99,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
 
     // Assertion mock data
-    uint64 constant ASSERTION_LIVENESS = 5000;
+    uint64 constant ASSERTION_LIVENESS = 25_000;
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
     bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
