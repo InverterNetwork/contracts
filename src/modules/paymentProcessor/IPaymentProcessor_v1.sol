@@ -18,6 +18,11 @@ interface IPaymentProcessor_v1 {
     /// @notice a client can only execute on its own orders
     error Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
 
+    /// @notice the paymentReceiver is not owed any money by the paymentClient
+    error Module__PaymentProcessor__NothingToClaim(
+        address paymentClient, address paymentReceiver
+    );
+
     //--------------------------------------------------------------------------
     // Events
 

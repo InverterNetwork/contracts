@@ -97,11 +97,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @notice insufficient tokens in the client to do payments
     error Module__PP_Streaming__InsufficientTokenBalanceInClient();
 
-    /// @notice the paymentReceiver is not owed any money by the paymentClient
-    error Module__PP_Streaming__NothingToClaim(
-        address paymentClient, address paymentReceiver
-    );
-
     /// @notice paymentReceiver's walletId for the paymentClient is not valid
     error Module__PP_Streaming__InvalidWallet(
         address paymentClient, address paymentReceiver, uint walletId
