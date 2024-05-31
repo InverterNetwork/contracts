@@ -2,10 +2,6 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
@@ -166,9 +162,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // Set sell fee percentage
         _setSellFee(bondingCurveProperties.sellFee);
         // Set buying functionality to open if true. By default buying is false
-        if (bondingCurveProperties.buyIsOpen == true) _openBuy();
+        if (bondingCurveProperties.buyIsOpen) _openBuy();
         // Set selling functionality to open if true. By default selling is false
-        if (bondingCurveProperties.sellIsOpen == true) _openSell();
+        if (bondingCurveProperties.sellIsOpen) _openSell();
     }
 
     //--------------------------------------------------------------------------

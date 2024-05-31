@@ -15,10 +15,11 @@ import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IBondingCurveBase_v1,
     IFundingManager_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
