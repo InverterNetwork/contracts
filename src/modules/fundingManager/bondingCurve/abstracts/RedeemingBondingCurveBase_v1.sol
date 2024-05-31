@@ -58,7 +58,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Modifiers
 
     modifier sellingIsEnabled() {
-        if (sellIsOpen == false) {
+        if (!sellIsOpen) {
             revert
                 Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
         }
@@ -118,7 +118,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function getStaticPriceForSelling() external virtual returns (uint);
+    function getStaticPriceForSelling() external view virtual returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
@@ -234,7 +234,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
     function _openSell() internal virtual {
-        if (sellIsOpen == true) {
+        if (sellIsOpen) {
             revert Module__RedeemingBondingCurveBase__SellingAlreadyOpen();
         }
         sellIsOpen = true;
@@ -243,7 +243,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
     function _closeSell() internal virtual {
-        if (sellIsOpen == false) {
+        if (!sellIsOpen) {
             revert Module__RedeemingBondingCurveBase__SellingAlreadyClosed();
         }
         sellIsOpen = false;
@@ -270,6 +270,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     ///     being deposited, expressed in BPS
     function _getSellFeesAndTreasuryAddresses()
         internal
+        view
         virtual
         returns (
             address collateralTreasury,
@@ -294,6 +295,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
     function _calculateSaleReturn(uint _depositAmount)
         internal
+        view
         virtual
         returns (uint redeemAmount)
     {

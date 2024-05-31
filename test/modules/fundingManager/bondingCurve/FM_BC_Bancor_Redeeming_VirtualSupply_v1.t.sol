@@ -92,26 +92,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     event TokensBought(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address buyer
     );
-    event VirtualCollateralAmountAdded(
-        uint indexed amountAdded, uint indexed newSupply
-    );
+    event VirtualCollateralAmountAdded(uint amountAdded, uint newSupply);
     event VirtualCollateralAmountSubtracted(
-        uint indexed amountSubtracted, uint indexed newSupply
+        uint amountSubtracted, uint newSupply
     );
     event VirtualIssuanceAmountSubtracted(
-        uint indexed amountSubtracted, uint indexed newSupply
+        uint amountSubtracted, uint newSupply
     );
-    event VirtualIssuanceAmountAdded(
-        uint indexed amountAdded, uint indexed newSupply
-    );
+    event VirtualIssuanceAmountAdded(uint amountAdded, uint newSupply);
     event TokensSold(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address seller
     );
     event BuyReserveRatioSet(
@@ -120,16 +116,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     event SellReserveRatioSet(
         uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
     );
-    event VirtualIssuanceSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
-    event VirtualCollateralSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
+    event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
+    event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
 
     //--------------------------------------------------------------------------
     // Events
-    event TransferOrchestratorToken(address indexed to, uint indexed amount);
+    event TransferOrchestratorToken(address indexed to, uint amount);
 
     function setUp() public virtual {
         // Deploy contracts
