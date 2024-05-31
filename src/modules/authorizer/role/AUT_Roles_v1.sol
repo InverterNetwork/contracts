@@ -89,12 +89,7 @@ contract AUT_Roles_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Constructor and initialization
-
-    constructor() {
-        // make the BURN_ADMIN_ROLE immutable
-        _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
-    }
+    // Initialization
 
     /// @inheritdoc Module_v1
     function init(
@@ -117,6 +112,9 @@ contract AUT_Roles_v1 is
         // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the orchestrator owners as "admins of the admin role",
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
+
+        // make the BURN_ADMIN_ROLE immutable
+        _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
 
         // Set up OWNER role structure:
 
