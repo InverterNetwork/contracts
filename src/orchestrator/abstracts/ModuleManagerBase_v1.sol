@@ -113,22 +113,11 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev List of modules.
     address[] private _modules;
 
-    mapping(address => bool) _isModule;
+    mapping(address => bool) private _isModule;
 
     /// @dev Mapping to keep track of active timelocks for updating modules
     mapping(address module => ModuleUpdateTimelock timelock) public
         moduleAddressToTimelock;
-
-    /// @dev Mapping of modules and access control roles to accounts and
-    ///      whether they holds that role.
-    /// @dev module address => role => account address => bool.
-    ///
-    /// @custom:invariant Modules can only mutate own account roles.
-    /// @custom:invariant Only modules can mutate not own account roles.
-    /// @custom:invariant Account can always renounce own roles.
-    /// @custom:invariant Roles only exist for enabled modules.
-    mapping(address => mapping(bytes32 => mapping(address => bool))) private
-        _moduleRoles;
 
     //--------------------------------------------------------------------------
     // Initializer

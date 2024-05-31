@@ -39,7 +39,7 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Event emitted when sell fee is updated
     /// @param newSellFee The new sell fee
     /// @param oldSellFee The old sell fee
-    event SellFeeUpdated(uint indexed newSellFee, uint indexed oldSellFee);
+    event SellFeeUpdated(uint newSellFee, uint oldSellFee);
 
     /// @notice Event emitted when tokens have been succesfully redeemed
     /// @param receiver The address that will receive the redeemed tokens.
@@ -48,8 +48,8 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @param seller The address that initiated the sell order.
     event TokensSold(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address seller
     );
 
@@ -71,24 +71,24 @@ interface IRedeemingBondingCurveBase_v1 {
     function sell(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the selling functionality for the collateral.
-    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner.
     ///      Reverts if selling is already open.
     function openSell() external;
 
     /// @notice Closes the selling functionality for the collateral.
-    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner.
     ///      Reverts if selling is already closed.
     function closeSell() external;
 
     /// @notice Sets the fee percentage for selling collateral, payed in collateral
-    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner.
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setSellFee(uint _fee) external;
 
     /// @notice Calculates and returns the static price for selling the issuance token.
     /// @return uint The static price for selling the issuance token.
-    function getStaticPriceForSelling() external returns (uint);
+    function getStaticPriceForSelling() external view returns (uint);
 
     /// @notice Calculates the amount of tokens to be redeemed based on a given deposit amount.
     /// @dev This function takes into account any applicable sell fees before computing the

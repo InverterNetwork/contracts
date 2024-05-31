@@ -13,6 +13,9 @@ import {
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
+import {IERC20PaymentClientBase_v1} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v1.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -21,8 +24,7 @@ import {
     LM_PC_KPIRewarder_v1,
     ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v1,
-    IERC20PaymentClientBase_v1
+    ILM_PC_Staking_v1
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
 
 import {
@@ -42,7 +44,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
 
     OptimisticOracleV3Mock ooV3;
 
-    uint64 immutable DEFAULT_LIVENESS = 5000;
+    uint64 immutable DEFAULT_LIVENESS = 25_000;
 
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
@@ -76,7 +78,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     );
 
     event KPICreated(
-        uint KPI_Id,
+        uint indexed KPI_Id,
         uint numOfTranches,
         uint totalKPIRewards,
         bool continuous,

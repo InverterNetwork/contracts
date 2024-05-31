@@ -21,22 +21,18 @@ interface IVirtualIssuanceSupplyBase_v1 {
     /// @notice Event emitted when virtual issuance supply has been set
     /// @param newSupply The new virtual issuance supply
     /// @param oldSupply The old virtual issuance supply
-    event VirtualIssuanceSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
+    event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
 
     /// @notice Event emitted when virtual issuance amount has been added
     /// @param amountAdded The amount added to the virtual issuance supply
     /// @param newSupply The new virtual issuance supply
-    event VirtualIssuanceAmountAdded(
-        uint indexed amountAdded, uint indexed newSupply
-    );
+    event VirtualIssuanceAmountAdded(uint amountAdded, uint newSupply);
 
     /// @notice Event emitted when virtual issuance amount has ben subtracted
     /// @param amountSubtracted The amount subtracted from the virtual issuance supply
     /// @param newSupply The new virtual issuance supply
     event VirtualIssuanceAmountSubtracted(
-        uint indexed amountSubtracted, uint indexed newSupply
+        uint amountSubtracted, uint newSupply
     );
 
     //--------------------------------------------------------------------------

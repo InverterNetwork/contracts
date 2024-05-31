@@ -109,6 +109,7 @@ interface IGovernor_v1 {
     /// @return The timelock of the beacon address
     function getBeaconTimelock(address beacon)
         external
+        view
         returns (Timelock memory);
 
     //--------------------------------------------------------------------------

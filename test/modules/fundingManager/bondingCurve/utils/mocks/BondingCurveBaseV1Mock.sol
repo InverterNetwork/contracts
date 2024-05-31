@@ -43,7 +43,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
         _setBuyFee(_buyFee);
 
-        if (_buyIsOpen == true) _openBuy();
+        if (_buyIsOpen) _openBuy();
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)
@@ -77,6 +77,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function call_calculatePurchaseReturn(uint _depositAmount)
         external
+        view
         returns (uint)
     {
         return _calculatePurchaseReturn(_depositAmount);
@@ -120,6 +121,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function call_getBuyFeesAndTreasuryAddresses()
         external
+        view
         returns (
             address collateralTreasury,
             address issuanceTreasury,

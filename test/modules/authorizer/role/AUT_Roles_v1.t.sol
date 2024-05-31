@@ -416,7 +416,7 @@ contract AUT_RolesV1Test is Test {
 
         vm.startPrank(address(BOB));
         for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectRevert(); // Just a general revert since AccesControl doesn't have error types
+            vm.expectRevert(); // Just a general revert since AccessControl doesn't have error types
             _authorizer.grantRole(managerRole, newAuthorized[i]);
         }
         vm.stopPrank();
@@ -488,7 +488,7 @@ contract AUT_RolesV1Test is Test {
 
         vm.startPrank(address(BOB));
         for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectRevert(); // Just a general revert since AccesControl doesn't have error types
+            vm.expectRevert(); // Just a general revert since AccessControl doesn't have error types
             _authorizer.revokeRole(managerRole, newAuthorized[i]);
         }
         vm.stopPrank();

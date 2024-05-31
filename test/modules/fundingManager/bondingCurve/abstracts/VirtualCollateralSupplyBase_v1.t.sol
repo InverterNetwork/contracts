@@ -14,16 +14,12 @@ contract VirtualCollateralSupplyBaseV1Test is Test {
     uint internal constant INITIAL_SUPPLY = 1000e18;
     uint internal constant MAX_UINT = type(uint).max;
 
-    event VirtualCollateralSupplySet(
-        uint indexed newSupply, uint indexed oldSupply
-    );
+    event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
 
-    event VirtualCollateralAmountAdded(
-        uint indexed amountAdded, uint indexed newSupply
-    );
+    event VirtualCollateralAmountAdded(uint amountAdded, uint newSupply);
 
     event VirtualCollateralAmountSubtracted(
-        uint indexed amountSubtracted, uint indexed newSupply
+        uint amountSubtracted, uint newSupply
     );
 
     function setUp() public {
