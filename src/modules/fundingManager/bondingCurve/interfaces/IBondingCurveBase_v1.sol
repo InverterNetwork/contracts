@@ -43,7 +43,7 @@ interface IBondingCurveBase_v1 {
     event BuyingDisabled();
 
     /// @notice Event emitted when buy fee is updated
-    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
+    event BuyFeeUpdated(uint newBuyFee, uint oldBuyFee);
 
     /// @notice Event emitted when the issuance token is updated
     event IssuanceTokenUpdated(
@@ -60,8 +60,8 @@ interface IBondingCurveBase_v1 {
     /// @param buyer The address that initiated the buy order.
     event TokensBought(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address buyer
     );
 
@@ -77,7 +77,7 @@ interface IBondingCurveBase_v1 {
     /// @param treasury The protocol treasury address receiving the token fee amount
     /// @param feeAmount The fee amount minted to the treasury
     event ProtocolFeeMinted(
-        address indexed token, address indexed treasury, uint indexed feeAmount
+        address indexed token, address indexed treasury, uint feeAmount
     );
 
     /// @notice Event emitted when protocol fee has been transferred to the treasury
@@ -85,7 +85,7 @@ interface IBondingCurveBase_v1 {
     /// @param treasury The protocol treasury address receiving the token fee amount
     /// @param feeAmount The fee amount transferred to the treasury
     event ProtocolFeeTransferred(
-        address indexed token, address indexed treasury, uint indexed feeAmount
+        address indexed token, address indexed treasury, uint feeAmount
     );
 
     //--------------------------------------------------------------------------
@@ -115,24 +115,24 @@ interface IBondingCurveBase_v1 {
     function buy(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the buying functionality for the token.
-    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner.
     ///      Reverts if buying is already open.
     function openBuy() external;
 
     /// @notice Closes the buying functionality for the token.
-    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner.
     ///      Reverts if buying is already closed.
     function closeBuy() external;
 
     /// @notice Sets the fee percentage for buying tokens, payed in collateral
-    /// @dev Only callable by the Orchestrator_v1 owner, or Manager.
+    /// @dev Only callable by the Orchestrator_v1 owner.
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setBuyFee(uint _fee) external;
 
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// @return uint The static price for buying the issuance token.
-    function getStaticPriceForBuying() external returns (uint);
+    function getStaticPriceForBuying() external view returns (uint);
 
     /// @notice Calculates the amount of tokens to be minted based on a given deposit amount.
     /// @dev This function takes into account any applicable buy fees before computing the

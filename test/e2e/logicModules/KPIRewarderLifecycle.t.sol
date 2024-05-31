@@ -22,10 +22,11 @@ import {
     LM_PC_KPIRewarder_v1,
     ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
-    OptimisticOracleV3Interface,
-    ILM_PC_Staking_v1,
-    IERC20PaymentClientBase_v1
+    ILM_PC_Staking_v1
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
+
+import {OptimisticOracleV3Interface} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -99,7 +100,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
 
     // Assertion mock data
-    uint64 constant ASSERTION_LIVENESS = 5000;
+    uint64 constant ASSERTION_LIVENESS = 25_000;
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
     bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
@@ -396,7 +397,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     function _getExpectedRewardAmount(
         ILM_PC_KPIRewarder_v1.KPI memory resolvedKPI,
         uint assertedValue
-    ) internal view returns (uint) {
+    ) internal pure returns (uint) {
         uint rewardAmount;
 
         for (uint i; i < resolvedKPI.numOfTranches; i++) {

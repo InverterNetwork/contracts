@@ -1,24 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {
-    ILM_PC_Staking_v1,
-    LM_PC_Staking_v1,
-    SafeERC20,
-    IERC20,
-    IERC20PaymentClientBase_v1,
-    ReentrancyGuard
-} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
-
-import {
-    IOptimisticOracleIntegrator,
-    OptimisticOracleIntegrator,
-    OptimisticOracleV3CallbackRecipientInterface,
-    OptimisticOracleV3Interface,
-    ClaimData
-} from
-    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
-
 interface ILM_PC_KPIRewarder_v1 {
     //--------------------------------------------------------------------------
     // Types
@@ -77,14 +59,14 @@ interface ILM_PC_KPIRewarder_v1 {
     // Events
 
     /// @notice Event emitted when a user stake is enqueued
-    event StakeEnqueued(address user, uint amount);
+    event StakeEnqueued(address indexed user, uint amount);
 
     /// @notice Event emitted when a user stake is dequeued before staking
-    event StakeDequeued(address user, uint amount);
+    event StakeDequeued(address indexed user, uint amount);
 
     /// @notice Event emitted when a KPI is created
     event KPICreated(
-        uint KPI_Id,
+        uint indexed KPI_Id,
         uint numOfTranches,
         uint totalKPIRewards,
         bool continuous,
@@ -93,7 +75,7 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
-    event FeeFundsDeposited(address token, uint amount);
+    event FeeFundsDeposited(address indexed token, uint amount);
 
     //--------------------------------------------------------------------------
     // Functions
