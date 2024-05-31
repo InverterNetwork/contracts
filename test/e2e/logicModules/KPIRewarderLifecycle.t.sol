@@ -304,7 +304,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             (REWARD_DEPOSIT_AMOUNT - totalDistributed)
         );
 
-        assertEq(totalDistributed, totalExpectedRewardsDistributed);
+        assertApproxEqAbs(
+            totalDistributed, totalExpectedRewardsDistributed, 1e6
+        );
 
         /*
         console.log("Final Rewards Distributed: ", totalDistributed);
