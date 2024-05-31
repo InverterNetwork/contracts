@@ -63,6 +63,14 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         _;
     }
 
+    //--------------------------------------------------------------------------
+    // State
+
+    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
+    /// @dev paymentClient => paymentReceiver => unclaimable Amount
+    mapping(address => mapping(address => uint)) internal
+        unclaimableAmountsForRecipient;
+
     /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
@@ -88,14 +96,11 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     {
         // Collect outstanding orders and their total token amount.
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
-        uint totalAmount;
-        (orders, totalAmount) = client.collectPaymentOrders();
 
-        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        client.amountPaid(totalAmount);
+        (orders,) = client.collectPaymentOrders();
 
         // Cache token.
-        IERC20 token_ = token();
+        address token_ = address(token());
 
         // Transfer tokens from {IERC20PaymentClientBase_v1} to order recipients.
         address recipient;
@@ -105,10 +110,6 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             recipient = orders[i].recipient;
             amount = orders[i].amount;
 
-            token_.safeTransferFrom(address(client), recipient, amount);
-
-            emit TokensReleased(recipient, address(token_), amount);
-
             emit PaymentOrderProcessed(
                 address(client),
                 recipient,
@@ -116,6 +117,29 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
                 orders[i].createdAt,
                 orders[i].dueTo
             );
+
+            (bool success, bytes memory data) = token_.call(
+                abi.encodeWithSelector(
+                    IERC20(token_).transferFrom.selector,
+                    address(client),
+                    recipient,
+                    amount
+                )
+            );
+
+            //If call was success
+            if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+                emit TokensReleased(recipient, token_, amount);
+
+                //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+                client.amountPaid(amount);
+            } else {
+                emit UnclaimableAmountAdded(address(client), recipient, amount);
+                //Adds the walletId to the array of unclaimable wallet ids
+
+                unclaimableAmountsForRecipient[address(client)][recipient] +=
+                    amount;
+            }
         }
     }
 
@@ -127,5 +151,13 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     {
         //Since we pay out on processing, this function does nothing
         return;
+    }
+
+    function unclaimable(address client, address paymentReceiver)
+        public
+        view
+        returns (uint amount)
+    {
+        return unclaimableAmountsForRecipient[client][paymentReceiver];
     }
 }

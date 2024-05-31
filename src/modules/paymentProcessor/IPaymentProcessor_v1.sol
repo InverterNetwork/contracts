@@ -42,6 +42,14 @@ interface IPaymentProcessor_v1 {
         address indexed recipient, address indexed token, uint amount
     );
 
+    /// @notice Emitted when a payment was unclaimable due to a token error.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that wshould have received the payment.
+    /// @param amount The amount of tokens that were unclaimable.
+    event UnclaimableAmountAdded(
+        address indexed paymentClient, address indexed recipient, uint amount
+    );
+
     //--------------------------------------------------------------------------
     // Functions
 
@@ -64,4 +72,12 @@ interface IPaymentProcessor_v1 {
 
     /// @notice Returns the IERC20 token the payment processor can process.
     function token() external view returns (IERC20);
+
+    /// @notice Getter for the amount of tokens that could not be claimed.
+    /// @param client address of the payment client
+    /// @param paymentReceiver PaymentReceiver's address.
+    function unclaimable(address client, address paymentReceiver)
+        external
+        view
+        returns (uint amount);
 }

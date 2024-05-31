@@ -61,6 +61,14 @@ contract PP_SimpleV1Test is ModuleTest {
         address indexed recipient, address indexed token, uint amount
     );
 
+    /// @notice Emitted when a payment was unclaimable due to a token error.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param recipient The address that wshould have received the payment.
+    /// @param amount The amount of tokens that were unclaimable.
+    event UnclaimableAmountAdded(
+        address indexed paymentClient, address indexed recipient, uint amount
+    );
+
     function setUp() public {
         address impl = address(new PP_Simple_v1());
         paymentProcessor = PP_Simple_v1(Clones.clone(impl));
@@ -133,7 +141,11 @@ contract PP_SimpleV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Payment Processing
 
-    function testProcessPayments(address recipient, uint amount) public {
+    function testProcessPayments(
+        address recipient,
+        uint amount,
+        bool paymentsFail
+    ) public {
         vm.assume(recipient != address(paymentProcessor));
         vm.assume(recipient != address(paymentClient));
         vm.assume(recipient != address(0));
@@ -149,8 +161,10 @@ contract PP_SimpleV1Test is ModuleTest {
             })
         );
 
-        // Call processPayments.
-        vm.prank(address(paymentClient));
+        if (paymentsFail) {
+            // transfers will fail by returning false now
+            _token.toggleReturnFalse();
+        }
 
         vm.expectEmit(true, true, true, true);
         emit PaymentOrderProcessed(
@@ -160,18 +174,42 @@ contract PP_SimpleV1Test is ModuleTest {
             block.timestamp,
             block.timestamp
         );
-        emit TokensReleased(recipient, address(_token), amount);
+        if (!paymentsFail) {
+            vm.expectEmit(true, true, true, true);
+            emit TokensReleased(recipient, address(_token), amount);
+        } else {
+            vm.expectEmit(true, true, true, true);
+            emit UnclaimableAmountAdded(
+                address(paymentClient), recipient, amount
+            );
+        }
 
+        // Call processPayments.
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
-
-        // Check correct balances.
-        assertEq(_token.balanceOf(address(recipient)), amount);
-        assertEq(_token.balanceOf(address(paymentClient)), 0);
 
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
 
-        assertEq(amount, paymentClient.amountPaidCounter());
+        //If call doesnt fail
+        if (!paymentsFail) {
+            // Check correct balances.
+            assertEq(_token.balanceOf(address(recipient)), amount);
+            assertEq(_token.balanceOf(address(paymentClient)), 0);
+
+            assertEq(amount, paymentClient.amountPaidCounter());
+            assertEq(
+                paymentProcessor.unclaimable(address(paymentClient), recipient),
+                0
+            );
+        } //If call fails
+        else {
+            assertEq(0, paymentClient.amountPaidCounter());
+            assertEq(
+                paymentProcessor.unclaimable(address(paymentClient), recipient),
+                amount
+            );
+        }
     }
 
     function testProcessPaymentsFailsWhenCalledByNonModule(address nonModule)
