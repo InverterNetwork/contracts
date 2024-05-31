@@ -97,6 +97,7 @@ contract GovernorV1Test is Test {
     }
 
     function testAccessibleBeacon(uint seed, address target) public {
+        vm.assume(target != 0x4e59b44847b379578588920cA78FbF26c0B4956C); // Create2Deployer
         bool shouldFail = true;
         //Restrict seed to one of 3 variants
         seed = bound(seed, 0, 2);
