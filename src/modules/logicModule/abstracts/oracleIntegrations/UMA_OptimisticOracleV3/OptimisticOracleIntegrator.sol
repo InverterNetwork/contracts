@@ -23,7 +23,6 @@ import {ClaimData} from
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,

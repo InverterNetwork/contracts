@@ -2,10 +2,6 @@
 pragma solidity 0.8.23;
 
 // Internal Interfaces
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
