@@ -69,7 +69,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Modifiers
 
     modifier buyingIsEnabled() {
-        if (buyIsOpen == false) {
+        if (!buyIsOpen) {
             revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
         }
         _;
@@ -254,7 +254,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev Opens the buy functionality by setting the state variable `buyIsOpen` to true.
     function _openBuy() internal virtual {
-        if (buyIsOpen == true) {
+        if (buyIsOpen) {
             revert Module__BondingCurveBase__BuyingAlreadyOpen();
         }
         buyIsOpen = true;
@@ -263,7 +263,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev Closes the buy functionality by setting the state variable `buyIsOpen` to false.
     function _closeBuy() internal virtual {
-        if (buyIsOpen == false) {
+        if (!buyIsOpen) {
             revert Module__BondingCurveBase__BuyingAlreadyClosed();
         }
         buyIsOpen = false;
