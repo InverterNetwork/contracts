@@ -1,24 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {
-    ILM_PC_Staking_v1,
-    LM_PC_Staking_v1,
-    SafeERC20,
-    IERC20,
-    IERC20PaymentClientBase_v1,
-    ReentrancyGuard
-} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
-
-import {
-    IOptimisticOracleIntegrator,
-    OptimisticOracleIntegrator,
-    OptimisticOracleV3CallbackRecipientInterface,
-    OptimisticOracleV3Interface,
-    ClaimData
-} from
-    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
-
 interface ILM_PC_KPIRewarder_v1 {
     //--------------------------------------------------------------------------
     // Types
