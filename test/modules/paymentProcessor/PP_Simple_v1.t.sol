@@ -305,4 +305,91 @@ contract PP_SimpleV1Test is ModuleTest {
         );
         paymentProcessor.cancelRunningPayments(otherERC20PaymentClient);
     }
+
+    function testClaimPreviouslyUnclaimable(address[] memory recipients)
+        public
+    {
+        vm.assume(recipients.length < 30);
+
+        for (uint i = 0; i < recipients.length; i++) {
+            //If recipient is invalid change it
+            if (recipients[i] == address(0) || recipients[i].code.length != 0) {
+                recipients[i] = address(0x1);
+            }
+        }
+
+        // transfers will fail by returning false now
+        _token.toggleReturnFalse();
+
+        // Add payment order to client and call processPayments.
+
+        for (uint i = 0; i < recipients.length; i++) {
+            paymentClient.addPaymentOrder(
+                IERC20PaymentClientBase_v1.PaymentOrder({
+                    recipient: recipients[i],
+                    amount: 1,
+                    createdAt: block.timestamp,
+                    dueTo: block.timestamp
+                })
+            );
+        }
+        vm.prank(address(paymentClient));
+        paymentProcessor.processPayments(paymentClient);
+
+        // transfers will not fail anymore
+        _token.toggleReturnFalse();
+
+        uint amount;
+        address recipient;
+        uint amountPaid;
+        for (uint i = 0; i < recipients.length; i++) {
+            recipient = recipients[i];
+
+            //Check that recipients are not handled twice
+            //In case that the random array did it multiple times
+            if (recipientsHandled[recipient]) continue;
+            recipientsHandled[recipient] = true;
+
+            amount =
+                paymentProcessor.unclaimable(address(paymentClient), recipient);
+
+            //Do call
+            vm.expectEmit(true, true, true, true);
+            emit TokensReleased(recipient, address(_token), amount);
+
+            vm.prank(recipient);
+            paymentProcessor.claimPreviouslyUnclaimable(
+                address(paymentClient), recipient
+            );
+
+            assertEq(
+                paymentProcessor.unclaimable(address(paymentClient), recipient),
+                0
+            );
+
+            //Amount send
+            assertEq(_token.balanceOf(recipient), amount);
+
+            //Check that amountPaid is correct in PaymentClient
+            amountPaid += amount;
+            assertEq(paymentClient.amountPaidCounter(), amountPaid);
+        }
+    }
+
+    mapping(address => bool) recipientsHandled;
+
+    function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor_v1
+                    .Module__PaymentProcessor__NothingToClaim
+                    .selector,
+                address(paymentClient),
+                address(this)
+            )
+        );
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), address(0x1)
+        );
+    }
 }

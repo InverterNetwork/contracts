@@ -153,11 +153,51 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         return;
     }
 
+    /// @inheritdoc IPaymentProcessor_v1
     function unclaimable(address client, address paymentReceiver)
         public
         view
         returns (uint amount)
     {
         return unclaimableAmountsForRecipient[client][paymentReceiver];
+    }
+
+    /// @inheritdoc IPaymentProcessor_v1
+    function claimPreviouslyUnclaimable(address client, address receiver)
+        external
+    {
+        if (unclaimable(client, _msgSender()) == 0) {
+            revert Module__PaymentProcessor__NothingToClaim(
+                client, _msgSender()
+            );
+        }
+
+        _claimPreviouslyUnclaimable(client, receiver);
+    }
+
+    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
+    /// @param client address of the payment client
+    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
+    function _claimPreviouslyUnclaimable(
+        address client,
+        address paymentReceiver
+    ) internal {
+        //get amount
+
+        address sender = _msgSender();
+        //copy value over
+        uint amount = unclaimableAmountsForRecipient[client][sender];
+        //Delete the field
+        delete unclaimableAmountsForRecipient[client][sender];
+
+        IERC20 _token = token();
+
+        //Call has to succeed otherwise no state change
+        _token.safeTransferFrom(client, paymentReceiver, amount);
+
+        emit TokensReleased(paymentReceiver, address(_token), amount);
+
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        IERC20PaymentClientBase_v1(client).amountPaid(amount);
     }
 }

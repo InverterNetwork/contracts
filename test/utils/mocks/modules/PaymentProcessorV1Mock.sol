@@ -53,4 +53,8 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
         view
         returns (uint amount)
     {}
+
+    function claimPreviouslyUnclaimable(address client, address receiver)
+        external
+    {}
 }
