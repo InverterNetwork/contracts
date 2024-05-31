@@ -45,9 +45,9 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
         _setBuyFee(_buyFee);
 
-        if (_buyIsOpen == true) _openBuy();
+        if (_buyIsOpen) _openBuy();
 
-        if (_sellIsOpen == true) _openSell();
+        if (_sellIsOpen) _openSell();
     }
 
     function _issueTokensFormulaWrapper(uint _depositAmount)

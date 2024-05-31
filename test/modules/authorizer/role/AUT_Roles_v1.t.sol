@@ -167,6 +167,11 @@ contract AUT_RolesV1Test is Test {
             abi.encode(initialAuth, address(this))
         );
 
+        assertEq(
+            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
+            testAuthorizer.BURN_ADMIN_ROLE()
+        );
+
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
@@ -192,6 +197,11 @@ contract AUT_RolesV1Test is Test {
             abi.encode(initialAuth, address(this))
         );
 
+        assertEq(
+            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
+            testAuthorizer.BURN_ADMIN_ROLE()
+        );
+
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
@@ -213,6 +223,11 @@ contract AUT_RolesV1Test is Test {
             IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
+        );
+
+        assertEq(
+            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
+            testAuthorizer.BURN_ADMIN_ROLE()
         );
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));

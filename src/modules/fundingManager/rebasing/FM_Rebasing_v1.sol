@@ -5,6 +5,7 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -16,9 +17,10 @@ import {
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
-import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
+import {
+    IERC20,
+    IERC20Metadata
+} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";

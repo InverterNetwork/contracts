@@ -59,12 +59,12 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     function mintIssuanceTokenTo(address _receiver, uint _amount) external;
 
     /// @notice Set the reserve ratio used for issuing tokens on a bonding curve.
-    /// @dev This function can only be called by the Orchestrator_v1 owner, or Manager.
+    /// @dev This function can only be called by the Orchestrator_v1 owner.
     /// @param _reserveRatio The new reserve ratio for buying, expressed in PPM.
     function setReserveRatioForBuying(uint32 _reserveRatio) external;
 
     /// @notice Set the reserve ratio used for redeeming tokens on a bonding curve.
-    /// @dev This function can only be called by the Orchestrator_v1 owner, or Manager.
+    /// @dev This function can only be called by the Orchestrator_v1 owner.
     /// @param _reserveRatio The new reserve ratio for selling, expressed in PPM.
     function setReserveRatioForSelling(uint32 _reserveRatio) external;
 

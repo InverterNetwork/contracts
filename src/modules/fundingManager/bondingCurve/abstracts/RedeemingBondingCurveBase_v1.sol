@@ -58,7 +58,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Modifiers
 
     modifier sellingIsEnabled() {
-        if (sellIsOpen == false) {
+        if (!sellIsOpen) {
             revert
                 Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
         }
@@ -237,7 +237,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @dev Opens the sell functionality by setting the state variable `sellIsOpen` to true.
     function _openSell() internal virtual {
-        if (sellIsOpen == true) {
+        if (sellIsOpen) {
             revert Module__RedeemingBondingCurveBase__SellingAlreadyOpen();
         }
         sellIsOpen = true;
@@ -246,7 +246,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @dev Closes the sell functionality by setting the state variable `sellIsOpen` to false.
     function _closeSell() internal virtual {
-        if (sellIsOpen == false) {
+        if (!sellIsOpen) {
             revert Module__RedeemingBondingCurveBase__SellingAlreadyClosed();
         }
         sellIsOpen = false;
