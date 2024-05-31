@@ -134,14 +134,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             address(this)
         );
 
-        // Set issuance token. This also caches the decimals
-        _setIssuanceToken(address(_issuanceToken));
-
         // Set accepted token
         _token = IERC20(_acceptedToken);
 
         // Cache token decimals for collateral
         collateralTokenDecimals = IERC20Metadata(address(_token)).decimals();
+
+        // Set issuance token. This also caches the decimals
+        _setIssuanceToken(address(_issuanceToken));
 
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
