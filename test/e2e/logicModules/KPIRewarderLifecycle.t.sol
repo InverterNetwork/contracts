@@ -22,10 +22,11 @@ import {
     LM_PC_KPIRewarder_v1,
     ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
-    OptimisticOracleV3Interface,
-    ILM_PC_Staking_v1,
-    IERC20PaymentClientBase_v1
+    ILM_PC_Staking_v1
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
+
+import {OptimisticOracleV3Interface} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";

@@ -21,7 +21,6 @@ import {OptimisticOracleV3Interface} from
 import {ClaimData} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 /**
  * @title Optimistic Oracle Integrator

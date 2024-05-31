@@ -13,6 +13,9 @@ import {
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
+import {IERC20PaymentClientBase_v1} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v1.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -21,8 +24,7 @@ import {
     LM_PC_KPIRewarder_v1,
     ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v1,
-    IERC20PaymentClientBase_v1
+    ILM_PC_Staking_v1
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
 
 import {
