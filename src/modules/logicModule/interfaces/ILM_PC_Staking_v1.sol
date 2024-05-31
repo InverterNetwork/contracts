@@ -71,11 +71,13 @@ interface ILM_PC_Staking_v1 {
 
     /// @notice Stake a specified amount of tokens to earn rewards
     /// @dev should tokens already be staked, then the sending address will collect the rewards up until this point
+    /// @dev Fee on transfer tokens is currently not supported
     /// @param amount : how much token should be staked
     function stake(uint amount) external;
 
     /// @notice Unstake a specified amount of tokens and collect rewards
     /// @dev Reaps the rewards collected up to this point for the msg.Sender()
+    /// @dev Fee on transfer tokens is currently not supported
     /// @param amount : how much token should be unstaked
     function unstake(uint amount) external;
 
