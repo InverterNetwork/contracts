@@ -182,8 +182,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         issuanceFeeAmount = protocolFeeAmount;
 
-        // Process the protocol fee
-        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
         // Calculate redeem amount based on upstream formula
         uint collateralRedeemAmount = _redeemTokensFormulaWrapper(netDeposit);
 
@@ -191,6 +189,9 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
+
+        // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out the backing collateral
+        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
         // Require that enough collateral token is held to be redeemable
         if (
