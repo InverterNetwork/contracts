@@ -586,6 +586,78 @@ contract OrchestratorV1Test is Test {
         );
         orchestrator.initiateRemoveModuleWithTimelock(currentPaymentProcessor);
     }
+    /*  Test function executeRemoveModule
+        ├── Given the module address to be removed is the current authorizer
+        │   └── When the function executeRemoveModule() gets called
+        │       └── Then the function should revert
+        ├── Given the module address to be removed is the current funding manager
+        │   └── When the function executeRemoveModule() gets called
+        │       └── Then the function should revert
+        └── Given the module address to be removed is the current payment processor
+            └── When the function executeRemoveModule() gets called
+                └── Then the function should revert
+    */
+
+    function testExecuteRemoveModule_failsGivenModuleAddressIsCurrentAuthorizer(
+    ) public {
+        orchestrator.init(
+            1,
+            new address[](0),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+        address currentAuthorizer = address(orchestrator.authorizer());
+
+        vm.expectRevert(
+            IOrchestrator_v1.Orchestrator__InvalidRemovalOfAuthorizer.selector
+        );
+        orchestrator.executeRemoveModule(currentAuthorizer);
+    }
+
+    function testExecuteRemoveModule_failsGivenModuleAddressIsCurrentFundingManager(
+    ) public {
+        orchestrator.init(
+            1,
+            new address[](0),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+        address currentFundingManager = address(orchestrator.fundingManager());
+
+        vm.expectRevert(
+            IOrchestrator_v1
+                .Orchestrator__InvalidRemovalOfFundingManager
+                .selector
+        );
+        orchestrator.executeRemoveModule(currentFundingManager);
+    }
+
+    function testExecuteRemoveModule_failsGivenModuleAddressIsCurrentPaymentProcessor(
+    ) public {
+        orchestrator.init(
+            1,
+            new address[](0),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+        address currentPaymentProcessor =
+            address(orchestrator.paymentProcessor());
+
+        vm.expectRevert(
+            IOrchestrator_v1
+                .Orchestrator__InvalidRemovalOfPaymentProcessor
+                .selector
+        );
+        orchestrator.executeRemoveModule(currentPaymentProcessor);
+    }
 
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution

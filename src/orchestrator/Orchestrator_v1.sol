@@ -73,6 +73,22 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _;
     }
 
+    modifier onlyLogicModules(address module_) {
+        // Revert given module to be removed is equal to current authorizer
+        if (module_ == address(authorizer)) {
+            revert Orchestrator__InvalidRemovalOfAuthorizer();
+        }
+        // Revert given module to be removed is equal to current fundingManager
+        if (module_ == address(fundingManager)) {
+            revert Orchestrator__InvalidRemovalOfFundingManager();
+        }
+        // Revert given module to be removed is equal to current paymentProcessor
+        if (module_ == address(paymentProcessor)) {
+            revert Orchestrator__InvalidRemovalOfPaymentProcessor();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Storage
 
@@ -345,19 +361,10 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function initiateRemoveModuleWithTimelock(address module_) external {
-        // Revert given module to be removed is equal to current authorizer
-        if (module_ == address(authorizer)) {
-            revert Orchestrator__InvalidRemovalOfAuthorizer();
-        }
-        // Revert given module to be removed is equal to current fundingManager
-        if (module_ == address(fundingManager)) {
-            revert Orchestrator__InvalidRemovalOfFundingManager();
-        }
-        // Revert given module to be removed is equal to current paymentProcessor
-        if (module_ == address(paymentProcessor)) {
-            revert Orchestrator__InvalidRemovalOfPaymentProcessor();
-        }
+    function initiateRemoveModuleWithTimelock(address module_)
+        external
+        onlyLogicModules(module_)
+    {
         _initiateRemoveModuleWithTimelock(module_);
     }
 
@@ -367,7 +374,10 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function executeRemoveModule(address module_) external {
+    function executeRemoveModule(address module_)
+        external
+        onlyLogicModules(module_)
+    {
         _executeRemoveModule(module_);
     }
 
