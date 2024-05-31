@@ -48,7 +48,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
 
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
-    uint256 constant MOCK_ASSERTION_DATA = 100;
+    uint constant MOCK_ASSERTION_DATA = 100;
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
     address USER_1 = address(0xA1BA);
 
@@ -364,7 +364,10 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         }
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
-            MOCK_ASSERTION_DATA_ID, bytes32(MOCK_ASSERTION_DATA), MOCK_ASSERTER_ADDRESS, 0x0
+            MOCK_ASSERTION_DATA_ID,
+            bytes32(MOCK_ASSERTION_DATA),
+            MOCK_ASSERTER_ADDRESS,
+            0x0
         ); //we don't know the last one
 
         bytes32 assertionId = kpiManager.postAssertion(
@@ -419,7 +422,10 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
-            MOCK_ASSERTION_DATA_ID, bytes32(MOCK_ASSERTION_DATA), MOCK_ASSERTER_ADDRESS, 0x0
+            MOCK_ASSERTION_DATA_ID,
+            bytes32(MOCK_ASSERTION_DATA),
+            MOCK_ASSERTER_ADDRESS,
+            0x0
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         bytes32 assertionId = kpiManager.postAssertion(
@@ -826,15 +832,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         address[] memory users,
         uint[] memory amounts
     ) external {
-
-        uint256 assertedIntermediateValue = 250;
-
+        uint assertedIntermediateValue = 250;
 
         // it should emit an event
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, users, amounts, totalStakedFunds) =
-            setUpStateForAssertionResolution(users, amounts, assertedIntermediateValue, true);
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
 
         vm.startPrank(address(ooV3));
         vm.expectEmit(true, true, true, true, address(kpiManager));
@@ -868,12 +874,14 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         vm.assume(users.length > 1);
 
-        uint256 assertedIntermediateValue = 250;
+        uint assertedIntermediateValue = 250;
 
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, users, amounts, totalStakedFunds) =
-            setUpStateForAssertionResolution(users, amounts, assertedIntermediateValue, true);
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
 
         vm.startPrank(address(ooV3));
 
@@ -944,12 +952,14 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
     ) external whenTheAssertionResolvedToTrue {
         // it should not pay out any amount from the uncompleted tranche at all
 
-        uint256 assertedIntermediateValue = 250;
+        uint assertedIntermediateValue = 250;
 
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, users, amounts, totalStakedFunds) =
-            setUpStateForAssertionResolution(users, amounts, assertedIntermediateValue, false);
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, false
+        );
 
         vm.warp(block.timestamp + 5);
 
