@@ -37,7 +37,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         returns (bool)
     {
         return interfaceId == type(IBondingCurveBase_v1).interfaceId
-            || interfaceId == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
