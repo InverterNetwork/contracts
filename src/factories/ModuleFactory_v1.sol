@@ -139,7 +139,7 @@ contract ModuleFactory_v1 is
         address proxy;
         //If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
-            //Use a InverterTransparentUpgradeableProxy as a proxy
+            //Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
                 new InverterTransparentUpgradeableProxy_v1(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
