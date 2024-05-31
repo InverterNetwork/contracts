@@ -80,12 +80,7 @@ contract AUT_Roles_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Constructor and initialization
-
-    constructor() {
-        // make the BURN_ADMIN_ROLE immutable
-        _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
-    }
+    // Initialization
 
     /// @inheritdoc Module_v1
     function init(
@@ -108,7 +103,10 @@ contract AUT_Roles_v1 is
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // If there is no initial admin specfied or the initial admin is the same as the deployer
+        // make the BURN_ADMIN_ROLE immutable
+        _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
+
+        // Set up OWNER role structure:
 
         if (initialAdmin != address(0)) {
             _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
