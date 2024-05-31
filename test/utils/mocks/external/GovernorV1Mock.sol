@@ -14,7 +14,11 @@ contract GovernorV1Mock is IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    function getBeaconTimelock(address) external returns (Timelock memory) {}
+    function getBeaconTimelock(address)
+        external
+        view
+        returns (Timelock memory)
+    {}
 
     //--------------------------------------------------------------------------
     // FeeManager

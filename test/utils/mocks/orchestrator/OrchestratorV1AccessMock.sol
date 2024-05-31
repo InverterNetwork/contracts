@@ -53,7 +53,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
 
     function executeRemoveModule(address module) external {}
 
-    function isModule(address module) external returns (bool) {}
+    function isModule(address module) external view returns (bool) {}
 
     function listModules() external view returns (address[] memory) {}
 

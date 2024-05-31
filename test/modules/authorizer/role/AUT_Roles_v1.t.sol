@@ -167,6 +167,11 @@ contract AUT_RolesV1Test is Test {
             abi.encode(initialAuth, address(this))
         );
 
+        assertEq(
+            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
+            testAuthorizer.BURN_ADMIN_ROLE()
+        );
+
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
@@ -192,6 +197,11 @@ contract AUT_RolesV1Test is Test {
             abi.encode(initialAuth, address(this))
         );
 
+        assertEq(
+            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
+            testAuthorizer.BURN_ADMIN_ROLE()
+        );
+
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
         assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
@@ -213,6 +223,11 @@ contract AUT_RolesV1Test is Test {
             IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
+        );
+
+        assertEq(
+            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
+            testAuthorizer.BURN_ADMIN_ROLE()
         );
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
@@ -401,7 +416,7 @@ contract AUT_RolesV1Test is Test {
 
         vm.startPrank(address(BOB));
         for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectRevert(); // Just a general revert since AccesControl doesn't have error types
+            vm.expectRevert(); // Just a general revert since AccessControl doesn't have error types
             _authorizer.grantRole(managerRole, newAuthorized[i]);
         }
         vm.stopPrank();
@@ -473,7 +488,7 @@ contract AUT_RolesV1Test is Test {
 
         vm.startPrank(address(BOB));
         for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectRevert(); // Just a general revert since AccesControl doesn't have error types
+            vm.expectRevert(); // Just a general revert since AccessControl doesn't have error types
             _authorizer.revokeRole(managerRole, newAuthorized[i]);
         }
         vm.stopPrank();

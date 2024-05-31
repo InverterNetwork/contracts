@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
@@ -17,17 +15,13 @@ import {
     LM_PC_Staking_v1,
     SafeERC20,
     IERC20,
-    ERC20PaymentClientBase_v1,
-    IERC20PaymentClientBase_v1,
-    ReentrancyGuard
+    ERC20PaymentClientBase_v1
 } from "./LM_PC_Staking_v1.sol";
 
 import {
     IOptimisticOracleIntegrator,
     OptimisticOracleIntegrator,
-    OptimisticOracleV3CallbackRecipientInterface,
-    OptimisticOracleV3Interface,
-    ClaimData
+    OptimisticOracleV3CallbackRecipientInterface
 } from
     "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
@@ -314,7 +308,7 @@ contract LM_PC_KPIRewarder_v1 is
     // ============================================================
     // Optimistic Oracle Overrides:
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully
@@ -372,7 +366,7 @@ contract LM_PC_KPIRewarder_v1 is
         );
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         //Do nothing
