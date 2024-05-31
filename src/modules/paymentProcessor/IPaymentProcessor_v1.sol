@@ -49,9 +49,13 @@ interface IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Processes all payments from an {IERC20PaymentClientBase_v1} instance.
-    /// @dev It's up to the the implementation to keep up with what has been
-    ///      paid out or not.
+    /// @notice Processes all payments from an {IERC20PaymentClientBase_v1} instance. Please note:
+    ///         this function does not support callbacks on transfer of tokens.
+    /// @dev    It's up to the the implementation to keep up with what has been
+    ///         paid out or not.
+    /// @dev    Currently callback functions on token transfers are not supported and thus not checked.
+    ///         This could lead to a failed transaction which could influence the batched processing of
+    ///         payments.
     /// @param client The {IERC20PaymentClientBase_v1} instance to process its to payments.
     function processPayments(IERC20PaymentClientBase_v1 client) external;
 
