@@ -135,9 +135,8 @@ contract LM_PC_KPIRewarder_v1 is
     /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
     function postAssertion(
         bytes32 dataId,
-        bytes32 data,
-        address asserter,
         uint assertedValue,
+        address asserter,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
         // =====================================================================
@@ -175,7 +174,7 @@ contract LM_PC_KPIRewarder_v1 is
         // =====================================================================
         // Assertion Posting
 
-        assertionId = assertDataFor(dataId, data, asserter);
+        assertionId = assertDataFor(dataId, bytes32(assertedValue), asserter);
         assertionConfig[assertionId] = RewardRoundConfiguration(
             block.timestamp, assertedValue, targetKPI, false
         );

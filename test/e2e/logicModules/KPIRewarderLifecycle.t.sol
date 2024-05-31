@@ -337,9 +337,8 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         vm.prank(AUTOMATION_SERVICE);
         bytes32 assertionId = kpiRewarder.postAssertion(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
             MOCK_ASSERTED_VALUE,
+            MOCK_ASSERTER_ADDRESS,
             0 // target KPI
         );
 
