@@ -77,15 +77,15 @@ contract OrchestratorE2E is E2ETest {
     //We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnOrchestrator() public {
         // address(this) creates a new orchestrator.
-        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory_v1.OrchestratorConfig({
-            owner: address(this),
-            token: token
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
         });
 
-        //Create Orchestrator_v1
         IOrchestrator_v1 orchestrator =
-            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+            _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
+
         uint timelock =
             Orchestrator_v1(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
         //------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ contract OrchestratorE2E is E2ETest {
 
         //Create the module via the moduleFactory
         address bountyManager = moduleFactory.createModule(
-            bountyManagerMetadata, orchestrator, bytes("")
+            bountyManagerMetadata, orchestrator, bytes(""), workflowConfig
         );
 
         orchestrator.initiateAddModuleWithTimelock(bountyManager);
@@ -121,13 +121,17 @@ contract OrchestratorE2E is E2ETest {
 
         //Create the new modules via the moduleFactory
         address newPaymentProcessor = moduleFactory.createModule(
-            simplePaymentProcessorMetadata, orchestrator, bytes("")
+            simplePaymentProcessorMetadata,
+            orchestrator,
+            bytes(""),
+            workflowConfig
         );
 
         address newFundingManager = moduleFactory.createModule(
             rebasingFundingManagerMetadata,
             orchestrator,
-            abi.encode(address(orchestrator.fundingManager().token()))
+            abi.encode(address(orchestrator.fundingManager().token())),
+            workflowConfig
         );
 
         address[] memory initialAuthorizedAddresses = new address[](1);
@@ -136,7 +140,8 @@ contract OrchestratorE2E is E2ETest {
         address newAuthorizer = moduleFactory.createModule(
             roleAuthorizerMetadata,
             orchestrator,
-            abi.encode(initialAuthorizedAddresses)
+            abi.encode(initialAuthorizedAddresses),
+            workflowConfig
         );
 
         modulesBefore = orchestrator.modulesSize(); // We store the number of modules the orchestrator has

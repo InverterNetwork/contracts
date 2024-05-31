@@ -43,6 +43,10 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @return The minor version.
     function version() external view returns (uint, uint);
 
+    /// @notice Returns the implementation address of the beacon.
+    /// @return The address of the implementation.
+    function getImplementationAddress() external returns (address);
+
     /// @notice Returns wether the beacon is in emergency mode or not.
     /// @return Is the beacon in emergency mode.
     function emergencyModeActive() external view returns (bool);

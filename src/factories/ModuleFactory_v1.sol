@@ -8,8 +8,13 @@ import {
     IModule_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+
 // Internal Dependencies
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
+import {InverterTransparentUpgradeableProxy_v1} from
+    "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Internal Libraries
@@ -118,7 +123,8 @@ contract ModuleFactory_v1 is
     function createModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
-        bytes memory configData
+        bytes memory configData,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
@@ -130,7 +136,21 @@ contract ModuleFactory_v1 is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
-        address proxy = address(new InverterBeaconProxy_v1(beacon));
+        address proxy;
+        //If the workflow should fetch their updates themselves
+        if (workflowConfig.independentUpdates) {
+            //Use a InverterTransparentUpgradeableProxy as a proxy
+            proxy = address(
+                new InverterTransparentUpgradeableProxy_v1(
+                    beacon, workflowConfig.independentUpdateAdmin, bytes("")
+                )
+            );
+        }
+        //If not then
+        else {
+            //Instead use the Beacon Structure Proxy
+            proxy = address(new InverterBeaconProxy_v1(beacon));
+        }
 
         IModule_v1(proxy).init(orchestrator, metadata, configData);
 

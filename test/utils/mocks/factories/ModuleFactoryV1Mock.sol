@@ -10,6 +10,9 @@ import {
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
 
@@ -18,12 +21,15 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     uint public addressCounter = 10;
 
     address public governor = address(0x99999);
+    IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
     function createModule(
         IModule_v1.Metadata memory,
         IOrchestrator_v1,
-        bytes memory
+        bytes memory,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
+        givenWorkflowConfig = workflowConfig;
         return address(uint160(++addressCounter));
     }
 

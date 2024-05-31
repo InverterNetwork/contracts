@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 interface IModuleFactory_v1 {
@@ -50,10 +52,13 @@ interface IModuleFactory_v1 {
     /// @param metadata The module's metadata.
     /// @param orchestrator The orchestrator's instance of the module.
     /// @param configData The configData of the module
+    /// @param workflowConfig The configData of the workflow
+    /// @return Returns the address of the created module proxy
     function createModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
-        bytes memory configData
+        bytes memory configData,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address);
 
     /// @notice Returns the {IInverterBeacon_v1} instance registered and the id for given

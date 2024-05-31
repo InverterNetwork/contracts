@@ -292,6 +292,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
     {
         // It should revert
         _assumeValidAddress(caller);
+        vm.assume(caller != paymentPusher_user);
         vm.startPrank(caller);
         vm.expectRevert(
             abi.encodeWithSelector(

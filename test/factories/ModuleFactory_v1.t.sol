@@ -6,8 +6,6 @@ import "forge-std/Test.sol";
 // Internal Dependencies
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 
-import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -18,8 +16,16 @@ import {
     IOrchestrator_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
 // Mocks
-import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
+import {ModuleImplementationV2Mock} from
+    "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
@@ -31,10 +37,16 @@ contract ModuleFactoryV1Test is Test {
     ModuleFactory_v1 factory;
 
     // Mocks
-    ModuleV1Mock module;
+    ModuleImplementationV1Mock module;
     InverterBeaconV1OwnableMock beacon;
 
     address governanceContract = address(0x010101010101);
+
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates =
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
+    });
 
     //--------------------------------------------------------------------------
     // Events
@@ -59,7 +71,7 @@ contract ModuleFactoryV1Test is Test {
         IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
 
     function setUp() public {
-        module = new ModuleV1Mock();
+        module = new ModuleImplementationV1Mock();
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
 
         factory = new ModuleFactory_v1(address(0));
@@ -171,13 +183,17 @@ contract ModuleFactoryV1Test is Test {
     //--------------------------------------------------------------------------
     // Tests: createModule
 
+    error hm();
+
     function testCreateModule(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IModule_v1.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
+        _assumeValidWorkflowConfig(workflowConfig);
 
         beacon.overrideImplementation(address(module));
 
@@ -196,7 +212,10 @@ contract ModuleFactoryV1Test is Test {
         // Create new module instance.
         IModule_v1 newModule = IModule_v1(
             factory.createModule(
-                metadata, IOrchestrator_v1(orchestrator), configData
+                metadata,
+                IOrchestrator_v1(orchestrator),
+                configData,
+                workflowConfig
             )
         );
 
@@ -205,6 +224,23 @@ contract ModuleFactoryV1Test is Test {
         );
         assertEq(address(newModule.orchestrator()), address(orchestrator));
         assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
+
+        //Check for proper Proxy setup
+
+        beacon.overrideImplementation(address(new ModuleImplementationV2Mock()));
+
+        //Beacon should point to Version 2
+        uint expectedValue = 2;
+
+        //If it is independent then the version should have stayed at 1
+        if (workflowConfig.independentUpdates) {
+            expectedValue = 1;
+        }
+
+        assertEq(
+            ModuleImplementationV1Mock(address(newModule)).getMockVersion(),
+            expectedValue
+        );
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
@@ -219,7 +255,10 @@ contract ModuleFactoryV1Test is Test {
             IModuleFactory_v1.ModuleFactory__UnregisteredMetadata.selector
         );
         factory.createModule(
-            metadata, IOrchestrator_v1(orchestrator), configData
+            metadata,
+            IOrchestrator_v1(orchestrator),
+            configData,
+            workflowConfigNoIndependentUpdates
         );
     }
 
@@ -235,5 +274,16 @@ contract ModuleFactoryV1Test is Test {
 
     function _assumeValidOrchestrator(address orchestrator) internal pure {
         vm.assume(orchestrator != address(0));
+    }
+
+    function _assumeValidWorkflowConfig(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+    ) internal view {
+        if (workflowConfig.independentUpdates) {
+            vm.assume(workflowConfig.independentUpdateAdmin != address(0));
+            vm.assume(
+                address(workflowConfig.independentUpdateAdmin).code.length == 0
+            );
+        }
     }
 }

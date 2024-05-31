@@ -47,6 +47,13 @@ contract deployAndSwitchTokenAuthorizer is Script {
         1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
+    //Decide on the workflowConfig
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfig =
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
+    });
+
     ModuleFactory_v1 moduleFactory = ModuleFactory_v1(moduleFactoryAddress);
     Orchestrator_v1 orchestrator = Orchestrator_v1(orchestratorAddress);
 
@@ -73,7 +80,8 @@ contract deployAndSwitchTokenAuthorizer is Script {
         address deployedAuthorizerAddress = moduleFactory.createModule(
             authorizerMetadata,
             IOrchestrator_v1(orchestrator),
-            authorizerFactoryConfig.configData
+            authorizerFactoryConfig.configData,
+            workflowConfig
         );
         AUT_TokenGated_Roles_v1 deployedAuthorizer =
             AUT_TokenGated_Roles_v1(deployedAuthorizerAddress);

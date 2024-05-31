@@ -19,9 +19,14 @@ import {
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
+import {ModuleImplementationV1Mock} from
+    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleFactoryV1Mock} from
     "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+
+import {InverterBeaconV1OwnableMock} from
+    "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
@@ -31,6 +36,10 @@ contract OrchestratorFactoryV1Test is Test {
     OrchestratorFactory_v1 factory;
 
     Orchestrator_v1 target;
+
+    InverterBeaconV1OwnableMock beacon;
+
+    address governanceContract = makeAddr("GovernorContract");
 
     //--------------------------------------------------------------------------
     // Events
@@ -46,10 +55,10 @@ contract OrchestratorFactoryV1Test is Test {
     ModuleFactoryV1Mock moduleFactory;
 
     // Metadata
-    IOrchestratorFactory_v1.OrchestratorConfig orchestratorConfig =
-    IOrchestratorFactory_v1.OrchestratorConfig({
-        owner: address(this),
-        token: IERC20(new ERC20Mock("Mock Token", "MOCK"))
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates =
+    IOrchestratorFactory_v1.WorkflowConfig({
+        independentUpdates: false,
+        independentUpdateAdmin: address(0)
     });
 
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig =
@@ -84,10 +93,11 @@ contract OrchestratorFactoryV1Test is Test {
 
         target = new Orchestrator_v1(address(0));
 
+        beacon = new InverterBeaconV1OwnableMock(governanceContract);
+        beacon.overrideImplementation(address(target));
+
         factory = new OrchestratorFactory_v1(address(0));
-        factory.init(
-            moduleFactory.governor(), address(target), address(moduleFactory)
-        );
+        factory.init(moduleFactory.governor(), beacon, address(moduleFactory));
     }
 
     function testValidOrchestratorId(uint getId, uint orchestratorsCreated)
@@ -109,11 +119,15 @@ contract OrchestratorFactoryV1Test is Test {
     }
 
     function testDeploymentInvariants() public {
-        assertEq(factory.target(), address(target));
+        assertEq(address(factory.beacon()), address(beacon));
         assertEq(factory.moduleFactory(), address(moduleFactory));
     }
 
-    function testCreateOrchestrator(uint modulesLen) public {
+    function testCreateOrchestrator(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        uint modulesLen
+    ) public {
+        _assumeValidWorkflowConfig(workflowConfig);
         // Note to stay reasonable
         modulesLen = bound(modulesLen, 0, 50);
 
@@ -129,12 +143,19 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1 with id=1
         IOrchestrator_v1 orchestrator = factory.createOrchestrator(
-            orchestratorConfig,
+            workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             moduleConfigs
         );
+
+        //Check that workflowConfig was properly forwarded
+        (bool independentUpdates, address independentUpdateAdmin) =
+            moduleFactory.givenWorkflowConfig();
+
+        assertEq(workflowConfig.independentUpdates, independentUpdates);
+        assertEq(workflowConfig.independentUpdateAdmin, independentUpdateAdmin);
 
         // Check that orchestrator's strorage correctly initialized.
         assertEq(orchestrator.orchestratorId(), 1);
@@ -142,12 +163,15 @@ contract OrchestratorFactoryV1Test is Test {
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
         assertTrue(address(orchestrator.governor()) == moduleFactory.governor());
 
+        //Module size should be the 3 enforced contracts + whatever is in the module config
+        assertEq(orchestrator.modulesSize(), 3 + moduleConfigs.length);
+
         vm.expectEmit(true, false, false, false);
         emit OrchestratorCreated(2, address(0)); //since we don't know the address of the orchestrator
 
         // Deploy Orchestrator_v1 with id=2
         orchestrator = factory.createOrchestrator(
-            orchestratorConfig,
+            workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
@@ -158,6 +182,26 @@ contract OrchestratorFactoryV1Test is Test {
 
         //check that orchestratorFactory idCounter is correct.
         assertEq(factory.getOrchestratorIDCounter(), 2);
+
+        //Check for proper Proxy setup
+
+        beacon.overrideImplementation(address(new ModuleImplementationV1Mock()));
+
+        //If it is independent then the beacon change should not be represented
+        if (workflowConfig.independentUpdates) {
+            vm.expectRevert();
+            ModuleImplementationV1Mock(address(orchestrator)).getMockVersion();
+
+            assertEq(orchestrator.orchestratorId(), 2);
+        } else {
+            assertEq(
+                ModuleImplementationV1Mock(address(orchestrator)).getMockVersion(
+                ),
+                1
+            );
+            vm.expectRevert();
+            orchestrator.orchestratorId();
+        }
     }
 
     function testOrchestratorMapping(uint orchestratorAmount) public {
@@ -180,7 +224,7 @@ contract OrchestratorFactoryV1Test is Test {
 
         // Deploy Orchestrator_v1
         IOrchestrator_v1 orchestrator = factory.createOrchestrator(
-            orchestratorConfig,
+            workflowConfigNoIndependentUpdates,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
@@ -188,5 +232,16 @@ contract OrchestratorFactoryV1Test is Test {
         );
 
         return address(orchestrator);
+    }
+
+    function _assumeValidWorkflowConfig(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+    ) internal view {
+        if (workflowConfig.independentUpdates) {
+            vm.assume(workflowConfig.independentUpdateAdmin != address(0));
+            vm.assume(
+                address(workflowConfig.independentUpdateAdmin).code.length == 0
+            );
+        }
     }
 }

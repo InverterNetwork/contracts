@@ -105,10 +105,10 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // Define Initial Configuration Data
 
         // Orchestrator: Owner, funding token
-        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory_v1.OrchestratorConfig({
-            owner: orchestratorOwner,
-            token: collateralToken
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
         });
 
         IBondingCurveBase_v1.IssuanceToken memory buf_issuanceToken =
@@ -176,7 +176,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         {
             _orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
-                orchestratorConfig,
+                workflowConfig,
                 bondingCurveFundingManagerConfig,
                 authorizerFactoryConfig,
                 paymentProcessorFactoryConfig,

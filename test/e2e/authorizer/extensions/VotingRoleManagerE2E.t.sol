@@ -87,14 +87,14 @@ contract VotingRoleManagerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------------
-        IOrchestratorFactory_v1.OrchestratorConfig memory orchestratorConfig =
-        IOrchestratorFactory_v1.OrchestratorConfig({
-            owner: address(this),
-            token: token
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
         });
 
         IOrchestrator_v1 orchestrator =
-            _create_E2E_Orchestrator(orchestratorConfig, moduleConfigurations);
+            _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
         AUT_Roles_v1 authorizer =
             AUT_Roles_v1(address(orchestrator.authorizer()));
