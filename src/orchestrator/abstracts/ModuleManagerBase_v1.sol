@@ -305,7 +305,8 @@ abstract contract ModuleManagerBase_v1 is
 
     function _ensureValidModule(address module) private view {
         if (
-            module == address(0) || module == address(this)
+            module.code.length == 0 || module == address(0)
+                || module == address(this)
                 || !ERC165(module).supportsInterface(type(IModule_v1).interfaceId)
         ) {
             revert ModuleManagerBase__InvalidModuleAddress();
