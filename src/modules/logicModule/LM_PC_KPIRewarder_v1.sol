@@ -61,6 +61,7 @@ contract LM_PC_KPIRewarder_v1 is
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
     // Deposit Queue
+    bool public assertionPending;
     address[] public stakingQueue;
     mapping(address => uint) public stakingQueueAmounts;
     uint public totalQueuedFunds;
@@ -140,6 +141,10 @@ contract LM_PC_KPIRewarder_v1 is
         uint assertedValue,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
+        if (assertionPending) {
+            revert Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
+        }
+
         // =====================================================================
         // Input Validation
 
@@ -179,6 +184,8 @@ contract LM_PC_KPIRewarder_v1 is
         assertionConfig[assertionId] = RewardRoundConfiguration(
             block.timestamp, assertedValue, targetKPI, false
         );
+
+        assertionPending = true;
 
         // (return assertionId)
     }
@@ -364,6 +371,9 @@ contract LM_PC_KPIRewarder_v1 is
             assertionData[assertionId].asserter,
             assertionId
         );
+
+        // Independently of the fact that the assertion resolved true or not, new assertions can now be posted.
+        assertionPending = false;
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
