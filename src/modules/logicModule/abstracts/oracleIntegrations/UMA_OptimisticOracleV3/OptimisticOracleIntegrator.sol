@@ -119,10 +119,14 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Internal Functions
 
-    function _setDefaultCurrency(address _newCurrency) internal {
+    function _setDefaultCurrency(address _newCurrency, uint _newBond) internal {
         if (address(_newCurrency) == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
         }
+        if( _newBond < oo.getMinimumBond(address(defaultCurrency));
+
+        // TODO expand this to include bond, and check that it is above the minimum bond.
+        // Will need refactoring of scripts and tests.
         defaultCurrency = IERC20(_newCurrency);
     }
 
