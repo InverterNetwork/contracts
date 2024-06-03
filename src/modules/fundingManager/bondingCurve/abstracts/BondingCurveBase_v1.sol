@@ -187,8 +187,12 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         if (_depositAmount == 0) {
             revert Module__BondingCurveBase__InvalidDepositAmount();
         }
+
+        // Cache Collateral Token
+        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
+
         // Transfer collateral, confirming that correct amount == allowance
-        __Module_orchestrator.fundingManager().token().safeTransferFrom(
+        collateralToken.safeTransferFrom(
             _msgSender(), address(this), _depositAmount
         );
         // Get protocol fee percentages and treasury addresses
@@ -213,9 +217,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralTreasury,
-            __Module_orchestrator.fundingManager().token(),
-            protocolFeeAmount
+            collateralTreasury, collateralToken, protocolFeeAmount
         );
         // Add workflow fee if applicable
         if (workflowFeeAmount > 0) {
