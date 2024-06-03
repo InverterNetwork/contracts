@@ -17,6 +17,9 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice There always needs to be at least one admin.
     error Module__Authorizer__AdminRoleCannotBeEmpty();
 
+    /// @notice The orchestrator cannot own itself
+    error Module__Authorizer__OrchestratorCannotHaveOwnerRole();
+
     //--------------------------------------------------------------------------
     // Functions
 
