@@ -313,7 +313,6 @@ contract LM_PC_KPIRewarder_v1 is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
-
         //First, we perform checks and state management on the parent function.
         super.assertionResolvedCallback(assertionId, assertedTruthfully);
 
@@ -358,9 +357,10 @@ contract LM_PC_KPIRewarder_v1 is
 
             _setRewards(rewardAmount, 1);
             assertionConfig[assertionId].distributed = true;
-
-        } 
-        // If the data assertion resolved to false, the 'distributed' value in assertionConfig will stay false
+        } else {
+            // To keep in line with the upstream contract. If the assertion was false, we delete the corresponding assertionConfig from storage.
+            delete assertionConfig[assertionId];
+        }
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface

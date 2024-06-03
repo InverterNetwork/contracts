@@ -879,6 +879,10 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
         kpiManager.assertionResolvedCallback(createdID, false);
         vm.stopPrank();
+
+        // Check assertion data is deleted
+        assertEq(kpiManager.getAssertion(createdID).dataId, 0);
+        assertEq(kpiManager.getAssertionConfig(createdID).creationTime, 0);
     }
 
     modifier whenTheAssertionResolvedToTrue() {
@@ -906,9 +910,6 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(250e18, 1, 250e18, block.timestamp + 1);
-
-        vm.expectEmit(true, true, true, true, address(kpiManager));
         emit DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
@@ -917,8 +918,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             createdID
         );
 
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit RewardSet(250e18, 1, 250e18, block.timestamp + 1);
+
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
+
+        // Check storage state is modified
+        assertEq(kpiManager.getAssertion(createdID).resolved, true);
+        assertEq(kpiManager.getAssertionConfig(createdID).distributed, true);
 
         vm.warp(block.timestamp + 3);
 
@@ -982,9 +990,6 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(200e18, 1, 200e18, block.timestamp + 1);
-
-        vm.expectEmit(true, true, true, true, address(kpiManager));
         emit DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
@@ -993,9 +998,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             createdID
         );
 
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit RewardSet(200e18, 1, 200e18, block.timestamp + 1);
+
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
 
+        // Check storage state is modified
+        assertEq(kpiManager.getAssertion(createdID).resolved, true);
+        assertEq(kpiManager.getAssertionConfig(createdID).distributed, true);
         vm.warp(block.timestamp + 3);
 
         uint length = users.length;
