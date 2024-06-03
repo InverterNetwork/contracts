@@ -61,6 +61,7 @@ contract LM_PC_KPIRewarder_v1 is
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
     // Deposit Queue
+    uint minimumStake; // The workflow owner can set a minimum stake amount to mitigate griefing attacks where sybils spam the queue with multiple small stakes.
     address[] public stakingQueue;
     mapping(address => uint) public stakingQueueAmounts;
     uint public totalQueuedFunds;
@@ -250,6 +251,13 @@ contract LM_PC_KPIRewarder_v1 is
         return (KpiNum);
     }
 
+    function setMinimumStake(uint _minimumStake)
+        external
+        onlyOrchestratorOwner
+    {
+        minimumStake = _minimumStake;
+    }
+
     // ===========================================================
     // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
 
@@ -262,6 +270,10 @@ contract LM_PC_KPIRewarder_v1 is
     {
         if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
             revert Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
+        }
+
+        if (amount < minimumStake) {
+            revert Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
         }
 
         address sender = _msgSender();

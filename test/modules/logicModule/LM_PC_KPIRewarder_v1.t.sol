@@ -679,6 +679,8 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
 stakeTest
 ├── when the staked amount is 0
 │   └── it should revert
+├── when the staked amount is below the minimum stake
+│   └── it should revert
 ├── when the length of the staking Queue is already at MAX_QUEUE_LENGTH
 │   └── it should revert
 ├── when the caller does not have sufficient funds
@@ -699,6 +701,27 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
                 .selector
         );
         kpiManager.stake(0);
+    }
+
+    function test_RevertWhen_TheStakedAmountIsBelowMinimum(
+        uint minAmount,
+        uint stakeAmount
+    ) external {
+        // it should revert
+        vm.assume(minAmount > 1);
+        stakeAmount = bound(stakeAmount, 1, minAmount - 1);
+
+        kpiManager.setMinimumStake(minAmount);
+
+        stakingToken.mint(USER_1, stakeAmount);
+        vm.startPrank(USER_1);
+        stakingToken.approve(address(kpiManager), stakeAmount);
+        vm.expectRevert(
+            ILM_PC_KPIRewarder_v1
+                .Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount
+                .selector
+        );
+        kpiManager.stake(stakeAmount);
     }
 
     function test_RevertWhen_TheLengthOfTheStakingQueueIsAlreadyAtMAX_QUEUE_LENGTH(
