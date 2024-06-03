@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-interface IERC20Issuance_v1 {
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+interface IERC20Issuance_v1 is IERC20 {
     // Events
 
     /// @notice Emitted when the minter is set.
