@@ -106,17 +106,7 @@ contract AUT_Roles_v1 is
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // Set up OWNER role structure:
-
-        // -> set OWNER as admin of itself
-        //_setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
-        // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        //_setRoleAdmin(DEFAULT_ADMIN_ROLE, DEFAULT_ADMIN_ROLE);
-
-        // Set up MANAGER role structure:
-        // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, DEFAULT_ADMIN_ROLE);
-        // grant MANAGER Role to specified address
+        // Grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
         // If there is no initial owner specfied or the initial owner is the same as the deployer
