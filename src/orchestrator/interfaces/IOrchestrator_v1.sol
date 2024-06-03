@@ -26,6 +26,11 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice The given module is not used in the orchestrator
     error Orchestrator__InvalidModuleType(address module);
 
+    /// @notice The token of the new funding manager is not the same as the current funding manager.
+    error Orchestrator__MismatchedTokenForFundingManager(
+        address currentToken, address newToken
+    );
+
     /// @notice The given module is not used in the orchestrator
     error Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
 
