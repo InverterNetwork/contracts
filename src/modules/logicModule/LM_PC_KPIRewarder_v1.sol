@@ -313,10 +313,11 @@ contract LM_PC_KPIRewarder_v1 is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
-        if (_msgSender() != address(oo)) {
-            revert Module__OptimisticOracleIntegrator__CallerNotOO();
-        }
 
+        //First, we perform checks and state management on the parent function.
+        super.assertionResolvedCallback(assertionId, assertedTruthfully);
+
+        // If the assertion was true, we calculate the rewards and distribute them.
         if (assertedTruthfully) {
             // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds.
 
@@ -356,14 +357,10 @@ contract LM_PC_KPIRewarder_v1 is
             }
 
             _setRewards(rewardAmount, 1);
-        }
-        emit DataAssertionResolved(
-            assertedTruthfully,
-            assertionData[assertionId].dataId,
-            assertionData[assertionId].data,
-            assertionData[assertionId].asserter,
-            assertionId
-        );
+            assertionConfig[assertionId].distributed = true;
+
+        } 
+        // If the data assertion resolved to false, the 'distributed' value in assertionConfig will stay false
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
