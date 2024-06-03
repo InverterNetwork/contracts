@@ -189,10 +189,10 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
-        
+
         // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out the backing collateral
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
-        
+
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
