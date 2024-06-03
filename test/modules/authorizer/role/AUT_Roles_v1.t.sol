@@ -170,9 +170,15 @@ contract AUT_RolesV1Test is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
+        assertEq(
+            testAuthorizer.hasRole(testAuthorizer.getOwnerRole(), initialAuth),
+            true
+        );
 
-        assertEq(testAuthorizer.hasRole("0x01", address(this)), false);
+        assertEq(
+            testAuthorizer.hasRole(testAuthorizer.getOwnerRole(), address(this)),
+            false
+        );
         assertEq(
             testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
@@ -195,7 +201,10 @@ contract AUT_RolesV1Test is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
+        assertEq(
+            testAuthorizer.hasRole(testAuthorizer.getOwnerRole(), address(this)),
+            true
+        );
         assertEq(
             testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
@@ -218,7 +227,10 @@ contract AUT_RolesV1Test is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
+        assertEq(
+            testAuthorizer.hasRole(testAuthorizer.getOwnerRole(), initialAuth),
+            true
+        );
 
         assertEq(
             testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
@@ -240,9 +252,12 @@ contract AUT_RolesV1Test is Test {
             _METADATA,
             abi.encode(initialOwner, initialManager)
         );
-        assertEq(_authorizer.hasRole("0x01", address(this)), false);
+        assertEq(
+            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
+            false
+        );
         assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
-        assertEq(_authorizer.hasRole("0x01", ALBA), true);
+        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
         assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
     }
 
@@ -1040,10 +1055,12 @@ contract AUT_RolesV1Test is Test {
 
     function testGrantAdminRoleFailsIfNotOwner() public {
         bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        address COBIE = address(0xC0B1E);
+
         vm.prank(BOB);
         vm.expectRevert();
-        _authorizer.grantRole(adminRole, ALBA);
-        assertFalse(_authorizer.hasRole(adminRole, ALBA));
+        _authorizer.grantRole(adminRole, COBIE);
+        assertFalse(_authorizer.hasRole(adminRole, COBIE));
     }
 
     // Test that only Owner can change admin
@@ -1171,7 +1188,7 @@ contract AUT_RolesV1Test is Test {
         vm.expectEmit(true, true, true, true);
         emit RoleAdminChanged(
             _authorizer.generateRoleId(address(mockModule), ROLE_1),
-            bytes32(0x0),
+            bytes32(0x00),
             _authorizer.BURN_ADMIN_ROLE()
         );
 
