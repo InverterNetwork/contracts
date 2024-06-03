@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
@@ -40,6 +38,7 @@ abstract contract OptimisticOracleIntegrator is
 
     // General Parameters
     IERC20 public defaultCurrency; // The currency used for the bond.
+    uint public defaultBond; // The bond used for the assertions. Must be higher or equal to the minimum bond of the currency used
     OptimisticOracleV3Interface public oo; // The OptimisticOracleV3 instance where assertions will be published to.
     uint64 public assertionLiveness; // Time period an assertion is open for dispute (in seconds).
     bytes32 public defaultIdentifier; // The identifier used when creating the assertion. For most usecases, this will resolve to "ASSERT_TRUTH".
@@ -58,20 +57,23 @@ abstract contract OptimisticOracleIntegrator is
     ) external virtual override initializer {
         __Module_init(orchestrator_, metadata);
 
-        (address currencyAddr, address ooAddr, uint64 liveness) =
-            abi.decode(configData, (address, address, uint64));
+        (address currencyAddr, uint bondAmount, address ooAddr, uint64 liveness)
+        = abi.decode(configData, (address, uint, address, uint64));
 
-        __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
+        __OptimisticOracleIntegrator_init(
+            currencyAddr, bondAmount, ooAddr, liveness
+        );
     }
 
     function __OptimisticOracleIntegrator_init(
         address currencyAddr,
+        uint bondAmount,
         address ooAddr,
         uint64 liveness
     ) internal onlyInitializing {
-        _setDefaultCurrency(currencyAddr);
         _setOptimisticOracle(ooAddr);
         _setDefaultAssertionLiveness(liveness);
+        _setDefaultCurrency(currencyAddr, bondAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -96,11 +98,11 @@ abstract contract OptimisticOracleIntegrator is
     // Setter Functions
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    function setDefaultCurrency(address _newCurrency)
+    function setDefaultCurrency(address _newCurrency, uint _newBond)
         public
         onlyOrchestratorOwner
     {
-        _setDefaultCurrency(_newCurrency);
+        _setDefaultCurrency(_newCurrency, _newBond);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
@@ -119,15 +121,18 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Internal Functions
 
-    function _setDefaultCurrency(address _newCurrency, uint _newBond) internal {
+    function _setDefaultCurrency(address _newCurrency, uint _newBond)
+        internal
+    {
         if (address(_newCurrency) == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
         }
-        if( _newBond < oo.getMinimumBond(address(defaultCurrency));
+        if (_newBond < oo.getMinimumBond(address(_newCurrency))) {
+            revert Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
+        }
 
-        // TODO expand this to include bond, and check that it is above the minimum bond.
-        // Will need refactoring of scripts and tests.
         defaultCurrency = IERC20(_newCurrency);
+        defaultBond = _newBond;
     }
 
     function _setOptimisticOracle(address _newOO) internal {
@@ -160,9 +165,10 @@ abstract contract OptimisticOracleIntegrator is
         returns (bytes32 assertionId)
     {
         asserter = asserter == address(0) ? _msgSender() : asserter;
-        uint bond = oo.getMinimumBond(address(defaultCurrency));
-        defaultCurrency.safeTransferFrom(_msgSender(), address(this), bond);
-        defaultCurrency.safeIncreaseAllowance(address(oo), bond);
+        defaultCurrency.safeTransferFrom(
+            _msgSender(), address(this), defaultBond
+        );
+        defaultCurrency.safeIncreaseAllowance(address(oo), defaultBond);
 
         // The claim we want to assert is the first argument of assertTruth. It must contain all of the relevant
         // details so that anyone may verify the claim without having to read any further information on chain. As a
@@ -189,7 +195,7 @@ abstract contract OptimisticOracleIntegrator is
             address(0), // No sovereign security.
             assertionLiveness,
             defaultCurrency,
-            bond,
+            defaultBond,
             defaultIdentifier,
             bytes32(0) // No domain.
         );

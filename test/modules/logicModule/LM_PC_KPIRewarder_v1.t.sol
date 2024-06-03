@@ -105,7 +105,11 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         bytes memory configData = abi.encode(
-            address(stakingToken), address(feeToken), ooV3, DEFAULT_LIVENESS
+            address(stakingToken),
+            address(feeToken),
+            ooV3.getMinimumBond(address(feeToken)),
+            ooV3,
+            DEFAULT_LIVENESS
         );
 
         kpiManager.init(_orchestrator, _METADATA, configData);

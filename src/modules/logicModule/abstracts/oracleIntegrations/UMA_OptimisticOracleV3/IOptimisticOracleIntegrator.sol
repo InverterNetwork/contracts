@@ -47,6 +47,9 @@ interface IOptimisticOracleIntegrator is
     /// @notice Caller is not Optimistic Oracle instance
     error Module__OptimisticOracleIntegrator__CallerNotOO();
 
+    /// @notice Bond given for the specified currency is below minimum
+    error Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
+
     //==========================================================================
     // Functions
 
@@ -71,9 +74,10 @@ interface IOptimisticOracleIntegrator is
 
     // Setter Functions
 
-    /// @notice Sets the default currency for the bond.
+    /// @notice Sets the default currency and amount for the bond.
     /// @param _newCurrency The address of the new default currency.
-    function setDefaultCurrency(address _newCurrency) external;
+    /// @param _newBond The new bond amount.
+    function setDefaultCurrency(address _newCurrency, uint _newBond) external;
 
     /// @notice Sets the OptimisticOracleV3 instance where assertions will be published to.
     /// @param _newOO The address of the new OptimisticOracleV3 instance.
