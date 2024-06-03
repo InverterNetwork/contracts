@@ -881,7 +881,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.stopPrank();
 
         // Check assertion data is deleted
-        assertEq(kpiManager.getAssertion(createdID).dataId, 0);
+        assertEq(kpiManager.getAssertion(createdID).asserter, address(0)); // address(0) asserters are not possible in the system
         assertEq(kpiManager.getAssertionConfig(createdID).creationTime, 0);
     }
 
