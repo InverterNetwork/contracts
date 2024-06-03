@@ -184,6 +184,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         uint minimumBond,
         uint proposedBond
     ) public {
+        minimumBond = bound(minimumBond, 0, 1e40); // keep it reasonable to avoid overflows
         vm.assume(proposedBond < minimumBond);
 
         _validateAddress(whitelisted); // make sure it doesn't collide with addresses in use by the test
