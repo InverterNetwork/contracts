@@ -156,9 +156,6 @@ contract LM_PC_KPIRewarder_v1 is
             revert Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
         }
 
-        // Question: what kind of checks should or can we implement on the data side?
-        // Technically the value mentioned inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
-
         // =====================================================================
         // Staking Queue Management
 
