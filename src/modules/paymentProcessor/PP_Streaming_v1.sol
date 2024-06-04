@@ -243,7 +243,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function removeAllPaymentReceiverPayments(
         address client,
         address paymentReceiver
-    ) external onlyOrchestratorOwner {
+    ) external onlyOrchestratorAdmin {
         if (
             _findAddressInActiveStreams(client, paymentReceiver)
                 == type(uint).max
@@ -260,7 +260,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address client,
         address paymentReceiver,
         uint streamId
-    ) external onlyOrchestratorOwner {
+    ) external onlyOrchestratorAdmin {
         // First, we give the streamed funds from this specific streamId to the beneficiary
         _claimForSpecificStream(client, paymentReceiver, streamId);
 

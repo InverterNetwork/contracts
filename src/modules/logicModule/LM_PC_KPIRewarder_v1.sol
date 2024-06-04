@@ -52,7 +52,7 @@ contract LM_PC_KPIRewarder_v1 is
     // This module enable KPI based reward distribution into the staking manager by using UMAs Optimistic Oracle.
 
     // It works in the following way:
-    // - The owner can create KPIs, which are a set of tranches with rewards assigned. These can be continuous or not (see below)
+    // - The admin can create KPIs, which are a set of tranches with rewards assigned. These can be continuous or not (see below)
     // - An external actor with the ASSERTER role can trigger the posting of an assertion to the UMA Oracle, specifying the value to be asserted and the KPI to use for the reward distrbution in case it resolves
     // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved. They will be added before posting the next assertion.
     // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function. This will calculate the final reward value and distribute it to the stakers.
@@ -188,13 +188,13 @@ contract LM_PC_KPIRewarder_v1 is
     }
 
     // ========================================================================
-    // Owner Configuration Functions:
+    // Admin Configuration Functions:
 
     // Top up funds to pay the optimistic oracle fee
     /// @inheritdoc ILM_PC_KPIRewarder_v1
     function depositFeeFunds(uint amount)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
         nonReentrant
         validAmount(amount)
     {
@@ -208,7 +208,7 @@ contract LM_PC_KPIRewarder_v1 is
         bool _continuous,
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
-    ) external onlyOrchestratorOwner returns (uint) {
+    ) external onlyOrchestratorAdmin returns (uint) {
         uint _numOfTranches = _trancheValues.length;
 
         if (_numOfTranches < 1 || _numOfTranches > 20) {

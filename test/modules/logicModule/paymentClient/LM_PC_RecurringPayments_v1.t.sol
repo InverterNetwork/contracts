@@ -241,11 +241,11 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         //Warp to a reasonable time
         vm.warp(2 weeks);
 
-        //onlyOrchestratorOwnerOrManager
+        //onlyOrchestratorAdminOrManager
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getOwnerRole(),
+                _authorizer.getAdminRole(),
                 address(0xBEEF)
             )
         );
@@ -368,11 +368,11 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        //onlyOrchestratorOwnerOrManager
+        //onlyOrchestratorAdminOrManager
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getOwnerRole(),
+                _authorizer.getAdminRole(),
                 address(0xBEEF)
             )
         );

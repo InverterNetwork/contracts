@@ -84,19 +84,19 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function openSell() external virtual onlyOrchestratorOwner {
+    function openSell() external virtual onlyOrchestratorAdmin {
         sellIsOpen = true;
         emit SellingEnabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function closeSell() external virtual onlyOrchestratorOwner {
+    function closeSell() external virtual onlyOrchestratorAdmin {
         sellIsOpen = false;
         emit SellingDisabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint _fee) external virtual onlyOrchestratorOwner {
+    function setSellFee(uint _fee) external virtual onlyOrchestratorAdmin {
         _setSellFee(_fee);
     }
 

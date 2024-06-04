@@ -117,8 +117,6 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
 
     function version() external pure returns (string memory) {}
 
-    function owner() external view returns (address) {}
-
     function manager() external view returns (address) {}
 
     function findModuleAddressInOrchestrator(string calldata moduleName)

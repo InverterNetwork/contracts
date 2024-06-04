@@ -97,20 +97,20 @@ abstract contract OptimisticOracleIntegrator is
     /// @inheritdoc IOptimisticOracleIntegrator
     function setDefaultCurrency(address _newCurrency)
         public
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _setDefaultCurrency(_newCurrency);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    function setOptimisticOracle(address _newOO) public onlyOrchestratorOwner {
+    function setOptimisticOracle(address _newOO) public onlyOrchestratorAdmin {
         _setOptimisticOracle(_newOO);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
     function setDefaultAssertionLiveness(uint64 _newLiveness)
         public
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _setDefaultAssertionLiveness(_newLiveness);
     }

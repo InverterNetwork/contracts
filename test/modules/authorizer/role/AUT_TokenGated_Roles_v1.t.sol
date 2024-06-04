@@ -72,9 +72,9 @@ contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
             _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
-        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
+        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
+            _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
             false
         );
     }
@@ -158,9 +158,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
             _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
             true
         );
-        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
+        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
         assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
+            _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
             false
         );
 

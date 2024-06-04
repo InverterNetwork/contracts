@@ -65,13 +65,13 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    /// @notice Verifies that the owner being removed is not the last one
-    modifier notLastOwner(bytes32 role) {
+    /// @notice Verifies that the admin being removed is not the last one
+    modifier notLastAdmin(bytes32 role) {
         if (
             role == DEFAULT_ADMIN_ROLE
                 && getRoleMemberCount(DEFAULT_ADMIN_ROLE) <= 1
         ) {
-            revert Module__Authorizer__OwnerRoleCannotBeEmpty();
+            revert Module__Authorizer__AdminRoleCannotBeEmpty();
         }
         _;
     }
@@ -92,27 +92,27 @@ contract AUT_Roles_v1 is
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
 
-        (address initialOwner, address initialManager) =
+        (address initialAdmin, address initialManager) =
             abi.decode(configData, (address, address));
 
-        __RoleAuthorizer_init(initialOwner, initialManager);
+        __RoleAuthorizer_init(initialAdmin, initialManager);
     }
 
-    function __RoleAuthorizer_init(address initialOwner, address initialManager)
+    function __RoleAuthorizer_init(address initialAdmin, address initialManager)
         internal
         onlyInitializing
     {
-        // Note about DEFAULT_ADMIN_ROLE: The Owner of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
+        // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
         // Grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
-        // If there is no initial owner specfied or the initial owner is the same as the deployer
+        // If there is no initial admin specfied or the initial admin is the same as the deployer
 
-        if (initialOwner != address(0)) {
-            _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
+        if (initialAdmin != address(0)) {
+            _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
         } else {
             _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         }
@@ -121,7 +121,7 @@ contract AUT_Roles_v1 is
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
+    /// @notice Overrides {_revokeRole} to prevent having an empty ADMIN role
     /// @param role The id number of the role
     /// @param who The user we want to check on
     /// @return bool Returns if revoke has been succesful
@@ -129,7 +129,7 @@ contract AUT_Roles_v1 is
         internal
         virtual
         override
-        notLastOwner(role)
+        notLastAdmin(role)
         returns (bool)
     {
         return super._revokeRole(role, who);
@@ -258,7 +258,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function getOwnerRole() public pure returns (bytes32) {
+    function getAdminRole() public pure returns (bytes32) {
         return DEFAULT_ADMIN_ROLE;
     }
 

@@ -134,7 +134,7 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         _roleAuthorized[role][who] = false;
     }
 
-    function getOwnerRole() external pure returns (bytes32) {
+    function getAdminRole() external pure returns (bytes32) {
         return "0x00";
     }
 

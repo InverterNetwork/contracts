@@ -58,13 +58,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by the owner of the workflow
+    /// @notice Modifier to guarantee function is only callable by the admin of the workflow
     ///         address.
-    modifier onlyOrchestratorOwner() {
-        bytes32 ownerRole = authorizer.getOwnerRole();
+    modifier onlyOrchestratorAdmin() {
+        bytes32 adminRole = authorizer.getAdminRole();
 
-        if (!authorizer.hasRole(ownerRole, _msgSender())) {
-            revert Orchestrator__CallerNotAuthorized(ownerRole, _msgSender());
+        if (!authorizer.hasRole(adminRole, _msgSender())) {
+            revert Orchestrator__CallerNotAuthorized(adminRole, _msgSender());
         }
         _;
     }
@@ -200,16 +200,16 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         override(ModuleManagerBase_v1)
         returns (bool)
     {
-        return authorizer.hasRole(authorizer.getOwnerRole(), who);
+        return authorizer.hasRole(authorizer.getAdminRole(), who);
     }
 
     //--------------------------------------------------------------------------
-    // onlyOrchestratorOwner Functions
+    // onlyOrchestratorAdmin Functions
 
     /// @inheritdoc IOrchestrator_v1
     function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         address authorizerContract = address(authorizer_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
@@ -232,7 +232,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetAuthorizer(IAuthorizer_v1 authorizer_)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _executeAddModule(address(authorizer_));
         _executeRemoveModule(address(authorizer));
@@ -243,7 +243,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _cancelModuleUpdate(address(authorizer_));
     }
@@ -251,7 +251,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetFundingManagerWithTimelock(
         IFundingManager_v1 fundingManager_
-    ) external onlyOrchestratorOwner {
+    ) external onlyOrchestratorAdmin {
         address fundingManagerContract = address(fundingManager_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         bytes4 fundingManagerInterfaceId = type(IFundingManager_v1).interfaceId;
@@ -273,7 +273,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetFundingManager(IFundingManager_v1 fundingManager_)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _executeAddModule(address(fundingManager_));
         _executeRemoveModule(address(fundingManager));
@@ -284,7 +284,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _cancelModuleUpdate(address(fundingManager_));
     }
@@ -292,7 +292,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetPaymentProcessorWithTimelock(
         IPaymentProcessor_v1 paymentProcessor_
-    ) external onlyOrchestratorOwner {
+    ) external onlyOrchestratorAdmin {
         address paymentProcessorContract = address(paymentProcessor_);
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         bytes4 paymentProcessorInterfaceId =
@@ -315,7 +315,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _executeAddModule(address(paymentProcessor_));
         _executeRemoveModule(address(paymentProcessor));
@@ -326,7 +326,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelPaymentProcessorUpdate(
         IPaymentProcessor_v1 paymentProcessor_
-    ) external onlyOrchestratorOwner {
+    ) external onlyOrchestratorAdmin {
         _cancelModuleUpdate(address(paymentProcessor_));
     }
 
@@ -370,7 +370,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeTx(address target, bytes memory data)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
         returns (bytes memory)
     {
         bool ok;
