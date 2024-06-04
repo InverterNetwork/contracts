@@ -107,6 +107,10 @@ contract AUT_Roles_v1 is
         internal
         onlyInitializing
     {
+        if (initialOwner == address(0)) {
+            revert Module__Authorizer__InvalidInitialOwner();
+        }
+        
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
@@ -114,13 +118,8 @@ contract AUT_Roles_v1 is
         // make the BURN_ADMIN_ROLE immutable
         _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
 
-        // Set up OWNER role structure:
-
-        if (initialAdmin != address(0)) {
-            _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
-        } else {
-            _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        }
+        // set the initial owner as the DEFAULT_ADMIN_ROLE
+        _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
     }
 
     //--------------------------------------------------------------------------
