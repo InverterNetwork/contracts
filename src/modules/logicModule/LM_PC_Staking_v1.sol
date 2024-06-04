@@ -194,7 +194,7 @@ contract LM_PC_Staking_v1 is
     /// @inheritdoc ILM_PC_Staking_v1
     function setRewards(uint amount, uint duration)
         external
-        onlyOrchestratorOwnerOrManager
+        onlyOrchestratorAdminOrManager
     {
         _setRewards(amount, duration);
     }

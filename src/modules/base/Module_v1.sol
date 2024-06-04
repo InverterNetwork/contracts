@@ -76,17 +76,17 @@ abstract contract Module_v1 is
 
     /// @notice Modifier to guarantee function is only callable by addresses
     ///         authorized via Orchestrator_v1.
-    modifier onlyOrchestratorOwner() {
+    modifier onlyOrchestratorAdmin() {
         _checkRoleModifier(
-            __Module_orchestrator.authorizer().getOwnerRole(), _msgSender()
+            __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
         );
         _;
     }
 
     /// @notice Modifier to guarantee function is only callable by either
     ///         addresses authorized via Orchestrator_v1 or the Orchestrator_v1's manager.
-    modifier onlyOrchestratorOwnerOrManager() {
-        _checkOnlyOrchestratorOwnerOrManagerModifier();
+    modifier onlyOrchestratorAdminOrManager() {
+        _checkonlyOrchestratorAdminOrManagerModifier();
         _;
     }
 
@@ -96,6 +96,17 @@ abstract contract Module_v1 is
             __Module_orchestrator.authorizer().generateRoleId(
                 address(this), role
             ),
+            _msgSender()
+        );
+        _;
+    }
+
+    modifier onlyModuleRoleAdmin(bytes32 role) {
+        bytes32 moduleRole = __Module_orchestrator.authorizer().generateRoleId(
+            address(this), role
+        );
+        _checkRoleModifier(
+            __Module_orchestrator.authorizer().getRoleAdmin(moduleRole),
             _msgSender()
         );
         _;
@@ -186,14 +197,14 @@ abstract contract Module_v1 is
 
     function grantModuleRole(bytes32 role, address target)
         external
-        onlyOrchestratorOwner
+        onlyModuleRoleAdmin(role)
     {
         __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
     }
 
     function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
-        onlyOrchestratorOwner
+        onlyModuleRoleAdmin(role)
     {
         __Module_orchestrator.authorizer().grantRoleFromModuleBatched(
             role, targets
@@ -202,14 +213,14 @@ abstract contract Module_v1 is
 
     function revokeModuleRole(bytes32 role, address target)
         external
-        onlyOrchestratorOwner
+        onlyModuleRoleAdmin(role)
     {
         __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
     }
 
     function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
-        onlyOrchestratorOwner
+        onlyModuleRoleAdmin(role)
     {
         __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
             role, targets
@@ -280,19 +291,19 @@ abstract contract Module_v1 is
         }
     }
 
-    function _checkOnlyOrchestratorOwnerOrManagerModifier() internal view {
+    function _checkonlyOrchestratorAdminOrManagerModifier() internal view {
         IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
 
-        bytes32 ownerRole = authorizer.getOwnerRole();
+        bytes32 adminRole = authorizer.getAdminRole();
         bytes32 managerRole = authorizer.getManagerRole();
 
         if (
-            authorizer.hasRole(ownerRole, _msgSender())
+            authorizer.hasRole(adminRole, _msgSender())
                 || authorizer.hasRole(managerRole, _msgSender())
         ) {
             return;
         } else {
-            revert Module__CallerNotAuthorized(ownerRole, _msgSender());
+            revert Module__CallerNotAuthorized(adminRole, _msgSender());
         }
     }
 

@@ -50,11 +50,7 @@ contract AUT_Roles_v1 is
 
     //--------------------------------------------------------------------------
     // Storage
-
-    // Stored for easy public reference. Other Modules can assume the following roles to exist
-    bytes32 public constant ORCHESTRATOR_OWNER_ROLE = "0x01";
     bytes32 public constant ORCHESTRATOR_MANAGER_ROLE = "0x02";
-
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
@@ -69,13 +65,13 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    /// @notice Verifies that the owner being removed is not the last one
-    modifier notLastOwner(bytes32 role) {
+    /// @notice Verifies that the admin being removed is not the last one
+    modifier notLastAdmin(bytes32 role) {
         if (
-            role == ORCHESTRATOR_OWNER_ROLE
-                && getRoleMemberCount(ORCHESTRATOR_OWNER_ROLE) <= 1
+            role == DEFAULT_ADMIN_ROLE
+                && getRoleMemberCount(DEFAULT_ADMIN_ROLE) <= 1
         ) {
-            revert Module__Authorizer__OwnerRoleCannotBeEmpty();
+            revert Module__Authorizer__AdminRoleCannotBeEmpty();
         }
         _;
     }
@@ -96,46 +92,36 @@ contract AUT_Roles_v1 is
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
 
-        (address initialOwner, address initialManager) =
+        (address initialAdmin, address initialManager) =
             abi.decode(configData, (address, address));
 
-        __RoleAuthorizer_init(initialOwner, initialManager);
+        __RoleAuthorizer_init(initialAdmin, initialManager);
     }
 
-    function __RoleAuthorizer_init(address initialOwner, address initialManager)
+    function __RoleAuthorizer_init(address initialAdmin, address initialManager)
         internal
         onlyInitializing
     {
-        // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the orchestrator owners as "admins of the admin role",
-        // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
+        // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
+        // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // Set up OWNER role structure:
-
-        // -> set OWNER as admin of itself
-        _setRoleAdmin(ORCHESTRATOR_OWNER_ROLE, ORCHESTRATOR_OWNER_ROLE);
-        // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(DEFAULT_ADMIN_ROLE, ORCHESTRATOR_OWNER_ROLE);
-
-        // Set up MANAGER role structure:
-        // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, ORCHESTRATOR_OWNER_ROLE);
-        // grant MANAGER Role to specified address
+        // Grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
-        // If there is no initial owner specfied or the initial owner is the same as the deployer
+        // If there is no initial admin specfied or the initial admin is the same as the deployer
 
-        if (initialOwner != address(0)) {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
+        if (initialAdmin != address(0)) {
+            _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
         } else {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
+            _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
         }
     }
 
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    /// @notice Overrides {_revokeRole} to prevent having an empty OWNER role
+    /// @notice Overrides {_revokeRole} to prevent having an empty ADMIN role
     /// @param role The id number of the role
     /// @param who The user we want to check on
     /// @return bool Returns if revoke has been succesful
@@ -143,7 +129,7 @@ contract AUT_Roles_v1 is
         internal
         virtual
         override
-        notLastOwner(role)
+        notLastAdmin(role)
         returns (bool)
     {
         return super._revokeRole(role, who);
@@ -234,7 +220,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function grantGlobalRole(bytes32 role, address target)
         external
-        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _grantRole(roleId, target);
@@ -243,7 +229,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
         external
-        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         for (uint i = 0; i < targets.length; i++) {
@@ -254,7 +240,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function revokeGlobalRole(bytes32 role, address target)
         external
-        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _revokeRole(roleId, target);
@@ -263,7 +249,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
         external
-        onlyRole(ORCHESTRATOR_OWNER_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE)
     {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         for (uint i = 0; i < targets.length; i++) {
@@ -272,8 +258,8 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function getOwnerRole() public pure returns (bytes32) {
-        return ORCHESTRATOR_OWNER_ROLE;
+    function getAdminRole() public pure returns (bytes32) {
+        return DEFAULT_ADMIN_ROLE;
     }
 
     /// @inheritdoc IAuthorizer_v1

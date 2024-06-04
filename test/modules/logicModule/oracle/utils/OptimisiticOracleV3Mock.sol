@@ -52,7 +52,7 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
 
     /**
      * @notice Sets the default currency, liveness, and burned bond percentage.
-     * @dev Only callable by the contract owner (UMA governor).
+     * @dev Only callable by the contract admin (UMA governor).
      * @param _defaultCurrency the default currency to bond asserters in assertTruthWithDefaults.
      * @param _defaultLiveness the default liveness for assertions in assertTruthWithDefaults.
      * @param _burnedBondPercentage the percentage of the bond that is sent as fee to UMA Store contract on disputes.

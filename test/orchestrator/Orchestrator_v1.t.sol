@@ -275,10 +275,10 @@ contract OrchestratorV1Test is Test {
 
         // verify whether the init value is set and not the value from the old
         // authorizer, to check whether the replacement is successful
-        bytes32 ownerRole = orchestrator.authorizer().getOwnerRole();
-        assertFalse(orchestrator.authorizer().hasRole(ownerRole, address(this)));
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+        assertFalse(orchestrator.authorizer().hasRole(adminRole, address(this)));
         assertTrue(
-            orchestrator.authorizer().hasRole(ownerRole, address(0xA11CE))
+            orchestrator.authorizer().hasRole(adminRole, address(0xA11CE))
         );
     }
 
@@ -743,7 +743,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IOrchestrator_v1.Orchestrator__CallerNotAuthorized.selector,
-                authorizer.getOwnerRole(),
+                authorizer.getAdminRole(),
                 address(this)
             )
         );

@@ -21,8 +21,8 @@ interface IOrchestratorFactory_v1 {
     /// @notice The module's data arrays length mismatch.
     error OrchestratorFactory__ModuleDataLengthMismatch();
 
-    /// @notice The orchestrator owner is address(0)
-    error OrchestratorFactory__OrchestratorOwnerIsInvalid();
+    /// @notice The orchestrator admin is address(0)
+    error OrchestratorFactory__OrchestratorAdminIsInvalid();
 
     //--------------------------------------------------------------------------
     // Events
@@ -50,7 +50,7 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Creates a new orchestrator_v1 with caller being the orchestrator's owner.
+    /// @notice Creates a new orchestrator_v1.
     /// @param workflowConfig The workflow's config data.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
     ///                         instance.

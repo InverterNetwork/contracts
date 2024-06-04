@@ -69,7 +69,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -77,7 +77,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
             _METADATA,
             abi.encode(
                 issuanceToken_properties,
-                owner_address,
+                admin_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
@@ -95,7 +95,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
         address[] memory targets = new address[](3);
         targets[0] = buyer;
         targets[1] = seller;
-        targets[2] = owner_address;
+        targets[2] = admin_address;
 
         bondingCurveFundingManager.grantModuleRoleBatched(
             CURVE_INTERACTION_ROLE, targets
@@ -131,9 +131,9 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
 
     // Override to test deactivation
     function testMintIssuanceTokenTo(uint amount) public override {
-        assertEq(issuanceToken.balanceOf(non_owner_address), 0);
+        assertEq(issuanceToken.balanceOf(non_admin_address), 0);
 
-        vm.startPrank(address(owner_address));
+        vm.startPrank(address(admin_address));
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
@@ -144,12 +144,12 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
             );
 
             bondingCurveFundingManager.mintIssuanceTokenTo(
-                non_owner_address, amount
+                non_admin_address, amount
             );
         }
         vm.stopPrank();
 
-        assertEq(_token.balanceOf(non_owner_address), 0);
+        assertEq(_token.balanceOf(non_admin_address), 0);
     }
 }
 
@@ -176,8 +176,8 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
 
     ERC20Issuance_v1 issuanceToken;
 
-    address owner_address = address(0xA1BA);
-    address non_owner_address = address(0xB0B);
+    address admin_address = address(0xA1BA);
+    address non_admin_address = address(0xB0B);
 
     function setUp() public {
         // Deploy contracts
@@ -213,7 +213,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -221,7 +221,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
             _METADATA,
             abi.encode(
                 issuanceToken_properties,
-                owner_address,
+                admin_address,
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
@@ -401,7 +401,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
         address _receiver = makeAddr("receiver");
         uint _mintAmount = 1;
 
-        bytes32 _roleId = _authorizer.getOwnerRole();
+        bytes32 _roleId = _authorizer.getAdminRole();
 
         vm.startPrank(_minter);
         {

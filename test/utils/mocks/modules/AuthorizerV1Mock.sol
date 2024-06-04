@@ -53,7 +53,7 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
 
         _authorized[authorized] = true;
 
-        _roleAuthorized["0x01"][msg.sender] = true;
+        _roleAuthorized["0x00"][msg.sender] = true;
         _roleAuthorized["0x02"][msg.sender] = true;
     }
 
@@ -134,8 +134,8 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         _roleAuthorized[role][who] = false;
     }
 
-    function getOwnerRole() external pure returns (bytes32) {
-        return "0x01";
+    function getAdminRole() external pure returns (bytes32) {
+        return "0x00";
     }
 
     function getManagerRole() external pure returns (bytes32) {
@@ -182,7 +182,7 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
     }
 
     function getRoleAdmin(bytes32) external pure returns (bytes32) {
-        revert("Not implemented in Authorizer Mock");
+        return "0x00"; // In this mock, all roles have the owner as admin
     }
 
     function getRoleMember(bytes32, uint) external pure returns (address) {

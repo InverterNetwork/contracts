@@ -52,19 +52,19 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     // Functions
 
     /// @notice Mints a specified amount of Issuance Tokens to a designated receiver address.
-    /// @dev This function is restricted to be called only by the Orchestrator_v1 Owner.
+    /// @dev This function is restricted to be called only by the Orchestrator_v1 Admin.
     ///      It uses the internal _mint function to mint the tokens.
     /// @param _receiver The address that will receive the newly minted tokens.
     /// @param _amount The amount of tokens to be minted.
     function mintIssuanceTokenTo(address _receiver, uint _amount) external;
 
     /// @notice Set the reserve ratio used for issuing tokens on a bonding curve.
-    /// @dev This function can only be called by the Orchestrator_v1 owner, or Manager.
+    /// @dev This function can only be called by the Orchestrator_v1 admin
     /// @param _reserveRatio The new reserve ratio for buying, expressed in PPM.
     function setReserveRatioForBuying(uint32 _reserveRatio) external;
 
     /// @notice Set the reserve ratio used for redeeming tokens on a bonding curve.
-    /// @dev This function can only be called by the Orchestrator_v1 owner, or Manager.
+    /// @dev This function can only be called by the Orchestrator_v1 admin
     /// @param _reserveRatio The new reserve ratio for selling, expressed in PPM.
     function setReserveRatioForSelling(uint32 _reserveRatio) external;
 
