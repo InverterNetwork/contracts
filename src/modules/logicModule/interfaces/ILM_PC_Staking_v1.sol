@@ -78,6 +78,10 @@ interface ILM_PC_Staking_v1 {
     /// @param amount : how much token should be unstaked
     function unstake(uint amount) external;
 
+    /// @notice Collects the rewards that are earned up until now
+    /// @dev Reaps the rewards collected up to this point for the msg.Sender()
+    function claimRewards() external;
+
     /// @notice Sets the rewards that are to be distributed
     /// @dev Equally distributes the reward amount over the given time period
     /// @param amount : how much token should be distributed
