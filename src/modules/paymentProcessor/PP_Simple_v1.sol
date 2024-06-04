@@ -76,7 +76,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
 
     //--------------------------------------------------------------------------
     // Initialization
-    
+
     /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
