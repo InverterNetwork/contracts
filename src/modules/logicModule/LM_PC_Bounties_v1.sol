@@ -36,6 +36,10 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {

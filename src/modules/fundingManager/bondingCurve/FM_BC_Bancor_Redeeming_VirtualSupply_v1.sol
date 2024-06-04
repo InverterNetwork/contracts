@@ -53,6 +53,10 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          defined transactional limits and decimal precision requirements to prevent computational
  *          overflows or underflows.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is

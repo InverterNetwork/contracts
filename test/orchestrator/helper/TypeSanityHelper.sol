@@ -10,7 +10,7 @@ contract TypeSanityHelper is Test {
         _self = self;
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Helpers
 
     function assumeElemNotInSet(address[] memory set, address elem)
@@ -22,7 +22,7 @@ contract TypeSanityHelper is Test {
         }
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Types for Orchestrator_v1
     // Contract: Orchestrator_v1.sol
 
@@ -30,7 +30,7 @@ contract TypeSanityHelper is Test {
         vm.assume(id != 0);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Types for Module
     // Contract: base/ModuleManagerBase_v1.sol
 
@@ -68,7 +68,7 @@ contract TypeSanityHelper is Test {
         return invalids;
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Types for Funder
     // Contract: base/FunderManager.sol
 

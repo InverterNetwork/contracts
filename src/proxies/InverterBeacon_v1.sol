@@ -24,10 +24,14 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *          features include emergency mode control and strict version handling with major
  *          and minor version concepts.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // ERC-165 Public View Functions
 
     /// @inheritdoc ERC165
@@ -60,7 +64,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _;
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // State
 
     /// @dev The beacon's implementation address.
@@ -94,7 +98,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _upgradeTo(_implementation, _newMinorVersion, false);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Public View Functions
 
     /// @inheritdoc IBeacon
@@ -122,7 +126,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         return (majorVersion, minorVersion);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // onlyOwner Mutating Functions
 
     /// @inheritdoc IInverterBeacon_v1
@@ -134,7 +138,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _upgradeTo(newImplementation, newMinorVersion, overrideShutdown);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // onlyOwner Intervention Mechanism
 
     /// @inheritdoc IInverterBeacon_v1
@@ -157,7 +161,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         emit ShutdownReversed();
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Internal Functions
 
     function _upgradeTo(

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// Internal Interfaces
 import {IInverterTransparentUpgradeableProxy_v1} from
     "./IInverterTransparentUpgradeableProxy_v1.sol";
 

@@ -76,9 +76,9 @@ contract RoleAuthorizerE2E is E2ETest {
     }
 
     function test_e2e_RoleAuthorizer() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
@@ -108,9 +108,9 @@ contract RoleAuthorizerE2E is E2ETest {
             }
         }
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Assign Bounty Manager Roles
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // we authorize the Admin to create  bounties
         bountyManager.grantModuleRole(
@@ -137,9 +137,9 @@ contract RoleAuthorizerE2E is E2ETest {
         assertTrue(authorizer.hasRole(adminRole, orchestratorAdmin));
         assertEq(authorizer.getRoleMemberCount(adminRole), 1);
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Set up seed deposit and initial deposit by users
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
@@ -156,9 +156,9 @@ contract RoleAuthorizerE2E is E2ETest {
         }
         vm.stopPrank();
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Create bounty
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // Bounty details
         uint minimumPayoutAmount = 100e18;
@@ -177,9 +177,9 @@ contract RoleAuthorizerE2E is E2ETest {
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
         assertEq(bounty.details, details);
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Worker submits bounty
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
         ILM_PC_Bounties_v1.Contributor memory BOB =
             ILM_PC_Bounties_v1.Contributor(bountySubmitter, 200e18);
@@ -194,9 +194,9 @@ contract RoleAuthorizerE2E is E2ETest {
 
         vm.stopPrank();
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Manager verifies bounty claim
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.prank(bountyVerifier);
         bountyManager.verifyClaim(claimId, contribs);
     }

@@ -14,6 +14,10 @@ import {ElasticReceiptTokenBase_v1} from
  *          are initially assigned to the zero address to manage the elastic supply during mint
  *          and burn.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 abstract contract ElasticReceiptToken_v1 is ElasticReceiptTokenBase_v1 {

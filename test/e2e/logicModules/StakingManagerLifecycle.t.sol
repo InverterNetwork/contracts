@@ -111,9 +111,9 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
     }
 
     function test_e2e_LM_PC_Staking_v1Lifecycle() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({

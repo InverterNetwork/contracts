@@ -15,7 +15,7 @@ import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title   ModuleManagerBase_v1: Module Manager Base v1 for Inverter Network
+ * @title   ModuleManagerBase
  *
  * @dev     A contract to manage Inverter Network modules. It allows for adding and
  *          removing modules in a local registry for reference. Additional functionality
@@ -24,8 +24,12 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
  *          The transaction execution and module management is copied from Gnosis
  *          Safe's [ModuleManager](https://github.com/safe-global/safe-contracts/blob/main/contracts/base/ModuleManager.sol).
  *
- * @author  Adapted from Gnosis Safe
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
+ *          Adapted from Gnosis Safe
  */
 abstract contract ModuleManagerBase_v1 is
     IModuleManagerBase_v1,

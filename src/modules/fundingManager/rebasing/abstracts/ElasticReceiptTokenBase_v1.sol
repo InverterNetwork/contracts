@@ -55,6 +55,10 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
  *      -> Public account balance               `_accountBits[account] / _bitsPerToken`
  *      -> Public total token supply            `_totalTokenSupply`
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author Buttonwood Foundation
  * @author merkleplant
  */

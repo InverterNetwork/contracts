@@ -23,7 +23,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
-    //---------------------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------------
     // Test variables
 
     // Users
@@ -88,9 +88,9 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     }
 
     function init() private {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,

@@ -1,28 +1,39 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
-
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-
 import {IOptimisticOracleIntegrator} from
     "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/IOptimisticOracleIntegrator.sol";
 
-// External Dependencies
+// Internal Dependencies
+import {Module_v1} from "src/modules/base/Module_v1.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {OptimisticOracleV3CallbackRecipientInterface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 import {OptimisticOracleV3Interface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
+
+// External Dependencies
 import {ClaimData} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
-
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
+/**
+ * @title Optimistic Oracle Integrator
+ *
+ * @notice This module allows for the integration of the UMA OptimisticOracleV3 contract with our modules.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @author Inverter Network
+ */
 abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,
     Module_v1

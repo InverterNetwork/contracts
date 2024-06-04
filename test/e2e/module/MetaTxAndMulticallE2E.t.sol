@@ -75,9 +75,9 @@ contract MetaTxAndMulticallE2E is E2ETest {
     }
 
     function test_e2e_SendMetaTransaction() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -88,9 +88,9 @@ contract MetaTxAndMulticallE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Module E2E Test
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         //-----------------------------------------------------
         // Create signer
@@ -206,9 +206,9 @@ contract MetaTxAndMulticallE2E is E2ETest {
     }
 
     function test_e2e_SendMulticall() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({

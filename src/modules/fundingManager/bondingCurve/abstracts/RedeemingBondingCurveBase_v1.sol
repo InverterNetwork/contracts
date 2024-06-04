@@ -26,6 +26,10 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          Fee calculations utilize BPS for precision. Redeem-specific calculations should be
  *          implemented in derived contracts.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 abstract contract RedeemingBondingCurveBase_v1 is

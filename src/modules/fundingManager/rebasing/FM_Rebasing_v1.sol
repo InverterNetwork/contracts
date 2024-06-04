@@ -36,6 +36,10 @@ import {Strings} from "@oz/utils/Strings.sol";
  *          preventing excess balance accumulation and ensuring operational integrity.
  *          Custom rebase mechanics are applied based on the actual token reserves.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract FM_Rebasing_v1 is

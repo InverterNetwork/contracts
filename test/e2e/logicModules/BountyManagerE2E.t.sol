@@ -78,9 +78,9 @@ contract BountyManagerE2E is E2ETest {
     }
 
     function test_e2e_BountyManagerLifecycle() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,

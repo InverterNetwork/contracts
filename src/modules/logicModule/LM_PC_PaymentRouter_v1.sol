@@ -18,20 +18,19 @@ import {
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
-// Internal Libraries
-
-// External Libraries
-
 /**
  * @title   Payment Router
  *
  * @notice  This module enables pushing payments directly to the Payment Processor.
  *
- *
  * @dev     Extends {ERC20PaymentClientBase_v1} to integrate payment processing with
  *          bounty management, supporting dynamic additions, updates, and the locking
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */

@@ -75,9 +75,9 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
     }
 
     function test_e2e_TokenGatedRoleAuthorizer() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
@@ -107,9 +107,9 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
             }
         }
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Set up Bounty Manager Roles with different thresholds
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         //Give the Orchestrator_v1 Admin the power to change module roles
         authorizer.grantRole(authorizer.DEFAULT_ADMIN_ROLE(), orchestratorAdmin);
@@ -151,9 +151,9 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         }
         vm.stopPrank();
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Set up seed deposit and initial deposit by users
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         uint initialDeposit = 10e18;
         token.mint(address(this), initialDeposit);
@@ -171,9 +171,9 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         }
         vm.stopPrank();
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Create bounty
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.prank(orchestratorAdmin);
         uint bountyId =
             bountyManager.addBounty(100e18, 500e18, "This is a test bounty");
@@ -194,9 +194,9 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         assertEq(bounty.maximumPayoutAmount, 500e18);
         assertEq(bounty.details, "This is a test bounty");
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Worker submits bounty
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
         ILM_PC_Bounties_v1.Contributor memory BOB =
             ILM_PC_Bounties_v1.Contributor(bountySubmitter, 200e18);
@@ -211,9 +211,9 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
         vm.stopPrank();
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Manager verifies bounty claim
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.prank(bountyVerifier);
         bountyManager.verifyClaim(claimId, contribs);
 

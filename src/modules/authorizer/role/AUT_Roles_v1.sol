@@ -30,6 +30,10 @@ import {AccessControlEnumerableUpgradeable} from
  *          offer fine-grained access control through role-based permissions. Utilizes
  *          ERC2771 for meta-transactions to enhance module interaction experiences.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract AUT_Roles_v1 is

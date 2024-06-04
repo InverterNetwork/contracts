@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
-
+// Internal Interfaces
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-
 import {IAUT_EXT_VotingRoles_v1} from
     "src/modules/authorizer/role/interfaces/IAUT_EXT_VotingRoles_v1.sol";
 
+// Internal Dependencies
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 /**
  * @title   Voting Role Manager
  *
@@ -20,8 +21,13 @@ import {IAUT_EXT_VotingRoles_v1} from
  *          creating motions, casting votes, and executing actions based on collective
  *          decisions. This structure enhances governance transparency and efficacy.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
+
 contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public

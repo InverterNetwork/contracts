@@ -7,6 +7,9 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
+// Internal Libraries
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
+
 // External Dependencies
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {
@@ -14,9 +17,6 @@ import {
     ContextUpgradeable
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
-
-// Internal Libraries
-import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 /**
  * @title   Module
@@ -32,6 +32,10 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
  *
  *          Each module is identified via a unique identifier based on its major
  *          version, title, and url given in the metadata.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */

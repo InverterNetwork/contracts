@@ -1,23 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Internal Interfaces
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {
+    IERC20PaymentClientBase_v1,
+    IPaymentProcessor_v1
+} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
+
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
     Module_v1,
     ERC165
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
-
-// Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-
-import {
-    IERC20PaymentClientBase_v1,
-    IPaymentProcessor_v1
-} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
-
-import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -26,6 +24,20 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
 
+/**
+ * @title   Staking Module
+ *
+ * @notice  Provides a mechanism for users to stake tokens and earn rewards.
+ *
+ * @dev     Extends {ERC20PaymentClientBase_v1} and integrates with the Payment Processor
+ *          to enable the distribution of rewards to stakers.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @author  Inverter Network
+ */
 contract LM_PC_Staking_v1 is
     ILM_PC_Staking_v1,
     ERC20PaymentClientBase_v1,

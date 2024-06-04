@@ -25,6 +25,10 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          - calculating the issuance amount by means of an abstract function to be implemented in
  *             the downstream contract.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author Inverter Network
  */
 contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
@@ -33,7 +37,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
     uint public MAX_SUPPLY;
     uint8 internal _decimals;
 
-    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Modifiers
     modifier onlyMinter() {
         if (_msgSender() != allowedMinter) {
@@ -42,7 +46,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
         _;
     }
 
-    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Constructor
 
     constructor(
@@ -58,7 +62,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
         _decimals = decimals_;
     }
 
-    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // External Functions
 
     function decimals() public view override returns (uint8) {
@@ -83,7 +87,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
         _burn(_from, _amount);
     }
 
-    //------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Sets the address of the minter.

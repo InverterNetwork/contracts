@@ -60,7 +60,7 @@ contract TransactionForwarderV1Test is Test {
         assertEq(signer, signerResult);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: testExecuteMulticall()
 
     function testExecuteMulticallFailsNoTrustedForwarder() public {
@@ -214,7 +214,7 @@ contract TransactionForwarderV1Test is Test {
         //Note: We are not testing _isTrustedByTarget as it is just a straightup copy from openzeppelins
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Helper Functions
 
     function createSingleCall(uint seed, address target)

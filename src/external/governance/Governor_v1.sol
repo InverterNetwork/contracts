@@ -32,6 +32,10 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  *          functionalities, i.e. setting the fee manager, setting the timelock, upgrading the
  *          beacons and exposing the emergency shutdown.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {

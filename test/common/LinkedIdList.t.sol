@@ -24,7 +24,7 @@ contract LinkedIdListTest is Test {
         assertEq(list.listIds().length, 0);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Modifier
 
     function testValidNewId(uint[] calldata seed, uint id) public {
@@ -140,7 +140,7 @@ contract LinkedIdListTest is Test {
         list.moveIdInList(id, prevId, idToPositionAfter);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // View Functions
 
     function testListIds(uint[] calldata seed) public {
@@ -206,7 +206,7 @@ contract LinkedIdListTest is Test {
         list.getNextId(0);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Mutating Functions
 
     function testAddId(uint[] calldata seed) public {
@@ -385,7 +385,7 @@ contract LinkedIdListTest is Test {
         list.moveIdInList(0, 0, 1);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Helper Functions
 
     //Create ids that are not the same but still randomised

@@ -33,6 +33,10 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          multiple clients and recipients, integrated with error handling for
  *          payments and managing active streaming schedules and their cancellations.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
  * @author  Inverter Network
  */
 contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {

@@ -62,9 +62,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
     */
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Chain Configuration
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     uint sepoliaForkId;
 
@@ -73,9 +73,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     address USDC_address = 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238; // Sepolia USDC address
     address USDC_Minter = 0x39B3756655A34F869208c72b661f1afdEc1d428F; // Sepolia USDC Master Minter
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Global Variables
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
@@ -91,9 +91,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     address[] users;
     uint[] amounts;
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Mock Data
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     address OWNER = address(0x1); //Workflow owner
     address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
@@ -110,9 +110,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     uint[NUM_OF_TRANCHES] trancheValues = [100, 200, 300, 400];
     uint[NUM_OF_TRANCHES] trancheRewards = [100e18, 100e18, 100e18, 100e18];
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test Run Parameters
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     uint constant REWARD_DEPOSIT_AMOUNT = 50_000_000e18;
 
@@ -218,9 +218,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     }
 
     function test_e2e_LM_PC_KPIRewarder_v1Lifecycle() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -246,9 +246,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             }
         }
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Test Context Setup
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // Generate Users and Amounts
         users = new address[](TOTAL_USERS);
@@ -271,9 +271,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         rewardToken.approve(address(fundingManager), REWARD_DEPOSIT_AMOUNT);
         fundingManager.deposit(REWARD_DEPOSIT_AMOUNT);
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Test Rounds
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // Now we loop through the rounds. First round happens with no stakers and the rewards are not distributed, but the reward value is modified. Since the funds stay in the FundingManager until claiming, there are no locked funds in the kpiRewarder.
 
@@ -400,9 +400,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         //return (distributedInRound, expectedDistributed);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // E2E Helper Functions
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
 
     function _getExpectedRewardAmount(
         ILM_PC_KPIRewarder_v1.KPI memory resolvedKPI,
