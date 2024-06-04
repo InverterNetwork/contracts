@@ -39,13 +39,6 @@ contract PP_SimpleV1Test is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Events
-
-    /// @notice Emitted when a payment gets processed for execution.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param createdAt Timestamp at which the order was created.
-    /// @param dueTo Timestamp at which the full amount should be payed out/claimable.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
@@ -53,18 +46,9 @@ contract PP_SimpleV1Test is ModuleTest {
         uint createdAt,
         uint dueTo
     );
-
-    /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
     );
-
-    /// @notice Emitted when a payment was unclaimable due to a token error.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that wshould have received the payment.
-    /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient, address indexed recipient, uint amount
     );
