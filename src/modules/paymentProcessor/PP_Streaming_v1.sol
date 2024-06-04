@@ -634,6 +634,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint _cliff,
         uint _end
     ) internal {
+        ++numStreams[client][_paymentReceiver];
         if (
             !validPaymentReceiver(_paymentReceiver) || !validTotal(_total)
                 || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
@@ -642,8 +643,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _paymentReceiver, _token, _total, _start, _cliff, _end
             );
         } else {
-            ++numStreams[client][_paymentReceiver];
-
             streams[client][_paymentReceiver][_streamId] =
                 Stream(_token, _streamId, _total, 0, _start, _cliff, _end);
 
