@@ -317,7 +317,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         );
 
         assertApproxEqAbs(
-            totalDistributed, totalExpectedRewardsDistributed, 1e6
+            totalDistributed, totalExpectedRewardsDistributed, 1e2
         );
 
         /*
