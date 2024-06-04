@@ -80,6 +80,14 @@ contract AUT_Roles_v1 is
         _;
     }
 
+    /// @notice Verifies that the owner being added is not the orchestrator
+    modifier noSelfOwner(bytes32 role, address who) {
+        if (role == ORCHESTRATOR_OWNER_ROLE && who == address(orchestrator())) {
+            revert Module__Authorizer__OrchestratorCannotHaveOwnerRole();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -145,6 +153,20 @@ contract AUT_Roles_v1 is
         returns (bool)
     {
         return super._revokeRole(role, who);
+    }
+
+    /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @return bool Returns if grant has been succesful
+    function _grantRole(bytes32 role, address who)
+        internal
+        virtual
+        override
+        noSelfOwner(role, who)
+        returns (bool)
+    {
+        return super._grantRole(role, who);
     }
 
     //--------------------------------------------------------------------------

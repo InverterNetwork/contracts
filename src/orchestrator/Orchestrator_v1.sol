@@ -285,8 +285,15 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     fundingManagerContract, fundingManagerInterfaceId
                 )
         ) {
-            _initiateAddModuleWithTimelock(fundingManagerContract);
-            _initiateRemoveModuleWithTimelock(address(fundingManager));
+            if (fundingManager.token() != fundingManager_.token()) {
+                revert Orchestrator__MismatchedTokenForFundingManager(
+                    address(fundingManager.token()),
+                    address(fundingManager_.token())
+                );
+            } else {
+                _initiateAddModuleWithTimelock(fundingManagerContract);
+                _initiateRemoveModuleWithTimelock(address(fundingManager));
+            }
         } else {
             revert Orchestrator__InvalidModuleType(fundingManagerContract);
         }
