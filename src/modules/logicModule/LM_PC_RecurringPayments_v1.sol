@@ -101,6 +101,9 @@ contract LM_PC_RecurringPayments_v1 is
     /// @dev List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initialization
 

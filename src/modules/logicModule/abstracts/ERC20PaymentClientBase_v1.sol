@@ -82,6 +82,9 @@ abstract contract ERC20PaymentClientBase_v1 is
     /// @dev The current cumulative amount of tokens outstanding.
     mapping(address => uint) internal _outstandingTokenAmounts;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
 

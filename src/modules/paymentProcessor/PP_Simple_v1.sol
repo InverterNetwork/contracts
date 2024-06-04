@@ -68,12 +68,18 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // State
+    // Storage
 
     /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
     /// @dev paymentClient => paymentReceiver => unclaimable Amount
     mapping(address => mapping(address => uint)) internal
         unclaimableAmountsForRecipient;
+
+    // Gap for possible future upgrades
+    uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Initialization
 
     /// @inheritdoc Module_v1
     function init(

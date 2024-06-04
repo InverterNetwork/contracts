@@ -93,6 +93,9 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     // Stores the threshold amount for each token in a role
     mapping(bytes32 => uint) public thresholdMap;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 

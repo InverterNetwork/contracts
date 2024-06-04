@@ -71,6 +71,9 @@ abstract contract Module_v1 is
     /// @custom:invariant Not mutated after initialization.
     Metadata internal __Module_metadata;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Modifiers
     //

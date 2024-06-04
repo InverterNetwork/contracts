@@ -58,6 +58,9 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev Sell fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000
     uint public sellFee;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Modifiers
 
