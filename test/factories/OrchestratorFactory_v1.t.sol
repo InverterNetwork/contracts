@@ -8,6 +8,7 @@ import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {Ownable} from "@oz/access/Ownable.sol";
 
 // Internal Interfaces
 import {
@@ -151,11 +152,17 @@ contract OrchestratorFactoryV1Test is Test {
         );
 
         //Check that workflowConfig was properly forwarded
-        (bool independentUpdates, address independentUpdateAdmin) =
+        (bool independentUpdates, address independentUpdateProxyAdmin) =
             moduleFactory.givenWorkflowConfig();
 
         assertEq(workflowConfig.independentUpdates, independentUpdates);
-        assertEq(workflowConfig.independentUpdateAdmin, independentUpdateAdmin);
+        if (workflowConfig.independentUpdates) {
+            address independentUpdateAdmin =
+                Ownable(independentUpdateProxyAdmin).owner();
+            assertEq(
+                workflowConfig.independentUpdateAdmin, independentUpdateAdmin
+            );
+        }
 
         // Check that orchestrator's strorage correctly initialized.
         assertEq(orchestrator.orchestratorId(), 1);
