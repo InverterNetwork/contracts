@@ -123,7 +123,28 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     function setUp() public override {
         // Pin tests to a block o save in RPC calls
         uint forkBlock = 5_723_995; //April 18 2024 12:15 EST
-        sepoliaForkId = vm.createSelectFork(vm.rpcUrl("sepolia"), forkBlock);
+
+        // Get RPC URL from the foundry.toml via the environment
+        // if that fails, set the fallback rpc url
+        string memory rpcUrl;
+        try vm.rpcUrl("sepolia") returns (string memory url) {
+            rpcUrl = url;
+        } catch {
+            console.log(
+                "Failed to get valid rpc url for sepolia from env, using fallback"
+            );
+            rpcUrl = vm.rpcUrl("https://rpc2.sepolia.org/");
+        }
+
+        // Try creating the fork via the rpc url set above
+        // if that fails, we alert the user about this
+        try vm.createSelectFork(rpcUrl, forkBlock) returns (uint forkId) {
+            sepoliaForkId = forkId;
+        } catch {
+            revert(
+                "Failed to create fork, missing working Sepolia RPC URL - Check README.md"
+            );
+        }
 
         // We deploy and label the necessary tokens for the tests
         USDC = ERC20Mock(USDC_address); //we use it  mock so we can call mint functions
