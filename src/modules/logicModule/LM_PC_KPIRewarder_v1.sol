@@ -278,7 +278,7 @@ contract LM_PC_KPIRewarder_v1 is
 
     function setMinimumStake(uint _minimumStake)
         external
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         minimumStake = _minimumStake;
     }

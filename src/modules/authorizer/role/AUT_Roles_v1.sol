@@ -82,10 +82,10 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    /// @notice Verifies that the owner being added is not the orchestrator
-    modifier noSelfOwner(bytes32 role, address who) {
-        if (role == ORCHESTRATOR_OWNER_ROLE && who == address(orchestrator())) {
-            revert Module__Authorizer__OrchestratorCannotHaveOwnerRole();
+    /// @notice Verifies that the admin being added is not the orchestrator
+    modifier noSelfAdmin(bytes32 role, address who) {
+        if (role == DEFAULT_ADMIN_ROLE && who == address(orchestrator())) {
+            revert Module__Authorizer__OrchestratorCannotHaveAdminRole();
         }
         _;
     }
@@ -110,7 +110,7 @@ contract AUT_Roles_v1 is
         internal
         onlyInitializing
     {
-        if (initialOwner == address(0)) {
+        if (initialAdmin == address(0)) {
             revert Module__Authorizer__InvalidInitialOwner();
         }
 
@@ -121,8 +121,8 @@ contract AUT_Roles_v1 is
         // make the BURN_ADMIN_ROLE immutable
         _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
 
-        // set the initial owner as the DEFAULT_ADMIN_ROLE
-        _grantRole(DEFAULT_ADMIN_ROLE, initialOwner);
+        // set the initial admin as the DEFAULT_ADMIN_ROLE
+        _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
     }
 
     //--------------------------------------------------------------------------
@@ -150,7 +150,7 @@ contract AUT_Roles_v1 is
         internal
         virtual
         override
-        noSelfOwner(role, who)
+        noSelfAdmin(role, who)
         returns (bool)
     {
         return super._grantRole(role, who);
