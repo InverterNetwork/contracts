@@ -73,7 +73,7 @@ abstract contract OptimisticOracleIntegrator is
     ) internal onlyInitializing {
         _setOptimisticOracle(ooAddr);
         _setDefaultAssertionLiveness(liveness);
-        _setDefaultCurrency(currencyAddr, bondAmount);
+        _setDefaultCurrencyAndBond(currencyAddr, bondAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -98,11 +98,11 @@ abstract contract OptimisticOracleIntegrator is
     // Setter Functions
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    function setDefaultCurrency(address _newCurrency, uint _newBond)
+    function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         public
         onlyOrchestratorOwner
     {
-        _setDefaultCurrency(_newCurrency, _newBond);
+        _setDefaultCurrencyAndBond(_newCurrency, _newBond);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
@@ -121,7 +121,7 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Internal Functions
 
-    function _setDefaultCurrency(address _newCurrency, uint _newBond)
+    function _setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         internal
     {
         if (address(_newCurrency) == address(0)) {
