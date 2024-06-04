@@ -2,6 +2,8 @@
 pragma solidity 0.8.23;
 
 //Internal Interfaces
+import {IInverterProxyAdmin_v1} from
+    "src/proxies/interfaces/IInverterProxyAdmin_v1.sol";
 import {IInverterTransparentUpgradeableProxy_v1} from
     "src/proxies/interfaces/IInverterTransparentUpgradeableProxy_v1.sol";
 
@@ -17,23 +19,19 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  *
  * @author  Inverter Network
  */
-contract InverterProxyAdmin_v1 is Ownable2Step {
+contract InverterProxyAdmin_v1 is Ownable2Step, IInverterProxyAdmin_v1 {
     /// @notice Constructs the InverterProxyAdmin_v1.
     /// @param initialOwner The initial owner of the contract.
     constructor(address initialOwner) Ownable(initialOwner) {}
 
-    /// @notice Upgrades the corresponding proxy to the newest version of the implementation.
-    /// @dev This contract must be othe admin/owner of the proxy.
-    /// @param proxy The proxy to upgrade.
+    /// @inheritdoc IInverterProxyAdmin_v1
     function upgradeToNewestVersion(
         IInverterTransparentUpgradeableProxy_v1 proxy
     ) external onlyOwner {
         proxy.upgradeToNewestVersion();
     }
 
-    /// @notice Upgrades multiple proxies to the newest version of the implementation.
-    /// @dev This contract must be othe admin/owner of the proxies.
-    /// @param proxies The proxies to upgrade.
+    /// @inheritdoc IInverterProxyAdmin_v1
     function upgradeToNewestVersionBatched(
         IInverterTransparentUpgradeableProxy_v1[] calldata proxies
     ) external onlyOwner {
