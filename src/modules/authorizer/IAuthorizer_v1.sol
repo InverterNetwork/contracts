@@ -102,8 +102,4 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice Returns the role ID of the owner role
     /// @return The role ID
     function getOwnerRole() external view returns (bytes32);
-
-    /// @notice Returns the role ID of the manager role
-    /// @return The role ID
-    function getManagerRole() external view returns (bytes32);
 }

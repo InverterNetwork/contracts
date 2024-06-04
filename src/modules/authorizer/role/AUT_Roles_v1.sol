@@ -53,7 +53,6 @@ contract AUT_Roles_v1 is
 
     // Stored for easy public reference. Other Modules can assume the following roles to exist
     bytes32 public constant ORCHESTRATOR_OWNER_ROLE = "0x01";
-    bytes32 public constant ORCHESTRATOR_MANAGER_ROLE = "0x02";
 
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
@@ -96,13 +95,12 @@ contract AUT_Roles_v1 is
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
 
-        (address initialOwner, address initialManager) =
-            abi.decode(configData, (address, address));
+        (address initialOwner) = abi.decode(configData, (address));
 
-        __RoleAuthorizer_init(initialOwner, initialManager);
+        __RoleAuthorizer_init(initialOwner);
     }
 
-    function __RoleAuthorizer_init(address initialOwner, address initialManager)
+    function __RoleAuthorizer_init(address initialOwner)
         internal
         onlyInitializing
     {
@@ -116,12 +114,6 @@ contract AUT_Roles_v1 is
         _setRoleAdmin(ORCHESTRATOR_OWNER_ROLE, ORCHESTRATOR_OWNER_ROLE);
         // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, ORCHESTRATOR_OWNER_ROLE);
-
-        // Set up MANAGER role structure:
-        // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
-        _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, ORCHESTRATOR_OWNER_ROLE);
-        // grant MANAGER Role to specified address
-        _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
         // If there is no initial owner specfied or the initial owner is the same as the deployer
 
@@ -274,11 +266,6 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function getOwnerRole() public pure returns (bytes32) {
         return ORCHESTRATOR_OWNER_ROLE;
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function getManagerRole() public pure returns (bytes32) {
-        return ORCHESTRATOR_MANAGER_ROLE;
     }
 
     //--------------------------------------------------------------------------

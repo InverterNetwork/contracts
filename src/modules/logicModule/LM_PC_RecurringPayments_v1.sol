@@ -188,7 +188,7 @@ contract LM_PC_RecurringPayments_v1 is
         address recipient
     )
         external
-        onlyOrchestratorOwnerOrManager
+        onlyOrchestratorOwner
         validAmount(amount)
         validStartEpoch(startEpoch)
         validRecipient(recipient)
@@ -220,7 +220,7 @@ contract LM_PC_RecurringPayments_v1 is
     /// @inheritdoc ILM_PC_RecurringPayments_v1
     function removeRecurringPayment(uint prevId, uint id)
         external
-        onlyOrchestratorOwnerOrManager
+        onlyOrchestratorOwner
     {
         //trigger to resolve the given Payment
         _triggerFor(id, _paymentList.getNextId(id));

@@ -166,7 +166,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata, abi.encode(address(this), address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 

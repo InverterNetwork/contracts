@@ -24,7 +24,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
     // E2E Test Variables
     address orchestratorOwner = makeAddr("orchestratorOwner");
-    address orchestratorManager = makeAddr("orchestratorManager");
+    address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
     ERC20Mock gatingToken = new ERC20Mock("Gating Token", "GATOR");
@@ -53,8 +53,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this))
+                tokenRoleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 
@@ -137,7 +136,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
             authorizer.setThreshold(verifierRoleId, address(gatingToken), 50);
 
             // We mint 51 tokens to the orchestrator manager so they can verify bounties
-            gatingToken.mint(orchestratorManager, 51);
+            gatingToken.mint(bountyVerifier, 51);
 
             // Make the CLAIM_ADMIN_ROLE token-gated by GATOR token and set the threshold
             bytes32 claimRoleId = authorizer.generateRoleId(
@@ -181,7 +180,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
         // others can't add it
         vm.expectRevert();
-        vm.prank(orchestratorManager);
+        vm.prank(bountyVerifier);
         bountyManager.addBounty(100e18, 500e18, "This is a test bounty");
 
         vm.expectRevert();
@@ -215,7 +214,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Manager verifies bounty claim
         //--------------------------------------------------------------------------------
-        vm.prank(orchestratorManager);
+        vm.prank(bountyVerifier);
         bountyManager.verifyClaim(claimId, contribs);
 
         // the worker can't verifiy it
