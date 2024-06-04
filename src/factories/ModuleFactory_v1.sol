@@ -94,6 +94,9 @@ contract ModuleFactory_v1 is
     /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Constructor & Initializer
 

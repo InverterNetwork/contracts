@@ -46,14 +46,14 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice The KPI number is invalid
     error Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
 
-    /// @notice The target value for the assertion cannot be zero
-    error Module__LM_PC_KPIRewarder_v1__InvalidTargetValue();
-
     /// @notice The Queue for new stakers is full
     error Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
 
     /// @notice The Token used paying the bond cannot be the same that is being staked.
     error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
+
+    /// @notice An assertion can only by posted if the preceding one is resolved.
+    error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
 
     //--------------------------------------------------------------------------
     // Events
