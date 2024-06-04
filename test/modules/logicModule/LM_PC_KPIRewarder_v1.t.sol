@@ -48,7 +48,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
 
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
-    uint constant MOCK_ASSERTION_DATA = 100;
+    uint constant MOCK_ASSERTED_VALUE = 100;
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
     address USER_1 = address(0xA1BA);
 
@@ -365,7 +365,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            bytes32(MOCK_ASSERTION_DATA),
+            bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
         ); //we don't know the last one
@@ -392,7 +392,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             kpiManager.getAssertionConfig(assertionId);
 
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
-        assertEq(assertion.data, bytes32(MOCK_ASSERTION_DATA));
+        assertEq(assertion.data, bytes32(MOCK_ASSERTED_VALUE));
         assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
 
         assertEq(rewardRoundConfig.creationTime, block.timestamp);
@@ -423,7 +423,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            bytes32(MOCK_ASSERTION_DATA),
+            bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
         );
@@ -445,7 +445,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             kpiManager.getAssertionConfig(assertionId);
 
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
-        assertEq(assertion.data, bytes32(MOCK_ASSERTION_DATA));
+        assertEq(assertion.data, bytes32(MOCK_ASSERTED_VALUE));
         assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
 
         assertEq(rewardRoundConfig.creationTime, block.timestamp);
