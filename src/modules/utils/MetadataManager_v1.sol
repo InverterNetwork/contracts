@@ -43,6 +43,9 @@ contract MetadataManager_v1 is IMetadataManager_v1, Module_v1 {
     OrchestratorMetadata private _orchestratorMetadata;
     MemberMetadata[] private _teamMetadata;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initialization
 

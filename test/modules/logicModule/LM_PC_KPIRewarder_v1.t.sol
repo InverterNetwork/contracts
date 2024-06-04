@@ -268,6 +268,8 @@ postAssertionTest
 │   └── it should revert 
 ├── when the specified KPI does not exist
 │   └── it should revert 
+├── when there is an unresolved assertion live
+│   └── it should revert 
 ├── when stakingQueue length is bigger than 0
 │   ├── it should stake all orders in the stakingQueue
 │   └── it should remove the amount form the queued funds
@@ -341,6 +343,63 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             100,
             99_999
         );
+    }
+
+    function test_RevertWhen_ThereIsALiveUnresolvedAssertion() external {
+        // prepare conditions
+        createDummyIncontinuousKPI();
+
+        // prepare  bond and asserter authorization
+        kpiManager.grantModuleRole(
+            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
+        );
+        feeToken.mint(
+            address(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken))
+        ); //
+        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
+        feeToken.approve(
+            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
+        );
+        vm.stopPrank();
+
+        // SuT
+        vm.expectEmit(true, false, false, false, address(kpiManager));
+        emit DataAsserted(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            0x0
+        );
+        vm.prank(address(MOCK_ASSERTER_ADDRESS));
+        bytes32 assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
+
+        // state after
+        assertEq(kpiManager.assertionPending(), true);
+
+        // Posting another assertion should now fail
+        vm.expectRevert(
+            ILM_PC_KPIRewarder_v1
+                .Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists
+                .selector
+        );
+        vm.prank(address(MOCK_ASSERTER_ADDRESS));
+        assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTER_ADDRESS,
+            100,
+            0
+        );
+
+        // created one is still pending
+        assertEq(kpiManager.assertionPending(), true);
     }
 
     function test_WhenStakingQueueLengthIsBiggerThan0(
@@ -879,6 +938,10 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
         kpiManager.assertionResolvedCallback(createdID, false);
         vm.stopPrank();
+
+        // Check assertion data is deleted
+        assertEq(kpiManager.getAssertion(createdID).asserter, address(0)); // address(0) asserters are not possible in the system
+        assertEq(kpiManager.getAssertionConfig(createdID).creationTime, 0);
     }
 
     modifier whenTheAssertionResolvedToTrue() {
@@ -906,9 +969,6 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(250e18, 1, 250e18, block.timestamp + 1);
-
-        vm.expectEmit(true, true, true, true, address(kpiManager));
         emit DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
@@ -917,8 +977,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             createdID
         );
 
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit RewardSet(250e18, 1, 250e18, block.timestamp + 1);
+
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
+
+        // Check storage state is modified
+        assertEq(kpiManager.getAssertion(createdID).resolved, true);
+        assertEq(kpiManager.getAssertionConfig(createdID).distributed, true);
 
         vm.warp(block.timestamp + 3);
 
@@ -982,9 +1049,6 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(200e18, 1, 200e18, block.timestamp + 1);
-
-        vm.expectEmit(true, true, true, true, address(kpiManager));
         emit DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
@@ -993,9 +1057,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             createdID
         );
 
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit RewardSet(200e18, 1, 200e18, block.timestamp + 1);
+
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
 
+        // Check storage state is modified
+        assertEq(kpiManager.getAssertion(createdID).resolved, true);
+        assertEq(kpiManager.getAssertionConfig(createdID).distributed, true);
         vm.warp(block.timestamp + 3);
 
         uint length = users.length;

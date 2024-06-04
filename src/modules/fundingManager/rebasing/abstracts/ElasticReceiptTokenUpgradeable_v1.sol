@@ -19,6 +19,9 @@ import {ElasticReceiptTokenBase_v1} from
 abstract contract ElasticReceiptTokenUpgradeable_v1 is
     ElasticReceiptTokenBase_v1
 {
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
