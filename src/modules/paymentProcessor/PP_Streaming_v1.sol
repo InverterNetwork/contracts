@@ -616,6 +616,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint _dueTo,
         uint _walletId
     ) internal {
+        ++numVestingWallets[client][_paymentReceiver];
         if (
             !validAddress(_paymentReceiver) || !validSalary(_salary)
                 || !validStart(_start)
@@ -624,8 +625,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _paymentReceiver, _salary, _start, _dueTo
             );
         } else {
-            ++numVestingWallets[client][_paymentReceiver];
-
             vestings[client][_paymentReceiver][_walletId] =
                 VestingWallet(_salary, 0, _start, _dueTo, _walletId);
 
