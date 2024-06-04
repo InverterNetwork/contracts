@@ -77,7 +77,8 @@ interface IOptimisticOracleIntegrator is
     /// @notice Sets the default currency and amount for the bond.
     /// @param _newCurrency The address of the new default currency.
     /// @param _newBond The new bond amount.
-    function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond) external;
+    function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
+        external;
 
     /// @notice Sets the OptimisticOracleV3 instance where assertions will be published to.
     /// @param _newOO The address of the new OptimisticOracleV3 instance.

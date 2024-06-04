@@ -170,7 +170,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
     */
 
-    function testsetDefaultCurrencyAndBondFails_whenNewCurrencyIsZero() public {
+    function testsetDefaultCurrencyAndBondFails_whenNewCurrencyIsZero()
+        public
+    {
         vm.expectRevert(
             IOptimisticOracleIntegrator
                 .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
@@ -198,7 +200,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         ooIntegrator.setDefaultCurrencyAndBond(whitelisted, proposedBond);
     }
 
-    function testsetDefaultCurrencyAndBond(address whitelisted, uint bond) public {
+    function testsetDefaultCurrencyAndBond(address whitelisted, uint bond)
+        public
+    {
         _validateAddress(whitelisted); // make sure it doesn't collide with addresses in use by the test
 
         ooV3.whitelistCurrency(whitelisted, 0);
