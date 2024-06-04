@@ -104,7 +104,6 @@ contract AUT_Roles_v1 is
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-
         // If there is no initial admin specfied or the initial admin is the same as the deployer
 
         if (initialAdmin != address(0)) {
