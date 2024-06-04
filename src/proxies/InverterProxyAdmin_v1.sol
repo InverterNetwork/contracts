@@ -35,7 +35,7 @@ contract InverterProxyAdmin_v1 is Ownable2Step, IInverterProxyAdmin_v1 {
     function upgradeToNewestVersionBatched(
         IInverterTransparentUpgradeableProxy_v1[] calldata proxies
     ) external onlyOwner {
-        for (uint i; i < proxies.length; i++) {
+        for (uint i; i < proxies.length; ++i) {
             proxies[i].upgradeToNewestVersion();
         }
     }
