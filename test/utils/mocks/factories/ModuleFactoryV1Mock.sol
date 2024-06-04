@@ -12,13 +12,10 @@ import {
 
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
-
-    // Note to not start too low as, e.g., modules are not allowed to have
-    // address(0x1).
-    uint public addressCounter = 10;
 
     address public governor = address(0x99999);
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
@@ -29,8 +26,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         bytes memory,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
-        givenWorkflowConfig = workflowConfig;
-        return address(uint160(++addressCounter));
+        return address(new ModuleV1Mock());
     }
 
     function getBeaconAndId(IModule_v1.Metadata memory metadata)

@@ -110,7 +110,7 @@ contract AUT_Roles_v1 is
         if (initialOwner == address(0)) {
             revert Module__Authorizer__InvalidInitialOwner();
         }
-        
+
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".

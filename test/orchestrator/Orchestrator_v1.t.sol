@@ -36,6 +36,7 @@ import {ModuleFactoryV1Mock} from
     "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
+import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -88,65 +89,31 @@ contract OrchestratorV1Test is Test {
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
-    function testInit(uint orchestratorId, address[] memory modules) public {
+    function testInit(uint orchestratorId, uint moduleAmount) public {
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
 
-        address[] memory truncatedModules = new address[](125);
-        if (modules.length > 125) {
-            for (uint i; i < 125; i++) {
-                truncatedModules[i] = modules[i];
-            }
-            types.assumeValidModules(truncatedModules);
+        address[] memory modules = createModules(moduleAmount);
 
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(truncatedModules);
+        vm.expectEmit(true, true, true, false);
+        emit OrchestratorInitialized(
+            orchestratorId,
+            address(fundingManager),
+            address(authorizer),
+            address(paymentProcessor),
+            modules,
+            address(governor)
+        );
 
-            vm.expectEmit(true, true, true, false);
-            emit OrchestratorInitialized(
-                orchestratorId,
-                address(fundingManager),
-                address(authorizer),
-                address(paymentProcessor),
-                truncatedModules,
-                address(governor)
-            );
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                truncatedModules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        } else {
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(modules);
-
-            vm.expectEmit(true, true, true, false);
-            emit OrchestratorInitialized(
-                orchestratorId,
-                address(fundingManager),
-                address(authorizer),
-                address(paymentProcessor),
-                truncatedModules,
-                address(governor)
-            );
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                modules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        }
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
 
         // Check that orchestrator's storage correctly initialized.
         assertEq(orchestrator.orchestratorId(), orchestratorId);
@@ -161,87 +128,8 @@ contract OrchestratorV1Test is Test {
         assertTrue(orchestrator.isTrustedForwarder(address(forwarder)));
     }
 
-    function testReinitFails(uint orchestratorId, address[] memory modules)
-        public
-    {
-        types.assumeValidOrchestratorId(orchestratorId);
-
-        address[] memory truncatedModules = new address[](125);
-        if (modules.length > 125) {
-            for (uint i; i < 125; i++) {
-                truncatedModules[i] = modules[i];
-            }
-
-            types.assumeValidModules(truncatedModules);
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(truncatedModules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                truncatedModules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-
-            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                truncatedModules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        } else {
-            types.assumeValidModules(modules);
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(modules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                modules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-
-            vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                modules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Tests: Replacing the three base modules: authorizer, funding manager,
-    //        payment processor
-
-    function testInitiateAndExecuteSetAuthorizer(
-        uint orchestratorId,
-        address[] memory modules
-    ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
-        types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
+    function testReinitFails(uint orchestratorId, uint moduleAmount) public {
+        address[] memory modules = createModules(moduleAmount);
 
         // Initialize orchestrator.
         orchestrator.init(
@@ -254,12 +142,41 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        orchestrator.init(
+            orchestratorId,
+            modules,
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Replacing the three base modules: authorizer, funding manager,
+    //        payment processor
+
+    function testInitiateAndExecuteSetAuthorizer(
+        uint orchestratorId,
+        uint moduleAmount
+    ) public {
+        types.assumeValidOrchestratorId(orchestratorId);
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
         authorizer.setIsAuthorized(address(this), true);
 
         // Create new authorizer module
         AuthorizerV1Mock newAuthorizer = new AuthorizerV1Mock();
-        vm.assume(newAuthorizer != authorizer);
-        types.assumeElemNotInSet(modules, address(newAuthorizer));
 
         newAuthorizer.mockInit(abi.encode(address(0xA11CE)));
 
@@ -284,22 +201,15 @@ contract OrchestratorV1Test is Test {
 
     function testInitiateSetAuthorizerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
 
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
             address(moduleFactory),
-            modules,
+            createModules(moduleAmount),
             fundingManager,
             authorizer,
             paymentProcessor,
@@ -310,8 +220,6 @@ contract OrchestratorV1Test is Test {
 
         // Create new authorizer module
         address newAuthorizer = address(0x8888);
-        vm.assume(newAuthorizer != address(authorizer));
-        types.assumeElemNotInSet(modules, address(newAuthorizer));
 
         // set the new payment processor module. First the verification function reverts, then the setter.
         vm.expectRevert();
@@ -329,22 +237,15 @@ contract OrchestratorV1Test is Test {
 
     function testInitiateAndExecuteSetFundingManager(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
 
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
             address(moduleFactory),
-            modules,
+            createModules(moduleAmount),
             fundingManager,
             authorizer,
             paymentProcessor,
@@ -358,9 +259,7 @@ contract OrchestratorV1Test is Test {
 
         // Create new funding manager module
         FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
-        vm.assume(newFundingManager != fundingManager);
         newFundingManager.setToken(IERC20(address(0xA11CE)));
-        types.assumeElemNotInSet(modules, address(newFundingManager));
 
         orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
         vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -377,22 +276,14 @@ contract OrchestratorV1Test is Test {
 
     function testInitiateSetFundingManagerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
-
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
             address(moduleFactory),
-            modules,
+            createModules(moduleAmount),
             fundingManager,
             authorizer,
             paymentProcessor,
@@ -406,8 +297,6 @@ contract OrchestratorV1Test is Test {
 
         // Create new funding manager module
         address newFundingManager = address(0x8888);
-        vm.assume(newFundingManager != address(fundingManager));
-        types.assumeElemNotInSet(modules, newFundingManager);
 
         vm.expectRevert();
         vm.expectRevert(
@@ -424,21 +313,13 @@ contract OrchestratorV1Test is Test {
 
     function testInitiateAndExecuteSetFundingManager_failsIfMismatchedTokens(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
-
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
-            modules,
+            createModules(moduleAmount),
             fundingManager,
             authorizer,
             paymentProcessor,
@@ -452,8 +333,6 @@ contract OrchestratorV1Test is Test {
 
         // Create new funding manager module
         FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
-        vm.assume(newFundingManager != fundingManager);
-        types.assumeElemNotInSet(modules, address(newFundingManager));
         newFundingManager.setToken(IERC20(address(0xB0B)));
 
         vm.expectRevert(
@@ -470,22 +349,14 @@ contract OrchestratorV1Test is Test {
 
     function testInitiateAndExecuteSetPaymentProcessor(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
-
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
             address(moduleFactory),
-            modules,
+            createModules(moduleAmount),
             fundingManager,
             authorizer,
             paymentProcessor,
@@ -497,8 +368,6 @@ contract OrchestratorV1Test is Test {
         // Create new payment processor module
         PaymentProcessorV1Mock newPaymentProcessor =
             new PaymentProcessorV1Mock();
-        vm.assume(newPaymentProcessor != paymentProcessor);
-        types.assumeElemNotInSet(modules, address(newPaymentProcessor));
 
         orchestrator.initiateSetPaymentProcessorWithTimelock(
             newPaymentProcessor
@@ -514,22 +383,14 @@ contract OrchestratorV1Test is Test {
 
     function testInitiateSetPaymentProcessorWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
-        // limit to 100, otherwise we could run into the max module limit
-        modules = cutArray(100, modules);
-
         types.assumeValidOrchestratorId(orchestratorId);
-        types.assumeValidModules(modules);
-
-        // Make sure mock addresses are not in set of modules.
-        assumeMockAreNotInSet(modules);
-
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
             address(moduleFactory),
-            modules,
+            createModules(moduleAmount),
             fundingManager,
             authorizer,
             paymentProcessor,
@@ -540,8 +401,6 @@ contract OrchestratorV1Test is Test {
 
         // Create new payment processor module
         address newPaymentProcessor = address(0x8888);
-        vm.assume(newPaymentProcessor != address(paymentProcessor));
-        types.assumeElemNotInSet(modules, newPaymentProcessor);
 
         // set the new payment processor module. First the verification function reverts, then the setter.
         vm.expectRevert();
@@ -709,49 +568,19 @@ contract OrchestratorV1Test is Test {
     //--------------------------------------------------------------------------
     // Tests: Transaction Execution
 
-    function testExecuteTx(uint orchestratorId, address[] memory modules)
-        public
-    {
+    function testExecuteTx(uint orchestratorId, uint moduleAmount) public {
         types.assumeValidOrchestratorId(orchestratorId);
 
-        address[] memory truncatedModules = new address[](125);
-        if (modules.length > 125) {
-            for (uint i; i < 125; i++) {
-                truncatedModules[i] = modules[i];
-            }
-
-            types.assumeValidModules(truncatedModules);
-
-            // Make sure mock addresses are not in set of truncatedModules.
-            assumeMockAreNotInSet(truncatedModules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                truncatedModules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        } else {
-            types.assumeValidModules(modules);
-
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(modules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                modules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        }
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
         authorizer.setIsAuthorized(address(this), true);
 
         bytes memory returnData = orchestrator.executeTx(
@@ -762,47 +591,20 @@ contract OrchestratorV1Test is Test {
 
     function testExecuteTxFailsIfCallFails(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
         types.assumeValidOrchestratorId(orchestratorId);
-        address[] memory truncatedModules = new address[](125);
-        if (modules.length > 125) {
-            for (uint i; i < 125; i++) {
-                truncatedModules[i] = modules[i];
-            }
 
-            types.assumeValidModules(truncatedModules);
-
-            // Make sure mock addresses are not in set of truncatedModules.
-            assumeMockAreNotInSet(truncatedModules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                truncatedModules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        } else {
-            types.assumeValidModules(modules);
-
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(modules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                modules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        }
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
 
         authorizer.setIsAuthorized(address(this), true);
 
@@ -814,48 +616,20 @@ contract OrchestratorV1Test is Test {
 
     function testExecuteTxFailsIfCallerNotAuthorized(
         uint orchestratorId,
-        address[] memory modules
+        uint moduleAmount
     ) public {
         types.assumeValidOrchestratorId(orchestratorId);
 
-        address[] memory truncatedModules = new address[](125);
-        if (modules.length > 125) {
-            for (uint i; i < 125; i++) {
-                truncatedModules[i] = modules[i];
-            }
-
-            types.assumeValidModules(truncatedModules);
-
-            // Make sure mock addresses are not in set of truncatedModules.
-            assumeMockAreNotInSet(truncatedModules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                truncatedModules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        } else {
-            types.assumeValidModules(modules);
-
-            // Make sure mock addresses are not in set of modules.
-            assumeMockAreNotInSet(modules);
-
-            // Initialize orchestrator.
-            orchestrator.init(
-                orchestratorId,
-                address(moduleFactory),
-                modules,
-                fundingManager,
-                authorizer,
-                paymentProcessor,
-                governor
-            );
-        }
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
 
         authorizer.setIsAuthorized(address(this), false);
 
@@ -887,32 +661,17 @@ contract OrchestratorV1Test is Test {
     //--------------------------------------------------------------------------
     // Helper Functions
 
-    function assumeMockAreNotInSet(address[] memory modules) private view {
-        types.assumeElemNotInSet(modules, address(fundingManager));
-        types.assumeElemNotInSet(modules, address(authorizer));
-        types.assumeElemNotInSet(modules, address(paymentProcessor));
-        types.assumeElemNotInSet(modules, address(token));
-    }
-
-    function cutArray(uint size, address[] memory addrs)
+    function createModules(uint amount)
         internal
-        pure
-        returns (address[] memory)
+        returns (address[] memory modules)
     {
-        uint length = addrs.length;
-        vm.assume(length > 0); //Array has to be at least 1
-
-        if (length <= size) {
-            return addrs;
+        if (amount > 50) {
+            amount = 50;
         }
 
-        address[] memory cutArry = new address[](size);
-        for (uint i; i < size - 1;) {
-            cutArry[i] = addrs[i];
-            unchecked {
-                ++i;
-            }
+        modules = new address[](amount);
+        for (uint i = 0; i < amount; i++) {
+            modules[i] = address(new ModuleV1Mock());
         }
-        return cutArry;
     }
 }
