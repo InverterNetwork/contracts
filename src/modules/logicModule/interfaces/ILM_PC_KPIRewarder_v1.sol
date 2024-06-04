@@ -52,6 +52,9 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice The Token used paying the bond cannot be the same that is being staked.
     error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
 
+    /// @notice The stake amount is invalid
+    error Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
+
     /// @notice An assertion can only by posted if the preceding one is resolved.
     error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
 
@@ -123,4 +126,8 @@ interface ILM_PC_KPIRewarder_v1 {
         external
         view
         returns (RewardRoundConfiguration memory);
+
+    /// @notice Sets the minimum amount a user must stake
+    /// @param _minimumStake The minimum amount
+    function setMinimumStake(uint _minimumStake) external;
 }
