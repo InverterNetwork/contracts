@@ -126,7 +126,7 @@ interface IBondingCurveBase_v1 {
 
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// @return uint The static price for buying the issuance token.
-    function getStaticPriceForBuying() external returns (uint);
+    function getStaticPriceForBuying() external view returns (uint);
 
     /// @notice Calculates the amount of tokens to be minted based on a given deposit amount.
     /// @dev This function takes into account any applicable buy fees before computing the
