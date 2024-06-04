@@ -51,7 +51,7 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice The Token used paying the bond cannot be the same that is being staked.
     error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
-    
+
     /// @notice The stake amount is invalid
     error Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
 
