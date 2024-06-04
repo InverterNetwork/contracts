@@ -248,9 +248,16 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     function executeSetAuthorizer(IAuthorizer_v1 authorizer_)
         external
         onlyOrchestratorOwner
+        updatingModuleAlreadyStarted(address(authorizer_))
+        whenTimelockExpired(address(authorizer_))
     {
-        _executeAddModule(address(authorizer_));
         _executeRemoveModule(address(authorizer));
+
+        //set timelock to inactive
+        moduleAddressToTimelock[address(authorizer_)].timelockActive = false;
+        //Use _commitAddModule directly as it doesnt need the authorization of the by now none existing Authorizer
+        _commitAddModule(address(authorizer_));
+
         authorizer = authorizer_;
         emit AuthorizerUpdated(address(authorizer_));
     }
@@ -278,8 +285,15 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     fundingManagerContract, fundingManagerInterfaceId
                 )
         ) {
-            _initiateAddModuleWithTimelock(fundingManagerContract);
-            _initiateRemoveModuleWithTimelock(address(fundingManager));
+            if (fundingManager.token() != fundingManager_.token()) {
+                revert Orchestrator__MismatchedTokenForFundingManager(
+                    address(fundingManager.token()),
+                    address(fundingManager_.token())
+                );
+            } else {
+                _initiateAddModuleWithTimelock(fundingManagerContract);
+                _initiateRemoveModuleWithTimelock(address(fundingManager));
+            }
         } else {
             revert Orchestrator__InvalidModuleType(fundingManagerContract);
         }
@@ -290,8 +304,8 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         external
         onlyOrchestratorOwner
     {
-        _executeAddModule(address(fundingManager_));
         _executeRemoveModule(address(fundingManager));
+        _executeAddModule(address(fundingManager_));
         fundingManager = fundingManager_;
         emit FundingManagerUpdated(address(fundingManager_));
     }
@@ -332,8 +346,8 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         external
         onlyOrchestratorOwner
     {
-        _executeAddModule(address(paymentProcessor_));
         _executeRemoveModule(address(paymentProcessor));
+        _executeAddModule(address(paymentProcessor_));
         paymentProcessor = paymentProcessor_;
         emit PaymentProcessorUpdated(address(paymentProcessor_));
     }

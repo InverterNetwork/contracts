@@ -253,6 +253,7 @@ contract OrchestratorV1Test is Test {
 
         // Create new funding manager module
         FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
+        newFundingManager.setToken(IERC20(address(0xA11CE)));
 
         orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
         vm.warp(block.timestamp + orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -263,7 +264,7 @@ contract OrchestratorV1Test is Test {
         orchestrator.executeSetFundingManager(newFundingManager);
         assertTrue(orchestrator.fundingManager() == newFundingManager);
         assertTrue(
-            address((orchestrator.fundingManager()).token()) == address(0)
+            address((orchestrator.fundingManager()).token()) == address(0xA11CE)
         );
     }
 
@@ -301,6 +302,44 @@ contract OrchestratorV1Test is Test {
             IFundingManager_v1(newFundingManager)
         );
         assertTrue(orchestrator.fundingManager() == fundingManager);
+    }
+
+    function testInitiateAndExecuteSetFundingManager_failsIfMismatchedTokens(
+        uint orchestratorId,
+        uint moduleAmount
+    ) public {
+        types.assumeValidOrchestratorId(orchestratorId);
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+        FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
+            IERC20(address(0xA11CE))
+        );
+
+        // Create new funding manager module
+        FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
+        vm.assume(newFundingManager != fundingManager);
+        types.assumeElemNotInSet(modules, address(newFundingManager));
+        newFundingManager.setToken(IERC20(address(0xB0B)));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1
+                    .Orchestrator__MismatchedTokenForFundingManager
+                    .selector,
+                orchestrator.fundingManager().token(),
+                newFundingManager.token()
+            )
+        );
+        orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
     }
 
     function testInitiateAndExecuteSetPaymentProcessor(
