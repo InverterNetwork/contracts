@@ -153,6 +153,7 @@ contract AUT_RolesV1Test is Test {
 
         vm.assume(initialAuth != address(0));
         vm.assume(initialAuth != address(this));
+        vm.assume(initialAuth != address(_orchestrator));
 
         testAuthorizer.init(
             IOrchestrator_v1(_orchestrator),
