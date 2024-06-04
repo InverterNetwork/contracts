@@ -89,16 +89,14 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice Posts an assertion to the Optimistic Oracle, specifying the KPI to use and the asserted value
     /// @param dataId The dataId to be posted
-    /// @param data The data to be posted
+    /// @param assertedValue The target value that will be asserted and posted as data to the oracle
     /// @param asserter The address of the asserter
-    /// @param assertedValue The target value that will be asserted
     /// @param targetKPI The KPI to be used for distribution once the assertion confirms
     /// @return assertionId The assertionId received for the posted assertion
     function postAssertion(
         bytes32 dataId,
-        bytes32 data,
-        address asserter,
         uint assertedValue,
+        address asserter,
         uint targetKPI
     ) external returns (bytes32 assertionId);
 
