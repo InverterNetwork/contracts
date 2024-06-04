@@ -102,7 +102,7 @@ contract ModuleFactory_v1 is
 
     /// @dev Mapping of proxy address to orchestrator address.
     mapping(address => address) private _orchestratorOfProxy;
-    
+
     // Storage gap for future upgrades
     uint[50] private __gap;
 
