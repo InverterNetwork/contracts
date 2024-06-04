@@ -44,6 +44,9 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     /// @dev Maximum unsigned integer value for overflow checks.
     uint private constant MAX_UINT = type(uint).max;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Public Functions
     /// @inheritdoc IVirtualCollateralSupplyBase_v1

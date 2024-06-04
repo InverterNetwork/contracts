@@ -66,6 +66,9 @@ contract LM_PC_KPIRewarder_v1 is
     uint public totalQueuedFunds;
     uint public constant MAX_QUEUE_LENGTH = 50;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     /*
     Tranche Example:
     trancheValues = [10000, 20000, 30000]

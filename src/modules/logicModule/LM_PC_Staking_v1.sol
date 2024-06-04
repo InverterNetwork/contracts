@@ -64,6 +64,9 @@ contract LM_PC_Staking_v1 is
     /// @dev mapping of how many reward tokens the user accumulated
     mapping(address => uint) internal rewards;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initialization
 
