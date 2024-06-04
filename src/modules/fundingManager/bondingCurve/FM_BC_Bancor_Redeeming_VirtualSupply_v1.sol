@@ -103,6 +103,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev Token decimals of the issuance token, which is stored within the implementation for gas saving.
     uint8 internal issuanceTokenDecimals;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Init Function
 

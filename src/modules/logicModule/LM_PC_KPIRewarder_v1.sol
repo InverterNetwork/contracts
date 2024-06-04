@@ -67,6 +67,9 @@ contract LM_PC_KPIRewarder_v1 is
     uint public totalQueuedFunds;
     uint public constant MAX_QUEUE_LENGTH = 50;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     /*
     Tranche Example:
     trancheValues = [10000, 20000, 30000]
@@ -320,10 +323,10 @@ contract LM_PC_KPIRewarder_v1 is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
-        if (_msgSender() != address(oo)) {
-            revert Module__OptimisticOracleIntegrator__CallerNotOO();
-        }
+        //First, we perform checks and state management on the parent function.
+        super.assertionResolvedCallback(assertionId, assertedTruthfully);
 
+        // If the assertion was true, we calculate the rewards and distribute them.
         if (assertedTruthfully) {
             // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds.
 
@@ -363,17 +366,15 @@ contract LM_PC_KPIRewarder_v1 is
             }
 
             _setRewards(rewardAmount, 1);
+            assertionConfig[assertionId].distributed = true;
+        } else {
+            // To keep in line with the upstream contract. If the assertion was false, we delete the corresponding assertionConfig from storage.
+            delete assertionConfig[assertionId];
         }
-        emit DataAssertionResolved(
-            assertedTruthfully,
-            assertionData[assertionId].dataId,
-            assertionData[assertionId].data,
-            assertionData[assertionId].asserter,
-            assertionId
-        );
 
         // Independently of the fact that the assertion resolved true or not, new assertions can now be posted.
         assertionPending = false;
+
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface

@@ -212,6 +212,10 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
 
     //@dev Connects contributor addresses to claim Ids
     mapping(address => EnumerableSet.UintSet) contributorAddressToClaimIds;
+
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initialization
 
