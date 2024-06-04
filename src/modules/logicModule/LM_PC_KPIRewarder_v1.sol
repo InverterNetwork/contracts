@@ -374,7 +374,6 @@ contract LM_PC_KPIRewarder_v1 is
 
         // Independently of the fact that the assertion resolved true or not, new assertions can now be posted.
         assertionPending = false;
-
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
