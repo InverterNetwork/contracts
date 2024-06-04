@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Dependencies
-
-import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
-import {InverterTransparentUpgradeableProxy_v1} from
-    "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
-import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-import {InverterProxyAdmin_v1} from "src/proxies/InverterProxyAdmin_v1.sol";
-
 // Internal Interfaces
 import {
     IOrchestratorFactory_v1,
@@ -22,12 +14,19 @@ import {
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
+// Internal Dependencies
+import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
+import {InverterTransparentUpgradeableProxy_v1} from
+    "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
+import {InverterProxyAdmin_v1} from "src/proxies/InverterProxyAdmin_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 //External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
@@ -48,6 +47,10 @@ import {
  *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */
@@ -84,7 +87,7 @@ contract OrchestratorFactory_v1 is
     /// @dev Starts counting from 1.
     uint private _orchestratorIdCounter;
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Modifier
 
     /// @notice Modifier to guarantee that the given id is valid

@@ -24,7 +24,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 /**
- * @title   Orchestrator_v1: Orchestrator v1 for Inverter Network.
+ * @title   Orchestrator
  *
  * @dev     This Contract is the center and connecting block of all Modules in a
  *          Inverter Network Workflow. It contains references to the essential contracts
@@ -40,6 +40,10 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  *          via a non-changeable {IPaymentProcessor_v1} instance.
  *
  *          Each orchestrator has a unique id set during initialization.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */
@@ -88,7 +92,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     IGovernor_v1 public override(IOrchestrator_v1) governor;
 
     //--------------------------------------------------------------------------
-    // Initializer
+    // Constructor & Initializer
 
     constructor(address _trustedForwarder)
         ModuleManagerBase_v1(_trustedForwarder)

@@ -66,7 +66,7 @@ abstract contract ModuleTest is Test {
     IModule_v1.Metadata _METADATA =
         IModule_v1.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, _TITLE);
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Setup
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
         feeManager = new FeeManager_v1();
@@ -101,7 +101,7 @@ abstract contract ModuleTest is Test {
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: Initialization
     //
     // MUST be implemented in downstream contract.
@@ -110,17 +110,17 @@ abstract contract ModuleTest is Test {
 
     function testReinitFails() public virtual;
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Assertion Helper Functions
     //
     // Prefixed with `_assert`.
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Fuzzer Helper Functions
     //
     // Prefixed with `_assume`.
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Helpers
 
     /// This function is intended to help in the case the number is intended to be converted into a token with a different decimal value.

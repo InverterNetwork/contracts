@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
-
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-
 import {ILM_PC_KPIRewarder_v1} from "@lm/interfaces/ILM_PC_KPIRewarder_v1.sol";
-
 import {
     ILM_PC_Staking_v1,
     LM_PC_Staking_v1,
@@ -19,7 +14,6 @@ import {
     IERC20PaymentClientBase_v1,
     ReentrancyGuard
 } from "./LM_PC_Staking_v1.sol";
-
 import {
     IOptimisticOracleIntegrator,
     OptimisticOracleIntegrator,
@@ -29,6 +23,24 @@ import {
 } from
     "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
+// Internal Dependencies
+import {Module_v1} from "src/modules/base/Module_v1.sol";
+
+/**
+ * @title   KPI Rewarder Module
+ *
+ * @notice  Provides a mechanism for distributing rewards to stakers based
+ *          on Key Performance Indicators (KPIs).
+ *
+ * @dev     Extends {LM_PC_Staking_v1} and integrates with {OptimisticOracleIntegrator}
+ *          to enable KPI-based reward distribution within the staking manager.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @author  Inverter Network
+ */
 contract LM_PC_KPIRewarder_v1 is
     ILM_PC_KPIRewarder_v1,
     LM_PC_Staking_v1,
@@ -47,7 +59,7 @@ contract LM_PC_KPIRewarder_v1 is
             || super.supportsInterface(interfaceId);
     }
 
-    // =================================================================
+    //--------------------------------------------------------------------------
     // General Information about the working of this contract
     // This module enable KPI based reward distribution into the staking manager by using UMAs Optimistic Oracle.
 
@@ -57,7 +69,7 @@ contract LM_PC_KPIRewarder_v1 is
     // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved. They will be added before posting the next assertion.
     // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function. This will calculate the final reward value and distribute it to the stakers.
 
-    // =================================================================
+    //--------------------------------------------------------------------------
 
     // KPI and Configuration Storage
     uint public KPICounter;
@@ -108,7 +120,7 @@ contract LM_PC_KPIRewarder_v1 is
         __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
     }
 
-    // ======================================================================
+    //--------------------------------------------------------------------------
     // View functions
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
@@ -130,8 +142,8 @@ contract LM_PC_KPIRewarder_v1 is
         return stakingQueue;
     }
 
-    // ========================================================================
-    // Assertion Manager functions:
+    //--------------------------------------------------------------------------
+    // Assertion Manager Functions
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
     /// @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
@@ -144,7 +156,7 @@ contract LM_PC_KPIRewarder_v1 is
         uint assertedValue,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
-        // =====================================================================
+        //--------------------------------------------------------------------------
         // Input Validation
 
         //  If the asserter is the Module itself, we need to ensure the token paid for bond is different than the one used for staking, since it could mess with the balances
@@ -164,7 +176,7 @@ contract LM_PC_KPIRewarder_v1 is
         // Question: what kind of checks should or can we implement on the data side?
         // Technically the value mentioned inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
 
-        // =====================================================================
+        //--------------------------------------------------------------------------
         // Staking Queue Management
 
         for (uint i = 0; i < stakingQueue.length; i++) {
@@ -176,7 +188,7 @@ contract LM_PC_KPIRewarder_v1 is
 
         delete stakingQueue; // reset the queue
 
-        // =====================================================================
+        //--------------------------------------------------------------------------
         // Assertion Posting
 
         assertionId = assertDataFor(dataId, data, asserter);
@@ -191,7 +203,7 @@ contract LM_PC_KPIRewarder_v1 is
         // (return assertionId)
     }
 
-    // ========================================================================
+    //--------------------------------------------------------------------------
     // Admin Configuration Functions:
 
     // Top up funds to pay the optimistic oracle fee
@@ -258,7 +270,7 @@ contract LM_PC_KPIRewarder_v1 is
         return (KpiNum);
     }
 
-    // ===========================================================
+    //--------------------------------------------------------------------------
     // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
 
     /// @inheritdoc ILM_PC_Staking_v1
@@ -313,7 +325,7 @@ contract LM_PC_KPIRewarder_v1 is
         }
     }
 
-    // ============================================================
+    //--------------------------------------------------------------------------
     // Optimistic Oracle Overrides:
 
     /// @inheritdoc IOptimisticOracleIntegrator

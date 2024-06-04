@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// External Libraries
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// Internal Interfaces
+import {
+    IERC20PaymentClientBase_v1,
+    IPaymentProcessor_v1
+} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
 import {
@@ -13,12 +14,12 @@ import {
     ERC165,
     ContextUpgradeable
 } from "src/modules/base/Module_v1.sol";
-import {
-    IERC20PaymentClientBase_v1,
-    IPaymentProcessor_v1
-} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
-import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 /**
  * @title   ERC20 Payment Client Base
@@ -30,6 +31,10 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
  * @dev     Utilizes {SafeERC20} for token operations and integrates with {IPaymentProcessor_v1}
  *          to handle token payments. This abstract contract must be extended by modules
  *          that manage ERC20 payment orders, supporting complex payment scenarios.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */

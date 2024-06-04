@@ -88,7 +88,7 @@ contract OrchestratorE2E is E2ETest {
 
         uint timelock =
             Orchestrator_v1(address(orchestrator)).MODULE_UPDATE_TIMELOCK();
-        //------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------
         // Adding Module
 
         uint modulesBefore = orchestrator.modulesSize(); // We store the number of modules the orchestrator has
@@ -107,7 +107,7 @@ contract OrchestratorE2E is E2ETest {
 
         assertEq((modulesBefore + 1), orchestrator.modulesSize()); // The orchestrator now has one more module
 
-        //------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------
         // Removing Module
         orchestrator.initiateRemoveModuleWithTimelock(bountyManager);
         // skip timelock
@@ -116,7 +116,7 @@ contract OrchestratorE2E is E2ETest {
 
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules
 
-        //------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------------
         //In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
 
         //Create the new modules via the moduleFactory

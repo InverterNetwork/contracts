@@ -8,7 +8,7 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {IBeacon} from "@oz/proxy/beacon/IBeacon.sol";
 
 interface IInverterBeacon_v1 is IBeacon {
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Given implementation invalid.
@@ -35,7 +35,7 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @notice The Beacon shutdown was reversed.
     event ShutdownReversed();
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Public View Functions
 
     /// @notice Returns the version of the linked implementation.
@@ -51,7 +51,7 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @return Is the beacon in emergency mode.
     function emergencyModeActive() external view returns (bool);
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // onlyOwner Mutating Functions
 
     /// @notice Upgrades the beacon to a new implementation address.
@@ -66,7 +66,7 @@ interface IInverterBeacon_v1 is IBeacon {
         bool overrideShutdown
     ) external;
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // onlyOwner Intervention Mechanism
 
     /// @notice Shuts down the beacon and stops the system

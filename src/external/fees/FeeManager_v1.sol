@@ -6,7 +6,6 @@ import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
-
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
@@ -18,6 +17,10 @@ import {Ownable2StepUpgradeable} from
  *
  *  @dev    Inherits from {ERC165} for interface detection, {Ownable2StepUpgradeable} for owner-based
  *          access control, and implements the {IFeeManager_v1} interface.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */
@@ -34,7 +37,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     }
 
     //--------------------------------------------------------------------------
-    // Modifier
+    // Modifiers
 
     modifier validAddress(address adr) {
         if (adr == address(0)) {

@@ -17,12 +17,21 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  * @notice  Acts as the admin of the Inverter Transparent Upgradeable Proxies
  *          and is responsible for upgrading the proxies to the newest version.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  * @author  Inverter Network
  */
 contract InverterProxyAdmin_v1 is Ownable2Step, IInverterProxyAdmin_v1 {
+    //--------------------------------------------------------------------------
+    // Constructor
+
     /// @notice Constructs the InverterProxyAdmin_v1.
     /// @param initialOwner The initial owner of the contract.
     constructor(address initialOwner) Ownable(initialOwner) {}
+
+    //--------------------------------------------------------------------------
+    // onlyOwner Mutating Functions
 
     /// @inheritdoc IInverterProxyAdmin_v1
     function upgradeToNewestVersion(

@@ -60,7 +60,7 @@ contract InverterBeaconV1Test is Test {
         assertEq(minorVersion, 0);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: modifier
 
     function testZeroAsNewMinorVersion() public {
@@ -127,7 +127,7 @@ contract InverterBeaconV1Test is Test {
         beacon.original_setImplementation(newImplementation, false);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: upgradeTo()
 
     function testUpgradeTo(
@@ -200,7 +200,7 @@ contract InverterBeaconV1Test is Test {
         beacon.upgradeTo(address(0), 1, false);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: shutDownImplementation
 
     function testShutDownImplementation() public {
@@ -230,7 +230,7 @@ contract InverterBeaconV1Test is Test {
         beacon.shutDownImplementation();
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: restartImplementation
 
     function testRestartImplementation() public {
@@ -262,7 +262,7 @@ contract InverterBeaconV1Test is Test {
         beacon.restartImplementation();
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: _setImplementation
 
     function test_setImplementation(
@@ -311,7 +311,7 @@ contract InverterBeaconV1Test is Test {
         beacon.original_setImplementation(address(0), false);
     }
 
-    //--------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------
     // Test: ERC-165's supportInterface()
 
     function testSupportsInterface() public {

@@ -7,17 +7,14 @@ import {
     IOrchestrator_v1,
     IModule_v1
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
-
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Internal Dependencies
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {InverterTransparentUpgradeableProxy_v1} from
     "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
-import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-
-// Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // External Interfaces
@@ -44,6 +41,10 @@ import {
  *          The owner can register module metadata's to an {IInverterBeacon_v1}
  *          implementations. Note that a metadata's registered {IInverterBeacon_v1}
  *          implementation can not be changed after registration!
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */

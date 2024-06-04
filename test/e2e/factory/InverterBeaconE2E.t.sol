@@ -115,9 +115,9 @@ contract InverterBeaconE2E is E2ETest {
     // Tests: InverterBeacon_v1 Upgrades
 
     function test_e2e_InverterBeaconUpgrade() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -128,9 +128,9 @@ contract InverterBeaconE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Module E2E Test
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // Find Implementation
         IModuleImplementationMock moduleMock;
@@ -160,9 +160,9 @@ contract InverterBeaconE2E is E2ETest {
     }
 
     function test_e2e_InverterBeaconShutdown() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -172,9 +172,9 @@ contract InverterBeaconE2E is E2ETest {
 
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Module E2E Test
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // Find Implementation
         IModuleImplementationMock moduleMock;

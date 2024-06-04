@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Dependencies
-import {
-    ERC20PaymentClientBase_v1,
-    Module_v1,
-    ERC165
-} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
-
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {ILM_PC_RecurringPayments_v1} from
     "@lm/interfaces/ILM_PC_RecurringPayments_v1.sol";
-
 import {
     IERC20PaymentClientBase_v1,
     IPaymentProcessor_v1
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+
+// Internal Dependencies
+import {
+    ERC20PaymentClientBase_v1,
+    Module_v1,
+    ERC165
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Libraries
@@ -33,6 +32,10 @@ import {LinkedIdList} from "src/common/LinkedIdList.sol";
  *          such as adding, removing, and triggering payments based on time cycles.
  *          Integrates with {ERC20PaymentClientBase_v1} for handling actual payment
  *          transactions. Note that it will use the token type stored in the FundingManager for the payments.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */

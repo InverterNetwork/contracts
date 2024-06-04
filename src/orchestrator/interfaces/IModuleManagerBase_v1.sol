@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// Interfaces
+// External Interfaces
 import {IERC2771Context} from "src/external/interfaces/IERC2771Context.sol";
 
 interface IModuleManagerBase_v1 is IERC2771Context {

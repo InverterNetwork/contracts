@@ -94,9 +94,9 @@ contract RecurringPaymentManagerE2E is E2ETest {
         paymentAmount = bound(paymentAmount, 1, 1e18);
         LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,

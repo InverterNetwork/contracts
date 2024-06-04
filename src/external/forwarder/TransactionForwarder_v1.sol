@@ -3,12 +3,11 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {ITransactionForwarder_v1} from
-    "src/external/forwarder/ITransactionForwarder_v1.sol";
+    "src/external/forwarder/interfaces/ITransactionForwarder_v1.sol";
 
 // External Dependencies
 import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
-
 import {Context} from "@oz/utils/Context.sol";
 
 /**
@@ -24,6 +23,10 @@ import {Context} from "@oz/utils/Context.sol";
  *          It handles nonce management, signature verification, and ensures only trusted calls
  *          are forwarded.
  *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *  +
  * @author  Inverter Network
  */
 contract TransactionForwarder_v1 is
@@ -113,14 +116,8 @@ contract TransactionForwarder_v1 is
         );
     }
 
-    // Copied from the ERC2771Forwarder as it isnt declared internal ಠ_ಠ
-    // Just added a _ because i cant override it
-    /**
-     * @dev Returns whether the target trusts this forwarder.
-     *
-     * This function performs a static call to the target contract calling the
-     * {ERC2771Context-isTrustedForwarder} function.
-     */
+    // Copied from the ERC2771Forwarder as it isnt declared internally
+    // Added an underscore because it can not be overwritten
     function __isTrustedByTarget(address target) private view returns (bool) {
         bytes memory encodedParams =
             abi.encodeCall(ERC2771Context.isTrustedForwarder, (address(this)));

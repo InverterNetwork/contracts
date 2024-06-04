@@ -135,7 +135,7 @@ contract AUT_RolesV1Test is Test {
         );
     }
 
-    //--------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Tests Initialization
 
     function testSupportsInterface() public {
@@ -254,7 +254,7 @@ contract AUT_RolesV1Test is Test {
 
     // Test Register Roles
 
-    //--------------------------------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Test manually granting and revoking roles as orchestrator-defined Admin
 
     function testGrantAdminRole(address[] memory newAuthorized) public {

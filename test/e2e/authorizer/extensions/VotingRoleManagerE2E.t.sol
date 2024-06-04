@@ -83,9 +83,9 @@ contract VotingRoleManagerE2E is E2ETest {
     }
 
     function test_e2e_SingleVoteGovernor() public {
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
@@ -137,9 +137,9 @@ contract VotingRoleManagerE2E is E2ETest {
         // By having address(this) renounce the Admin Role, all changes from now on need to go through the AUT_EXT_VotingRoles_v1
         authorizer.renounceRole(adminRole, address(this));
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Set up Vote to create Bounty
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
 
         // Bounty details
         uint minimumPayoutAmount = 100e18;
@@ -160,9 +160,9 @@ contract VotingRoleManagerE2E is E2ETest {
 
         vm.warp(block.timestamp + 2);
 
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Vote happens
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.prank(voter1);
         singleVoteGovernor.castVote(motionId, 0);
         vm.prank(voter2);
@@ -171,9 +171,9 @@ contract VotingRoleManagerE2E is E2ETest {
         singleVoteGovernor.castVote(motionId, 0);
 
         vm.warp(block.timestamp + 3 days);
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         // Execute Vote
-        //--------------------------------------------------------------------------------
+        //--------------------------------------------------------------------------
         vm.prank(voter1);
         singleVoteGovernor.executeMotion(motionId);
 
