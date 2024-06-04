@@ -109,6 +109,10 @@ contract AUT_Roles_v1 is
         internal
         onlyInitializing
     {
+        if (initialOwner == address(0)) {
+            revert Module__Authorizer__InvalidInitialOwner();
+        }
+
         // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the orchestrator owners as "admins of the admin role",
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
@@ -131,11 +135,7 @@ contract AUT_Roles_v1 is
 
         // If there is no initial owner specfied or the initial owner is the same as the deployer
 
-        if (initialOwner != address(0)) {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
-        } else {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
-        }
+        _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
     }
 
     //--------------------------------------------------------------------------
