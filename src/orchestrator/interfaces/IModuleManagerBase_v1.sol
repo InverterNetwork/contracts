@@ -34,9 +34,6 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Given address is not a module.
     error ModuleManagerBase__IsNotModule();
 
-    /// @notice The supplied modules are not consecutive.
-    error ModuleManagerBase__ModulesNotConsecutive();
-
     /// @notice The Manager has reached the maximum amount of modules.
     error ModuleManagerBase__ModuleAmountOverLimits();
 
