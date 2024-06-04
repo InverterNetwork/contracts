@@ -355,16 +355,15 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         bytes32 assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTED_VALUE,
             MOCK_ASSERTER_ADDRESS,
-            100,
             0
         );
 
@@ -380,9 +379,8 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTED_VALUE,
             MOCK_ASSERTER_ADDRESS,
-            100,
             0
         );
 
