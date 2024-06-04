@@ -1173,8 +1173,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             vm.startPrank(recipient);
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IPP_Streaming_v1
-                        .Module__PP_Streaming__NothingToClaim
+                    IPaymentProcessor_v1
+                        .Module__PaymentProcessor__NothingToClaim
                         .selector,
                     address(paymentClient),
                     recipient
@@ -1342,7 +1342,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPP_Streaming_v1.Module__PP_Streaming__NothingToClaim.selector,
+                IPaymentProcessor_v1
+                    .Module__PaymentProcessor__NothingToClaim
+                    .selector,
                 address(paymentClient),
                 address(this)
             )

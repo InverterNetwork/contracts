@@ -191,22 +191,14 @@ contract AUT_RolesV1Test is Test {
 
         address initialAuth = address(0);
 
+        vm.expectRevert(
+            IAuthorizer_v1.Module__Authorizer__InvalidInitialOwner.selector
+        );
+
         testAuthorizer.init(
             IOrchestrator_v1(_orchestrator),
             _METADATA,
             abi.encode(initialAuth, address(this))
-        );
-
-        assertEq(
-            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
-            testAuthorizer.BURN_ADMIN_ROLE()
-        );
-
-        assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
-
-        assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
-        assertEq(
-            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
         );
     }
 

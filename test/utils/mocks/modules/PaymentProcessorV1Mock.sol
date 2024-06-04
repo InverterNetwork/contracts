@@ -47,4 +47,14 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
     function deleteAllPayments(IERC20PaymentClientBase_v1 client) external {
         client.collectPaymentOrders();
     }
+
+    function unclaimable(address client, address paymentReceiver)
+        external
+        view
+        returns (uint amount)
+    {}
+
+    function claimPreviouslyUnclaimable(address client, address receiver)
+        external
+    {}
 }
