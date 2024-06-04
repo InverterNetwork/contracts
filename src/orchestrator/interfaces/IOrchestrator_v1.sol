@@ -26,6 +26,11 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice The given module is not used in the orchestrator
     error Orchestrator__InvalidModuleType(address module);
 
+    /// @notice The token of the new funding manager is not the same as the current funding manager.
+    error Orchestrator__MismatchedTokenForFundingManager(
+        address currentToken, address newToken
+    );
+
     /// @notice The given module is not used in the orchestrator
     error Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
 
@@ -121,17 +126,20 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     ) external;
 
     /// @notice Executes replacing the current authorizer with `_authorizer`
+    /// @notice !!! IMPORTANT !!! When changing the Authorizer the current set of assigned addresses to Roles are lost. Make sure initial owners are set properly.
     /// @dev Only callable by authorized caller.
     /// @param authorizer_ The address of the new authorizer module.
     function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
 
     /// @notice Executes replaces the current funding manager with `fundingManager_`
+    /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained in the module might not be retrievable. Make sure to clean the FundingManager properly beforehand.
     /// @dev Only callable by authorized caller.
     /// @param fundingManager_ The address of the new funding manager module.
     function executeSetFundingManager(IFundingManager_v1 fundingManager_)
         external;
 
     /// @notice Executes replaces the current payment processor with `paymentProcessor_`
+    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payment orders are lost. Make sure to resolve those payments properly beforehand.
     /// @dev Only callable by authorized caller.
     /// @param paymentProcessor_ The address of the new payment processor module.
     function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)

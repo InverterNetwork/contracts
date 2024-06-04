@@ -83,6 +83,14 @@ contract AUT_Roles_v1 is
         _;
     }
 
+    /// @notice Verifies that the owner being added is not the orchestrator
+    modifier noSelfOwner(bytes32 role, address who) {
+        if (role == ORCHESTRATOR_OWNER_ROLE && who == address(orchestrator())) {
+            revert Module__Authorizer__OrchestratorCannotHaveOwnerRole();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -104,6 +112,10 @@ contract AUT_Roles_v1 is
         internal
         onlyInitializing
     {
+        if (initialOwner == address(0)) {
+            revert Module__Authorizer__InvalidInitialOwner();
+        }
+
         // Note about DEFAULT_ADMIN_ROLE: The DEFAULT_ADMIN_ROLE has admin privileges on all roles in the contract. It starts out empty, but we set the orchestrator owners as "admins of the admin role",
         // so they can whitelist an address which then will have full write access to the roles in the system. This is mainly intended for safety/recovery situations,
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
@@ -126,11 +138,7 @@ contract AUT_Roles_v1 is
 
         // If there is no initial owner specfied or the initial owner is the same as the deployer
 
-        if (initialOwner != address(0)) {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
-        } else {
-            _grantRole(ORCHESTRATOR_OWNER_ROLE, _msgSender());
-        }
+        _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
     }
 
     //--------------------------------------------------------------------------
@@ -148,6 +156,20 @@ contract AUT_Roles_v1 is
         returns (bool)
     {
         return super._revokeRole(role, who);
+    }
+
+    /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @return bool Returns if grant has been succesful
+    function _grantRole(bytes32 role, address who)
+        internal
+        virtual
+        override
+        noSelfOwner(role, who)
+        returns (bool)
+    {
+        return super._grantRole(role, who);
     }
 
     //--------------------------------------------------------------------------

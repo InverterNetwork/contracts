@@ -97,11 +97,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @notice insufficient tokens in the client to do payments
     error Module__PP_Streaming__InsufficientTokenBalanceInClient();
 
-    /// @notice the paymentReceiver is not owed any money by the paymentClient
-    error Module__PP_Streaming__NothingToClaim(
-        address paymentClient, address paymentReceiver
-    );
-
     /// @notice paymentReceiver's walletId for the paymentClient is not valid
     error Module__PP_Streaming__InvalidWallet(
         address paymentClient, address paymentReceiver, uint walletId
@@ -126,7 +121,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     function claimAll(address client) external;
 
     /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver
-    /// @dev This function should be callable if the _msgSender is either an activePaymentReceiver or has some unclaimedAmounts
+    /// @dev This function should be callable if the _msgSender has unclaimedAmounts
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
     /// @param receiver The address that will receive the previously unclaimable amount
     function claimPreviouslyUnclaimable(address client, address receiver)

@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 // Interfaces
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -267,7 +268,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev Expects `module` to be valid module address.
     /// @dev Expects `module` to not be enabled module.
-    function _commitAddModule(address module) private {
+    function _commitAddModule(address module) internal {
         // Add address to _modules list.
         _modules.push(module);
         _isModule[module] = true;
@@ -306,7 +307,11 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     function _ensureValidModule(address module) private view {
-        if (module == address(0) || module == address(this)) {
+        if (
+            module.code.length == 0 || module == address(0)
+                || module == address(this)
+                || !ERC165(module).supportsInterface(type(IModule_v1).interfaceId)
+        ) {
             revert ModuleManagerBase__InvalidModuleAddress();
         }
     }

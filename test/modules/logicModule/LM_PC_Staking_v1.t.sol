@@ -45,7 +45,6 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     event RewardSet(
         uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
     );
-    event RewardsDurationUpdated(uint newDuration);
     event Staked(address indexed user, uint amount);
     event Unstaked(address indexed user, uint amount);
     event RewardsDistributed(address indexed user, uint amount);
