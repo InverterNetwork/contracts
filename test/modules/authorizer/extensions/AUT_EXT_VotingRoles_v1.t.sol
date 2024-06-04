@@ -95,8 +95,8 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _setUpOrchestrator(_governor);
 
         //we give the governor the ownwer role
-        bytes32 ownerRole = _authorizer.getOwnerRole();
-        _authorizer.grantRole(ownerRole, address(_governor));
+        bytes32 adminRole = _authorizer.getAdminRole();
+        _authorizer.grantRole(adminRole, address(_governor));
         //_authorizer.setIsAuthorized(address(_governor), true);
 
         // Initialize the governor with 3 users
@@ -273,14 +273,14 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     function testInit() public override(ModuleTest) {
         assertEq(_orchestrator.isModule(address(_governor)), true);
 
-        bytes32 owner = _authorizer.getOwnerRole();
+        bytes32 admin = _authorizer.getAdminRole();
 
-        assertEq(_authorizer.hasRole(owner, address(_governor)), true); // Owner role
+        assertEq(_authorizer.hasRole(admin, address(_governor)), true); // Admin role
         assertEq(_governor.isVoter(ALBA), true);
         assertEq(_governor.isVoter(BOB), true);
         assertEq(_governor.isVoter(COBIE), true);
-        assertEq(_authorizer.hasRole(owner, address(this)), true);
-        assertEq(_authorizer.hasRole(owner, address(_orchestrator)), false);
+        assertEq(_authorizer.hasRole(admin, address(this)), true);
+        assertEq(_authorizer.hasRole(admin, address(_orchestrator)), false);
         assertEq(_governor.isVoter(address(this)), false);
         assertEq(_governor.isVoter(address(_orchestrator)), false);
 
@@ -981,7 +981,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IOrchestrator_v1.Orchestrator__CallerNotAuthorized.selector,
-                _authorizer.getOwnerRole(),
+                _authorizer.getAdminRole(),
                 _other
             )
         );

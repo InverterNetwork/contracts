@@ -27,13 +27,13 @@ contract ERC20IssuanceTest is Test {
 
     /*
     test setMinter
-    ├── When the caller is not the Owner
+    ├── When the caller is not the Admin
     │   └── It should revert
-    └── When the caller is the Owner
+    └── When the caller is the Admin
     └── It should set the new minter address
     */
 
-    function testSetMinterFails_IfCallerNotOwner() public {
+    function testSetMinterFails_IfCallerNotAdmin() public {
         vm.startPrank(address(0xB0B));
         {
             vm.expectRevert(

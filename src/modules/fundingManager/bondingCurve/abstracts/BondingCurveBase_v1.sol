@@ -99,19 +99,19 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    function openBuy() external virtual onlyOrchestratorOwner {
+    function openBuy() external virtual onlyOrchestratorAdmin {
         buyIsOpen = true;
         emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function closeBuy() external virtual onlyOrchestratorOwner {
+    function closeBuy() external virtual onlyOrchestratorAdmin {
         buyIsOpen = false;
         emit BuyingDisabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function setBuyFee(uint _fee) external virtual onlyOrchestratorOwner {
+    function setBuyFee(uint _fee) external virtual onlyOrchestratorAdmin {
         _setBuyFee(_fee);
     }
 
@@ -158,7 +158,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         public
         virtual
         validReceiver(_receiver)
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         if (_amount > projectCollateralFeeCollected) {
             revert Module__BondingCurveBase__InvalidWithdrawAmount();
@@ -409,10 +409,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _mint(address _to, uint _amount) internal virtual {
         issuanceToken.mint(_to, _amount);
     }
+
     /// @dev Burns tokens
     /// @param _from The address of the owner.
     /// @param _amount The amount of tokens to burn.
-
     function _burn(address _from, uint _amount) internal virtual {
         issuanceToken.burn(_from, _amount);
     }

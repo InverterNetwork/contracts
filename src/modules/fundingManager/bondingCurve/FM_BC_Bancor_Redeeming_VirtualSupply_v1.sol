@@ -48,7 +48,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v1}, {VirtualIssuanceSupplyBase_v1},
  *          and {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper functions for bonding curve
- *          calculations using the Bancor formula. {Orchestrator_v1} Owner or Manager manages
+ *          calculations using the Bancor formula. {Orchestrator_v1} Admin manages
  *          configuration such as virtual supplies and reserve ratios. Ensure interaction adheres to
  *          defined transactional limits and decimal precision requirements to prevent computational
  *          overflows or underflows.
@@ -329,7 +329,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function mintIssuanceTokenTo(address _receiver, uint _amount)
         external
         virtual
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
         validReceiver(_receiver)
     {
         _mint(_receiver, _amount);
@@ -340,7 +340,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         override(VirtualIssuanceSupplyBase_v1)
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _setVirtualIssuanceSupply(_virtualSupply);
     }
@@ -350,7 +350,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         override(VirtualCollateralSupplyBase_v1)
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _setVirtualCollateralSupply(_virtualSupply);
     }
@@ -359,7 +359,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function setReserveRatioForBuying(uint32 _reserveRatio)
         external
         virtual
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _setReserveRatioForBuying(_reserveRatio);
     }
@@ -368,7 +368,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function setReserveRatioForSelling(uint32 _reserveRatio)
         external
         virtual
-        onlyOrchestratorOwner
+        onlyOrchestratorAdmin
     {
         _setReserveRatioForSelling(_reserveRatio);
     }

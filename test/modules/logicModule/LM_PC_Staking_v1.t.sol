@@ -468,11 +468,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function testSetRewardsModifierInPosition() public {
-        //onlyOrchestratorOwnerOrManager
+        //onlyOrchestratorAdminOrManager
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getOwnerRole(),
+                _authorizer.getAdminRole(),
                 address(0xBEEF)
             )
         );
