@@ -61,16 +61,9 @@ contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
         );
 
         address initialAuth = ALBA;
-        address initialManager = address(this);
 
         _authorizer.init(
-            IOrchestrator_v1(_orchestrator),
-            _METADATA,
-            abi.encode(initialAuth, initialManager)
-        );
-        assertEq(
-            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
-            true
+            IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
         );
         assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
         assertEq(
@@ -147,16 +140,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
         );
 
         address initialAuth = ALBA;
-        address initialManager = address(this);
 
         _authorizer.init(
-            IOrchestrator_v1(_orchestrator),
-            _METADATA,
-            abi.encode(initialAuth, initialManager)
-        );
-        assertEq(
-            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
-            true
+            IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
         );
         assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
         assertEq(

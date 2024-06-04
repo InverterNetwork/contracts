@@ -206,7 +206,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig roleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         roleAuthorizerMetadata,
-        abi.encode(address(this), address(this))  
+        abi.encode(address(this))  
     );
     */
     function setUpRoleAuthorizer() internal {
@@ -248,7 +248,7 @@ contract E2EModuleRegistry is Test {
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
         tokenRoleAuthorizerMetadata,
-        abi.encode(address(this), address(this))  
+        abi.encode(address(this))  
     ); 
     */
 

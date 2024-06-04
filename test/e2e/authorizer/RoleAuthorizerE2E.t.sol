@@ -27,7 +27,7 @@ contract RoleAuthorizerE2E is E2ETest {
 
     // E2E Test Variables
     address orchestratorAdmin = makeAddr("orchestratorAdmin");
-    address orchestratorManager = makeAddr("orchestratorManager");
+    address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
     function setUp() public override {
@@ -54,7 +54,7 @@ contract RoleAuthorizerE2E is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata, abi.encode(address(this), address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 
@@ -119,7 +119,7 @@ contract RoleAuthorizerE2E is E2ETest {
 
         // we authorize the manager to verify bounty claims
         bountyManager.grantModuleRole(
-            bountyManager.VERIFIER_ROLE(), address(orchestratorManager)
+            bountyManager.VERIFIER_ROLE(), bountyVerifier
         );
 
         // we authorize the bountySubmitter to submit bounty claims
@@ -127,15 +127,8 @@ contract RoleAuthorizerE2E is E2ETest {
             bountyManager.CLAIMANT_ROLE(), address(bountySubmitter)
         );
 
-        // Since we deploy the orchestrator, with address(this) as admin and manager for easier setup,
+        // Since we deploy the orchestrator, with address(this) as admin,
         // we now assign them to two external addresses. In production these will be directly set on deployment.
-
-        // we grant manager role to managerAddress
-        bytes32 managerRole = authorizer.getManagerRole();
-        authorizer.grantRole(managerRole, address(orchestratorManager));
-        authorizer.renounceRole(managerRole, address(this));
-        assertTrue(authorizer.hasRole(managerRole, orchestratorManager));
-        assertEq(authorizer.getRoleMemberCount(managerRole), 1);
 
         //we grant admin role to adminAddress
         bytes32 adminRole = authorizer.getAdminRole();
@@ -204,7 +197,7 @@ contract RoleAuthorizerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Manager verifies bounty claim
         //--------------------------------------------------------------------------------
-        vm.prank(orchestratorManager);
+        vm.prank(bountyVerifier);
         bountyManager.verifyClaim(claimId, contribs);
     }
 }
