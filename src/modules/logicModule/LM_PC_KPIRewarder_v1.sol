@@ -142,9 +142,8 @@ contract LM_PC_KPIRewarder_v1 is
     /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
     function postAssertion(
         bytes32 dataId,
-        bytes32 data,
-        address asserter,
         uint assertedValue,
+        address asserter,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
         if (assertionPending) {
@@ -168,9 +167,6 @@ contract LM_PC_KPIRewarder_v1 is
             revert Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
         }
 
-        // Question: what kind of checks should or can we implement on the data side?
-        // Technically the value mentioned inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
-
         // =====================================================================
         // Staking Queue Management
 
@@ -186,7 +182,7 @@ contract LM_PC_KPIRewarder_v1 is
         // =====================================================================
         // Assertion Posting
 
-        assertionId = assertDataFor(dataId, data, asserter);
+        assertionId = assertDataFor(dataId, bytes32(assertedValue), asserter);
         assertionConfig[assertionId] = RewardRoundConfiguration(
             block.timestamp, assertedValue, targetKPI, false
         );
