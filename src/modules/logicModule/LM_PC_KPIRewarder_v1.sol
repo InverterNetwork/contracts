@@ -112,12 +112,15 @@ contract LM_PC_KPIRewarder_v1 is
         (
             address stakingTokenAddr,
             address currencyAddr,
+            uint defaultBond,
             address ooAddr,
             uint64 liveness
-        ) = abi.decode(configData, (address, address, address, uint64));
+        ) = abi.decode(configData, (address, address, uint, address, uint64));
 
         __LM_PC_Staking_v1_init(stakingTokenAddr);
-        __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
+        __OptimisticOracleIntegrator_init(
+            currencyAddr, defaultBond, ooAddr, liveness
+        );
     }
 
     //--------------------------------------------------------------------------

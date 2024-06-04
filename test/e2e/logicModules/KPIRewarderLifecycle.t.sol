@@ -210,6 +210,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                 abi.encode(
                     address(stakingToken),
                     USDC_address,
+                    OptimisticOracleV3Interface(ooV3_address).getMinimumBond(
+                        USDC_address
+                    ),
                     ooV3_address,
                     ASSERTION_LIVENESS
                 )
