@@ -50,7 +50,6 @@ contract AUT_Roles_v1 is
 
     //--------------------------------------------------------------------------
     // Storage
-    bytes32 public constant ORCHESTRATOR_MANAGER_ROLE = "0x02";
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
@@ -92,22 +91,18 @@ contract AUT_Roles_v1 is
     ) external override initializer {
         __Module_init(orchestrator_, metadata);
 
-        (address initialAdmin, address initialManager) =
-            abi.decode(configData, (address, address));
+        (address initialAdmin) = abi.decode(configData, (address));
 
-        __RoleAuthorizer_init(initialAdmin, initialManager);
+        __RoleAuthorizer_init(initialAdmin);
     }
 
-    function __RoleAuthorizer_init(address initialAdmin, address initialManager)
+    function __RoleAuthorizer_init(address initialAdmin)
         internal
         onlyInitializing
     {
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
-
-        // Grant MANAGER Role to specified address
-        _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
 
         // If there is no initial admin specfied or the initial admin is the same as the deployer
 
@@ -260,11 +255,6 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function getAdminRole() public pure returns (bytes32) {
         return DEFAULT_ADMIN_ROLE;
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function getManagerRole() public pure returns (bytes32) {
-        return ORCHESTRATOR_MANAGER_ROLE;
     }
 
     //--------------------------------------------------------------------------

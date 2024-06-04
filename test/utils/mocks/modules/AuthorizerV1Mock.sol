@@ -138,10 +138,6 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         return "0x00";
     }
 
-    function getManagerRole() external pure returns (bytes32) {
-        return "0x02";
-    }
-
     function grantGlobalRole(bytes32 role, address target) external {
         bytes32 roleID = generateRoleId(address(orchestrator()), role);
         grantRole(roleID, target);

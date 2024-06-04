@@ -73,8 +73,7 @@ contract InverterBeaconE2E is E2ETest {
         setUpTokenGatedRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this))
+                tokenRoleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 

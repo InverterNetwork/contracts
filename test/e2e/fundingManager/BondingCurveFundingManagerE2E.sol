@@ -90,7 +90,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata, abi.encode(address(this), address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 

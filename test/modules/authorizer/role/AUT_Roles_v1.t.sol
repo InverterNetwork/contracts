@@ -121,19 +121,11 @@ contract AUT_RolesV1Test is Test {
         );
 
         address initialAuth = ALBA;
-        address initialManager = address(this);
 
         _authorizer.init(
-            IOrchestrator_v1(_orchestrator),
-            _METADATA,
-            abi.encode(initialAuth, initialManager)
+            IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
         );
 
-        //console.log(_authorizer.hasRole(_authorizer.getManagerRole(), initialManager));
-        assertEq(
-            _authorizer.hasRole(_authorizer.getManagerRole(), address(this)),
-            true
-        );
         //console.log(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA));
         assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
         //console.log(_authorizer.hasRole(_authorizer.getAdminRole(), address(this)));
@@ -244,13 +236,12 @@ contract AUT_RolesV1Test is Test {
         );
 
         address initialAdmin = address(this);
-        address initialManager = address(this);
 
         vm.expectRevert();
         _authorizer.init(
             IOrchestrator_v1(newOrchestrator),
             _METADATA,
-            abi.encode(initialAdmin, initialManager)
+            abi.encode(initialAdmin)
         );
         assertEq(
             _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
@@ -344,133 +335,6 @@ contract AUT_RolesV1Test is Test {
             _authorizer.getRoleMemberCount(_authorizer.getAdminRole()),
             amountAuth
         );
-    }
-
-    function testGrantManagerRole(address[] memory newAuthorized) public {
-        // Here we test adding to a role with OWNER as admin
-
-        bytes32 managerRole = _authorizer.getManagerRole();
-        uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
-
-        _validateAuthorizedList(newAuthorized);
-
-        vm.startPrank(address(ALBA));
-        for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectEmit(true, true, true, true);
-            emit RoleGranted(managerRole, newAuthorized[i], address(ALBA));
-            _authorizer.grantRole(managerRole, newAuthorized[i]);
-        }
-        vm.stopPrank();
-
-        for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), true);
-        }
-        assertEq(
-            _authorizer.getRoleMemberCount(managerRole),
-            (amountManagers + newAuthorized.length)
-        );
-    }
-
-    function testGrantManagerRoleFailsIfNotAdmin(address[] memory newAuthorized)
-        public
-    {
-        // Here we test adding to a role that has OWNER as admin while not being OWNER
-        bytes32 managerRole = _authorizer.getManagerRole();
-
-        vm.startPrank(address(ALBA));
-        _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
-        vm.stopPrank();
-
-        //assertEq(_authorizer.hasRole(address(_orchestrator), 1, BOB), true);
-        assertEq(_authorizer.hasRole(managerRole, BOB), true);
-
-        uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
-
-        _validateAuthorizedList(newAuthorized);
-
-        vm.startPrank(address(BOB));
-        for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectRevert(); // Just a general revert since AccesControl doesn't have error types
-            _authorizer.grantRole(managerRole, newAuthorized[i]);
-        }
-        vm.stopPrank();
-
-        for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
-        }
-        assertEq(_authorizer.getRoleMemberCount(managerRole), amountManagers);
-    }
-
-    function testRevokeManagerRole(address[] memory newAuthorized) public {
-        // Here we test adding to a role with OWNER as admin
-
-        bytes32 managerRole = _authorizer.getManagerRole();
-        uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
-
-        _validateAuthorizedList(newAuthorized);
-
-        vm.startPrank(address(ALBA));
-        for (uint i; i < newAuthorized.length; ++i) {
-            _authorizer.grantRole(managerRole, newAuthorized[i]);
-        }
-        vm.stopPrank();
-
-        for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), true);
-        }
-        assertEq(
-            _authorizer.getRoleMemberCount(managerRole),
-            (amountManagers + newAuthorized.length)
-        );
-
-        // Now we remove them all
-
-        vm.startPrank(address(ALBA));
-        for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectEmit(true, true, true, true);
-            emit RoleRevoked(managerRole, newAuthorized[i], address(ALBA));
-
-            _authorizer.revokeRole(managerRole, newAuthorized[i]);
-        }
-        vm.stopPrank();
-
-        for (uint i; i < newAuthorized.length; ++i) {
-            /* assertEq(
-                _authorizer.hasRole(address(_orchestrator), 1, newAuthorized[i]),
-                false
-            );*/
-            assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
-        }
-        assertEq(_authorizer.getRoleMemberCount(managerRole), amountManagers);
-    }
-
-    function testRevokeManagerRoleFailsIfNotAdmin(
-        address[] memory newAuthorized
-    ) public {
-        // Here we test adding to a role that has OWNER as admin while not being OWNER
-        bytes32 managerRole = _authorizer.getManagerRole();
-
-        vm.startPrank(address(ALBA));
-        _authorizer.grantRole(managerRole, BOB); //Meet your new Manager
-        vm.stopPrank();
-
-        assertEq(_authorizer.hasRole(managerRole, BOB), true);
-
-        uint amountManagers = _authorizer.getRoleMemberCount(managerRole);
-
-        _validateAuthorizedList(newAuthorized);
-
-        vm.startPrank(address(BOB));
-        for (uint i; i < newAuthorized.length; ++i) {
-            vm.expectRevert(); // Just a general revert since AccesControl doesn't have error types
-            _authorizer.revokeRole(managerRole, newAuthorized[i]);
-        }
-        vm.stopPrank();
-
-        for (uint i; i < newAuthorized.length; ++i) {
-            assertEq(_authorizer.hasRole(managerRole, newAuthorized[i]), false);
-        }
-        assertEq(_authorizer.getRoleMemberCount(managerRole), amountManagers);
     }
 
     // Test grantRoleFromModule

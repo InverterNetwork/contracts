@@ -83,13 +83,6 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by either
-    ///         addresses authorized via Orchestrator_v1 or the Orchestrator_v1's manager.
-    modifier onlyOrchestratorAdminOrManager() {
-        _checkonlyOrchestratorAdminOrManagerModifier();
-        _;
-    }
-
     /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
         _checkRoleModifier(
@@ -288,22 +281,6 @@ abstract contract Module_v1 is
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
-        }
-    }
-
-    function _checkonlyOrchestratorAdminOrManagerModifier() internal view {
-        IAuthorizer_v1 authorizer = __Module_orchestrator.authorizer();
-
-        bytes32 adminRole = authorizer.getAdminRole();
-        bytes32 managerRole = authorizer.getManagerRole();
-
-        if (
-            authorizer.hasRole(adminRole, _msgSender())
-                || authorizer.hasRole(managerRole, _msgSender())
-        ) {
-            return;
-        } else {
-            revert Module__CallerNotAuthorized(adminRole, _msgSender());
         }
     }
 
