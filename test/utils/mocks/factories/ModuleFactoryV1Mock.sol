@@ -13,6 +13,11 @@ import {
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+import {FundingManagerV1Mock} from
+    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+import {PaymentProcessorV1Mock} from
+    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
@@ -20,13 +25,41 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     address public governor = address(0x99999);
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
+    IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
+        1, 0, "https://fundingmanager.com", "FundingManager"
+    );
+
+    IModule_v1.Metadata authorizerMetadata =
+        IModule_v1.Metadata(1, 0, "https://authorizer.com", "Authorizer");
+
+    IModule_v1.Metadata paymentProcessorMetadata = IModule_v1.Metadata(
+        1, 1, "https://paymentprocessor.com", "PP_Simple_v1"
+    );
+
     function createModule(
-        IModule_v1.Metadata memory,
+        IModule_v1.Metadata memory metadata,
         IOrchestrator_v1,
         bytes memory,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
-        return address(new ModuleV1Mock());
+        if (
+            LibMetadata.identifier(metadata)
+                == LibMetadata.identifier(fundingManagerMetadata)
+        ) {
+            return address(new FundingManagerV1Mock());
+        } else if (
+            LibMetadata.identifier(metadata)
+                == LibMetadata.identifier(authorizerMetadata)
+        ) {
+            return address(new AuthorizerV1Mock());
+        } else if (
+            LibMetadata.identifier(metadata)
+                == LibMetadata.identifier(paymentProcessorMetadata)
+        ) {
+            return address(new PaymentProcessorV1Mock());
+        } else {
+            return address(new ModuleV1Mock());
+        }
     }
 
     function getBeaconAndId(IModule_v1.Metadata memory metadata)
