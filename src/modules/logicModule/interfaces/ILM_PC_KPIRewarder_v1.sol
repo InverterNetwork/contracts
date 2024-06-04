@@ -92,6 +92,13 @@ interface ILM_PC_KPIRewarder_v1 {
         uint[] trancheRewards
     );
 
+    event RewardRoundConfigured(
+        bytes32 indexed assertionId,
+        uint creationTime,
+        uint assertedValue,
+        uint indexed KpiToUse
+    );
+
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
     event FeeFundsDeposited(address token, uint amount);
 

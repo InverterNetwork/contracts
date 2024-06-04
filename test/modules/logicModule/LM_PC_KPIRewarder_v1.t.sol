@@ -84,6 +84,13 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         uint[] trancheRewards
     );
 
+    event RewardRoundConfigured(
+        bytes32 indexed assertionId,
+        uint creationTime,
+        uint assertedValue,
+        uint indexed KpiToUse
+    );
+
     event PaymentOrderAdded(
         address indexed recipient, address indexed token, uint amount
     );
@@ -382,6 +389,9 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             0x0
         ); //we don't know the last one
 
+        vm.expectEmit(false, true, true, true, address(kpiManager));
+        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); //we don't know the generated ID
+
         bytes32 assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
             MOCK_ASSERTION_DATA,
@@ -443,6 +453,10 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             MOCK_ASSERTER_ADDRESS,
             0x0
         );
+
+        vm.expectEmit(false, true, true, true, address(kpiManager));
+        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); //we don't know the generated ID
+
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         bytes32 assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
