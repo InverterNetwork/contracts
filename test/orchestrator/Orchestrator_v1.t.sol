@@ -326,8 +326,6 @@ contract OrchestratorV1Test is Test {
 
         // Create new funding manager module
         FundingManagerV1Mock newFundingManager = new FundingManagerV1Mock();
-        vm.assume(newFundingManager != fundingManager);
-        types.assumeElemNotInSet(modules, address(newFundingManager));
         newFundingManager.setToken(IERC20(address(0xB0B)));
 
         vm.expectRevert(
