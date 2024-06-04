@@ -7,6 +7,7 @@ import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {InverterTransparentUpgradeableProxy_v1} from
     "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {InverterProxyAdmin_v1} from "src/proxies/InverterProxyAdmin_v1.sol";
 
 // Internal Interfaces
 import {
@@ -138,7 +139,14 @@ contract OrchestratorFactory_v1 is
         address proxy;
         //If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
-            //Use a InverterTransparentUpgradeableProxy as a proxy
+            //Deploy a proxy admin contract that owns the invidual proxies
+            //Overwriting the independentUpdateAdmin as the ProxyAdmin will
+            //be the actual admin of the proxy
+            workflowConfig.independentUpdateAdmin = address(
+                new InverterProxyAdmin_v1(workflowConfig.independentUpdateAdmin)
+            );
+
+            //Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
                 new InverterTransparentUpgradeableProxy_v1(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
