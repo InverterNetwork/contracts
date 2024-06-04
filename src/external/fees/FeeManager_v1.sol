@@ -70,6 +70,9 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     mapping(address => mapping(bytes32 => Fee)) internal workflowIssuanceFees;
     mapping(address => mapping(bytes32 => Fee)) internal workflowCollateralFees;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initialization
 

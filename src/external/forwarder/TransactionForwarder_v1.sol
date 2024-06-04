@@ -31,6 +31,9 @@ contract TransactionForwarder_v1 is
     ERC2771Forwarder,
     Context
 {
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Initialization
 

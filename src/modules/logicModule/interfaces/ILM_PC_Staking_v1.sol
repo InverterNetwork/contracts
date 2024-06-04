@@ -21,9 +21,6 @@ interface ILM_PC_Staking_v1 {
         uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
     );
 
-    /// @notice Event emitted when the reward duration is updated.
-    event RewardsDurationUpdated(uint newDuration);
-
     /// @notice Event emitted when a user stakes an amount.
     event Staked(address indexed user, uint amount);
 
@@ -80,6 +77,10 @@ interface ILM_PC_Staking_v1 {
     /// @dev Fee on transfer tokens are currently not supported
     /// @param amount : how much token should be unstaked
     function unstake(uint amount) external;
+
+    /// @notice Collects the rewards that are earned up until now
+    /// @dev Reaps the rewards collected up to this point for the msg.Sender()
+    function claimRewards() external;
 
     /// @notice Sets the rewards that are to be distributed
     /// @dev Equally distributes the reward amount over the given time period

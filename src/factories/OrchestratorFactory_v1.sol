@@ -79,6 +79,9 @@ contract OrchestratorFactory_v1 is
     /// @dev Starts counting from 1.
     uint private _orchestratorIdCounter;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------------
     // Modifier
 
