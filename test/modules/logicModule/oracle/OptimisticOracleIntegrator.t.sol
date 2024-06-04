@@ -156,9 +156,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // Setter Functions
 
     /*
-        When the caller is not the owner
+        When the caller is not the admin
             reverts (tested in module tests)
-        When the caller is the owner
+        When the caller is the admin
             when the address is 0
                 reverts
             when the address is a valid token
@@ -189,9 +189,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     /*
-        When the caller is not the owner
+        When the caller is not the admin
             reverts (tested in module tests)
-        When the caller is the owner
+        When the caller is the admin
             when the address is 0
                 reverts
             when the address is not an UMA OO instance 
@@ -227,9 +227,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     }
 
     /*
-        When the caller is not the owner
+        When the caller is not the admin
             reverts (tested in module tests)
-        When the caller is the owner
+        When the caller is the admin
             when the liveness is 0
                 reverts
             when the liveness is valid 

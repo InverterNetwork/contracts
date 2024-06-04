@@ -126,11 +126,11 @@ contract AUT_RolesV1Test is Test {
             IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
         );
 
-        //console.log(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA));
-        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), true);
-        //console.log(_authorizer.hasRole(_authorizer.getOwnerRole(), address(this)));
+        //console.log(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA));
+        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
+        //console.log(_authorizer.hasRole(_authorizer.getAdminRole(), address(this)));
         assertEq(
-            _authorizer.hasRole(_authorizer.getOwnerRole(), address(this)),
+            _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
             false
         );
     }
@@ -144,7 +144,7 @@ contract AUT_RolesV1Test is Test {
         );
     }
 
-    function testInitWithInitialOwner(address initialAuth) public {
+    function testInitWithInitialAdmin(address initialAuth) public {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
@@ -162,16 +162,22 @@ contract AUT_RolesV1Test is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
-
-        assertEq(testAuthorizer.hasRole("0x01", address(this)), false);
         assertEq(
-            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
+            testAuthorizer.hasRole(testAuthorizer.getAdminRole(), initialAuth),
+            true
+        );
+
+        assertEq(
+            testAuthorizer.hasRole(testAuthorizer.getAdminRole(), address(this)),
+            false
+        );
+        assertEq(
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getAdminRole()), 1
         );
     }
 
-    function testInitWithoutInitialOwners() public {
-        //Checks that address list gets correctly stored on initialization if there are no owners given
+    function testInitWithoutInitialAdmins() public {
+        //Checks that address list gets correctly stored on initialization if there are no admins given
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new AUT_Roles_v1());
@@ -187,13 +193,16 @@ contract AUT_RolesV1Test is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.hasRole("0x01", address(this)), true);
         assertEq(
-            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
+            testAuthorizer.hasRole(testAuthorizer.getAdminRole(), address(this)),
+            true
+        );
+        assertEq(
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getAdminRole()), 1
         );
     }
 
-    function testInitWithInitialOwnerSameAsDeployer() public {
+    function testInitWithInitialAdminSameAsDeployer() public {
         //Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
@@ -210,10 +219,13 @@ contract AUT_RolesV1Test is Test {
 
         assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
 
-        assertEq(testAuthorizer.hasRole("0x01", initialAuth), true);
+        assertEq(
+            testAuthorizer.hasRole(testAuthorizer.getAdminRole(), initialAuth),
+            true
+        );
 
         assertEq(
-            testAuthorizer.getRoleMemberCount(testAuthorizer.getOwnerRole()), 1
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getAdminRole()), 1
         );
     }
 
@@ -223,28 +235,31 @@ contract AUT_RolesV1Test is Test {
             Clones.clone(address(new Orchestrator_v1(address(0))))
         );
 
-        address initialOwner = address(this);
+        address initialAdmin = address(this);
 
         vm.expectRevert();
         _authorizer.init(
             IOrchestrator_v1(newOrchestrator),
             _METADATA,
-            abi.encode(initialOwner)
+            abi.encode(initialAdmin)
         );
-        assertEq(_authorizer.hasRole("0x01", address(this)), false);
+        assertEq(
+            _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
+            false
+        );
         assertEq(address(_authorizer.orchestrator()), address(_orchestrator));
-        assertEq(_authorizer.hasRole("0x01", ALBA), true);
-        assertEq(_authorizer.getRoleMemberCount(_authorizer.getOwnerRole()), 1);
+        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
+        assertEq(_authorizer.getRoleMemberCount(_authorizer.getAdminRole()), 1);
     }
 
     // Test Register Roles
 
     //--------------------------------------------------------------------------------------
-    // Test manually granting and revoking roles as orchestrator-defined Owner
+    // Test manually granting and revoking roles as orchestrator-defined Admin
 
-    function testGrantOwnerRole(address[] memory newAuthorized) public {
+    function testGrantAdminRole(address[] memory newAuthorized) public {
         uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
+            _authorizer.getRoleMemberCount(_authorizer.getAdminRole());
 
         _validateAuthorizedList(newAuthorized);
 
@@ -252,72 +267,72 @@ contract AUT_RolesV1Test is Test {
         for (uint i; i < newAuthorized.length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit RoleGranted(
-                _authorizer.getOwnerRole(), newAuthorized[i], address(ALBA)
+                _authorizer.getAdminRole(), newAuthorized[i], address(ALBA)
             );
 
-            _authorizer.grantRole(_authorizer.getOwnerRole(), newAuthorized[i]);
+            _authorizer.grantRole(_authorizer.getAdminRole(), newAuthorized[i]);
         }
         vm.stopPrank();
 
         for (uint i; i < newAuthorized.length; ++i) {
             assertEq(
                 _authorizer.hasRole(
-                    _authorizer.getOwnerRole(), newAuthorized[i]
+                    _authorizer.getAdminRole(), newAuthorized[i]
                 ),
                 true
             );
         }
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
+            _authorizer.getRoleMemberCount(_authorizer.getAdminRole()),
             (amountAuth + newAuthorized.length)
         );
     }
 
-    function testRevokeOwnerRole() public {
-        //Add Bob as owner
+    function testRevokeAdminRole() public {
+        //Add Bob as admin
         vm.startPrank(address(ALBA));
-        _authorizer.grantRole(_authorizer.getOwnerRole(), BOB); //Meet your new Manager
+        _authorizer.grantRole(_authorizer.getAdminRole(), BOB); //Meet your new Manager
         vm.stopPrank();
-        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), BOB), true);
+        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), BOB), true);
 
         uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
+            _authorizer.getRoleMemberCount(_authorizer.getAdminRole());
 
         vm.startPrank(address(ALBA));
 
         vm.expectEmit(true, true, true, true);
         emit RoleRevoked(
-            _authorizer.getOwnerRole(), address(ALBA), address(ALBA)
+            _authorizer.getAdminRole(), address(ALBA), address(ALBA)
         );
 
-        _authorizer.revokeRole(_authorizer.getOwnerRole(), ALBA);
+        _authorizer.revokeRole(_authorizer.getAdminRole(), ALBA);
         vm.stopPrank();
 
-        assertEq(_authorizer.hasRole(_authorizer.getOwnerRole(), ALBA), false);
+        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), false);
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
+            _authorizer.getRoleMemberCount(_authorizer.getAdminRole()),
             amountAuth - 1
         );
     }
 
-    function testRemoveLastOwnerFails() public {
+    function testRemoveLastAdminFails() public {
         uint amountAuth =
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole());
-        bytes32 ownerRole = _authorizer.getOwnerRole(); //To correctly time the vm.expectRevert
+            _authorizer.getRoleMemberCount(_authorizer.getAdminRole());
+        bytes32 adminRole = _authorizer.getAdminRole(); //To correctly time the vm.expectRevert
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1
-                    .Module__Authorizer__OwnerRoleCannotBeEmpty
+                    .Module__Authorizer__AdminRoleCannotBeEmpty
                     .selector
             )
         );
         vm.prank(address(ALBA));
-        _authorizer.revokeRole(ownerRole, ALBA);
+        _authorizer.revokeRole(adminRole, ALBA);
 
-        assertEq(_authorizer.hasRole(ownerRole, ALBA), true);
+        assertEq(_authorizer.hasRole(adminRole, ALBA), true);
         assertEq(
-            _authorizer.getRoleMemberCount(_authorizer.getOwnerRole()),
+            _authorizer.getRoleMemberCount(_authorizer.getAdminRole()),
             amountAuth
         );
     }
@@ -717,7 +732,7 @@ contract AUT_RolesV1Test is Test {
         assertTrue(_authorizer.hasRole(globalRole, BOB));
     }
 
-    function testGrantGlobalRoleFailsIfNotOwner() public {
+    function testGrantGlobalRoleFailsIfNotAdmin() public {
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
         vm.prank(BOB);
@@ -727,7 +742,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     // Test grantGlobalRoleBatched
-    // - Should revert if caller is not owner
+    // - Should revert if caller is not admin
     // - Should not revert if address list is empty
 
     function testGrantGlobalRoleBatched(address[] memory newAuthorized)
@@ -753,7 +768,7 @@ contract AUT_RolesV1Test is Test {
         }
     }
 
-    function testGrantGlobalRoleBatchedFailsIfCalledByNonOwner() public {
+    function testGrantGlobalRoleBatchedFailsIfCalledByNonAdmin() public {
         address newModule = _setupMockSelfManagedModule();
 
         bytes32 globalRole =
@@ -809,7 +824,7 @@ contract AUT_RolesV1Test is Test {
         vm.stopPrank();
     }
 
-    function testRevokeGlobalRoleFailsIfNotOwner() public {
+    function testRevokeGlobalRoleFailsIfNotAdmin() public {
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
 
@@ -824,7 +839,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     // Test revokeGlobalRoleBatched
-    // - Should revert if caller is not owner
+    // - Should revert if caller is not admin
     // - Should not revert if address list is empty
 
     function testRevokeGlobalRoleBatched(address[] memory newAuthorized)
@@ -852,7 +867,7 @@ contract AUT_RolesV1Test is Test {
         vm.stopPrank();
     }
 
-    function testRevokeGlobalRoleBatchedFailsIfNotOwner() public {
+    function testRevokeGlobalRoleBatchedFailsIfNotAdmin() public {
         address newModule = _setupMockSelfManagedModule();
 
         bytes32 globalRole =
@@ -902,15 +917,17 @@ contract AUT_RolesV1Test is Test {
         assertTrue(_authorizer.hasRole(adminRole, BOB));
     }
 
-    function testGrantAdminRoleFailsIfNotOwner() public {
+    function testGrantAdminRoleFailsIfNotAdmin() public {
         bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
+        address COBIE = address(0xC0B1E);
+
         vm.prank(BOB);
         vm.expectRevert();
-        _authorizer.grantRole(adminRole, ALBA);
-        assertFalse(_authorizer.hasRole(adminRole, ALBA));
+        _authorizer.grantRole(adminRole, COBIE);
+        assertFalse(_authorizer.hasRole(adminRole, COBIE));
     }
 
-    // Test that only Owner can change admin
+    // Test that only Admin can change admin
     function testChangeRoleAdminOnModuleRole() public {
         // First, we make BOB admin
         bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
@@ -924,7 +941,7 @@ contract AUT_RolesV1Test is Test {
 
         // Now we set the OWNER as Role admin
         vm.startPrank(BOB);
-        _authorizer.transferAdminRole(roleId, _authorizer.getOwnerRole());
+        _authorizer.transferAdminRole(roleId, _authorizer.getAdminRole());
         vm.stopPrank();
 
         // ALBA can now freely grant and revoke roles
@@ -941,12 +958,12 @@ contract AUT_RolesV1Test is Test {
         address newModule = _setupMockSelfManagedModule();
 
         bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
-        bytes32 ownerRole = _authorizer.getOwnerRole(); //Buffer this to time revert
+        bytes32 adminRole = _authorizer.getAdminRole(); //Buffer this to time revert
 
         // BOB is not allowed to do this
         vm.startPrank(BOB);
         vm.expectRevert();
-        _authorizer.transferAdminRole(roleId, ownerRole);
+        _authorizer.transferAdminRole(roleId, adminRole);
         vm.stopPrank();
     }
 
@@ -1024,7 +1041,7 @@ contract AUT_RolesV1Test is Test {
     function _setupMockSelfManagedModule() internal returns (address) {
         ModuleV1Mock mockModule = new ModuleV1Mock();
 
-        vm.startPrank(ALBA); //We assume ALBA is owner
+        vm.startPrank(ALBA); //We assume ALBA is admin
         _orchestrator.initiateAddModuleWithTimelock(address(mockModule));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
         emit hm(_orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -1035,7 +1052,7 @@ contract AUT_RolesV1Test is Test {
         vm.expectEmit(true, true, true, true);
         emit RoleAdminChanged(
             _authorizer.generateRoleId(address(mockModule), ROLE_1),
-            bytes32(0x0),
+            bytes32(0x00),
             _authorizer.BURN_ADMIN_ROLE()
         );
 

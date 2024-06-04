@@ -211,7 +211,7 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // onlyOrchestratorOwner Functions
+    // onlyOrchestratorAdmin Functions
 
     function _cancelModuleUpdate(address module)
         internal

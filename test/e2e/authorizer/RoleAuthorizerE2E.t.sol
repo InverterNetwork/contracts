@@ -26,7 +26,7 @@ contract RoleAuthorizerE2E is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
-    address orchestratorOwner = makeAddr("orchestratorOwner");
+    address orchestratorAdmin = makeAddr("orchestratorAdmin");
     address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
@@ -112,9 +112,9 @@ contract RoleAuthorizerE2E is E2ETest {
         // Assign Bounty Manager Roles
         //--------------------------------------------------------------------------------
 
-        // we authorize the owner to create  bounties
+        // we authorize the Admin to create  bounties
         bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ISSUER_ROLE(), address(orchestratorOwner)
+            bountyManager.BOUNTY_ISSUER_ROLE(), address(orchestratorAdmin)
         );
 
         // we authorize the manager to verify bounty claims
@@ -127,15 +127,15 @@ contract RoleAuthorizerE2E is E2ETest {
             bountyManager.CLAIMANT_ROLE(), address(bountySubmitter)
         );
 
-        // Since we deploy the orchestrator, with address(this) as owner and manager for easier setup,
+        // Since we deploy the orchestrator, with address(this) as admin,
         // we now assign them to two external addresses. In production these will be directly set on deployment.
 
-        //we grant owner role to ownerAddress
-        bytes32 ownerRole = authorizer.getOwnerRole();
-        authorizer.grantRole(ownerRole, address(orchestratorOwner));
-        authorizer.renounceRole(ownerRole, address(this));
-        assertTrue(authorizer.hasRole(ownerRole, orchestratorOwner));
-        assertEq(authorizer.getRoleMemberCount(ownerRole), 1);
+        //we grant admin role to adminAddress
+        bytes32 adminRole = authorizer.getAdminRole();
+        authorizer.grantRole(adminRole, address(orchestratorAdmin));
+        authorizer.renounceRole(adminRole, address(this));
+        assertTrue(authorizer.hasRole(adminRole, orchestratorAdmin));
+        assertEq(authorizer.getRoleMemberCount(adminRole), 1);
 
         //--------------------------------------------------------------------------------
         // Set up seed deposit and initial deposit by users
@@ -165,7 +165,7 @@ contract RoleAuthorizerE2E is E2ETest {
         uint maximumPayoutAmount = 500e18;
         bytes memory details = "This is a test bounty";
 
-        vm.prank(orchestratorOwner);
+        vm.prank(orchestratorAdmin);
         uint bountyId = bountyManager.addBounty(
             minimumPayoutAmount, maximumPayoutAmount, details
         );

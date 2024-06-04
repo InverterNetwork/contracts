@@ -125,17 +125,17 @@ contract VotingRoleManagerE2E is E2ETest {
             }
         }
 
-        // We make the governor the only owner
-        bytes32 ownerRole = authorizer.getOwnerRole();
-        authorizer.grantRole(ownerRole, address(singleVoteGovernor));
+        // We make the governor the only admin
+        bytes32 adminRole = authorizer.getAdminRole();
+        authorizer.grantRole(adminRole, address(singleVoteGovernor));
 
         // we authorize governance to create  bounties
         bountyManager.grantModuleRole(
             bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
         );
 
-        // By having address(this) renounce the Owner Role, all changes from now on need to go through the AUT_EXT_VotingRoles_v1
-        authorizer.renounceRole(ownerRole, address(this));
+        // By having address(this) renounce the Admin Role, all changes from now on need to go through the AUT_EXT_VotingRoles_v1
+        authorizer.renounceRole(adminRole, address(this));
 
         //--------------------------------------------------------------------------------
         // Set up Vote to create Bounty

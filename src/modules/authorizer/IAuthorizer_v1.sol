@@ -14,8 +14,8 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice The function is only callable if the Module is self-managing its roles.
     error Module__Authorizer__ModuleNotSelfManaged();
 
-    /// @notice There always needs to be at least one owner.
-    error Module__Authorizer__OwnerRoleCannotBeEmpty();
+    /// @notice There always needs to be at least one admin.
+    error Module__Authorizer__AdminRoleCannotBeEmpty();
 
     //--------------------------------------------------------------------------
     // Functions
@@ -76,30 +76,30 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice Grants a global role to a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
-    /// @dev Only the addresses with the Owner role should be able to call this function
+    /// @dev Only the addresses with the Admin role should be able to call this function
     function grantGlobalRole(bytes32 role, address target) external;
 
     /// @notice Grants a global role to a set of targets
     /// @param role The role to grant
     /// @param targets The addresses to grant the role to
-    /// @dev Only the addresses with the Owner role should be able to call this function
+    /// @dev Only the addresses with the Admin role should be able to call this function
     function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
         external;
 
     /// @notice Revokes a global role from a target
     /// @param role The role to grant
     /// @param target The address to grant the role to
-    /// @dev Only the addresses with the Owner role should be able to call this function
+    /// @dev Only the addresses with the Admin role should be able to call this function
     function revokeGlobalRole(bytes32 role, address target) external;
 
     /// @notice Revokes a global role from a set of targets
     /// @param role The role to grant
     /// @param targets The addresses to grant the role to
-    /// @dev Only the addresses with the Owner role should be able to call this function
+    /// @dev Only the addresses with the Admin role should be able to call this function
     function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
         external;
 
-    /// @notice Returns the role ID of the owner role
+    /// @notice Returns the role ID of the admin role
     /// @return The role ID
-    function getOwnerRole() external view returns (bytes32);
+    function getAdminRole() external view returns (bytes32);
 }

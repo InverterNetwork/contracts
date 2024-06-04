@@ -23,7 +23,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
-    address orchestratorOwner = makeAddr("orchestratorOwner");
+    address orchestratorAdmin = makeAddr("orchestratorAdmin");
     address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
@@ -111,10 +111,10 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Set up Bounty Manager Roles with different thresholds
         //--------------------------------------------------------------------------------
 
-        //Give the Orchestrator_v1 owner the power to change module roles
-        authorizer.grantRole(authorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner);
+        //Give the Orchestrator_v1 Admin the power to change module roles
+        authorizer.grantRole(authorizer.DEFAULT_ADMIN_ROLE(), orchestratorAdmin);
 
-        vm.startPrank(orchestratorOwner);
+        vm.startPrank(orchestratorAdmin);
         {
             // Make the BOUNTY_ADMIN_ROLE token-gated by GATOR token and set the threshold
             bytes32 bountyRoleId = authorizer.generateRoleId(
@@ -124,8 +124,8 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
             authorizer.grantRole(bountyRoleId, address(gatingToken));
             authorizer.setThreshold(bountyRoleId, address(gatingToken), 100);
 
-            // We mint 101 tokens to the orchestrator owner so they can create bounties
-            gatingToken.mint(orchestratorOwner, 101);
+            // We mint 101 tokens to the orchestrator admin so they can create bounties
+            gatingToken.mint(orchestratorAdmin, 101);
 
             // Make the VERIFY_ADMIN_ROLE token-gated by GATOR token and set the threshold
             bytes32 verifierRoleId = authorizer.generateRoleId(
@@ -174,7 +174,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Create bounty
         //--------------------------------------------------------------------------------
-        vm.prank(orchestratorOwner);
+        vm.prank(orchestratorAdmin);
         uint bountyId =
             bountyManager.addBounty(100e18, 500e18, "This is a test bounty");
 

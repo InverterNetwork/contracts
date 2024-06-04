@@ -42,8 +42,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     ERC20Issuance_v1 issuanceToken;
 
-    address owner_address = makeAddr("alice");
-    address non_owner_address = makeAddr("bob");
+    address admin_address = makeAddr("alice");
+    address non_admin_address = makeAddr("bob");
 
     event BuyingEnabled();
     event BuyingDisabled();
@@ -84,7 +84,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
         //Set max fee of feeManager to 100% for testing purposes
         vm.prank(address(governor));
@@ -171,16 +171,16 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     */
     function testBuyingIsEnabled_FailsIfBuyNotOpen() public {
-        vm.prank(owner_address);
+        vm.prank(admin_address);
         bondingCurveFundingManager.closeBuy();
 
-        vm.prank(non_owner_address);
+        vm.prank(non_admin_address);
         vm.expectRevert(
             IBondingCurveBase_v1
                 .Module__BondingCurveBase__BuyingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.buyFor(non_owner_address, 100, 100);
+        bondingCurveFundingManager.buyFor(non_admin_address, 100, 100);
     }
 
     /* Test validReceiver modifier
@@ -192,7 +192,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
                 └── it should not revert (tested in buy tests)
     */
     function testValidReceiver_FailsForInvalidAddresses() public {
-        vm.startPrank(non_owner_address);
+        vm.startPrank(non_admin_address);
 
         // Test for address(0)
         vm.expectRevert(
@@ -268,7 +268,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         
     */
     function testBuyOrder_FailsIfDepositAmountIsZero() public {
-        vm.startPrank(non_owner_address);
+        vm.startPrank(non_admin_address);
 
         vm.expectRevert(
             IBondingCurveBase_v1
@@ -354,7 +354,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         }
 
         if (_workflowFee != 0) {
-            vm.prank(owner_address);
+            vm.prank(admin_address);
             bondingCurveFundingManager.setBuyFee(_workflowFee);
         }
 
@@ -730,9 +730,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test openBuy and _openBuy function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator_v1 admin
         │      └── it should revert (tested in base Module modifier tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator_v1 admin
                └── when buy functionality is already open
                 │      └── it should stay as is
                 │      └── it should emit an event
@@ -740,7 +740,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
                         └── it should open the buy functionality
                         └── it should emit an event
     */
-    function testOpenBuy_Idempotence() public callerIsOrchestratorOwner {
+    function testOpenBuy_Idempotence() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
@@ -751,7 +751,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
     }
 
-    function testOpenBuy() public callerIsOrchestratorOwner {
+    function testOpenBuy() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         bondingCurveFundingManager.closeBuy();
@@ -767,9 +767,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test closeBuy and _closeBuy function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator_v1 admin
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator_v1 admin
                └── when buy functionality is already closed
                 │      └── it should stay as is
                 │      └── it should emit an event
@@ -779,7 +779,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
     */
     function testCloseBuy_FailsIfAlreadyClosed()
         public
-        callerIsOrchestratorOwner
+        callerIsOrchestratorAdmin
     {
         vm.expectEmit(address(bondingCurveFundingManager));
         emit BuyingDisabled();
@@ -796,7 +796,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
     }
 
-    function testCloseBuy() public callerIsOrchestratorOwner {
+    function testCloseBuy() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
@@ -808,9 +808,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test setBuyFee and _setBuyFee function
-        ├── when caller is not the Orchestrator_v1 owner
+        ├── when caller is not the Orchestrator_v1 admin
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 owner
+        └── when caller is the Orchestrator_v1 admin
                └── when fee is over 100% 
                 │      └── it should revert
                 ├── when fee is  100% 
@@ -821,7 +821,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
     */
     function testSetBuyFee_FailsIfFee100PercentOrMore(uint _fee)
         public
-        callerIsOrchestratorOwner
+        callerIsOrchestratorAdmin
     {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
@@ -832,7 +832,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.setBuyFee(_fee);
     }
 
-    function testSetBuyFee(uint newFee) public callerIsOrchestratorOwner {
+    function testSetBuyFee(uint newFee) public callerIsOrchestratorAdmin {
         vm.assume(newFee < bondingCurveFundingManager.call_BPS());
 
         vm.expectEmit(
@@ -951,7 +951,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         }
 
         if (_workflowFee != 0) {
-            vm.prank(owner_address);
+            vm.prank(admin_address);
             bondingCurveFundingManager.setBuyFee(_workflowFee);
         }
 
@@ -1114,10 +1114,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Helper functions
 
-    // Modifier to ensure the caller has the owner role
-    modifier callerIsOrchestratorOwner() {
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
-        vm.startPrank(owner_address);
+    // Modifier to ensure the caller has the admin role
+    modifier callerIsOrchestratorAdmin() {
+        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+        vm.startPrank(admin_address);
         _;
     }
 

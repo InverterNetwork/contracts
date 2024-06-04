@@ -48,8 +48,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     ERC20Issuance_v1 issuanceToken;
 
-    address owner_address = address(0xA1BA);
-    address non_owner_address = address(0xB0B);
+    address admin_address = address(0xA1BA);
+    address non_admin_address = address(0xB0B);
 
     event SellingEnabled();
     event SellingDisabled();
@@ -80,7 +80,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         );
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
+        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
         //Set max fee of feeManager to 100% for testing purposes
         vm.prank(address(governor));
@@ -171,16 +171,16 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     */
     function testSellingIsEnabled_FailsIfSellNotOpen() public {
-        vm.prank(owner_address);
+        vm.prank(admin_address);
         bondingCurveFundingManager.closeSell();
 
-        vm.prank(non_owner_address);
+        vm.prank(non_admin_address);
         vm.expectRevert(
             IRedeemingBondingCurveBase_v1
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.sellFor(non_owner_address, 100, 100);
+        bondingCurveFundingManager.sellFor(non_admin_address, 100, 100);
     }
 
     // test modifier on sellFor function
@@ -242,7 +242,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     */
 
     function testSellOrder_FailsIfDepositAmountIsZero() public {
-        vm.startPrank(non_owner_address);
+        vm.startPrank(non_admin_address);
         {
             vm.expectRevert(
                 IBondingCurveBase_v1
@@ -326,7 +326,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         }
 
         if (_workflowFee != 0) {
-            vm.prank(owner_address);
+            vm.prank(admin_address);
             bondingCurveFundingManager.setSellFee(_workflowFee);
         }
 
@@ -374,9 +374,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test openSell function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator admin
         │      └── it should revert (tested in base Module modifier tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator admin
                └── when sell functionality is already open
                 │      └── it should stay as is
                 │      └── it should reemit an eventvert
@@ -384,7 +384,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                         ├── it should open the sell functionality
                         └── it should emit an event
     */
-    function testOpenSell_Idempotence() public callerIsOrchestratorOwner {
+    function testOpenSell_Idempotence() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
         vm.expectEmit(address(bondingCurveFundingManager));
         emit SellingEnabled();
@@ -392,7 +392,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.openSell();
     }
 
-    function testOpenSell() public callerIsOrchestratorOwner {
+    function testOpenSell() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
         bondingCurveFundingManager.closeSell();
@@ -408,9 +408,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test closeSell function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator admin
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator admin
                └── when sell functionality is already closed
                 │      └── it should stay as is
                 │      └── it should reemit an eventvert
@@ -421,7 +421,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     function testCloseSell_FailsIfAlreadyClosed()
         public
-        callerIsOrchestratorOwner
+        callerIsOrchestratorAdmin
     {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
@@ -438,7 +438,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.sellIsOpen(), false);
     }
 
-    function testCloseSell() public callerIsOrchestratorOwner {
+    function testCloseSell() public callerIsOrchestratorAdmin {
         assertEq(bondingCurveFundingManager.sellIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
@@ -449,9 +449,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test setSellFee and _setSellFee function
-        ├── when caller is not the Orchestrator owner
+        ├── when caller is not the Orchestrator admin
         │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator owner
+        └── when caller is the Orchestrator admin
                └── when fee is over 100% 
                 │      └── it should revert
                 ├── when fee is 100% 
@@ -464,7 +464,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
     function testSetSellFee_FailsIfFeeIsOver100Percent(uint _fee)
         public
-        callerIsOrchestratorOwner
+        callerIsOrchestratorAdmin
     {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
@@ -475,7 +475,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.setSellFee(_fee);
     }
 
-    function testSetSellFee(uint _fee) public callerIsOrchestratorOwner {
+    function testSetSellFee(uint _fee) public callerIsOrchestratorAdmin {
         vm.assume(_fee <= bondingCurveFundingManager.call_BPS());
 
         uint oldSellFee = bondingCurveFundingManager.sellFee();
@@ -548,7 +548,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         }
 
         if (_workflowFee != 0) {
-            vm.prank(owner_address);
+            vm.prank(admin_address);
             bondingCurveFundingManager.setSellFee(_workflowFee);
         }
 
@@ -599,10 +599,10 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Helper functions
 
-    // Modifier to ensure the caller has the owner role
-    modifier callerIsOrchestratorOwner() {
-        _authorizer.grantRole(_authorizer.getOwnerRole(), owner_address);
-        vm.startPrank(owner_address);
+    // Modifier to ensure the caller has the admin role
+    modifier callerIsOrchestratorAdmin() {
+        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+        vm.startPrank(admin_address);
         _;
     }
 

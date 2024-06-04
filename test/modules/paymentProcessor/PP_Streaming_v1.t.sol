@@ -1001,7 +1001,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertTrue(expectedTotal != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorAdmin can call the next function
         paymentProcessor.removePaymentForSpecificStream(
             address(paymentClient), paymentReceiver1, walletId
         );
@@ -1130,7 +1130,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assertTrue(total2 != 0);
 
-        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorOwner can call the next function
+        vm.prank(address(this)); // stupid line, ik, but it's just here to show that onlyOrchestratorAdmin can call the next function
         paymentProcessor.removePaymentForSpecificStream(
             address(paymentClient),
             paymentReceiver1,
