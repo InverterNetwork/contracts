@@ -39,13 +39,13 @@ contract FeeManagerV1Mock is IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury) {}
+    ) external view returns (uint fee, address treasury) {}
 
     function getIssuanceWorkflowFeeAndTreasury(
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury) {}
+    ) external view returns (uint fee, address treasury) {}
 
     //--------------------------------------------------------------------------
     // Setter Functions

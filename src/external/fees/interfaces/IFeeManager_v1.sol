@@ -143,7 +143,7 @@ interface IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury);
+    ) external view returns (uint fee, address treasury);
 
     /// @notice Returns the issuance fee for a specific workflow module function and the according treasury address of the workflow
     /// @param workflow The address of the workflow that contains the module function
@@ -155,7 +155,7 @@ interface IFeeManager_v1 {
         address workflow,
         address module,
         bytes4 functionSelector
-    ) external returns (uint fee, address treasury);
+    ) external view returns (uint fee, address treasury);
 
     //--------------------------------------------------------------------------
     // Setter Functions

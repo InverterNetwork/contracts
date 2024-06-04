@@ -237,6 +237,7 @@ abstract contract Module_v1 is
     /// @return treasury The address of the treasury
     function _getFeeManagerCollateralFeeData(bytes4 functionSelector)
         internal
+        view
         returns (uint fee, address treasury)
     {
         //Fetch fee manager address from orchestrator
@@ -255,6 +256,7 @@ abstract contract Module_v1 is
     /// @return treasury The address of the treasury
     function _getFeeManagerIssuanceFeeData(bytes4 functionSelector)
         internal
+        view
         returns (uint fee, address treasury)
     {
         //Fetch fee manager address from orchestrator

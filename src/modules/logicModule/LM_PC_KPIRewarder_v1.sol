@@ -184,6 +184,10 @@ contract LM_PC_KPIRewarder_v1 is
             block.timestamp, assertedValue, targetKPI, false
         );
 
+        emit RewardRoundConfigured(
+            assertionId, block.timestamp, assertedValue, targetKPI
+        );
+
         // (return assertionId)
     }
 

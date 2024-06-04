@@ -118,6 +118,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @inheritdoc IBondingCurveBase_v1
     function calculatePurchaseReturn(uint _depositAmount)
         public
+        view
         virtual
         returns (uint mintAmount)
     {
@@ -184,7 +185,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IBondingCurveBase_v1
-    function getStaticPriceForBuying() external virtual returns (uint);
+    function getStaticPriceForBuying() external view virtual returns (uint);
 
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
@@ -298,6 +299,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     ///     being deposited or minted, expressed in BPS
     function _getFunctionFeesAndTreasuryAddresses(bytes4 _selector)
         internal
+        view
         virtual
         returns (
             address collateralTreasury,

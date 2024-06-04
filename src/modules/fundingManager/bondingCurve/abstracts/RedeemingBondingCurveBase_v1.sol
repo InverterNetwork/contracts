@@ -103,6 +103,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function calculateSaleReturn(uint _depositAmount)
         public
+        view
         virtual
         returns (uint redeemAmount)
     {
