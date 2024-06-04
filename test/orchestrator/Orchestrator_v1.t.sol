@@ -92,6 +92,55 @@ contract OrchestratorV1Test is Test {
 
         address[] memory modules = createModules(moduleAmount);
 
+        address wrongModule = address(new ModuleV1Mock());
+
+        // We expect reverts when trying to set the wrong module as any of the privileged modules
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                wrongModule
+            )
+        );
+        orchestrator.init(
+            orchestratorId,
+            modules,
+            IFundingManager_v1(wrongModule),
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                wrongModule
+            )
+        );
+        orchestrator.init(
+            orchestratorId,
+            modules,
+            fundingManager,
+            IAuthorizer_v1(wrongModule),
+            paymentProcessor,
+            governor
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                wrongModule
+            )
+        );
+        orchestrator.init(
+            orchestratorId,
+            modules,
+            fundingManager,
+            authorizer,
+            IPaymentProcessor_v1(wrongModule),
+            governor
+        );
+
+        // Now we test correct initialization
         vm.expectEmit(true, true, true, false);
         emit OrchestratorInitialized(
             orchestratorId,
