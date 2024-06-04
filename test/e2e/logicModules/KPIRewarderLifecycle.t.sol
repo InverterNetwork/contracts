@@ -102,9 +102,8 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     // Assertion mock data
     uint64 constant ASSERTION_LIVENESS = 25_000;
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
-    bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
-    address constant MOCK_ASSERTER_ADDRESS = address(0x1);
     uint constant MOCK_ASSERTED_VALUE = 250;
+    address constant MOCK_ASSERTER_ADDRESS = address(0x1);
 
     // KPI mock data
     uint constant NUM_OF_TRANCHES = 4;
@@ -196,6 +195,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                 abi.encode(
                     address(stakingToken),
                     USDC_address,
+                    OptimisticOracleV3Interface(ooV3_address).getMinimumBond(
+                        USDC_address
+                    ),
                     ooV3_address,
                     ASSERTION_LIVENESS
                 ),
@@ -336,9 +338,8 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         vm.prank(AUTOMATION_SERVICE);
         bytes32 assertionId = kpiRewarder.postAssertion(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
             MOCK_ASSERTED_VALUE,
+            MOCK_ASSERTER_ADDRESS,
             0 // target KPI
         );
 

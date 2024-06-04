@@ -48,13 +48,14 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
 
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
-    bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
+    uint constant MOCK_ASSERTED_VALUE = 100;
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
     address USER_1 = address(0xA1BA);
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
     // the reward token is _token from ModuleTest
     ERC20Mock feeToken = new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK");
+    uint feeTokenBond;
 
     //=========================================================================================
     // Events for emission testing
@@ -95,6 +96,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         ooV3 = new OptimisticOracleV3Mock(feeToken, DEFAULT_LIVENESS);
         // we whitelist the default currency
         ooV3.whitelistCurrency(address(feeToken), 5e17);
+        feeTokenBond = ooV3.getMinimumBond(address(feeToken));
 
         //Add Module to Mock Orchestrator
         address impl = address(new LM_PC_KPIRewarder_v1());
@@ -105,7 +107,11 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         bytes memory configData = abi.encode(
-            address(stakingToken), address(feeToken), ooV3, DEFAULT_LIVENESS
+            address(stakingToken),
+            address(feeToken),
+            feeTokenBond,
+            ooV3,
+            DEFAULT_LIVENESS
         );
 
         kpiManager.init(_orchestrator, _METADATA, configData);
@@ -146,7 +152,11 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                address(0), address(_token), address(ooV3), DEFAULT_LIVENESS
+                address(0),
+                address(_token),
+                feeTokenBond,
+                address(ooV3),
+                DEFAULT_LIVENESS
             )
         );
 
@@ -162,6 +172,25 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
             abi.encode(
                 address(stakingToken),
                 address(0),
+                feeTokenBond,
+                address(ooV3),
+                DEFAULT_LIVENESS
+            )
+        );
+
+        // Test invalid token bond
+        vm.expectRevert(
+            IOptimisticOracleIntegrator
+                .Module__OptimisticOracleIntegrator__CurrencyBondTooLow
+                .selector
+        );
+        kpiManager.init(
+            _orchestrator,
+            _METADATA,
+            abi.encode(
+                address(stakingToken),
+                address(feeToken),
+                0,
                 address(ooV3),
                 DEFAULT_LIVENESS
             )
@@ -290,7 +319,11 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             LM_PC_KPIRewarder_v1(Clones.clone(impl));
 
         bytes memory configData = abi.encode(
-            address(feeToken), address(feeToken), ooV3, DEFAULT_LIVENESS
+            address(feeToken),
+            address(feeToken),
+            feeTokenBond,
+            ooV3,
+            DEFAULT_LIVENESS
         );
 
         alt_kpiManager.init(_orchestrator, _METADATA, configData);
@@ -303,11 +336,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
                 .selector
         );
         alt_kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            address(alt_kpiManager),
-            100,
-            0
+            MOCK_ASSERTION_DATA_ID, 100, address(alt_kpiManager), 0
         );
     }
 
@@ -319,11 +348,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
                 .selector
         );
         kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            99_999
+            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 99_999
         );
     }
 
@@ -337,11 +362,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
                 .selector
         );
         kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            99_999
+            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 99_999
         );
     }
 
@@ -367,16 +388,15 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         bytes32 assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTED_VALUE,
             MOCK_ASSERTER_ADDRESS,
-            100,
             0
         );
 
@@ -392,9 +412,8 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            MOCK_ASSERTED_VALUE,
             MOCK_ASSERTER_ADDRESS,
-            100,
             0
         );
 
@@ -436,17 +455,13 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
         ); //we don't know the last one
 
         bytes32 assertionId = kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            0
+            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
         );
         vm.stopPrank();
 
@@ -467,7 +482,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             kpiManager.getAssertionConfig(assertionId);
 
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
-        assertEq(assertion.data, MOCK_ASSERTION_DATA);
+        assertEq(assertion.data, bytes32(MOCK_ASSERTED_VALUE));
         assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
 
         assertEq(rewardRoundConfig.creationTime, block.timestamp);
@@ -498,17 +513,13 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         bytes32 assertionId = kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            0
+            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
         );
 
         // state after
@@ -524,7 +535,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             kpiManager.getAssertionConfig(assertionId);
 
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
-        assertEq(assertion.data, MOCK_ASSERTION_DATA);
+        assertEq(assertion.data, bytes32(MOCK_ASSERTED_VALUE));
         assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
 
         assertEq(rewardRoundConfig.creationTime, block.timestamp);
@@ -563,11 +574,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         vm.expectRevert(); // ERC20 insufficient balance revert
         bytes32 assertionId = kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            100,
-            0
+            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
         );
 
         // state after
@@ -921,17 +928,13 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(valueToAssert),
             MOCK_ASSERTER_ADDRESS,
             0x0
         ); //we don't know the last one
 
         assertionId = kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
-            MOCK_ASSERTER_ADDRESS,
-            valueToAssert,
-            0
+            MOCK_ASSERTION_DATA_ID, valueToAssert, MOCK_ASSERTER_ADDRESS, 0
         );
         vm.stopPrank();
 
@@ -942,11 +945,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         address[] memory users,
         uint[] memory amounts
     ) external {
+        uint assertedIntermediateValue = 250;
+
         // it should emit an event
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, users, amounts, totalStakedFunds) =
-            setUpStateForAssertionResolution(users, amounts, 250, true);
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
 
         vm.startPrank(address(ooV3));
         vm.expectEmit(true, true, true, true, address(kpiManager));
@@ -955,7 +962,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         emit DataAssertionResolved(
             false,
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(assertedIntermediateValue),
             MOCK_ASSERTER_ADDRESS,
             createdID
         );
@@ -984,10 +991,14 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         vm.assume(users.length > 1);
 
+        uint assertedIntermediateValue = 250;
+
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, users, amounts, totalStakedFunds) =
-            setUpStateForAssertionResolution(users, amounts, 250, true);
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
 
         vm.startPrank(address(ooV3));
 
@@ -995,7 +1006,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         emit DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(assertedIntermediateValue),
             MOCK_ASSERTER_ADDRESS,
             createdID
         );
@@ -1062,10 +1073,14 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
     ) external whenTheAssertionResolvedToTrue {
         // it should not pay out any amount from the uncompleted tranche at all
 
+        uint assertedIntermediateValue = 250;
+
         bytes32 createdID;
         uint totalStakedFunds;
         (createdID, users, amounts, totalStakedFunds) =
-            setUpStateForAssertionResolution(users, amounts, 250, false);
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, false
+        );
 
         vm.warp(block.timestamp + 5);
 
@@ -1075,7 +1090,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         emit DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
-            MOCK_ASSERTION_DATA,
+            bytes32(assertedIntermediateValue),
             MOCK_ASSERTER_ADDRESS,
             createdID
         );
