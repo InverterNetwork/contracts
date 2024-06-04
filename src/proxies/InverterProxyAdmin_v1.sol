@@ -12,16 +12,14 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 /**
  * @title   Inverter Proxy Admin
  *
- * @notice  Manages upgrades for Inverter Network proxies, allowing administrators to update
- *          the implementation logic of deployed contracts. Supports batch upgrades for multiple
- *          proxies in a single transaction.
+ * @notice  Acts as the admin of the Inverter Transparent Upgradeable Proxies
+ *          and is responsible for upgrading the proxies to the newest version.
  *
  * @author  Inverter Network
  */
 contract InverterProxyAdmin_v1 is Ownable2Step {
-    /**
-     * @dev Sets the initial owner who can perform upgrades.
-     */
+    /// @notice Constructs the InverterProxyAdmin_v1.
+    /// @param initialOwner The initial owner of the contract.
     constructor(address initialOwner) Ownable(initialOwner) {}
 
     /// @notice Upgrades the corresponding proxy to the newest version of the implementation.
