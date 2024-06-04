@@ -1,7 +1,7 @@
 <a href="https://inverter.network" target="_blank"><img align="right" width="150" height="150" top="100" src="./assets/logo_circle.svg"></a>
 
 # Inverter Network Smart Contracts
-*Build, customize, and innovate with Inverter's modular logic and extensive web3 interoperability.*
+*Inverter is the pioneering web3 protocol for token economies, enabling conditional token issuance, dynamic utility management, and token distribution. Build, customize, and innovate with Inverter's modular logic and extensive web3 interoperability.*
 
 ## Installation
 
@@ -14,9 +14,16 @@ The Inverter Network smart contracts are developed using the [foundry toolchain]
 
 ## Usage
 
-Common tasks are executed through a `Makefile`.
+Common tasks are executed through a `Makefile`. The most common commands are:
+* `make build` to compile the project.
+* `make test` to run the test suite.
+  * Note: _Some of our tests  require a working Sepolia RPC URL, as we test certain contracts via fork testing. We implemented fallbacks in these cases in the code directly, so they should work even without any RPC set in the environment. If that does not work, please set a working one via `export SEPOLIA_RPC_URL=https://rpc-url-here`._
+* `make pre-commit` to ensure all of the development requirements are met, such as
+  * the Foundry Formatter has been run.
+  * the scripts are all working.
+  * the tests all run without any issues.
 
-The `Makefile` supports a help command, i.e. `make help`.
+Additionally, the `Makefile` supports a help command, i.e. `make help`.
 
 ```
 $ make help
@@ -31,14 +38,15 @@ $ make help
 A technical documentation can be found in our **[GitHub Wiki](https://github.com/InverterNetwork/inverter-contracts/wiki)**.
 
 ## Dependencies
-
 - [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
 - [OpenZeppelin Upgradeable-Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable)
+- [UMAProtocol](https://github.com/UMAprotocol/protocol) (_for the [KPIRewarder Staking Module](./src/modules/logicModule/LM_PC_KPIRewarder_v1.sol)_)
+
+## Contributing
+You are considering to contribute to our protocol? Awesome - please refer to our [Contribution Guidelines](./CONTRIBUTING.md) to find our about the processes we established to ensure highest quality within our codebase.
 
 ## Safety
+Our [Security Policy](./SECURITY.md) provides details about our Security Guidelines, audits, and more. If you have discovered a potential security vulnerability within the Inverter Protocol, please report it to us by emailing [security@inverter.network](mailto:security@inverter.network).
 
-This is experimental software and is provided on an "as is" and
-"as available" basis.
-
-We do not give any warranties and will not be liable for any loss incurred
-through any use of this codebase.
+-----
+_Disclaimer: This is experimental software and is provided on an "as is" and "as available" basis. We do not give any warranties and will not be liable for any loss incurred through any use of this codebase._
