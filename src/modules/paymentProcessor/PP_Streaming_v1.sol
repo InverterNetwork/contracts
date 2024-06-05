@@ -48,6 +48,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         returns (bool)
     {
         return interfaceId == type(IPP_Streaming_v1).interfaceId
+            || interfaceId == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -81,6 +82,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice list of streamIds of all payment orders of a particular paymentReceiver for a particular paymentClient
     /// @dev client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[])
     mapping(address => mapping(address => uint[])) private activeStreams;
+
+    // Storage gap for future upgrades
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -131,6 +135,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _claimAll(client, _msgSender());
     }
 
+    /// @inheritdoc IPP_Streaming_v1
     function claimPreviouslyUnclaimable(address client, address receiver)
         external
     {
@@ -633,6 +638,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint _cliff,
         uint _end
     ) internal {
+        ++numStreams[client][_paymentReceiver];
         if (
             !validPaymentReceiver(_paymentReceiver) || !validTotal(_total)
                 || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
@@ -641,8 +647,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 _paymentReceiver, _token, _total, _start, _cliff, _end
             );
         } else {
-            ++numStreams[client][_paymentReceiver];
-
             streams[client][_paymentReceiver][_streamId] =
                 Stream(_token, _streamId, _total, 0, _start, _cliff, _end);
 

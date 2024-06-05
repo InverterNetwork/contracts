@@ -35,7 +35,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     OptimisticOracleIntegratorMock ooIntegrator;
     OptimisticOracleV3Mock ooV3;
 
-    uint64 immutable DEFAULT_LIVENESS = 5000;
+    uint64 immutable DEFAULT_LIVENESS = 25_000;
 
     // Mock data for assertions
     bytes32 constant MOCK_ASSERTION_DATA_ID = "0x1234";
@@ -62,12 +62,17 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
         assertEq(address(_authorizer), address(_orchestrator.authorizer()));
 
-        //console.log("Token address: ", address(_token));
-        //console.log("Optimistic Oracle address: ",address(ooV3));
-        bytes memory _configData =
-            abi.encode(address(_token), address(ooV3), DEFAULT_LIVENESS);
-        //console.log("Optimistic Oracle config data (next line): ");
-        //console.logBytes(_configData);
+        console.log("Token address: ", address(_token));
+        console.log("Optimistic Oracle address: ", address(ooV3));
+        console.log("Minimum bond: ", ooV3.getMinimumBond(address(_token)));
+        bytes memory _configData = abi.encode(
+            address(_token),
+            ooV3.getMinimumBond(address(_token)),
+            address(ooV3),
+            DEFAULT_LIVENESS
+        );
+        console.log("Optimistic Oracle config data (next line): ");
+        console.logBytes(_configData);
 
         ooIntegrator.init(_orchestrator, _METADATA, _configData);
         _token.mint(address(this), 1e22);
@@ -161,31 +166,58 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         When the caller is the admin
             when the address is 0
                 reverts
+            when the bond is below the minimum specified by the OptimisticOracleV3
+                reverts
             when the address is a valid token
                 sets the new address as default currency
+                sets the new bond amount
                 emits an event
         
         // Note: checks if the token is whitelisted in the OptimisticOracleV3 are performed when creating an assertion, not when setting the default currency
 
     */
 
-    function testSetDefaultCurrencyFails_whenNewCurrencyIsZero() public {
+    function testsetDefaultCurrencyAndBondFails_whenNewCurrencyIsZero()
+        public
+    {
         vm.expectRevert(
             IOptimisticOracleIntegrator
                 .Module__OptimisticOracleIntegrator__InvalidDefaultCurrency
                 .selector
         );
-        ooIntegrator.setDefaultCurrency(address(0));
+        ooIntegrator.setDefaultCurrencyAndBond(address(0), 0);
     }
 
-    function testSetDefaultCurrency(address whitelisted) public {
+    function testsetDefaultCurrencyAndBondFails_whenBondBelowMinimum(
+        address whitelisted,
+        uint minimumBond,
+        uint proposedBond
+    ) public {
+        minimumBond = bound(minimumBond, 0, 1e40); // keep it reasonable to avoid overflows
+        vm.assume(proposedBond < minimumBond);
+
+        _validateAddress(whitelisted); // make sure it doesn't collide with addresses in use by the test
+        ooV3.whitelistCurrency(whitelisted, minimumBond);
+
+        vm.expectRevert(
+            IOptimisticOracleIntegrator
+                .Module__OptimisticOracleIntegrator__CurrencyBondTooLow
+                .selector
+        );
+        ooIntegrator.setDefaultCurrencyAndBond(whitelisted, proposedBond);
+    }
+
+    function testsetDefaultCurrencyAndBond(address whitelisted, uint bond)
+        public
+    {
         _validateAddress(whitelisted); // make sure it doesn't collide with addresses in use by the test
 
         ooV3.whitelistCurrency(whitelisted, 0);
 
-        ooIntegrator.setDefaultCurrency(whitelisted);
+        ooIntegrator.setDefaultCurrencyAndBond(whitelisted, bond);
 
         assertEq(address(ooIntegrator.defaultCurrency()), whitelisted);
+        assertEq(ooIntegrator.defaultBond(), bond);
     }
 
     /*
@@ -230,24 +262,27 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         When the caller is not the admin
             reverts (tested in module tests)
         When the caller is the admin
-            when the liveness is 0
+            when the liveness is below 6 hours
                 reverts
             when the liveness is valid 
                 sets the new liveness
                 emits an event
     */
 
-    function testSetDefaultAssertionLivenessFails_whenLivenessIsZero() public {
+    function testSetDefaultAssertionLivenessFails_whenLivenessLessThanSixHours(
+        uint64 newLiveness
+    ) public {
+        vm.assume(newLiveness < 21_600);
         vm.expectRevert(
             IOptimisticOracleIntegrator
                 .Module__OptimisticOracleIntegrator__InvalidDefaultLiveness
                 .selector
         );
-        ooIntegrator.setDefaultAssertionLiveness(0);
+        ooIntegrator.setDefaultAssertionLiveness(newLiveness);
     }
 
     function testSetDefaultAssertionLiveness(uint64 newLiveness) public {
-        vm.assume(newLiveness > 0);
+        vm.assume(newLiveness >= 21_600);
         ooIntegrator.setDefaultAssertionLiveness(newLiveness);
         assertEq(ooIntegrator.assertionLiveness(), newLiveness);
     }

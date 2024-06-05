@@ -33,13 +33,21 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice The given threshold is invalid
     error Module__AUT_TokenGated_Roles__InvalidThreshold(uint threshold);
 
+    /// @notice The role is token-gated but no threshold is set.
+    error Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold(
+        bytes32 role, address token
+    );
+
     //--------------------------------------------------------------------------
     // Public functions
 
     /// @notice Checks if an account qualifies for a token-gated role.
     /// @param role The role to be checked.
     /// @param who The account to be checked.
-    function hasTokenRole(bytes32 role, address who) external returns (bool);
+    function hasTokenRole(bytes32 role, address who)
+        external
+        view
+        returns (bool);
 
     /// @notice Returns the threshold amount necessary to qualify for a given token role
     /// @param roleId The role to be checked on.
@@ -55,6 +63,9 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     function makeRoleTokenGatedFromModule(bytes32 role) external;
 
     /// @notice One-step setup for Modules to create a token-gated role and set its threshold.
+    ///        Please be aware that using tokens that are transferable and have active markets could
+    ///         make the token-gated authorization vulnerable to flash loans, potentially bypassing
+    ///         the authorization mechanism.
     /// @param role The role to be made token-gated
     /// @param token The token for which the threshold will be set.
     /// @param threshold The minimum balance of the token required to qualify for the role.

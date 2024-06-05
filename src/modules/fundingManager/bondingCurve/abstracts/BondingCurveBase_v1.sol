@@ -41,7 +41,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         returns (bool)
     {
         return interfaceId == type(IBondingCurveBase_v1).interfaceId
-            || interfaceId == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -66,6 +65,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @notice Accumulated project trading fees collected from deposits made by users
     /// when engaging with the bonding curve-based funding manager. Collected in collateral
     uint public projectCollateralFeeCollected;
+
+    // Storage gap for future upgrades
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -225,8 +227,12 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
     {
         _validateDepositAmount(_depositAmount);
+
+        // Cache Collateral Token
+        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
+
         // Transfer collateral, confirming that correct amount == allowance
-        __Module_orchestrator.fundingManager().token().safeTransferFrom(
+        collateralToken.safeTransferFrom(
             _msgSender(), address(this), _depositAmount
         );
         // Get protocol fee percentages and treasury addresses
@@ -250,9 +256,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralTreasury,
-            __Module_orchestrator.fundingManager().token(),
-            protocolFeeAmount
+            collateralTreasury, collateralToken, protocolFeeAmount
         );
 
         // Add workflow fee if applicable

@@ -10,16 +10,12 @@ import {
     LM_PC_Staking_v1,
     SafeERC20,
     IERC20,
-    ERC20PaymentClientBase_v1,
-    IERC20PaymentClientBase_v1,
-    ReentrancyGuard
+    ERC20PaymentClientBase_v1
 } from "./LM_PC_Staking_v1.sol";
 import {
     IOptimisticOracleIntegrator,
     OptimisticOracleIntegrator,
-    OptimisticOracleV3CallbackRecipientInterface,
-    OptimisticOracleV3Interface,
-    ClaimData
+    OptimisticOracleV3CallbackRecipientInterface
 } from
     "src/modules/logicModule/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
 
@@ -77,10 +73,15 @@ contract LM_PC_KPIRewarder_v1 is
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
     // Deposit Queue
+    bool public assertionPending;
+    uint minimumStake; // The workflow owner can set a minimum stake amount to mitigate griefing attacks where sybils spam the queue with multiple small stakes.
     address[] public stakingQueue;
     mapping(address => uint) public stakingQueueAmounts;
     uint public totalQueuedFunds;
     uint public constant MAX_QUEUE_LENGTH = 50;
+
+    // Storage gap for future upgrades
+    uint[50] private __gap;
 
     /*
     Tranche Example:
@@ -112,12 +113,15 @@ contract LM_PC_KPIRewarder_v1 is
         (
             address stakingTokenAddr,
             address currencyAddr,
+            uint defaultBond,
             address ooAddr,
             uint64 liveness
-        ) = abi.decode(configData, (address, address, address, uint64));
+        ) = abi.decode(configData, (address, address, uint, address, uint64));
 
         __LM_PC_Staking_v1_init(stakingTokenAddr);
-        __OptimisticOracleIntegrator_init(currencyAddr, ooAddr, liveness);
+        __OptimisticOracleIntegrator_init(
+            currencyAddr, defaultBond, ooAddr, liveness
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -151,11 +155,14 @@ contract LM_PC_KPIRewarder_v1 is
     /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
     function postAssertion(
         bytes32 dataId,
-        bytes32 data,
-        address asserter,
         uint assertedValue,
+        address asserter,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
+        if (assertionPending) {
+            revert Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
+        }
+
         //--------------------------------------------------------------------------
         // Input Validation
 
@@ -173,9 +180,6 @@ contract LM_PC_KPIRewarder_v1 is
             revert Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
         }
 
-        // Question: what kind of checks should or can we implement on the data side?
-        // Technically the value mentioned inside "data" (and posted publicly) wouldn't need to be the same as assertedValue...
-
         //--------------------------------------------------------------------------
         // Staking Queue Management
 
@@ -191,7 +195,7 @@ contract LM_PC_KPIRewarder_v1 is
         //--------------------------------------------------------------------------
         // Assertion Posting
 
-        assertionId = assertDataFor(dataId, data, asserter);
+        assertionId = assertDataFor(dataId, bytes32(assertedValue), asserter);
         assertionConfig[assertionId] = RewardRoundConfiguration(
             block.timestamp, assertedValue, targetKPI, false
         );
@@ -199,6 +203,8 @@ contract LM_PC_KPIRewarder_v1 is
         emit RewardRoundConfigured(
             assertionId, block.timestamp, assertedValue, targetKPI
         );
+
+        assertionPending = true;
 
         // (return assertionId)
     }
@@ -270,6 +276,13 @@ contract LM_PC_KPIRewarder_v1 is
         return (KpiNum);
     }
 
+    function setMinimumStake(uint _minimumStake)
+        external
+        onlyOrchestratorAdmin
+    {
+        minimumStake = _minimumStake;
+    }
+
     //--------------------------------------------------------------------------
     // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
 
@@ -282,6 +295,10 @@ contract LM_PC_KPIRewarder_v1 is
     {
         if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
             revert Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
+        }
+
+        if (amount < minimumStake) {
+            revert Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
         }
 
         address sender = _msgSender();
@@ -328,15 +345,15 @@ contract LM_PC_KPIRewarder_v1 is
     //--------------------------------------------------------------------------
     // Optimistic Oracle Overrides:
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
-        if (_msgSender() != address(oo)) {
-            revert Module__OptimisticOracleIntegrator__CallerNotOO();
-        }
+        //First, we perform checks and state management on the parent function.
+        super.assertionResolvedCallback(assertionId, assertedTruthfully);
 
+        // If the assertion was true, we calculate the rewards and distribute them.
         if (assertedTruthfully) {
             // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds.
 
@@ -376,17 +393,17 @@ contract LM_PC_KPIRewarder_v1 is
             }
 
             _setRewards(rewardAmount, 1);
+            assertionConfig[assertionId].distributed = true;
+        } else {
+            // To keep in line with the upstream contract. If the assertion was false, we delete the corresponding assertionConfig from storage.
+            delete assertionConfig[assertionId];
         }
-        emit DataAssertionResolved(
-            assertedTruthfully,
-            assertionData[assertionId].dataId,
-            assertionData[assertionId].data,
-            assertionData[assertionId].asserter,
-            assertionId
-        );
+
+        // Independently of the fact that the assertion resolved true or not, new assertions can now be posted.
+        assertionPending = false;
     }
 
-    /// @inheritdoc IOptimisticOracleIntegrator
+    /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         //Do nothing

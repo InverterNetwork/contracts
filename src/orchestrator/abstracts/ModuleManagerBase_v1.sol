@@ -4,10 +4,8 @@ pragma solidity 0.8.23;
 // Interfaces
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
-import {
-    IOrchestratorFactory_v1,
-    IModuleFactory_v1
-} from "src/factories/OrchestratorFactory_v1.sol";
+import {IModuleFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 //External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -130,16 +128,8 @@ abstract contract ModuleManagerBase_v1 is
     mapping(address module => ModuleUpdateTimelock timelock) public
         moduleAddressToTimelock;
 
-    /// @dev Mapping of modules and access control roles to accounts and
-    ///      whether they holds that role.
-    /// @dev module address => role => account address => bool.
-    ///
-    /// @custom:invariant Modules can only mutate own account roles.
-    /// @custom:invariant Only modules can mutate not own account roles.
-    /// @custom:invariant Account can always renounce own roles.
-    /// @custom:invariant Roles only exist for enabled modules.
-    mapping(address => mapping(bytes32 => mapping(address => bool))) private
-        _moduleRoles;
+    // Storage gap for future upgrades
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Initializer
@@ -291,7 +281,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev Expects `module` to be valid module address.
     /// @dev Expects `module` to not be enabled module.
-    function _commitAddModule(address module) private {
+    function _commitAddModule(address module) internal {
         // Add address to _modules list.
         _modules.push(module);
         _isModule[module] = true;
@@ -330,7 +320,11 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     function _ensureValidModule(address module) private view {
-        if (module == address(0) || module == address(this)) {
+        if (
+            module.code.length == 0 || module == address(0)
+                || module == address(this)
+                || !ERC165(module).supportsInterface(type(IModule_v1).interfaceId)
+        ) {
             revert ModuleManagerBase__InvalidModuleAddress();
         }
         if (

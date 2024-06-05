@@ -74,6 +74,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     function call_calculateSaleReturn(uint _depositAmount)
         external
+        view
         returns (uint)
     {
         return calculateSaleReturn(_depositAmount);
@@ -109,20 +110,6 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
         return _sellOrder(_receiver, _depositAmount, _minAmountOut);
-    }
-
-    function call_getSellFeesAndTreasuryAddresses()
-        external
-        returns (
-            address collateralTreasury,
-            address issuanceTreasury,
-            uint collateralSellFeePercentage,
-            uint issuanceSellFeePercentage
-        )
-    {
-        return _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        );
     }
 
     function call_calculateNetAndSplitFees(

@@ -67,6 +67,15 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         _;
     }
 
+    //--------------------------------------------------------------------------
+    // Storage
+
+    // Gap for possible future upgrades
+    uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Initializer
+
     /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
@@ -126,6 +135,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
 
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
         external
+        view
         onlyModule
         validClient(client)
     {

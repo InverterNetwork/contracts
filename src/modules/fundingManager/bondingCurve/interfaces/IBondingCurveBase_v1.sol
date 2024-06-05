@@ -37,7 +37,7 @@ interface IBondingCurveBase_v1 {
     event BuyingDisabled();
 
     /// @notice Event emitted when buy fee is updated
-    event BuyFeeUpdated(uint indexed newBuyFee, uint indexed oldBuyFee);
+    event BuyFeeUpdated(uint newBuyFee, uint oldBuyFee);
 
     /// @notice Event emitted when the issuance token is updated
     event IssuanceTokenUpdated(
@@ -54,8 +54,8 @@ interface IBondingCurveBase_v1 {
     /// @param buyer The address that initiated the buy order.
     event TokensBought(
         address indexed receiver,
-        uint indexed depositAmount,
-        uint indexed receivedAmount,
+        uint depositAmount,
+        uint receivedAmount,
         address buyer
     );
 
@@ -71,7 +71,7 @@ interface IBondingCurveBase_v1 {
     /// @param treasury The protocol treasury address receiving the token fee amount
     /// @param feeAmount The fee amount minted to the treasury
     event ProtocolFeeMinted(
-        address indexed token, address indexed treasury, uint indexed feeAmount
+        address indexed token, address indexed treasury, uint feeAmount
     );
 
     /// @notice Event emitted when protocol fee has been transferred to the treasury
@@ -79,7 +79,7 @@ interface IBondingCurveBase_v1 {
     /// @param treasury The protocol treasury address receiving the token fee amount
     /// @param feeAmount The fee amount transferred to the treasury
     event ProtocolFeeTransferred(
-        address indexed token, address indexed treasury, uint indexed feeAmount
+        address indexed token, address indexed treasury, uint feeAmount
     );
 
     //--------------------------------------------------------------------------

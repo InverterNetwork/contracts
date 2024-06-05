@@ -57,6 +57,9 @@ contract AUT_Roles_v1 is
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
+    // Storage gap for future upgrades
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -79,13 +82,16 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
-    // Constructor and initialization
-
-    constructor() {
-        // make the BURN_ADMIN_ROLE immutable
-        _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
+    /// @notice Verifies that the admin being added is not the orchestrator
+    modifier noSelfAdmin(bytes32 role, address who) {
+        if (role == DEFAULT_ADMIN_ROLE && who == address(orchestrator())) {
+            revert Module__Authorizer__OrchestratorCannotHaveAdminRole();
+        }
+        _;
     }
+
+    //--------------------------------------------------------------------------
+    // Initialization
 
     /// @inheritdoc Module_v1
     function init(
@@ -104,17 +110,19 @@ contract AUT_Roles_v1 is
         internal
         onlyInitializing
     {
+        if (initialAdmin == address(0)) {
+            revert Module__Authorizer__InvalidInitialAdmin();
+        }
+
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin privileges on all Modules in the contract.
         // It is defined in the AccessControl contract and identified with bytes32("0x00")
         // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
 
-        // If there is no initial admin specfied or the initial admin is the same as the deployer
+        // make the BURN_ADMIN_ROLE immutable
+        _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
 
-        if (initialAdmin != address(0)) {
-            _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
-        } else {
-            _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        }
+        // set the initial admin as the DEFAULT_ADMIN_ROLE
+        _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
     }
 
     //--------------------------------------------------------------------------
@@ -132,6 +140,20 @@ contract AUT_Roles_v1 is
         returns (bool)
     {
         return super._revokeRole(role, who);
+    }
+
+    /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @return bool Returns if grant has been succesful
+    function _grantRole(bytes32 role, address who)
+        internal
+        virtual
+        override
+        noSelfAdmin(role, who)
+        returns (bool)
+    {
+        return super._grantRole(role, who);
     }
 
     //--------------------------------------------------------------------------

@@ -121,8 +121,8 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
                 address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
             );
             authorizer.setTokenGated(bountyRoleId, true);
-            authorizer.grantRole(bountyRoleId, address(gatingToken));
             authorizer.setThreshold(bountyRoleId, address(gatingToken), 100);
+            authorizer.grantRole(bountyRoleId, address(gatingToken));
 
             // We mint 101 tokens to the orchestrator admin so they can create bounties
             gatingToken.mint(orchestratorAdmin, 101);
@@ -132,8 +132,8 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
                 address(bountyManager), bountyManager.VERIFIER_ROLE()
             );
             authorizer.setTokenGated(verifierRoleId, true);
-            authorizer.grantRole(verifierRoleId, address(gatingToken));
             authorizer.setThreshold(verifierRoleId, address(gatingToken), 50);
+            authorizer.grantRole(verifierRoleId, address(gatingToken));
 
             // We mint 51 tokens to the orchestrator manager so they can verify bounties
             gatingToken.mint(bountyVerifier, 51);
@@ -143,8 +143,8 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
                 address(bountyManager), bountyManager.CLAIMANT_ROLE()
             );
             authorizer.setTokenGated(claimRoleId, true);
-            authorizer.grantRole(claimRoleId, address(gatingToken));
             authorizer.setThreshold(claimRoleId, address(gatingToken), 25);
+            authorizer.grantRole(claimRoleId, address(gatingToken));
 
             // We mint 26 tokens to the bounty submitter so they can submit bounties
             gatingToken.mint(bountySubmitter, 26);

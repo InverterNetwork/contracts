@@ -1,24 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {
-    ILM_PC_Staking_v1,
-    LM_PC_Staking_v1,
-    SafeERC20,
-    IERC20,
-    IERC20PaymentClientBase_v1,
-    ReentrancyGuard
-} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
-
-import {
-    IOptimisticOracleIntegrator,
-    OptimisticOracleIntegrator,
-    OptimisticOracleV3CallbackRecipientInterface,
-    OptimisticOracleV3Interface,
-    ClaimData
-} from
-    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/OptimisticOracleIntegrator.sol";
-
 interface ILM_PC_KPIRewarder_v1 {
     //--------------------------------------------------------------------------
     // Types
@@ -64,27 +46,30 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice The KPI number is invalid
     error Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
 
-    /// @notice The target value for the assertion cannot be zero
-    error Module__LM_PC_KPIRewarder_v1__InvalidTargetValue();
-
     /// @notice The Queue for new stakers is full
     error Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
 
     /// @notice The Token used paying the bond cannot be the same that is being staked.
     error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
 
+    /// @notice The stake amount is invalid
+    error Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
+
+    /// @notice An assertion can only by posted if the preceding one is resolved.
+    error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
+
     //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a user stake is enqueued
-    event StakeEnqueued(address user, uint amount);
+    event StakeEnqueued(address indexed user, uint amount);
 
     /// @notice Event emitted when a user stake is dequeued before staking
-    event StakeDequeued(address user, uint amount);
+    event StakeDequeued(address indexed user, uint amount);
 
     /// @notice Event emitted when a KPI is created
     event KPICreated(
-        uint KPI_Id,
+        uint indexed KPI_Id,
         uint numOfTranches,
         uint totalKPIRewards,
         bool continuous,
@@ -100,23 +85,21 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
-    event FeeFundsDeposited(address token, uint amount);
+    event FeeFundsDeposited(address indexed token, uint amount);
 
     //--------------------------------------------------------------------------
     // Functions
 
     /// @notice Posts an assertion to the Optimistic Oracle, specifying the KPI to use and the asserted value
     /// @param dataId The dataId to be posted
-    /// @param data The data to be posted
+    /// @param assertedValue The target value that will be asserted and posted as data to the oracle
     /// @param asserter The address of the asserter
-    /// @param assertedValue The target value that will be asserted
     /// @param targetKPI The KPI to be used for distribution once the assertion confirms
     /// @return assertionId The assertionId received for the posted assertion
     function postAssertion(
         bytes32 dataId,
-        bytes32 data,
-        address asserter,
         uint assertedValue,
+        address asserter,
         uint targetKPI
     ) external returns (bytes32 assertionId);
 
@@ -150,4 +133,8 @@ interface ILM_PC_KPIRewarder_v1 {
         external
         view
         returns (RewardRoundConfiguration memory);
+
+    /// @notice Sets the minimum amount a user must stake
+    /// @param _minimumStake The minimum amount
+    function setMinimumStake(uint _minimumStake) external;
 }

@@ -47,6 +47,9 @@ interface IOptimisticOracleIntegrator is
     /// @notice Caller is not Optimistic Oracle instance
     error Module__OptimisticOracleIntegrator__CallerNotOO();
 
+    /// @notice Bond given for the specified currency is below minimum
+    error Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
+
     //==========================================================================
     // Functions
 
@@ -56,7 +59,10 @@ interface IOptimisticOracleIntegrator is
     /// @param assertionId The id of the Assertion to return.
     /// @return bool Wether the assertion is resolved.
     /// @return bytes32 The Assertion Data.
-    function getData(bytes32 assertionId) external returns (bool, bytes32);
+    function getData(bytes32 assertionId)
+        external
+        view
+        returns (bool, bytes32);
 
     /// @notice For a given assertionId, returns the assserion itself.
     /// @param assertionId The id of the Assertion to return.
@@ -68,9 +74,11 @@ interface IOptimisticOracleIntegrator is
 
     // Setter Functions
 
-    /// @notice Sets the default currency for the bond.
+    /// @notice Sets the default currency and amount for the bond.
     /// @param _newCurrency The address of the new default currency.
-    function setDefaultCurrency(address _newCurrency) external;
+    /// @param _newBond The new bond amount.
+    function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
+        external;
 
     /// @notice Sets the OptimisticOracleV3 instance where assertions will be published to.
     /// @param _newOO The address of the new OptimisticOracleV3 instance.
@@ -90,15 +98,4 @@ interface IOptimisticOracleIntegrator is
     function assertDataFor(bytes32 dataId, bytes32 data, address asserter)
         external
         returns (bytes32 assertionId);
-
-    /// @notice Callback function for the moment the OptimisticOracleV3 assertion resolves.
-    /// @param assertionId The id of the Assertion generating the callback.
-    function assertionResolvedCallback(
-        bytes32 assertionId,
-        bool assertedTruthfully
-    ) external;
-
-    /// @notice Callback function for the moment the OptimisticOracleV3 assertion is disputed.
-    /// @param assertionId The id of the Assertion generating the callback.
-    function assertionDisputedCallback(bytes32 assertionId) external;
 }

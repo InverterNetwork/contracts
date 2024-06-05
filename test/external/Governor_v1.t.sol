@@ -97,6 +97,7 @@ contract GovernorV1Test is Test {
     }
 
     function testAccessibleBeacon(uint seed, address target) public {
+        vm.assume(target != 0x4e59b44847b379578588920cA78FbF26c0B4956C); // Create2Deployer
         bool shouldFail = true;
         //Restrict seed to one of 3 variants
         seed = bound(seed, 0, 2);
@@ -254,7 +255,7 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: Getter Functions
 
-    function testGetBeaconTimelock() public {
+    function testGetBeaconTimelock() public view {
         //Tivial Test
         //100% Testcoverage here we go xD
         gov.getBeaconTimelock(address(0));
@@ -263,7 +264,7 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: FeeManager Functions
 
-    function testGetFeeManager() public {
+    function testGetFeeManager() public view {
         //Tivial Test
         gov.getFeeManager();
     }

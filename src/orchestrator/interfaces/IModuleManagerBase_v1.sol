@@ -34,9 +34,6 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Given address is not a module.
     error ModuleManagerBase__IsNotModule();
 
-    /// @notice The supplied modules are not consecutive.
-    error ModuleManagerBase__ModulesNotConsecutive();
-
     /// @notice The Manager has reached the maximum amount of modules.
     error ModuleManagerBase__ModuleAmountOverLimits();
 
@@ -90,7 +87,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Returns whether the address `module` is added as module.
     /// @param module The module to check.
     /// @return True if module added, false otherwise.
-    function isModule(address module) external returns (bool);
+    function isModule(address module) external view returns (bool);
 
     /// @notice Returns the list of all modules.
     /// @return List of all modules.
