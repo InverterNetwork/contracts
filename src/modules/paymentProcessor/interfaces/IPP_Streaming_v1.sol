@@ -121,11 +121,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @notice insufficient tokens in the client to do payments
     error Module__PP_Streaming__InsufficientTokenBalanceInClient();
 
-    /// @notice the paymentReceiver is not owed any money by the paymentClient
-    error Module__PP_Streaming__NothingToClaim(
-        address paymentClient, address paymentReceiver
-    );
-
     /// @notice paymentReceiver's streamId for the paymentClient is not valid
     error Module__PP_Streaming__InvalidStream(
         address paymentClient, address paymentReceiver, uint streamId
@@ -147,13 +142,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @dev This function should be callable if the _msgSender is an activePaymentReceiver
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
     function claimAll(address client) external;
-
-    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver
-    /// @dev This function should be callable if the _msgSender has unclaimedAmounts
-    /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
-    /// @param receiver The address that will receive the previously unclaimable amount
-    function claimPreviouslyUnclaimable(address client, address receiver)
-        external;
 
     /// @notice claim the total amount up til block.timestamp from the client for a payment order with id = streamId by _msgSender
     /// @dev If for a specific streamId, the tokens could not be transferred for some reason, it will added to the unclaimableAmounts
@@ -246,14 +234,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address paymentReceiver,
         uint streamId
     ) external view returns (uint);
-
-    /// @notice Getter for the amount of tokens that could not be claimed.
-    /// @param client address of the payment client
-    /// @param paymentReceiver PaymentReceiver's address.
-    function unclaimable(address client, address paymentReceiver)
-        external
-        view
-        returns (uint);
 
     /// @notice see all active payment orders for a paymentClient associated with a particular paymentReceiver
     /// @dev the paymentReceiver must be an active paymentReceiver for the particular payment client

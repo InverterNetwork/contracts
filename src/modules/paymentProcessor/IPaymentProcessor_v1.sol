@@ -18,6 +18,11 @@ interface IPaymentProcessor_v1 {
     /// @notice a client can only execute on its own orders
     error Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
 
+    /// @notice the paymentReceiver is not owed any money by the paymentClient
+    error Module__PaymentProcessor__NothingToClaim(
+        address paymentClient, address paymentReceiver
+    );
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -46,6 +51,18 @@ interface IPaymentProcessor_v1 {
         address indexed recipient, address indexed token, uint amount
     );
 
+    /// @notice Emitted when a payment was unclaimable due to a token error.
+    /// @param paymentClient The payment client that originated the order.
+    /// @param paymentClient The token address in which the payment should have happened.
+    /// @param recipient The address that should have received the payment.
+    /// @param amount The amount of tokens that were unclaimable.
+    event UnclaimableAmountAdded(
+        address indexed paymentClient,
+        address indexed token,
+        address indexed recipient,
+        uint amount
+    );
+
     //--------------------------------------------------------------------------
     // Functions
 
@@ -65,4 +82,24 @@ interface IPaymentProcessor_v1 {
     /// @param client The {IERC20PaymentClientBase_v1} instance to process its to payments.
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
         external;
+
+    /// @notice Getter for the amount of tokens that could not be claimed.
+    /// @param client address of the payment client
+    /// @param token address of the payment token
+    /// @param paymentReceiver PaymentReceiver's address.
+    function unclaimable(address client, address token, address paymentReceiver)
+        external
+        view
+        returns (uint amount);
+
+    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver
+    /// @dev This function should be callable if the _msgSender has unclaimedAmounts
+    /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
+    /// @param token address of the payment token
+    /// @param receiver The address that will receive the previously unclaimable amount
+    function claimPreviouslyUnclaimable(
+        address client,
+        address token,
+        address receiver
+    ) external;
 }
