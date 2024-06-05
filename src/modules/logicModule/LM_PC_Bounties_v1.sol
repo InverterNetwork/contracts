@@ -67,7 +67,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         uint i;
         for (i; i < length;) {
             if (contribs[i].addr == sender) {
-                //sender was found in contrib list
+                // sender was found in contrib list
                 break;
             }
 
@@ -76,7 +76,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
             }
         }
 
-        //If i is length or higher the sender wasnt found in the contib list
+        // If i is length or higher the sender wasnt found in the contib list
         if (i >= length) {
             revert Module__LM_PC_Bounty__OnlyClaimContributor();
         }
@@ -116,7 +116,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     ) internal view {
         //@update to be in correct range
         uint length = contributors.length;
-        //length cant be zero
+        // length cant be zero
         if (length == 0) {
             revert Module__LM_PC_Bounty__InvalidContributorsLength();
         }
@@ -127,7 +127,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         for (uint i; i < length;) {
             currentAmount = contributors[i].claimAmount;
 
-            //amount cant be zero
+            // amount cant be zero
             if (currentAmount == 0) {
                 revert Module__LM_PC_Bounty__InvalidContributorAmount();
             }
@@ -231,7 +231,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         bytes memory
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
-        //init empty list of bounties and claims
+        // init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();
     }
@@ -372,7 +372,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         uint length = contributors.length;
         for (uint i; i < length;) {
             c.contributors.push(contributors[i]);
-            //add ClaimId to each contributor address accordingly
+            // add ClaimId to each contributor address accordingly
             contributorAddressToClaimIds[contributors[i].addr].add(claimId);
             unchecked {
                 ++i;
@@ -404,7 +404,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
 
         uint length = c.contributors.length;
         for (uint i; i < length;) {
-            //remove ClaimId for each contributor address
+            // remove ClaimId for each contributor address
             contributorAddressToClaimIds[c.contributors[i].addr].remove(claimId);
             unchecked {
                 ++i;
@@ -417,7 +417,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
 
         for (uint i; i < length;) {
             c.contributors.push(contributors[i]);
-            //add ClaimId again to each contributor address
+            // add ClaimId again to each contributor address
             contributorAddressToClaimIds[contributors[i].addr].add(claimId);
             unchecked {
                 ++i;
@@ -454,10 +454,10 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
 
         uint length = contribs.length;
 
-        //current contributor in loop
+        // current contributor in loop
         Contributor memory contrib;
 
-        //For each Contributor add payments according to the claimAmount specified
+        // For each Contributor add payments according to the claimAmount specified
         for (uint i; i < length;) {
             contrib = contribs[i];
 
@@ -476,12 +476,12 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
             }
         }
 
-        //when done process the Payments correctly
+        // when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClientBase_v1(address(this))
         );
 
-        //Set completed to true
+        // Set completed to true
         _claimRegistry[claimId].claimed = true;
 
         emit ClaimVerified(claimId);

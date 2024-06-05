@@ -114,12 +114,12 @@ contract LM_PC_RecurringPayments_v1 is
         bytes memory configData
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
-        //Set empty list of RecurringPayment
+        // Set empty list of RecurringPayment
         _paymentList.init();
 
         epochLength = abi.decode(configData, (uint));
 
-        //revert if not at least 1 week and at most a year
+        // revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
@@ -216,7 +216,7 @@ contract LM_PC_RecurringPayments_v1 is
             recurringPaymentId,
             amount,
             startEpoch,
-            startEpoch - 1, //lastTriggeredEpoch
+            startEpoch - 1, // lastTriggeredEpoch
             recipient
         );
 
@@ -228,10 +228,10 @@ contract LM_PC_RecurringPayments_v1 is
         external
         onlyOrchestratorAdmin
     {
-        //trigger to resolve the given Payment
+        // trigger to resolve the given Payment
         _triggerFor(id, _paymentList.getNextId(id));
 
-        //Remove Id from list
+        // Remove Id from list
         _paymentList.removeId(prevId, id);
 
         // Remove RecurringPayment instance from registry.
@@ -255,31 +255,31 @@ contract LM_PC_RecurringPayments_v1 is
         validId(endId)
         startIdBeforeEndId(startId, endId)
     {
-        //in the loop in _triggerFor it wouldnt run through endId itself, so we take the position afterwards in the list
+        // in the loop in _triggerFor it wouldnt run through endId itself, so we take the position afterwards in the list
         _triggerFor(startId, _paymentList.getNextId(endId));
     }
 
     function _triggerFor(uint startId, uint endId) private {
-        //Set startId to be the current position in List
+        // Set startId to be the current position in List
         uint currentId = startId;
 
         uint currentEpoch = getCurrentEpoch();
 
         RecurringPayment memory currentPayment;
-        //Amount of how many epochs have been not triggered
+        // Amount of how many epochs have been not triggered
         uint epochsNotTriggered;
 
-        //Loop through every element in payment list until endId is reached
+        // Loop through every element in payment list until endId is reached
         while (currentId != endId) {
             currentPayment = _paymentRegistry[currentId];
 
-            //check if payment started
+            // check if payment started
             if (currentPayment.startEpoch <= currentEpoch) {
                 epochsNotTriggered =
                     currentEpoch - currentPayment.lastTriggeredEpoch;
-                //If order hasnt been triggered this epoch
+                // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
-                    //add paymentOrder for this epoch
+                    // add paymentOrder for this epoch
                     _addPaymentOrder(
                         PaymentOrder({
                             recipient: currentPayment.recipient,
@@ -289,17 +289,17 @@ contract LM_PC_RecurringPayments_v1 is
                             amount: currentPayment.amount,
                             start: block.timestamp,
                             cliff: 0,
-                            //End of current epoch is the end date
+                            // End of current epoch is the end date
                             end: (currentEpoch + 1) * epochLength
                         })
                     );
 
-                    //if past epochs have not been triggered
+                    // if past epochs have not been triggered
                     if (epochsNotTriggered > 1) {
                         _addPaymentOrder(
                             PaymentOrder({
                                 recipient: currentPayment.recipient,
-                                //because we already made a payment that for the current epoch
+                                // because we already made a payment that for the current epoch
                                 paymentToken: address(
                                     orchestrator().fundingManager().token()
                                 ),
@@ -307,21 +307,21 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 start: block.timestamp,
                                 cliff: 0,
-                                //Payment was already due so end is start of this epoch which should already have passed
+                                // Payment was already due so end is start of this epoch which should already have passed
                                 end: currentEpoch * epochLength
                             })
                         );
                     }
-                    //When done update the real state of lastTriggeredEpoch
+                    // When done update the real state of lastTriggeredEpoch
                     _paymentRegistry[currentId].lastTriggeredEpoch =
                         currentEpoch;
                 }
             }
-            //Set to next Id in List
+            // Set to next Id in List
             currentId = _paymentList.list[currentId];
         }
 
-        //when done process the Payments correctly
+        // when done process the Payments correctly
         emit RecurringPaymentsTriggered(currentEpoch);
 
         __Module_orchestrator.paymentProcessor().processPayments(

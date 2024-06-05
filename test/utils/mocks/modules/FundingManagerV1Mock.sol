@@ -29,7 +29,7 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
             || super.supportsInterface(interfaceId);
     }
 
-    //using SafeERC20 for IERC20;
+    // using SafeERC20 for IERC20;
 
     IERC20 private _token;
 

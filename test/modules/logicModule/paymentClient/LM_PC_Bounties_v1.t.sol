@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -68,7 +68,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     event ClaimVerified(uint indexed claimId);
 
     function setUp() public {
-        //Add Module to Mock Orchestrator_v1
+        // Add Module to Mock Orchestrator_v1
         address impl = address(new LM_PC_Bounties_v1());
         bountyManager = LM_PC_Bounties_v1(Clones.clone(impl));
 
@@ -95,7 +95,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
     }
 
-    //This function also tests all the getters
+    // This function also tests all the getters
     function testInit() public override(ModuleTest) {}
 
     function testReinitFails() public override(ModuleTest) {
@@ -111,11 +111,11 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint[] memory amounts,
         address addr
     ) public {
-        addrs = cutArray(50, addrs); //cut to reasonable size
+        addrs = cutArray(50, addrs); // cut to reasonable size
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
 
-        ///Restrict amounts to 20_000 to test properly(doesnt overflow)
+        /// Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
         //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
@@ -200,17 +200,17 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint[] memory amounts
     ) public {
         uint length = addrs.length;
-        vm.assume(length <= 50); //reasonable size
+        vm.assume(length <= 50); // reasonable size
         vm.assume(length <= amounts.length);
 
         minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
         maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
         vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
 
-        //Restrict amounts to 20_000 to test properly(doesnt overflow)
+        // Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
 
-        //ID is 1
+        // ID is 1
         bountyManager.addBounty(
             minimumPayoutAmount, maximumPayoutAmount, bytes("")
         );
@@ -236,7 +236,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
             uint totalAmount;
             ILM_PC_Bounties_v1.Contributor memory currentContrib;
-            //Check if it reached the end -> ClaimExceedsGivenPayoutAmounts will only be checked if it ran through everything
+            // Check if it reached the end -> ClaimExceedsGivenPayoutAmounts will only be checked if it ran through everything
             bool reachedEnd;
 
             for (uint i; i < length; i++) {
@@ -380,7 +380,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     // Mutating Functions
 
     //-----------------------------------------
-    //AddBounty
+    // AddBounty
 
     function testAddBounty(
         uint testAmount,
@@ -388,7 +388,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint maximumPayoutAmount,
         bytes calldata details
     ) public {
-        testAmount = bound(testAmount, 1, 30); //Reasonable Amount
+        testAmount = bound(testAmount, 1, 30); // Reasonable Amount
         minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
         maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
         vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
@@ -411,7 +411,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     function testAddBountyModifierInPosition() public {
-        //validPayoutAmounts
+        // validPayoutAmounts
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidPayoutAmounts
@@ -419,10 +419,10 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.addBounty(0, 0, bytes(""));
 
-        //Set this address to not authorized to test the roles correctly
+        // Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
-        //onlyBountyAdmin
+        // onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -436,7 +436,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //AddClaim
+    // AddClaim
 
     function testAddClaim(
         uint times,
@@ -444,12 +444,12 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint[] memory amounts,
         bytes calldata details
     ) public {
-        addrs = cutArray(50, addrs); //cut to reasonable size
+        addrs = cutArray(50, addrs); // cut to reasonable size
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
         times = bound(times, 1, 50);
 
-        ///Restrict amounts to 20_000 to test properly(doesnt overflow)
+        /// Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
         //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
@@ -462,13 +462,13 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         for (uint i = 0; i < times; i++) {
             vm.expectEmit(true, true, true, true);
-            //id starts at 2 because the id counter starts at 1 and addBounty increases it by 1 again
+            // id starts at 2 because the id counter starts at 1 and addBounty increases it by 1 again
             emit ClaimAdded(i + 2, 1, contribs, details);
 
             id = bountyManager.addClaim(1, contribs, details);
             assertEqualClaim(id, 1, contribs, details, false);
 
-            //Assert set is filled correctly
+            // Assert set is filled correctly
             for (uint j; j < length; j++) {
                 assertContributorAddressToClaimIdsContains(contribs[j].addr, id);
             }
@@ -478,13 +478,13 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     function testAddClaimModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
 
-        //validBountyId
+        // validBountyId
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        //validContributorsForBounty
+        // validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidContributorAmount
@@ -492,7 +492,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.addClaim(1, INVALID_CONTRIBUTORS, bytes(""));
 
-        //notLocked
+        // notLocked
         bountyManager.lockBounty(1);
 
         vm.expectRevert(
@@ -500,10 +500,10 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        //Set this address to not authorized to test the roles correctly
+        // Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
-        //onlyClaimAdmin
+        // onlyClaimAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -517,7 +517,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //UpdateBounty
+    // UpdateBounty
 
     function testUpdateBounty(bytes calldata details) public {
         uint id = bountyManager.addBounty(1, 1, bytes(""));
@@ -533,16 +533,16 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     function testUpdateBountyModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
 
-        //validBountyId
+        // validBountyId
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.updateBounty(0, bytes(""));
 
-        //Set this address to not authorized to test the roles correctly
+        // Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
-        //onlyBountyAdmin
+        // onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -553,10 +553,10 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             )
         );
         bountyManager.updateBounty(1, bytes(""));
-        //Reset this address to authorized
+        // Reset this address to authorized
         _authorizer.setIsAuthorized(address(this), true);
 
-        //notLocked
+        // notLocked
         bountyManager.lockBounty(1);
 
         vm.expectRevert(
@@ -566,7 +566,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //UpdateBounty
+    // UpdateBounty
 
     function testLockBounty() public {
         uint id = bountyManager.addBounty(1, 1, bytes(""));
@@ -582,23 +582,23 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     function testLockBountyModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
 
-        //validBountyId
+        // validBountyId
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__InvalidBountyId.selector
         );
         bountyManager.lockBounty(0);
 
-        //NotLocked
+        // NotLocked
         bountyManager.lockBounty(1);
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.lockBounty(1);
 
-        //Set this address to not authorized to test the roles correctly
+        // Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
-        //onlyBountyAdmin
+        // onlyBountyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -612,17 +612,17 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //UpdateClaimContributors
+    // UpdateClaimContributors
 
     function testUpdateClaimContributors(
         address[] memory addrs,
         uint[] memory amounts
     ) public {
-        addrs = cutArray(50, addrs); //cut to reasonable size
+        addrs = cutArray(50, addrs); // cut to reasonable size
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
 
-        //Restrict amounts to 20_000 to test properly(doesnt overflow)
+        // Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
         //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
@@ -640,8 +640,8 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         assertEqualClaim(2, 1, contribs, bytes(""), false);
 
-        //Check if default contributors are in the set
-        //if not make sure their ClaimIds are removed
+        // Check if default contributors are in the set
+        // if not make sure their ClaimIds are removed
         if (!contains(contribs, DEFAULT_CONTRIBUTORS[0].addr)) {
             assertContributorAddressToClaimIdsContainsNot(
                 DEFAULT_CONTRIBUTORS[0].addr, id
@@ -653,7 +653,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             );
         }
 
-        //Assert set is filled correctly
+        // Assert set is filled correctly
         for (uint j; j < length; j++) {
             assertContributorAddressToClaimIdsContains(contribs[j].addr, id);
         }
@@ -663,16 +663,16 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        bountyManager.addBounty(1, 100_000_000, bytes("")); //Id 3
-        bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); //Id 4
+        bountyManager.addBounty(1, 100_000_000, bytes("")); // Id 3
+        bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); // Id 4
 
-        //validClaimId
+        // validClaimId
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.updateClaimContributors(0, DEFAULT_CONTRIBUTORS);
 
-        //validContributorsForBounty
+        // validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidContributorAmount
@@ -680,8 +680,8 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.updateClaimContributors(2, INVALID_CONTRIBUTORS);
 
-        //onlyClaimAdmin
-        _authorizer.setIsAuthorized(address(this), false); //No access address
+        // onlyClaimAdmin
+        _authorizer.setIsAuthorized(address(this), false); // No access address
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -692,22 +692,22 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             )
         );
         bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
-        //Reset this address to authorized
+        // Reset this address to authorized
         _authorizer.setIsAuthorized(address(this), true);
 
-        //Reset this address to be authorized to test correctly
+        // Reset this address to be authorized to test correctly
         _authorizer.setIsAuthorized(address(this), true);
 
         bountyManager.lockBounty(1);
 
-        //notLocked
+        // notLocked
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
 
         bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
 
-        //notClaimed
+        // notClaimed
         _token.mint(address(_fundingManager), 100_000_000);
         bountyManager.verifyClaim(4, DEFAULT_CONTRIBUTORS);
 
@@ -718,7 +718,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //UpdateClaimDetails
+    // UpdateClaimDetails
 
     function testUpdateClaimDetails(bytes calldata details) public {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
@@ -736,16 +736,16 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        bountyManager.addBounty(1, 100_000_000, bytes("")); //Id 3
-        bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); //Id 4
+        bountyManager.addBounty(1, 100_000_000, bytes("")); // Id 3
+        bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); // Id 4
 
-        //validClaimId
+        // validClaimId
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.updateClaimDetails(0, bytes(""));
 
-        //onlyClaimContributor
+        // onlyClaimContributor
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__OnlyClaimContributor
@@ -753,7 +753,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.updateClaimDetails(2, bytes(""));
 
-        //notLocked
+        // notLocked
         bountyManager.lockBounty(1);
 
         vm.expectRevert(
@@ -762,7 +762,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimDetails(2, bytes(""));
 
-        //notClaimed
+        // notClaimed
         _token.mint(address(_fundingManager), 100_000_000);
         bountyManager.verifyClaim(4, DEFAULT_CONTRIBUTORS);
 
@@ -774,18 +774,18 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //verifyClaim
+    // verifyClaim
 
     function testVerifyClaim(
         address[] memory addrs,
         uint[] memory amounts,
         bytes calldata details
     ) public {
-        addrs = cutArray(50, addrs); //cut to reasonable size
+        addrs = cutArray(50, addrs); // cut to reasonable size
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
 
-        //Restrict amounts to 20_000_000_000_000 to test properly(doesnt overflow)
+        // Restrict amounts to 20_000_000_000_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
         //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
@@ -807,10 +807,10 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         assertEq(length, orders.length);
 
-        //Amount of tokens that should be in the LM_PC_RecurringPayments_v1
+        // Amount of tokens that should be in the LM_PC_RecurringPayments_v1
         uint totalAmount;
 
-        //Amount of tokens in a single order
+        // Amount of tokens in a single order
         uint claimAmount;
 
         for (uint i = 0; i < length; i++) {
@@ -830,15 +830,15 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
     function testVerifyClaimModifierInPosition() public {
         bountyManager.addBounty(1, 100_000_000, bytes(""));
-        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes("")); //Id 2
+        bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes("")); // Id 2
 
-        bountyManager.addBounty(1, 100_000_000, bytes("")); //Id 3
-        bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); //Id 4
+        bountyManager.addBounty(1, 100_000_000, bytes("")); // Id 3
+        bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); // Id 4
 
-        //Set this address to not authorized to test the roles correctly
+        // Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
-        //onlyVerifyAdmin
+        // onlyVerifyAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -850,16 +850,16 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
 
-        //Reset this address to authorized
+        // Reset this address to authorized
         _authorizer.setIsAuthorized(address(this), true);
 
-        //validClaimId
+        // validClaimId
         vm.expectRevert(
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__InvalidClaimId.selector
         );
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
 
-        //contributorsNotChanged
+        // contributorsNotChanged
 
         vm.expectRevert(
             ILM_PC_Bounties_v1
@@ -868,7 +868,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.verifyClaim(2, INVALID_CONTRIBUTORS);
 
-        //notClaimed
+        // notClaimed
         _token.mint(address(_fundingManager), 100_000_000);
         bountyManager.verifyClaim(2, DEFAULT_CONTRIBUTORS);
 
@@ -877,7 +877,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.verifyClaim(2, DEFAULT_CONTRIBUTORS);
 
-        //notLocked
+        // notLocked
         bountyManager.lockBounty(3);
 
         vm.expectRevert(
@@ -895,7 +895,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         returns (address[] memory)
     {
         uint length = addrs.length;
-        vm.assume(length > 0); //Array has to be at least 1
+        vm.assume(length > 0); // Array has to be at least 1
 
         if (length <= size) {
             return addrs;
@@ -914,7 +914,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         returns (uint[] memory)
     {
         uint length = amounts.length;
-        vm.assume(length > 0); //Array has to be at least 1
+        vm.assume(length > 0); // Array has to be at least 1
 
         for (uint i = 0; i < length; i++) {
             if (amounts[i] > maxAmount) {
@@ -933,18 +933,18 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         address a;
 
         for (uint i; i < length; i++) {
-            //Convert address(0) to address (1)
+            // Convert address(0) to address (1)
             a = addrs[i];
             if (
                 a == address(0) || a == address(bountyManager)
                     || a == address(_orchestrator)
             ) addrs[i] = address(0x1);
 
-            //Convert amount 0 to 1
+            // Convert amount 0 to 1
             if (amounts[i] == 0) {
                 amounts[i] = 1;
             }
-            //If Higher than 1_000_000_000_000_000 convert to 1_000_000_000_000_000
+            // If Higher than 1_000_000_000_000_000 convert to 1_000_000_000_000_000
             if (amounts[i] > 1_000_000_000_000_000) {
                 amounts[i] = 1_000_000_000_000_000;
             }
@@ -970,14 +970,14 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         address a;
 
         for (uint i; i < length; i++) {
-            //Convert address(0) to address (1)
+            // Convert address(0) to address (1)
             a = addrs[i];
             if (
                 a == address(0) || a == address(bountyManager)
                     || a == address(_orchestrator)
             ) addrs[i] = address(0x1);
 
-            //Convert amount 0 to 1
+            // Convert amount 0 to 1
             if (amounts[i] == 0) {
                 amounts[i] = 1;
             }

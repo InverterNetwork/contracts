@@ -69,7 +69,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // execute add module to orchestrator
         orchestrator.executeSetAuthorizer(deployedAuthorizer);
 
-        //grant default admin role to orchestratorOwner
+        // grant default admin role to orchestratorOwner
         deployedAuthorizer.grantRole(
             deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner
         );
@@ -85,7 +85,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
             bountyManagerAddress, bountyManager.VERIFIER_ROLE()
         );
 
-        //manually set tokenGated, token and threshold for all roles
+        // manually set tokenGated, token and threshold for all roles
         deployedAuthorizer.setTokenGated(claimRoleId, true);
         deployedAuthorizer.grantRole(claimRoleId, receiptTokenAddress);
         deployedAuthorizer.setThreshold(claimRoleId, receiptTokenAddress, 1);

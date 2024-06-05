@@ -20,7 +20,7 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 // External Interfaces
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
-//External Dependencies
+// External Dependencies
 import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
@@ -141,18 +141,18 @@ contract ModuleFactory_v1 is
         }
 
         address proxy;
-        //If the workflow should fetch their updates themselves
+        // If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
-            //Use an InverterTransparentUpgradeableProxy as a proxy
+            // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
                 new InverterTransparentUpgradeableProxy_v1(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
         }
-        //If not then
+        // If not then
         else {
-            //Instead use the Beacon Structure Proxy
+            // Instead use the Beacon Structure Proxy
             proxy = address(new InverterBeaconProxy_v1(beacon));
         }
 

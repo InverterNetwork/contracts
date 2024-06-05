@@ -47,7 +47,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
-    //Decide on the workflowConfig
+    // Decide on the workflowConfig
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig =
     IOrchestratorFactory_v1.WorkflowConfig({
         independentUpdates: false,

@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -107,7 +107,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         ooV3.whitelistCurrency(address(feeToken), 5e17);
         feeTokenBond = ooV3.getMinimumBond(address(feeToken));
 
-        //Add Module to Mock Orchestrator
+        // Add Module to Mock Orchestrator
         address impl = address(new LM_PC_KPIRewarder_v1());
         kpiManager = LM_PC_KPIRewarder_v1(Clones.clone(impl));
 
@@ -147,7 +147,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
             address(stakingToken), address(_token), ooV3, DEFAULT_LIVENESS
         );
 
-        //Init Module wrongly
+        // Init Module wrongly
         vm.expectRevert(IModule_v1.Module__InvalidOrchestratorAddress.selector);
         kpiManager.init(IOrchestrator_v1(address(0)), _METADATA, configData);
 
@@ -467,10 +467,10 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
             0x0
-        ); //we don't know the last one
+        ); // we don't know the last one
 
         vm.expectEmit(false, true, true, true, address(kpiManager));
-        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); //we don't know the generated ID
+        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); // we don't know the generated ID
 
         bytes32 assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
@@ -487,7 +487,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
 
         assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
 
-        //check mock for stored data
+        // check mock for stored data
         IOptimisticOracleIntegrator.DataAssertion memory assertion =
             kpiManager.getAssertion(assertionId);
         ILM_PC_KPIRewarder_v1.RewardRoundConfiguration memory rewardRoundConfig =
@@ -531,7 +531,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         );
 
         vm.expectEmit(false, true, true, true, address(kpiManager));
-        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); //we don't know the generated ID
+        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); // we don't know the generated ID
 
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         bytes32 assertionId = kpiManager.postAssertion(
@@ -544,7 +544,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
 
         assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
 
-        //check mock for posted data
+        // check mock for posted data
         IOptimisticOracleIntegrator.DataAssertion memory assertion =
             kpiManager.getAssertion(assertionId);
         ILM_PC_KPIRewarder_v1.RewardRoundConfiguration memory rewardRoundConfig =
@@ -690,7 +690,7 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         uint[] memory rewardsCapped = trancheRewards[0:length];
 
         for (uint i = 0; i < length; i++) {
-            //bound values to avoid overflows
+            // bound values to avoid overflows
             valuesCapped[i] =
                 bound(valuesCapped[i], 1, 1_000_000_000_000_000e18);
             rewardsCapped[i] =
@@ -947,7 +947,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             bytes32(valueToAssert),
             MOCK_ASSERTER_ADDRESS,
             0x0
-        ); //we don't know the last one
+        ); // we don't know the last one
 
         assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID, valueToAssert, MOCK_ASSERTER_ADDRESS, 0
@@ -973,7 +973,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         vm.startPrank(address(ooV3));
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        //vm.expectEmit(false, false, false, false);
+        // vm.expectEmit(false, false, false, false);
 
         emit DataAssertionResolved(
             false,
@@ -1056,7 +1056,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
                 amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
             console.log(userReward);
 
-            //Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
+            // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
             assertApproxEqAbs(
                 kpiManager.earned(users[i]),
                 userReward,
@@ -1139,7 +1139,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
                 amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
             console.log(userReward);
 
-            //Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
+            // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
             assertApproxEqAbs(
                 kpiManager.earned(users[i]),
                 userReward,

@@ -75,23 +75,23 @@ library LinkedIdList {
         uint prevId,
         uint idToPositionAfter
     ) {
-        //Check that id is existing
+        // Check that id is existing
         if (!isExistingId(self, id)) {
             revert Library__LinkedIdList__InvalidId();
         }
-        //Check that idToPositionAfter is in the list
+        // Check that idToPositionAfter is in the list
         if (self.list[idToPositionAfter] == 0) {
             revert Library__LinkedIdList__InvalidPosition();
         }
-        //Check if it is a valid intermediate position
+        // Check if it is a valid intermediate position
         if (
-            (id == idToPositionAfter) //Make sure it doesnt move after itself
-                || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
+            (id == idToPositionAfter) // Make sure it doesnt move after itself
+                || (idToPositionAfter == prevId) // Make sure it doesnt move before itself
         ) {
             revert Library__LinkedIdList__InvalidIntermediatePosition();
         }
 
-        //Check for Consecutive Id
+        // Check for Consecutive Id
         if (self.list[prevId] != id) {
             revert Library__LinkedIdList__IdNotConsecutive();
         }
@@ -110,7 +110,7 @@ library LinkedIdList {
 
     /// @dev should never be called more than once
     function init(List storage self) internal {
-        //set Sentinel to link back to itself to initiate List
+        // set Sentinel to link back to itself to initiate List
         self.list[_SENTINEL] = _SENTINEL;
         self.last = _SENTINEL;
     }
@@ -151,7 +151,7 @@ library LinkedIdList {
         view
         returns (bool)
     {
-        //Return true if id is in list and not Sentinel
+        // Return true if id is in list and not Sentinel
         return self.list[id] != 0 && id != _SENTINEL;
     }
 
@@ -219,26 +219,26 @@ library LinkedIdList {
         uint prevId,
         uint idToPositionAfter
     ) internal validMoveParameter(self, id, prevId, idToPositionAfter) {
-        //Remove current id from list
+        // Remove current id from list
         uint nextIdInLine = self.list[id];
         self.list[prevId] = nextIdInLine;
 
-        //Re-Add id in list:
+        // Re-Add id in list:
 
-        //Get the Id that should come after with idToPositionAfter
+        // Get the Id that should come after with idToPositionAfter
         nextIdInLine = self.list[idToPositionAfter];
 
         // Add id inbetween the targeted id (idToPositionAfter) and the originally following id (nextIdInLine)
         self.list[idToPositionAfter] = id;
         self.list[id] = nextIdInLine;
 
-        //If _last doesnt point towards Sentinel
+        // If _last doesnt point towards Sentinel
         if (self.list[self.last] != _SENTINEL) {
-            //either id moved to last position
+            // either id moved to last position
             if (self.list[id] == _SENTINEL) {
                 self.last = id;
             }
-            //or id moved away from last position
+            // or id moved away from last position
             else {
                 self.last = prevId;
             }

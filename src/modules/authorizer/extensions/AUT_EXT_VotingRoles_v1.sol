@@ -230,12 +230,12 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     }
 
     function removeVoter(address who) external onlySelf {
-        //Revert if trying to remove the last voter
+        // Revert if trying to remove the last voter
         if (voterCount == 1) {
             revert Module__VotingRoleManager__EmptyVoters();
         }
 
-        //Revert if removal would leave threshold unreachable
+        // Revert if removal would leave threshold unreachable
         if (voterCount <= threshold) {
             revert Module__VotingRoleManager__UnreachableThreshold();
         }
@@ -291,7 +291,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__InvalidSupport();
         }
 
-        //Revert if motionID invalid
+        // Revert if motionID invalid
         if (motionId >= motionCount) {
             revert Module__VotingRoleManager__InvalidMotionId();
         }
@@ -340,7 +340,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__MotionInVotingPhase();
         }
 
-        //Revert if necessary threshold was not reached
+        // Revert if necessary threshold was not reached
         if (motion_.forVotes < motion_.requiredThreshold) {
             revert Module__VotingRoleManager__ThresholdNotReached();
         }

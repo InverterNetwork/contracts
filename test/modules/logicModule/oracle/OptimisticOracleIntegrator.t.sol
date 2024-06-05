@@ -13,7 +13,7 @@ import {OptimisticOracleV3Mock} from
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -49,7 +49,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         // we whitelist the default currency
         ooV3.whitelistCurrency(address(_token), 5e17);
 
-        //Add Module to Mock Orchestrator
+        // Add Module to Mock Orchestrator
         ooIntegratorImplementation =
             address(new OptimisticOracleIntegratorMock());
         ooIntegrator = OptimisticOracleIntegratorMock(
@@ -83,7 +83,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        //set up new orchestrator
+        // set up new orchestrator
         ooIntegratorImplementation =
             address(new OptimisticOracleIntegratorMock());
         ooIntegrator = OptimisticOracleIntegratorMock(
@@ -94,7 +94,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         bytes memory _configData =
             abi.encode(address(_token), address(ooV3), DEFAULT_LIVENESS);
 
-        //Init Module wrongly
+        // Init Module wrongly
         vm.expectRevert(IModule_v1.Module__InvalidOrchestratorAddress.selector);
         ooIntegrator.init(IOrchestrator_v1(address(0)), _METADATA, _configData);
 
@@ -311,7 +311,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
 
     */
-    //Maybe better here?
+    // Maybe better here?
     function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who)
         public
     {
@@ -337,20 +337,20 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         _token.mint(prankUser, 1e18);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);
-        //get user balance before
+        // get user balance before
         uint userBalanceBefore = _token.balanceOf(prankUser);
         // get OO balance before
         uint ooBalanceBefore = _token.balanceOf(address(ooV3));
 
-        //Since we are using the mockauthorizer, the asserter has the asserter role
+        // Since we are using the mockauthorizer, the asserter has the asserter role
         vm.prank(prankUser);
         ooIntegrator.assertDataFor(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, address(0)
         );
 
-        //assert user balance has been reduced by $bond
+        // assert user balance has been reduced by $bond
         assertEq(_token.balanceOf(prankUser), userBalanceBefore - 1e18);
-        //assert OO balance has ben increased by $bond
+        // assert OO balance has ben increased by $bond
         assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore + 1e18);
     }
 
@@ -361,21 +361,21 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         _token.mint(prankUser, 1e9);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);
-        //get user balance before
+        // get user balance before
         uint userBalanceBefore = _token.balanceOf(prankUser);
         // get OO balance before
         uint ooBalanceBefore = _token.balanceOf(address(ooV3));
 
-        //Since we are using the mockauthorizer, the asserter has the asserter role
+        // Since we are using the mockauthorizer, the asserter has the asserter role
         vm.prank(prankUser);
         vm.expectRevert();
         ooIntegrator.assertDataFor(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, prankUser
         );
 
-        //assert user balance has been reduced by $bond
+        // assert user balance has been reduced by $bond
         assertEq(_token.balanceOf(prankUser), userBalanceBefore);
-        //assert OO balance has ben increased by $bond
+        // assert OO balance has ben increased by $bond
         assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore);
     }
 
@@ -384,20 +384,20 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         _token.mint(prankUser, 1e18);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);
-        //get user balance before
+        // get user balance before
         uint userBalanceBefore = _token.balanceOf(prankUser);
         // get OO balance before
         uint ooBalanceBefore = _token.balanceOf(address(ooV3));
 
-        //Since we are using the mockauthorizer, the asserter has the asserter role
+        // Since we are using the mockauthorizer, the asserter has the asserter role
         vm.prank(prankUser);
         ooIntegrator.assertDataFor(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, prankUser
         );
 
-        //assert user balance has been reduced by $bond
+        // assert user balance has been reduced by $bond
         assertEq(_token.balanceOf(prankUser), userBalanceBefore - 1e18);
-        //assert OO balance has ben increased by $bond
+        // assert OO balance has ben increased by $bond
         assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore + 1e18);
     }
 

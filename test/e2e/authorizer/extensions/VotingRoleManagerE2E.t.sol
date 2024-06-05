@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -14,7 +14,7 @@ import {
     LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
 
-//SuT
+// SuT
 import {
     AUT_EXT_VotingRoles_v1,
     IAUT_EXT_VotingRoles_v1
@@ -192,15 +192,15 @@ contract VotingRoleManagerE2E is E2ETest {
         uint motionId
     ) internal view returns (bool, bytes memory) {
         (
-            , //address _addr
-            , //bytes memory _act
-            , //uint _start
-            , //uint _end
-            , //uint _threshold
-            , //uint _for
-            , //uint _against
-            , //uint _abstain
-            , //uint _excAt
+            , // address _addr
+            , // bytes memory _act
+            , // uint _start
+            , // uint _end
+            , // uint _threshold
+            , // uint _for
+            , // uint _against
+            , // uint _abstain
+            , // uint _excAt
             bool _excRes,
             bytes memory _excData
         ) = singleVoteGovernor.motions(motionId);

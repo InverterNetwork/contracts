@@ -36,7 +36,7 @@ contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
         if (useOriginal_setImplementation) {
             super._setImplementation(newImplementation, overrideShutdown);
         } else {
-            //noop
+            // noop
         }
     }
 }

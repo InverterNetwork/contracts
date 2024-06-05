@@ -73,7 +73,7 @@ contract GovernorV1Mock is IGovernor_v1 {
     // Beacon Functions
 
     //---------------------------
-    //Upgrade
+    // Upgrade
 
     function upgradeBeaconWithTimelock(
         address beacon,
@@ -88,7 +88,7 @@ contract GovernorV1Mock is IGovernor_v1 {
     function setTimelockPeriod(uint) external {}
 
     //---------------------------
-    //Emergency Shutdown
+    // Emergency Shutdown
 
     function initiateBeaconShutdown(address) external {}
 
@@ -98,7 +98,7 @@ contract GovernorV1Mock is IGovernor_v1 {
 
     function restartBeaconImplementation(address) external {}
     //---------------------------
-    //Ownable2Step
+    // Ownable2Step
 
     function acceptOwnership(address) external {}
 }

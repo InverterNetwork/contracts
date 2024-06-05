@@ -82,7 +82,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
-        //Set max fee of feeManager to 100% for testing purposes
+        // Set max fee of feeManager to 100% for testing purposes
         vm.prank(address(governor));
         feeManager.setMaxFee(feeManager.BPS());
 
@@ -111,7 +111,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    //This function also tests all the getters
+    // This function also tests all the getters
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
@@ -317,7 +317,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
 
-        //Set Fee
+        // Set Fee
         if (_collateralFee != 0) {
             feeManager.setDefaultCollateralFee(_collateralFee);
         }
@@ -539,7 +539,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         _depositAmount = bound(_depositAmount, 1, 1e38);
 
-        //Set Fee
+        // Set Fee
         if (_collateralFee != 0) {
             feeManager.setDefaultCollateralFee(_collateralFee);
         }

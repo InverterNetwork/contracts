@@ -58,7 +58,7 @@ contract E2EModuleRegistry is Test {
     //      );
     // And AS A COMMENT:
     // /*
-    //  //Example Config:
+    //  // Example Config:
     //      IOrchestratorFactory_v1.ModuleConfig(
     //          moduleMetadata,
     //          abi.encode(address(this)),
@@ -479,7 +479,7 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    //LM_PC_KPIRewarder_v1
+    // LM_PC_KPIRewarder_v1
 
     LM_PC_KPIRewarder_v1 LM_PC_KPIRewarder_v1Impl;
 

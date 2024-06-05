@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 interface ILM_PC_RecurringPayments_v1 {
     struct RecurringPayment {
         uint amount;
-        //in which epoch this should start
+        // in which epoch this should start
         uint startEpoch;
-        //When was the last epoch this Payment was triggered
+        // When was the last epoch this Payment was triggered
         uint lastTriggeredEpoch;
         address recipient;
     }

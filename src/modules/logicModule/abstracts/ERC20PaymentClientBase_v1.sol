@@ -192,7 +192,7 @@ abstract contract ERC20PaymentClientBase_v1 is
             // Ensure payment processor is able to fetch the tokens from address(this).
             _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
 
-            //Ensure that the Client will have sufficient funds.
+            // Ensure that the Client will have sufficient funds.
             // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
             _ensureTokenBalance(tokens[i]);
         }

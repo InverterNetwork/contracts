@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -12,7 +12,7 @@ import {
 
 import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
-//SuT
+// SuT
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -48,7 +48,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // FundingManager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
-        //BancorFormula 'formula' is instantiated in the E2EModuleRegistry
+        // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
         IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties =
         IBondingCurveBase_v1.IssuanceToken({
@@ -134,10 +134,10 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // Due to how the underlying rebase mechanism works, it is necessary
         // to always have some amount of tokens in the fundingmanager.
         // It's best, if the owner deposits them right after deployment.
-        //uint initialDeposit = 10e18;
-        //token.mint(address(this), initialDeposit);
-        //token.approve(address(fundingManager), initialDeposit);
-        //fundingManager.deposit(initialDeposit);
+        // uint initialDeposit = 10e18;
+        // token.mint(address(this), initialDeposit);
+        // token.approve(address(fundingManager), initialDeposit);
+        // fundingManager.deposit(initialDeposit);
 
         // Mint some tokens to alice and bob in order to fund the fundingmanager.
 
@@ -145,7 +145,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         token.mint(alice, aliceBuyAmount);
         token.mint(bob, bobBuyAmount);
         uint buf_minAmountOut =
-            fundingManager.calculatePurchaseReturn(aliceBuyAmount); //buffer variable to store the minimum amount out on calls to the buy and sell functions
+            fundingManager.calculatePurchaseReturn(aliceBuyAmount); // buffer variable to store the minimum amount out on calls to the buy and sell functions
 
         vm.startPrank(alice);
         {
@@ -196,7 +196,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             );
 
             fundingManager.sell(issuanceToken.balanceOf(bob), buf_minAmountOut);
-            assertApproxEqRel(token.balanceOf(bob), bobBuyAmount, 0.00001e18); //ensures that the imprecision introduced by the math stays below 0.001%
+            assertApproxEqRel(token.balanceOf(bob), bobBuyAmount, 0.00001e18); // ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
 
@@ -216,7 +216,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             );
             assertApproxEqRel(
                 token.balanceOf(alice), aliceBuyAmount, 0.00001e18
-            ); //ensures that the imprecision introduced by the math stays below 0.001%
+            ); // ensures that the imprecision introduced by the math stays below 0.001%
         }
         vm.stopPrank();
 

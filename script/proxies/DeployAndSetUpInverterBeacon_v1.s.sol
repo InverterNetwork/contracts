@@ -69,7 +69,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
                 owner, majorVersion, implementation, minorVersion
             );
 
-            //return the proxy after creation
+            // return the proxy after creation
             proxy =
                 address(new InverterBeaconProxy_v1(InverterBeacon_v1(beacon)));
 

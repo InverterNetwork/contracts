@@ -47,7 +47,7 @@ contract AUT_RolesV1Test is Test {
     ModuleFactoryV1Mock internal _moduleFactory = new ModuleFactoryV1Mock();
     TransactionForwarder_v1 _forwarder =
         new TransactionForwarder_v1("TransactionForwarder_v1");
-    address ALBA = address(0xa1ba); //default authorized person
+    address ALBA = address(0xa1ba); // default authorized person
     address BOB = address(0xb0b); // example person to add
 
     bytes32 immutable ROLE_0 = "ROLE_0";
@@ -126,9 +126,9 @@ contract AUT_RolesV1Test is Test {
             IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
         );
 
-        //console.log(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA));
+        // console.log(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA));
         assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
-        //console.log(_authorizer.hasRole(_authorizer.getAdminRole(), address(this)));
+        // console.log(_authorizer.hasRole(_authorizer.getAdminRole(), address(this)));
         assertEq(
             _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
             false
@@ -145,7 +145,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testInitWithInitialAdmin(address initialAuth) public {
-        //Checks that address list gets correctly stored on initialization
+        // Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new AUT_Roles_v1());
@@ -207,7 +207,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testInitWithInitialAdminSameAsDeployer() public {
-        //Checks that address list gets correctly stored on initialization
+        // Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new AUT_Roles_v1());
@@ -239,7 +239,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testReinitFails() public {
-        //Create a mock new orchestrator
+        // Create a mock new orchestrator
         Orchestrator_v1 newOrchestrator = Orchestrator_v1(
             Clones.clone(address(new Orchestrator_v1(address(0))))
         );
@@ -316,9 +316,9 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testRevokeAdminRole() public {
-        //Add Bob as admin
+        // Add Bob as admin
         vm.startPrank(address(ALBA));
-        _authorizer.grantRole(_authorizer.getAdminRole(), BOB); //Meet your new Manager
+        _authorizer.grantRole(_authorizer.getAdminRole(), BOB); // Meet your new Manager
         vm.stopPrank();
         assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), BOB), true);
 
@@ -345,7 +345,7 @@ contract AUT_RolesV1Test is Test {
     function testRemoveLastAdminFails() public {
         uint amountAuth =
             _authorizer.getRoleMemberCount(_authorizer.getAdminRole());
-        bytes32 adminRole = _authorizer.getAdminRole(); //To correctly time the vm.expectRevert
+        bytes32 adminRole = _authorizer.getAdminRole(); // To correctly time the vm.expectRevert
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -645,7 +645,7 @@ contract AUT_RolesV1Test is Test {
         newAuthorized = _validateAuthorizedList(newAuthorized);
         bytes32 role0_module = _authorizer.generateRoleId(newModule, ROLE_0);
 
-        //grant role to the addresses
+        // grant role to the addresses
         for (uint i = 0; i < newAuthorized.length; i++) {
             vm.prank(newModule);
             _authorizer.grantRoleFromModule(ROLE_0, newAuthorized[i]);
@@ -962,7 +962,7 @@ contract AUT_RolesV1Test is Test {
         _authorizer.grantRole(adminRole, BOB);
         assertTrue(_authorizer.hasRole(adminRole, BOB));
 
-        //Then we set up a mock module
+        // Then we set up a mock module
         address newModule = _setupMockSelfManagedModule();
         bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
 
@@ -981,11 +981,11 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testChangeRoleAdminOnModuleRoleFailsIfNotAdmin() public {
-        //We set up a mock module
+        // We set up a mock module
         address newModule = _setupMockSelfManagedModule();
 
         bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_0);
-        bytes32 adminRole = _authorizer.getAdminRole(); //Buffer this to time revert
+        bytes32 adminRole = _authorizer.getAdminRole(); // Buffer this to time revert
 
         // BOB is not allowed to do this
         vm.startPrank(BOB);
@@ -1003,7 +1003,7 @@ contract AUT_RolesV1Test is Test {
         _authorizer.grantRole(adminRole, BOB);
         assertTrue(_authorizer.hasRole(adminRole, BOB));
 
-        //Then we set up a mock module and buffer the role with burned admin
+        // Then we set up a mock module and buffer the role with burned admin
         address newModule = _setupMockSelfManagedModule();
         bytes32 roleId = _authorizer.generateRoleId(newModule, ROLE_1);
 
@@ -1033,7 +1033,7 @@ contract AUT_RolesV1Test is Test {
         _authorizer.grantRole(adminRole, BOB);
         assertTrue(_authorizer.hasRole(adminRole, BOB));
 
-        //Then we set up a mock module and buffer both roles
+        // Then we set up a mock module and buffer both roles
         address newModule = _setupMockSelfManagedModule();
         bytes32 roleId_0 = _authorizer.generateRoleId(newModule, ROLE_0);
         bytes32 roleId_1 = _authorizer.generateRoleId(newModule, ROLE_1);
@@ -1068,7 +1068,7 @@ contract AUT_RolesV1Test is Test {
     function _setupMockSelfManagedModule() internal returns (address) {
         ModuleV1Mock mockModule = new ModuleV1Mock();
 
-        vm.startPrank(ALBA); //We assume ALBA is admin
+        vm.startPrank(ALBA); // We assume ALBA is admin
         _orchestrator.initiateAddModuleWithTimelock(address(mockModule));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
         emit hm(_orchestrator.MODULE_UPDATE_TIMELOCK());

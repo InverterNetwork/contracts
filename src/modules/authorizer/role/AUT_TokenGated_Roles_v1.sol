@@ -62,7 +62,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     // Modifiers
 
     modifier onlyEmptyRole(bytes32 roleId) {
-        //Check that the role is empty
+        // Check that the role is empty
         if (getRoleMemberCount(roleId) != 0) {
             revert Module__AUT_TokenGated_Roles__RoleNotEmpty();
         }
@@ -273,7 +273,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
             bytes32 thresholdId = keccak256(abi.encodePacked(role, tokenAddr));
             uint tokenThreshold = thresholdMap[thresholdId];
 
-            //Should work with both ERC20 and ERC721
+            // Should work with both ERC20 and ERC721
             try TokenInterface(tokenAddr).balanceOf(who) returns (
                 uint tokenBalance
             ) {

@@ -160,7 +160,7 @@ contract FM_Rebasing_v1 is
     // Internal Mutating Functions
 
     function _deposit(address from, address to, uint amount) internal {
-        //Depositing from itself with its own balance would mint tokens without increasing underlying balance.
+        // Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
             revert Module__FundingManager__CannotSelfDeposit();
         }

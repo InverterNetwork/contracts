@@ -142,7 +142,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
 
         // Return redeem amount
-        //return redeemAmount;
+        // return redeemAmount;
     }
 
     //--------------------------------------------------------------------------

@@ -169,7 +169,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    //This function also tests all the getters
+    // This function also tests all the getters
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
@@ -625,7 +625,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.startPrank(seller);
         {
-            vm.expectRevert(); //The formula reverts
+            vm.expectRevert(); // The formula reverts
             bondingCurveFundingManager.sell(userSellAmount, userSellAmount);
         }
         vm.stopPrank();
@@ -653,7 +653,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.startPrank(seller);
         {
-            vm.expectRevert(); //The formula reverts
+            vm.expectRevert(); // The formula reverts
             bondingCurveFundingManager.sell(amount, amount);
         }
         vm.stopPrank();
@@ -709,7 +709,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             decimalConverted_userSellAmount
         );
 
-        //normalize the formulaReturn. This is the amount in the context of the collateral token
+        // normalize the formulaReturn. This is the amount in the context of the collateral token
         uint normalized_formulaReturn = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
             formulaReturn, 18, _token.decimals()
@@ -818,7 +818,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             userSellAmount
         );
 
-        //normalize the formulaReturn. This is the amount in the context of the collateral token
+        // normalize the formulaReturn. This is the amount in the context of the collateral token
         uint normalized_formulaReturn = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
             formulaReturn, 18, _token.decimals()
@@ -935,7 +935,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             decimalConverted_userSellAmount
         );
 
-        //normalize the formulaReturn. This is the amount in the context of the collateral token
+        // normalize the formulaReturn. This is the amount in the context of the collateral token
         uint normalized_formulaReturn = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
             formulaReturn, 18, _token.decimals()
@@ -1311,7 +1311,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         public
         callerIsOrchestratorAdmin
     {
-        //manual bound for uint32
+        // manual bound for uint32
         _newRatio = (_newRatio % bondingCurveFundingManager.call_PPM()) + 1; // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
 
         vm.expectEmit(
@@ -1370,7 +1370,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         public
         callerIsOrchestratorAdmin
     {
-        //manual bound for uint32
+        // manual bound for uint32
         _newRatio = (_newRatio % bondingCurveFundingManager.call_PPM()) + 1; // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)

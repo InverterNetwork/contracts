@@ -50,7 +50,7 @@ abstract contract ModuleTest is Test {
     FeeManager_v1 feeManager;
     address treasury = makeAddr("treasury");
 
-    //Deploy a forwarder used to enable metatransactions
+    // Deploy a forwarder used to enable metatransactions
     TransactionForwarder_v1 _forwarder =
         new TransactionForwarder_v1("TransactionForwarder_v1");
 

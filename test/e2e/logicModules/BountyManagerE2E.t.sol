@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -151,7 +151,7 @@ contract BountyManagerE2E is E2ETest {
         ILM_PC_Bounties_v1.Contributor memory contrib2 =
             ILM_PC_Bounties_v1.Contributor(address(0xb0b), 150e18);
 
-        //auth.setIsAuthorized(address(0xA11CE), true);
+        // auth.setIsAuthorized(address(0xA11CE), true);
         bountyManager.grantModuleRole(
             bountyManager.CLAIMANT_ROLE(), address(0xA11CE)
         );
@@ -170,7 +170,7 @@ contract BountyManagerE2E is E2ETest {
 
         address verifier1 = makeAddr("verifier 1");
 
-        //auth.setIsAuthorized(verifier1, true);
+        // auth.setIsAuthorized(verifier1, true);
         bountyManager.grantModuleRole(bountyManager.VERIFIER_ROLE(), verifier1);
 
         vm.prank(verifier1);
@@ -180,7 +180,7 @@ contract BountyManagerE2E is E2ETest {
         assertEq(token.balanceOf(contrib1.addr), 150e18);
         assertEq(token.balanceOf(contrib2.addr), 150e18);
 
-        //Lets create another Claim for the same bounty
+        // Lets create another Claim for the same bounty
         vm.prank(address(0xA11CE));
         claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
 

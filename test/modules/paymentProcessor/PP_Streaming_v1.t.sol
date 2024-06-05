@@ -138,7 +138,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         _authorizer.setIsAuthorized(address(this), true);
 
-        //Set up PaymentClient Correctöy
+        // Set up PaymentClient Correctöy
         impl = address(new ERC20PaymentClientBaseV1Mock());
         paymentClient = ERC20PaymentClientBaseV1Mock(Clones.clone(impl));
 
@@ -582,7 +582,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint[] memory endTimes
     ) public {
         uint length = recipients.length;
-        vm.assume(length < 50); //Restrict to reasonable size
+        vm.assume(length < 50); // Restrict to reasonable size
         vm.assume(length <= endTimes.length);
 
         assumeValidRecipients(recipients);
@@ -590,7 +590,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // Warp to reasonable time to test wether orders before timestamp are retrievable
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
 
-        //Amount of tokens for user that should be payed out
+        // Amount of tokens for user that should be payed out
         uint payoutAmount = 100;
 
         for (uint i; i < length; i++) {
@@ -618,7 +618,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address recipient = recipients[i];
             IERC20PaymentClientBase_v1.PaymentOrder memory order = orders[i];
 
-            //If end is before currentTimestamp evereything should be releasable
+            // If end is before currentTimestamp evereything should be releasable
             if (order.end <= block.timestamp) {
                 assertEq(
                     paymentProcessor.releasableForSpecificStream(
@@ -652,7 +652,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         // Check addinng invalid recipients
 
-        //we don't mind about adding address(this)in this case
+        // we don't mind about adding address(this)in this case
         for (uint i = 0; i < recipients.length - 1; ++i) {
             paymentClient.addPaymentOrderUnchecked(
                 IERC20PaymentClientBase_v1.PaymentOrder({
@@ -665,7 +665,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 })
             );
         }
-        //Expect the correct number and sequence of emits
+        // Expect the correct number and sequence of emits
         for (uint i = 0; i < recipients.length - 1; ++i) {
             vm.expectEmit(true, true, true, true);
             emit InvalidStreamingOrderDiscarded(
@@ -743,7 +743,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         speedRunStreamingAndClaim(recipients, amounts, durations);
 
-        //We run process payments again, but since there are no new orders, nothing should happen.
+        // We run process payments again, but since there are no new orders, nothing should happen.
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
 
@@ -1018,7 +1018,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
             (expectedTotal / 2)
         );
-        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(paymentClient.amountPaidCounter(), expectedTotal);
         assertTrue(
             initialStreamIdAtIndex1 != paymentReceiverStreams[1]._streamId
@@ -1120,7 +1120,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             total1
         );
 
-        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(paymentClient.amountPaidCounter(), total1);
         amountPaidAlready += paymentClient.amountPaidCounter();
 
@@ -1137,7 +1137,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             paymentReceiverStreams[1]._streamId
         );
 
-        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(
             paymentClient.amountPaidCounter(),
             paymentReceiverStreams[1]._total + total1
@@ -1167,7 +1167,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentProcessor.claimForSpecificStream(
             address(paymentClient), paymentReceiverStreams[0]._streamId
         );
-        //Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
+        // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, total3);
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
@@ -1248,7 +1248,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 })
             );
         }
-        //Expect the correct number and sequence of emits
+        // Expect the correct number and sequence of emits
         for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
@@ -1280,7 +1280,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // FF to half the max_duration
         vm.warp(block.timestamp + 2 weeks);
 
-        //we expect cancellation events for each payment
+        // we expect cancellation events for each payment
         for (uint i = 0; i < length; ++i) {
             vm.expectEmit(true, true, true, true);
             // we can expect all recipient to be unique due to the call to assumeValidRecipients.
@@ -1379,7 +1379,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentProcessor.cancelRunningPayments(otherERC20PaymentClient);
     }
 
-    //This test creates a new set of payments in a client which finished all running payments.
+    // This test creates a new set of payments in a client which finished all running payments.
     function testCancelRunningPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1471,7 +1471,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint128[] memory amounts
     ) public {
         uint length = recipients.length;
-        vm.assume(length < 50); //Reasonable amount
+        vm.assume(length < 50); // Reasonable amount
         vm.assume(length <= amounts.length);
         assumeValidRecipients(recipients);
         assumeValidAmounts(amounts, length);
@@ -1500,7 +1500,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         paymentProcessor.processPayments(paymentClient);
 
         for (uint z = 0; z <= duration; z += 1 hours) {
-            //we check each hour
+            // we check each hour
             vm.warp(start + z);
 
             for (uint i = 0; i < recipients.length; i++) {
@@ -1523,7 +1523,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.assume(recipients.length < 30);
 
         for (uint i = 0; i < recipients.length; i++) {
-            //If recipient is invalid change it
+            // If recipient is invalid change it
             if (recipients[i] == address(0) || recipients[i].code.length != 0) {
                 recipients[i] = address(0x1);
             }
@@ -1548,8 +1548,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             vm.prank(address(paymentClient));
             paymentProcessor.processPayments(paymentClient);
 
-            //Immediately claim
-            //This should shift right into unclaimable
+            // Immediately claim
+            // This should shift right into unclaimable
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
         }
@@ -1563,19 +1563,19 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         for (uint i = 0; i < recipients.length; i++) {
             recipient = recipients[i];
 
-            //Check that recipients are not handled twice
+            // Check that recipients are not handled twice
             if (recipientsHandled[recipient]) continue;
             recipientsHandled[recipient] = true;
 
             amount =
                 paymentProcessor.unclaimable(address(paymentClient), recipient);
 
-            //Grab Unclaimable Wallet Ids array
+            // Grab Unclaimable Wallet Ids array
             uint[] memory ids = paymentProcessor.getUnclaimableStreams(
                 address(paymentClient), recipient
             );
 
-            //Do call
+            // Do call
             vm.expectEmit(true, true, true, true);
             emit TokensReleased(recipient, address(_token), amount);
 
@@ -1584,7 +1584,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 address(paymentClient), recipient
             );
 
-            //Unclaimable amount for Wallet Ids empty (mapping)
+            // Unclaimable amount for Wallet Ids empty (mapping)
             for (uint j = 0; j < ids.length; j++) {
                 assertEq(
                     paymentProcessor.getUnclaimableAmountForStreams(
@@ -1594,7 +1594,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 );
             }
 
-            //Check Unclaimable Wallet Ids array empty
+            // Check Unclaimable Wallet Ids array empty
             assertEq(
                 paymentProcessor.getUnclaimableStreams(
                     address(paymentClient), recipient
@@ -1602,10 +1602,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 0
             );
 
-            //Amount send
+            // Amount send
             assertEq(_token.balanceOf(recipient), amount);
 
-            //Check that amountPaid is correct in PaymentClient
+            // Check that amountPaid is correct in PaymentClient
             amountPaid += amount;
             assertEq(paymentClient.amountPaidCounter(), amountPaid);
         }
@@ -1626,7 +1626,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         );
     }
 
-    //This test creates a new set of payments in a client which finished all running payments.
+    // This test creates a new set of payments in a client which finished all running payments.
     function testUpdateFinishedPayments(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1648,7 +1648,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint totalAmount;
         for (uint i; i < recipients.length; i++) {
             recipient = recipients[i];
-            amount = uint(amounts[i]) * 2; //we paid two rounds
+            amount = uint(amounts[i]) * 2; // we paid two rounds
             totalAmount += amount;
 
             assertEq(_token.balanceOf(address(recipient)), amount);
@@ -1823,7 +1823,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         vm.assume(recipients.length < 30);
 
         for (uint i = 0; i < recipients.length; i++) {
-            //If recipient is invalid change it
+            // If recipient is invalid change it
             if (recipients[i] == address(0) || recipients[i].code.length != 0) {
                 recipients[i] = address(0x1);
             }
@@ -1848,8 +1848,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             vm.prank(address(paymentClient));
             paymentProcessor.processPayments(paymentClient);
 
-            //Immediately claim
-            //This should shift right into unclaimable
+            // Immediately claim
+            // This should shift right into unclaimable
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
         }
@@ -1859,7 +1859,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         for (uint i = 0; i < recipients.length; i++) {
             amount = 0;
             recipient = recipients[i];
-            //if array contains address multiple times we check for repetitions
+            // if array contains address multiple times we check for repetitions
             for (uint j = 0; j < recipients.length; j++) {
                 if (recipients[j] == recipient) {
                     amount += 1;

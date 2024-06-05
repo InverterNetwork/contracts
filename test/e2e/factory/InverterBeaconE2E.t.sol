@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -95,7 +95,7 @@ contract InverterBeaconE2E is E2ETest {
         // Deploy module beacons.
 
         beacon = new InverterBeacon_v1(
-            address(gov), //The governor contract will be the owner of the beacon
+            address(gov), // The governor contract will be the owner of the beacon
             MAJOR_VERSION,
             address(moduleImpl1),
             MINOR_VERSION
@@ -105,7 +105,7 @@ contract InverterBeaconE2E is E2ETest {
         vm.prank(teamMultisig);
         gov.registerMetadata(moduleFactory, DATA, InverterBeacon_v1(beacon));
 
-        //Add new Beacon to this moduleConfiguration
+        // Add new Beacon to this moduleConfiguration
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(DATA, bytes(""))
         );
@@ -135,10 +135,10 @@ contract InverterBeaconE2E is E2ETest {
         // Find Implementation
         IModuleImplementationMock moduleMock;
 
-        //Get all Modules
+        // Get all Modules
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            //Find the one that can fulfill the IMetadataFunction
+            // Find the one that can fulfill the IMetadataFunction
             try IModuleImplementationMock(modulesList[i]).getMockVersion()
             returns (uint) {
                 moduleMock = IModuleImplementationMock(modulesList[i]);
@@ -148,14 +148,14 @@ contract InverterBeaconE2E is E2ETest {
             }
         }
 
-        //Check that the version is 1 as implemented in the ModuleImplementationV1Mock
+        // Check that the version is 1 as implemented in the ModuleImplementationV1Mock
         assertEq(moduleMock.getMockVersion(), 1);
 
         // Upgrade beacon to point to the Version 2 implementation.
         vm.prank(address(gov));
         beacon.upgradeTo(address(moduleImpl2), MINOR_VERSION + 1, false);
 
-        //Check that after the update
+        // Check that after the update
         assertEq(moduleMock.getMockVersion(), 2);
     }
 
@@ -179,10 +179,10 @@ contract InverterBeaconE2E is E2ETest {
         // Find Implementation
         IModuleImplementationMock moduleMock;
 
-        //Get all Modules
+        // Get all Modules
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            //Find the one that can fulfill the IMetadataFunction
+            // Find the one that can fulfill the IMetadataFunction
             try IModuleImplementationMock(modulesList[i]).getMockVersion()
             returns (uint) {
                 moduleMock = IModuleImplementationMock(modulesList[i]);
@@ -192,38 +192,38 @@ contract InverterBeaconE2E is E2ETest {
             }
         }
 
-        //Check that the Call of the implementation still works
+        // Check that the Call of the implementation still works
         assertEq(moduleMock.getMockVersion(), 1);
 
-        //Simulate Emergency by implementing shut-down
+        // Simulate Emergency by implementing shut-down
         vm.prank(address(gov));
         beacon.shutDownImplementation();
 
-        //The call to the implementation should fail
-        //As a note: apparently a try catch still throws an EVM Error when the call doesnt find the correct function in the target address,
-        //because the target doesnt create a proper Revert when its called
-        //Thats why im wrapping it in a call to demonstrate
-        //Funnily enough the call doesnt return as a failure for some reason
-        //Because of the failure of the direct call we know that it actually fails if called
-        //I assume its a weird interaction between the delegatecall of the proxy and the call we are just doing here
-        //So just to make sure that we can actually check if the call fails
-        //We check if the returndata is 0, which it is not supposed to be with the getMockVersion function
+        // The call to the implementation should fail
+        // As a note: apparently a try catch still throws an EVM Error when the call doesnt find the correct function in the target address,
+        // because the target doesnt create a proper Revert when its called
+        // Thats why im wrapping it in a call to demonstrate
+        // Funnily enough the call doesnt return as a failure for some reason
+        // Because of the failure of the direct call we know that it actually fails if called
+        // I assume its a weird interaction between the delegatecall of the proxy and the call we are just doing here
+        // So just to make sure that we can actually check if the call fails
+        // We check if the returndata is 0, which it is not supposed to be with the getMockVersion function
 
         bytes memory data =
             abi.encodeCall(IModuleImplementationMock.getMockVersion, ());
         (, bytes memory returnData) = address(moduleMock).call(data);
-        //Make sure returndata is 0 which means call didnt go through
+        // Make sure returndata is 0 which means call didnt go through
         assertEq(returnData.length, 0);
 
-        //Reverse shut-down
+        // Reverse shut-down
         vm.prank(address(gov));
         beacon.restartImplementation();
 
-        //Check that the Call of the implementation works again
+        // Check that the Call of the implementation works again
         assertEq(moduleMock.getMockVersion(), 1);
 
-        //Lets do a upgrade that overrides the shutdown
-        //First shut-down
+        // Lets do a upgrade that overrides the shutdown
+        // First shut-down
         vm.prank(address(gov));
         beacon.shutDownImplementation();
 
@@ -232,10 +232,10 @@ contract InverterBeaconE2E is E2ETest {
         beacon.upgradeTo(
             address(moduleImpl2),
             MINOR_VERSION + 1,
-            true //Set override shutdown to true, which should result in reversing the shutdown
+            true // Set override shutdown to true, which should result in reversing the shutdown
         );
 
-        //Check that the Call of the implementation works again and is properly upgraded
+        // Check that the Call of the implementation works again and is properly upgraded
         assertEq(moduleMock.getMockVersion(), 2);
     }
 

@@ -226,14 +226,14 @@ contract ModuleFactoryV1Test is Test {
         assertEq(address(newModule.orchestrator()), address(orchestrator));
         assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
 
-        //Check for proper Proxy setup
+        // Check for proper Proxy setup
 
         beacon.overrideImplementation(address(new ModuleImplementationV2Mock()));
 
-        //Beacon should point to Version 2
+        // Beacon should point to Version 2
         uint expectedValue = 2;
 
-        //If it is independent then the version should have stayed at 1
+        // If it is independent then the version should have stayed at 1
         if (workflowConfig.independentUpdates) {
             expectedValue = 1;
         }

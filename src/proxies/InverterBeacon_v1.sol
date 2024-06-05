@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-//Internal Interfaces
+// Internal Interfaces
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // External Interfaces
@@ -143,9 +143,9 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
 
     /// @inheritdoc IInverterBeacon_v1
     function shutDownImplementation() external onlyOwner {
-        //Go into emergency mode
+        // Go into emergency mode
         _emergencyMode = true;
-        //Set implementation pointer to address 0 and therefor halting the system
+        // Set implementation pointer to address 0 and therefor halting the system
         _implementationPointer = address(0);
 
         emit ShutdownInitiated();
@@ -153,9 +153,9 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
 
     /// @inheritdoc IInverterBeacon_v1
     function restartImplementation() external onlyOwner {
-        //Reverse emergency mode
+        // Reverse emergency mode
         _emergencyMode = false;
-        //Set implementation pointer back to original implementation address
+        // Set implementation pointer back to original implementation address
         _implementationPointer = _implementationAddress;
 
         emit ShutdownReversed();
@@ -182,16 +182,16 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     ) internal virtual validImplementation(newImplementation) {
         _implementationAddress = newImplementation;
 
-        //If the beacon is running normally
+        // If the beacon is running normally
         if (!_emergencyMode) {
-            //Change the _implementationPointer accordingly
+            // Change the _implementationPointer accordingly
             _implementationPointer = newImplementation;
         } else {
-            //If emergencyMode is active and overrideShutdown is true
+            // If emergencyMode is active and overrideShutdown is true
             if (overrideShutdown) {
-                //Change the _implementationPointer accordingly
+                // Change the _implementationPointer accordingly
                 _implementationPointer = newImplementation;
-                //And reverse emergency Mode
+                // And reverse emergency Mode
                 _emergencyMode = false;
 
                 emit ShutdownReversed();

@@ -13,19 +13,19 @@ contract FeeManagerTest is Test {
     // SuT
     FeeManager_v1 feeMan;
 
-    //State
+    // State
     address defaultProtocolTreasury = address(0x111111);
     address alternativeTreasury = address(0x222222);
 
-    uint defaultCollateralFee = 101; //1,01%
-    uint defaultIssuanceFee = 102; //1,02%
+    uint defaultCollateralFee = 101; // 1,01%
+    uint defaultIssuanceFee = 102; // 1,02%
 
-    uint alternativeCollateralFee = 103; //1,01%
-    uint alternativeIssuanceFee = 104; //1,02%
+    uint alternativeCollateralFee = 103; // 1,01%
+    uint alternativeIssuanceFee = 104; // 1,02%
 
     uint INVALID_FEE;
 
-    //Events
+    // Events
     event MaxFeeSet(uint maxFee);
     event DefaultProtocolTreasurySet(address defaultProtocolTreasury);
     event WorkflowTreasurySet(address workflow, address treasury);
@@ -56,7 +56,7 @@ contract FeeManagerTest is Test {
         );
         INVALID_FEE = feeMan.BPS() + 1;
 
-        //For easier testing set maxfee to BPS
+        // For easier testing set maxfee to BPS
         feeMan.setMaxFee(feeMan.BPS());
     }
 
@@ -116,7 +116,7 @@ contract FeeManagerTest is Test {
     }
 
     function testInitModifierInPosition() public {
-        //initializer
+        // initializer
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         feeMan.init(
             address(this),
@@ -126,7 +126,7 @@ contract FeeManagerTest is Test {
         );
 
         feeMan = new FeeManager_v1();
-        //validAddress(owner)
+        // validAddress(owner)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidAddress.selector
@@ -149,7 +149,7 @@ contract FeeManagerTest is Test {
             address(this), address(0), defaultCollateralFee, defaultIssuanceFee
         );
 
-        //validFee(_defaultCollateralFee)
+        // validFee(_defaultCollateralFee)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidFee.selector
@@ -162,7 +162,7 @@ contract FeeManagerTest is Test {
             defaultIssuanceFee
         );
 
-        //validFee(_defaultIssuanceFee)
+        // validFee(_defaultIssuanceFee)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidFee.selector
@@ -180,7 +180,7 @@ contract FeeManagerTest is Test {
     // Test: Getter Functions
 
     function testGetDefaultProtocolTreasury() public view {
-        //Trivial
+        // Trivial
         feeMan.getDefaultProtocolTreasury();
     }
 
@@ -237,14 +237,14 @@ contract FeeManagerTest is Test {
     }
 
     function testGetCollateralWorkflowFeeAndTreasury() public view {
-        //Trivial
+        // Trivial
         feeMan.getCollateralWorkflowFeeAndTreasury(
             address(0), address(0), bytes4("0")
         );
     }
 
     function testGetIssuanceWorkflowFeeAndTreasury() public view {
-        //Trivial
+        // Trivial
         feeMan.getIssuanceWorkflowFeeAndTreasury(
             address(0), address(0), bytes4("0")
         );
@@ -264,7 +264,7 @@ contract FeeManagerTest is Test {
     }
 
     function testSetMaxFeeModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -273,7 +273,7 @@ contract FeeManagerTest is Test {
         vm.prank(address(0));
         feeMan.setMaxFee(0);
 
-        //validMaxFee(maxFee)
+        // validMaxFee(maxFee)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidMaxFee.selector
@@ -294,7 +294,7 @@ contract FeeManagerTest is Test {
     }
 
     function testSetDefaultProtocolTreasuryModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -303,7 +303,7 @@ contract FeeManagerTest is Test {
         vm.prank(address(0));
         feeMan.setDefaultProtocolTreasury(address(0x1));
 
-        //validAddress(_defaultProtocolTreasury)
+        // validAddress(_defaultProtocolTreasury)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidAddress.selector
@@ -324,7 +324,7 @@ contract FeeManagerTest is Test {
     }
 
     function testsetWorkflowTreasuryModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -333,7 +333,7 @@ contract FeeManagerTest is Test {
         vm.prank(address(0));
         feeMan.setWorkflowTreasury(address(0x1), address(0x1));
 
-        //validAddress(treasury)
+        // validAddress(treasury)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidAddress.selector
@@ -357,7 +357,7 @@ contract FeeManagerTest is Test {
     }
 
     function testSetDefaultCollateralFeeModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -366,7 +366,7 @@ contract FeeManagerTest is Test {
         vm.prank(address(0));
         feeMan.setDefaultCollateralFee(0);
 
-        //validFee(_defaultCollateralFee)
+        // validFee(_defaultCollateralFee)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidFee.selector
@@ -387,7 +387,7 @@ contract FeeManagerTest is Test {
     }
 
     function testSetDefaultIssuanceFeeModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -396,7 +396,7 @@ contract FeeManagerTest is Test {
         vm.prank(address(0));
         feeMan.setDefaultIssuanceFee(0);
 
-        //validFee(_defaultIssuanceFee)
+        // validFee(_defaultIssuanceFee)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidFee.selector
@@ -442,7 +442,7 @@ contract FeeManagerTest is Test {
     }
 
     function testSetCollateralWorkflowFeeModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -453,7 +453,7 @@ contract FeeManagerTest is Test {
             address(0x1), address(0x1), bytes4("1"), true, 0
         );
 
-        //validFee(feeMan)
+        // validFee(feeMan)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidFee.selector
@@ -501,7 +501,7 @@ contract FeeManagerTest is Test {
     }
 
     function testSetIssuanceWorkflowFeeModifierInPosition() public {
-        //onlyOwner
+        // onlyOwner
         vm.expectRevert(
             abi.encodeWithSelector(
                 OZErrors.Ownable__UnauthorizedAccount, address(0)
@@ -512,7 +512,7 @@ contract FeeManagerTest is Test {
             address(0x1), address(0x1), bytes4("1"), true, 0
         );
 
-        //validFee(feeMan)
+        // validFee(feeMan)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFeeManager_v1.FeeManager__InvalidFee.selector

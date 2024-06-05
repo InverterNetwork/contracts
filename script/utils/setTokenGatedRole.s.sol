@@ -67,7 +67,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
         vm.startBroadcast(orchestratorOwner);
 
-        //Give the Orchestrator_v1 owner the power to change module roles
+        // Give the Orchestrator_v1 owner the power to change module roles
         deployedAuthorizer.grantRole(
             deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner
         );
@@ -81,7 +81,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
             bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
         );
 
-        //First, we mark the Role as Token-Gated
+        // First, we mark the Role as Token-Gated
         deployedAuthorizer.setTokenGated(roleId, true);
         // Second, we set the token to be used for the Role as the gating token
         deployedAuthorizer.grantRole(roleId, gatingTokenAddress);

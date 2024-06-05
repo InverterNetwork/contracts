@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 // SuT
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -100,59 +100,59 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         //-----------------------------------------------------
         // Call Function without role
-        //In this example we're gonna call the rebasing fundingmanagers deposit function
+        // In this example we're gonna call the rebasing fundingmanagers deposit function
 
-        //Lets get the fundingmanager address
+        // Lets get the fundingmanager address
         address fundingManager = address(orchestrator.fundingManager());
 
-        //lets define how much he wants to deposit
+        // lets define how much he wants to deposit
         uint depositAmount = 1000;
-        //For this to work the signer would have to have that amount of tokens
+        // For this to work the signer would have to have that amount of tokens
         token.mint(signer, depositAmount);
-        //and the token transferal approved before
+        // and the token transferal approved before
         vm.prank(signer);
         token.approve(fundingManager, depositAmount);
 
-        //We create a simplyfied ForwardRequest without the signature
+        // We create a simplyfied ForwardRequest without the signature
         ERC2771Forwarder.ForwardRequestData memory req = ERC2771Forwarder
             .ForwardRequestData({
             from: signer,
             to: fundingManager,
             value: 0,
-            //This should be approximately be the gas value of the called function in this case the deposit function
+            // This should be approximately be the gas value of the called function in this case the deposit function
             gas: 1_000_000,
-            //This is the timestamp after which the request is not executable anymore.
+            // This is the timestamp after which the request is not executable anymore.
             deadline: uint48(block.timestamp + 1 weeks),
             data: abi.encodeWithSignature("deposit(uint256)", depositAmount),
-            //This has to be empty until we create the signature
+            // This has to be empty until we create the signature
             signature: bytes("")
         });
 
-        //Create the digest needed to create the signature
+        // Create the digest needed to create the signature
         bytes32 digest = forwarder.createDigest(req);
 
-        //Create Signature with digest (This has to be handled by the frontend)
+        // Create Signature with digest (This has to be handled by the frontend)
         vm.prank(signer);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
 
         req.signature = signature;
 
-        //Do call
+        // Do call
         forwarder.execute(req);
 
-        //Check if successful
+        // Check if successful
         assertEq(
             FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
 
         //-----------------------------------------------------
-        //Call Function with role
-        //In this example we're gonna call the bountyManagers createBounty Function
-        //The function needs a role to access it
+        // Call Function with role
+        // In this example we're gonna call the bountyManagers createBounty Function
+        // The function needs a role to access it
 
-        //Lets get the bountyManager address
+        // Lets get the bountyManager address
         LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
@@ -165,43 +165,43 @@ contract MetaTxAndMulticallE2E is E2ETest {
                 continue;
             }
         }
-        //Give the signer address the according role
+        // Give the signer address the according role
         bountyManager.grantModuleRole(
             bountyManager.BOUNTY_ISSUER_ROLE(), signer
         );
 
-        //Then we need to create the ForwardRequest
+        // Then we need to create the ForwardRequest
         req = ERC2771Forwarder.ForwardRequestData({
             from: signer,
             to: address(bountyManager),
             value: 0,
-            //This should be approximately be the gas value of the called function in this case the addBounty function
+            // This should be approximately be the gas value of the called function in this case the addBounty function
             gas: 1_000_000,
             deadline: uint48(block.timestamp + 1 weeks),
             data: abi.encodeWithSignature(
                 "addBounty(uint256,uint256,bytes)",
-                100e18, //minimumPayoutAmount
-                500e18, //maximumPayoutAmount
-                bytes("This is a test bounty") //details
+                100e18, // minimumPayoutAmount
+                500e18, // maximumPayoutAmount
+                bytes("This is a test bounty") // details
             ),
-            //This has to be empty until we create the signature
+            // This has to be empty until we create the signature
             signature: bytes("")
         });
 
-        //Create the digest needed to create the signature
+        // Create the digest needed to create the signature
         digest = forwarder.createDigest(req);
 
-        //Create Signature with digest (This has to be handled by the frontend)
+        // Create Signature with digest (This has to be handled by the frontend)
         vm.prank(signer);
         (v, r, s) = vm.sign(signerPrivateKey, digest);
         signature = abi.encodePacked(r, s, v);
 
         req.signature = signature;
 
-        //Do call
+        // Do call
         forwarder.execute(req);
 
-        //Check if successful
+        // Check if successful
         assertTrue(bountyManager.isExistingBountyId(1));
     }
 
@@ -219,7 +219,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        //lets use this example user
+        // lets use this example user
         address user = address(0xBEEF);
 
         // for the multicall to work we need to collect all the individual calls we want to make
@@ -229,39 +229,39 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         //-----------------------------------------------------
         // Call Function without role
-        //In this example we're gonna call the rebasing fundingmanagers deposit function
+        // In this example we're gonna call the rebasing fundingmanagers deposit function
 
-        //Lets get the fundingmanager address
+        // Lets get the fundingmanager address
         address fundingManager = address(orchestrator.fundingManager());
 
-        //lets define how much he wants to deposit
+        // lets define how much he wants to deposit
         uint depositAmount = 1000;
-        //For this to work the signer would have to have that amount of tokens
+        // For this to work the signer would have to have that amount of tokens
         token.mint(user, depositAmount);
-        //and the token transferal approved before
+        // and the token transferal approved before
         vm.prank(user);
         token.approve(fundingManager, depositAmount);
 
-        //We create a call struct containing the call we want to make
+        // We create a call struct containing the call we want to make
         ITransactionForwarder_v1.SingleCall memory call1 =
         ITransactionForwarder_v1.SingleCall({
-            //target of the call should be the fundingmanager
+            // target of the call should be the fundingmanager
             target: fundingManager,
-            //We dont allow the call to fail. In some circumstances this might be useful though
+            // We dont allow the call to fail. In some circumstances this might be useful though
             allowFailure: false,
-            //The encoded data of the call we want to make
+            // The encoded data of the call we want to make
             callData: abi.encodeWithSignature("deposit(uint256)", depositAmount)
         });
 
-        //Put the call into our call collection
+        // Put the call into our call collection
         callCollection[0] = call1;
 
         //-----------------------------------------------------
-        //Call Function with role
-        //In this example we're gonna call the bountyManagers createBounty Function
-        //The function needs a role to access it
+        // Call Function with role
+        // In this example we're gonna call the bountyManagers createBounty Function
+        // The function needs a role to access it
 
-        //Lets get the bountyManager address
+        // Lets get the bountyManager address
         LM_PC_Bounties_v1 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
@@ -275,40 +275,40 @@ contract MetaTxAndMulticallE2E is E2ETest {
             }
         }
 
-        //Give the signer address the according role
+        // Give the signer address the according role
         bountyManager.grantModuleRole(bountyManager.BOUNTY_ISSUER_ROLE(), user);
 
-        //We create a call struct containing the call we want to make
+        // We create a call struct containing the call we want to make
         ITransactionForwarder_v1.SingleCall memory call2 =
         ITransactionForwarder_v1.SingleCall({
-            //target of the call should be the fundingmanager
+            // target of the call should be the fundingmanager
             target: address(bountyManager),
-            //We dont allow the call to fail. In some circumstances this might be useful though
+            // We dont allow the call to fail. In some circumstances this might be useful though
             allowFailure: false,
-            //The encoded data of the call we want to make
+            // The encoded data of the call we want to make
             callData: abi.encodeWithSignature(
                 "addBounty(uint256,uint256,bytes)",
-                100e18, //minimumPayoutAmount
-                500e18, //maximumPayoutAmount
-                bytes("This is a test bounty") //details
+                100e18, // minimumPayoutAmount
+                500e18, // maximumPayoutAmount
+                bytes("This is a test bounty") // details
             )
         });
 
-        //Put the call into our call collection
+        // Put the call into our call collection
         callCollection[1] = call2;
 
-        //Do the multiCall
+        // Do the multiCall
         //!!! the user has to make the call
         vm.prank(user);
         forwarder.executeMulticall(callCollection);
 
-        //Check if successful
-        //For the fundingmanager
+        // Check if successful
+        // For the fundingmanager
         assertEq(
             FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
-        //For the bountyManager
+        // For the bountyManager
         assertTrue(bountyManager.isExistingBountyId(1));
     }
 }

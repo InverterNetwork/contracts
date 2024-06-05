@@ -85,7 +85,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
     ModuleV1Mock mockModule = new ModuleV1Mock();
 
-    address ALBA = address(0xa1ba); //default authorized person
+    address ALBA = address(0xa1ba); // default authorized person
     address BOB = address(0xb0b); // example person
     address CLOE = address(0xc10e); // example person
 
@@ -150,11 +150,11 @@ contract TokenGatedAUT_RoleV1Test is Test {
             false
         );
 
-        //We mint some tokens: First, two different amounts of ERC20
+        // We mint some tokens: First, two different amounts of ERC20
         roleToken.mint(BOB, 1000);
         roleToken.mint(CLOE, 10);
 
-        //Then, a ERC721 for BOB
+        // Then, a ERC721 for BOB
         roleNft.mint(BOB);
     }
 
@@ -189,7 +189,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         return roleId;
     }
 
-    //function set up nftGated role
+    // function set up nftGated role
     function setUpNFTGatedRole(address module, bytes32 role, address nft)
         internal
         returns (bytes32)
@@ -213,7 +213,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     // -------------------------------------
     // State change and validation tests
 
-    //test make role token gated
+    // test make role token gated
 
     function testMakeRoleTokenGated() public {
         bytes32 roleId_1 = setUpTokenGatedRole(
@@ -231,11 +231,11 @@ contract TokenGatedAUT_RoleV1Test is Test {
         // we set CLOE as admin
         makeAddressDefaultAdmin(CLOE);
 
-        //we set and unset on an empty role
+        // we set and unset on an empty role
 
         bytes32 roleId = _authorizer.generateRoleId(address(mockModule), "0x00");
 
-        //now we make it tokengated as admin
+        // now we make it tokengated as admin
         vm.prank(CLOE);
 
         vm.expectEmit();
@@ -245,7 +245,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         assertTrue(_authorizer.isTokenGated(roleId));
 
-        //and revert the change
+        // and revert the change
         vm.prank(CLOE);
 
         vm.expectEmit();
@@ -256,12 +256,12 @@ contract TokenGatedAUT_RoleV1Test is Test {
         assertFalse(_authorizer.isTokenGated(roleId));
     }
 
-    //test makeTokenGated fails if not empty
+    // test makeTokenGated fails if not empty
     function testMakingFunctionTokenGatedFailsIfAlreadyInUse() public {
         bytes32 roleId =
             _authorizer.generateRoleId(address(mockModule), ROLE_TOKEN);
 
-        //we switch on self-management and whitelist an address
+        // we switch on self-management and whitelist an address
         vm.startPrank(address(mockModule));
         _authorizer.grantRoleFromModule(ROLE_TOKEN, CLOE);
 
@@ -275,7 +275,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         _authorizer.makeRoleTokenGatedFromModule(ROLE_TOKEN);
         assertFalse(_authorizer.isTokenGated(roleId));
 
-        //we revoke the whitelist
+        // we revoke the whitelist
         _authorizer.revokeRoleFromModule(ROLE_TOKEN, CLOE);
 
         // now it works:
@@ -291,7 +291,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         bytes32 roleId =
             _authorizer.generateRoleId(address(mockModule), ROLE_TOKEN);
 
-        //we switch on self-management and whitelist an address
+        // we switch on self-management and whitelist an address
         vm.prank(address(mockModule));
         _authorizer.grantRoleFromModule(ROLE_TOKEN, CLOE);
 
@@ -315,7 +315,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         );
         _authorizer.setTokenGated(roleId, false);
 
-        //we revoke the whitelist
+        // we revoke the whitelist
         _authorizer.revokeRole(roleId, CLOE);
 
         // now it works:
@@ -342,9 +342,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
         );
 
         vm.prank(address(mockModule));
-        //First, the call to the interface reverts without reason
+        // First, the call to the interface reverts without reason
         vm.expectRevert();
-        //Then the contract handles the reversion and sends the correct error message
+        // Then the contract handles the reversion and sends the correct error message
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAUT_TokenGated_Roles_v1
@@ -365,9 +365,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
         );
 
         vm.prank(BOB);
-        //First, the call to the interface reverts without reason
+        // First, the call to the interface reverts without reason
         vm.expectRevert();
-        //Then the contract handles the reversion and sends the correct error message
+        // Then the contract handles the reversion and sends the correct error message
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAUT_TokenGated_Roles_v1
@@ -412,7 +412,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     function testSetThresholdFromAdminFailsIfInvalid() public {
         // we set BOB as admin
         makeAddressDefaultAdmin(BOB);
-        //First we set up a valid role
+        // First we set up a valid role
         bytes32 roleId = setUpTokenGatedRole(
             address(mockModule), ROLE_TOKEN, address(roleToken), 500
         );
@@ -435,7 +435,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         makeAddressDefaultAdmin(BOB);
 
         vm.prank(address(mockModule));
-        //We didn't make the role token-gated beforehand
+        // We didn't make the role token-gated beforehand
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAUT_TokenGated_Roles_v1
@@ -447,7 +447,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
             ROLE_TOKEN, address(roleToken), 500
         );
 
-        //also fails for the admin
+        // also fails for the admin
         bytes32 roleId =
             _authorizer.generateRoleId(address(mockModule), ROLE_TOKEN);
 
@@ -502,7 +502,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         makeAddressDefaultAdmin(BOB);
 
         vm.prank(address(mockModule));
-        //We didn't make the role token-gated beforehand
+        // We didn't make the role token-gated beforehand
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAUT_TokenGated_Roles_v1
@@ -519,7 +519,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     function testGrantTokenRoleFailsIfThresholdWouldBeZero() public {
         bytes32 role = ROLE_TOKEN;
 
-        //Make the role token-gated, but don't set a token with grantRoleFromModule()
+        // Make the role token-gated, but don't set a token with grantRoleFromModule()
         vm.prank(address(mockModule));
         _authorizer.makeRoleTokenGatedFromModule(role);
 
@@ -557,7 +557,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         vm.startPrank(address(mockModule));
 
-        //Make the role token-gated with a threshold of 500
+        // Make the role token-gated with a threshold of 500
         _authorizer.makeRoleTokenGatedFromModule(role);
         _authorizer.grantTokenRoleFromModule(role, address(roleToken), 500);
 
@@ -581,7 +581,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         vm.stopPrank();
     }
 
-    //Test Authorization
+    // Test Authorization
 
     // Test token authorization
     // -> yes case
@@ -593,9 +593,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
         vm.assume(callers.length <= amounts.length);
         vm.assume(threshold != 0);
 
-        //This implcitly confirms ERC20 compatibility
+        // This implcitly confirms ERC20 compatibility
 
-        //We burn the tokens created on setup
+        // We burn the tokens created on setup
         roleToken.burn(BOB, 1000);
         roleToken.burn(CLOE, 10);
 
@@ -605,13 +605,13 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         for (uint i = 0; i < callers.length; i++) {
             if (callers[i] == address(0)) {
-                //cannot mint to 0 address
+                // cannot mint to 0 address
                 continue;
             }
 
             roleToken.mint(callers[i], amounts[i]);
 
-            //we ensure both ways to check give the same result
+            // we ensure both ways to check give the same result
             vm.prank(address(mockModule));
             bool result = _authorizer.hasModuleRole(ROLE_TOKEN, callers[i]);
             assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
@@ -638,10 +638,10 @@ contract TokenGatedAUT_RoleV1Test is Test {
         vm.assume(callers.length < 50);
         vm.assume(callers.length <= hasNFT.length);
 
-        //This is similar to the function above, but in this case we just do a yes/no check
-        //This implcitly confirms ERC721 compatibility
+        // This is similar to the function above, but in this case we just do a yes/no check
+        // This implcitly confirms ERC721 compatibility
 
-        //We burn the token created on setup
+        // We burn the token created on setup
         roleNft.burn(roleNft.idCounter() - 1);
 
         bytes32 roleId =
@@ -649,14 +649,14 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         for (uint i = 0; i < callers.length; i++) {
             if (callers[i] == address(0)) {
-                //cannot mint to 0 address
+                // cannot mint to 0 address
                 continue;
             }
             if (hasNFT[i]) {
                 roleNft.mint(callers[i]);
             }
 
-            //we ensure both ways to check give the same result
+            // we ensure both ways to check give the same result
             vm.prank(address(mockModule));
             bool result = _authorizer.hasModuleRole(ROLE_NFT, callers[i]);
             assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
