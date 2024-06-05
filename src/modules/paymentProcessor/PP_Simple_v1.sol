@@ -201,12 +201,12 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         //Delete the field
         delete unclaimableAmountsForRecipient[client][token][sender];
 
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        IERC20PaymentClientBase_v1(client).amountPaid(token, amount);
+
         //Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
 
         emit TokensReleased(paymentReceiver, address(token), amount);
-
-        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(token, amount);
     }
 }
