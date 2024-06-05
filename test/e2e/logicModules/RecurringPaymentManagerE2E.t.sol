@@ -169,7 +169,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         PP_Streaming_v1 streamingPaymentProcessor;
         for (uint i; i < modulesList.length; ++i) {
             try IPP_Streaming_v1(modulesList[i]).unclaimable(
-                paymentReceiver1, paymentReceiver2
+                paymentReceiver1, address(token), paymentReceiver2
             ) returns (uint) {
                 streamingPaymentProcessor = PP_Streaming_v1(modulesList[i]);
                 break;
