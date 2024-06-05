@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -26,7 +26,7 @@ import {
 } from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
-//import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+// import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {ERC20Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -44,13 +44,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
     address staker4 = makeAddr("staker 4");
 
     // Parameters for distributed rewards
-    //lets do multiple ones
+    // lets do multiple ones
     uint duration1 = 1 weeks;
-    uint amount1 = 10 * 1 weeks; //This should represent 10 tokens per second -> 10 * 1 weeks / 1 weeks = 10
+    uint amount1 = 10 * 1 weeks; // This should represent 10 tokens per second -> 10 * 1 weeks / 1 weeks = 10
     uint duration2 = 4 weeks;
-    uint amount2 = 20 * 4 weeks; //This should represent 10 tokens per second -> 10 * 1 weeks / 1 weeks = 10
+    uint amount2 = 20 * 4 weeks; // This should represent 10 tokens per second -> 10 * 1 weeks / 1 weeks = 10
     uint duration3 = 2 weeks;
-    uint amount3 = 40 * 2 weeks; //This should represent 10 tokens per second -> 10 * 1 weeks / 1 weeks = 10
+    uint amount3 = 40 * 2 weeks; // This should represent 10 tokens per second -> 10 * 1 weeks / 1 weeks = 10
 
     // Constants
 
@@ -141,7 +141,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
             }
         }
 
-        //Warp to reasonable time
+        // Warp to reasonable time
         vm.warp(52 weeks);
 
         // ----------------
@@ -179,13 +179,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         vm.prank(staker2);
         stakingManager.stake(10);
 
-        //Value staked  |   Value earned            |   Rewards claimed
-        //Staker 1:10   |   Staker 1:               |   Staker 1:
-        //Staker 2:10   |   Staker 2:               |   Staker 2:
-        //Staker 3:     |   Staker 3:               |   Staker 3:
-        //Staker 4:     |   Staker 4:               |   Staker 4:
+        // Value staked  |   Value earned            |   Rewards claimed
+        // Staker 1:10   |   Staker 1:               |   Staker 1:
+        // Staker 2:10   |   Staker 2:               |   Staker 2:
+        // Staker 3:     |   Staker 3:               |   Staker 3:
+        // Staker 4:     |   Staker 4:               |   Staker 4:
 
-        //Check if values are accurate
+        // Check if values are accurate
 
         // 6. Warp time to end it
 
@@ -195,13 +195,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         vm.prank(staker2);
         stakingManager.unstake(10);
 
-        //Value staked  |   Value earned            |   Rewards claimed
-        //Staker 1:10   |   Staker 1: 1/2 amount1   |   Staker 1:
-        //Staker 2:     |   Staker 2:               |   Staker 2: 1/2 amount1
-        //Staker 3:     |   Staker 3:               |   Staker 3:
-        //Staker 4:     |   Staker 4:               |   Staker 4:
+        // Value staked  |   Value earned            |   Rewards claimed
+        // Staker 1:10   |   Staker 1: 1/2 amount1   |   Staker 1:
+        // Staker 2:     |   Staker 2:               |   Staker 2: 1/2 amount1
+        // Staker 3:     |   Staker 3:               |   Staker 3:
+        // Staker 4:     |   Staker 4:               |   Staker 4:
 
-        //Check if values are accurate
+        // Check if values are accurate
         assertEq(amount1 / 2, stakingManager.earned(staker1));
         assertEq(amount1 / 2, rewardToken.balanceOf(staker2));
 
@@ -213,13 +213,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
 
         vm.warp(block.timestamp + duration2 / 2);
 
-        //Value staked  |   Value earned            |   Rewards claimed
-        //Staker 1:10   |   Staker 1: 1/2 amount1 + 1/2 amount2   |   Staker 1:
-        //Staker 2:     |   Staker 2:               |   Staker 2: 1/2 amount1
-        //Staker 3:     |   Staker 3:               |   Staker 3:
-        //Staker 4:     |   Staker 4:               |   Staker 4:
+        // Value staked  |   Value earned            |   Rewards claimed
+        // Staker 1:10   |   Staker 1: 1/2 amount1 + 1/2 amount2   |   Staker 1:
+        // Staker 2:     |   Staker 2:               |   Staker 2: 1/2 amount1
+        // Staker 3:     |   Staker 3:               |   Staker 3:
+        // Staker 4:     |   Staker 4:               |   Staker 4:
 
-        //Check if values are accurate
+        // Check if values are accurate
         assertEq(amount1 / 2 + amount2 / 2, stakingManager.earned(staker1));
 
         // 10. Let staker 3 and 4 into it
@@ -230,11 +230,11 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         vm.prank(staker4);
         stakingManager.stake(5);
 
-        //Value staked  |   Value earned                        |   Rewards claimed
-        //Staker 1:10   |   Staker 1: 1/2 amount1 + 1/2 amount2 |   Staker 1:
-        //Staker 2:     |   Staker 2:                           |   Staker 2: 1/2 amount1
-        //Staker 3: 5   |   Staker 3:                           |   Staker 3:
-        //Staker 4: 5   |   Staker 4:                           |   Staker 4:
+        // Value staked  |   Value earned                        |   Rewards claimed
+        // Staker 1:10   |   Staker 1: 1/2 amount1 + 1/2 amount2 |   Staker 1:
+        // Staker 2:     |   Staker 2:                           |   Staker 2: 1/2 amount1
+        // Staker 3: 5   |   Staker 3:                           |   Staker 3:
+        // Staker 4: 5   |   Staker 4:                           |   Staker 4:
 
         // 11. Finish it
 
@@ -245,13 +245,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         vm.prank(staker3);
         stakingManager.unstake(5);
 
-        //Value staked  |   Value earned                        |   Rewards claimed
-        //Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 |   Staker 1:
-        //Staker 2:     |   Staker 2:                           |   Staker 2: 1/2 amount1
-        //Staker 3:     |   Staker 3:                           |   Staker 3: 1/8 amount2
-        //Staker 4: 5   |   Staker 4: 1/8 amount2               |   Staker 4:
+        // Value staked  |   Value earned                        |   Rewards claimed
+        // Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 |   Staker 1:
+        // Staker 2:     |   Staker 2:                           |   Staker 2: 1/2 amount1
+        // Staker 3:     |   Staker 3:                           |   Staker 3: 1/8 amount2
+        // Staker 4: 5   |   Staker 4: 1/8 amount2               |   Staker 4:
 
-        //Check if values are accurate
+        // Check if values are accurate
         assertEq(amount1 / 2 + amount2 * 3 / 4, stakingManager.earned(staker1));
         assertEq(amount2 * 1 / 8, rewardToken.balanceOf(staker3));
         assertEq(amount2 * 1 / 8, stakingManager.earned(staker4));
@@ -261,33 +261,33 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         vm.prank(staker4);
         stakingManager.stake(5);
 
-        //Value staked  |   Value earned                        |   Rewards claimed
-        //Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 |   Staker 1:
-        //Staker 2:     |   Staker 2:                           |   Staker 2: 1/2 amount1
-        //Staker 3:     |   Staker 3:                           |   Staker 3: 1/8 amount2
-        //Staker 4: 10  |   Staker 4:                           |   Staker 4: 1/8 amount2
+        // Value staked  |   Value earned                        |   Rewards claimed
+        // Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 |   Staker 1:
+        // Staker 2:     |   Staker 2:                           |   Staker 2: 1/2 amount1
+        // Staker 3:     |   Staker 3:                           |   Staker 3: 1/8 amount2
+        // Staker 4: 10  |   Staker 4:                           |   Staker 4: 1/8 amount2
 
-        //Check if values are accurate
+        // Check if values are accurate
         assertEq(amount2 * 1 / 8, rewardToken.balanceOf(staker4));
 
         // 14. Set up reward period 3
 
         stakingManager.setRewards(amount3, duration3);
 
-        //Use case: The reward period wasnt long enough
-        //Extend it by setting up reward period 3 again
+        // Use case: The reward period wasnt long enough
+        // Extend it by setting up reward period 3 again
 
         stakingManager.setRewards(amount3, duration3);
 
         // 15. Warp time to end it
-        //Because the amount and the duration get added on top of each other we need to duble the duration to get the end of the reward period
+        // Because the amount and the duration get added on top of each other we need to duble the duration to get the end of the reward period
         vm.warp(block.timestamp + duration3 * 2);
 
-        //Value staked  |   Value earned                                        |   Rewards claimed
-        //Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 + 1 amount3     |   Staker 1:
-        //Staker 2:     |   Staker 2:                                           |   Staker 2: 1/2 amount1
-        //Staker 3:     |   Staker 3:                                           |   Staker 3: 1/8 amount2
-        //Staker 4: 10  |   Staker 4: 1 amount3                                 |   Staker 4: 1/8 amount2
+        // Value staked  |   Value earned                                        |   Rewards claimed
+        // Staker 1:10   |   Staker 1: 1/2 amount1 + 3/4 amount2 + 1 amount3     |   Staker 1:
+        // Staker 2:     |   Staker 2:                                           |   Staker 2: 1/2 amount1
+        // Staker 3:     |   Staker 3:                                           |   Staker 3: 1/8 amount2
+        // Staker 4: 10  |   Staker 4: 1 amount3                                 |   Staker 4: 1/8 amount2
 
         assertEq(
             amount1 / 2 + amount2 * 3 / 4 + amount3,
@@ -303,13 +303,13 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         vm.prank(staker4);
         stakingManager.unstake(10);
 
-        //Value staked  |   Value earned    |   Rewards claimed
-        //Staker 1: 5   |   Staker 1:       |   Staker 1: 1/2 amount1 + 3/4 amount2 + 1 amount3
-        //Staker 2:     |   Staker 2:       |   Staker 2: 1/2 amount1
-        //Staker 3:     |   Staker 3:       |   Staker 3: 1/8 amount2
-        //Staker 4:     |   Staker 4:       |   Staker 4: 1/8 amount2 + 1 amount3
+        // Value staked  |   Value earned    |   Rewards claimed
+        // Staker 1: 5   |   Staker 1:       |   Staker 1: 1/2 amount1 + 3/4 amount2 + 1 amount3
+        // Staker 2:     |   Staker 2:       |   Staker 2: 1/2 amount1
+        // Staker 3:     |   Staker 3:       |   Staker 3: 1/8 amount2
+        // Staker 4:     |   Staker 4:       |   Staker 4: 1/8 amount2 + 1 amount3
 
-        //Check if values are accurate
+        // Check if values are accurate
 
         assertEq(5, stakingManager.balanceOf(staker1));
         assertEq(

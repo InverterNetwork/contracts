@@ -54,7 +54,7 @@ contract InverterBeaconV1Test is Test {
         assertEq(beacon.owner(), address(this));
         assertEq(beacon.pendingOwner(), address(0));
 
-        //Check for version
+        // Check for version
         (uint majorVersion, uint minorVersion) = beacon.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 0);
@@ -64,11 +64,11 @@ contract InverterBeaconV1Test is Test {
     // Test: modifier
 
     function testZeroAsNewMinorVersion() public {
-        //Check for version
+        // Check for version
         (, uint minorVersionPre) = beacon.version();
         assertEq(minorVersionPre, 0);
 
-        //generate implementation address
+        // generate implementation address
         address implementation = address(new ModuleImplementationV1Mock());
 
         vm.expectRevert(
@@ -77,7 +77,7 @@ contract InverterBeaconV1Test is Test {
                 .selector
         );
 
-        //Upgrade to an initial Version
+        // Upgrade to an initial Version
         beacon.upgradeTo(implementation, 0, false);
     }
 
@@ -89,13 +89,13 @@ contract InverterBeaconV1Test is Test {
         // initialization (first version ever set)
         vm.assume(initialMinorVersion > 0);
 
-        //generate implementation address
+        // generate implementation address
         address implementation = address(new ModuleImplementationV1Mock());
 
-        //Upgrade to an initial Version
+        // Upgrade to an initial Version
         beacon.upgradeTo(implementation, initialMinorVersion, false);
 
-        //Check for version
+        // Check for version
         (, uint minorVersionPre) = beacon.version();
         assertEq(minorVersionPre, initialMinorVersion);
 
@@ -109,7 +109,7 @@ contract InverterBeaconV1Test is Test {
         beacon.upgradeTo(implementation, newMinorVersion, false);
 
         if (newMinorVersion > initialMinorVersion) {
-            //Check for version
+            // Check for version
             (, uint minorVersionPost) = beacon.version();
             assertEq(minorVersionPost, newMinorVersion);
         }
@@ -139,7 +139,7 @@ contract InverterBeaconV1Test is Test {
         // needs to be a valid upgrade
         vm.assume(oldMinorVersion < newMinorVersion);
 
-        //Turn off setImplementation
+        // Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 
         if (oldMinorVersion != 0) {
@@ -213,7 +213,7 @@ contract InverterBeaconV1Test is Test {
 
         beacon.shutDownImplementation();
 
-        //Check that internal implementation stays the same
+        // Check that internal implementation stays the same
         assertEq(beacon.get_implementation(), address(toUpgrade1));
         assertEq(beacon.implementation(), address(0));
         assertTrue(beacon.emergencyModeActive());
@@ -245,7 +245,7 @@ contract InverterBeaconV1Test is Test {
 
         beacon.restartImplementation();
 
-        //Check that internal implementation stays the same
+        // Check that internal implementation stays the same
         assertEq(beacon.get_implementation(), address(toUpgrade1));
         assertEq(beacon.implementation(), address(toUpgrade1));
         assertFalse(beacon.emergencyModeActive());
@@ -269,7 +269,7 @@ contract InverterBeaconV1Test is Test {
         bool emergencyModeActive,
         bool overrideShutdown
     ) public {
-        //Set oldImplementation
+        // Set oldImplementation
         ModuleImplementationV1Mock toUpgrade1 = new ModuleImplementationV1Mock();
 
         beacon.original_setImplementation(address(toUpgrade1), false);
@@ -292,7 +292,7 @@ contract InverterBeaconV1Test is Test {
         if (!emergencyModeActive) {
             assertEq(beacon.implementation(), address(toUpgrade2));
         } else {
-            //if override shutdown is not active it should stay inactive
+            // if override shutdown is not active it should stay inactive
             if (!overrideShutdown) {
                 assertEq(beacon.implementation(), address(0));
             } else {

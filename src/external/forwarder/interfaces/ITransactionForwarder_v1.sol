@@ -6,14 +6,14 @@ interface ITransactionForwarder_v1 {
     // Structs
 
     struct SingleCall {
-        address target; //Target contract that will receive the call
-        bool allowFailure; //Is the call allowed to fail in the multicall execution
-        bytes callData; //Data of the call
+        address target; // Target contract that will receive the call
+        bool allowFailure; // Is the call allowed to fail in the multicall execution
+        bytes callData; // Data of the call
     }
 
     struct Result {
-        bool success; //was the call a succes
-        bytes returnData; //Return data of the call
+        bool success; // was the call a succes
+        bytes returnData; // Return data of the call
     }
 
     //--------------------------------------------------------------------------

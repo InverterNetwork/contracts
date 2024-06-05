@@ -44,7 +44,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // SuT
     AUT_EXT_VotingRoles_v1 _governor;
 
-    //Orchestrator_v1 _orchestrator;
+    // Orchestrator_v1 _orchestrator;
     address[] initialVoters;
     address[] currentVoters;
 
@@ -94,7 +94,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         _setUpOrchestrator(_governor);
 
-        //we give the governor the ownwer role
+        // we give the governor the ownwer role
         bytes32 adminRole = _authorizer.getAdminRole();
         _authorizer.grantRole(adminRole, address(_governor));
         //_authorizer.setIsAuthorized(address(_governor), true);
@@ -119,7 +119,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         currentVoters.push(BOB);
         currentVoters.push(COBIE);
 
-        //validation of the initial state happens in testInit()
+        // validation of the initial state happens in testInit()
     }
 
     function testSupportsInterface() public {
@@ -151,7 +151,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             // We add a new address through governance.
             bytes memory _encodedAction =
                 abi.encodeWithSignature("addVoter(address)", users[i]);
-            //for ease, we are assuming this is happening before any threshold changes
+            // for ease, we are assuming this is happening before any threshold changes
             uint _voteID = speedrunSuccessfulVote(
                 address(_governor), _encodedAction, initialVoters
             );
@@ -288,7 +288,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     }
 
     function testInitWithInitialVoters(address[] memory testVoters) public {
-        //Checks that address list gets correctly stored on initialization
+        // Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         vm.assume(testVoters.length >= 2);
@@ -298,7 +298,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         AUT_EXT_VotingRoles_v1 testAuthorizer =
             AUT_EXT_VotingRoles_v1(Clones.clone(authImpl));
 
-        //Since the authorizer we are working with is not the default one,
+        // Since the authorizer we are working with is not the default one,
         // we must manually control that the fuzzer doesn't feed us its address
         for (uint i; i < testVoters.length; ++i) {
             vm.assume(testVoters[i] != address(testAuthorizer));
@@ -323,7 +323,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         address[] memory testVoters,
         uint8 position
     ) public {
-        //Checks that address list gets correctly stored on initialization
+        // Checks that address list gets correctly stored on initialization
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         vm.assume(testVoters.length >= 2);
@@ -335,7 +335,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         _validateUserList(testVoters);
 
-        //Since the authorizer we are working with is not the default one,
+        // Since the authorizer we are working with is not the default one,
         // we must manually control that the fuzzer doesn't feed us its address
         for (uint i; i < testVoters.length; ++i) {
             vm.assume(testVoters[i] != address(testAuthorizer));
@@ -383,7 +383,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             abi.encode(testVoters, DEFAULT_QUORUM, DEFAULT_DURATION)
         );
 
-        //test faulty list (zero addresses)
+        // test faulty list (zero addresses)
         testVoters = new address[](2);
 
         vm.expectRevert(
@@ -489,7 +489,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                     users[i]
                 )
             );
-            vm.prank(users[i]); //authorized, but not Module
+            vm.prank(users[i]); // authorized, but not Module
             _governor.addVoter(users[i]);
         }
     }
@@ -506,7 +506,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                     users[i]
                 )
             );
-            vm.prank(users[i]); //authorized, but not Module
+            vm.prank(users[i]); // authorized, but not Module
             _governor.removeVoter(users[i]);
         }
     }
@@ -522,12 +522,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             assertEq(_governor.isVoter(users[i]), true);
 
-            //prank as that address, create a vote and vote on it
+            // prank as that address, create a vote and vote on it
             (address _moduleAddress, bytes memory _msg) = getMockValidVote();
             uint _newVote = createVote(users[i], _moduleAddress, _msg);
             voteInFavor(users[i], _newVote);
 
-            //assert that voting worked (also confirms that vote exists)
+            // assert that voting worked (also confirms that vote exists)
             assertEq(_governor.getReceipt(_newVote, users[i]).hasVoted, true);
         }
     }
@@ -540,7 +540,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _validateUserList(users);
         batchAddAuthorized(users);
 
-        //create a vote
+        // create a vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -557,7 +557,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             voteInFavor(users[i], _voteID);
         }
 
-        //vote in the last possible moment
+        // vote in the last possible moment
         vm.warp(startTime + DEFAULT_DURATION);
         voteInFavor(BOB, _voteID);
 
@@ -581,7 +581,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     function testVoteInFavorUnauthorized(address[] memory users) public {
         _validateUserList(users);
 
-        //create vote as authorized user
+        // create vote as authorized user
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -601,7 +601,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _validateUserList(users);
         batchAddAuthorized(users);
 
-        //create a vote
+        // create a vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -618,7 +618,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             voteAgainst(users[i], _voteID);
         }
 
-        //vote in the last possible moment
+        // vote in the last possible moment
         vm.warp(startTime + DEFAULT_DURATION);
         voteAgainst(BOB, _voteID);
 
@@ -641,7 +641,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Fail to vote against as unauthorized address
     function testVoteAgainstUnauthorized(address[] memory users) public {
         _validateUserList(users);
-        //create vote
+        // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -678,7 +678,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             voteAbstain(users[i], _voteID);
         }
 
-        //vote in the last possible moment
+        // vote in the last possible moment
         vm.warp(startTime + DEFAULT_DURATION);
         voteAbstain(BOB, _voteID);
 
@@ -716,7 +716,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Fail to vote abstain as unauthorized address
     function testAbstainUnauthorized(address[] memory users) public {
         _validateUserList(users);
-        //create vote
+        // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -733,7 +733,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     // Fail to vote after vote is closed (testing the three vote variants)
     function testVoteOnExpired(uint[] memory nums) public {
-        //create vote
+        // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -758,7 +758,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             );
             voteAgainst(ALBA, _voteID);
 
-            //Abstain
+            // Abstain
             vm.expectRevert(
                 IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__MotionVotingPhaseClosed
@@ -770,7 +770,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     // Fail to vote on an unexisting voteID (testing the three vote variants)
     function testVoteOnUnexistingID(uint160[] memory wrongIDs) public {
-        //create vote
+        // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -796,7 +796,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
             voteAgainst(ALBA, wrongID);
 
-            //Abstain
+            // Abstain
             vm.expectRevert(
                 IAUT_EXT_VotingRoles_v1
                     .Module__VotingRoleManager__InvalidMotionId
@@ -809,7 +809,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Fail to vote with a different value than the allowed three
     function testCastInvalidVote(uint8 wrongVote) public {
         vm.assume(wrongVote > 2);
-        //create vote
+        // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
@@ -826,12 +826,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     function testDoubleVoting(address[] memory users) public {
         _validateUserList(users);
         batchAddAuthorized(users);
-        //create vote
+        // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < users.length; ++i) {
-            //vote once
+            // vote once
             voteAgainst(users[i], _voteID);
 
             vm.expectRevert(
@@ -888,7 +888,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Fail to execute vote that didn't pass
 
     function testExecuteInexistentVote(uint wrongId) public {
-        //No votes exist yet, everyting should fail
+        // No votes exist yet, everyting should fail
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__InvalidMotionId
@@ -906,7 +906,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             address(_moduleAddress), _encodedAction, initialVoters
         );
 
-        //No prank address needed
+        // No prank address needed
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__ThresholdNotReached
@@ -915,13 +915,13 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _governor.executeMotion(_voteID);
     }
 
-    //Fail to execute vote while voting is open
+    // Fail to execute vote while voting is open
     function testExecuteWhileVotingOpen() public {
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
         uint _voteID = createVote(ALBA, _moduleAddress, _msg);
 
-        //First, we reach the threshold
+        // First, we reach the threshold
         voteInFavor(ALBA, _voteID);
         voteInFavor(BOB, _voteID);
 
@@ -934,7 +934,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         );
         _governor.executeMotion(_voteID);
 
-        //we wait and try again in the last block of voting time
+        // we wait and try again in the last block of voting time
         vm.warp(block.timestamp + _governor.voteDuration());
 
         vm.expectRevert(
@@ -1005,7 +1005,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             assertEq(_governor.isVoter(users[i]), true);
         }
-        //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
+        // test idempotence. We do the same again and verify that nothing fails and everything stays the same.
         for (uint i; i < users.length; ++i) {
             _governor.addVoter(users[i]);
         }
@@ -1032,7 +1032,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             assertEq(_governor.isVoter(users[i]), false);
         }
-        //test idempotence. We do the same again and verify that nothing fails and everything stays the same.
+        // test idempotence. We do the same again and verify that nothing fails and everything stays the same.
         for (uint i; i < users.length; ++i) {
             _governor.removeVoter(users[i]);
         }
@@ -1049,7 +1049,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.startPrank(address(_governor));
         _governor.removeVoter(COBIE);
 
-        //this call would leave a 1 person list with a threshold of 2
+        // this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__UnreachableThreshold
@@ -1068,7 +1068,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _governor.removeVoter(COBIE);
         _governor.removeVoter(BOB);
 
-        //this call would leave a 1 person list with a threshold of 2
+        // this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
                 .Module__VotingRoleManager__EmptyVoters
@@ -1129,12 +1129,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                     users[i]
                 )
             );
-            vm.prank(users[i]); //authorized, but not orchestrator
+            vm.prank(users[i]); // authorized, but not orchestrator
             _governor.setThreshold(_newQ);
         }
     }
 
-    //Change the threshold by going through governance
+    // Change the threshold by going through governance
     function testGovernanceThresholdChange() public {
         uint _newThreshold = 1;
 
@@ -1212,9 +1212,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         assertEq(_governor.voteDuration(), _oldDur);
     }
 
-    //Set new duration bygoing through governance
+    // Set new duration bygoing through governance
     function testGovernanceVoteDurationChange() public {
-        //already covered in:
+        // already covered in:
         testVoteExecution();
     }
 
@@ -1234,7 +1234,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                     users[i]
                 )
             );
-            vm.prank(users[i]); //authorized, but not orchestrator
+            vm.prank(users[i]); // authorized, but not orchestrator
             _governor.setVotingDuration(_newDuration);
         }
     }

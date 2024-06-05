@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -114,13 +114,13 @@ contract StreamingPaymentProcessorE2E is E2ETest {
             orchestrator.findModuleAddressInOrchestrator("PP_Streaming_v1")
         );
 
-        //deposit some funds to fundingManager
+        // deposit some funds to fundingManager
         uint initialDeposit = 10e22;
         token.mint(address(this), initialDeposit);
         token.approve(address(fundingManager), initialDeposit);
         fundingManager.deposit(initialDeposit);
 
-        //Set Block.timestamp to startEpoch
+        // Set Block.timestamp to startEpoch
         vm.warp(startEpoch * epochLength);
     }
 
@@ -130,7 +130,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // ---------------------------------------------------------------------------------------------------
         // User side of the PP_Streaming_v1
 
-        //Create 3 different Payments
+        // Create 3 different Payments
 
         uint paymentAmount = 1e18;
 
@@ -143,35 +143,35 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.addRecurringPayment(
             paymentAmount, startEpoch, alice
         );
-        //this should create 3 streamingpayments with end timestamp of startEpoch * epochLength + 1 week
+        // this should create 3 streamingpayments with end timestamp of startEpoch * epochLength + 1 week
         recurringPaymentManager.trigger();
 
         // ----------------
         // Getter Functions
 
-        //Check Payments
-        //viewAllPaymentOrders
-        //Lets see all avaialable orders
+        // Check Payments
+        // viewAllPaymentOrders
+        // Lets see all avaialable orders
         IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 
-        //startForSpecificStream
-        //When does the payment start stream?
+        // startForSpecificStream
+        // When does the payment start stream?
         uint start = streamingPaymentProcessor.startForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(start == block.timestamp);
 
-        //endForSpecificStream
-        //When is the payment end?
+        // endForSpecificStream
+        // When is the payment end?
         uint end = streamingPaymentProcessor.endForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(end == startEpoch * epochLength + 1 weeks);
 
-        //streamedAmountForSpecificStream
-        //lets see what is hypotheically realeasable in half a week
+        // streamedAmountForSpecificStream
+        // lets see what is hypotheically realeasable in half a week
         uint streamedAmount = streamingPaymentProcessor
             .streamedAmountForSpecificStream(
             address(recurringPaymentManager),
@@ -181,22 +181,22 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         );
         assertTrue(streamedAmount == paymentAmount / 2);
 
-        //releasedForSpecificStream
-        //What got already released for that specific wallet id?
+        // releasedForSpecificStream
+        // What got already released for that specific wallet id?
         uint released = streamingPaymentProcessor.releasedForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(released == 0);
 
-        //releasableForSpecificStream
-        //What is currently releasable? Emphasis on "currently"
+        // releasableForSpecificStream
+        // What is currently releasable? Emphasis on "currently"
         uint releasable = streamingPaymentProcessor.releasableForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(releasable == 0);
 
-        //unclaimable
-        //In case a transfer should fail this can be checked here
+        // unclaimable
+        // In case a transfer should fail this can be checked here
         uint unclaimable = streamingPaymentProcessor.unclaimable(
             address(recurringPaymentManager), alice
         );
@@ -205,42 +205,42 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // ----------------
         // Claim Functions
 
-        //Lets do a time jump of half a week
+        // Lets do a time jump of half a week
         vm.warp(block.timestamp + 1 weeks / 2);
-        //And check how much is releasable
+        // And check how much is releasable
         releasable = streamingPaymentProcessor.releasableForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(releasable == paymentAmount / 2);
 
-        //Lets claim the releasable tokens for a single stream
+        // Lets claim the releasable tokens for a single stream
         vm.prank(alice);
         streamingPaymentProcessor.claimForSpecificStream(
             address(recurringPaymentManager), streams[0]._streamId
         );
-        //check what got released
+        // check what got released
         released = streamingPaymentProcessor.releasedForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
         assertTrue(released == paymentAmount / 2);
 
-        //Check it on the tokensied too
+        // Check it on the tokensied too
         assertTrue(token.balanceOf(alice) == paymentAmount / 2);
 
-        //claim rest up to point
-        //claimAll
+        // claim rest up to point
+        // claimAll
         vm.prank(alice);
         streamingPaymentProcessor.claimAll(address(recurringPaymentManager));
-        //Check token
+        // Check token
         assertTrue(token.balanceOf(alice) == paymentAmount / 2 * 3);
 
-        //Time Jump to the end of the week
+        // Time Jump to the end of the week
         vm.warp(block.timestamp + 1 weeks / 2);
 
-        //Claim all
+        // Claim all
         vm.prank(alice);
         streamingPaymentProcessor.claimAll(address(recurringPaymentManager));
-        //Check token
+        // Check token
         assertTrue(token.balanceOf(alice) == paymentAmount * 3);
     }
 
@@ -248,13 +248,13 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         init();
 
         // ---------------------------------------------------------------------------------------------------
-        //Admin Functions
+        // Admin Functions
 
-        //Lets set up a few payments to test
-        //5 Payments
-        //3 Alice
-        //1 Bob
-        //1 Charlie
+        // Lets set up a few payments to test
+        // 5 Payments
+        // 3 Alice
+        // 1 Bob
+        // 1 Charlie
 
         recurringPaymentManager.addRecurringPayment(1, startEpoch, alice);
         recurringPaymentManager.addRecurringPayment(1, startEpoch, alice);
@@ -263,10 +263,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.addRecurringPayment(1, startEpoch, bob);
         recurringPaymentManager.addRecurringPayment(1, startEpoch, charlie);
 
-        //Trigger starts the payments
+        // Trigger starts the payments
         recurringPaymentManager.trigger();
 
-        //Check if everyone has a running payment active
+        // Check if everyone has a running payment active
         IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
@@ -285,8 +285,8 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // ----------------
         // RemovePayment Functions
 
-        //remove 1 Alice
-        //removePaymentForSpecificStream
+        // remove 1 Alice
+        // removePaymentForSpecificStream
         streamingPaymentProcessor.removePaymentForSpecificStream(
             address(recurringPaymentManager), alice, streams[0]._streamId
         );
@@ -296,25 +296,25 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         );
         assertTrue(streams.length == 2);
 
-        //remove all Payments from Alice
+        // remove all Payments from Alice
         streamingPaymentProcessor.removeAllPaymentReceiverPayments(
             address(recurringPaymentManager), alice
         );
 
-        //Make sure alice has no payments left
+        // Make sure alice has no payments left
         assertFalse(
             streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), alice
             )
         );
 
-        //As a bonus
-        //If calling from a module its possible to cancel all running payments
-        //remove All running payments
+        // As a bonus
+        // If calling from a module its possible to cancel all running payments
+        // remove All running payments
         vm.prank(address(recurringPaymentManager));
         streamingPaymentProcessor.cancelRunningPayments(recurringPaymentManager);
 
-        //Make sure the others are also removed
+        // Make sure the others are also removed
         assertFalse(
             streamingPaymentProcessor.isActivePaymentReceiver(
                 address(recurringPaymentManager), bob

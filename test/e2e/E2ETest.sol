@@ -69,13 +69,13 @@ contract E2ETest is E2EModuleRegistry {
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
-        //Deploy Governance Contract
+        // Deploy Governance Contract
         gov = Governor_v1(
             address(
-                new TransparentUpgradeableProxy( //based on openzeppelins TransparentUpgradeableProxy
-                    address(new Governor_v1()), //Implementation Address
-                    communityMultisig, //Admin
-                    bytes("") //data field that could have been used for calls, but not necessary
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new Governor_v1()), // Implementation Address
+                    communityMultisig, // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
                 )
             )
         );
@@ -90,12 +90,12 @@ contract E2ETest is E2EModuleRegistry {
 
         // Deploy a Mock funding token for testing.
 
-        //Set gov as the default beacon owner
+        // Set gov as the default beacon owner
         DEFAULT_BEACON_OWNER = address(gov);
 
         token = new ERC20Mock("Mock", "MOCK");
 
-        //Deploy a forwarder used to enable metatransactions
+        // Deploy a forwarder used to enable metatransactions
         forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
 
         // Deploy Orchestrator_v1 implementation.

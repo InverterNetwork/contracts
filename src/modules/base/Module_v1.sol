@@ -240,11 +240,11 @@ abstract contract Module_v1 is
         view
         returns (uint fee, address treasury)
     {
-        //Fetch fee manager address from orchestrator
-        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) //Fetch feeManager address from orchestrator
+        // Fetch fee manager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) // Fetch feeManager address from orchestrator
             .getCollateralWorkflowFeeAndTreasury(
-            address(__Module_orchestrator), //Always take this modules orchestrator as the workflow address
-            address(this), //always take this as the module address
+            address(__Module_orchestrator), // Always take this modules orchestrator as the workflow address
+            address(this), // always take this as the module address
             functionSelector
         );
     }
@@ -259,11 +259,11 @@ abstract contract Module_v1 is
         view
         returns (uint fee, address treasury)
     {
-        //Fetch fee manager address from orchestrator
-        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) //Fetch feeManager address from orchestrator
+        // Fetch fee manager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) // Fetch feeManager address from orchestrator
             .getIssuanceWorkflowFeeAndTreasury(
-            address(__Module_orchestrator), //Always take this modules orchestrator as the workflow address
-            address(this), //always take this as the module address
+            address(__Module_orchestrator), // Always take this modules orchestrator as the workflow address
+            address(this), // always take this as the module address
             functionSelector
         );
     }

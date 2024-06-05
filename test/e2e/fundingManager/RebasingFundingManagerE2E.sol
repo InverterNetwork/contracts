@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-//SuT
+// SuT
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 /**

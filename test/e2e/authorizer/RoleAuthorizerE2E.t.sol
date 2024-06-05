@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 // SuT
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -130,7 +130,7 @@ contract RoleAuthorizerE2E is E2ETest {
         // Since we deploy the orchestrator, with address(this) as admin,
         // we now assign them to two external addresses. In production these will be directly set on deployment.
 
-        //we grant admin role to adminAddress
+        // we grant admin role to adminAddress
         bytes32 adminRole = authorizer.getAdminRole();
         authorizer.grantRole(adminRole, address(orchestratorAdmin));
         authorizer.renounceRole(adminRole, address(this));

@@ -28,7 +28,7 @@ contract LinkedIdListTest is Test {
     // Modifier
 
     function testValidNewId(uint[] calldata seed, uint id) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
 
         uint[] memory ids = createIds(seed);
         addIds(ids);
@@ -42,7 +42,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testValidId(uint[] calldata seed, uint id) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
 
         uint[] memory ids = createIds(seed);
         addIds(ids);
@@ -60,7 +60,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testValidPosition(uint[] calldata seed, uint id) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
 
         uint[] memory ids = createIds(seed);
         addIds(ids);
@@ -74,7 +74,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testOnlyConsecutiveIds(uint[] calldata seed, uint prevId) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
         vm.assume(seed.length > 0);
 
         uint randomId;
@@ -83,7 +83,7 @@ contract LinkedIdListTest is Test {
 
         addIds(ids);
 
-        //RandomId has to be part of the list and is not _SENTINEL
+        // RandomId has to be part of the list and is not _SENTINEL
         randomId = ids[bound(seed[0], 0, seed.length - 1)];
 
         if (list.getPreviousId(randomId) != prevId) {
@@ -100,7 +100,7 @@ contract LinkedIdListTest is Test {
         uint prevId,
         uint idToPositionAfter
     ) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
         vm.assume(seed.length > 0);
         prevId = bound(prevId, 0, 2000);
         id = bound(id, 0, 2000);
@@ -121,10 +121,10 @@ contract LinkedIdListTest is Test {
                 LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
             );
         }
-        //Check if it is a valid intermediate position
+        // Check if it is a valid intermediate position
         else if (
-            (id == idToPositionAfter) //Make sure it doesnt move after itself
-                || (idToPositionAfter == prevId) //Make sure it doesnt move before itself
+            (id == idToPositionAfter) // Make sure it doesnt move after itself
+                || (idToPositionAfter == prevId) // Make sure it doesnt move before itself
         ) {
             vm.expectRevert(
                 LinkedIdList
@@ -144,7 +144,7 @@ contract LinkedIdListTest is Test {
     // View Functions
 
     function testListIds(uint[] calldata seed) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
 
         uint[] memory ids = createIds(seed);
         uint length = ids.length;
@@ -160,12 +160,12 @@ contract LinkedIdListTest is Test {
     }
 
     function testIsExistingId(uint[] calldata seed, uint randomId) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
 
         uint[] memory ids = createIds(seed);
         addIds(ids);
 
-        bool expectedValue; //False
+        bool expectedValue; // False
 
         if (containsId(list.listIds(), randomId)) {
             expectedValue = true;
@@ -174,7 +174,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testGetPreviousId(uint[] calldata seed) public {
-        vm.assume(seed.length < 1000); //Reasonable size
+        vm.assume(seed.length < 1000); // Reasonable size
 
         uint[] memory ids = createIds(seed);
         uint length = ids.length;
@@ -189,7 +189,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testGetPreviousIdModifier() public {
-        //Check validPosition is in place
+        // Check validPosition is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
         );
@@ -198,7 +198,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testGetNextIdModifier() public {
-        //Check validPosition is in place
+        // Check validPosition is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__InvalidPosition.selector
         );
@@ -210,7 +210,7 @@ contract LinkedIdListTest is Test {
     // Mutating Functions
 
     function testAddId(uint[] calldata seed) public {
-        vm.assume(seed.length > 0); //Reasonable size
+        vm.assume(seed.length > 0); // Reasonable size
         vm.assume(seed.length < 1000);
 
         uint[] memory ids = createIds(seed);
@@ -230,7 +230,7 @@ contract LinkedIdListTest is Test {
             previousId = id;
         }
 
-        //Check for validNewId
+        // Check for validNewId
 
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__InvalidNewId.selector
@@ -242,7 +242,7 @@ contract LinkedIdListTest is Test {
     function testAddIdModifier() public {
         list.addId(1);
 
-        //Check validNewId is in place
+        // Check validNewId is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__InvalidNewId.selector
         );
@@ -251,15 +251,15 @@ contract LinkedIdListTest is Test {
     }
 
     function testRemoveId(uint[] calldata seed) public {
-        vm.assume(seed.length > 0); //Reasonable size
+        vm.assume(seed.length > 0); // Reasonable size
         vm.assume(seed.length < 1000);
 
-        //Check for validId
+        // Check for validId
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
         list.removeId(_SENTINEL, 0);
 
-        //Add Ids to the list
+        // Add Ids to the list
         uint[] memory ids = createIds(seed);
 
         uint id;
@@ -267,19 +267,19 @@ contract LinkedIdListTest is Test {
         uint length = ids.length;
         addIds(ids);
 
-        //Check for validId
+        // Check for validId
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__IdNotConsecutive.selector
         );
 
-        //Should not be consecutive
+        // Should not be consecutive
         list.removeId(ids[0], ids[2]);
 
-        //Check if removel works correct
+        // Check if removel works correct
         uint nextId;
         uint prevId;
 
-        //Reverse loop to check for correct updating of list.last
+        // Reverse loop to check for correct updating of list.last
         for (uint i = length; i > 0; i--) {
             id = ids[i];
             nextId = list.getNextId(id);
@@ -297,7 +297,7 @@ contract LinkedIdListTest is Test {
             assertEq(list.lastId(), prevId);
         }
 
-        //Check List is empty
+        // Check List is empty
         assertEq(list.length(), 0);
         assertEq(list.lastId(), _SENTINEL);
         assertEq(list.listIds().length, 0);
@@ -306,12 +306,12 @@ contract LinkedIdListTest is Test {
     function testRemoveIdModifier() public {
         list.addId(1);
 
-        //Check validId is in place
+        // Check validId is in place
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
         list.removeId(1, 2);
 
-        //Check onlyConsecutiveIds is in place
+        // Check onlyConsecutiveIds is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__IdNotConsecutive.selector
         );
@@ -320,19 +320,19 @@ contract LinkedIdListTest is Test {
     }
 
     function testMoveId(uint[] calldata seed, uint idToMoveToIndex) public {
-        vm.assume(seed.length > 2); //Reasonable size
+        vm.assume(seed.length > 2); // Reasonable size
         vm.assume(seed.length < 20);
 
-        idToMoveToIndex = bound(idToMoveToIndex, 0, seed.length); //This might break out of Index Range because idToMoveTo can be _SENTINTEL
+        idToMoveToIndex = bound(idToMoveToIndex, 0, seed.length); // This might break out of Index Range because idToMoveTo can be _SENTINTEL
 
         uint[] memory ids = createIds(seed);
 
         addIds(ids);
 
-        uint randomId = ids[bound(seed[0], 0, seed.length - 1)]; //Use Seed to create a randomId, this is to prevent StackTooDeep
+        uint randomId = ids[bound(seed[0], 0, seed.length - 1)]; // Use Seed to create a randomId, this is to prevent StackTooDeep
         uint prevId = list.getPreviousId(randomId);
         uint idToMoveTo;
-        //If Index equals 20 use it as _SENTINEL
+        // If Index equals 20 use it as _SENTINEL
         if (idToMoveToIndex == seed.length) {
             idToMoveTo = _SENTINEL;
         } else {
@@ -346,7 +346,7 @@ contract LinkedIdListTest is Test {
         assertTrue(list.getNextId(idToMoveTo) == randomId);
         assertTrue(list.getNextId(prevId) != randomId);
 
-        //Check if _last is set correctly
+        // Check if _last is set correctly
 
         if (idToMoveToIndex == seed.length - 1) {
             assertTrue(list.getNextId(randomId) == _SENTINEL);
@@ -354,7 +354,7 @@ contract LinkedIdListTest is Test {
     }
 
     function testMoveIdInListModifier() public {
-        //Check validId is in place for id
+        // Check validId is in place for id
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
         list.moveIdInList(0, 0, 0);
@@ -362,22 +362,22 @@ contract LinkedIdListTest is Test {
         list.addId(0);
         list.addId(1);
 
-        //Check validPosition is in place for idToPositionAfter
+        // Check validPosition is in place for idToPositionAfter
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
         list.moveIdInList(0, 0, 2);
 
-        //Check intermediatePosition is in place
+        // Check intermediatePosition is in place
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
         list.moveIdInList(0, 1, 0);
 
-        //Check intermediatePosition is in place
+        // Check intermediatePosition is in place
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
 
         list.moveIdInList(0, 1, 1);
 
-        //Check onlyConsecutiveIds is in place
+        // Check onlyConsecutiveIds is in place
         vm.expectRevert(
             LinkedIdList.Library__LinkedIdList__IdNotConsecutive.selector
         );
@@ -388,7 +388,7 @@ contract LinkedIdListTest is Test {
     //--------------------------------------------------------------------------
     // Helper Functions
 
-    //Create ids that are not the same but still randomised
+    // Create ids that are not the same but still randomised
     function createIds(uint[] calldata seed)
         internal
         view

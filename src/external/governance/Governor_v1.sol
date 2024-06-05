@@ -86,7 +86,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     }
 
     modifier upgradeProcessAlreadyStarted(address beacon) {
-        //if timelock not active
+        // if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
             revert Governor__UpgradeProcessNotStarted();
         }
@@ -296,14 +296,14 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         upgradeProcessAlreadyStarted(beacon)
         timelockPeriodExceeded(beacon)
     {
-        //set timelock to inactive
+        // set timelock to inactive
         beaconTimelock[beacon].timelockActive = false;
 
-        //Upgrade beacon
+        // Upgrade beacon
         IInverterBeacon_v1(beacon).upgradeTo(
             beaconTimelock[beacon].intendedImplementation,
             beaconTimelock[beacon].intendedMinorVersion,
-            false //this is not intended to override a shutdown
+            false // this is not intended to override a shutdown
         );
 
         emit BeaconUpgraded(
@@ -376,7 +376,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     }
 
     //---------------------------
-    //Ownable2Step
+    // Ownable2Step
 
     /// @inheritdoc IGovernor_v1
     function acceptOwnership(address adr)
@@ -390,7 +390,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         (bool success,) =
             adr.call(abi.encodeCall(Ownable2Step.acceptOwnership, ()));
 
-        //if the call is not a success
+        // if the call is not a success
         if (!success) {
             revert Governor__CallToTargetContractFailed();
         }
@@ -402,12 +402,12 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
 
     //@dev internal function that checks if target address is a beacon and this contract has the ownership of it
     function isBeaconAccessible(address target) internal returns (bool) {
-        //check if target is a contract
+        // check if target is a contract
         if (target.code.length == 0) {
             return false;
         }
 
-        //Check if target address supports Inverter beacon interface
+        // Check if target address supports Inverter beacon interface
         (bool success, bytes memory result) = target.call(
             abi.encodeCall(
                 InverterBeacon_v1.supportsInterface,
@@ -415,15 +415,15 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
             )
         );
 
-        //if target does not support the beacon interface return false
+        // if target does not support the beacon interface return false
         if (!(success && result.length != 0 && abi.decode(result, (bool)))) {
             return false;
         }
 
-        //Check if target is ownable and who the owner is
+        // Check if target is ownable and who the owner is
         (success, result) = target.call(abi.encodeWithSignature("owner()"));
 
-        //if not ownable or owner is not this contract return false
+        // if not ownable or owner is not this contract return false
         if (
             !(
                 success && result.length != 0
@@ -431,7 +431,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
             )
         ) return false;
 
-        //we are here, that means target is owned by this address and inverter beacon
+        // we are here, that means target is owned by this address and inverter beacon
         return true;
     }
 }

@@ -28,7 +28,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SetupInvestableWorkstream is Test, DeploymentScript {
-    //ScriptConstants scriptConstants = new ScriptConstants();
+    // ScriptConstants scriptConstants = new ScriptConstants();
 
     // ========================================================================
     // ENVIRONMENT VARIABLES OR CONSTANTS
@@ -78,10 +78,10 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // OPTIONAL PRE-STEPS
 
-        //If the factories aren't deployed on the target chain, we can run the deployment script to deploy the factories, implementations and Beacons.
+        // If the factories aren't deployed on the target chain, we can run the deployment script to deploy the factories, implementations and Beacons.
         address orchestratorFactory = DeploymentScript.run();
 
-        //If there's no formula or token deployment on the chain, we deploy them
+        // If there's no formula or token deployment on the chain, we deploy them
         vm.startBroadcast(orchestratorOwnerPrivateKey);
         {
             formula = new BancorFormula();

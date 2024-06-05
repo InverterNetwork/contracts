@@ -72,27 +72,27 @@ contract TransactionForwarder_v1 is
         SingleCall calldata calli;
         bytes memory data;
 
-        //run through all of the calls
+        // run through all of the calls
         for (uint i = 0; i < length; i++) {
             calli = calls[i];
-            //Check if the target actually trusts the forwarder
+            // Check if the target actually trusts the forwarder
             if (!__isTrustedByTarget(calli.target)) {
                 revert ERC2771UntrustfulTarget(calli.target, address(this));
             }
 
-            //Add call target to the end of the calldata
-            //This will be read by the ERC2771Context of the target contract
+            // Add call target to the end of the calldata
+            // This will be read by the ERC2771Context of the target contract
             data = abi.encodePacked(calli.callData, _msgSender());
 
-            //Do the call
+            // Do the call
             (bool success, bytes memory returnData) = calli.target.call(data);
 
-            //In case call fails check if it its allowed to fail
+            // In case call fails check if it its allowed to fail
             if (!success && !calli.allowFailure) {
                 revert CallFailed(calli);
             }
 
-            //set result correctly
+            // set result correctly
             results[i] = Result(success, returnData);
         }
     }

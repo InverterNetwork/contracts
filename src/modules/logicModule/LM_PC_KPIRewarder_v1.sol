@@ -310,7 +310,7 @@ contract LM_PC_KPIRewarder_v1 is
         stakingQueueAmounts[sender] += amount;
         totalQueuedFunds += amount;
 
-        //transfer funds to LM_PC_Staking_v1
+        // transfer funds to LM_PC_Staking_v1
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
 
         emit StakeEnqueued(sender, amount);
@@ -337,7 +337,7 @@ contract LM_PC_KPIRewarder_v1 is
 
             emit StakeDequeued(user, amount);
 
-            //return funds to user
+            // return funds to user
             IERC20(stakingToken).safeTransfer(user, amount);
         }
     }
@@ -350,7 +350,7 @@ contract LM_PC_KPIRewarder_v1 is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
-        //First, we perform checks and state management on the parent function.
+        // First, we perform checks and state management on the parent function.
         super.assertionResolvedCallback(assertionId, assertedTruthfully);
 
         // If the assertion was true, we calculate the rewards and distribute them.
@@ -367,12 +367,12 @@ contract LM_PC_KPIRewarder_v1 is
                     resolvedKPI.trancheValues[i]
                         <= assertionConfig[assertionId].assertedValue
                 ) {
-                    //the asserted value is above tranche end
+                    // the asserted value is above tranche end
                     rewardAmount += resolvedKPI.trancheRewards[i];
                 } else {
-                    //tranche was not completed
+                    // tranche was not completed
                     if (resolvedKPI.continuous) {
-                        //continuous distribution
+                        // continuous distribution
                         uint trancheRewardValue = resolvedKPI.trancheRewards[i];
                         uint trancheStart =
                             i == 0 ? 0 : resolvedKPI.trancheValues[i - 1];
@@ -385,9 +385,9 @@ contract LM_PC_KPIRewarder_v1 is
                         rewardAmount +=
                             achievedReward * (trancheRewardValue / trancheEnd); // since the trancheRewardValue will be a very big number.
                     }
-                    //else -> no reward
+                    // else -> no reward
 
-                    //exit the loop
+                    // exit the loop
                     break;
                 }
             }
@@ -406,6 +406,6 @@ contract LM_PC_KPIRewarder_v1 is
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
-        //Do nothing
+        // Do nothing
     }
 }

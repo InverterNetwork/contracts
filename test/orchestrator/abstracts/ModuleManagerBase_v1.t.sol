@@ -133,7 +133,7 @@ contract ModuleManagerBaseV1Test is Test {
         vm.assume(moduleAmount > MAX_MODULES);
         address[] memory modules = createModules(moduleAmount, 1000);
 
-        //we don't need to check for validity since it should revert before
+        // we don't need to check for validity since it should revert before
 
         moduleManager = new ModuleManagerBaseV1Mock(address(0));
         vm.expectRevert(
@@ -149,7 +149,7 @@ contract ModuleManagerBaseV1Test is Test {
     {
         vm.assume(modules.length > MAX_MODULES);
 
-        //we don't need to check for validity since it should revert before
+        // we don't need to check for validity since it should revert before
 
         moduleManager = new ModuleManagerBaseV1Mock(address(0));
         vm.expectRevert(

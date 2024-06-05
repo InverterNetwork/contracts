@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {ModuleTest, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
 import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
@@ -96,7 +96,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     // Mock Data
     //--------------------------------------------------------------------------
 
-    address OWNER = address(0x1); //Workflow owner
+    address OWNER = address(0x1); // Workflow owner
     address AUTOMATION_SERVICE = address(0x6E1A70); // The automation service that will post the assertion and do the callback
 
     // Assertion mock data
@@ -122,7 +122,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
     function setUp() public override {
         // Pin tests to a block o save in RPC calls
-        uint forkBlock = 5_723_995; //April 18 2024 12:15 EST
+        uint forkBlock = 5_723_995; // April 18 2024 12:15 EST
 
         // Get RPC URL from the foundry.toml via the environment
         // if that fails, set the fallback rpc url
@@ -147,7 +147,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         }
 
         // We deploy and label the necessary tokens for the tests
-        USDC = ERC20Mock(USDC_address); //we use it  mock so we can call mint functions
+        USDC = ERC20Mock(USDC_address); // we use it  mock so we can call mint functions
         rewardToken = new ERC20Mock("Project Reward Mock Token", "REWARD MOCK");
         stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 
@@ -392,14 +392,14 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                     rewardToken.balanceOf(users[i])
                 );
             }
-            //console.log("User %s has a reward of %s", users[i], reward);
+            // console.log("User %s has a reward of %s", users[i], reward);
         }
 
         uint rewardBalanceAfter = rewardToken.balanceOf(address(fundingManager));
 
         assertEq(rewardBalanceAfter, (rewardBalanceBefore - distributedInRound));
 
-        //return (distributedInRound, expectedDistributed);
+        // return (distributedInRound, expectedDistributed);
     }
 
     //--------------------------------------------------------------------------
@@ -414,12 +414,12 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
         for (uint i; i < resolvedKPI.numOfTranches; i++) {
             if (resolvedKPI.trancheValues[i] <= assertedValue) {
-                //the asserted value is above tranche end
+                // the asserted value is above tranche end
                 rewardAmount += resolvedKPI.trancheRewards[i];
             } else {
-                //tranche was not completed
+                // tranche was not completed
                 if (resolvedKPI.continuous) {
-                    //continuous distribution
+                    // continuous distribution
                     uint trancheRewardValue = resolvedKPI.trancheRewards[i];
                     uint trancheStart =
                         i == 0 ? 0 : resolvedKPI.trancheValues[i - 1];
@@ -433,9 +433,9 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                     rewardAmount +=
                         achievedReward * (trancheRewardValue / trancheEnd); // since the trancheRewardValue will be a very big number.
                 }
-                //else -> no reward
+                // else -> no reward
 
-                //exit the loop
+                // exit the loop
                 break;
             }
         }
@@ -446,7 +446,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     // Stakes a set of users and their amounts
     function _setUpStakers(uint start, uint end) private {
         for (uint i = start; i < end; i++) {
-            //console.log("SetupStakers: Staking %s for %s", amounts[i], users[i]);
+            // console.log("SetupStakers: Staking %s for %s", amounts[i], users[i]);
 
             stakingToken.mint(users[i], amounts[i]);
             vm.startPrank(users[i]);

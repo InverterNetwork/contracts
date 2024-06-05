@@ -47,7 +47,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    //Minter/Burner Role
+    // Minter/Burner Role
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     // Storage gap for future upgrades

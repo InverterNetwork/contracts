@@ -70,7 +70,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
 
     address internal defaultProtocolTreasury;
 
-    //Orchestrator => treasury
+    // Orchestrator => treasury
     mapping(address => address) internal workflowTreasuries;
 
     // default fees that apply unless workflow
@@ -78,7 +78,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     uint internal defaultIssuanceFee;
     uint internal defaultCollateralFee;
 
-    //orchestrator => hash(functionSelector + module address) => feeStruct
+    // orchestrator => hash(functionSelector + module address) => feeStruct
     mapping(address => mapping(bytes32 => Fee)) internal workflowIssuanceFees;
     mapping(address => mapping(bytes32 => Fee)) internal workflowCollateralFees;
 
@@ -101,7 +101,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     {
         __Ownable_init(owner);
 
-        //initial max fee is 10%
+        // initial max fee is 10%
         maxFee = 1000;
 
         if (_defaultCollateralFee > maxFee || _defaultIssuanceFee > maxFee) {
@@ -160,10 +160,10 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         bytes32 moduleFunctionHash =
             getModuleFunctionHash(module, functionSelector);
 
-        //In case workflow fee is set return it
+        // In case workflow fee is set return it
         if (workflowCollateralFees[workflow][moduleFunctionHash].set) {
             return workflowCollateralFees[workflow][moduleFunctionHash].value;
-        } //otherwise return default fee
+        } // otherwise return default fee
         else {
             return defaultCollateralFee;
         }
@@ -178,10 +178,10 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         bytes32 moduleFunctionHash =
             getModuleFunctionHash(module, functionSelector);
 
-        //In case workflow fee is set return it
+        // In case workflow fee is set return it
         if (workflowIssuanceFees[workflow][moduleFunctionHash].set) {
             return workflowIssuanceFees[workflow][moduleFunctionHash].value;
-        } //otherwise return default fee
+        } // otherwise return default fee
         else {
             return defaultIssuanceFee;
         }

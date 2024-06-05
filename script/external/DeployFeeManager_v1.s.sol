@@ -22,9 +22,9 @@ contract DeployFeeManager_v1 is Script {
 
         address governor = vm.envAddress("GOVERNOR_ADDRESS");
         address defaultProtocolTreasury =
-            vm.envAddress("COMMUNITY_MULTISIG_ADDRESS"); //Community Multisig as default treasury
-        uint defaultCollateralFee = 100; //Should be 1%
-        uint defaultIssuanceFee = 100; //Should be 1%
+            vm.envAddress("COMMUNITY_MULTISIG_ADDRESS"); // Community Multisig as default treasury
+        uint defaultCollateralFee = 100; // Should be 1%
+        uint defaultIssuanceFee = 100; // Should be 1%
         // Check settings.
 
         require(

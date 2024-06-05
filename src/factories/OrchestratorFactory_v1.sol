@@ -25,7 +25,7 @@ import {InverterProxyAdmin_v1} from "src/proxies/InverterProxyAdmin_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-//External Dependencies
+// External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {
     ERC2771ContextUpgradeable,
@@ -143,29 +143,29 @@ contract OrchestratorFactory_v1 is
         ModuleConfig[] memory moduleConfigs
     ) external returns (IOrchestrator_v1) {
         address proxy;
-        //If the workflow should fetch their updates themselves
+        // If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
-            //Deploy a proxy admin contract that owns the invidual proxies
-            //Overwriting the independentUpdateAdmin as the ProxyAdmin will
-            //be the actual admin of the proxy
+            // Deploy a proxy admin contract that owns the invidual proxies
+            // Overwriting the independentUpdateAdmin as the ProxyAdmin will
+            // be the actual admin of the proxy
             workflowConfig.independentUpdateAdmin = address(
                 new InverterProxyAdmin_v1(workflowConfig.independentUpdateAdmin)
             );
 
-            //Use an InverterTransparentUpgradeableProxy as a proxy
+            // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
                 new InverterTransparentUpgradeableProxy_v1(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
         }
-        //If not then
+        // If not then
         else {
-            //Instead use the Beacon Structure Proxy
+            // Instead use the Beacon Structure Proxy
             proxy = address(new InverterBeaconProxy_v1(beacon));
         }
 
-        //Map orchestrator proxy
+        // Map orchestrator proxy
         _orchestrators[++_orchestratorIdCounter] = proxy;
 
         // Deploy and cache {IFundingManager_v1} module.

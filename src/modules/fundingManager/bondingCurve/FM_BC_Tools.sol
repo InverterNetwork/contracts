@@ -11,7 +11,7 @@ pragma solidity 0.8.23;
  * @author Inverter Network
  */
 library FM_BC_Tools {
-    //error Module__BondingCurveBase__FeeAmountToHigh();
+    // error Module__BondingCurveBase__FeeAmountToHigh();
 
     /// @dev Converts an amount to a required decimal representation.
     /// This function is useful for handling tokens with different decimal places.

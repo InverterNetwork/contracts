@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -42,7 +42,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     function setUp() public {
-        //Add Module to Mock Orchestrator_v1
+        // Add Module to Mock Orchestrator_v1
         address impl = address(new LM_PC_RecurringPayments_v1());
         recurringPaymentManager = LM_PC_RecurringPayments_v1(Clones.clone(impl));
 
@@ -61,7 +61,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
     }
 
-    //This function also tests all the getters
+    // This function also tests all the getters
     function testInit() public override(ModuleTest) {
         vm.expectRevert(
             ILM_PC_RecurringPayments_v1
@@ -69,7 +69,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
                 .selector
         );
 
-        //Init Module wrongly
+        // Init Module wrongly
         recurringPaymentManager.init(
             _orchestrator, _METADATA, abi.encode(1 weeks - 1)
         );
@@ -80,12 +80,12 @@ contract LM_PC_RecurringV1Test is ModuleTest {
                 .selector
         );
 
-        //Init Module wrongly
+        // Init Module wrongly
         recurringPaymentManager.init(
             _orchestrator, _METADATA, abi.encode(52 weeks + 1)
         );
 
-        //Init Module correct
+        // Init Module correct
         recurringPaymentManager.init(
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
@@ -160,11 +160,11 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Epoch Functions
-    //Trivial to test
+    // Trivial to test
 
-    //Testing this for coverage
+    // Testing this for coverage
     function testGetFutureEpoch(uint seed) public {
-        uint x = bound(seed, 0, 100_000_000); //Reasonable amount
+        uint x = bound(seed, 0, 100_000_000); // Reasonable amount
         reasonableWarpAndInit(seed);
 
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
@@ -175,7 +175,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     // Mutating Functions
 
     //-----------------------------------------
-    //AddRecurringPayment
+    // AddRecurringPayment
 
     function testAddRecurringPayment(
         uint seed,
@@ -185,7 +185,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     ) public {
         reasonableWarpAndInit(seed);
 
-        //Assume correct inputs
+        // Assume correct inputs
         vm.assume(
             recipient != address(0)
                 && recipient != address(recurringPaymentManager)
@@ -196,10 +196,10 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         vm.expectEmit(true, true, true, true);
         emit RecurringPaymentAdded(
-            1, //Id starts at 1
+            1, // Id starts at 1
             amount,
             startEpoch,
-            startEpoch - 1, //lastTriggeredEpoch has to be startEpoch - 1
+            startEpoch - 1, // lastTriggeredEpoch has to be startEpoch - 1
             recipient
         );
         recurringPaymentManager.addRecurringPayment(
@@ -210,22 +210,22 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             1, amount, startEpoch, startEpoch - 1, recipient
         );
 
-        //Check for multiple Adds
+        // Check for multiple Adds
         uint id;
-        uint length = bound(amount, 1, 30); //Reasonable amount
+        uint length = bound(amount, 1, 30); // Reasonable amount
         for (uint i = 2; i < length + 2; i++) {
             vm.expectEmit(true, true, true, true);
             emit RecurringPaymentAdded(
-                i, //Id starts at 1
+                i, // Id starts at 1
                 1,
                 currentEpoch,
-                currentEpoch - 1, //lastTriggeredEpoch has to be startEpoch - 1
+                currentEpoch - 1, // lastTriggeredEpoch has to be startEpoch - 1
                 address(0xBEEF)
             );
             id = recurringPaymentManager.addRecurringPayment(
                 1, currentEpoch, address(0xBEEF)
             );
-            assertEq(id, i); //Maybe a bit overtested, that id is correct but ¯\_(ツ)_/¯
+            assertEq(id, i); // Maybe a bit overtested, that id is correct but ¯\_(ツ)_/¯
             assertEqualRecurringPayment(
                 i, 1, currentEpoch, currentEpoch - 1, address(0xBEEF)
             );
@@ -233,15 +233,15 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     }
 
     function testAddRecurringPaymentModifierInPosition() public {
-        //Init Module
+        // Init Module
         recurringPaymentManager.init(
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        //Warp to a reasonable time
+        // Warp to a reasonable time
         vm.warp(2 weeks);
 
-        //onlyOrchestratorAdmin
+        // onlyOrchestratorAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -249,10 +249,10 @@ contract LM_PC_RecurringV1Test is ModuleTest {
                 address(0xBEEF)
             )
         );
-        vm.prank(address(0xBEEF)); //Not Authorized
+        vm.prank(address(0xBEEF)); // Not Authorized
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0xBEEF));
 
-        //validAmount
+        // validAmount
         vm.expectRevert(
             IERC20PaymentClientBase_v1
                 .Module__ERC20PaymentClientBase__InvalidAmount
@@ -260,7 +260,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
         recurringPaymentManager.addRecurringPayment(0, 2 weeks, address(0xBEEF));
 
-        //validStartEpoch
+        // validStartEpoch
 
         vm.expectRevert(
             ILM_PC_RecurringPayments_v1
@@ -269,7 +269,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
         recurringPaymentManager.addRecurringPayment(1, 0, address(0xBEEF));
 
-        //validRecipient
+        // validRecipient
 
         vm.expectRevert(
             IERC20PaymentClientBase_v1
@@ -280,15 +280,15 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //RemoveRecurringPayment
+    // RemoveRecurringPayment
 
     function testRemoveRecurringPayment(uint seed, uint amount) public {
         reasonableWarpAndInit(seed);
-        amount = bound(amount, 1, 30); //Reasonable number of repetitions
+        amount = bound(amount, 1, 30); // Reasonable number of repetitions
 
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
-        //Fund Fundingmanager
+        // Fund Fundingmanager
         _token.mint(address(_fundingManager), amount);
 
         // Fill list with RecurringPayments.
@@ -313,15 +313,15 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             );
         }
 
-        //Make sure that payments got triggered accordingly
+        // Make sure that payments got triggered accordingly
         assertEq(recurringPaymentManager.paymentOrders().length, amount);
 
-        //Delete all payments for easier testing
+        // Delete all payments for easier testing
         _paymentProcessor.deleteAllPayments(
             IERC20PaymentClientBase_v1(address(recurringPaymentManager))
         );
 
-        //Fund Fundingmanager
+        // Fund Fundingmanager
         _token.mint(address(_fundingManager), amount);
 
         // Fill list again with recurring payments.
@@ -344,7 +344,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
                 prevId = _SENTINEL;
             }
 
-            //Check if trigger was called
+            // Check if trigger was called
             vm.expectEmit(true, true, true, true);
             emit RecurringPaymentsTriggered(currentEpoch);
 
@@ -358,17 +358,17 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             );
         }
 
-        //Make sure that payments got triggered accordingly
+        // Make sure that payments got triggered accordingly
         assertEq(recurringPaymentManager.paymentOrders().length, amount);
     }
 
     function testRemoveRecurringPaymentModifierInPosition() public {
-        //Init Module
+        // Init Module
         recurringPaymentManager.init(
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        //onlyOrchestratorAdmin
+        // onlyOrchestratorAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -376,7 +376,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
                 address(0xBEEF)
             )
         );
-        vm.prank(address(0xBEEF)); //Not Authorized
+        vm.prank(address(0xBEEF)); // Not Authorized
         recurringPaymentManager.removeRecurringPayment(0, 1);
     }
 
@@ -384,7 +384,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     // Trigger
 
     function testTrigger(uint seed, address[] memory receivers) public {
-        vm.assume(receivers.length < 100 && receivers.length >= 3); //Reasonable amount
+        vm.assume(receivers.length < 100 && receivers.length >= 3); // Reasonable amount
 
         receivers = convertToValidRecipients(receivers);
 
@@ -394,20 +394,20 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
-        //Generate appropriate Payment Orders
+        // Generate appropriate Payment Orders
         createRecurringPaymentOrders(seed, receivers);
 
-        //Mint enough tokens based on the payment order
+        // Mint enough tokens based on the payment order
 
-        //Quick estimate: 1 token per payment Max receivers 100, max jumps 20, max epochs used in jump 4 -> 8000 tokens needed (lets go with 10k)
-        //note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
+        // Quick estimate: 1 token per payment Max receivers 100, max jumps 20, max epochs used in jump 4 -> 8000 tokens needed (lets go with 10k)
+        // note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
         _token.mint(address(_fundingManager), 10_000);
 
-        //Copy Payments for later comparison
+        // Copy Payments for later comparison
         ILM_PC_RecurringPayments_v1.RecurringPayment[] memory
             recurringPaymentsToBeChecked = fetchRecurringPayments();
 
-        //Payout created Payments via trigger
+        // Payout created Payments via trigger
         vm.expectEmit(true, true, true, true);
         emit RecurringPaymentsTriggered(currentEpoch);
         recurringPaymentManager.trigger();
@@ -415,12 +415,12 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         ILM_PC_RecurringPayments_v1.RecurringPayment[] memory
             currentRecurringPayments = fetchRecurringPayments();
 
-        //compare that Orders were placed and lastTriggered got updated accordingly
+        // compare that Orders were placed and lastTriggered got updated accordingly
         recurringPaymentsAreCorrect(
             recurringPaymentsToBeChecked, currentRecurringPayments, currentEpoch
         );
 
-        //remove tokens and orders from recurringPaymentManager for easier testing
+        // remove tokens and orders from recurringPaymentManager for easier testing
         _paymentProcessor.deleteAllPayments(
             IERC20PaymentClientBase_v1(address(recurringPaymentManager))
         );
@@ -429,17 +429,17 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             _token.balanceOf(address(recurringPaymentManager))
         );
 
-        //Do a timejump and check again
+        // Do a timejump and check again
         for (uint i = 0; i < timejumps; i++) {
-            //Update Payments for later comparison
+            // Update Payments for later comparison
             recurringPaymentsToBeChecked = fetchRecurringPayments();
 
             vm.warp(
                 block.timestamp
                     + bound(
-                        seed, //Introduce some randomness for the jump
+                        seed, // Introduce some randomness for the jump
                         recurringPaymentManager.getEpochLength(),
-                        recurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                        recurringPaymentManager.getEpochLength() * 4 // In case someone forgets to trigger -> Minimum one Month max 4 years
                     )
             );
             currentEpoch = recurringPaymentManager.getCurrentEpoch();
@@ -449,14 +449,14 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
             currentRecurringPayments = fetchRecurringPayments();
 
-            //compare that Orders were placed and lastTriggered got updated accordingly
+            // compare that Orders were placed and lastTriggered got updated accordingly
             recurringPaymentsAreCorrect(
                 recurringPaymentsToBeChecked,
                 currentRecurringPayments,
                 currentEpoch
             );
 
-            //remove tokens and orders from recurringPaymentManager for easier testing
+            // remove tokens and orders from recurringPaymentManager for easier testing
             _paymentProcessor.deleteAllPayments(
                 IERC20PaymentClientBase_v1(address(recurringPaymentManager))
             );
@@ -473,7 +473,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint startId,
         uint endId
     ) public {
-        vm.assume(receivers.length < 100 && receivers.length >= 3); //Reasonable amount
+        vm.assume(receivers.length < 100 && receivers.length >= 3); // Reasonable amount
 
         endId = bound(endId, 1, receivers.length);
         startId = bound(startId, 1, endId);
@@ -482,16 +482,16 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         reasonableWarpAndInit(seed);
 
-        //Generate appropriate Payment Orders
+        // Generate appropriate Payment Orders
         createRecurringPaymentOrders(seed, receivers);
 
-        //Mint enough tokens based on the payment order
+        // Mint enough tokens based on the payment order
 
-        //Quick estimate: 1 token per payment Max receivers 100, max epochs used in jump 4 -> 400 tokens needed (lets go with 500)
-        //note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
+        // Quick estimate: 1 token per payment Max receivers 100, max epochs used in jump 4 -> 400 tokens needed (lets go with 500)
+        // note to 1 token: im not testing if the paymentProcessor works just if it creates payment orders accordingly
         _token.mint(address(_fundingManager), 500);
 
-        //Copy Payments for later comparison
+        // Copy Payments for later comparison
         ILM_PC_RecurringPayments_v1.RecurringPayment[] memory
             filteredRecurringPaymentsToBeChecked =
                 filterPayments(fetchRecurringPayments(), startId, endId);
@@ -499,9 +499,9 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         vm.warp(
             block.timestamp
                 + bound(
-                    seed, //Introduce some randomness for the jump
+                    seed, // Introduce some randomness for the jump
                     0,
-                    recurringPaymentManager.getEpochLength() * 4 //In case someone forgets to trigger -> Minimum one Month max 4 years
+                    recurringPaymentManager.getEpochLength() * 4 // In case someone forgets to trigger -> Minimum one Month max 4 years
                 )
         );
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
@@ -510,12 +510,12 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         emit RecurringPaymentsTriggered(currentEpoch);
         recurringPaymentManager.triggerFor(startId, endId);
 
-        //Get currentPayments and filter them
+        // Get currentPayments and filter them
         ILM_PC_RecurringPayments_v1.RecurringPayment[] memory
             currentRecurringPayments =
                 filterPayments(fetchRecurringPayments(), startId, endId);
 
-        //compare that Orders were placed and lastTriggered got updated accordingly
+        // compare that Orders were placed and lastTriggered got updated accordingly
         recurringPaymentsAreCorrect(
             filteredRecurringPaymentsToBeChecked,
             currentRecurringPayments,
@@ -564,13 +564,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     function reasonableWarpAndInit(uint seed) internal {
         uint epochLength = bound(seed, 1 weeks, 52 weeks);
 
-        //with this we are at least in epoch 2 and there is enough time to go on from that time (3_153_600_000 seconds are 100 years)
+        // with this we are at least in epoch 2 and there is enough time to go on from that time (3_153_600_000 seconds are 100 years)
         uint currentTimestamp = bound(seed, 52 weeks + 1, 3_153_600_000);
 
-        //Warp to a reasonable time
+        // Warp to a reasonable time
         vm.warp(currentTimestamp);
 
-        //Init Module
+        // Init Module
         recurringPaymentManager.init(
             _orchestrator, _METADATA, abi.encode(epochLength)
         );
@@ -582,7 +582,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         returns (address[] memory)
     {
         uint length = addrs.length;
-        //Convert address(0) to address (1)
+        // Convert address(0) to address (1)
         for (uint i; i < length; i++) {
             if (
                 addrs[i] == address(0)
@@ -620,7 +620,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint growingSequenceBefore;
         uint growingSequenceCurrent;
         for (uint i; i < length; i++) {
-            //This is a way to introduce randomness and grow the startEpoch in reasonable steps
+            // This is a way to introduce randomness and grow the startEpoch in reasonable steps
             growingSequenceCurrent = growingSequenceBefore + i;
 
             startEpoch = currentEpoch
@@ -661,16 +661,16 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         pure
         returns (ILM_PC_RecurringPayments_v1.RecurringPayment[] memory)
     {
-        uint filterArrayLength = endId - startId + 1; //even if endId and startId are the same its at least one order
+        uint filterArrayLength = endId - startId + 1; // even if endId and startId are the same its at least one order
         ILM_PC_RecurringPayments_v1.RecurringPayment[] memory returnArray = new ILM_PC_RecurringPayments_v1
             .RecurringPayment[](filterArrayLength);
         for (uint i = 0; i < filterArrayLength; i++) {
-            returnArray[i] = paymentsToFilter[startId - 1 + i]; //because ids start at 1 substract 1 to get appropriate array position
+            returnArray[i] = paymentsToFilter[startId - 1 + i]; // because ids start at 1 substract 1 to get appropriate array position
         }
         return returnArray;
     }
 
-    //Note: this needs the old version of the orders before the trigger function was called to work
+    // Note: this needs the old version of the orders before the trigger function was called to work
     function recurringPaymentsAreCorrect(
         ILM_PC_RecurringPayments_v1.RecurringPayment[] memory
             recurringPaymentsToBeChecked,
@@ -685,24 +685,24 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         assertEq(length, currentRecurringPayments.length);
 
-        //prediction of how many orders have to be created for this recurring payment
+        // prediction of how many orders have to be created for this recurring payment
         uint epochsTriggered;
 
-        //Amount of tokens that should be in the LM_PC_RecurringPayments_v1
+        // Amount of tokens that should be in the LM_PC_RecurringPayments_v1
         uint totalAmount;
 
-        //Amount of tokens in a single order
+        // Amount of tokens in a single order
         uint orderAmount;
 
         ILM_PC_RecurringPayments_v1.RecurringPayment memory
             currentRecurringPaymentToBeChecked;
 
-        //Because some of the RecurringPaymentOrders start only in the future we have to have a seperate index for that
+        // Because some of the RecurringPaymentOrders start only in the future we have to have a seperate index for that
         uint numberOfOrdersMade;
 
         for (uint i; i < length; i++) {
             currentRecurringPaymentToBeChecked = recurringPaymentsToBeChecked[i];
-            //Orders are only created if lastTriggeredEpoch is smaller than currentEpoch
+            // Orders are only created if lastTriggeredEpoch is smaller than currentEpoch
             if (
                 currentEpoch
                     > currentRecurringPaymentToBeChecked.lastTriggeredEpoch
@@ -740,7 +740,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
                 totalAmount += orderAmount;
                 numberOfOrdersMade++;
-                //Check if updated payment lastTriggeredEpoch is current epoch
+                // Check if updated payment lastTriggeredEpoch is current epoch
                 assertEq(
                     currentRecurringPayments[i].lastTriggeredEpoch, currentEpoch
                 );

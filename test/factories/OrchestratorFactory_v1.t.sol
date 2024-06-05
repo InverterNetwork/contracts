@@ -151,7 +151,7 @@ contract OrchestratorFactoryV1Test is Test {
             moduleConfigs
         );
 
-        //Check that workflowConfig was properly forwarded
+        // Check that workflowConfig was properly forwarded
         (bool independentUpdates, address independentUpdateProxyAdmin) =
             moduleFactory.givenWorkflowConfig();
 
@@ -170,11 +170,11 @@ contract OrchestratorFactoryV1Test is Test {
         assertTrue(address(orchestrator.paymentProcessor()) != address(0));
         assertTrue(address(orchestrator.governor()) == moduleFactory.governor());
 
-        //Module size should be the 3 enforced contracts + whatever is in the module config
+        // Module size should be the 3 enforced contracts + whatever is in the module config
         assertEq(orchestrator.modulesSize(), 3 + moduleConfigs.length);
 
         vm.expectEmit(true, false, false, false);
-        emit OrchestratorCreated(2, address(0)); //since we don't know the address of the orchestrator
+        emit OrchestratorCreated(2, address(0)); // since we don't know the address of the orchestrator
 
         // Deploy Orchestrator_v1 with id=2
         orchestrator = factory.createOrchestrator(
@@ -187,14 +187,14 @@ contract OrchestratorFactoryV1Test is Test {
         // Only check that orchestrator's id is correct.
         assertEq(orchestrator.orchestratorId(), 2);
 
-        //check that orchestratorFactory idCounter is correct.
+        // check that orchestratorFactory idCounter is correct.
         assertEq(factory.getOrchestratorIDCounter(), 2);
 
-        //Check for proper Proxy setup
+        // Check for proper Proxy setup
 
         beacon.overrideImplementation(address(new ModuleImplementationV1Mock()));
 
-        //If it is independent then the beacon change should not be represented
+        // If it is independent then the beacon change should not be represented
         if (workflowConfig.independentUpdates) {
             vm.expectRevert();
             ModuleImplementationV1Mock(address(orchestrator)).getMockVersion();
@@ -222,7 +222,7 @@ contract OrchestratorFactoryV1Test is Test {
     }
 
     function _deployOrchestrator() private returns (address) {
-        //Create Empty ModuleConfig
+        // Create Empty ModuleConfig
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs =
             new IOrchestratorFactory_v1.ModuleConfig[](0);
 

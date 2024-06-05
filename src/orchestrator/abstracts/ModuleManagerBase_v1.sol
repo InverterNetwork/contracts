@@ -7,7 +7,7 @@ import {IModuleManagerBase_v1} from
 import {IModuleFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
-//External Dependencies
+// External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
@@ -88,7 +88,7 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     modifier updatingModuleAlreadyStarted(address _module) {
-        //if timelock not active
+        // if timelock not active
         if (!moduleAddressToTimelock[_module].timelockActive) {
             revert ModuleManagerBase__ModuleUpdateAlreadyStarted();
         }
@@ -240,7 +240,7 @@ abstract contract ModuleManagerBase_v1 is
         updatingModuleAlreadyStarted(module)
         whenTimelockExpired(module)
     {
-        //set timelock to inactive
+        // set timelock to inactive
         moduleAddressToTimelock[module].timelockActive = false;
 
         _commitAddModule(module);
@@ -252,7 +252,7 @@ abstract contract ModuleManagerBase_v1 is
         updatingModuleAlreadyStarted(module)
         whenTimelockExpired(module)
     {
-        //set timelock to inactive
+        // set timelock to inactive
         moduleAddressToTimelock[module].timelockActive = false;
 
         _commitRemoveModule(module);
@@ -296,7 +296,7 @@ abstract contract ModuleManagerBase_v1 is
         // its roles configuration is the same as before.
         // Note that this could potentially lead to security issues!
 
-        //Unordered removal
+        // Unordered removal
         address[] memory modulesSearchArray = _modules;
 
         uint moduleIndex = type(uint).max;

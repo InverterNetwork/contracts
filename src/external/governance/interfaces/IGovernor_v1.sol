@@ -196,7 +196,7 @@ interface IGovernor_v1 {
     // Beacon Functions
 
     //---------------------------
-    //Upgrade
+    // Upgrade
 
     /// @notice Starts the upgrade process of a beacon by creating a timelock period after which the beacon can be upgraded via triggerUpgradeBeaconWithTimelock()
     //@dev This function will override previous timelocks even if they are active
@@ -226,7 +226,7 @@ interface IGovernor_v1 {
     function setTimelockPeriod(uint newtimelockPeriod) external;
 
     //---------------------------
-    //Emergency Shutdown
+    // Emergency Shutdown
 
     /// @notice Initiates the shutdown of a beacon
     /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
@@ -250,7 +250,7 @@ interface IGovernor_v1 {
     function restartBeaconImplementation(address beacon) external;
 
     //---------------------------
-    //Ownable2Step
+    // Ownable2Step
 
     /// @notice Accepts the ownership over the target address
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE

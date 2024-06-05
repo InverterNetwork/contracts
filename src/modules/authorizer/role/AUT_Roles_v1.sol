@@ -166,7 +166,7 @@ contract AUT_Roles_v1 is
         virtual
         returns (bool)
     {
-        //Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
+        // Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
         bytes32 roleId = generateRoleId(_msgSender(), role);
         return hasRole(roleId, who);
     }

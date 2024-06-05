@@ -396,18 +396,18 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     {
         // Calculate mint amount through bonding curve
         uint decimalConvertedMintAmount = formula.calculatePurchaseReturn(
-            //decimalConvertedVirtualIssuanceSupply
+            // decimalConvertedVirtualIssuanceSupply
             FM_BC_Tools._convertAmountToRequiredDecimal(
                 virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
             ),
-            //decimalConvertedVirtualCollateralSupply
+            // decimalConvertedVirtualCollateralSupply
             FM_BC_Tools._convertAmountToRequiredDecimal(
                 virtualCollateralSupply,
                 collateralTokenDecimals,
                 eighteenDecimals
             ),
             reserveRatioForBuying,
-            //decimalConvertedDepositAmount
+            // decimalConvertedDepositAmount
             FM_BC_Tools._convertAmountToRequiredDecimal(
                 _depositAmount, collateralTokenDecimals, eighteenDecimals
             )
@@ -431,11 +431,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     {
         // Calculate redeem amount through bonding curve
         uint decimalConvertedRedeemAmount = formula.calculateSaleReturn(
-            //decimalConvertedVirtualIssuanceSupply
+            // decimalConvertedVirtualIssuanceSupply
             FM_BC_Tools._convertAmountToRequiredDecimal(
                 virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
             ),
-            //decimalConvertedVirtualCollateralSupply
+            // decimalConvertedVirtualCollateralSupply
             FM_BC_Tools._convertAmountToRequiredDecimal(
                 virtualCollateralSupply,
                 collateralTokenDecimals,

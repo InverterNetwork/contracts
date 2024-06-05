@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -183,7 +183,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
             .viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver1
         );
-        //One Paymentorder for the current epoch and one for all past payment orders -> 2 orders
+        // One Paymentorder for the current epoch and one for all past payment orders -> 2 orders
         assertEq(streams.length, 2);
         streams = streamingPaymentProcessor.viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver2

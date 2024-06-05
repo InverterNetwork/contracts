@@ -173,7 +173,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         onlyModule
         validClient(address(client))
     {
-        //We check if there are any new paymentOrders, without processing them
+        // We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
             IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
@@ -555,12 +555,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         address _token =
             streams[client][paymentReceiver][streamId]._paymentToken;
-        uint remainingReleasable = streams[client][paymentReceiver][streamId] //The total amount
-            ._total - streams[client][paymentReceiver][streamId]._released; //Minus what has already been "released"
+        uint remainingReleasable = streams[client][paymentReceiver][streamId] // The total amount
+            ._total - streams[client][paymentReceiver][streamId]._released; // Minus what has already been "released"
 
-        //In case there is still something to be released
+        // In case there is still something to be released
         if (remainingReleasable > 0) {
-            //Let PaymentClient know that the amount is not needed to be stored anymore
+            // Let PaymentClient know that the amount is not needed to be stored anymore
 
             IERC20PaymentClientBase_v1(client).amountPaid(
                 _token, remainingReleasable
@@ -728,7 +728,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         if (success && (data.length == 0 || abi.decode(data, (bool)))) {
             emit TokensReleased(paymentReceiver, _token, amount);
 
-            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            // Make sure to let paymentClient know that amount doesnt have to be stored anymore
             IERC20PaymentClientBase_v1(client).amountPaid(
                 address(_token), amount
             );
@@ -736,7 +736,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             emit UnclaimableAmountAdded(
                 client, paymentReceiver, address(_token), streamId, amount
             );
-            //Adds the streamId to the array of unclaimable stream ids
+            // Adds the streamId to the array of unclaimable stream ids
 
             uint[] memory ids = unclaimableStreams[client][paymentReceiver];
             bool containsId = false;
@@ -747,7 +747,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     break;
                 }
             }
-            //If it doesnt contain id than add it to array
+            // If it doesnt contain id than add it to array
             if (!containsId) {
                 unclaimableStreams[client][paymentReceiver].push(streamId);
             }
@@ -773,7 +773,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         address client,
         address paymentReceiver
     ) internal {
-        //get amount
+        // get amount
         uint amount;
 
         address sender = _msgSender();
@@ -781,22 +781,22 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint length = ids.length;
 
         for (uint i = 0; i < length; i++) {
-            //Add the unclaimable amount of each id to the current amount
+            // Add the unclaimable amount of each id to the current amount
             amount += unclaimableAmountsForStream[client][sender][ids[i]];
-            //Delete value of stream id
+            // Delete value of stream id
             delete unclaimableAmountsForStream[client][sender][ids[i]];
         }
-        //As all of the stream ids should have been claimed we can delete the stream id array
+        // As all of the stream ids should have been claimed we can delete the stream id array
         delete unclaimableStreams[client][sender];
 
         IERC20 _token = orchestrator().fundingManager().token();
 
-        //Call has to succeed otherwise no state change
+        // Call has to succeed otherwise no state change
         _token.safeTransferFrom(client, paymentReceiver, amount);
 
         emit TokensReleased(paymentReceiver, address(_token), amount);
 
-        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        // Make sure to let paymentClient know that amount doesnt have to be stored anymore
         IERC20PaymentClientBase_v1(client).amountPaid(address(_token), amount);
     }
 

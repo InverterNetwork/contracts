@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -9,7 +9,7 @@ import {
     ModuleFactory_v1
 } from "test/e2e/E2ETest.sol";
 
-//SuT
+// SuT
 import {
     IOrchestrator_v1,
     Orchestrator_v1
@@ -24,7 +24,7 @@ import {
     ILM_PC_Bounties_v1, LM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
 
-//Beacon
+// Beacon
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 /**
@@ -74,7 +74,7 @@ contract OrchestratorE2E is E2ETest {
         setUpBountyManager();
     }
 
-    //We're adding and removing a Module during the lifetime of the orchestrator
+    // We're adding and removing a Module during the lifetime of the orchestrator
     function testManageModulesLiveOnOrchestrator() public {
         // address(this) creates a new orchestrator.
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -93,7 +93,7 @@ contract OrchestratorE2E is E2ETest {
 
         uint modulesBefore = orchestrator.modulesSize(); // We store the number of modules the orchestrator has
 
-        //Create the module via the moduleFactory
+        // Create the module via the moduleFactory
         address bountyManager = moduleFactory.createModule(
             bountyManagerMetadata, orchestrator, bytes(""), workflowConfig
         );
@@ -102,7 +102,7 @@ contract OrchestratorE2E is E2ETest {
         // skip timelock
         vm.warp(block.timestamp + timelock);
 
-        //Add Module to the orchestrator
+        // Add Module to the orchestrator
         orchestrator.executeAddModule(bountyManager);
 
         assertEq((modulesBefore + 1), orchestrator.modulesSize()); // The orchestrator now has one more module
@@ -117,9 +117,9 @@ contract OrchestratorE2E is E2ETest {
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules
 
         //------------------------------------------------------------------------------------------
-        //In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
+        // In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
 
-        //Create the new modules via the moduleFactory
+        // Create the new modules via the moduleFactory
         address newPaymentProcessor = moduleFactory.createModule(
             simplePaymentProcessorMetadata,
             orchestrator,
@@ -146,13 +146,13 @@ contract OrchestratorE2E is E2ETest {
 
         modulesBefore = orchestrator.modulesSize(); // We store the number of modules the orchestrator has
 
-        //We store the original module addresses
+        // We store the original module addresses
         address originalPaymentProcessor =
             address(orchestrator.paymentProcessor());
         address originalFundingManager = address(orchestrator.fundingManager());
         address originalAuthorizer = address(orchestrator.authorizer());
 
-        //Replace the old modules with the new ones
+        // Replace the old modules with the new ones
         orchestrator.initiateSetPaymentProcessorWithTimelock(
             IPaymentProcessor_v1(newPaymentProcessor)
         );
@@ -176,7 +176,7 @@ contract OrchestratorE2E is E2ETest {
 
         orchestrator.executeSetAuthorizer(IAuthorizer_v1(newAuthorizer));
 
-        //Assert post-state
+        // Assert post-state
         assertEq(modulesBefore, orchestrator.modulesSize()); // The orchestrator is back to the original number of modules
 
         assertEq(newPaymentProcessor, address(orchestrator.paymentProcessor()));

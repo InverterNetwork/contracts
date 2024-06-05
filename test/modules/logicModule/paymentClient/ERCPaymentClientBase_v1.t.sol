@@ -65,7 +65,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         token = ERC20Mock(address(_orchestrator.fundingManager().token()));
     }
 
-    //These are just placeholders, as the real PaymentProcessor is an abstract contract and not a real module
+    // These are just placeholders, as the real PaymentProcessor is an abstract contract and not a real module
     function testInit() public override {}
 
     function testReinitFails() public override {}
@@ -240,7 +240,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         _assumeValidRecipient(recipient);
 
-        //prep paymentClient
+        // prep paymentClient
         _token.mint(address(_fundingManager), orderAmount * amount);
 
         for (uint i; i < orderAmount; ++i) {
@@ -363,7 +363,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         public
     {
         amountRequired = bound(amountRequired, 1, 1_000_000_000_000e18);
-        //prep paymentClient
+        // prep paymentClient
         _token.mint(address(paymentClient), currentFunds);
 
         // create paymentOrder with required amount
@@ -382,10 +382,10 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         if (currentFunds >= amountRequired) {
             _orchestrator.setExecuteTxBoolReturn(true);
-            //NoOp as we already have enough funds
+            // NoOp as we already have enough funds
             assertEq(bytes(""), _orchestrator.executeTxData());
         } else {
-            //Check that Error works correctly
+            // Check that Error works correctly
             vm.expectRevert(
                 IERC20PaymentClientBase_v1
                     .Module__ERC20PaymentClientBase__TokenTransferFailed
@@ -397,7 +397,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
             paymentClient.originalEnsureTokenBalance(address(_token));
 
-            //callback from orchestrator to transfer tokens has to be in this form
+            // callback from orchestrator to transfer tokens has to be in this form
             assertEq(
                 abi.encodeCall(
                     IFundingManager_v1.transferOrchestratorToken,
@@ -411,7 +411,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testEnsureTokenAllowance(uint firstAmount, uint secondAmount)
         public
     {
-        //Set up reasonable boundaries
+        // Set up reasonable boundaries
         firstAmount = bound(firstAmount, 1, type(uint).max / 2);
         secondAmount = bound(secondAmount, 1, type(uint).max / 2);
 

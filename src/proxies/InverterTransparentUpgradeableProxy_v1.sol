@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-//Internal Interfaces
+// Internal Interfaces
 import {IInverterTransparentUpgradeableProxy_v1} from
     "src/proxies/interfaces/IInverterTransparentUpgradeableProxy_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
@@ -111,11 +111,11 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
 
     /// @dev Upgrades the implementation to the newest version listed in the beacon
     function upgradeToNewestVersion() internal virtual {
-        //Override implementation
+        // Override implementation
         ERC1967Utils.upgradeToAndCall(
             _beacon.getImplementationAddress(), bytes("")
         );
-        //Override version
+        // Override version
         (majorVersion, minorVersion) = _beacon.version();
     }
 

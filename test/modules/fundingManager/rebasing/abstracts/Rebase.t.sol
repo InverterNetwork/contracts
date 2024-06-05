@@ -72,7 +72,7 @@ contract RebaseTest is ElasticReceiptTokenV1Test {
             underlier.mint(address(ertb), testCase.newSupplyTarget);
 
             vm.expectEmit(false, false, false, false);
-            emit Rebase(0, 0); //we don't know the new values, so we just emit a dummy value
+            emit Rebase(0, 0); // we don't know the new values, so we just emit a dummy value
 
             ertb.rebase();
 
@@ -94,7 +94,7 @@ contract RebaseTest is ElasticReceiptTokenV1Test {
             underlier.mint(address(ertb), totalSupply);
 
             vm.expectEmit(false, false, false, false);
-            emit Rebase(0, 0); //we don't know the new values, so we just emit a dummy value
+            emit Rebase(0, 0); // we don't know the new values, so we just emit a dummy value
 
             ertb.rebase();
 

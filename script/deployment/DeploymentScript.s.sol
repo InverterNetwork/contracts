@@ -51,7 +51,7 @@ contract DeploymentScript is Script {
 
     // ------------------------------------------------------------------------
     // Instances of Deployer Scripts
-    //Orchestrator_v1
+    // Orchestrator_v1
     DeployOrchestrator_v1 deployOrchestrator = new DeployOrchestrator_v1();
     // Factories
     DeployModuleFactory_v1 deployModuleFactory = new DeployModuleFactory_v1();
@@ -81,22 +81,22 @@ contract DeploymentScript is Script {
     // TransactionForwarder_v1
     DeployTransactionForwarder_v1 deployTransactionForwarder =
         new DeployTransactionForwarder_v1();
-    //Governor_v1
+    // Governor_v1
     DeployGovernor_v1 deployGovernor = new DeployGovernor_v1();
-    //FeeManager_v1
+    // FeeManager_v1
     DeployFeeManager_v1 deployFeeManager = new DeployFeeManager_v1();
 
-    //Beacon
+    // Beacon
     DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
         new DeployAndSetUpInverterBeacon_v1();
 
     // ------------------------------------------------------------------------
     // Deployed Implementation Contracts
 
-    //Orchestrator_v1
+    // Orchestrator_v1
     address orchestrator;
 
-    //TransactionForwarder_v1
+    // TransactionForwarder_v1
     address forwarderImplementation;
     address governorImplementation;
 
@@ -118,7 +118,7 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Beacons
 
-    //TransactionForwarder_v1
+    // TransactionForwarder_v1
     address forwarderBeacon;
     // Funding Manager
     address rebasingFundingManagerBeacon;
@@ -138,15 +138,15 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Deployed Proxy Contracts
 
-    //These contracts will actually be used at the later point of time
+    // These contracts will actually be used at the later point of time
 
-    //Governor_v1
+    // Governor_v1
     address governor;
 
-    //FeeManager
+    // FeeManager
     address feeManager;
 
-    //TransactionForwarder_v1
+    // TransactionForwarder_v1
     address forwarder;
 
     // Factories
@@ -242,7 +242,7 @@ contract DeploymentScript is Script {
         uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
-        //Fetch the Multisig addresses
+        // Fetch the Multisig addresses
         address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
         address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
 
@@ -264,10 +264,10 @@ contract DeploymentScript is Script {
         console2.log("Fee Manager \n");
 
         feeManager = deployFeeManager.run(
-            address(governor), //owner
-            treasury, //treasury
-            100, //Collateral Fee 1%
-            100 //Issuance Fee 1%
+            address(governor), // owner
+            treasury, // treasury
+            100, // Collateral Fee 1%
+            100 // Issuance Fee 1%
         );
 
         console2.log(
@@ -275,17 +275,17 @@ contract DeploymentScript is Script {
         );
 
         console2.log("Deploy orchestrator implementation \n");
-        //Orchestrator_v1
+        // Orchestrator_v1
         orchestrator = deployOrchestrator.run();
 
         console2.log(
             "-----------------------------------------------------------------------------"
         );
         console2.log("Deploy forwarder implementation and proxy \n");
-        //Deploy TransactionForwarder_v1 implementation
+        // Deploy TransactionForwarder_v1 implementation
         forwarderImplementation = deployTransactionForwarder.run();
 
-        //Deploy beacon and actual proxy
+        // Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(deployer, forwarderImplementation, 1, 0);
 
@@ -300,10 +300,10 @@ contract DeploymentScript is Script {
         );
         console2.log("Deploy factory implementations \n");
 
-        //Deploy module factory v1 implementation
+        // Deploy module factory v1 implementation
         moduleFactory = deployModuleFactory.run(deployer, forwarder);
 
-        //Deploy orchestrator Factory implementation
+        // Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
             deployer, orchestrator, moduleFactory, forwarder
         );
@@ -336,7 +336,7 @@ contract DeploymentScript is Script {
         console2.log(
             "Deploy module beacons and register in module factory v1 \n"
         );
-        //Deploy Modules and Register in factories
+        // Deploy Modules and Register in factories
 
         // Funding Manager
         rebasingFundingManagerBeacon = deployAndSetupInverterBeacon_v1

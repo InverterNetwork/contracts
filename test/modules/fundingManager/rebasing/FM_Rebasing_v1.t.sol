@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -68,17 +68,17 @@ contract FM_RebasingV1Test is ModuleTest {
     event TransferOrchestratorToken(address indexed _to, uint _amount);
 
     function setUp() public {
-        //because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
+        // because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
 
-        //Add Module to Mock Orchestrator_v1
+        // Add Module to Mock Orchestrator_v1
 
         address impl = address(new FM_Rebasing_v1());
         fundingManager = FM_Rebasing_v1(Clones.clone(impl));
 
         _setUpOrchestrator(fundingManager);
 
-        //Init Module
+        // Init Module
         fundingManager.init(
             _orchestrator, _METADATA, abi.encode(address(_token))
         );
@@ -95,7 +95,7 @@ contract FM_RebasingV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    //This function also tests all the getters
+    // This function also tests all the getters
     //--------------------------------------------------------------------------
     // Tests: Initialization
 
@@ -275,10 +275,10 @@ contract FM_RebasingV1Test is ModuleTest {
 
         // ----------- SETUP ---------
 
-        //Buffer variable to track how much underlying balance each user has left
+        // Buffer variable to track how much underlying balance each user has left
         uint[] memory remainingFunds = new uint[](input.users.length);
 
-        //the deployer deposits 1 token so the orchestrator is never empty
+        // the deployer deposits 1 token so the orchestrator is never empty
         _token.mint(address(this), 1);
         vm.startPrank(address(this));
         _token.approve(address(fundingManager), type(uint).max);
@@ -327,7 +327,7 @@ contract FM_RebasingV1Test is ModuleTest {
                 remainingFunds[i] / 2,
                 1
             );
-            //We also update the balance tracking
+            // We also update the balance tracking
             remainingFunds[i] = fundingManager.balanceOf(input.users[i]);
         }
 
@@ -361,7 +361,7 @@ contract FM_RebasingV1Test is ModuleTest {
                 1
             );
 
-            //We also update the balance tracking
+            // We also update the balance tracking
             remainingFunds[i] = fundingManager.balanceOf(input.users[i]);
         }
 
@@ -372,7 +372,7 @@ contract FM_RebasingV1Test is ModuleTest {
             uint balance = fundingManager.balanceOf(input.users[i]);
             if (balance != 0) {
                 vm.prank(input.users[i]);
-                //to test both withdraw and withdrawTo
+                // to test both withdraw and withdrawTo
                 if (i % 2 == 0) {
                     vm.expectEmit();
                     emit Withdrawal(input.users[i], input.users[i], balance);
@@ -385,7 +385,7 @@ contract FM_RebasingV1Test is ModuleTest {
             }
         }
 
-        //Once everybody has withdrawn, only the initial token + some possible balance rounding leftovers remain.
+        // Once everybody has withdrawn, only the initial token + some possible balance rounding leftovers remain.
         assertTrue(fundingManager.totalSupply() <= (1 + input.users.length));
 
         // ---- STEP FOUR: RE-START ORCHESTRATOR
@@ -452,13 +452,13 @@ contract FM_RebasingV1Test is ModuleTest {
         // We cap the amount each user will deposit so we dont exceed the total supply.
         uint maxDeposit = (DEPOSIT_CAP / amountOfDepositors);
         for (uint i = 0; i < amountOfDepositors; i++) {
-            //we generate a "random" address
+            // we generate a "random" address
             address addr = address(uint160(i + 1));
             if (
                 addr != address(0) && addr != address(fundingManager)
                     && !_usersCache[addr] && addr != address(this)
             ) {
-                //This should be enough for the case we generated a duplicate address
+                // This should be enough for the case we generated a duplicate address
                 addr = address(uint160(block.timestamp - i));
             }
 
@@ -466,7 +466,7 @@ contract FM_RebasingV1Test is ModuleTest {
             userDeposits.users.push(addr);
             _usersCache[addr] = true;
 
-            //This is to avoid the fuzzer to generate a deposit amount that is too big
+            // This is to avoid the fuzzer to generate a deposit amount that is too big
             depositAmounts[i] = bound(depositAmounts[i], 1, maxDeposit - 1);
             userDeposits.deposits.push(depositAmounts[i]);
         }

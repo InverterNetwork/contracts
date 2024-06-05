@@ -156,7 +156,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
 
         // Return expected purchase return amount
-        //return mintAmount;
+        // return mintAmount;
     }
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -251,7 +251,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
-        //collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
+        // collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
         collateralFeeAmount = protocolFeeAmount + workflowFeeAmount;
 
         // Process the protocol fee

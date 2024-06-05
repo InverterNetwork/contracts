@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -36,11 +36,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 
-    //Variables
+    // Variables
     uint internal initialStakerMaxAmount = 100;
     uint internal tokenMultiplicator = 1e18;
 
-    //Events
+    // Events
 
     event RewardSet(
         uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
@@ -50,7 +50,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     event RewardsDistributed(address indexed user, uint amount);
 
     function setUp() public {
-        //Add Module to Mock Orchestrator
+        // Add Module to Mock Orchestrator
         address impl = address(new LM_PC_Staking_v1AccessMock());
         stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
 
@@ -65,7 +65,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    //This function also tests all the getters
+    // This function also tests all the getters
     function testInit() public override(ModuleTest) {
         assertEq(address(stakingToken), stakingManager.stakingToken());
     }
@@ -81,7 +81,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     // Modifier
 
     function testValidDuration(uint duration) public {
-        duration = bound(duration, 0, 31_536_000_000); //31536000000 = 1000 years in seconds
+        duration = bound(duration, 0, 31_536_000_000); // 31536000000 = 1000 years in seconds
         if (duration == 0) {
             vm.expectRevert(
                 ILM_PC_Staking_v1
@@ -96,10 +96,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     // Getter
 
     function testEarned(uint seed) public {
-        //Set up reasonable stakers
+        // Set up reasonable stakers
         setUpReasonableStakers(seed);
 
-        address user = address(uint160(1)); //Addresslikely to have stake in setUpReasonableStakers()
+        address user = address(uint160(1)); // Addresslikely to have stake in setUpReasonableStakers()
         uint providedRewardValue = stakingManager.direct_calculateRewardValue();
         uint userRewardValue = stakingManager.getRewards(user);
         uint userBalance = stakingManager.balanceOf(user);
@@ -124,30 +124,30 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         amount = bound(amount, 1, 1_000_000_000 * tokenMultiplicator);
         duration = bound(duration, 1, 31_536_000_000);
 
-        //Set up reasonable stakers
+        // Set up reasonable stakers
         setUpReasonableStakers(seed);
 
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         stakingManager.setRewards(
-            bound(seed, 1, 10_000) * 30 days, //This guarantees that 1 to 10_000 tokesn per second are distributed
+            bound(seed, 1, 10_000) * 30 days, // This guarantees that 1 to 10_000 tokesn per second are distributed
             30 days
         );
 
-        //There is a chance that the warp is higher than the reward period
+        // There is a chance that the warp is higher than the reward period
         vm.warp(bound(warp, 0, 35 days));
 
         uint rewardRate = stakingManager.rewardRate();
         uint totalSupply = stakingManager.totalSupply();
 
         if (block.timestamp > stakingManager.rewardsEnd()) {
-            //Assume that calculated reward is 0
+            // Assume that calculated reward is 0
             assertEq(0, stakingManager.estimateReward(amount, duration));
         } else {
             uint calculatedEstimation;
 
-            //If duration went over rewardsend
+            // If duration went over rewardsend
             if (block.timestamp + duration > stakingManager.rewardsEnd()) {
-                //Change duration so that it goes until rewardsend
+                // Change duration so that it goes until rewardsend
                 duration = stakingManager.rewardsEnd() - block.timestamp;
             }
 
@@ -166,7 +166,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function testEstimateRewardModifierInPosition() public {
-        //validAmount
+        // validAmount
         vm.expectRevert(
             IERC20PaymentClientBase_v1
                 .Module__ERC20PaymentClientBase__InvalidAmount
@@ -175,7 +175,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.estimateReward(0, 1);
 
-        //validDuration
+        // validDuration
         vm.expectRevert(
             ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
         );
@@ -187,34 +187,34 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     // Mutating Functions
 
     //-----------------------------------------
-    //stake
+    // stake
 
     function testStake(uint seed) public {
-        //Set up reasonable stakers
+        // Set up reasonable stakers
         setUpReasonableStakers(seed);
 
-        //Because we potentially want to introduce a user that already staked I randomise a address that has a chance to already be a staker from the setUpReasonableStakers() function
+        // Because we potentially want to introduce a user that already staked I randomise a address that has a chance to already be a staker from the setUpReasonableStakers() function
         address staker =
             address(uint160(bound(seed, 1, initialStakerMaxAmount + 1)));
 
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         setUpReasonableRewards(seed);
 
-        //Fund orchestrator
+        // Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
 
         if (staker == address(0)) {
             staker = address(uint160(1));
         }
 
-        //reasonable stake amount
+        // reasonable stake amount
         uint stakeAmount =
             bound(seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator);
 
-        //Mint to user
+        // Mint to user
         stakingToken.mint(staker, stakeAmount);
 
-        //Approve usage
+        // Approve usage
         vm.prank(staker);
         stakingToken.approve(address(stakingManager), stakeAmount);
 
@@ -228,7 +228,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.prank(staker);
         stakingManager.stake(stakeAmount);
 
-        //Check _distributeRewards() is triggered
+        // Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
             assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
@@ -242,7 +242,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function testStakeModifierInPosition() public {
-        //validAmount
+        // validAmount
         vm.expectRevert(
             IERC20PaymentClientBase_v1
                 .Module__ERC20PaymentClientBase__InvalidAmount
@@ -251,27 +251,27 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.stake(0);
 
-        //Check for reentrancy
+        // Check for reentrancy
 
-        //Set it so that the stakingToken does a reentrancy call on the stakingManager
+        // Set it so that the stakingToken does a reentrancy call on the stakingManager
         stakingToken.setReentrancyOnTransfer(
             abi.encodeWithSignature("stake(uint256)", 1)
         );
 
-        //Mint to user
+        // Mint to user
         stakingToken.mint(address(0xBeef), 1);
 
-        //Approve
+        // Approve
         vm.prank(address(0xBeef));
         stakingToken.approve(address(stakingManager), 1);
 
         vm.prank(address(0xBeef));
         stakingManager.stake(1);
 
-        //Check if the call failed
+        // Check if the call failed
         assertFalse(stakingToken.callSuccessful());
 
-        //Check if return error was correct
+        // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
                 ReentrancyGuard.ReentrancyGuardReentrantCall.selector
@@ -281,38 +281,38 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     //-----------------------------------------
-    //unstake
+    // unstake
 
     function testUnstake(uint seed, uint unstakeSeed, address staker) public {
         if (staker == address(0) || staker == address(stakingManager)) {
             staker = address(uint160(1));
         }
 
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         setUpReasonableRewards(seed);
 
-        //Fund orchestrator
+        // Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
 
-        //reasonable stake amount
+        // reasonable stake amount
         uint stakeAmount =
             bound(seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator);
 
-        //reasonable withdraw amount
+        // reasonable withdraw amount
         uint unstakeAmount = bound(unstakeSeed, tokenMultiplicator, stakeAmount);
 
-        //Mint to user
+        // Mint to user
         stakingToken.mint(staker, stakeAmount);
 
-        //Approve usage
+        // Approve usage
         vm.prank(staker);
         stakingToken.approve(address(stakingManager), stakeAmount);
 
-        //Stake
+        // Stake
         vm.prank(staker);
         stakingManager.stake(stakeAmount);
 
-        //Warp the chain by a reasonable amount
+        // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
         uint prevTotalAmount = stakingManager.totalSupply();
@@ -322,11 +322,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.expectEmit(true, true, true, true);
         emit Unstaked(staker, unstakeAmount);
 
-        //Withdraw
+        // Withdraw
         vm.prank(staker);
         stakingManager.unstake(unstakeAmount);
 
-        //Check _distributeRewards() is triggered
+        // Check _distributeRewards() is triggered
         if (expectedEarnings != 0) {
             assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
@@ -340,7 +340,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function testUnstakeModifierInPosition() public {
-        //validAmount
+        // validAmount
         vm.expectRevert(
             IERC20PaymentClientBase_v1
                 .Module__ERC20PaymentClientBase__InvalidAmount
@@ -349,43 +349,43 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.unstake(0);
 
-        //Check for reentrancy
+        // Check for reentrancy
 
-        //Set it so that the stakingToken does a reentrancy call on the stakingManager
+        // Set it so that the stakingToken does a reentrancy call on the stakingManager
         stakingToken.setReentrancyOnTransfer(
             abi.encodeWithSignature("stake(uint256)", 1)
         );
 
-        //Warp time appropriately
+        // Warp time appropriately
         vm.warp(365 days);
 
-        //Fund orchestrator
+        // Fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
 
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         setUpReasonableRewards(0);
 
-        //Mint to user
+        // Mint to user
         stakingToken.mint(address(0xBeef), 1);
 
-        //Approve
+        // Approve
         vm.prank(address(0xBeef));
         stakingToken.approve(address(stakingManager), 1);
 
-        //Stake tokens
+        // Stake tokens
         vm.prank(address(0xBeef));
         stakingManager.stake(1);
 
-        //Warp so staker would get rewarded
+        // Warp so staker would get rewarded
         vm.warp(block.timestamp + 1 days);
 
         vm.prank(address(0xBeef));
         stakingManager.unstake(1);
 
-        //Check if the call failed
+        // Check if the call failed
         assertFalse(stakingToken.callSuccessful());
 
-        //Check if return error was correct
+        // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
                 ReentrancyGuard.ReentrancyGuardReentrantCall.selector
@@ -408,8 +408,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             bound(secondAmount, 1, 1_000_000_000_000_000 * tokenMultiplicator);
         secondDuration = bound(secondDuration, 1, 365 days);
 
-        //Intial timestamp cant be 0
-        //Warp the chain by a reasonable amount
+        // Intial timestamp cant be 0
+        // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days));
 
         uint expectedRewardRate = calculateRewardRate(amount, duration, 0, 0);
@@ -422,7 +422,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
                     .selector
             );
             stakingManager.setRewards(amount, duration);
-            //No need to test further, because the rest of the unit test doesnt make sense otherwise
+            // No need to test further, because the rest of the unit test doesnt make sense otherwise
             return;
         }
 
@@ -434,9 +434,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(expectedRewardRate, stakingManager.rewardRate());
         assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
 
-        //Test when rewards were already set
+        // Test when rewards were already set
 
-        //Warp the chain by a reasonable amount, but reward period should still be active
+        // Warp the chain by a reasonable amount, but reward period should still be active
         vm.warp(bound(seed, 0, duration - 1) + block.timestamp);
 
         expectedRewardRate = calculateRewardRate(
@@ -451,7 +451,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
                     .selector
             );
             stakingManager.setRewards(secondAmount, secondDuration);
-            //No need to test further, because the rest of the unit test doesnt make sense otherwise
+            // No need to test further, because the rest of the unit test doesnt make sense otherwise
             return;
         }
 
@@ -467,7 +467,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function testSetRewardsModifierInPosition() public {
-        //onlyOrchestratorAdmin
+        // onlyOrchestratorAdmin
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -479,7 +479,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.prank(address(0xBEEF));
         stakingManager.setRewards(1, 1);
 
-        //validAmount
+        // validAmount
         vm.expectRevert(
             IERC20PaymentClientBase_v1
                 .Module__ERC20PaymentClientBase__InvalidAmount
@@ -488,7 +488,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.setRewards(0, 1);
 
-        //validDuration
+        // validDuration
         vm.expectRevert(
             ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
         );
@@ -500,11 +500,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     // Internal Functions
 
     function test_update(uint seed, address trigger) public {
-        //Set up reasonable stakers
+        // Set up reasonable stakers
         setUpReasonableStakers(seed);
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         setUpReasonableRewards(seed);
-        //Warp the chain by a reasonable amount
+        // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
         uint expectedRewards;
@@ -519,9 +519,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.direct_update(trigger);
 
-        //Check that values changed
+        // Check that values changed
         assertEq(
-            stakingManager.direct_calculateRewardValue(), //works because time between last update and RewardDistributionTimestamp value is 0 and therefor just returns the older rewardValue
+            stakingManager.direct_calculateRewardValue(), // works because time between last update and RewardDistributionTimestamp value is 0 and therefor just returns the older rewardValue
             stakingManager.getRewardValue()
         );
         assertEq(stakingManager.getLastUpdate(), stakingManager.getLastUpdate());
@@ -536,7 +536,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function test_calculateRewardValue(uint seed) public {
-        //Set up reasonable stakers
+        // Set up reasonable stakers
         setUpReasonableStakers(seed);
 
         uint rewardDistributionTimestamp =
@@ -560,10 +560,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function test_getRewardDistributionTimestamp(uint seed) public {
-        //Set up reasonable stakers
+        // Set up reasonable stakers
         setUpReasonableStakers(seed);
 
-        uint newRewardsEnd = bound(seed, 1 days, 2 * 365 days); //setUpReasonableStakers() sets the current timestamp to some value between 1 day to 365 days.
+        uint newRewardsEnd = bound(seed, 1 days, 2 * 365 days); // setUpReasonableStakers() sets the current timestamp to some value between 1 day to 365 days.
         stakingManager.setRewardsEnd(newRewardsEnd);
 
         uint estimatedValue;
@@ -579,18 +579,18 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     }
 
     function test_distributeRewards(uint seed) public {
-        //Warp the chain to a reasonable amount
+        // Warp the chain to a reasonable amount
         vm.warp(bound(seed, 1 days, 365 days));
 
-        //fund orchestrator
+        // fund orchestrator
         _token.mint(address(_fundingManager), 12_960_000);
 
         address user = address(uint160(1));
 
-        //Mint to user
+        // Mint to user
         stakingToken.mint(user, 1);
 
-        //User stakes
+        // User stakes
         vm.startPrank(user);
 
         stakingToken.approve(address(stakingManager), 1);
@@ -598,15 +598,15 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         vm.stopPrank();
 
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         setUpReasonableRewards(seed);
 
-        //Warp the chain by a reasonable amount
+        // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
         uint expectedPayout = stakingManager.earned(user);
 
-        //For earned to work update had to be triggered
+        // For earned to work update had to be triggered
         stakingManager.direct_update(user);
 
         vm.expectEmit(true, true, true, true);
@@ -614,10 +614,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.direct_distributeRewards(user);
 
-        //rewards are reset
+        // rewards are reset
         assertEq(0, stakingManager.getRewards(user));
 
-        //Expect paymentOrder to be correct
+        // Expect paymentOrder to be correct
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             stakingManager.paymentOrders();
 
@@ -627,7 +627,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(block.timestamp, orders[0].start);
         assertEq(block.timestamp, orders[0].end);
 
-        //Make sure payment Processor was triggered
+        // Make sure payment Processor was triggered
         assertEq(1, _paymentProcessor.processPaymentsTriggered());
     }
 
@@ -637,24 +637,24 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     // Helper
 
     function setUpReasonableStakers(uint seed) internal {
-        //Warp the chain to a reasonable amount
+        // Warp the chain to a reasonable amount
         vm.warp(bound(seed, 1 days, 365 days));
 
-        //Set up stakers
-        //randomise amount of stakers
+        // Set up stakers
+        // randomise amount of stakers
         uint stakerAmount = bound(seed, 0, initialStakerMaxAmount);
 
         uint stakeAmount;
         uint stakerNumber = 1;
         for (uint i = 0; i < stakerAmount; i++) {
-            //randomise amount staked
+            // randomise amount staked
             stakeAmount = bound(
                 seed, tokenMultiplicator, 1_000_000_000 * tokenMultiplicator
             );
-            //Mint to users
+            // Mint to users
             stakingToken.mint(address(uint160(stakerNumber)), stakeAmount);
 
-            //Users stake
+            // Users stake
             vm.startPrank(address(uint160(stakerNumber)));
 
             stakingToken.approve(address(stakingManager), stakeAmount);
@@ -662,10 +662,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
             vm.stopPrank();
 
-            //Increase stakerNumber to get a different address
+            // Increase stakerNumber to get a different address
             stakerNumber++;
 
-            //Change seed to increase randomness
+            // Change seed to increase randomness
             unchecked {
                 seed -= stakeAmount;
             }
@@ -675,10 +675,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     function setUpReasonableRewards(uint seed) internal {
         uint tokens = bound(
             seed,
-            12_960_000, //Thats 5 tokens per second
-            1e22 * 12_960_000 //Thats 5000 tokens per second
+            12_960_000, // Thats 5 tokens per second
+            1e22 * 12_960_000 // Thats 5000 tokens per second
         );
-        //Set up reasonable rewards
+        // Set up reasonable rewards
         stakingManager.setRewards(tokens, 1 seconds);
     }
 
@@ -716,10 +716,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         if (block.timestamp >= rewardsEnd) {
             return amount / duration;
         } else {
-            //Calculate remaind rewards supposed to go into the pool
+            // Calculate remaind rewards supposed to go into the pool
             uint remainingRewards =
                 (rewardsEnd - block.timestamp) * alreadyExistingRewardRate;
-            //Add new Amount to previous amount and calculate rate
+            // Add new Amount to previous amount and calculate rate
             return (amount + remainingRewards) / duration;
         }
     }

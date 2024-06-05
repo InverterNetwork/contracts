@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-//Internal Interfaces
+// Internal Interfaces
 import {IInverterProxyAdmin_v1} from
     "src/proxies/interfaces/IInverterProxyAdmin_v1.sol";
 import {IInverterTransparentUpgradeableProxy_v1} from

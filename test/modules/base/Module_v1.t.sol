@@ -10,7 +10,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-//Internal Dependencies
+// Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
@@ -238,10 +238,10 @@ contract ModuleBaseV1Test is ModuleTest {
         uint setFee = 100;
         address treasury = makeAddr("customTreasury");
 
-        //Set treasury
+        // Set treasury
         feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
 
-        //set fee
+        // set fee
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
             address(module),
@@ -261,10 +261,10 @@ contract ModuleBaseV1Test is ModuleTest {
         uint setFee = 100;
         address treasury = makeAddr("customTreasury");
 
-        //Set treasury
+        // Set treasury
         feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
 
-        //set fee
+        // set fee
         feeManager.setIssuanceWorkflowFee(
             address(_orchestrator),
             address(module),
@@ -288,34 +288,34 @@ contract ModuleBaseV1Test is ModuleTest {
     {
         vm.assume(sender != address(_forwarder));
 
-        //Activate the trustedForwarder connection
+        // Activate the trustedForwarder connection
         _orchestrator.flipConnectToTrustedForwarder();
 
-        //setup function signature that will trigger the _msgSender
+        // setup function signature that will trigger the _msgSender
         bytes memory originalCallData =
             abi.encodeWithSignature("original_msgSender()");
 
-        //this should add the 20 bytes of the address to the end of the calldata
+        // this should add the 20 bytes of the address to the end of the calldata
         bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
 
         if (fromForwarder) {
             sender = address(_forwarder);
         }
-        //use call to properly use the added address at the end of the callData
+        // use call to properly use the added address at the end of the callData
         vm.prank(sender);
         (bool success, bytes memory returndata) =
             address(module).call(metaTxCallData);
 
         assertTrue(success);
 
-        //Decode the correct perceivedAddress out of the call returndata
+        // Decode the correct perceivedAddress out of the call returndata
         address perceivedSender = abi.decode(returndata, (address));
 
         if (fromForwarder) {
-            //If from Forwarder it should recognize the signer as the sender
+            // If from Forwarder it should recognize the signer as the sender
             assertEq(perceivedSender, signer);
         } else {
-            //If not it should be the sender
+            // If not it should be the sender
             assertEq(perceivedSender, sender);
         }
     }
@@ -325,34 +325,34 @@ contract ModuleBaseV1Test is ModuleTest {
     {
         vm.assume(sender != address(_forwarder));
 
-        //Activate the trustedForwarder connection
+        // Activate the trustedForwarder connection
         _orchestrator.flipConnectToTrustedForwarder();
 
-        //setup function signature that will trigger the _msgData
+        // setup function signature that will trigger the _msgData
         bytes memory originalCallData =
             abi.encodeWithSignature("original_msgData()");
 
-        //this should add the 20 bytes of the address to the end of the calldata
+        // this should add the 20 bytes of the address to the end of the calldata
         bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
 
         if (fromForwarder) {
             sender = address(_forwarder);
         }
-        //use call to properly use the added address at the end of the callData
+        // use call to properly use the added address at the end of the callData
         vm.prank(sender);
         (bool success, bytes memory returndata) =
             address(module).call(metaTxCallData);
 
         assertTrue(success);
 
-        //Decode the correct perceivedData out of the call returndata
+        // Decode the correct perceivedData out of the call returndata
         bytes memory perceivedData = abi.decode(returndata, (bytes));
 
         if (fromForwarder) {
-            //If from Forwarder it should have clipped the data to the size before the signer was added
+            // If from Forwarder it should have clipped the data to the size before the signer was added
             assertEq(perceivedData, originalCallData);
         } else {
-            //If not it should be full data without the clipping
+            // If not it should be full data without the clipping
             assertEq(perceivedData, metaTxCallData);
         }
     }

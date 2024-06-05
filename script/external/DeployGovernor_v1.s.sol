@@ -57,13 +57,13 @@ contract DeployGovernor_v1 is Script {
             // Deploy the Governor_v1.
             govImplementation = new Governor_v1();
 
-            //Deploy Governance Contract
+            // Deploy Governance Contract
             gov = Governor_v1(
                 address(
-                    new TransparentUpgradeableProxy( //based on openzeppelins TransparentUpgradeableProxy
-                        address(govImplementation), //Implementation Address
-                        communityMultisig, //Admin
-                        bytes("") //data field that could have been used for calls, but not necessary
+                    new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                        address(govImplementation), // Implementation Address
+                        communityMultisig, // Admin
+                        bytes("") // data field that could have been used for calls, but not necessary
                     )
                 )
             );

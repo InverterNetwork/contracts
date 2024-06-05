@@ -135,18 +135,18 @@ contract LM_PC_Staking_v1 is
         validDuration(duration)
         returns (uint)
     {
-        //if rewardsend is reached you dont get any rewards
+        // if rewardsend is reached you dont get any rewards
         if (block.timestamp > rewardsEnd) {
             return 0;
         }
-        //If duration went over rewardsend
+        // If duration went over rewardsend
         if (block.timestamp + duration > rewardsEnd) {
-            //change duration so that it goes until rewardsend
+            // change duration so that it goes until rewardsend
             duration = rewardsEnd - block.timestamp;
         }
-        //If no one else staked
+        // If no one else staked
         if (totalSupply == 0) {
-            //Get full amount back
+            // Get full amount back
             return amount * duration * rewardRate;
         }
         return amount * duration * rewardRate / totalSupply;
@@ -166,7 +166,7 @@ contract LM_PC_Staking_v1 is
 
         _stake(sender, amount);
 
-        //transfer funds to LM_PC_Staking_v1
+        // transfer funds to LM_PC_Staking_v1
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
@@ -179,20 +179,20 @@ contract LM_PC_Staking_v1 is
         validAmount(amount)
     {
         address sender = _msgSender();
-        //Update rewardValue, updatedTimestamp and earned values
+        // Update rewardValue, updatedTimestamp and earned values
         _update(sender);
 
-        //Reduce balances accordingly
+        // Reduce balances accordingly
         _balances[sender] -= amount;
-        //Total supply too
+        // Total supply too
         totalSupply -= amount;
 
-        //Transfer funds back to sender
+        // Transfer funds back to sender
         IERC20(stakingToken).safeTransfer(sender, amount);
 
-        //If the user has earned something
+        // If the user has earned something
         if (rewards[sender] != 0) {
-            //distribute rewards
+            // distribute rewards
             _distributeRewards(sender);
         }
 
@@ -221,15 +221,15 @@ contract LM_PC_Staking_v1 is
     function _stake(address depositFor, uint amount) internal virtual {
         _update(depositFor);
 
-        //If the user has already earned something
+        // If the user has already earned something
         if (rewards[depositFor] != 0) {
-            //distribute rewards for previous reward period
+            // distribute rewards for previous reward period
             _distributeRewards(depositFor);
         }
 
-        //Increase balance accordingly
+        // Increase balance accordingly
         _balances[depositFor] += amount;
-        //Total supply too
+        // Total supply too
         totalSupply += amount;
 
         emit Staked(depositFor, amount);
@@ -237,13 +237,13 @@ contract LM_PC_Staking_v1 is
 
     /// @dev This has to trigger on every major change of the state of the contract
     function _update(address triggerAddress) internal {
-        //Set a new reward value
+        // Set a new reward value
         rewardValue = _calculateRewardValue();
 
-        //Set timestamp correctly
+        // Set timestamp correctly
         lastUpdate = _getRewardDistributionTimestamp();
 
-        //If trigger address is 0 then its not a user
+        // If trigger address is 0 then its not a user
         if (triggerAddress != address(0)) {
             rewards[triggerAddress] = _earned(triggerAddress, rewardValue);
             userRewardValue[triggerAddress] = rewardValue;
@@ -256,16 +256,16 @@ contract LM_PC_Staking_v1 is
     /// multiplied by the time period it was active and dividing that with the total supply
     /// This "single" value is essentially what a single token would have earned in that time period
     function _calculateRewardValue() internal view returns (uint) {
-        //In case the totalSupply is 0 the rewardValue doesnt change
+        // In case the totalSupply is 0 the rewardValue doesnt change
         if (totalSupply == 0) {
             return rewardValue;
         }
 
-        return (_getRewardDistributionTimestamp() - lastUpdate) //Get the time difference between the last time it was updated and now (or in case the reward period ended the rewardEnd timestamp)
-            * rewardRate //Multiply it with the rewardrate to get the rewards distributed for all of the stakers together
+        return (_getRewardDistributionTimestamp() - lastUpdate) // Get the time difference between the last time it was updated and now (or in case the reward period ended the rewardEnd timestamp)
+            * rewardRate // Multiply it with the rewardrate to get the rewards distributed for all of the stakers together
             * 1e36 // for the later division we need a value to compensate for the loss of precision. This value will be counteracted in earned()
-            / totalSupply //divide it by the totalSupply to get the rewards per token
-            + rewardValue; //add the old rewardValue to the new "single" rewardValue
+            / totalSupply // divide it by the totalSupply to get the rewards per token
+            + rewardValue; // add the old rewardValue to the new "single" rewardValue
     }
 
     /// @dev The function returns either the current timestamp or the last timestamp where rewards will be distributed, based on which one is earlier
@@ -283,7 +283,7 @@ contract LM_PC_Staking_v1 is
         view
         returns (uint)
     {
-        return (providedRewardValue - userRewardValue[user]) //This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
+        return (providedRewardValue - userRewardValue[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
             * _balances[user] // multiply by users balance of tokens to get their share of the token rewards
             / 1e36 // See comment in _calculateRewardValue();
             + rewards[user];
@@ -291,9 +291,9 @@ contract LM_PC_Staking_v1 is
 
     ///@dev direct distribution of earned rewards via the payment processor
     function _distributeRewards(address recipient) internal {
-        //Check what recipient has earned
+        // Check what recipient has earned
         uint amount = _earned(recipient, rewardValue);
-        //Set rewards to zero
+        // Set rewards to zero
         rewards[recipient] = 0;
 
         _addPaymentOrder(
@@ -321,25 +321,25 @@ contract LM_PC_Staking_v1 is
         validDuration(duration)
     {
         _update(address(0));
-        //If rewardsEnd is already reached
+        // If rewardsEnd is already reached
         if (block.timestamp >= rewardsEnd) {
-            //Dont include previous reward Rate
+            // Dont include previous reward Rate
             rewardRate = amount / duration;
         } else {
-            //Calculate remaining rewards supposed to go back into the pool
+            // Calculate remaining rewards supposed to go back into the pool
             uint remainingRewards = (rewardsEnd - block.timestamp) * rewardRate;
-            //Add new Amount to previous amount and calculate rate
+            // Add new Amount to previous amount and calculate rate
             rewardRate = (amount + remainingRewards) / duration;
         }
 
-        //RewardRate cant be zero
+        // RewardRate cant be zero
         if (rewardRate == 0) {
             revert Module__LM_PC_Staking_v1__InvalidRewardRate();
         }
 
-        //Rewards end is now plus duration
+        // Rewards end is now plus duration
         rewardsEnd = block.timestamp + duration;
-        //Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been distributed
+        // Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been distributed
         lastUpdate = block.timestamp;
 
         emit RewardSet(amount, duration, rewardRate, rewardsEnd);

@@ -266,9 +266,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     {
         _executeRemoveModule(address(authorizer));
 
-        //set timelock to inactive
+        // set timelock to inactive
         moduleAddressToTimelock[address(authorizer_)].timelockActive = false;
-        //Use _commitAddModule directly as it doesnt need the authorization of the by now none existing Authorizer
+        // Use _commitAddModule directly as it doesnt need the authorization of the by now none existing Authorizer
         _commitAddModule(address(authorizer_));
 
         authorizer = authorizer_;

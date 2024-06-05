@@ -29,7 +29,7 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
-        bytes memory //configData
+        bytes memory // configData
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
     }
@@ -58,7 +58,7 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
         _addPaymentOrders(orders);
     }
 
-    //for testing the original functionality of the internal functions I created these placeholders
+    // for testing the original functionality of the internal functions I created these placeholders
 
     function originalEnsureTokenBalance(address token) external {
         return _ensureTokenBalance(token);

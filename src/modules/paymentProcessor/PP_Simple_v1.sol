@@ -104,7 +104,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             address token = tokens[i];
             uint totalAmount = totalAmounts[i];
 
-            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            // Make sure to let paymentClient know that amount doesnt have to be stored anymore
             client.amountPaid(token, totalAmount);
         }
 
@@ -139,7 +139,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         onlyModule
         validClient(client)
     {
-        //Since we pay out on processing, this function does nothing
+        // Since we pay out on processing, this function does nothing
         return;
     }
 }

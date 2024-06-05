@@ -56,7 +56,7 @@ contract ERC20Mock is ERC20 {
         address owner = _msgSender();
         _transfer(owner, to, amount);
 
-        //Quite dirty but this should do the trick of testing attempted reentrancy
+        // Quite dirty but this should do the trick of testing attempted reentrancy
         if (reentrancyOnTransfer) {
             (bool success, bytes memory data) =
                 msg.sender.call(reentrancyCallData);
@@ -84,7 +84,7 @@ contract ERC20Mock is ERC20 {
         _spendAllowance(from, spender, amount);
         _transfer(from, to, amount);
 
-        //Quite dirty but this should do the trick of testing attempted reentrancy
+        // Quite dirty but this should do the trick of testing attempted reentrancy
         if (reentrancyOnTransfer) {
             (bool success, bytes memory data) =
                 msg.sender.call(reentrancyCallData);
