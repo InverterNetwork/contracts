@@ -244,7 +244,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
-            collateralreasury, collateralToken, protocolFeeAmount
+            collateralTreasury, collateralToken, protocolFeeAmount
         );
 
         // Add workflow fee if applicable
@@ -306,46 +306,5 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _getFeeManagerIssuanceFeeData(
             bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
         );
-    }
-
-    /// @dev This function takes into account any applicable sell fees before computing the
-    /// collateral amount to be redeemed. Revert when depositAmount is zero.
-    /// @param _depositAmount The amount of tokens deposited by the user.
-    /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
-    function _calculateSaleReturn(uint _depositAmount)
-        internal
-        view
-        virtual
-        returns (uint redeemAmount)
-    {
-        if (_depositAmount == 0) {
-            revert Module__RedeemingBondingCurveBase__InvalidDepositAmount();
-        }
-
-        // Get protocol fee percentages
-        (
-            /* collateralreasury */
-            ,
-            /* issuanceTreasury */
-            ,
-            uint collateralSellFeePercentage,
-            uint issuanceSellFeePercentage
-        ) = _getSellFeesAndTreasuryAddresses();
-
-        // Deduct protocol sell fee from issuance, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-        _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
-
-        // Calculate redeem amount from formula
-        redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
-
-        // Deduct protocol and project sell fee from collateral, if applicable
-        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
-        _calculateNetAndSplitFees(
-            redeemAmount, collateralSellFeePercentage, sellFee
-        );
-
-        // Return redeem amount
-        return redeemAmount;
     }
 }

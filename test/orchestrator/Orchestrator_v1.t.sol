@@ -105,6 +105,7 @@ contract OrchestratorV1Test is Test {
         );
         orchestrator.init(
             orchestratorId,
+            address(moduleFactory),
             modules,
             IFundingManager_v1(wrongModule),
             authorizer,
@@ -120,6 +121,7 @@ contract OrchestratorV1Test is Test {
         );
         orchestrator.init(
             orchestratorId,
+            address(moduleFactory),
             modules,
             fundingManager,
             IAuthorizer_v1(wrongModule),
@@ -135,6 +137,7 @@ contract OrchestratorV1Test is Test {
         );
         orchestrator.init(
             orchestratorId,
+            address(moduleFactory),
             modules,
             fundingManager,
             authorizer,
@@ -194,6 +197,7 @@ contract OrchestratorV1Test is Test {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         orchestrator.init(
             orchestratorId,
+            address(moduleFactory),
             modules,
             fundingManager,
             authorizer,
@@ -215,6 +219,7 @@ contract OrchestratorV1Test is Test {
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
+            address(moduleFactory),
             createModules(moduleAmount),
             fundingManager,
             authorizer,
@@ -368,6 +373,7 @@ contract OrchestratorV1Test is Test {
         // Initialize orchestrator.
         orchestrator.init(
             orchestratorId,
+            address(moduleFactory),
             createModules(moduleAmount),
             fundingManager,
             authorizer,
@@ -557,6 +563,7 @@ contract OrchestratorV1Test is Test {
     ) public {
         orchestrator.init(
             1,
+            address(moduleFactory),
             new address[](0),
             fundingManager,
             authorizer,
@@ -577,6 +584,7 @@ contract OrchestratorV1Test is Test {
     ) public {
         orchestrator.init(
             1,
+            address(moduleFactory),
             new address[](0),
             fundingManager,
             authorizer,
@@ -597,6 +605,7 @@ contract OrchestratorV1Test is Test {
     ) public {
         orchestrator.init(
             1,
+            address(moduleFactory),
             new address[](0),
             fundingManager,
             authorizer,

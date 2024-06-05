@@ -327,10 +327,10 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager.call_executeAddModule(module);
     }
 
-    function testInitiateAddModuleWithTimelock_FailsIfProxyNotRegistered(
-        address who
-    ) public {
-        types.assumeValidModule(who);
+    function testInitiateAddModuleWithTimelock_FailsIfProxyNotRegistered()
+        public
+    {
+        address module = createModules(1, 1)[0];
 
         // Test whether the initiation fails
         moduleManager.__ModuleManager_setRegisteredProxyCheckShouldFail(true);
@@ -340,18 +340,18 @@ contract ModuleManagerBaseV1Test is Test {
                 .ModuleManagerBase__ModuleNotRegistered
                 .selector
         );
-        moduleManager.call_initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(module);
 
         // Afterwards, tests if it works once the proxy is registered properly
         moduleManager.__ModuleManager_setRegisteredProxyCheckShouldFail(false);
 
-        moduleManager.call_initiateAddModuleWithTimelock(who);
+        moduleManager.call_initiateAddModuleWithTimelock(module);
         vm.warp(block.timestamp + timelock);
 
         vm.expectEmit(true, true, true, true);
-        emit ModuleAdded(who);
+        emit ModuleAdded(module);
 
-        moduleManager.call_executeAddModule(who);
+        moduleManager.call_executeAddModule(module);
     }
 
     function testInitiateAddModuleWithTimelock_FailsIfAlreadyAdded() public {

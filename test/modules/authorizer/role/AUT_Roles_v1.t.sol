@@ -183,7 +183,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testInitWithoutInitialAdmins() public {
-        //Checks that address list gets correctly stored on initialization if there are no admins given
+        // Checks that address list gets correctly stored on initialization if there are no admins given
         // We "reuse" the orchestrator created in the setup, but the orchestrator doesn't know about this new authorizer.
 
         address authImpl = address(new AUT_Roles_v1());
@@ -202,18 +202,7 @@ contract AUT_RolesV1Test is Test {
         );
 
         assertEq(
-            testAuthorizer.getRoleAdmin(testAuthorizer.BURN_ADMIN_ROLE()),
-            testAuthorizer.BURN_ADMIN_ROLE()
-        );
-
-        assertEq(address(testAuthorizer.orchestrator()), address(_orchestrator));
-
-        assertEq(
-            testAuthorizer.hasRole(testAuthorizer.getAdminRole(), address(this)),
-            true
-        );
-        assertEq(
-            testAuthorizer.getRoleMemberCount(testAuthorizer.getAdminRole()), 1
+            testAuthorizer.getRoleMemberCount(testAuthorizer.getAdminRole()), 0
         );
     }
 

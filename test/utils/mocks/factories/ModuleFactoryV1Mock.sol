@@ -42,6 +42,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         bytes memory,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
+        givenWorkflowConfig = workflowConfig;
         if (
             LibMetadata.identifier(metadata)
                 == LibMetadata.identifier(fundingManagerMetadata)
