@@ -78,22 +78,4 @@ interface IPaymentProcessor_v1 {
     /// @param client The {IERC20PaymentClientBase_v1} instance to process its to payments.
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
         external;
-
-    /// @notice Returns the IERC20 token the payment processor can process.
-    function token() external view returns (IERC20);
-
-    /// @notice Getter for the amount of tokens that could not be claimed.
-    /// @param client address of the payment client
-    /// @param paymentReceiver PaymentReceiver's address.
-    function unclaimable(address client, address paymentReceiver)
-        external
-        view
-        returns (uint amount);
-
-    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver
-    /// @dev This function should be callable if the _msgSender has  unclaimedAmounts
-    /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
-    /// @param receiver The address that will receive the previously unclaimable amount
-    function claimPreviouslyUnclaimable(address client, address receiver)
-        external;
 }

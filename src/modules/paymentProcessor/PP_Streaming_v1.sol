@@ -140,9 +140,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         external
     {
         if (unclaimable(client, _msgSender()) == 0) {
-            revert Module__PaymentProcessor__NothingToClaim(
-                client, _msgSender()
-            );
+            revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
         }
 
         _claimPreviouslyUnclaimable(client, receiver);
