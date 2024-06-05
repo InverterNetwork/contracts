@@ -20,7 +20,7 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
     ERC20Mock token;
 
-    uint public amountPaidCounter;
+    mapping(address => uint) public amountPaidCounter;
     mapping(address => bool) authorized;
 
     //--------------------------------------------------------------------------
@@ -99,7 +99,7 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         external
         override(ERC20PaymentClientBase_v1)
     {
-        amountPaidCounter += amount;
+        amountPaidCounter[_token] += amount;
 
         _outstandingTokenAmounts[_token] -= amount;
     }

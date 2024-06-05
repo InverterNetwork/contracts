@@ -326,7 +326,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 ++i;
             }
         }
-        assertEq(totalAmount, paymentClient.amountPaidCounter());
+        assertEq(totalAmount, paymentClient.amountPaidCounter(address(_token)));
     }
 
     // test cannot claim before cliff ends
@@ -440,7 +440,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 ++i;
             }
         }
-        assertEq(totalAmount, paymentClient.amountPaidCounter());
+        assertEq(totalAmount, paymentClient.amountPaidCounter(address(_token)));
     }
 
     function test_claimStreamedAmounts_CliffDoesNotInfluencePayout(
@@ -536,7 +536,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 ++i;
             }
         }
-        assertEq(expectedHalfAmount, paymentClient.amountPaidCounter());
+        assertEq(
+            expectedHalfAmount, paymentClient.amountPaidCounter(address(_token))
+        );
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
@@ -982,7 +984,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             (expectedTotal / 2)
         );
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), expectedTotal);
+        assertEq(
+            paymentClient.amountPaidCounter(address(_token)), expectedTotal
+        );
         assertTrue(
             initialStreamIdAtIndex1 != paymentReceiverStreams[1]._streamId
         );
@@ -1084,8 +1088,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         );
 
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), total1);
-        amountPaidAlready += paymentClient.amountPaidCounter();
+        assertEq(paymentClient.amountPaidCounter(address(_token)), total1);
+        amountPaidAlready += paymentClient.amountPaidCounter(address(_token));
 
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
         total2 = (paymentReceiverStreams[1]._total) / 2; // since we are at half the streaming duration
@@ -1102,10 +1106,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(
-            paymentClient.amountPaidCounter(),
+            paymentClient.amountPaidCounter(address(_token)),
             paymentReceiverStreams[1]._total + total1
         );
-        amountPaidAlready = paymentClient.amountPaidCounter();
+        amountPaidAlready = paymentClient.amountPaidCounter(address(_token));
 
         paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
@@ -1131,7 +1135,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address(paymentClient), paymentReceiverStreams[0]._streamId
         );
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, total3);
+        assertEq(
+            paymentClient.amountPaidCounter(address(_token)) - amountPaidAlready,
+            total3
+        );
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
@@ -1574,7 +1581,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
             // Check that amountPaid is correct in PaymentClient
             amountPaid += amount;
-            assertEq(paymentClient.amountPaidCounter(), amountPaid);
+            assertEq(
+                paymentClient.amountPaidCounter(address(_token)), amountPaid
+            );
         }
     }
 
@@ -1641,7 +1650,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
 
-        assertEq(totalAmount, paymentClient.amountPaidCounter());
+        assertEq(totalAmount, paymentClient.amountPaidCounter(address(_token)));
     }
 
     // Verifies our contract corectly handles ERC20 revertion.
