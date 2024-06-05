@@ -70,6 +70,11 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
+    /// @dev paymentClient => token address => paymentReceiver => unclaimable Amount
+    mapping(address => mapping(address => mapping(address => uint))) internal
+        unclaimableAmountsForRecipient;
+
     // Gap for possible future upgrades
     uint[50] private __gap;
 
@@ -96,17 +101,8 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     {
         // Collect outstanding orders and their total token amount.
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
-        address[] memory tokens;
-        uint[] memory totalAmounts;
-        (orders, tokens, totalAmounts) = client.collectPaymentOrders();
 
-        for (uint i = 0; i < tokens.length; i++) {
-            address token = tokens[i];
-            uint totalAmount = totalAmounts[i];
-
-            // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-            client.amountPaid(token, totalAmount);
-        }
+        (orders,,) = client.collectPaymentOrders();
 
         // Transfer tokens from {IERC20PaymentClientBase_v1} to order recipients.
         address recipient;
@@ -114,12 +110,8 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         uint len = orders.length;
         for (uint i; i < len; ++i) {
             recipient = orders[i].recipient;
-            IERC20 token_ = IERC20(orders[i].paymentToken);
+            address token_ = orders[i].paymentToken;
             amount = orders[i].amount;
-
-            token_.safeTransferFrom(address(client), recipient, amount);
-
-            emit TokensReleased(recipient, address(token_), amount);
 
             emit PaymentOrderProcessed(
                 address(client),
@@ -130,6 +122,31 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
                 0,
                 orders[i].end
             );
+
+            (bool success, bytes memory data) = token_.call(
+                abi.encodeWithSelector(
+                    IERC20(token_).transferFrom.selector,
+                    address(client),
+                    recipient,
+                    amount
+                )
+            );
+
+            //If call was success
+            if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+                emit TokensReleased(recipient, token_, amount);
+
+                //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+                client.amountPaid(token_, amount);
+            } else {
+                emit UnclaimableAmountAdded(
+                    address(client), token_, recipient, amount
+                );
+                //Adds the walletId to the array of unclaimable wallet ids
+
+                unclaimableAmountsForRecipient[address(client)][token_][recipient]
+                += amount;
+            }
         }
     }
 
@@ -141,5 +158,55 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     {
         // Since we pay out on processing, this function does nothing
         return;
+    }
+
+    /// @inheritdoc IPaymentProcessor_v1
+    function unclaimable(address client, address token, address paymentReceiver)
+        public
+        view
+        returns (uint amount)
+    {
+        return unclaimableAmountsForRecipient[client][token][paymentReceiver];
+    }
+
+    /// @inheritdoc IPaymentProcessor_v1
+    function claimPreviouslyUnclaimable(
+        address client,
+        address token,
+        address receiver
+    ) external {
+        if (unclaimable(client, token, _msgSender()) == 0) {
+            revert Module__PaymentProcessor__NothingToClaim(
+                client, _msgSender()
+            );
+        }
+
+        _claimPreviouslyUnclaimable(client, token, receiver);
+    }
+
+    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
+    /// @param client address of the payment client
+    /// @param token address of the payment token
+    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
+    function _claimPreviouslyUnclaimable(
+        address client,
+        address token,
+        address paymentReceiver
+    ) internal {
+        //get amount
+
+        address sender = _msgSender();
+        //copy value over
+        uint amount = unclaimableAmountsForRecipient[client][token][sender];
+        //Delete the field
+        delete unclaimableAmountsForRecipient[client][token][sender];
+
+        //Call has to succeed otherwise no state change
+        IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
+
+        emit TokensReleased(paymentReceiver, address(token), amount);
+
+        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        IERC20PaymentClientBase_v1(client).amountPaid(token, amount);
     }
 }
