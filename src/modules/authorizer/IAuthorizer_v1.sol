@@ -20,8 +20,8 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice The orchestrator cannot own itself
     error Module__Authorizer__OrchestratorCannotHaveAdminRole();
 
-    /// @notice The provided initial owner address is invalid
-    error Module__Authorizer__InvalidInitialOwner();
+    /// @notice The provided initial admin address is invalid
+    error Module__Authorizer__InvalidInitialAdmin();
 
     //--------------------------------------------------------------------------
     // Functions

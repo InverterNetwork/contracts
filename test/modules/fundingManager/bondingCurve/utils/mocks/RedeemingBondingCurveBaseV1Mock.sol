@@ -112,21 +112,6 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         return _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
-    function call_getSellFeesAndTreasuryAddresses()
-        external
-        view
-        returns (
-            address collateralTreasury,
-            address issuanceTreasury,
-            uint collateralSellFeePercentage,
-            uint issuanceSellFeePercentage
-        )
-    {
-        return _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        );
-    }
-
     function call_calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,

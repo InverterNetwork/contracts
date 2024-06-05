@@ -278,33 +278,4 @@ abstract contract RedeemingBondingCurveBase_v1 is
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
     }
-
-    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
-    ///     sell operations
-    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
-    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
-    /// @return collateralSellFeePercentage The percentage fee to be collected from the collateral
-    ///     token being redeemed, expressed in BPS
-    /// @return issuanceSellFeePercentage The percentage fee to be collected from the issuance token
-    ///     being deposited, expressed in BPS
-    function _getSellFeesAndTreasuryAddresses()
-        internal
-        view
-        virtual
-        returns (
-            address collateralTreasury,
-            address issuanceTreasury,
-            uint collateralSellFeePercentage,
-            uint issuanceSellFeePercentage
-        )
-    {
-        (collateralSellFeePercentage, collateralTreasury) =
-        _getFeeManagerCollateralFeeData(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        );
-        (issuanceSellFeePercentage, issuanceTreasury) =
-        _getFeeManagerIssuanceFeeData(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
-        );
-    }
 }

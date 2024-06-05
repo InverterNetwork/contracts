@@ -18,11 +18,6 @@ interface IPaymentProcessor_v1 {
     /// @notice a client can only execute on its own orders
     error Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
 
-    /// @notice the paymentReceiver is not owed any money by the paymentClient
-    error Module__PaymentProcessor__NothingToClaim(
-        address paymentClient, address paymentReceiver
-    );
-
     //--------------------------------------------------------------------------
     // Events
 
@@ -49,14 +44,6 @@ interface IPaymentProcessor_v1 {
     /// @param amount The amount of tokens the payment consists of.
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
-    );
-
-    /// @notice Emitted when a payment was unclaimable due to a token error.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that wshould have received the payment.
-    /// @param amount The amount of tokens that were unclaimable.
-    event UnclaimableAmountAdded(
-        address indexed paymentClient, address indexed recipient, uint amount
     );
 
     //--------------------------------------------------------------------------

@@ -192,7 +192,7 @@ contract AUT_RolesV1Test is Test {
         address initialAuth = address(0);
 
         vm.expectRevert(
-            IAuthorizer_v1.Module__Authorizer__InvalidInitialOwner.selector
+            IAuthorizer_v1.Module__Authorizer__InvalidInitialAdmin.selector
         );
 
         testAuthorizer.init(
