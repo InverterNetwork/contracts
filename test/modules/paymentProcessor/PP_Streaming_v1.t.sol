@@ -46,15 +46,6 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Emitted when a payment gets processed for execution.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that will receive the payment.
-    /// @param paymentToken The address of the token that is being used for the payment
-    /// @param streamId ID of the streaming payment order that was added.
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param start The start date of the streaming period.
-    /// @param cliff The duration of the cliff period.
-    /// @param end The ending of the streaming period.
     event StreamingPaymentAdded(
         address indexed paymentClient,
         address indexed recipient,
@@ -65,22 +56,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint cliff,
         uint end
     );
-
-    /// @notice Emitted when the stream to an address is removed.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that will stop receiving payment.
-    /// @param streamId ID of the streaming payment order that was removed.
     event StreamingPaymentRemoved(
         address indexed paymentClient, address indexed recipient, uint streamId
     );
-
-    /// @notice Emitted when a running stream schedule gets updated.
-    /// @param recipient The address that will receive the payment.
-    /// @param paymentToken The address of the token that will be used for the payment
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param start The start date of the streaming period.
-    /// @param cliff The duration of the cliff period.
-    /// @param end The ending of the streaming period.
     event InvalidStreamingOrderDiscarded(
         address indexed recipient,
         address indexed paymentToken,
@@ -90,15 +68,6 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint end
     );
 
-    /// @notice Emitted when a payment gets processed for execution.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that will receive the payment.
-    /// @param paymentToken The address of the token that will be used for the payment
-    /// @param streamId ID of the streaming payment order that was processed
-    /// @param amount The amount of tokens the payment consists of.
-    /// @param start The start date of the streaming period.
-    /// @param cliff The duration of the cliff period.
-    /// @param end The ending of the streaming period.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
@@ -110,12 +79,6 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         uint end
     );
 
-    /// @notice Emitted when a payment was unclaimable due to a token error.
-    /// @param paymentClient The payment client that originated the order.
-    /// @param recipient The address that wshould have received the payment.
-    /// @param paymentToken The address of the token that will be used for the payment
-    /// @param streamId ID of the streaming payment order that was processed
-    /// @param amount The amount of tokens that were unclaimable.
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
@@ -363,7 +326,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 ++i;
             }
         }
-        assertEq(totalAmount, paymentClient.amountPaidCounter());
+        assertEq(totalAmount, paymentClient.amountPaidCounter(address(_token)));
     }
 
     // test cannot claim before cliff ends
@@ -477,7 +440,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 ++i;
             }
         }
-        assertEq(totalAmount, paymentClient.amountPaidCounter());
+        assertEq(totalAmount, paymentClient.amountPaidCounter(address(_token)));
     }
 
     function test_claimStreamedAmounts_CliffDoesNotInfluencePayout(
@@ -573,7 +536,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 ++i;
             }
         }
-        assertEq(expectedHalfAmount, paymentClient.amountPaidCounter());
+        assertEq(
+            expectedHalfAmount, paymentClient.amountPaidCounter(address(_token))
+        );
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
@@ -1019,7 +984,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             (expectedTotal / 2)
         );
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), expectedTotal);
+        assertEq(
+            paymentClient.amountPaidCounter(address(_token)), expectedTotal
+        );
         assertTrue(
             initialStreamIdAtIndex1 != paymentReceiverStreams[1]._streamId
         );
@@ -1121,8 +1088,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         );
 
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter(), total1);
-        amountPaidAlready += paymentClient.amountPaidCounter();
+        assertEq(paymentClient.amountPaidCounter(address(_token)), total1);
+        amountPaidAlready += paymentClient.amountPaidCounter(address(_token));
 
         // Now we are interested in finding the details of the 2nd wallet of paymentReceiver1
         total2 = (paymentReceiverStreams[1]._total) / 2; // since we are at half the streaming duration
@@ -1139,10 +1106,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
         assertEq(
-            paymentClient.amountPaidCounter(),
+            paymentClient.amountPaidCounter(address(_token)),
             paymentReceiverStreams[1]._total + total1
         );
-        amountPaidAlready = paymentClient.amountPaidCounter();
+        amountPaidAlready = paymentClient.amountPaidCounter(address(_token));
 
         paymentReceiverStreams = paymentProcessor.viewAllPaymentOrders(
             address(paymentClient), paymentReceiver1
@@ -1168,7 +1135,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             address(paymentClient), paymentReceiverStreams[0]._streamId
         );
         // Make sure the paymentClient got the right amount of tokens removed from the outstanding mapping
-        assertEq(paymentClient.amountPaidCounter() - amountPaidAlready, total3);
+        assertEq(
+            paymentClient.amountPaidCounter(address(_token)) - amountPaidAlready,
+            total3
+        );
 
         finalPaymentReceiverBalance = _token.balanceOf(paymentReceiver1);
 
@@ -1443,8 +1413,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             vm.startPrank(recipient);
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    IPP_Streaming_v1
-                        .Module__PP_Streaming__NothingToClaim
+                    IPaymentProcessor_v1
+                        .Module__PaymentProcessor__NothingToClaim
                         .selector,
                     address(paymentClient),
                     recipient
@@ -1567,12 +1537,13 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             if (recipientsHandled[recipient]) continue;
             recipientsHandled[recipient] = true;
 
-            amount =
-                paymentProcessor.unclaimable(address(paymentClient), recipient);
+            amount = paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), recipient
+            );
 
             // Grab Unclaimable Wallet Ids array
             uint[] memory ids = paymentProcessor.getUnclaimableStreams(
-                address(paymentClient), recipient
+                address(paymentClient), address(_token), recipient
             );
 
             // Do call
@@ -1581,14 +1552,17 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
             vm.prank(recipient);
             paymentProcessor.claimPreviouslyUnclaimable(
-                address(paymentClient), recipient
+                address(paymentClient), address(_token), recipient
             );
 
             // Unclaimable amount for Wallet Ids empty (mapping)
             for (uint j = 0; j < ids.length; j++) {
                 assertEq(
                     paymentProcessor.getUnclaimableAmountForStreams(
-                        address(paymentClient), recipient, ids[j]
+                        address(paymentClient),
+                        address(_token),
+                        recipient,
+                        ids[j]
                     ),
                     0
                 );
@@ -1597,7 +1571,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             // Check Unclaimable Wallet Ids array empty
             assertEq(
                 paymentProcessor.getUnclaimableStreams(
-                    address(paymentClient), recipient
+                    address(paymentClient), address(_token), recipient
                 ).length,
                 0
             );
@@ -1607,7 +1581,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
             // Check that amountPaid is correct in PaymentClient
             amountPaid += amount;
-            assertEq(paymentClient.amountPaidCounter(), amountPaid);
+            assertEq(
+                paymentClient.amountPaidCounter(address(_token)), amountPaid
+            );
         }
     }
 
@@ -1616,13 +1592,15 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPP_Streaming_v1.Module__PP_Streaming__NothingToClaim.selector,
+                IPaymentProcessor_v1
+                    .Module__PaymentProcessor__NothingToClaim
+                    .selector,
                 address(paymentClient),
                 address(this)
             )
         );
         paymentProcessor.claimPreviouslyUnclaimable(
-            address(paymentClient), address(0x1)
+            address(paymentClient), address(0), address(0x1)
         );
     }
 
@@ -1672,7 +1650,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
 
-        assertEq(totalAmount, paymentClient.amountPaidCounter());
+        assertEq(totalAmount, paymentClient.amountPaidCounter(address(_token)));
     }
 
     // Verifies our contract corectly handles ERC20 revertion.
@@ -1723,7 +1701,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), recipient
+            ),
             amount / 4
         );
 
@@ -1733,7 +1713,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // claim the previously unclaimable amount
         vm.prank(recipient);
         paymentProcessor.claimPreviouslyUnclaimable(
-            address(paymentClient), recipient
+            address(paymentClient), address(_token), recipient
         );
 
         // after successful claim of the previously unclaimable amount the receiver should have 25% total,
@@ -1746,7 +1726,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), recipient
+            ),
+            0
         );
     }
 
@@ -1792,7 +1775,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient),
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), recipient
+            ),
             amount / 4
         );
 
@@ -1802,7 +1787,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         // claim the previously unclaimable amount
         vm.prank(recipient);
         paymentProcessor.claimPreviouslyUnclaimable(
-            address(paymentClient), recipient
+            address(paymentClient), address(_token), recipient
         );
 
         // after successful claim of the previously unclaimable amount the receiver should have 25% total,
@@ -1815,7 +1800,10 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
             0
         );
         assertEq(
-            paymentProcessor.unclaimable(address(paymentClient), recipient), 0
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), recipient
+            ),
+            0
         );
     }
 
@@ -1866,7 +1854,9 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                 }
             }
             assertEq(
-                paymentProcessor.unclaimable(address(paymentClient), recipient),
+                paymentProcessor.unclaimable(
+                    address(paymentClient), address(_token), recipient
+                ),
                 amount
             );
         }

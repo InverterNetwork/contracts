@@ -198,7 +198,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // unclaimable
         // In case a transfer should fail this can be checked here
         uint unclaimable = streamingPaymentProcessor.unclaimable(
-            address(recurringPaymentManager), alice
+            address(recurringPaymentManager), address(token), alice
         );
         assertTrue(unclaimable == 0);
 

@@ -67,13 +67,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         streams;
 
     /// @notice tracks all streams for payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => paymentReceiver => streamId array
-    mapping(address => mapping(address => uint[])) internal unclaimableStreams;
+    /// @dev paymentClient => token address => paymentReceiver => streamId array
+    mapping(address => mapping(address => mapping(address => uint[]))) internal
+        unclaimableStreams;
 
     /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => paymentReceiver => streamId => unclaimable Amount
-    mapping(address => mapping(address => mapping(uint => uint))) internal
-        unclaimableAmountsForStream;
+    /// @dev paymentClient => token address =>  paymentReceiver => streamId => unclaimable Amount
+    mapping(
+        address => mapping(address => mapping(address => mapping(uint => uint)))
+    ) internal unclaimableAmountsForStream;
 
     /// @notice list of addresses with open payment Orders per paymentClient
     /// @dev paymentClient => listOfPaymentReceivers(address[]). Duplicates are not allowed.
@@ -129,21 +131,27 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @inheritdoc IPP_Streaming_v1
     function claimAll(address client) external {
         if (activeStreams[client][_msgSender()].length == 0) {
-            revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
+            revert Module__PaymentProcessor__NothingToClaim(
+                client, _msgSender()
+            );
         }
 
         _claimAll(client, _msgSender());
     }
 
-    /// @inheritdoc IPP_Streaming_v1
-    function claimPreviouslyUnclaimable(address client, address receiver)
-        external
-    {
-        if (unclaimable(client, _msgSender()) == 0) {
-            revert Module__PP_Streaming__NothingToClaim(client, _msgSender());
+    /// @inheritdoc IPaymentProcessor_v1
+    function claimPreviouslyUnclaimable(
+        address client,
+        address token,
+        address receiver
+    ) external {
+        if (unclaimable(client, token, _msgSender()) == 0) {
+            revert Module__PaymentProcessor__NothingToClaim(
+                client, _msgSender()
+            );
         }
 
-        _claimPreviouslyUnclaimable(client, receiver);
+        _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -354,13 +362,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         ) - releasedForSpecificStream(client, paymentReceiver, streamId);
     }
 
-    /// @inheritdoc IPP_Streaming_v1
-    function unclaimable(address client, address paymentReceiver)
+    /// @inheritdoc IPaymentProcessor_v1
+    function unclaimable(address client, address token, address paymentReceiver)
         public
         view
         returns (uint amount)
     {
-        uint[] memory ids = unclaimableStreams[client][paymentReceiver];
+        uint[] memory ids = unclaimableStreams[client][token][paymentReceiver];
         uint length = ids.length;
 
         if (length == 0) {
@@ -368,8 +376,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
 
         for (uint i = 0; i < length; i++) {
-            amount +=
-                unclaimableAmountsForStream[client][paymentReceiver][ids[i]];
+            amount += unclaimableAmountsForStream[client][token][paymentReceiver][ids[i]];
         }
     }
 
@@ -738,7 +745,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             );
             // Adds the streamId to the array of unclaimable stream ids
 
-            uint[] memory ids = unclaimableStreams[client][paymentReceiver];
+            uint[] memory ids =
+                unclaimableStreams[client][_token][paymentReceiver];
             bool containsId = false;
 
             for (uint i = 0; i < ids.length; i++) {
@@ -749,11 +757,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             }
             // If it doesnt contain id than add it to array
             if (!containsId) {
-                unclaimableStreams[client][paymentReceiver].push(streamId);
+                unclaimableStreams[client][_token][paymentReceiver].push(
+                    streamId
+                );
             }
 
-            unclaimableAmountsForStream[client][paymentReceiver][streamId] +=
-                amount;
+            unclaimableAmountsForStream[client][_token][paymentReceiver][streamId]
+            += amount;
         }
 
         // This if conditional block represents that nothing more remains to be steamed from the specific streamId
@@ -768,36 +778,36 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
     /// @dev assumes that the streamId array is not empty
     /// @param client address of the payment client
+    /// @param client address of the payment token
     /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
     function _claimPreviouslyUnclaimable(
         address client,
+        address token,
         address paymentReceiver
     ) internal {
         // get amount
         uint amount;
 
         address sender = _msgSender();
-        uint[] memory ids = unclaimableStreams[client][sender];
+        uint[] memory ids = unclaimableStreams[client][token][sender];
         uint length = ids.length;
 
         for (uint i = 0; i < length; i++) {
             // Add the unclaimable amount of each id to the current amount
-            amount += unclaimableAmountsForStream[client][sender][ids[i]];
+            amount += unclaimableAmountsForStream[client][token][sender][ids[i]];
             // Delete value of stream id
-            delete unclaimableAmountsForStream[client][sender][ids[i]];
+            delete unclaimableAmountsForStream[client][token][sender][ids[i]];
         }
         // As all of the stream ids should have been claimed we can delete the stream id array
-        delete unclaimableStreams[client][sender];
-
-        IERC20 _token = orchestrator().fundingManager().token();
+        delete unclaimableStreams[client][token][sender];
 
         // Call has to succeed otherwise no state change
-        _token.safeTransferFrom(client, paymentReceiver, amount);
+        IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
 
-        emit TokensReleased(paymentReceiver, address(_token), amount);
+        emit TokensReleased(paymentReceiver, address(token), amount);
 
         // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(address(_token), amount);
+        IERC20PaymentClientBase_v1(client).amountPaid(address(token), amount);
     }
 
     /// @notice Virtual implementation of the stream formula.
