@@ -7,8 +7,6 @@ import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
-import {DeployInverterBeacon_v1} from
-    "script/proxies/DeployInverterBeacon_v1.s.sol";
 
 /**
  * @title DeployAndSetupInverterBeacon_v1 Deployment Script
@@ -85,5 +83,30 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         console2.log(
             "Creation of InverterBeaconProxy_v1 at address: ", address(proxy)
         );
+    }
+
+    function deployInverterBeacon(
+        address owner,
+        address implementation,
+        uint majorVersion,
+        uint minorVersion
+    ) public returns (address) {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the beacon.
+
+            beacon = new InverterBeacon_v1(
+                owner, majorVersion, implementation, minorVersion
+            );
+        }
+
+        vm.stopBroadcast();
+
+        // Log the deployed Beacon contract address.
+        console2.log(
+            "Deployment of InverterBeacon_v1 at address", address(beacon)
+        );
+
+        return address(beacon);
     }
 }
