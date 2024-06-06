@@ -7,6 +7,7 @@ import "forge-std/Script.sol";
 
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Import scripts:
 import {DeployAndSetUpInverterBeacon_v1} from
@@ -153,6 +154,9 @@ contract DeploymentScript is Script {
     address moduleFactory;
     address orchestratorFactory;
 
+    IModule_v1.Metadata[] initialMetadataRegistration;
+    IInverterBeacon_v1[] initialBeaconRegistration;
+
     // ------------------------------------------------------------------------
     // Module Metadata
 
@@ -287,26 +291,15 @@ contract DeploymentScript is Script {
 
         // Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetupInverterBeacon_v1
-            .deployBeaconAndSetupProxy(deployer, forwarderImplementation, 1, 0);
+            .deployBeaconAndSetupProxy(
+            address(governor), forwarderImplementation, 1, 0
+        );
 
         if (
             forwarder == forwarderImplementation || forwarder == forwarderBeacon
         ) {
             revert BeaconProxyDeploymentFailed();
         }
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
-        console2.log("Deploy factory implementations \n");
-
-        // Deploy module factory v1 implementation
-        moduleFactory = deployModuleFactory.run(deployer, forwarder);
-
-        // Deploy orchestrator Factory implementation
-        orchestratorFactory = deployOrchestratorFactory.run(
-            deployer, orchestrator, moduleFactory, forwarder
-        );
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -336,107 +329,138 @@ contract DeploymentScript is Script {
         console2.log(
             "Deploy module beacons and register in module factory v1 \n"
         );
-        // Deploy Modules and Register in factories
+        // Deploy Modules and fill the intitial init list
 
         // Funding Manager
-        rebasingFundingManagerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            rebasingFundingManager,
-            moduleFactory,
-            rebasingFundingManagerMetadata
+
+        initialMetadataRegistration.push(rebasingFundingManagerMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    rebasingFundingManager,
+                    rebasingFundingManagerMetadata.majorVersion,
+                    rebasingFundingManagerMetadata.minorVersion
+                )
+            )
         );
-        bancorBondingCurveFundingManagerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            bancorBondingCurveFundingManager,
-            moduleFactory,
+        initialMetadataRegistration.push(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
-        // Authorizer
-        roleAuthorizerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer, roleAuthorizer, moduleFactory, roleAuthorizerMetadata
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    bancorBondingCurveFundingManager,
+                    bancorVirtualSupplyBondingCurveFundingManagerMetadata
+                        .majorVersion,
+                    bancorVirtualSupplyBondingCurveFundingManagerMetadata
+                        .minorVersion
+                )
+            )
         );
-        tokenGatedRoleAuthorizerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            tokenGatedRoleAuthorizer,
-            moduleFactory,
-            tokenGatedRoleAuthorizerMetadata
+        // Authorizer
+        initialMetadataRegistration.push(roleAuthorizerMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    roleAuthorizer,
+                    roleAuthorizerMetadata.majorVersion,
+                    roleAuthorizerMetadata.minorVersion
+                )
+            )
+        );
+        initialMetadataRegistration.push(tokenGatedRoleAuthorizerMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    tokenGatedRoleAuthorizer,
+                    tokenGatedRoleAuthorizerMetadata.majorVersion,
+                    tokenGatedRoleAuthorizerMetadata.minorVersion
+                )
+            )
+        );
+        initialMetadataRegistration.push(singleVoteGovernorMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    singleVoteGovernor,
+                    singleVoteGovernorMetadata.majorVersion,
+                    singleVoteGovernorMetadata.minorVersion
+                )
+            )
         );
         // Payment Processor
-        simplePaymentProcessorBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            simplePaymentProcessor,
-            moduleFactory,
-            simplePaymentProcessorMetadata
+        initialMetadataRegistration.push(simplePaymentProcessorMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    simplePaymentProcessor,
+                    simplePaymentProcessorMetadata.majorVersion,
+                    simplePaymentProcessorMetadata.minorVersion
+                )
+            )
         );
-        streamingPaymentProcessorBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            streamingPaymentProcessor,
-            moduleFactory,
-            streamingPaymentProcessorMetadata
+        initialMetadataRegistration.push(streamingPaymentProcessorMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    streamingPaymentProcessor,
+                    streamingPaymentProcessorMetadata.majorVersion,
+                    streamingPaymentProcessorMetadata.minorVersion
+                )
+            )
         );
         // Logic Module
-        bountyManagerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer, bountyManager, moduleFactory, bountyManagerMetadata
+        initialMetadataRegistration.push(bountyManagerMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    bountyManager,
+                    bountyManagerMetadata.majorVersion,
+                    bountyManagerMetadata.minorVersion
+                )
+            )
         );
-        recurringPaymentManagerBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            recurringPaymentManager,
-            moduleFactory,
-            recurringPaymentManagerMetadata
-        );
-
-        // Utils
-        singleVoteGovernorBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer,
-            singleVoteGovernor,
-            moduleFactory,
-            singleVoteGovernorMetadata
+        initialMetadataRegistration.push(recurringPaymentManagerMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    recurringPaymentManager,
+                    recurringPaymentManagerMetadata.majorVersion,
+                    recurringPaymentManagerMetadata.minorVersion
+                )
+            )
         );
 
         console2.log(
             "-----------------------------------------------------------------------------"
         );
+        console2.log("Deploy factory implementations \n");
 
-        // Transfer Ownership of all contracts
+        // Deploy module factory v1 implementation
+        moduleFactory = deployModuleFactory.run(
+            address(governor),
+            forwarder,
+            initialMetadataRegistration,
+            initialBeaconRegistration
+        );
 
-        vm.startBroadcast(deployerPrivateKey);
-        {
-            Ownable2Step(rebasingFundingManagerBeacon).transferOwnership(
-                governor
-            );
-            Ownable2Step(bancorBondingCurveFundingManagerBeacon)
-                .transferOwnership(governor);
-            Ownable2Step(roleAuthorizerBeacon).transferOwnership(governor);
-            Ownable2Step(tokenGatedRoleAuthorizerBeacon).transferOwnership(
-                governor
-            );
-            Ownable2Step(simplePaymentProcessorBeacon).transferOwnership(
-                governor
-            );
-            Ownable2Step(streamingPaymentProcessorBeacon).transferOwnership(
-                governor
-            );
-            Ownable2Step(bountyManagerBeacon).transferOwnership(governor);
-            Ownable2Step(recurringPaymentManagerBeacon).transferOwnership(
-                governor
-            );
-            Ownable2Step(singleVoteGovernorBeacon).transferOwnership(governor);
+        // Deploy orchestrator Factory implementation
+        orchestratorFactory = deployOrchestratorFactory.run(
+            address(governor), orchestrator, moduleFactory, forwarder
+        );
 
-            Ownable2Step(orchestratorFactory).transferOwnership(governor);
-            Ownable2Step(moduleFactory).transferOwnership(governor);
-        }
-        vm.stopBroadcast();
-
-        console2.log("Transferred ownership of all contract to Governor \n");
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
 
         return (orchestratorFactory);
     }

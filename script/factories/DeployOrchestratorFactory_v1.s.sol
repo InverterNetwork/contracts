@@ -8,8 +8,8 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 
-import {DeployInverterBeacon_v1} from
-    "script/proxies/DeployInverterBeacon_v1.s.sol";
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 
 /**
  * @title OrchestratorFactory_v1 Deployment Script
@@ -32,9 +32,6 @@ contract DeployOrchestratorFactory_v1 is Script {
 
     DeployAndSetUpInverterBeacon_v1 deployAndSetUpInverterBeacon_v1 =
         new DeployAndSetUpInverterBeacon_v1();
-
-    DeployInverterBeacon_v1 deployInverterBeacon_v1 =
-        new DeployInverterBeacon_v1();
 
     function run() external returns (address) {
         // Read deployment settings from environment variables.
@@ -94,8 +91,9 @@ contract DeployOrchestratorFactory_v1 is Script {
             0 //@note do we have a way to smartly track these Versions?
         );
 
-        address orchestratorImplementationBeacon = deployInverterBeacon_v1.run(
-            governor, 1, orchestratorImplementation, 0
+        address orchestratorImplementationBeacon =
+        deployAndSetUpInverterBeacon_v1.deployInverterBeacon(
+            governor, orchestratorImplementation, 1, 0
         );
 
         orchestratorFactory = OrchestratorFactory_v1(orchestratorFactoryProxy);

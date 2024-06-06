@@ -2,7 +2,11 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {
+    ModuleFactory_v1, IModule_v1
+} from "src/factories/ModuleFactory_v1.sol";
+
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
@@ -43,13 +47,20 @@ contract DeployModuleFactory_v1 is Script {
         );
 
         // Deploy the moduleFactory.
-        return run(governor, forwarder);
+        return run(
+            governor,
+            forwarder,
+            new IModule_v1.Metadata[](0),
+            new IInverterBeacon_v1[](0)
+        );
     }
 
-    function run(address governor, address forwarder)
-        public
-        returns (address)
-    {
+    function run(
+        address governor,
+        address forwarder,
+        IModule_v1.Metadata[] memory initialMetadataRegistration,
+        IInverterBeacon_v1[] memory initialBeaconRegistration
+    ) public returns (address) {
         address moduleFactoryImplementation;
         vm.startBroadcast(deployerPrivateKey);
         {
@@ -71,7 +82,9 @@ contract DeployModuleFactory_v1 is Script {
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            moduleFactory.init(governor);
+            moduleFactory.init(
+                governor, initialMetadataRegistration, initialBeaconRegistration
+            );
         }
         vm.stopBroadcast();
 
