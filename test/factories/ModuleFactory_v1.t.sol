@@ -75,7 +75,11 @@ contract ModuleFactoryV1Test is Test {
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
 
         factory = new ModuleFactory_v1(address(0));
-        factory.init(governanceContract);
+        factory.init(
+            governanceContract,
+            new IModule_v1.Metadata[](0),
+            new IInverterBeacon_v1[](0)
+        );
     }
 
     function testDeploymentInvariants() public {
