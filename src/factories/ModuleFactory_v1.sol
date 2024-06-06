@@ -127,7 +127,7 @@ contract ModuleFactory_v1 is
 
         uint length = initialMetadataRegistration.length;
         if (length != initialBeaconRegistration.length) {
-            //@todo throw error
+            revert ModuleFactory__InvalidInitialRegistrationData();
         }
 
         for (uint i = 0; i < length; i++) {

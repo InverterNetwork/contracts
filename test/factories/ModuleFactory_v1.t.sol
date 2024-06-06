@@ -88,6 +88,64 @@ contract ModuleFactoryV1Test is Test {
         assertEq(factory.pendingOwner(), address(0));
     }
 
+    function testInitForMultipleInitialRegistrations(uint metadataSets)
+        public
+    {
+        factory = new ModuleFactory_v1(address(0));
+        metadataSets = bound(metadataSets, 1, 10);
+
+        IModule_v1.Metadata[] memory metadata =
+            new IModule_v1.Metadata[](metadataSets);
+
+        IInverterBeacon_v1[] memory beacons =
+            new IInverterBeacon_v1[](metadataSets);
+
+        InverterBeaconV1OwnableMock beaconI;
+        for (uint i = 0; i < metadataSets; i++) {
+            metadata[i] = IModule_v1.Metadata(i + 1, MINOR_VERSION, URL, TITLE);
+
+            beaconI = new InverterBeaconV1OwnableMock(governanceContract);
+
+            beaconI.overrideImplementation(address(0x1));
+
+            beacons[i] = beaconI;
+        }
+
+        factory.init(governanceContract, metadata, beacons);
+
+        IInverterBeacon_v1 currentBeacon;
+        for (uint i = 0; i < metadataSets; i++) {
+            (currentBeacon,) = factory.getBeaconAndId(metadata[i]);
+            assertEq(address(currentBeacon), address(beacons[i]));
+        }
+    }
+
+    function testInitFailsForUnevenArrays(uint number1, uint number2) public {
+        factory = new ModuleFactory_v1(address(0));
+        number1 = bound(number1, 1, 1000);
+        number2 = bound(number2, 1, 1000);
+
+        if (number1 != number2) {
+            vm.expectRevert(
+                IModuleFactory_v1
+                    .ModuleFactory__InvalidInitialRegistrationData
+                    .selector
+            );
+        } else {
+            vm.expectRevert(
+                IModuleFactory_v1.ModuleFactory__InvalidMetadata.selector
+            );
+        }
+
+        IModule_v1.Metadata[] memory metadata =
+            new IModule_v1.Metadata[](number1);
+        metadata[0] = IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, "");
+
+        factory.init(
+            governanceContract, metadata, new IInverterBeacon_v1[](number2)
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Test: registerMetadata
 
