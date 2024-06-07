@@ -120,7 +120,9 @@ contract ModuleFactoryV1Test is Test {
         }
     }
 
-    function testInitFailsForUnevenArrays(uint number1, uint number2) public {
+    function testInitFailsForMismatchedArrayLenghts(uint number1, uint number2)
+        public
+    {
         factory = new ModuleFactory_v1(address(0));
         number1 = bound(number1, 1, 1000);
         number2 = bound(number2, 1, 1000);
