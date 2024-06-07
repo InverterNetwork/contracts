@@ -413,25 +413,21 @@ contract DeploymentScript is Script {
                 )
             )
         );
-                initialMetadataRegistration.push(
+        initialMetadataRegistration.push(
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
-        
+
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     address(governor),
-                    restrictedBancorBondingCurveFundingManager,
+                    restrictedBancorVirtualSupplyBondingCurveFundingManager,
                     restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
                         .majorVersion,
                     restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
                         .minorVersion
                 )
             )
-        );
-        kpiRewarderBeacon = deployAndSetupInverterBeacon_v1
-            .deployAndRegisterInFactory(
-            deployer, kpiRewarder, moduleFactory, kpiRewarderMetadata
         );
 
         // Authorizer
@@ -511,6 +507,28 @@ contract DeploymentScript is Script {
                     recurringPaymentManager,
                     recurringPaymentManagerMetadata.majorVersion,
                     recurringPaymentManagerMetadata.minorVersion
+                )
+            )
+        );
+        initialMetadataRegistration.push(kpiRewarderMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    kpiRewarder,
+                    kpiRewarderMetadata.majorVersion,
+                    kpiRewarderMetadata.minorVersion
+                )
+            )
+        );
+        initialMetadataRegistration.push(paymentRouterMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    address(governor),
+                    paymentRouter,
+                    paymentRouterMetadata.majorVersion,
+                    paymentRouterMetadata.minorVersion
                 )
             )
         );
