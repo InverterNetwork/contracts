@@ -542,7 +542,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeNow(
         address[] memory recipients,
         uint[] memory endTimes
     ) public {
@@ -552,8 +552,16 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
 
         assumeValidRecipients(recipients);
 
-        // Warp to reasonable time to test wether orders before timestamp are retrievable
-        vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
+        // Find the greatest timestamp in the array
+        uint greatestEnd = 0;
+        for (uint i; i < endTimes.length; i++) {
+            if (endTimes[i] > greatestEnd) {
+                greatestEnd = endTimes[i];
+            }
+        }
+
+        // Warp to the greatest end value, so even that one is <= block.timestamp
+        vm.warp(greatestEnd);
 
         // Amount of tokens for user that should be payed out
         uint payoutAmount = 100;
@@ -565,7 +573,7 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: payoutAmount,
-                    start: block.timestamp,
+                    start: 0,
                     cliff: 0,
                     end: endTimes[i]
                 })
