@@ -33,6 +33,15 @@ install: # Installs the required dependencies
 build: # Build project
 	@forge build
 
+.PHONY: check-size
+check-size: # Print the size of contracts
+	@{ \
+	trap 'mv .test/ test/; mv .script/ script/' EXIT; \
+	mv test/ .test/; \
+	mv script/ .script/; \
+	forge build --sizes | awk '!/----/ && /-[0-9]+/ {print}'; \
+	}
+
 .PHONY: update
 update: # Update dependencies
 	@forge update
