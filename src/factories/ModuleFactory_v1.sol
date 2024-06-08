@@ -115,9 +115,26 @@ contract ModuleFactory_v1 is
 
     /// @notice The factories initializer function.
     /// @param _governor The address of the governor contract.
-    function init(address _governor) external initializer {
+    /// @param initialMetadataRegistration List of metadata that will be registered during the initialization.
+    /// @param initialMetadataRegistration List of beacon addresses that will be registered during the initialization.
+    function init(
+        address _governor,
+        IModule_v1.Metadata[] memory initialMetadataRegistration,
+        IInverterBeacon_v1[] memory initialBeaconRegistration
+    ) external initializer {
         __Ownable_init(_governor);
         governor = _governor;
+
+        uint length = initialMetadataRegistration.length;
+        if (length != initialBeaconRegistration.length) {
+            revert ModuleFactory__InvalidInitialRegistrationData();
+        }
+
+        for (uint i = 0; i < length; i++) {
+            _registerMetadata(
+                initialMetadataRegistration[i], initialBeaconRegistration[i]
+            );
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -197,7 +214,14 @@ contract ModuleFactory_v1 is
     function registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
-    ) external onlyOwner validMetadata(metadata) validBeacon(beacon) {
+    ) external onlyOwner {
+        _registerMetadata(metadata, beacon);
+    }
+
+    function _registerMetadata(
+        IModule_v1.Metadata memory metadata,
+        IInverterBeacon_v1 beacon
+    ) internal validMetadata(metadata) validBeacon(beacon) {
         IInverterBeacon_v1 oldBeacon;
         bytes32 id;
         (oldBeacon, id) = getBeaconAndId(metadata);

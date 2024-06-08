@@ -21,7 +21,8 @@ import {
 // Factories
 import {
     ModuleFactory_v1,
-    IModuleFactory_v1
+    IModuleFactory_v1,
+    IModule_v1
 } from "src/factories/ModuleFactory_v1.sol";
 import {
     OrchestratorFactory_v1,
@@ -106,7 +107,11 @@ contract E2ETest is E2EModuleRegistry {
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory_v1(address(forwarder));
-        moduleFactory.init(address(gov));
+        moduleFactory.init(
+            address(gov),
+            new IModule_v1.Metadata[](0),
+            new IInverterBeacon_v1[](0)
+        );
 
         orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
         orchestratorFactory.init(

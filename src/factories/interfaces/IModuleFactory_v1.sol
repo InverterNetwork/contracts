@@ -14,6 +14,9 @@ interface IModuleFactory_v1 {
     /// @notice Given metadata invalid.
     error ModuleFactory__InvalidMetadata();
 
+    /// @notice Given metadata invalid.
+    error ModuleFactory__InvalidInitialRegistrationData();
+
     /// @notice Given beacon invalid.
     error ModuleFactory__InvalidInverterBeacon();
 
