@@ -120,7 +120,7 @@ contract ModuleFactoryV1Test is Test {
         }
     }
 
-    function testInitFailsForMismatchedArrayLenghts(uint number1, uint number2)
+    function testInitFailsForMismatchedArrayLengths(uint number1, uint number2)
         public
     {
         factory = new ModuleFactory_v1(address(0));
