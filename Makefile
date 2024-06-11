@@ -198,7 +198,9 @@ pre-test: # format and export correct data
 
 .PHONY: pre-commit
 pre-commit: # Git pre-commit hook
-
+	@echo "### Checking the contract size"
+	@make check-size
+	
 	@echo "### Running the scripts"
 	@make testScripts
 
