@@ -205,7 +205,7 @@ interface IGovernor_v1 {
     /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
     /// @param moduleFactory The module factory what will should register the new beacon and its metadata
     /// @param metadata The metadata that will be registered
-    /// @param beacon The fbeacon that will be registered
+    /// @param beacon The beacon that will be registered
     function registerMetadataInModuleFactory(
         IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
