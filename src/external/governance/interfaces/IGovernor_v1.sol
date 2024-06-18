@@ -207,7 +207,7 @@ interface IGovernor_v1 {
     /// @param metadata The metadata that will be registered
     /// @param beacon The fbeacon that will be registered
     function registerMetadataInModuleFactory(
-        IModuleFactory_v1 moduleFactory,
+    /// @param beacon The beacon that will be registered
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external;
