@@ -243,7 +243,7 @@ contract DeploymentScript is Script {
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
         // Fetch the deployer details
-        uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+        uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
         // Fetch the Multisig addresses
@@ -268,7 +268,7 @@ contract DeploymentScript is Script {
         console2.log("Fee Manager \n");
 
         feeManager = deployFeeManager.run(
-            address(governor), // owner
+            address(governor),
             treasury, // treasury
             100, // Collateral Fee 1%
             100 // Issuance Fee 1%
