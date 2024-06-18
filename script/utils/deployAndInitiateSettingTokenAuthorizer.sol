@@ -27,9 +27,9 @@ contract deployAndSwitchTokenAuthorizer is Script {
         new DeployAndSetUpInverterBeacon_v1();
     ScriptConstants scriptConstants = new ScriptConstants();
 
-    uint orchestratorOwnerPrivateKey =
+    uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     DeployAUT_TokenGated_Role_v1 deployTokenRoleAuthorizer =
         new DeployAUT_TokenGated_Role_v1();
@@ -71,10 +71,10 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            authorizerMetadata, abi.encode(orchestratorOwner, orchestratorOwner)
+            authorizerMetadata, abi.encode(orchestratorAdmin, orchestratorAdmin)
         );
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
 
         // moduleFactory -> create Module
         address deployedAuthorizerAddress = moduleFactory.createModule(

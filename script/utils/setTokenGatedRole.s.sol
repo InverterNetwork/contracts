@@ -27,12 +27,12 @@ import {ScriptConstants} from "../script-constants.sol";
 contract deployAndSwitchTokenAuthorizer is Script {
     ScriptConstants scriptConstants = new ScriptConstants();
     // ===============================================================================================================
-    // NOTE: This script has to be executed by the Orchestrator_v1 owner address.
+    // NOTE: This script has to be executed by the Orchestrator_v1 admin address.
     // IT IS STRONGLY RECOMMENDED TO STORE THE PRIVATE KEY TO THAT ADDRESS IN A SEPARATE .ENV FILE
     // ===============================================================================================================
-    uint orchestratorOwnerPrivateKey =
+    uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     function run() public {
         // ===============================================================================================================
@@ -65,11 +65,11 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // Setup
         // ===============================================================================================================
 
-        vm.startBroadcast(orchestratorOwner);
+        vm.startBroadcast(orchestratorAdmin);
 
-        // Give the Orchestrator_v1 owner the power to change module roles
+        // Give the Orchestrator_v1 admin the power to change module roles
         deployedAuthorizer.grantRole(
-            deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner
+            deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorAdmin
         );
 
         // ===============================================================================================================

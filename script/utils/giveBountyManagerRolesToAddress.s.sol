@@ -14,9 +14,9 @@ contract giveBountyManagerRoles is Script {
     //       The address of the specific LM_PC_Bounties_v1 or beneficiary should be specified in the enivronment variables or can be edited into the script manually.
     // ==============================================================================================================
 
-    uint orchestratorOwnerPrivateKey =
+    uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     address bountyManagerAddress =
         vm.envAddress("DEPLOYED_BOUNTY_MANAGER_ADDRESS"); // The exisiting Bounty Manager instance
@@ -25,7 +25,7 @@ contract giveBountyManagerRoles is Script {
     address beneficiary = vm.envAddress("ROLE_BENEFICIARY_ADDRESS"); // The address that will be granted the roles
 
     function run() public {
-        vm.startBroadcast(orchestratorOwner);
+        vm.startBroadcast(orchestratorAdmin);
 
         bountyManager.grantModuleRole(
             bountyManager.BOUNTY_ISSUER_ROLE(), beneficiary

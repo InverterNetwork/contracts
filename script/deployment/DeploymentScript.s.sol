@@ -268,7 +268,7 @@ contract DeploymentScript is Script {
         console2.log("Fee Manager \n");
 
         feeManager = deployFeeManager.run(
-            address(governor), // owner
+            address(governor),
             treasury, // treasury
             100, // Collateral Fee 1%
             100 // Issuance Fee 1%

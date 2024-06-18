@@ -23,16 +23,16 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint orchestratorOwnerPrivateKey =
+    uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     //-------------------------------------------------------------------------
     // Mock Funder and Contributor information
 
-    // Since this is a demo deployment, we will use the same address for the owner and the funder.
-    uint funder1PrivateKey = orchestratorOwnerPrivateKey;
-    address funder1 = orchestratorOwner;
+    // Since this is a demo deployment, we will use the same address for the admin and the funder.
+    uint funder1PrivateKey = orchestratorAdminPrivateKey;
+    address funder1 = orchestratorAdmin;
 
     //-------------------------------------------------------------------------
     // Storage
@@ -50,7 +50,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Setup
 
         // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
         {
             token = new ERC20Mock("Inverter USD", "iUSD");
         }
@@ -66,7 +66,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Orchestrator_v1: Owner, funding token
+        // Orchestrator_v1
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
@@ -87,7 +87,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(orchestratorOwner)
+            roleAuthorizerMetadata, abi.encode(orchestratorAdmin)
         );
 
         // BountyManager: Metadata, salary precision, fee percentage, fee treasury address
@@ -104,7 +104,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Orchestrator_v1 Creation
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
         {
             test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
@@ -197,16 +197,16 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // =========
         // Due to how the underlying rebase mechanism works, it is necessary
         // to always have some amount of tokens in the orchestrator.
-        // It's best, if the owner deposits them right after deployment.
+        // It's best, if the admin deposits them right after deployment.
 
         // Initial Deposit => 10e18;
         FM_Rebasing_v1 fundingManager =
             FM_Rebasing_v1(address(test_orchestrator.fundingManager()));
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
         {
             token.mint(
-                address(orchestratorOwner),
+                address(orchestratorAdmin),
                 scriptConstants.orchestratorTokenDepositAmount()
             );
 
@@ -238,21 +238,21 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
 
         // Create a Bounty
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
 
-        // Whitelist owner to create bounties
+        // Whitelist admin to create bounties
         orchestratorCreatedBountyManager.grantModuleRole(
             orchestratorCreatedBountyManager.BOUNTY_ISSUER_ROLE(),
-            orchestratorOwner
+            orchestratorAdmin
         );
 
-        // Whitelist owner to post claims
+        // Whitelist admin to post claims
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.CLAIMANT_ROLE(), orchestratorOwner
+            orchestratorCreatedBountyManager.CLAIMANT_ROLE(), orchestratorAdmin
         );
-        // Whitelist owner to verify claims
+        // Whitelist admin to verify claims
         orchestratorCreatedBountyManager.grantModuleRole(
-            orchestratorCreatedBountyManager.VERIFIER_ROLE(), orchestratorOwner
+            orchestratorCreatedBountyManager.VERIFIER_ROLE(), orchestratorAdmin
         );
 
         bytes memory details = "TEST BOUNTY";

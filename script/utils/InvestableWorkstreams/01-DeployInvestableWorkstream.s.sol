@@ -33,9 +33,9 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ========================================================================
     // ENVIRONMENT VARIABLES OR CONSTANTS
 
-    uint orchestratorOwnerPrivateKey =
+    uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     // NOTE: In case the script should be run on a chain WITHOUT an already deployed formula or collateral token,
     //       comment the following lines and uncomment the pre-steps in the run() function
@@ -82,7 +82,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         address orchestratorFactory = DeploymentScript.run();
 
         // If there's no formula or token deployment on the chain, we deploy them
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
         {
             formula = new BancorFormula();
             console2.log(
@@ -104,7 +104,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Orchestrator: Owner, funding token
+        // Orchestrator
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
@@ -140,7 +140,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(
                     buf_issuanceToken,
-                    orchestratorOwner,
+                    orchestratorAdmin,
                     buf_bondingCurveProperties,
                     address(collateralToken)
                 )
@@ -154,7 +154,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(orchestratorOwner)
+            roleAuthorizerMetadata, abi.encode(orchestratorAdmin)
         );
 
         // Bounty Manager:
@@ -171,7 +171,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Orchestrator Creation
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
         {
             _orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
@@ -257,23 +257,23 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
 
         // ------------------------------------------------------------------------
 
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
         {
-            // Whitelist owner to create bounties
+            // Whitelist admin to create bounties
             orchestratorCreatedBountyManager.grantModuleRole(
                 orchestratorCreatedBountyManager.BOUNTY_ISSUER_ROLE(),
-                orchestratorOwner
+                orchestratorAdmin
             );
 
-            // Whitelist owner to post claims
+            // Whitelist admin to post claims
             orchestratorCreatedBountyManager.grantModuleRole(
                 orchestratorCreatedBountyManager.CLAIMANT_ROLE(),
-                orchestratorOwner
+                orchestratorAdmin
             );
-            // Whitelist owner to verify claims
+            // Whitelist admin to verify claims
             orchestratorCreatedBountyManager.grantModuleRole(
                 orchestratorCreatedBountyManager.VERIFIER_ROLE(),
-                orchestratorOwner
+                orchestratorAdmin
             );
         }
         vm.stopBroadcast();
