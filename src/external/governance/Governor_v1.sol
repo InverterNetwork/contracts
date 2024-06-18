@@ -249,7 +249,8 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     //--------------------------------------------------------------------------
     // Factory Functions
 
-    function registerMetadata(
+    /// @inheritdoc IGovernor_v1
+    function registerMetadataInModuleFactory(
         IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
