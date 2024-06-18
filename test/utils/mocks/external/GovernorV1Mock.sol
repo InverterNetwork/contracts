@@ -4,6 +4,13 @@ pragma solidity ^0.8.0;
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
+import {
+    IModuleFactory_v1,
+    IModule_v1
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
+
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
 contract GovernorV1Mock is IGovernor_v1 {
     address feeManager;
     //--------------------------------------------------------------------------
@@ -68,6 +75,15 @@ contract GovernorV1Mock is IGovernor_v1 {
             workflow, module, functionSelector, set, fee
         );
     }
+
+    //--------------------------------------------------------------------------
+    // Factory Functions
+
+    function registerMetadataInModuleFactory(
+        IModuleFactory_v1 moduleFactory,
+        IModule_v1.Metadata memory metadata,
+        IInverterBeacon_v1 beacon
+    ) external {}
 
     //--------------------------------------------------------------------------
     // Beacon Functions
