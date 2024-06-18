@@ -17,7 +17,7 @@ import {TransactionForwarder_v1} from
 contract DeployTransactionForwarder_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     /// @notice Creates the implementation, beacon and proxy of the transactionForwarder

@@ -14,7 +14,7 @@ import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 contract UpgradeInverterBeacon_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     function run(
