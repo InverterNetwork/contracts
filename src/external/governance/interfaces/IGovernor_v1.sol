@@ -2,10 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {
-    IModuleFactory_v1,
-    IModule_v1
-} from "src/factories/interfaces/IModuleFactory_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModuleFactory_v1} from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
