@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// Internal Dependencies
+import {
+    IModuleFactory_v1,
+    IModule_v1
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
+
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
 interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Structs
@@ -190,6 +198,20 @@ interface IGovernor_v1 {
         bytes4 functionSelector,
         bool set,
         uint fee
+    ) external;
+
+    //--------------------------------------------------------------------------
+    // Factory Functions
+
+    /// @notice Registers a beacon with the provided metadata in the target moduleFactory
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    /// @param moduleFactory The module factory what will should register the new beacon and its metadata
+    /// @param metadata The metadata that will be registered
+    /// @param beacon The fbeacon that will be registered
+    function registerMetadataInModuleFactory(
+        IModuleFactory_v1 moduleFactory,
+        IModule_v1.Metadata memory metadata,
+        IInverterBeacon_v1 beacon
     ) external;
 
     //--------------------------------------------------------------------------
