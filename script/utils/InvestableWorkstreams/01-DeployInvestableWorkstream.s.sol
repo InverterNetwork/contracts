@@ -34,7 +34,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     // ENVIRONMENT VARIABLES OR CONSTANTS
 
     uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+        vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     // NOTE: In case the script should be run on a chain WITHOUT an already deployed formula or collateral token,

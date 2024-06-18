@@ -19,7 +19,7 @@ import {TransparentUpgradeableProxy} from
 contract DeployGovernor_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     Governor_v1 govImplementation;

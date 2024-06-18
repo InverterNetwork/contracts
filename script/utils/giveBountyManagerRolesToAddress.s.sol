@@ -15,7 +15,7 @@ contract giveBountyManagerRoles is Script {
     // ==============================================================================================================
 
     uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+        vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     address bountyManagerAddress =

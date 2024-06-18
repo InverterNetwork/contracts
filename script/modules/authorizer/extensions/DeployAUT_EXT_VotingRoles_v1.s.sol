@@ -16,7 +16,7 @@ import {AUT_EXT_VotingRoles_v1} from
 contract DeployAUT_EXT_VotingRoles_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     AUT_EXT_VotingRoles_v1 singleVoteGovernor;

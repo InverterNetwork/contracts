@@ -24,7 +24,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+        vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     //-------------------------------------------------------------------------

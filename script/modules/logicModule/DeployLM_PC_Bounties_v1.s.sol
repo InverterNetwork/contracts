@@ -15,7 +15,7 @@ import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 contract DeployLM_PC_Bounties_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     LM_PC_Bounties_v1 bountyManager;

@@ -31,7 +31,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // IT IS STRONGLY RECOMMENDED TO STORE THE PRIVATE KEY TO THAT ADDRESS IN A SEPARATE .ENV FILE
     // ===============================================================================================================
     uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+        vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
 
     function run() public {
