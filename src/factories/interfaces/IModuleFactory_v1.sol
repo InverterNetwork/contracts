@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
@@ -13,6 +15,9 @@ interface IModuleFactory_v1 {
 
     /// @notice Given metadata invalid.
     error ModuleFactory__InvalidMetadata();
+
+    /// @notice Given metadata invalid.
+    error ModuleFactory__InvalidInitialRegistrationData();
 
     /// @notice Given beacon invalid.
     error ModuleFactory__InvalidInverterBeacon();
@@ -30,7 +35,7 @@ interface IModuleFactory_v1 {
     /// @param metadata The registered Metadata
     /// @param beacon The registered Beacon
     event MetadataRegistered(
-        IModule_v1.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
+        IModule_v1.Metadata metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator_v1.

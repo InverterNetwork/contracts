@@ -15,7 +15,7 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 contract DeployOrchestrator_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address forwarderAddress = vm.envAddress("FORWARDER_ADDRESS");
     address deployer = vm.addr(deployerPrivateKey);
 
