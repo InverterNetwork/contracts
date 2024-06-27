@@ -54,13 +54,12 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     event ClaimAdded(
         uint indexed claimId,
         uint indexed bountyId,
-        ILM_PC_Bounties_v1.Contributor[] indexed contributors,
+        ILM_PC_Bounties_v1.Contributor[] contributors,
         bytes details
     );
 
     event ClaimContributorsUpdated(
-        uint indexed claimId,
-        ILM_PC_Bounties_v1.Contributor[] indexed contributors
+        uint indexed claimId, ILM_PC_Bounties_v1.Contributor[] contributors
     );
 
     event ClaimDetailsUpdated(uint indexed claimId, bytes details);
