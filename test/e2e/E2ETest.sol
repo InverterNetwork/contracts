@@ -70,6 +70,9 @@ contract E2ETest is E2EModuleRegistry {
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
+        feeManager = new FeeManager_v1();
+        feeManager.init(address(this), treasury, 0, 0);
+
         // Deploy Governance Contract
         gov = Governor_v1(
             address(
@@ -81,10 +84,7 @@ contract E2ETest is E2EModuleRegistry {
             )
         );
 
-        gov.init(communityMultisig, teamMultisig, 1 weeks);
-
-        feeManager = new FeeManager_v1();
-        feeManager.init(address(this), treasury, 0, 0);
+        gov.init(communityMultisig, teamMultisig, 1 weeks, address(feeManager));
 
         vm.prank(communityMultisig);
         gov.setFeeManager(address(feeManager));

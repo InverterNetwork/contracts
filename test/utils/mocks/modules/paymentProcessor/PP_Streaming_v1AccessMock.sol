@@ -25,6 +25,14 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         return unclaimableAmountsForStream[client][token][sender][id];
     }
 
+    function getValidTimes(uint _start, uint _cliff, uint _end)
+        public
+        pure
+        returns (bool)
+    {
+        return validTimes(_start, _cliff, _end);
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions
 }
