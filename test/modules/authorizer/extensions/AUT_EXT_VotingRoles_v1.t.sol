@@ -83,6 +83,10 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     /// @param motionId The motion ID.
     event MotionCreated(uint indexed motionId);
 
+    event VoteCasted(
+        uint indexed motionId, address indexed voter, uint8 indexed support
+    );
+
     /// @notice Event emitted when a motion is executed.
     /// @param motionId The motion ID.
     event MotionExecuted(uint indexed motionId);
@@ -164,18 +168,25 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     function voteInFavor(address callingUser, uint voteID) public {
         uint8 vote = 0;
+
+        vm.expectEmit(true, true, true, true);
+        emit VoteCasted(voteID, callingUser, vote);
         vm.prank(callingUser);
         _governor.castVote(voteID, vote);
     }
 
     function voteAgainst(address callingUser, uint voteID) public {
         uint8 vote = 1;
+        vm.expectEmit(true, true, true, true);
+        emit VoteCasted(voteID, callingUser, vote);
         vm.prank(callingUser);
         _governor.castVote(voteID, vote);
     }
 
     function voteAbstain(address callingUser, uint voteID) public {
         uint8 vote = 2;
+        vm.expectEmit(true, true, true, true);
+        emit VoteCasted(voteID, callingUser, vote);
         vm.prank(callingUser);
         _governor.castVote(voteID, vote);
     }
