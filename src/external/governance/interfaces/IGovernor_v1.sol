@@ -104,7 +104,8 @@ interface IGovernor_v1 {
     function init(
         address communityMultisig,
         address teamMultisig,
-        uint timelockPeriod
+        uint timelockPeriod,
+        address initialFeeManager
     ) external;
 
     //--------------------------------------------------------------------------
