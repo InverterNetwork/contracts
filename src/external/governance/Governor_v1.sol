@@ -125,7 +125,8 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     function init(
         address newCommunityMultisig,
         address newTeamMultisig,
-        uint newTimelockPeriod
+        uint newTimelockPeriod,
+        address initialFeeManager
     )
         external
         initializer
@@ -150,6 +151,8 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         _grantRole(TEAM_MULTISIG_ROLE, newTeamMultisig);
 
         timelockPeriod = newTimelockPeriod;
+
+        _setFeeManager(initialFeeManager);
     }
 
     //--------------------------------------------------------------------------
@@ -174,11 +177,10 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
 
     /// @inheritdoc IGovernor_v1
     function setFeeManager(address newFeeManager)
-        external
+        public
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        validAddress(newFeeManager)
     {
-        feeManager = IFeeManager_v1(newFeeManager);
+        _setFeeManager(newFeeManager);
     }
 
     /// @inheritdoc IGovernor_v1
@@ -400,6 +402,15 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
 
     //--------------------------------------------------------------------------
     // Internal Functions
+
+    /// @dev sets the internal FeeManager address
+    /// @param newFeeManager the address of the new feeManager
+    function _setFeeManager(address newFeeManager)
+        internal
+        validAddress(newFeeManager)
+    {
+        feeManager = IFeeManager_v1(newFeeManager);
+    }
 
     //@dev internal function that checks if target address is a beacon and this contract has the ownership of it
     function isBeaconAccessible(address target) internal returns (bool) {
