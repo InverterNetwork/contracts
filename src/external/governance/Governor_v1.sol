@@ -177,7 +177,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
 
     /// @inheritdoc IGovernor_v1
     function setFeeManager(address newFeeManager)
-        public
+        external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
     {
         _setFeeManager(newFeeManager);
