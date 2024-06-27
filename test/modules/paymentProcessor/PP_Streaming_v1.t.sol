@@ -541,7 +541,7 @@ contract PP_StreamingV1Test is ModuleTest {
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeNow(
         address[] memory recipients,
         uint[] memory endTimes
     ) public {
@@ -551,8 +551,16 @@ contract PP_StreamingV1Test is ModuleTest {
 
         assumeValidRecipients(recipients);
 
-        // Warp to reasonable time to test wether orders before timestamp are retrievable
-        vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
+        // Find the greatest timestamp in the array
+        uint greatestEnd = 0;
+        for (uint i; i < endTimes.length; i++) {
+            if (endTimes[i] > greatestEnd) {
+                greatestEnd = endTimes[i];
+            }
+        }
+
+        // Warp to the greatest end value, so even that one is <= block.timestamp
+        vm.warp(greatestEnd);
 
         // Amount of tokens for user that should be payed out
         uint payoutAmount = 100;
@@ -564,7 +572,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: payoutAmount,
-                    start: block.timestamp,
+                    start: 0,
                     cliff: 0,
                     end: endTimes[i]
                 })
@@ -1859,6 +1867,43 @@ contract PP_StreamingV1Test is ModuleTest {
                 amount
             );
         }
+    }
+
+    function testTimeVerificationIsCorrectlyImplemented(
+        uint start,
+        uint cliff,
+        uint end
+    ) public {
+        // check if an overflow will happen via unchecked
+        bool willRevert = false;
+        unchecked {
+            if (start + cliff < start) {
+                willRevert = true;
+            }
+        }
+        vm.assume(!willRevert);
+
+        // Specifically test each aspect of the time verification here as well
+        // to find out whether it should revert or not
+        bool resultShouldBe = true;
+
+        // Check whether the start is greater than the end time
+        // Them being equal is fine if no streaming is desired (instant payout)
+        if (start > end) {
+            resultShouldBe = false;
+            console.log("start > end");
+        }
+
+        // Check whether the start with cliff added is greater than the end time
+        // Them being equal is fine again, as that would just be a delayed full payout
+        // (if cliff > 0)
+        if (start + cliff > end) {
+            resultShouldBe = false;
+            console.log("start + cliff > end");
+        }
+
+        bool result = paymentProcessor.getValidTimes(start, cliff, end);
+        assertEq(result, resultShouldBe);
     }
 
     //--------------------------------------------------------------------------

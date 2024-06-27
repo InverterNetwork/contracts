@@ -873,7 +873,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         pure
         returns (bool)
     {
-        return !(_start >= type(uint).max && _start + _cliff > _end);
+        // _start + _cliff should be less or equal to _end
+        // this already implies that _start is not greater than _end
+        return _start + _cliff <= _end;
     }
 
     /// @notice validate payment token input.
