@@ -51,7 +51,12 @@ contract GovernorV1Test is Test {
 
     function setUp() public {
         gov = new Governor_v1();
-        gov.init(communityMultisig, teamMultisig, timelockPeriod);
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            address(makeAddr("FeeManager"))
+        );
 
         // Create beacon owned by governor
         ownedBeaconMock = new InverterBeaconV1OwnableMock(address(gov));
@@ -219,12 +224,20 @@ contract GovernorV1Test is Test {
 
         // assert timelock Period
         assertEq(gov.timelockPeriod(), timelockPeriod);
+
+        // assert FeeManager
+        assertEq(gov.getFeeManager(), makeAddr("FeeManager"));
     }
 
     function testInitModifierInPosition() public {
         // initializer
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        gov.init(communityMultisig, teamMultisig, timelockPeriod);
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            makeAddr("FeeManager")
+        );
 
         gov = new Governor_v1();
         // validAddress(newCommunityMultisig)
@@ -233,7 +246,9 @@ contract GovernorV1Test is Test {
                 IGovernor_v1.Governor__InvalidAddress.selector, address(0)
             )
         );
-        gov.init(address(0), teamMultisig, timelockPeriod);
+        gov.init(
+            address(0), teamMultisig, timelockPeriod, makeAddr("FeeManager")
+        );
 
         // validAddress(newTeamMultisig)
         vm.expectRevert(
@@ -241,7 +256,12 @@ contract GovernorV1Test is Test {
                 IGovernor_v1.Governor__InvalidAddress.selector, address(0)
             )
         );
-        gov.init(communityMultisig, address(0), timelockPeriod);
+        gov.init(
+            communityMultisig,
+            address(0),
+            timelockPeriod,
+            makeAddr("FeeManager")
+        );
 
         // validTimelockPeriod(newTimelockPeriod)
         vm.expectRevert(
@@ -249,7 +269,16 @@ contract GovernorV1Test is Test {
                 IGovernor_v1.Governor__InvalidTimelockPeriod.selector, 0
             )
         );
-        gov.init(communityMultisig, teamMultisig, 0);
+        gov.init(communityMultisig, teamMultisig, 0, makeAddr("FeeManager"));
+
+        // validAddress(newFeeManager)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__InvalidAddress.selector, address(0)
+            )
+        );
+
+        gov.init(communityMultisig, teamMultisig, timelockPeriod, address(0));
     }
 
     //--------------------------------------------------------------------------

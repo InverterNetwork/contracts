@@ -10,9 +10,9 @@ import {ScriptConstants} from "../script-constants.sol";
 
 contract addClaim is Script {
     ScriptConstants scriptConstants = new ScriptConstants();
-    uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    uint orchestratorAdminPrivateKey =
+        vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     // ===============================================================================================================
     // Introduce corresponding bounty manager and user addresses here
@@ -35,7 +35,7 @@ contract addClaim is Script {
             claimAmount: scriptConstants.addBountyManagerClaim_user2_amount()
         });
 
-        vm.startBroadcast(orchestratorOwner);
+        vm.startBroadcast(orchestratorAdmin);
 
         uint claimId = bountyManager.addClaim(
             1, contributors, scriptConstants.emptyBytes()

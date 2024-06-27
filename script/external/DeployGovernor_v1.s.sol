@@ -19,7 +19,7 @@ import {TransparentUpgradeableProxy} from
 contract DeployGovernor_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     Governor_v1 govImplementation;
@@ -30,6 +30,7 @@ contract DeployGovernor_v1 is Script {
 
         address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
         address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
+        address feeManager = vm.envAddress("FEE_MANAGER_ADDRESS");
         uint timelockPeriod = 1 weeks;
         // Check settings.
 
@@ -43,14 +44,20 @@ contract DeployGovernor_v1 is Script {
             "DeployOrchestratorFactory_v1: Missing env variable: team multisig"
         );
 
+        require(
+            feeManager != address(0),
+            "DeployOrchestratorFactory_v1: Missing env variable: feeManager"
+        );
+
         // Deploy the Governor_v1.
-        return run(communityMultisig, teamMultisig, timelockPeriod);
+        return run(communityMultisig, teamMultisig, timelockPeriod, feeManager);
     }
 
     function run(
         address communityMultisig,
         address teamMultisig,
-        uint timelockPeriod
+        uint timelockPeriod,
+        address initialFeeManager
     ) public returns (address, address) {
         vm.startBroadcast(deployerPrivateKey);
         {
@@ -67,7 +74,12 @@ contract DeployGovernor_v1 is Script {
                     )
                 )
             );
-            gov.init(communityMultisig, teamMultisig, timelockPeriod);
+            gov.init(
+                communityMultisig,
+                teamMultisig,
+                timelockPeriod,
+                initialFeeManager
+            );
         }
 
         vm.stopBroadcast();

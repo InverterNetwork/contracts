@@ -4,6 +4,11 @@ import "forge-std/Script.sol";
 
 import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
+import {DeployAndSetUpInverterBeacon_v1} from
+    "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
+
 /**
  * @title FeeManager Deployment Script
  *
@@ -14,8 +19,11 @@ import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 contract DeployFeeManager_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
+
+    DeployAndSetUpInverterBeacon_v1 deployAndSetUpInverterBeacon_v1 =
+        new DeployAndSetUpInverterBeacon_v1();
 
     function run() external returns (address) {
         // Read deployment settings from environment variables.
@@ -54,25 +62,84 @@ contract DeployFeeManager_v1 is Script {
         uint defaultCollateralFee,
         uint defaultIssuanceFee
     ) public returns (address implementation) {
+        address feeManagerImplementation;
         vm.startBroadcast(deployerPrivateKey);
         {
-            FeeManager_v1 feeMan = new FeeManager_v1();
+            // Deploy the feeManager.
+            feeManagerImplementation = address(new FeeManager_v1());
+        }
+        vm.stopBroadcast();
 
-            feeMan.init(
+        address feeManagerBeacon;
+        address feeManagerProxy;
+
+        (feeManagerBeacon, feeManagerProxy) = deployAndSetUpInverterBeacon_v1
+            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0);
+
+        FeeManager_v1 feeManager = FeeManager_v1(feeManagerProxy);
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            feeManager.init(
                 owner,
                 defaultProtocolTreasury,
                 defaultCollateralFee,
                 defaultIssuanceFee
             );
-
-            implementation = address(feeMan);
         }
         vm.stopBroadcast();
+
+        implementation = address(feeManager);
 
         // Log
         console2.log(
             "Deployment of Fee Manager implementation at address ",
             implementation
         );
+    }
+
+    function createProxy(address owner)
+        external
+        returns (address implementation)
+    {
+        address feeManagerImplementation;
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the feeManager.
+            feeManagerImplementation = address(new FeeManager_v1());
+        }
+        vm.stopBroadcast();
+
+        address feeManagerBeacon;
+        address feeManagerProxy;
+
+        (feeManagerBeacon, feeManagerProxy) = deployAndSetUpInverterBeacon_v1
+            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0);
+
+        implementation = address(FeeManager_v1(feeManagerProxy));
+        // Log
+        console2.log(
+            "Deployment of Fee Manager implementation at address ",
+            implementation
+        );
+    }
+
+    function init(
+        address feeManager,
+        address owner,
+        address defaultProtocolTreasury,
+        uint defaultCollateralFee,
+        uint defaultIssuanceFee
+    ) external {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            FeeManager_v1(feeManager).init(
+                owner,
+                defaultProtocolTreasury,
+                defaultCollateralFee,
+                defaultIssuanceFee
+            );
+        }
+        vm.stopBroadcast();
     }
 }
