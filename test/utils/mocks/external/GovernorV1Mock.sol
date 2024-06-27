@@ -14,7 +14,7 @@ contract GovernorV1Mock is IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function init(address, address, uint) external {}
+    function init(address, address, uint, address) external {}
 
     //--------------------------------------------------------------------------
     // Getter Functions
