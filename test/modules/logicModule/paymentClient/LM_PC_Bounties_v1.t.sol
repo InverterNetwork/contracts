@@ -47,7 +47,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bytes details
     );
 
-    event BountyUpdated(uint indexed bountyId, bytes indexed details);
+    event BountyUpdated(uint indexed bountyId, bytes details);
 
     event BountyLocked(uint indexed bountyId);
 

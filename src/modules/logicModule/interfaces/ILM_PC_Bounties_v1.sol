@@ -93,7 +93,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @notice Event emitted when a Bounty got updated.
     /// @param bountyId The id of the updated Bounty.
     /// @param details The Bounty's details.
-    event BountyUpdated(uint indexed bountyId, bytes indexed details);
+    event BountyUpdated(uint indexed bountyId, bytes details);
 
     /// @notice Event emitted when a Bounty gets locked.
     /// @param bountyId The id of the locked Bounty.

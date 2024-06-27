@@ -24,14 +24,14 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     /// @param newBuyReserveRatio The new reserve ratio for buying
     /// @param oldBuyReserveRatio The old reserve ratio for buying
     event BuyReserveRatioSet(
-        uint32 indexed newBuyReserveRatio, uint32 indexed oldBuyReserveRatio
+        uint32 newBuyReserveRatio, uint32 oldBuyReserveRatio
     );
 
     /// @notice Event emitted when the reserve ratio for selling is updated
     /// @param newSellReserveRatio The new reserve ratio for selling
     /// @param oldSellReserveRatio The old reserve ratio for selling
     event SellReserveRatioSet(
-        uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
+        uint32 newSellReserveRatio, uint32 oldSellReserveRatio
     );
 
     //--------------------------------------------------------------------------
