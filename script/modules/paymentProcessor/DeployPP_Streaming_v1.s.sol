@@ -14,7 +14,7 @@ import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol"
 contract DeployPP_Streaming_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     PP_Streaming_v1 paymentProcessor;

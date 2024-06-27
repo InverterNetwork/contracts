@@ -28,9 +28,9 @@ contract deployAndSwitchTokenAuthorizer is Script {
         new DeployAndSetUpInverterBeacon_v1();
     ScriptConstants scriptConstants = new ScriptConstants();
 
-    uint orchestratorOwnerPrivateKey =
-        vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
-    address orchestratorOwner = vm.addr(orchestratorOwnerPrivateKey);
+    uint orchestratorAdminPrivateKey =
+        vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
+    address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);
 
     DeployAUT_TokenGated_Role_v1 deployTokenRoleAuthorizer =
         new DeployAUT_TokenGated_Role_v1();
@@ -53,7 +53,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     LM_PC_Bounties_v1 bountyManager = LM_PC_Bounties_v1(bountyManagerAddress);
 
     function run() public {
-        vm.startBroadcast(orchestratorOwnerPrivateKey);
+        vm.startBroadcast(orchestratorAdminPrivateKey);
 
         // Get deployed and setting initiated authorizer from .env
         address deployedAuthorizerAddress =
@@ -69,9 +69,9 @@ contract deployAndSwitchTokenAuthorizer is Script {
         // execute add module to orchestrator
         orchestrator.executeSetAuthorizer(deployedAuthorizer);
 
-        // grant default admin role to orchestratorOwner
+        // grant default admin role to orchestratorAdmin
         deployedAuthorizer.grantRole(
-            deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorOwner
+            deployedAuthorizer.DEFAULT_ADMIN_ROLE(), orchestratorAdmin
         );
 
         // make all LM_PC_Bounties_v1 roles tokenGated
