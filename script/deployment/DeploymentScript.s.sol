@@ -256,18 +256,28 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
+
+        console2.log("Deploy Fee Manager \n");
+
+        feeManager = deployFeeManager.createProxy(communityMultisig); //@note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
         console2.log("Governance Contract \n");
 
-        (governor, governorImplementation) =
-            deployGovernor.run(communityMultisig, teamMultisig, 1 weeks);
+        (governor, governorImplementation) = deployGovernor.run(
+            communityMultisig, teamMultisig, 1 weeks, feeManager
+        );
 
         console2.log(
             "-----------------------------------------------------------------------------"
         );
 
-        console2.log("Fee Manager \n");
+        console2.log("Init Fee Manager \n");
 
-        feeManager = deployFeeManager.run(
+        deployFeeManager.init(
+            feeManager,
             address(governor),
             treasury, // treasury
             100, // Collateral Fee 1%
