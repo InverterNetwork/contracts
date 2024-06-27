@@ -96,6 +96,14 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param motionId The motion ID.
     event MotionCreated(uint indexed motionId);
 
+    /// @notice Event emitted when a vote is cast for a motion
+    /// @param motionId The motion ID.
+    /// @param voter The address of a voter
+    /// @param motionId Value that indicates how the voter supports the motion
+    event VoteCasted(
+        uint indexed motionId, address indexed voter, uint8 indexed support
+    );
+
     /// @notice Event emitted when a motion is executed.
     /// @param motionId The motion ID.
     event MotionExecuted(uint indexed motionId);
