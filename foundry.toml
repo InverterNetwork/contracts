@@ -7,7 +7,7 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 # Compilation
 solc_version = "0.8.23"
 optimizer = true
-optimizer_runs = 2_000
+optimizer_runs = 500
 via_ir = false
 
 [fuzz]
