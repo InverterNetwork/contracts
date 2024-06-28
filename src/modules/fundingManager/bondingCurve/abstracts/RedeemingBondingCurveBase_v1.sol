@@ -257,7 +257,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Transfer tokens to receiver
-        collateralToken.transfer(_receiver, collateralRedeemAmount);
+        collateralToken.safeTransfer(_receiver, collateralRedeemAmount);
         // Emit event
         emit TokensSold(
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
