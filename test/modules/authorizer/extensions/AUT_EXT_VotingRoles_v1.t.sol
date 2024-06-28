@@ -83,7 +83,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     /// @param motionId The motion ID.
     event MotionCreated(uint indexed motionId);
 
-    event VoteCasted(
+    event VoteCast(
         uint indexed motionId, address indexed voter, uint8 indexed support
     );
 
@@ -199,7 +199,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         for (uint i; i < _voters.length; ++i) {
             vm.expectEmit(true, true, true, true);
-            emit VoteCasted(_voteID, _voters[i], 0);
+            emit VoteCast(_voteID, _voters[i], 0);
             voteInFavor(_voters[i], _voteID);
         }
 
@@ -222,7 +222,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i = 1; i < _governor.threshold(); ++i) {
             if (i < _voters.length) {
                 vm.expectEmit(true, true, true, true);
-                emit VoteCasted(_voteID, _voters[(i - 1)], 0);
+                emit VoteCast(_voteID, _voters[(i - 1)], 0);
                 voteInFavor(_voters[(i - 1)], _voteID);
             }
         }
@@ -537,7 +537,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             (address _moduleAddress, bytes memory _msg) = getMockValidVote();
             uint _newVote = createVote(users[i], _moduleAddress, _msg);
             vm.expectEmit(true, true, true, true);
-            emit VoteCasted(_newVote, users[i], 0);
+            emit VoteCast(_newVote, users[i], 0);
             voteInFavor(users[i], _newVote);
 
             // assert that voting worked (also confirms that vote exists)
@@ -623,7 +623,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _votesBefore = _motion.againstVotes;
 
         vm.expectEmit(true, true, true, true);
-        emit VoteCasted(_voteID, ALBA, 1);
+        emit VoteCast(_voteID, ALBA, 1);
         voteAgainst(ALBA, _voteID);
 
         uint startTime = block.timestamp;
@@ -631,14 +631,14 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.warp(startTime + i);
             vm.expectEmit(true, true, true, true);
-            emit VoteCasted(_voteID, users[i], 1);
+            emit VoteCast(_voteID, users[i], 1);
             voteAgainst(users[i], _voteID);
         }
 
         // vote in the last possible moment
         vm.warp(startTime + DEFAULT_DURATION);
         vm.expectEmit(true, true, true, true);
-        emit VoteCasted(_voteID, BOB, 1);
+        emit VoteCast(_voteID, BOB, 1);
         voteAgainst(BOB, _voteID);
 
         _motion = getFullMotionData(_voteID);
@@ -689,7 +689,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _votesBefore = _motion.abstainVotes;
 
         vm.expectEmit(true, true, true, true);
-        emit VoteCasted(_voteID, ALBA, 2);
+        emit VoteCast(_voteID, ALBA, 2);
         voteAbstain(ALBA, _voteID);
 
         uint startTime = block.timestamp;
@@ -697,14 +697,14 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.warp(startTime + i);
             vm.expectEmit(true, true, true, true);
-            emit VoteCasted(_voteID, users[i], 2);
+            emit VoteCast(_voteID, users[i], 2);
             voteAbstain(users[i], _voteID);
         }
 
         // vote in the last possible moment
         vm.warp(startTime + DEFAULT_DURATION);
         vm.expectEmit(true, true, true, true);
-        emit VoteCasted(_voteID, BOB, 2);
+        emit VoteCast(_voteID, BOB, 2);
         voteAbstain(BOB, _voteID);
 
         IAUT_EXT_VotingRoles_v1.Receipt memory _r =

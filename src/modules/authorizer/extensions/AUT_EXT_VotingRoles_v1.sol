@@ -327,7 +327,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
 
         motion_.receipts[voter] = Receipt(true, support);
 
-        emit VoteCasted(motionId, voter, support);
+        emit VoteCast(motionId, voter, support);
     }
 
     function executeMotion(uint motionId) external {
