@@ -35,7 +35,7 @@ interface IModuleFactory_v1 {
     /// @param metadata The registered Metadata
     /// @param beacon The registered Beacon
     event MetadataRegistered(
-        IModule_v1.Metadata indexed metadata, IInverterBeacon_v1 indexed beacon
+        IModule_v1.Metadata metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for a orchestrator_v1.
