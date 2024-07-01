@@ -20,7 +20,7 @@ import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 contract DeployKPIRewarder is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
     LM_PC_KPIRewarder_v1 kpiRewarder;
     //Beacon
