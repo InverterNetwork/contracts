@@ -15,7 +15,7 @@ import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
 contract DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_OWNER_PRIVATE_KEY");
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
     FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager;
