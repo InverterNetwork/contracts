@@ -1184,22 +1184,21 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(issuanceToken.balanceOf(non_admin_address), amount);
     }
 
-    /* Test setVirtualIssuanceSupply and _setVirtualIssuanceSupply function
-        ├── when caller is not the Orchestrator_v1 admin
-        │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
-                ├── when the new token supply is zero
-                │   └── it should revert
-                └── when the new token supply is above zero
-                    ├── it should set the new token supply
-                    └── it should emit an event
-
+    /* Test internal _setVirtualIssuanceSupply
+        ├── given the virtual supply is zero
+        │   └── when the function _setVirtualIssuanceSupply() gets called
+        │       └── then it should revert
+        ├── given the virtual supply after decimal conversion is zero
+        │   └── when the function _setVirtualIssuanceSupply() gets called
+        │       └── then it should revert
+        └── given the virtual supply is bigger than zero
+            └── when the function _setVirtualIssuanceSupply() gets called
+                └── then it should set the net issuance token supply
+                    └── and it should emit an event
     */
 
-    function testSetVirtualIssuanceSupply_FailsIfZero()
-        public
-        callerIsOrchestratorAdmin
-    {
+    function testInternalSetVirtualIssuanceSupply_RevertGivenIssuanceSupplyIsZero(
+    ) public {
         uint _newSupply = 0;
 
         vm.expectRevert(
@@ -1207,13 +1206,69 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
+        bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
+    }
+
+    function testInternalSetVirtualIssuanceSupply_RevertGivenAfterDecimalConversionIssuanceSupplyIsZero(
+        uint _newSupply
+    ) public {
+        // vm.assume(_newSupply < 10 ** (DECIMALS - 18));
+        _newSupply = bound(_newSupply, 0, 10 ** (DECIMALS - 18) - 1);
+
+        vm.expectRevert(
+            IVirtualIssuanceSupplyBase_v1
+                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
+                .selector
+        );
+        bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
+    }
+
+    function testInternalSetVirtualIssuanceSupply_WorksGivenIssuanceSupplyBiggerThanZero(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+
+        vm.expectEmit(
+            true, true, false, false, address(bondingCurveFundingManager)
+        );
+        emit VirtualIssuanceSupplySet(_newSupply, INITIAL_ISSUANCE_SUPPLY);
+        bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
+        assertEq(
+            bondingCurveFundingManager.getVirtualIssuanceSupply(), _newSupply
+        );
+    }
+
+    /* Test setVirtualIssuanceSupply
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function SetVirtualIssuanceSupply() gets called
+        │       └── then it should revert (tested in base Module tests)
+        └── given the caller is the Orchestrator_v1 admin
+            └── and the new token supply is above zero
+                └── when the function SetVirtualIssuanceSuppl()y gets called
+                    └── then it should set the new token supply
+                        └── and it should emit an event
+
+    */
+
+    function testSetVirtualIssuanceSupply_RevertGivenCallerNotAdmin(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+        // onlyOrchestratorAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                address(0xBEEF)
+            )
+        );
+        vm.prank(address(0xBEEF)); // Not Authorized
         bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
     }
 
-    function testSetVirtualIssuanceSupply(uint _newSupply)
-        public
-        callerIsOrchestratorAdmin
-    {
+    function testSetVirtualIssuanceSupply_WorksGivenCallerIsAdminAndIssuanceSupplyBiggerThanZero(
+        uint _newSupply
+    ) public callerIsOrchestratorAdmin {
         vm.assume(_newSupply != 0);
 
         vm.expectEmit(

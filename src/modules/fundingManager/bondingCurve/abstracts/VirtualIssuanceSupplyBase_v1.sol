@@ -103,7 +103,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
 
     /// @dev Internal function to directly set the virtual issuance supply to a new value.
     /// @param _virtualSupply The new value to set for the virtual issuance supply.
-    function _setVirtualIssuanceSupply(uint _virtualSupply) internal {
+    function _setVirtualIssuanceSupply(uint _virtualSupply) internal virtual {
         if (_virtualSupply == 0) {
             revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
             );

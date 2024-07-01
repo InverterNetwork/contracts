@@ -507,4 +507,19 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
     }
+
+    /// @dev    Internal function to directly set the virtual issuance supply to a new value.
+    ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
+    ///         is done for use in the Bancor Formulat
+    /// @param  _virtualSupply The new value to set for the virtual issuance supply.
+    function _setVirtualIssuanceSupply(uint _virtualSupply) internal override {
+        // Check if virtual supply is big enough to ensure compatibility with relative issuance
+        // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
+        // so it will not result in a round down 0 value
+        if (_virtualSupply < 10 ** (issuanceTokenDecimals - 18)) {
+            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
+            );
+        }
+        super._setVirtualIssuanceSupply(_virtualSupply);
+    }
 }
