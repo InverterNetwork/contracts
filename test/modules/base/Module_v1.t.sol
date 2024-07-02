@@ -49,13 +49,8 @@ contract ModuleBaseV1Test is ModuleTest {
     /// @notice Module has been initialized.
     /// @param parentOrchestrator The address of the orchestrator the module is linked to.
     /// @param moduleTitle The title of the module.
-    /// @param majorVersion The major version of the module.
-    /// @param minorVersion The minor version of the module.
     event ModuleInitialized(
-        address indexed parentOrchestrator,
-        string indexed moduleTitle,
-        uint majorVersion,
-        uint minorVersion
+        address indexed parentOrchestrator, string indexed moduleTitle
     );
 
     function setUp() public {
@@ -65,9 +60,7 @@ contract ModuleBaseV1Test is ModuleTest {
         _setUpOrchestrator(module);
 
         vm.expectEmit(true, true, true, false);
-        emit ModuleInitialized(
-            address(_orchestrator), _TITLE, _MAJOR_VERSION, _MINOR_VERSION
-        );
+        emit ModuleInitialized(address(_orchestrator), _TITLE);
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
