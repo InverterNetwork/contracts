@@ -58,7 +58,9 @@ contract ModuleFactoryV1Test is Test {
 
     /// @notice Event emitted when new module created for a orchestrator.
     event ModuleCreated(
-        address indexed orchestrator, address indexed module, bytes32 identifier
+        address indexed orchestrator,
+        address indexed module,
+        IModule_v1.Metadata metadata
     );
 
     // Constants
@@ -270,9 +272,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectEmit(true, false, false, false);
 
         // We emit the event we expect to see.
-        emit ModuleCreated(
-            orchestrator, address(0), LibMetadata.identifier(metadata)
-        );
+        emit ModuleCreated(orchestrator, address(0), metadata);
 
         // Create new module instance.
         IModule_v1 newModule = IModule_v1(
