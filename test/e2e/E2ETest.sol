@@ -72,7 +72,18 @@ contract E2ETest is E2EModuleRegistry {
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
-        feeManager = new FeeManager_v1();
+        // Deploy the Fee Manager
+
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    communityMultisig, // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
+
         feeManager.init(address(this), treasury, 0, 0);
 
         // Deploy Governance Contract
@@ -86,18 +97,6 @@ contract E2ETest is E2EModuleRegistry {
                 )
             )
         );
-
-        feeManager = FeeManager_v1(
-            address(
-                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
-                    address(new FeeManager_v1()), // Implementation Address
-                    communityMultisig, // Admin
-                    bytes("") // data field that could have been used for calls, but not necessary
-                )
-            )
-        );
-
-        feeManager.init(address(this), treasury, 0, 0);
 
         gov.init(communityMultisig, teamMultisig, 1 weeks, address(feeManager));
 
