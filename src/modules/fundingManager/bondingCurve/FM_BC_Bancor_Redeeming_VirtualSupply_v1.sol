@@ -296,8 +296,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(BondingCurveBase_v1)
         returns (uint)
     {
-        return uint(PPM) * uint(PPM) * virtualCollateralSupply
-            / (virtualIssuanceSupply * uint(reserveRatioForBuying));
+        return uint(PPM) * uint(PPM)
+            * FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
+            )
+            / (
+                FM_BC_Tools._convertAmountToRequiredDecimal(
+                    virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
+                ) * uint(reserveRatioForBuying)
+            );
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -309,8 +316,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        return uint(PPM) * uint(PPM) * virtualCollateralSupply
-            / (virtualIssuanceSupply * uint(reserveRatioForSelling));
+        return uint(PPM) * uint(PPM)
+            * FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
+            )
+            / (
+                FM_BC_Tools._convertAmountToRequiredDecimal(
+                    virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
+                ) * uint(reserveRatioForSelling)
+            );
     }
 
     /// @inheritdoc IFundingManager_v1
