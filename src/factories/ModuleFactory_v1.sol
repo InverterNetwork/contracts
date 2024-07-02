@@ -178,7 +178,7 @@ contract ModuleFactory_v1 is
         _orchestratorOfProxy[proxy] = address(orchestrator);
 
         emit ModuleCreated(
-            address(orchestrator), proxy, LibMetadata.identifier(metadata)
+            address(orchestrator), proxy, metadata
         );
 
         return proxy;

@@ -41,9 +41,9 @@ interface IModuleFactory_v1 {
     /// @notice Event emitted when new module created for a orchestrator_v1.
     /// @param orchestrator The corresponding orchestrator.
     /// @param module The created module instance.
-    /// @param identifier The module's identifier.
+    /// @param metadata The registered Metadata
     event ModuleCreated(
-        address indexed orchestrator, address indexed module, bytes32 identifier
+        address indexed orchestrator, address indexed module, IModule_v1.Metadata metadata
     );
 
     //--------------------------------------------------------------------------
