@@ -133,6 +133,14 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
             catch {
                 revert Module__AUT_TokenGated_Roles__InvalidToken(who);
             }
+            // Check that address has code attached
+            uint32 size;
+            assembly {
+                size := extcodesize(who)
+            }
+            if (size == 0) {
+                revert Module__AUT_TokenGated_Roles__InvalidToken(who);
+            }
         }
 
         return super._grantRole(role, who);
