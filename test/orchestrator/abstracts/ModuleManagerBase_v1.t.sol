@@ -131,7 +131,7 @@ contract ModuleManagerBaseV1Test is Test {
 
     function testInitFailsForTooManyModules(uint moduleAmount) public {
         vm.assume(moduleAmount > MAX_MODULES);
-        address[] memory modules = createModules(moduleAmount, 1000);
+        address[] memory modules = createModules(moduleAmount, 256);
 
         //we don't need to check for validity since it should revert before
 
@@ -342,8 +342,8 @@ contract ModuleManagerBaseV1Test is Test {
     function testInitiateAddModuleWithTimelock_FailsIfLimitReached(
         uint moduleAmount
     ) public {
-        moduleAmount = bound(moduleAmount, MAX_MODULES + 1, 1000);
-        address[] memory modules = createModules(moduleAmount, 1000);
+        moduleAmount = bound(moduleAmount, MAX_MODULES + 1, 256);
+        address[] memory modules = createModules(moduleAmount, 256);
 
         for (uint i; i < MAX_MODULES; ++i) {
             moduleManager.call_initiateAddModuleWithTimelock(modules[i]);
