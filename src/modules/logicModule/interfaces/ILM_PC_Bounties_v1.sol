@@ -93,7 +93,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @notice Event emitted when a Bounty got updated.
     /// @param bountyId The id of the updated Bounty.
     /// @param details The Bounty's details.
-    event BountyUpdated(uint indexed bountyId, bytes indexed details);
+    event BountyUpdated(uint indexed bountyId, bytes details);
 
     /// @notice Event emitted when a Bounty gets locked.
     /// @param bountyId The id of the locked Bounty.
@@ -107,7 +107,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     event ClaimAdded(
         uint indexed claimId,
         uint indexed bountyId,
-        Contributor[] indexed contributors,
+        Contributor[] contributors,
         bytes details
     );
 
@@ -115,7 +115,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @param claimId The id of the Claim that got updated.
     /// @param contributors The contributor information for the Claim.
     event ClaimContributorsUpdated(
-        uint indexed claimId, Contributor[] indexed contributors
+        uint indexed claimId, Contributor[] contributors
     );
 
     /// @notice Event emitted when Claim Details got updated.

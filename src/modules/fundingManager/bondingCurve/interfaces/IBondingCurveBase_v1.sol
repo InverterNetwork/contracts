@@ -62,9 +62,7 @@ interface IBondingCurveBase_v1 {
     /// @notice Event emitted when the decimals of the issuance token are updated
     /// @param oldDecimals The old decimals of the issuance token
     /// @param newDecimals The new decimals of the issuance token
-    event TokenDecimalsUpdated(
-        uint8 indexed oldDecimals, uint8 indexed newDecimals
-    );
+    event TokenDecimalsUpdated(uint8 oldDecimals, uint8 newDecimals);
 
     /// @notice Event emitted when protocol fee has been minted to the treasury
     /// @param token The token minted as protocol fee

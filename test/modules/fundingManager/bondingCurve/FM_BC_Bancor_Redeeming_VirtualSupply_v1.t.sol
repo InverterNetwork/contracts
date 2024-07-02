@@ -97,10 +97,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         address seller
     );
     event BuyReserveRatioSet(
-        uint32 indexed newBuyReserveRatio, uint32 indexed oldBuyReserveRatio
+        uint32 newBuyReserveRatio, uint32 oldBuyReserveRatio
     );
     event SellReserveRatioSet(
-        uint32 indexed newSellReserveRatio, uint32 indexed oldSellReserveRatio
+        uint32 newSellReserveRatio, uint32 oldSellReserveRatio
     );
     event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
     event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
