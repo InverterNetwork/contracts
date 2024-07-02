@@ -121,9 +121,6 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     uint constant TOTAL_USERS = USERS_PER_ROUND * DEPOSIT_ROUNDS;
 
     function setUp() public override {
-        // Pin tests to a block o save in RPC calls
-        uint forkBlock = 5_723_995; // April 18 2024 12:15 EST
-
         // Get RPC URL from the foundry.toml via the environment
         // if that fails, set the fallback rpc url
         string memory rpcUrl;
@@ -138,7 +135,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
         // Try creating the fork via the rpc url set above
         // if that fails, we alert the user about this
-        try vm.createSelectFork(rpcUrl, forkBlock) returns (uint forkId) {
+        try vm.createSelectFork(rpcUrl) returns (uint forkId) {
             sepoliaForkId = forkId;
         } catch {
             revert(
