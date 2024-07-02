@@ -617,6 +617,14 @@ contract BondingCurveBaseV1Test is ModuleTest {
         ├── Given the (protocol fee + workflow fee) > BPS / 100%
         │   └── When the function _calculateNetAndSplitFees() is called
         │       └── Then it should revert with BondingCurveFundingManagerBase__FeeAmountToHigh
+        ├── given the protocol fee > 0
+        │   └── and the amount is low enough such that the workflow feeAmount calculated rounds down to 0
+        │       └── when the function _calculateNetAndSplitFee() is called
+        │           └── then it should revert
+        ├── given the workflow fee > 0
+        │   └── and the amount is low enough such that the protocol feeAmount calculated rounds down to 0
+        │       └── when the function _calculateNetAndSplitFee() is called
+        │           └── then it should revert
         ├── Given the (protocol fee + workflow fee) == 0
         │   └── When the function _calculateNetAndSplitFees() is called
         │       └── Then it should return totalAmount as netAmount
@@ -658,6 +666,38 @@ contract BondingCurveBaseV1Test is ModuleTest {
         }
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
             0, protocolFee, workflowFee
+        );
+    }
+
+    function testInternalCalculateNetAndSplitFees_RevertGivenCalculatedWorkflowFeeAmountRoundsDownToZero(
+    ) public {
+        uint protocolFee = 0;
+        uint workflowFee = 10;
+        uint totalAmount = 100;
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyAmountToLow
+                .selector
+        );
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            workflowFee, protocolFee, totalAmount
+        );
+    }
+
+    function testInternalCalculateNetAndSplitFees_RevertGivenCalculatedProtocolFeeAmountRoundsDownToZero(
+    ) public {
+        uint protocolFee = 10;
+        uint workflowFee = 0;
+        uint totalAmount = 100;
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyAmountToLow
+                .selector
+        );
+        bondingCurveFundingManager.call_calculateNetAndSplitFees(
+            workflowFee, protocolFee, totalAmount
         );
     }
 

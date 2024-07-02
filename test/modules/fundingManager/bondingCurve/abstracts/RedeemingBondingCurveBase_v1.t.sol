@@ -524,6 +524,45 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(functionReturn, _depositAmount);
     }
 
+    function helperMax(uint a, uint b) public pure returns (uint) {
+        return a >= b ? a : b;
+    }
+
+    function helperCalculateMinDepositAmount(
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
+    ) public view returns (uint _depositAmount) {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        uint minDepositAmountWorkflowFee = 0;
+        uint minDepositAmountIssuanceFee = 0;
+        uint minDepositAmountCollateralFee = 0;
+        if (_workflowFee > 0) {
+            minDepositAmountWorkflowFee =
+                _bps / _workflowFee + (_bps % _workflowFee > 0 ? 1 : 0);
+        }
+        if (_issuanceFee > 0) {
+            minDepositAmountIssuanceFee =
+                _bps / _issuanceFee + (_bps % _issuanceFee > 0 ? 1 : 0);
+        }
+        if (_collateralFee > 0) {
+            minDepositAmountCollateralFee =
+                _bps / _collateralFee + (_bps % _collateralFee > 0 ? 1 : 0);
+        }
+
+        _depositAmount = helperMax(
+            helperMax(
+                minDepositAmountWorkflowFee, minDepositAmountCollateralFee
+            ),
+            minDepositAmountIssuanceFee
+        );
+
+        return _depositAmount == 0 ? 1 : _depositAmount;
+    }
+
+    event hm(uint hm);
+
     function testInternalCalculateSaleReturnWithFee(
         uint _depositAmount,
         uint _collateralFee,
@@ -537,7 +576,14 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
-        _depositAmount = bound(_depositAmount, 1, 1e38);
+        _depositAmount = bound(
+            _depositAmount,
+            helperCalculateMinDepositAmount(
+                _collateralFee, _issuanceFee, _collateralFee
+            ),
+            1e38
+        );
+        emit hm(_depositAmount);
 
         // Set Fee
         if (_collateralFee != 0) {
