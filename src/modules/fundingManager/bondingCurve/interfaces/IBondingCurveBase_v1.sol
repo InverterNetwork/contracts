@@ -27,6 +27,9 @@ interface IBondingCurveBase_v1 {
     /// @notice Withdrawl amount is bigger than project fee collected
     error Module__BondingCurveBase__InvalidWithdrawAmount();
 
+    /// @notice Buy amount in relation to fee percentage to small, results in round down fee amount to zero
+    error Module__BondingCurveBase__BuyAmountToLow();
+
     //--------------------------------------------------------------------------
     // Events
 

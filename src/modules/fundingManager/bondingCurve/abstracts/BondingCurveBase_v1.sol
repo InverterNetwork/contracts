@@ -323,13 +323,14 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev Calculates the propotion of the fees for the given amount and returns them plus the amount minus the fees
+    ///         Reverts when the workflow fee + protocol fee > BPS, and if the fee amounts < 0 when
+    ///         with fee percentages > 0 which points to a rounding down to zero due to interger division
     /// @param _totalAmount The amount from which the fees will be taken
     /// @param _protocolFee The protocol fee percentage in relation to the BPS that will be applied to the totalAmount
     /// @param _workflowFee The workflow fee percentage in relation to the BPS that will be applied to the totalAmount
     /// @return netAmount The total amount minus the combined fee amount
     /// @return protocolFeeAmount The fee amount of the protocol fee
     /// @return workflowFeeAmount The fee amount of the workflow fee
-
     function _calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,
@@ -342,8 +343,19 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         if ((_protocolFee + _workflowFee) > BPS) {
             revert Module__BondingCurveBase__FeeAmountToHigh();
         }
-        protocolFeeAmount = _totalAmount * _protocolFee / BPS;
-        workflowFeeAmount = _totalAmount * _workflowFee / BPS;
+        protocolFeeAmount =
+            _protocolFee > 0 ? _totalAmount * _protocolFee / BPS : 0;
+        workflowFeeAmount =
+            _workflowFee > 0 ? _totalAmount * _workflowFee / BPS : 0;
+
+        // Revert if calculated fee amount rounded down to zero
+        if (_protocolFee > 0 && protocolFeeAmount == 0) {
+            revert Module__BondingCurveBase__BuyAmountToLow();
+        }
+        if (_workflowFee > 0 && workflowFeeAmount == 0) {
+            revert Module__BondingCurveBase__BuyAmountToLow();
+        }
+
         netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
     }
 
