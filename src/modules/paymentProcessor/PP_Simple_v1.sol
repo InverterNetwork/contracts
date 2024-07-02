@@ -112,6 +112,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         address recipient;
         uint amount;
         uint len = orders.length;
+        uint amountPaid;
         for (uint i; i < len; ++i) {
             recipient = orders[i].recipient;
             amount = orders[i].amount;
@@ -137,8 +138,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             if (success && (data.length == 0 || abi.decode(data, (bool)))) {
                 emit TokensReleased(recipient, token_, amount);
 
-                //Make sure to let paymentClient know that amount doesnt have to be stored anymore
-                client.amountPaid(amount);
+                amountPaid += amount;
             } else {
                 emit UnclaimableAmountAdded(address(client), recipient, amount);
                 //Adds the walletId to the array of unclaimable wallet ids
@@ -146,6 +146,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
                 unclaimableAmountsForRecipient[address(client)][recipient] +=
                     amount;
             }
+        }
+        if (amountPaid != 0) {
+            //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+            client.amountPaid(amountPaid);
         }
     }
 
