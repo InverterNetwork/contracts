@@ -138,7 +138,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
 
         // Deduct protocol and project buy fee from collateral, if applicable
@@ -242,7 +242,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
 
         // Get net amount, protocol and workflow fee amounts
