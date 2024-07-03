@@ -60,13 +60,8 @@ contract LM_PC_KPIRewarder_v1 is
     mapping(uint => KPI) public registryOfKPIs;
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
-    // Deposit Queue
+    // For locking certain utilities when there are assertions open
     bool public assertionPending;
-    uint minimumStake; // The workflow owner can set a minimum stake amount to mitigate griefing attacks where sybils spam the queue with multiple small stakes.
-    address[] public stakingQueue;
-    mapping(address => uint) public stakingQueueAmounts;
-    uint public totalQueuedFunds;
-    uint public constant MAX_QUEUE_LENGTH = 50;
 
     // Storage gap for future upgrades
     uint[50] private __gap;
@@ -129,11 +124,6 @@ contract LM_PC_KPIRewarder_v1 is
         return assertionConfig[assertionId];
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v1
-    function getStakingQueue() public view returns (address[] memory) {
-        return stakingQueue;
-    }
-
     // ========================================================================
     // Assertion Manager functions:
 
@@ -147,6 +137,9 @@ contract LM_PC_KPIRewarder_v1 is
         address asserter,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
+        // ==================================================================
+        // Pre-check
+
         if (assertionPending) {
             revert Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
         }
@@ -167,18 +160,6 @@ contract LM_PC_KPIRewarder_v1 is
         if (KPICounter == 0 || targetKPI >= KPICounter) {
             revert Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
         }
-
-        // =====================================================================
-        // Staking Queue Management
-
-        for (uint i = 0; i < stakingQueue.length; i++) {
-            address user = stakingQueue[i];
-            _stake(user, stakingQueueAmounts[user]);
-            totalQueuedFunds -= stakingQueueAmounts[user];
-            stakingQueueAmounts[user] = 0;
-        }
-
-        delete stakingQueue; // reset the queue
 
         // =====================================================================
         // Assertion Posting
@@ -260,15 +241,8 @@ contract LM_PC_KPIRewarder_v1 is
         return (KpiNum);
     }
 
-    function setMinimumStake(uint _minimumStake)
-        external
-        onlyOrchestratorOwner
-    {
-        minimumStake = _minimumStake;
-    }
-
     // ===========================================================
-    // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
+    // Overrides:
 
     /// @inheritdoc ILM_PC_Staking_v1
     function stake(uint amount)
@@ -277,53 +251,20 @@ contract LM_PC_KPIRewarder_v1 is
         nonReentrant
         validAmount(amount)
     {
-        if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
-            revert Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
-        }
+        // ==================================================================
+        // Pre-check
 
-        if (amount < minimumStake) {
-            revert Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
+        if (assertionPending) {
+            revert Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending(
+            );
         }
 
         address sender = _msgSender();
 
-        if (stakingQueueAmounts[sender] == 0) {
-            // new stake for queue
-            stakingQueue.push(sender);
-        }
-        stakingQueueAmounts[sender] += amount;
-        totalQueuedFunds += amount;
+        _stake(sender, amount);
 
         //transfer funds to LM_PC_Staking_v1
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
-
-        emit StakeEnqueued(sender, amount);
-    }
-
-    /// @inheritdoc ILM_PC_KPIRewarder_v1
-    function dequeueStake() public nonReentrant {
-        address user = _msgSender();
-
-        // keep it idempotent
-        if (stakingQueueAmounts[user] != 0) {
-            uint amount = stakingQueueAmounts[user];
-
-            stakingQueueAmounts[user] = 0;
-            totalQueuedFunds -= amount;
-
-            for (uint i; i < stakingQueue.length; i++) {
-                if (stakingQueue[i] == user) {
-                    stakingQueue[i] = stakingQueue[stakingQueue.length - 1];
-                    stakingQueue.pop();
-                    break;
-                }
-            }
-
-            emit StakeDequeued(user, amount);
-
-            //return funds to user
-            IERC20(stakingToken).safeTransfer(user, amount);
-        }
     }
 
     // ============================================================
