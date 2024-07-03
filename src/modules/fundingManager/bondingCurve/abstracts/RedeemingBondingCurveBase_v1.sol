@@ -125,7 +125,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         // Deduct protocol sell fee from issuance, if applicable
@@ -199,7 +199,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         uint protocolFeeAmount;
