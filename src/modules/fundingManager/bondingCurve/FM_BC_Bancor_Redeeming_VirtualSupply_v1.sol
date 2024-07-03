@@ -36,6 +36,9 @@ import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 // Libraries
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -158,6 +161,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
+        // Check for valid Bancor Formula
+        if (
+            !ERC165(bondingCurveProperties.formula).supportsInterface(
+                type(IBancorFormula).interfaceId
+            )
+        ) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidBancorFormula();
+        }
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
