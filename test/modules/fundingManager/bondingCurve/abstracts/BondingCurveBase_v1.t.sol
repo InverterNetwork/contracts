@@ -429,7 +429,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         feeManager.setWorkflowTreasury(address(_orchestrator), _treasury);
         bytes4 buyFeeFunctionSelector =
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")));
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")));
 
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),

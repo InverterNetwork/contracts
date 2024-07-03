@@ -122,7 +122,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         )
     {
         return _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
     }
 
