@@ -14,6 +14,9 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     //              - Higher or equal to the collateral token decimals
     error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal();
 
+    /// @notice Invalid Bancor Formula contract
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidBancorFormula();
+
     //--------------------------------------------------------------------------
     // Events
 
