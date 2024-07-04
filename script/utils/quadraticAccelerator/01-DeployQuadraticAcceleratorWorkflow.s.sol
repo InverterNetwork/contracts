@@ -156,8 +156,7 @@ contract SetupQuadraticAcceleratorWorkflow is Test, DeploymentScript {
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata,
-            abi.encode(orchestratorOwner)
+            roleAuthorizerMetadata, abi.encode(orchestratorOwner)
         );
 
         // Bounty Manager:
