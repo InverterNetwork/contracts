@@ -429,7 +429,6 @@ contract DeploymentScript is Script {
                 )
             )
         );
-
         // Authorizer
         initialMetadataRegistration.push(roleAuthorizerMetadata);
         initialBeaconRegistration.push(
@@ -453,6 +452,7 @@ contract DeploymentScript is Script {
                 )
             )
         );
+
         initialMetadataRegistration.push(singleVoteGovernorMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -531,6 +531,7 @@ contract DeploymentScript is Script {
                     paymentRouterMetadata.minorVersion
                 )
             )
+
         );
 
         console2.log(

@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: make install
 
+      - name: Verify contract sizes
+        run: make check-size
+
       - name: Run scripts
         run: make testScripts
 

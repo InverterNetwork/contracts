@@ -33,6 +33,24 @@ install: # Installs the required dependencies
 build: # Build project
 	@forge build
 
+.PHONY: list-size
+list-size: # Print the size of contracts
+	@{ \
+	trap 'mv .test/ test/; mv .script/ script/' EXIT; \
+	mv test/ .test/; \
+	mv script/ .script/; \
+	forge build --sizes; \
+	}
+
+.PHONY: check-size
+check-size: # Checks the size of contracts
+	@{ \
+	trap 'mv .test/ test/; mv .script/ script/' EXIT; \
+	mv test/ .test/; \
+	mv script/ .script/; \
+	forge build --sizes | awk '!/----/ && /-[0-9]+/ { print; FOUND=1} END { if (!FOUND) { print "All contracts within the limit."; exit 0 }; if (FOUND) { exit 1 } }'; \
+	}
+
 .PHONY: update
 update: # Update dependencies
 	@forge update
@@ -180,7 +198,9 @@ pre-test: # format and export correct data
 
 .PHONY: pre-commit
 pre-commit: # Git pre-commit hook
-
+	@echo "### Checking the contract size"
+	@make check-size
+	
 	@echo "### Running the scripts"
 	@make testScripts
 
