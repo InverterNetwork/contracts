@@ -119,12 +119,6 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
 
     function manager() external view returns (address) {}
 
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address)
-    {}
-
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
         external
         view
