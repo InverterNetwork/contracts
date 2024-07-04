@@ -59,27 +59,28 @@ contract InverterBeaconV1Test is Test {
         assertEq(beacon.pendingOwner(), address(0));
 
         // Check for version
-        (uint majorVersion, uint minorVersion, uint newPatchVersion) =
+        (uint majorVersion, uint minorVersion, uint patchVersion) =
             beacon.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 0);
-        assertEq(newPatchVersion, 0);
+        assertEq(patchVersion, 0);
     }
 
     //--------------------------------------------------------------------------
     // Test: modifier
 
-    function testZeroAsNewMinorVersion() public {
+    function testZeroAsNewMinorAndPatchVersion() public {
         // Check for version
-        (, uint minorVersionPre,) = beacon.version();
+        (, uint minorVersionPre, uint patchVersionPre) = beacon.version();
         assertEq(minorVersionPre, 0);
+        assertEq(patchVersionPre, 0);
 
         // generate implementation address
         address implementation = address(new ModuleImplementationV1Mock());
 
         vm.expectRevert(
             IInverterBeacon_v1
-                .InverterBeacon__InvalidImplementationMinorVersion
+                .InverterBeacon__InvalidImplementationMinorOrPatchVersion
                 .selector
         );
 
@@ -87,34 +88,43 @@ contract InverterBeaconV1Test is Test {
         beacon.upgradeTo(implementation, 0, 0, false);
     }
 
-    function testNewMinorVersion(uint initialMinorVersion, uint newMinorVersion)
-        public
-    {
+    function testNewMinorOrPatchVersion(
+        uint initialVersion,
+        uint newMinorVersion,
+        uint newPatchVersion
+    ) public {
         // we can't upgrade to 0 version
         // as the 0 version can only be set during
         // initialization (first version ever set)
-        vm.assume(initialMinorVersion > 0);
+        vm.assume(initialVersion > 0);
 
         // generate implementation address
         address implementation = address(new ModuleImplementationV1Mock());
 
         // Upgrade to an initial Version
-        beacon.upgradeTo(implementation, initialMinorVersion, 0, false);
+        beacon.upgradeTo(implementation, initialVersion, initialVersion, false);
 
         // Check for version
-        (, uint minorVersionPre,) = beacon.version();
-        assertEq(minorVersionPre, initialMinorVersion);
+        (, uint minorVersionPre, uint patchVersionPre) = beacon.version();
+        assertEq(minorVersionPre, initialVersion);
+        assertEq(patchVersionPre, initialVersion);
 
-        if (newMinorVersion <= initialMinorVersion) {
+        if (
+            newMinorVersion < initialVersion
+                || newMinorVersion == initialVersion
+                    && newPatchVersion <= initialVersion
+        ) {
             vm.expectRevert(
                 IInverterBeacon_v1
-                    .InverterBeacon__InvalidImplementationMinorVersion
+                    .InverterBeacon__InvalidImplementationMinorOrPatchVersion
                     .selector
             );
         }
-        beacon.upgradeTo(implementation, newMinorVersion, 0, false);
+        beacon.upgradeTo(
+            implementation, newMinorVersion, newPatchVersion, false
+        );
 
-        if (newMinorVersion > initialMinorVersion) {
+        if (newMinorVersion > initialVersion) {
             // Check for version
             (, uint minorVersionPost,) = beacon.version();
             assertEq(minorVersionPost, newMinorVersion);
