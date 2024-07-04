@@ -11,11 +11,8 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @notice Given implementation invalid.
     error InverterBeacon__InvalidImplementation();
 
-    /// @notice Given implementation minor version is not higher than previous minor version.
-    error InverterBeacon__InvalidImplementationMinorVersion();
-
-    /// @notice Given implementation patch version is not higher than previous patch version.
-    error InverterBeacon__InvalidImplementationPatchVersion();
+    /// @notice Given implementation minor and patch version is not higher than previous minor version.
+    error InverterBeacon__InvalidImplementationMinorOrPatchVersion();
 
     //--------------------------------------------------------------------------
     // Events
@@ -44,9 +41,9 @@ interface IInverterBeacon_v1 is IBeacon {
     // Public View Functions
 
     /// @notice Returns the version of the linked implementation.
-    /// @return The major version.
-    /// @return The minor version.
-    /// @return The patch version.
+    /// @return Major version.
+    /// @return Minor version.
+    /// @return Patch version.
     function version() external view returns (uint, uint, uint);
 
     /// @notice Returns the implementation address of the beacon.

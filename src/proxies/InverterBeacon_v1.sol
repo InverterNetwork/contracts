@@ -57,16 +57,18 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _;
     }
 
-    modifier validNewMinorVersion(uint newMinorVersion) {
-        if (newMinorVersion <= minorVersion) {
-            revert InverterBeacon__InvalidImplementationMinorVersion();
-        }
-        _;
-    }
-
-    modifier validNewPatchVersion(uint newPatchVersion) {
-        if (newPatchVersion <= patchVersion) {
-            revert InverterBeacon__InvalidImplementationPatchVersion();
+    modifier validNewMinorOrPatchVersion(
+        uint newMinorVersion,
+        uint newPatchVersion
+    ) {
+        if (
+            //Minor Version cant go down
+            newMinorVersion < minorVersion
+            //Patch Version cant go down or stay the same if minorVersion stays the same
+            || newPatchVersion <= patchVersion
+                && newMinorVersion == minorVersion
+        ) {
+            revert InverterBeacon__InvalidImplementationMinorOrPatchVersion();
         }
         _;
     }
@@ -149,8 +151,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     )
         public
         onlyOwner
-        validNewMinorVersion(newMinorVersion)
-        validNewPatchVersion(newPatchVersion)
+        validNewMinorOrPatchVersion(newMinorVersion, newPatchVersion)
     {
         _upgradeTo(
             newImplementation,
@@ -196,7 +197,9 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
 
         minorVersion = newMinorVersion;
         patchVersion = newPatchVersion;
+        patchVersion = newPatchVersion;
 
+        emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
         emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
     }
 
