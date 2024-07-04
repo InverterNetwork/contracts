@@ -27,4 +27,7 @@ verbosity = 4
 mainnet = "${RPC_URL}"
 sepolia = "${SEPOLIA_RPC_URL}"
 
+[etherscan]
+cardona = {key = "${POLYGON_ETHERSCAN_API_KEY}", url = "https://api-cardona-zkevm.polygonscan.com/api" , chain = "2442"}
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
