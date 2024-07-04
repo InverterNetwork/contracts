@@ -531,7 +531,6 @@ contract DeploymentScript is Script {
                     paymentRouterMetadata.minorVersion
                 )
             )
-
         );
 
         console2.log(
