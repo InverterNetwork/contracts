@@ -104,33 +104,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
     }
 
     // Override to test deactivation
-    function testTransferOrchestratorToken(address to, uint amount)
-        public
-        override
-    {
-        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
-
-        _token.mint(address(bondingCurveFundingManager), amount);
-
-        vm.startPrank(address(_orchestrator));
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
-                        .Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated
-                        .selector
-                )
-            );
-
-            bondingCurveFundingManager.transferOrchestratorToken(to, amount);
-        }
-        vm.stopPrank();
-
-        assertEq(_token.balanceOf(to), 0);
-        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
-    }
-
-    // Override to test deactivation
     function testMintIssuanceTokenTo(uint amount) public override {
         assertEq(issuanceToken.balanceOf(non_admin_address), 0);
 

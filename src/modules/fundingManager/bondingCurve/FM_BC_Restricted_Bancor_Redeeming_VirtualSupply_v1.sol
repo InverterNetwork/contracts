@@ -87,19 +87,4 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
             Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
         );
     }
-
-    //--------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
-
-    /// @notice Transfer a specified amount of Tokens to a designated receiver address. Deactivated in this implementation.
-    function transferOrchestratorToken(address, uint)
-        external
-        view
-        override
-        onlyOrchestrator
-    {
-        revert
-            Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
-        );
-    }
 }
