@@ -26,14 +26,14 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
     IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
-        1, 0, "https://fundingmanager.com", "FundingManager"
+        1, 0, 0, "https://fundingmanager.com", "FundingManager"
     );
 
     IModule_v1.Metadata authorizerMetadata =
-        IModule_v1.Metadata(1, 0, "https://authorizer.com", "Authorizer");
+        IModule_v1.Metadata(1, 0, 0, "https://authorizer.com", "Authorizer");
 
     IModule_v1.Metadata paymentProcessorMetadata = IModule_v1.Metadata(
-        1, 1, "https://paymentprocessor.com", "PP_Simple_v1"
+        1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v1"
     );
 
     function createModule(

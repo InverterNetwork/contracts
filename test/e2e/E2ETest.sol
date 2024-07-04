@@ -102,8 +102,9 @@ contract E2ETest is E2EModuleRegistry {
         // Deploy Orchestrator_v1 implementation.
         orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
-        orchestratorBeacon =
-            new InverterBeacon_v1(address(gov), 1, address(orchestratorImpl), 0); //@note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
+        orchestratorBeacon = new InverterBeacon_v1(
+            address(gov), 1, address(orchestratorImpl), 0, 0
+        ); //@note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
 
         // Deploy Factories.
         moduleFactory = new ModuleFactory_v1(address(forwarder));

@@ -80,7 +80,7 @@ contract E2EModuleRegistry is Test {
     InverterBeacon_v1 rebasingFundingManagerBeacon;
 
     IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/funding-manager", "FM_Rebasing_v1"
+        1, 0, 0, "https://github.com/inverter/funding-manager", "FM_Rebasing_v1"
     );
 
     /*
@@ -101,7 +101,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             rebasingFundingManagerMetadata.majorVersion,
             address(rebasingFundingManagerImpl),
-            rebasingFundingManagerMetadata.minorVersion
+            rebasingFundingManagerMetadata.minorVersion,
+            rebasingFundingManagerMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -125,6 +126,7 @@ contract E2EModuleRegistry is Test {
     IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/inverter/bonding-curve-funding-manager",
         "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
@@ -173,7 +175,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion,
             address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
-            bancorVirtualSupplyBondingCurveFundingManagerMetadata.minorVersion
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata.minorVersion,
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -198,7 +201,7 @@ contract E2EModuleRegistry is Test {
     InverterBeacon_v1 roleAuthorizerBeacon;
 
     IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v1"
+        1, 0, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v1"
     );
 
     /* 
@@ -218,7 +221,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             roleAuthorizerMetadata.majorVersion,
             address(roleAuthorizerImpl),
-            roleAuthorizerMetadata.minorVersion
+            roleAuthorizerMetadata.minorVersion,
+            roleAuthorizerMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -238,6 +242,7 @@ contract E2EModuleRegistry is Test {
 
     IModule_v1.Metadata tokenRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/inverter/tokenRoleAuthorizer",
         "AUT_TokenGated_Roles_v1"
@@ -261,7 +266,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             tokenRoleAuthorizerMetadata.majorVersion,
             address(tokenRoleAuthorizerImpl),
-            tokenRoleAuthorizerMetadata.minorVersion
+            tokenRoleAuthorizerMetadata.minorVersion,
+            tokenRoleAuthorizerMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -284,7 +290,7 @@ contract E2EModuleRegistry is Test {
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
     IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v1"
+        1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v1"
     );
 
     /*
@@ -303,7 +309,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             simplePaymentProcessorMetadata.majorVersion,
             address(simplePaymentProcessorImpl),
-            simplePaymentProcessorMetadata.minorVersion
+            simplePaymentProcessorMetadata.minorVersion,
+            simplePaymentProcessorMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -323,6 +330,7 @@ contract E2EModuleRegistry is Test {
 
     IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/inverter/streaming-payment-processor",
         "PP_Streaming_v1"
@@ -345,7 +353,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             streamingPaymentProcessorMetadata.majorVersion,
             address(streamingPaymentProcessorImpl),
-            streamingPaymentProcessorMetadata.minorVersion
+            streamingPaymentProcessorMetadata.minorVersion,
+            streamingPaymentProcessorMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -369,6 +378,7 @@ contract E2EModuleRegistry is Test {
     IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
         1,
         0,
+        0,
         "https://github.com/inverter/recurring-payment-manager",
         "LM_PC_RecurringPayments_v1"
     );
@@ -389,7 +399,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             recurringPaymentManagerMetadata.majorVersion,
             address(recurringPaymentManagerImpl),
-            recurringPaymentManagerMetadata.minorVersion
+            recurringPaymentManagerMetadata.minorVersion,
+            recurringPaymentManagerMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -408,7 +419,11 @@ contract E2EModuleRegistry is Test {
     InverterBeacon_v1 bountyManagerBeacon;
 
     IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/bounty-manager", "LM_PC_Bounties_v1"
+        1,
+        0,
+        0,
+        "https://github.com/inverter/bounty-manager",
+        "LM_PC_Bounties_v1"
     );
     /*
      IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
@@ -428,7 +443,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             bountyManagerMetadata.majorVersion,
             address(bountyManagerImpl),
-            bountyManagerMetadata.minorVersion
+            bountyManagerMetadata.minorVersion,
+            bountyManagerMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -447,7 +463,11 @@ contract E2EModuleRegistry is Test {
     InverterBeacon_v1 LM_PC_Staking_v1Beacon;
 
     IModule_v1.Metadata LM_PC_Staking_v1Metadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/staking-manager", "LM_PC_Staking_v1"
+        1,
+        0,
+        0,
+        "https://github.com/inverter/staking-manager",
+        "LM_PC_Staking_v1"
     );
 
     /*
@@ -467,7 +487,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             LM_PC_Staking_v1Metadata.majorVersion,
             address(LM_PC_Staking_v1Impl),
-            LM_PC_Staking_v1Metadata.minorVersion
+            LM_PC_Staking_v1Metadata.minorVersion,
+            LM_PC_Staking_v1Metadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -486,7 +507,11 @@ contract E2EModuleRegistry is Test {
     InverterBeacon_v1 LM_PC_KPIRewarder_v1Beacon;
 
     IModule_v1.Metadata LM_PC_KPIRewarder_v1Metadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/inverter/KPI-Rewarder", "LM_PC_KPIRewarder_v1"
+        1,
+        0,
+        0,
+        "https://github.com/inverter/KPI-Rewarder",
+        "LM_PC_KPIRewarder_v1"
     );
 
     /*
@@ -506,7 +531,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             LM_PC_KPIRewarder_v1Metadata.majorVersion,
             address(LM_PC_KPIRewarder_v1Impl),
-            LM_PC_KPIRewarder_v1Metadata.minorVersion
+            LM_PC_KPIRewarder_v1Metadata.minorVersion,
+            LM_PC_KPIRewarder_v1Metadata.patchVersion
         );
 
         // Register modules at moduleFactory.
@@ -529,6 +555,7 @@ contract E2EModuleRegistry is Test {
 
     IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/inverter/single-vote-governor",
         "AUT_EXT_VotingRoles_v1"
@@ -554,7 +581,8 @@ contract E2EModuleRegistry is Test {
             DEFAULT_BEACON_OWNER,
             singleVoteGovernorMetadata.majorVersion,
             address(singleVoteGovernorImpl),
-            singleVoteGovernorMetadata.minorVersion
+            singleVoteGovernorMetadata.minorVersion,
+            singleVoteGovernorMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.

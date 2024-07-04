@@ -9,6 +9,7 @@ interface IModule_v1 {
     struct Metadata {
         uint majorVersion;
         uint minorVersion;
+        uint patchVersion;
         string url;
         string title;
     }
@@ -67,7 +68,8 @@ interface IModule_v1 {
     /// @notice Returns the module's version.
     /// @return The module's major version.
     /// @return The module's minor version.
-    function version() external view returns (uint, uint);
+    /// @return The module's patch version.
+    function version() external view returns (uint, uint, uint);
 
     /// @notice Returns the module's URL.
     /// @return The module's URL.

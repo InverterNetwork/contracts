@@ -21,6 +21,8 @@ interface IGovernor_v1 {
         address intendedImplementation;
         /// @dev The new intended minor Version of the beacon
         uint intendedMinorVersion;
+        /// @dev The new intended patch Version of the beacon
+        uint intendedPatchVersion;
     }
 
     //--------------------------------------------------------------------------
@@ -54,11 +56,13 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
+    /// @param newPatchVersion The new patch version.
     /// @param timelockExceeded Timestamp of when the timelock is exceeded
     event BeaconTimelockStarted(
         address beacon,
         address newImplementation,
         uint newMinorVersion,
+        uint newPatchVersion,
         uint timelockExceeded
     );
 
@@ -66,8 +70,12 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
+    /// @param newPatchVersion The new patch version.
     event BeaconUpgraded(
-        address beacon, address newImplementation, uint newMinorVersion
+        address beacon,
+        address newImplementation,
+        uint newMinorVersion,
+        uint newPatchVersion
     );
 
     /// @notice Event emitted when a beacon upgraded is canceled
@@ -86,8 +94,12 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
+    /// @param newPatchVersion The new patch version.
     event BeaconForcefullyUpgradedAndImplementationRestarted(
-        address beacon, address newImplementation, uint newMinorVersion
+        address beacon,
+        address newImplementation,
+        uint newMinorVersion,
+        uint newPatchVersion
     );
 
     /// @notice Event emitted when a beacon implementation is restarted
@@ -225,10 +237,12 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon that is intended to be upgraded
     /// @param newImplementation The address of the intended new Implementation of the beacon.
     /// @param newMinorVersion The intended new minor version of the beacon.
+    /// @param newPatchVersion The intended new patch version of the beacon.
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
-        uint newMinorVersion
+        uint newMinorVersion,
+        uint newPatchVersion
     ) external;
 
     /// @notice Upgrades a beacon with the data provided by the active timelock
@@ -259,10 +273,12 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon that is intended to be upgraded and restarted
     /// @param newImplementation The address of the intended new Implementation of the beacon.
     /// @param newMinorVersion The intended new minor version of the beacon.
+    /// @param newPatchVersion The intended new patch version of the beacon.
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
-        uint newMinorVersion
+        uint newMinorVersion,
+        uint newPatchVersion
     ) external;
 
     /// @notice Restarts the beacon implementation

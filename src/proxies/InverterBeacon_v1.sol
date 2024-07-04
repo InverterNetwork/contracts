@@ -21,8 +21,8 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *
  * @dev     Extends {ERC165} for interface detection and implements both {IInverterBeacon_v1} and
  *          {IBeacon}. Uses modifiers to enforce constraints on implementation upgrades. Unique
- *          features include emergency mode control and strict version handling with major
- *          and minor version concepts.
+ *          features include emergency mode control and strict version handling with major,
+ *          minor and patch version concepts.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
@@ -64,6 +64,13 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _;
     }
 
+    modifier validNewPatchVersion(uint newPatchVersion) {
+        if (newPatchVersion <= patchVersion) {
+            revert InverterBeacon__InvalidImplementationPatchVersion();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // State
 
@@ -84,6 +91,9 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     /// @dev The minor version of the implementation
     uint internal minorVersion;
 
+    /// @dev The patch version of the implementation
+    uint internal patchVersion;
+
     //--------------------------------------------------------------------------
     // Constructor
 
@@ -91,11 +101,12 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         address owner,
         uint _majorVersion,
         address _implementation,
-        uint _newMinorVersion
+        uint _newMinorVersion,
+        uint _newPatchVersion
     ) Ownable(owner) {
         majorVersion = _majorVersion;
 
-        _upgradeTo(_implementation, _newMinorVersion, false);
+        _upgradeTo(_implementation, _newMinorVersion, _newPatchVersion, false);
     }
 
     //--------------------------------------------------------------------------
@@ -122,8 +133,8 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     }
 
     /// @inheritdoc IInverterBeacon_v1
-    function version() external view returns (uint, uint) {
-        return (majorVersion, minorVersion);
+    function version() external view returns (uint, uint, uint) {
+        return (majorVersion, minorVersion, patchVersion);
     }
 
     //--------------------------------------------------------------------------
@@ -133,9 +144,20 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     function upgradeTo(
         address newImplementation,
         uint newMinorVersion,
+        uint newPatchVersion,
         bool overrideShutdown
-    ) public onlyOwner validNewMinorVersion(newMinorVersion) {
-        _upgradeTo(newImplementation, newMinorVersion, overrideShutdown);
+    )
+        public
+        onlyOwner
+        validNewMinorVersion(newMinorVersion)
+        validNewPatchVersion(newPatchVersion)
+    {
+        _upgradeTo(
+            newImplementation,
+            newMinorVersion,
+            newPatchVersion,
+            overrideShutdown
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -167,13 +189,15 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     function _upgradeTo(
         address newImplementation,
         uint newMinorVersion,
+        uint newPatchVersion,
         bool overrideShutdown
     ) internal {
         _setImplementation(newImplementation, overrideShutdown);
 
         minorVersion = newMinorVersion;
+        patchVersion = newPatchVersion;
 
-        emit Upgraded(newImplementation, newMinorVersion);
+        emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
     }
 
     function _setImplementation(

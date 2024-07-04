@@ -38,11 +38,13 @@ contract InverterBeaconE2E is E2ETest {
     // Mock Metadata
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 0;
+    uint constant PATCH_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule_v1.Metadata DATA =
-        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata DATA = IModule_v1.Metadata(
+        MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
+    );
 
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
@@ -98,7 +100,8 @@ contract InverterBeaconE2E is E2ETest {
             address(gov), // The governor contract will be the owner of the beacon
             MAJOR_VERSION,
             address(moduleImpl1),
-            MINOR_VERSION
+            MINOR_VERSION,
+            PATCH_VERSION
         );
 
         // Register modules at moduleFactory.
@@ -155,7 +158,9 @@ contract InverterBeaconE2E is E2ETest {
 
         // Upgrade beacon to point to the Version 2 implementation.
         vm.prank(address(gov));
-        beacon.upgradeTo(address(moduleImpl2), MINOR_VERSION + 1, false);
+        beacon.upgradeTo(
+            address(moduleImpl2), MINOR_VERSION + 1, PATCH_VERSION, false
+        );
 
         // Check that after the update
         assertEq(moduleMock.getMockVersion(), 2);
@@ -234,6 +239,7 @@ contract InverterBeaconE2E is E2ETest {
         beacon.upgradeTo(
             address(moduleImpl2),
             MINOR_VERSION + 1,
+            PATCH_VERSION,
             true // Set override shutdown to true, which should result in reversing the shutdown
         );
 

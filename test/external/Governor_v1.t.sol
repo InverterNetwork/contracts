@@ -35,16 +35,23 @@ contract GovernorV1Test is Test {
         address beacon,
         address newImplementation,
         uint newMinorVersion,
+        uint newPatchVersion,
         uint timelockExceeded
     );
     event BeaconUpgraded(
-        address beacon, address newImplementation, uint newMinorVersion
+        address beacon,
+        address newImplementation,
+        uint newMinorVersion,
+        uint newPatchVersion
     );
     event BeaconUpgradedCanceled(address beacon);
     event TimelockPeriodSet(uint newTimelockPeriod);
     event BeaconShutdownInitiated(address beacon);
     event BeaconForcefullyUpgradedAndImplementationRestarted(
-        address beacon, address newImplementation, uint newMinorVersion
+        address beacon,
+        address newImplementation,
+        uint newMinorVersion,
+        uint newPatchVersion
     );
     event BeaconImplementationRestarted(address beacon);
     event OwnershipAccepted(address adr);
@@ -130,7 +137,7 @@ contract GovernorV1Test is Test {
             );
         }
         vm.prank(address(communityMultisig));
-        gov.upgradeBeaconWithTimelock(target, address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(target, address(0x1), 0, 0);
     }
 
     function testOnlyCommunityOrTeamMultisig(address sender) public {
@@ -147,7 +154,7 @@ contract GovernorV1Test is Test {
 
         vm.prank(sender);
         gov.upgradeBeaconWithTimelock(
-            address(ownedBeaconMock), address(0xBEEF), 2
+            address(ownedBeaconMock), address(0xBEEF), 2, 0
         );
     }
 
@@ -155,7 +162,7 @@ contract GovernorV1Test is Test {
         if (processStarted) {
             vm.prank(address(communityMultisig));
             gov.upgradeBeaconWithTimelock(
-                address(ownedBeaconMock), address(0x1), 0
+                address(ownedBeaconMock), address(0x1), 0, 0
             );
         } else {
             vm.expectRevert(
@@ -177,7 +184,9 @@ contract GovernorV1Test is Test {
 
         // Create Timelock
         vm.prank(address(communityMultisig));
-        gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(
+            address(ownedBeaconMock), address(0x1), 0, 0
+        );
 
         // Wait seed2 time
         vm.warp(block.timestamp + seed2);
@@ -417,7 +426,8 @@ contract GovernorV1Test is Test {
         uint seed,
         bytes32 salt,
         address newImplementation,
-        uint newMinorVersion
+        uint newMinorVersion,
+        uint newPatchVersion
     ) public {
         vm.assume(newImplementation != address(0));
 
@@ -434,11 +444,12 @@ contract GovernorV1Test is Test {
             beacon,
             newImplementation,
             newMinorVersion,
+            newPatchVersion,
             timelockPeriod + block.timestamp
         );
         vm.prank(address(communityMultisig));
         gov.upgradeBeaconWithTimelock(
-            beacon, newImplementation, newMinorVersion
+            beacon, newImplementation, newMinorVersion, newPatchVersion
         );
 
         assertTrue(gov.getBeaconTimelock(beacon).timelockActive);
@@ -453,6 +464,9 @@ contract GovernorV1Test is Test {
         assertEq(
             gov.getBeaconTimelock(beacon).intendedMinorVersion, newMinorVersion
         );
+        assertEq(
+            gov.getBeaconTimelock(beacon).intendedPatchVersion, newPatchVersion
+        );
     }
 
     function testUpgradeBeaconWithTimelockModifierInPosition() public {
@@ -462,7 +476,9 @@ contract GovernorV1Test is Test {
                 IGovernor_v1.Governor__OnlyCommunityOrTeamMultisig.selector
             )
         );
-        gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(
+            address(ownedBeaconMock), address(0x1), 0, 0
+        );
 
         // accessibleBeacon(beacon)
         vm.expectRevert(
@@ -471,7 +487,7 @@ contract GovernorV1Test is Test {
             )
         );
         vm.prank(communityMultisig);
-        gov.upgradeBeaconWithTimelock(address(0), address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(address(0), address(0x1), 0, 0);
 
         // validAddress(newImplementation)
         vm.expectRevert(
@@ -480,18 +496,22 @@ contract GovernorV1Test is Test {
             )
         );
         vm.prank(communityMultisig);
-        gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0), 0);
+        gov.upgradeBeaconWithTimelock(
+            address(ownedBeaconMock), address(0), 0, 0
+        );
     }
 
     function testTriggerUpgradeBeaconWithTimelock() public {
         vm.prank(address(communityMultisig));
-        gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(
+            address(ownedBeaconMock), address(0x1), 0, 0
+        );
 
         // Resonable warp
         vm.warp(block.timestamp + timelockPeriod + 1);
 
         vm.expectEmit(true, true, true, true);
-        emit BeaconUpgraded(address(ownedBeaconMock), address(0x1), 0);
+        emit BeaconUpgraded(address(ownedBeaconMock), address(0x1), 0, 0);
 
         vm.prank(address(communityMultisig));
         gov.triggerUpgradeBeaconWithTimelock(address(ownedBeaconMock));
@@ -503,6 +523,7 @@ contract GovernorV1Test is Test {
         assertEq(ownedBeaconMock.functionCalled(), 1);
         assertEq(ownedBeaconMock.implementation(), address(0x1));
         assertEq(ownedBeaconMock.minorVersion(), 0);
+        assertEq(ownedBeaconMock.patchVersion(), 0);
         assertEq(ownedBeaconMock.forcefulCall(), false);
     }
 
@@ -537,7 +558,9 @@ contract GovernorV1Test is Test {
         // timelockPeriodExceeded(beacon)
 
         vm.prank(communityMultisig);
-        gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(
+            address(ownedBeaconMock), address(0x1), 0, 0
+        );
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -550,7 +573,9 @@ contract GovernorV1Test is Test {
 
     function testCancelUpgrade() public {
         vm.prank(address(communityMultisig));
-        gov.upgradeBeaconWithTimelock(address(ownedBeaconMock), address(0x1), 0);
+        gov.upgradeBeaconWithTimelock(
+            address(ownedBeaconMock), address(0x1), 0, 0
+        );
 
         // Resonable warp
         vm.warp(block.timestamp + timelockPeriod + 1);
@@ -644,12 +669,12 @@ contract GovernorV1Test is Test {
     function testForceUpgradeBeaconAndRestartImplementation() public {
         vm.expectEmit(true, true, true, true);
         emit BeaconForcefullyUpgradedAndImplementationRestarted(
-            address(ownedBeaconMock), address(0x1), 0
+            address(ownedBeaconMock), address(0x1), 0, 0
         );
 
         vm.prank(address(communityMultisig));
         gov.forceUpgradeBeaconAndRestartImplementation(
-            address(ownedBeaconMock), address(0x1), 0
+            address(ownedBeaconMock), address(0x1), 0, 0
         );
 
         assertFalse(
@@ -659,6 +684,7 @@ contract GovernorV1Test is Test {
         assertEq(ownedBeaconMock.functionCalled(), 1);
         assertEq(ownedBeaconMock.implementation(), address(0x1));
         assertEq(ownedBeaconMock.minorVersion(), 0);
+        assertEq(ownedBeaconMock.patchVersion(), 0);
         assertEq(ownedBeaconMock.forcefulCall(), true);
     }
 
@@ -674,7 +700,7 @@ contract GovernorV1Test is Test {
             )
         );
         gov.forceUpgradeBeaconAndRestartImplementation(
-            address(ownedBeaconMock), address(0x1), 0
+            address(ownedBeaconMock), address(0x1), 0, 0
         );
 
         // accessibleBeacon(beacon)
@@ -685,7 +711,7 @@ contract GovernorV1Test is Test {
         );
         vm.prank(communityMultisig);
         gov.forceUpgradeBeaconAndRestartImplementation(
-            address(0), address(0x1), 0
+            address(0), address(0x1), 0, 0
         );
 
         // validAddress(newImplementation)
@@ -696,7 +722,7 @@ contract GovernorV1Test is Test {
         );
         vm.prank(communityMultisig);
         gov.forceUpgradeBeaconAndRestartImplementation(
-            address(ownedBeaconMock), address(0), 0
+            address(ownedBeaconMock), address(0), 0, 0
         );
     }
 

@@ -269,7 +269,8 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
-        uint newMinorVersion
+        uint newMinorVersion,
+        uint newPatchVersion
     )
         external
         onlyCommunityOrTeamMultisig
@@ -280,13 +281,15 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
             true,
             block.timestamp + timelockPeriod,
             newImplementation,
-            newMinorVersion
+            newMinorVersion,
+            newPatchVersion
         );
 
         emit BeaconTimelockStarted(
             beacon,
             newImplementation,
             newMinorVersion,
+            newPatchVersion,
             block.timestamp + timelockPeriod
         );
     }
@@ -306,13 +309,15 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         IInverterBeacon_v1(beacon).upgradeTo(
             beaconTimelock[beacon].intendedImplementation,
             beaconTimelock[beacon].intendedMinorVersion,
+            beaconTimelock[beacon].intendedPatchVersion,
             false // this is not intended to override a shutdown
         );
 
         emit BeaconUpgraded(
             beacon,
             beaconTimelock[beacon].intendedImplementation,
-            beaconTimelock[beacon].intendedMinorVersion
+            beaconTimelock[beacon].intendedMinorVersion,
+            beaconTimelock[beacon].intendedPatchVersion
         );
     }
 
@@ -353,7 +358,8 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
-        uint newMinorVersion
+        uint newMinorVersion,
+        uint newPatchVersion
     )
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
@@ -361,10 +367,10 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         validAddress(newImplementation)
     {
         IInverterBeacon_v1(beacon).upgradeTo(
-            newImplementation, newMinorVersion, true
+            newImplementation, newMinorVersion, newPatchVersion, true
         );
         emit BeaconForcefullyUpgradedAndImplementationRestarted(
-            beacon, newImplementation, newMinorVersion
+            beacon, newImplementation, newMinorVersion, newPatchVersion
         );
     }
 

@@ -37,7 +37,8 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
                 owner,
                 metadata.majorVersion,
                 implementation,
-                metadata.minorVersion
+                metadata.minorVersion,
+                metadata.patchVersion
             );
 
             // Register Metadata at the ModuleFactory_v1
@@ -58,13 +59,14 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         address owner,
         address implementation,
         uint majorVersion,
-        uint minorVersion
+        uint minorVersion,
+        uint patchVersion
     ) external returns (address beaconAddress, address proxy) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
             beacon = new InverterBeacon_v1(
-                owner, majorVersion, implementation, minorVersion
+                owner, majorVersion, implementation, minorVersion, patchVersion
             );
 
             // return the proxy after creation
@@ -89,14 +91,15 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         address owner,
         address implementation,
         uint majorVersion,
-        uint minorVersion
+        uint minorVersion,
+        uint patchVersion
     ) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
 
             beacon = new InverterBeacon_v1(
-                owner, majorVersion, implementation, minorVersion
+                owner, majorVersion, implementation, minorVersion, patchVersion
             );
         }
 

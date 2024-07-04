@@ -74,7 +74,7 @@ contract DeployFeeManager_v1 is Script {
         address feeManagerProxy;
 
         (feeManagerBeacon, feeManagerProxy) = deployAndSetUpInverterBeacon_v1
-            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0);
+            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0, 0);
 
         FeeManager_v1 feeManager = FeeManager_v1(feeManagerProxy);
 
@@ -114,7 +114,7 @@ contract DeployFeeManager_v1 is Script {
         address feeManagerProxy;
 
         (feeManagerBeacon, feeManagerProxy) = deployAndSetUpInverterBeacon_v1
-            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0);
+            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0, 0);
 
         implementation = address(FeeManager_v1(feeManagerProxy));
         // Log

@@ -166,6 +166,7 @@ contract DeploymentScript is Script {
     IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
         1,
         0,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "FM_Rebasing_v1"
     );
@@ -173,6 +174,7 @@ contract DeploymentScript is Script {
     IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
@@ -184,12 +186,14 @@ contract DeploymentScript is Script {
     IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "AUT_Roles_v1"
     );
 
     IModule_v1.Metadata tokenGatedRoleAuthorizerMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "AUT_TokenGated_Roles_v1"
@@ -201,12 +205,14 @@ contract DeploymentScript is Script {
     IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
         1,
         0,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "PP_Simple_v1"
     );
 
     IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "PP_Streaming_v1"
@@ -218,12 +224,14 @@ contract DeploymentScript is Script {
     IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
         1,
         0,
+        0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "LM_PC_RecurringPayments_v1"
     );
 
     IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "LM_PC_Bounties_v1"
@@ -234,6 +242,7 @@ contract DeploymentScript is Script {
 
     IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
         1,
+        0,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
         "AUT_EXT_VotingRoles_v1"
@@ -302,7 +311,7 @@ contract DeploymentScript is Script {
         // Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(
-            address(governor), forwarderImplementation, 1, 0
+            address(governor), forwarderImplementation, 1, 0, 0
         );
 
         if (
@@ -350,7 +359,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     rebasingFundingManager,
                     rebasingFundingManagerMetadata.majorVersion,
-                    rebasingFundingManagerMetadata.minorVersion
+                    rebasingFundingManagerMetadata.minorVersion,
+                    rebasingFundingManagerMetadata.patchVersion
                 )
             )
         );
@@ -365,7 +375,9 @@ contract DeploymentScript is Script {
                     bancorVirtualSupplyBondingCurveFundingManagerMetadata
                         .majorVersion,
                     bancorVirtualSupplyBondingCurveFundingManagerMetadata
-                        .minorVersion
+                        .minorVersion,
+                    bancorVirtualSupplyBondingCurveFundingManagerMetadata
+                        .patchVersion
                 )
             )
         );
@@ -377,7 +389,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     roleAuthorizer,
                     roleAuthorizerMetadata.majorVersion,
-                    roleAuthorizerMetadata.minorVersion
+                    roleAuthorizerMetadata.minorVersion,
+                    roleAuthorizerMetadata.patchVersion
                 )
             )
         );
@@ -388,7 +401,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     tokenGatedRoleAuthorizer,
                     tokenGatedRoleAuthorizerMetadata.majorVersion,
-                    tokenGatedRoleAuthorizerMetadata.minorVersion
+                    tokenGatedRoleAuthorizerMetadata.minorVersion,
+                    tokenGatedRoleAuthorizerMetadata.patchVersion
                 )
             )
         );
@@ -399,7 +413,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     singleVoteGovernor,
                     singleVoteGovernorMetadata.majorVersion,
-                    singleVoteGovernorMetadata.minorVersion
+                    singleVoteGovernorMetadata.minorVersion,
+                    singleVoteGovernorMetadata.patchVersion
                 )
             )
         );
@@ -411,7 +426,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     simplePaymentProcessor,
                     simplePaymentProcessorMetadata.majorVersion,
-                    simplePaymentProcessorMetadata.minorVersion
+                    simplePaymentProcessorMetadata.minorVersion,
+                    simplePaymentProcessorMetadata.patchVersion
                 )
             )
         );
@@ -422,7 +438,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     streamingPaymentProcessor,
                     streamingPaymentProcessorMetadata.majorVersion,
-                    streamingPaymentProcessorMetadata.minorVersion
+                    streamingPaymentProcessorMetadata.minorVersion,
+                    streamingPaymentProcessorMetadata.patchVersion
                 )
             )
         );
@@ -434,7 +451,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     bountyManager,
                     bountyManagerMetadata.majorVersion,
-                    bountyManagerMetadata.minorVersion
+                    bountyManagerMetadata.minorVersion,
+                    bountyManagerMetadata.patchVersion
                 )
             )
         );
@@ -445,7 +463,8 @@ contract DeploymentScript is Script {
                     address(governor),
                     recurringPaymentManager,
                     recurringPaymentManagerMetadata.majorVersion,
-                    recurringPaymentManagerMetadata.minorVersion
+                    recurringPaymentManagerMetadata.minorVersion,
+                    recurringPaymentManagerMetadata.patchVersion
                 )
             )
         );
