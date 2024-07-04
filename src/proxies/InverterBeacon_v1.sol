@@ -197,9 +197,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
 
         minorVersion = newMinorVersion;
         patchVersion = newPatchVersion;
-        patchVersion = newPatchVersion;
 
-        emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
         emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
     }
 
