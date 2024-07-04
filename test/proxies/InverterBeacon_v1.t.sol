@@ -150,27 +150,37 @@ contract InverterBeaconV1Test is Test {
         address newImplementation,
         uint oldMinorVersion,
         uint newMinorVersion,
+        uint oldPatchVersion,
+        uint newPatchVersion,
         bool overrideShutdown
     ) public {
         // needs to be a valid upgrade
-        vm.assume(oldMinorVersion < newMinorVersion);
+        vm.assume(
+            newMinorVersion > oldMinorVersion
+                || newMinorVersion == oldMinorVersion
+                    && newPatchVersion > oldPatchVersion
+        );
 
         // Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 
-        if (oldMinorVersion != 0) {
-            beacon.upgradeTo(address(0), oldMinorVersion, 0, false);
-        }
+        beacon.upgradeTo(address(0), oldMinorVersion, oldPatchVersion, false);
 
         vm.expectEmit(true, true, true, true);
-        emit Upgraded(address(newImplementation), newMinorVersion, 0);
-
-        beacon.upgradeTo(
-            address(newImplementation), newMinorVersion, 0, overrideShutdown
+        emit Upgraded(
+            address(newImplementation), newMinorVersion, newPatchVersion
         );
 
-        (, uint minorVersion,) = beacon.version();
+        beacon.upgradeTo(
+            address(newImplementation),
+            newMinorVersion,
+            newPatchVersion,
+            overrideShutdown
+        );
+
+        (, uint minorVersion, uint patchVersion) = beacon.version();
         assertEq(newMinorVersion, minorVersion);
+        assertEq(newPatchVersion, patchVersion);
     }
 
     function testUpgradeToPOC() public {
