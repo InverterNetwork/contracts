@@ -20,6 +20,8 @@ import {
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
@@ -104,15 +106,17 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
     }
 
     // Override to test deactivation
-    function testTransferOrchestratorToken(address to, uint amount)
-        public
-        override
-    {
+    function testTransferOrchestratorToken_WorksGivenCallerIsPaymentClientAndRegisteredModule(
+        address to,
+        uint amount
+    ) public override {
         vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
 
         _token.mint(address(bondingCurveFundingManager), amount);
 
-        vm.startPrank(address(_orchestrator));
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
         {
             vm.expectRevert(
                 abi.encodeWithSelector(

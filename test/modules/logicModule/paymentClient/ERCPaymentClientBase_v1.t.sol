@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC20Errors} from "@oz/interfaces/draft-IERC6093.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -380,31 +381,22 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         _orchestrator.setInterceptData(true);
 
-        if (currentFunds >= amountRequired) {
-            _orchestrator.setExecuteTxBoolReturn(true);
-            // NoOp as we already have enough funds
-            assertEq(bytes(""), _orchestrator.executeTxData());
-        } else {
+        if (currentFunds > amountRequired) {
+            paymentClient.originalEnsureTokenBalance(address(_token));
+        } else if (
+            _token.balanceOf(address(_fundingManager))
+                < order.amount - _token.balanceOf(address(paymentClient))
+        ) {
             // Check that Error works correctly
             vm.expectRevert(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__TokenTransferFailed
-                    .selector
+                abi.encodeWithSelector(
+                    IERC20Errors.ERC20InsufficientBalance.selector,
+                    _fundingManager,
+                    _token.balanceOf(address(_fundingManager)),
+                    order.amount - _token.balanceOf(address(paymentClient))
+                )
             );
             paymentClient.originalEnsureTokenBalance(address(_token));
-
-            _orchestrator.setExecuteTxBoolReturn(true);
-
-            paymentClient.originalEnsureTokenBalance(address(_token));
-
-            // callback from orchestrator to transfer tokens has to be in this form
-            assertEq(
-                abi.encodeCall(
-                    IFundingManager_v1.transferOrchestratorToken,
-                    (address(paymentClient), amountRequired - currentFunds)
-                ),
-                _orchestrator.executeTxData()
-            );
         }
     }
 
