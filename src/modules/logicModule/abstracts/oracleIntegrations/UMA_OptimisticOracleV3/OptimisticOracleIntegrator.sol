@@ -179,9 +179,29 @@ abstract contract OptimisticOracleIntegrator is
         returns (bytes32 assertionId)
     {
         asserter = asserter == address(0) ? _msgSender() : asserter;
-        defaultCurrency.safeTransferFrom(
-            _msgSender(), address(this), defaultBond
-        );
+        if (asserter == address(this)) {
+            //ensure we have enough balance
+            if (defaultCurrency.balanceOf(address(this)) < defaultBond) {
+                revert
+                    Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
+                );
+            }
+        } else {
+            (bool success, bytes memory data) = address(defaultCurrency).call(
+                abi.encodeWithSelector(
+                    defaultCurrency.transferFrom.selector,
+                    _msgSender(),
+                    address(this),
+                    defaultBond
+                )
+            );
+            //require(success && (data.length == 0 || abi.decode(data, (bool)))); -> taken over from SafeERC20 since we want to override the revert messsage
+            if (!success || (data.length > 0 && !abi.decode(data, (bool)))) {
+                revert
+                    Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
+                );
+            }
+        }
         defaultCurrency.safeIncreaseAllowance(address(oo), defaultBond);
 
         // The claim we want to assert is the first argument of assertTruth. It must contain all of the relevant
