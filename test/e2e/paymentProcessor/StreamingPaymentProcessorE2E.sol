@@ -102,17 +102,33 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        recurringPaymentManager = LM_PC_RecurringPayments_v1(
-            orchestrator.findModuleAddressInOrchestrator(
-                "LM_PC_RecurringPayments_v1"
-            )
-        );
+        address[] memory modulesList = orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    type(ILM_PC_RecurringPayments_v1).interfaceId
+                )
+            ) {
+                recurringPaymentManager =
+                    LM_PC_RecurringPayments_v1(modulesList[i]);
+                break;
+            }
+        }
+
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
-        streamingPaymentProcessor = PP_Streaming_v1(
-            orchestrator.findModuleAddressInOrchestrator("PP_Streaming_v1")
-        );
+        address[] memory modulesList = orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165(modulesList[i]).supportsInterface(
+                    type(IPP_Streaming_v1).interfaceId
+                )
+            ) {
+                streamingPaymentProcessor = PP_Streaming_v1(modulesList[i]);
+                break;
+            }
+        }
 
         // deposit some funds to fundingManager
         uint initialDeposit = 10e22;
