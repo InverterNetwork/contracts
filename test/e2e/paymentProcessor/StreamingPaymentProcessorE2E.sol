@@ -12,7 +12,8 @@ import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
     LM_PC_RecurringPayments_v1,
-    ILM_PC_RecurringPayments_v1
+    ILM_PC_RecurringPayments_v1,
+    ERC165
 } from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
@@ -118,7 +119,6 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
-        address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165(modulesList[i]).supportsInterface(
