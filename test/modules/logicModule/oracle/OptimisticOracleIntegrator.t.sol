@@ -427,7 +427,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         public
     {
         // the bond is paid by the caller
-        _assumeValidAddress(prankUser);
+        _validateAddress(prankUser);
         _token.mint(prankUser, 1e18);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);
