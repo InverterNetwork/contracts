@@ -5,6 +5,9 @@ import "forge-std/console.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {ClaimData} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {
@@ -881,6 +884,8 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
 assertionresolvedCallbackTest
 ├── when the caller is not the Optimistic Oracle
 │   └── it should revert
+├── when the assertionId does not exist
+│   └── it should revert
 ├── when the assertion resolved to false
 │   └── it should emit an event
 └── when the assertion resolved to true
@@ -1183,6 +1188,64 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
                 .selector
         );
         kpiManager.assertionResolvedCallback(createdID, true);
+    }
+
+    function test_RevertWhen_TheAssertionIdDoesNotExist(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        // it should revert
+
+        // Create different assertion in OOV3 with callback to SuT
+        address ALBA = address(0xA1BA);
+        vm.startPrank(ALBA);
+        feeToken.mint(ALBA, 1e22);
+        feeToken.approve(address(ooV3), 1e22);
+        bytes32 fake_ID = ooV3.assertTruth(
+            abi.encodePacked(
+                "Data asserted: 0x", // in the example data is type bytes32 so we add the hex prefix 0x.
+                ClaimData.toUtf8Bytes(bytes32(MOCK_ASSERTED_VALUE)),
+                " for dataId: 0x",
+                ClaimData.toUtf8Bytes(MOCK_ASSERTION_DATA_ID),
+                " and asserter: 0x",
+                ClaimData.toUtf8BytesAddress(ALBA),
+                " at timestamp: ",
+                ClaimData.toUtf8BytesUint(block.timestamp),
+                " in the DataAsserter contract at 0x",
+                ClaimData.toUtf8BytesAddress(address(0)),
+                " is valid."
+            ),
+            ALBA,
+            address(kpiManager),
+            address(0),
+            DEFAULT_LIVENESS,
+            IERC20(feeToken),
+            kpiManager.defaultBond(),
+            kpiManager.defaultIdentifier(),
+            bytes32(0)
+        );
+        vm.stopPrank();
+
+        // We now create a legitimate assertion so the callback is "listening"
+
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+            setUpStateForAssertionResolution(users, amounts, 250, false);
+
+        vm.prank(address(ooV3));
+        vm.expectRevert(
+            ILM_PC_KPIRewarder_v1
+                .Module__LM_PC_KPIRewarder_v1__CallbackFromNonexistentAssertionId
+                .selector
+        );
+        kpiManager.assertionResolvedCallback(fake_ID, true);
+
+        // the other assertion is still open
+        (bool assertionResolved, bytes32 data) = kpiManager.getData(createdID);
+
+        assertEq(assertionResolved, false);
+        assertEq(data, 0);
     }
 }
 
