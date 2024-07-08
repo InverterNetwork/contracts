@@ -12,7 +12,7 @@ import {
 import {
     LM_PC_Bounties_v1,
     ILM_PC_Bounties_v1,
-    ERC165
+    ERC165Upgradeable
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
@@ -98,7 +98,7 @@ contract BountyManagerE2E is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_Bounties_v1).interfaceId
                 )
             ) {

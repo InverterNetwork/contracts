@@ -22,7 +22,7 @@ import {FM_Rebasing_v1} from
 import {
     LM_PC_Staking_v1,
     ILM_PC_Staking_v1,
-    ERC165
+    ERC165Upgradeable
 } from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
@@ -132,7 +132,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_Staking_v1).interfaceId
                 )
             ) {
