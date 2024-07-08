@@ -342,6 +342,37 @@ contract LM_PC_KPIRewarder_v1 is
         }
     }
 
+    function deleteStuckAssertion(bytes32 assertionId)
+        public
+        onlyOrchestratorAdmin
+    {
+        // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
+        if (assertionData[assertionId].dataId == bytes32(0x0)) {
+            revert Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+                assertionId
+            );
+        }
+
+        // TODO make sure that the assertion has expired before trying to see if it settles (snippet below not working))
+
+        uint assertionExpirationTime =
+            oo.getAssertion(assertionId).expirationTime;
+
+        if (block.timestamp < assertionExpirationTime) {
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck();
+        }
+
+        try oo.settleAssertion(assertionId) {
+            // If the assertion can be settled, it doesn't qualify as stuck and we revert
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck();
+        } catch {
+            delete assertionConfig[assertionId];
+            delete assertionData[assertionId];
+            assertionPending = false;
+            emit DeletedStuckAssertion(assertionId);
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Optimistic Oracle Overrides:
 

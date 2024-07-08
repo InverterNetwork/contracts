@@ -58,6 +58,14 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice An assertion can only by posted if the preceding one is resolved.
     error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
 
+    /// @notice Callback received references non existent assertionId
+    error Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+        bytes32 assertionId
+    );
+
+    /// @notice The assertion that is being removed was not stuck
+    error Module__LM_PC_KPIRewarder_v1__AssertionNotStuck();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -86,6 +94,9 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
     event FeeFundsDeposited(address indexed token, uint amount);
+
+    /// @notice Event emitted when a stuck assertion gets deleted
+    event DeletedStuckAssertion(bytes32 indexed assertionId);
 
     //--------------------------------------------------------------------------
     // Functions
