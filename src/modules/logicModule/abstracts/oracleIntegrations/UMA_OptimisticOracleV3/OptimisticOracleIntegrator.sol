@@ -233,17 +233,17 @@ abstract contract OptimisticOracleIntegrator is
 
         DataAssertion memory dataAssertion = assertionData[assertionId];
 
-        emit DataAssertionResolved(
-            assertedTruthfully,
-            dataAssertion.dataId,
-            dataAssertion.data,
-            dataAssertion.asserter,
-            assertionId
-        );
-
-        // If the assertion was true, then the data assertion is resolved.
+        // If the assertion was true, then the data assertion is resolved and an event is emitted.
         if (assertedTruthfully) {
             assertionData[assertionId].resolved = true;
+
+            emit DataAssertionResolved(
+                assertedTruthfully,
+                dataAssertion.dataId,
+                dataAssertion.data,
+                dataAssertion.asserter,
+                assertionId
+            );
         } else {
             delete assertionData[assertionId];
         } // Else delete the data assertion if it was false to save gas.

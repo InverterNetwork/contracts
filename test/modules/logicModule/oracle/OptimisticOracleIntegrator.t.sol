@@ -42,6 +42,16 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     bytes32 constant MOCK_ASSERTION_DATA = "This is test data";
     address constant MOCK_ASSERTER_ADDRESS = address(0x0);
 
+    // Events
+
+    event DataAssertionResolved(
+        bool assertedTruthfully,
+        bytes32 indexed dataId,
+        bytes32 data,
+        address indexed asserter,
+        bytes32 indexed assertionId
+    );
+
     // Setup + Init
 
     function setUp() public {
@@ -430,6 +440,14 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     function testAssertioResolvedCallback_whenResolvedTrue() public {
         bytes32 assertionId = createMockAssertion(
             MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, MOCK_ASSERTER_ADDRESS
+        );
+        vm.expectEmit(true, true, true, true);
+        emit DataAssertionResolved(
+            true,
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTION_DATA,
+            address(this),
+            assertionId
         );
         vm.prank(address(ooV3));
         ooIntegrator.assertionResolvedCallback(assertionId, true);
