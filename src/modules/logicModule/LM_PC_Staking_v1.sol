@@ -292,7 +292,7 @@ contract LM_PC_Staking_v1 is
     /// @dev direct distribution of earned rewards via the payment processor
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
-        uint amount = _earned(recipient, rewardValue);
+        uint amount = rewards[recipient];
         // Set rewards to zero
         rewards[recipient] = 0;
 
