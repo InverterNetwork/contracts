@@ -10,6 +10,7 @@ import {
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {Context} from "@oz/utils/Context.sol";
 
 /**
  * @title Elastic Receipt Token Base
@@ -62,7 +63,11 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
  * @author Buttonwood Foundation
  * @author merkleplant
  */
-abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
+abstract contract ElasticReceiptTokenBase_v1 is
+    IRebasingERC20,
+    Context,
+    ERC165
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -226,7 +231,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     {
         uint bits = _tokensToBits(tokens);
 
-        _transfer(msg.sender, to, tokens, bits);
+        _transfer(_msgSender(), to, tokens, bits);
 
         return true;
     }
@@ -243,7 +248,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     {
         uint bits = _tokensToBits(tokens);
 
-        _useAllowance(from, msg.sender, tokens);
+        _useAllowance(from, _msgSender(), tokens);
         _transfer(from, to, tokens, bits);
 
         return true;
@@ -257,10 +262,10 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         onAfterRebase
         returns (bool)
     {
-        uint bits = _accountBits[msg.sender];
+        uint bits = _accountBits[_msgSender()];
         uint tokens = _bitsToTokens(bits);
 
-        _transfer(msg.sender, to, tokens, bits);
+        _transfer(_msgSender(), to, tokens, bits);
 
         return true;
     }
@@ -282,9 +287,9 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
             // Decrease allowance by one. This is a conservative security
             // compromise as the dust could otherwise be stolen.
             // Note that allowances could be off by one because of this.
-            _useAllowance(from, msg.sender, 1);
+            _useAllowance(from, _msgSender(), 1);
         } else {
-            _useAllowance(from, msg.sender, tokens);
+            _useAllowance(from, _msgSender(), tokens);
         }
 
         _transfer(from, to, tokens, bits);
@@ -299,13 +304,13 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         validRecipient(spender)
         returns (bool)
     {
-        _tokenAllowances[msg.sender][spender] = tokens;
+        _tokenAllowances[_msgSender()][spender] = tokens;
 
-        emit Approval(msg.sender, spender, tokens);
+        emit Approval(_msgSender(), spender, tokens);
         return true;
     }
 
-    /// @notice Increases the amount of tokens that msg.sender has allowed
+    /// @notice Increases the amount of tokens that _msgSender() has allowed
     ///         to spender.
     /// @param spender The address of the spender.
     /// @param tokens The amount of tokens to increase allowance by.
@@ -314,15 +319,15 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         public
         returns (bool)
     {
-        _tokenAllowances[msg.sender][spender] += tokens;
+        _tokenAllowances[_msgSender()][spender] += tokens;
 
         emit Approval(
-            msg.sender, spender, _tokenAllowances[msg.sender][spender]
+            _msgSender(), spender, _tokenAllowances[_msgSender()][spender]
         );
         return true;
     }
 
-    /// @notice Decreases the amount of tokens that msg.sender has allowed
+    /// @notice Decreases the amount of tokens that _msgSender() has allowed
     ///         to spender.
     /// @param spender The address of the spender.
     /// @param tokens The amount of tokens to decrease allowance by.
@@ -331,14 +336,14 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         public
         returns (bool)
     {
-        if (tokens >= _tokenAllowances[msg.sender][spender]) {
-            delete _tokenAllowances[msg.sender][spender];
+        if (tokens >= _tokenAllowances[_msgSender()][spender]) {
+            delete _tokenAllowances[_msgSender()][spender];
         } else {
-            _tokenAllowances[msg.sender][spender] -= tokens;
+            _tokenAllowances[_msgSender()][spender] -= tokens;
         }
 
         emit Approval(
-            msg.sender, spender, _tokenAllowances[msg.sender][spender]
+            _msgSender(), spender, _tokenAllowances[_msgSender()][spender]
         );
         return true;
     }

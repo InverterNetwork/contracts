@@ -15,6 +15,9 @@ import {
 } from "@fm/rebasing/abstracts/ElasticReceiptTokenUpgradeable_v1.sol";
 
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ERC2771ContextUpgradeable} from
+    "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+import {Context} from "@oz/utils/Context.sol";
 
 // External Interfaces
 import {
@@ -88,7 +91,7 @@ contract FM_Rebasing_v1 is
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
-    // Init Function
+    // Initialization
 
     /// @inheritdoc Module_v1
     function init(
@@ -188,5 +191,40 @@ contract FM_Rebasing_v1 is
         token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the ElasticReceiptTokenBase_v1 as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Context)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the ElasticReceiptTokenBase_v1 as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Context)
+        returns (bytes calldata)
+    {
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Context)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }
