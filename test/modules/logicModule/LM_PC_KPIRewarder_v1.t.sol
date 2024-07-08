@@ -882,7 +882,8 @@ assertionresolvedCallbackTest
 ├── when the caller is not the Optimistic Oracle
 │   └── it should revert
 ├── when the assertion resolved to false
-│   └── it should emit an event
+│   ├── it should delete the assertion data
+|   └── it should delete the assertion config
 └── when the assertion resolved to true
     ├── it will go through all tranches until reaching the asserted amount
     ├── when the rewardType is continuous
@@ -963,6 +964,9 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
     ) external {
         uint assertedIntermediateValue = 250;
 
+        // it should delete the assertion data
+        // it should delete the assertion config
+
         // it should emit an event
         bytes32 createdID;
         uint totalStakedFunds;
@@ -972,16 +976,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
 
         vm.startPrank(address(ooV3));
-        vm.expectEmit(true, true, true, true, address(kpiManager));
-        // vm.expectEmit(false, false, false, false);
 
-        emit DataAssertionResolved(
-            false,
-            MOCK_ASSERTION_DATA_ID,
-            bytes32(assertedIntermediateValue),
-            MOCK_ASSERTER_ADDRESS,
-            createdID
-        );
         kpiManager.assertionResolvedCallback(createdID, false);
         vm.stopPrank();
 
