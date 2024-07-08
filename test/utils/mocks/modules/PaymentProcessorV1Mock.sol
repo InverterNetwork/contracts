@@ -39,9 +39,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
         processPaymentsTriggered += 1;
     }
 
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
-        external
-    {}
+    function cancelRunningPayments(IERC20PaymentClientBase_v1) external {}
 
     function token() external pure returns (IERC20) {
         return IERC20(address(0));
@@ -51,15 +49,19 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
         client.collectPaymentOrders();
     }
 
-    function unclaimable(address client, address token, address paymentReceiver)
+    function unclaimable(address, address, address)
         external
         view
-        returns (uint amount)
+        returns (uint)
     {}
 
-    function claimPreviouslyUnclaimable(
-        address client,
-        address token,
-        address receiver
-    ) external {}
+    function claimPreviouslyUnclaimable(address, address, address) external {}
+
+    function validPaymentOrder(IERC20PaymentClientBase_v1.PaymentOrder memory)
+        external
+        pure
+        returns (bool valid)
+    {
+        return true;
+    }
 }

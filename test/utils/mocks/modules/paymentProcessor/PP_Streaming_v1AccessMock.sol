@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// Internal Interfaces
+import {IERC20PaymentClientBase_v1} from
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 // Internal Dependencies
 import {PP_Streaming_v1} from "@pp/PP_Streaming_v1.sol";
 
@@ -32,7 +35,4 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
     {
         return validTimes(_start, _cliff, _end);
     }
-
-    //--------------------------------------------------------------------------
-    // Internal Functions
 }

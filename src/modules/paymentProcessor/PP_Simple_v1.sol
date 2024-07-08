@@ -184,6 +184,19 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
+    /// @inheritdoc IPaymentProcessor_v1
+    function validPaymentOrder(IERC20PaymentClientBase_v1.PaymentOrder memory)
+        external
+        pure
+        returns (bool valid)
+    {
+        //Every payment order is valid
+        return true;
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
     /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
     /// @param client address of the payment client
     /// @param token address of the payment token
