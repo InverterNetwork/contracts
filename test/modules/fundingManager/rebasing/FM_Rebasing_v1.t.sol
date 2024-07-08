@@ -413,16 +413,7 @@ contract FM_RebasingV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Tests: OnlyOrchestrator Mutating Functions
 
-    function testTransferOrchestratorToken_FailsGivenCallerIsNotPaymentClient(
-        address to,
-        uint amount
-    ) public {
-        vm.prank(address(_paymentProcessor));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
-        fundingManager.transferOrchestratorToken(to, amount);
-    }
-
-    function testTransferOrchestratorToken_FailsGivenCallerIsPaymentClientButNotRegisteredModule(
+    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
         address to,
         uint amount
     ) public {
@@ -433,7 +424,7 @@ contract FM_RebasingV1Test is ModuleTest {
         fundingManager.transferOrchestratorToken(to, amount);
     }
 
-    function testTransferOrchestratorToken_WorksGivenCallerIsPaymentClientAndRegisteredModule(
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
         address to,
         uint amount
     ) public virtual {

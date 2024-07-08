@@ -106,7 +106,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
     }
 
     // Override to test deactivation
-    function testTransferOrchestratorToken_WorksGivenCallerIsPaymentClientAndRegisteredModule(
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
         address to,
         uint amount
     ) public override {

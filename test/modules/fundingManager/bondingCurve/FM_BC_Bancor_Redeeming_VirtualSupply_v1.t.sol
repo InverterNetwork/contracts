@@ -1558,40 +1558,29 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // OnlyOrchestrator Mutating Functions
 
     /* Test transferOrchestratorToken 
-        ├── given the caller is not a PaymentClient
-        │   └── when the function transferOrchestratorToken() gets called
-        │       └── then it should revert
-        ├── given the caller is a PaymentClient module
-        │   └── and the PaymentClient module is not registered in the Orchestrator
+        ├── given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
+        │   └──and the conditions of the modifier are not met
         │       └── when the function transferOrchestratorToken() gets called
         │           └── then it should revert
-        └── given the caller is a PaymentClient module
+    └── given the caller is a PaymentClient module
             └── and the PaymentClient module is registered in the Orchestrator
                 └── then is should send the funds to the specified address
                     └── and it should emit an event
     */
 
-    function testTransferOrchestratorToken_FailsGivenCallerIsNotPaymentClient(
-        address to,
-        uint amount
-    ) public {
-        vm.prank(address(_paymentProcessor));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
-        bondingCurveFundingManager.transferOrchestratorToken(to, amount);
-    }
-
-    function testTransferOrchestratorToken_FailsGivenCallerIsPaymentClientButNotRegisteredModule(
+    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
+        address caller,
         address to,
         uint amount
     ) public {
         _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
 
-        vm.prank(address(_erc20PaymentClientMock));
+        vm.prank(caller);
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
         bondingCurveFundingManager.transferOrchestratorToken(to, amount);
     }
 
-    function testTransferOrchestratorToken_WorksGivenCallerIsPaymentClientAndRegisteredModule(
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
         address to,
         uint amount
     ) public virtual {
