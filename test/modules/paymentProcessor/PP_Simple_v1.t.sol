@@ -13,6 +13,10 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
+
+import {PP_Simple_v1AccessMock} from
+    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v1AccessMock.sol";
+
 import {
     PP_Simple_v1,
     IPaymentProcessor_v1
@@ -29,7 +33,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_SimpleV1Test is ModuleTest {
     // SuT
-    PP_Simple_v1 paymentProcessor;
+    PP_Simple_v1AccessMock paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV1Mock paymentClient;
@@ -57,8 +61,8 @@ contract PP_SimpleV1Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Simple_v1());
-        paymentProcessor = PP_Simple_v1(Clones.clone(impl));
+        address impl = address(new PP_Simple_v1AccessMock());
+        paymentProcessor = PP_Simple_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 
@@ -370,6 +374,71 @@ contract PP_SimpleV1Test is ModuleTest {
         );
         paymentProcessor.claimPreviouslyUnclaimable(
             address(paymentClient), address(0), address(0x1)
+        );
+    }
+
+    function test_ValidPaymentOrders(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        address sender
+    ) public {
+        order.start = bound(order.start, 0, type(uint).max / 2);
+        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+
+        bool expectedValue = false;
+
+        if (
+            paymentProcessor.original_validPaymentReceiver(order.recipient)
+                && paymentProcessor.original_validPaymentToken(order.paymentToken)
+                && paymentProcessor.original_validTotal(order.amount)
+        ) {
+            expectedValue = true;
+        }
+
+        vm.prank(sender);
+
+        assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+    }
+
+    function test_validPaymentReceiver(address addr, address sender) public {
+        bool expectedValue = true;
+        if (
+            addr == address(0) || addr == sender || addr == address(this)
+                || addr == address(_orchestrator)
+                || addr == address(_orchestrator.fundingManager().token())
+        ) {
+            expectedValue = false;
+        }
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+        );
+    }
+
+    function test_validTotal(uint _total) public {
+        bool expectedValue = true;
+        if (_total == 0) {
+            expectedValue = false;
+        }
+
+        assertEq(paymentProcessor.original_validTotal(_total), expectedValue);
+    }
+
+    function test_validPaymentToken(address _token, address sender) public {
+        bool expectedValue = true;
+        if (
+            _token == address(0) || _token == sender
+                || _token == address(paymentProcessor)
+                || _token == address(_orchestrator)
+        ) {
+            expectedValue = false;
+        }
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentToken(_token), expectedValue
         );
     }
 }
