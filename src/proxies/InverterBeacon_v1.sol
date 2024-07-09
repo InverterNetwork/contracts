@@ -67,12 +67,16 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // State
 
+    /// @dev The address of the contract that will revert all transactions.
+    /// Can only be set via the constructor() function
+    address internal _reverterAddress;
+
     /// @dev The beacon's implementation address.
     /// Can only be changed via the _setImplementation() function
     address internal _implementationAddress;
 
     /// @dev The beacon's current implementation pointer.
-    /// In case of emergency can be set to address(0) to pause functionality
+    /// In case of emergency can be set to _reverterAddress to pause functionality
     address internal _implementationPointer;
 
     /// @dev Is the beacon shut down / in emergency mode
@@ -88,11 +92,13 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     // Constructor
 
     constructor(
+        address reverter,
         address owner,
         uint _majorVersion,
         address _implementation,
         uint _newMinorVersion
     ) Ownable(owner) {
+        _reverterAddress = reverter;
         majorVersion = _majorVersion;
 
         _upgradeTo(_implementation, _newMinorVersion, false);
@@ -104,6 +110,11 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     /// @inheritdoc IBeacon
     function implementation() public view virtual override returns (address) {
         return _implementationPointer;
+    }
+
+    /// @inheritdoc IInverterBeacon_v1
+    function getReverterAddress() external view virtual returns (address) {
+        return _reverterAddress;
     }
 
     /// @inheritdoc IInverterBeacon_v1
@@ -145,8 +156,8 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     function shutDownImplementation() external onlyOwner {
         // Go into emergency mode
         _emergencyMode = true;
-        // Set implementation pointer to address 0 and therefor halting the system
-        _implementationPointer = address(0);
+        // Set implementation pointer to _reverterAddress and therefor halting the system
+        _implementationPointer = _reverterAddress;
 
         emit ShutdownInitiated();
     }
