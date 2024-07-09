@@ -6,7 +6,8 @@ import {IVirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   Virtual Issuance Supply Base
@@ -25,13 +26,13 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
  */
 abstract contract VirtualIssuanceSupplyBase_v1 is
     IVirtualIssuanceSupplyBase_v1,
-    ERC165
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         bytes4 interfaceId_IVirtualIssuanceSupply =

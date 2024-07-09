@@ -14,7 +14,7 @@ import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
 import {
     ERC20PaymentClientBase_v1,
     Module_v1,
-    ERC165
+    ERC165Upgradeable
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // External Interfaces

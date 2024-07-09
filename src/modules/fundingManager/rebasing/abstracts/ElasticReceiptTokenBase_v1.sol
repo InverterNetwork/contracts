@@ -9,8 +9,8 @@ import {
 } from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
-import {Context} from "@oz/utils/Context.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title Elastic Receipt Token Base
@@ -65,14 +65,13 @@ import {Context} from "@oz/utils/Context.sol";
  */
 abstract contract ElasticReceiptTokenBase_v1 is
     IRebasingERC20,
-    Context,
-    ERC165
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IRebasingERC20).interfaceId
@@ -206,6 +205,9 @@ abstract contract ElasticReceiptTokenBase_v1 is
 
     /// @dev Number of EIP-2612 permits per address.
     mapping(address => uint) internal _nonces;
+
+    // Storage gap for future upgrades
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Abstract Functions
