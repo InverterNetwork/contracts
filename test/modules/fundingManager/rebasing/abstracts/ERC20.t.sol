@@ -20,9 +20,9 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         // Note that an approval of zero is valid.
 
         vm.prank(owner);
-        assertTrue(ertb.approve(spender, amount));
+        assertTrue(ert.approve(spender, amount));
 
-        assertEq(ertb.allowance(owner, spender), amount);
+        assertEq(ert.allowance(owner, spender), amount);
     }
 
     function testApproveInf(address owner, address spender)
@@ -35,12 +35,12 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(owner, 1e9);
 
         vm.prank(owner);
-        assertTrue(ertb.approve(spender, type(uint).max));
+        assertTrue(ert.approve(spender, type(uint).max));
 
         vm.prank(spender);
-        assertTrue(ertb.transferFrom(owner, spender, 1e9));
+        assertTrue(ert.transferFrom(owner, spender, 1e9));
 
-        assertEq(ertb.allowance(owner, spender), type(uint).max);
+        assertEq(ert.allowance(owner, spender), type(uint).max);
     }
 
     function testIncreaseAllowance(address owner, address spender, uint erts)
@@ -51,9 +51,9 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         // Note that an allowance increase of zero is valid.
 
         vm.prank(owner);
-        assertTrue(ertb.increaseAllowance(spender, erts));
+        assertTrue(ert.increaseAllowance(spender, erts));
 
-        assertEq(ertb.allowance(owner, spender), erts);
+        assertEq(ert.allowance(owner, spender), erts);
     }
 
     function testDecreaseAllowance(address owner, address spender, uint erts)
@@ -66,12 +66,12 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         vm.assume(spender != address(0));
 
         vm.prank(owner);
-        assertTrue(ertb.increaseAllowance(spender, erts));
+        assertTrue(ert.increaseAllowance(spender, erts));
 
         vm.prank(owner);
-        assertTrue(ertb.decreaseAllowance(spender, erts));
+        assertTrue(ert.decreaseAllowance(spender, erts));
 
-        assertEq(ertb.allowance(owner, spender), 0);
+        assertEq(ert.allowance(owner, spender), 0);
     }
 
     function testTransfer(address from, address to, uint erts)
@@ -83,12 +83,12 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(from, erts);
 
         vm.prank(from);
-        assertTrue(ertb.transfer(to, erts));
+        assertTrue(ert.transfer(to, erts));
 
         if (from != to) {
-            assertEq(ertb.balanceOf(from), 0);
+            assertEq(ert.balanceOf(from), 0);
         }
-        assertEq(ertb.balanceOf(to), erts);
+        assertEq(ert.balanceOf(to), erts);
     }
 
     function testTransferAll(address from, address to, uint erts)
@@ -102,10 +102,10 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(from, erts);
 
         vm.prank(from);
-        assertTrue(ertb.transferAll(to));
+        assertTrue(ert.transferAll(to));
 
-        assertEq(ertb.balanceOf(from), 0);
-        assertEq(ertb.balanceOf(to), erts);
+        assertEq(ert.balanceOf(from), 0);
+        assertEq(ert.balanceOf(to), erts);
     }
 
     function testTransferFrom(address owner, address spender, uint erts)
@@ -119,13 +119,13 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(owner, erts);
 
         vm.prank(owner);
-        assertTrue(ertb.approve(spender, erts));
+        assertTrue(ert.approve(spender, erts));
 
         vm.prank(spender);
-        assertTrue(ertb.transferFrom(owner, spender, erts));
+        assertTrue(ert.transferFrom(owner, spender, erts));
 
-        assertEq(ertb.balanceOf(owner), 0);
-        assertEq(ertb.balanceOf(spender), erts);
+        assertEq(ert.balanceOf(owner), 0);
+        assertEq(ert.balanceOf(spender), erts);
     }
 
     function testTransferAllFrom(address owner, address spender, uint erts)
@@ -139,13 +139,13 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(owner, erts);
 
         vm.prank(owner);
-        assertTrue(ertb.approve(spender, erts));
+        assertTrue(ert.approve(spender, erts));
 
         vm.prank(spender);
-        assertTrue(ertb.transferAllFrom(owner, spender));
+        assertTrue(ert.transferAllFrom(owner, spender));
 
-        assertEq(ertb.balanceOf(owner), 0);
-        assertEq(ertb.balanceOf(spender), erts);
+        assertEq(ert.balanceOf(owner), 0);
+        assertEq(ert.balanceOf(spender), erts);
     }
 
     function testTransferAllFromWithZeroToken(address owner, address spender)
@@ -159,26 +159,26 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         // balance being zero.
         mintToUser(spender, 1e18);
         mintToUser(owner, 1);
-        underlier.burn(address(ertb), 1e18);
-        ertb.rebase();
+        underlier.burn(address(ert), 1e18);
+        ert.rebase();
 
-        assertEq(ertb.balanceOf(owner), 0);
-        assertTrue(ertb.scaledBalanceOf(owner) != 0);
+        assertEq(ert.balanceOf(owner), 0);
+        assertTrue(ert.scaledBalanceOf(owner) != 0);
 
         vm.prank(spender);
-        try ertb.transferAllFrom(owner, spender) {
+        try ert.transferAllFrom(owner, spender) {
             revert();
         } catch {
             // Fails due to not having enough allowance.
         }
 
         vm.prank(owner);
-        ertb.approve(spender, 1);
+        ert.approve(spender, 1);
 
         vm.prank(spender);
-        assertTrue(ertb.transferAllFrom(owner, spender));
+        assertTrue(ert.transferAllFrom(owner, spender));
 
-        assertEq(ertb.allowance(owner, spender), 0);
+        assertEq(ert.allowance(owner, spender), 0);
     }
 
     function testFailTransferInsufficientBalance(
@@ -195,7 +195,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
 
         // Fails with underflow due to insufficient balance.
         vm.prank(from);
-        ertb.transfer(to, erts);
+        ert.transfer(to, erts);
     }
 
     function testFailTransferFromInsufficientBalance(
@@ -211,11 +211,11 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(owner, erts - 1);
 
         vm.prank(owner);
-        ertb.approve(spender, erts);
+        ert.approve(spender, erts);
 
         // Fails with underflow due to insufficient balance.
         vm.prank(spender);
-        ertb.transferFrom(owner, owner, erts);
+        ert.transferFrom(owner, owner, erts);
     }
 
     function testFailTransferFromInsufficientAllowance(
@@ -231,11 +231,11 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(owner, erts);
 
         vm.prank(owner);
-        ertb.approve(spender, erts - 1);
+        ert.approve(spender, erts - 1);
 
         // Fails with underflow due to insufficient allowance.
         vm.prank(spender);
-        ertb.transferFrom(owner, owner, erts);
+        ert.transferFrom(owner, owner, erts);
     }
 
     function testFailTransferAllFromInsufficientAllowance(
@@ -251,11 +251,11 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         mintToUser(owner, erts);
 
         vm.prank(owner);
-        ertb.approve(spender, erts - 1);
+        ert.approve(spender, erts - 1);
 
         // Fails with underflow due to insufficient allowance.
         vm.prank(spender);
-        ertb.transferFrom(owner, owner, erts);
+        ert.transferFrom(owner, owner, erts);
     }
 
     function testPermit() public {
@@ -267,7 +267,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ertb.DOMAIN_SEPARATOR(),
+                    ert.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             PERMIT_TYPEHASH,
@@ -282,10 +282,10 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             )
         );
 
-        ertb.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
+        ert.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
 
-        assertEq(ertb.allowance(owner, address(0xCAFE)), 1e18);
-        assertEq(ertb.nonces(owner), 1);
+        assertEq(ert.allowance(owner, address(0xCAFE)), 1e18);
+        assertEq(ert.nonces(owner), 1);
     }
 
     function testFailPermitBadNonce() public {
@@ -297,7 +297,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ertb.DOMAIN_SEPARATOR(),
+                    ert.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             PERMIT_TYPEHASH,
@@ -313,7 +313,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         );
 
         // Fails due to nonce not being strictly increasing by 1.
-        ertb.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
+        ert.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
     }
 
     function testFailPermitBadDeadline() public {
@@ -325,7 +325,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ertb.DOMAIN_SEPARATOR(),
+                    ert.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             PERMIT_TYPEHASH,
@@ -341,7 +341,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         );
 
         // Fails due to deadline being in the past.
-        ertb.permit(owner, address(0xCAFE), 1e18, block.timestamp + 1, v, r, s);
+        ert.permit(owner, address(0xCAFE), 1e18, block.timestamp + 1, v, r, s);
     }
 
     function testFailPermitPastDeadline() public {
@@ -353,7 +353,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ertb.DOMAIN_SEPARATOR(),
+                    ert.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             PERMIT_TYPEHASH,
@@ -369,7 +369,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
         );
 
         // Fails due to deadline being in the past.
-        ertb.permit(owner, address(0xCAFE), 1e18, block.timestamp - 1, v, r, s);
+        ert.permit(owner, address(0xCAFE), 1e18, block.timestamp - 1, v, r, s);
     }
 
     function testFailPermitReplay() public {
@@ -381,7 +381,7 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    ertb.DOMAIN_SEPARATOR(),
+                    ert.DOMAIN_SEPARATOR(),
                     keccak256(
                         abi.encode(
                             PERMIT_TYPEHASH,
@@ -396,8 +396,8 @@ contract ERC20 is ElasticReceiptTokenV1Test {
             )
         );
 
-        ertb.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
+        ert.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
         // Fails due to being a replay attack.
-        ertb.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
+        ert.permit(owner, address(0xCAFE), 1e18, block.timestamp, v, r, s);
     }
 }

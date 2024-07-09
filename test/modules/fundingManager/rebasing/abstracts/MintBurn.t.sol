@@ -23,6 +23,6 @@ contract MintBurn is ElasticReceiptTokenV1Test {
 
         // Fails with Division by 0.
         vm.prank(to);
-        ertb.burn(erts);
+        ert.burn(erts);
     }
 }

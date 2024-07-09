@@ -9,10 +9,8 @@ import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {
-    ElasticReceiptTokenUpgradeable_v1,
-    ElasticReceiptTokenBase_v1
-} from "@fm/rebasing/abstracts/ElasticReceiptTokenUpgradeable_v1.sol";
+import {ElasticReceiptToken_v1} from
+    "@fm/rebasing/abstracts/ElasticReceiptToken_v1.sol";
 
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
@@ -33,7 +31,7 @@ import {Strings} from "@oz/utils/Strings.sol";
  *          within the Inverter Network. It supports operations like deposits and withdrawals,
  *          implementing dynamic supply adjustments to maintain proportional ownership.
  *
- * @dev     Extends {ElasticReceiptTokenUpgradeable_v1} for rebasing functionalities and
+ * @dev     Extends {ElasticReceiptToken_v1} for rebasing functionalities and
  *          implements {IFundingManager_v1} interface. Manages deposits up to a defined cap,
  *          preventing excess balance accumulation and ensuring operational integrity.
  *          Custom rebase mechanics are applied based on the actual token reserves.
@@ -46,14 +44,14 @@ import {Strings} from "@oz/utils/Strings.sol";
  */
 contract FM_Rebasing_v1 is
     IFundingManager_v1,
-    ElasticReceiptTokenUpgradeable_v1,
+    ElasticReceiptToken_v1,
     Module_v1
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ElasticReceiptTokenUpgradeable_v1, Module_v1)
+        override(ElasticReceiptToken_v1, Module_v1)
         returns (bool)
     {
         return interfaceId == type(IFundingManager_v1).interfaceId
@@ -122,7 +120,7 @@ contract FM_Rebasing_v1 is
     function _supplyTarget()
         internal
         view
-        override(ElasticReceiptTokenBase_v1)
+        override(ElasticReceiptToken_v1)
         returns (uint)
     {
         return token().balanceOf(address(this));

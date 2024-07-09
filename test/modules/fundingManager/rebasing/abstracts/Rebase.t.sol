@@ -59,79 +59,79 @@ contract RebaseTest is ElasticReceiptTokenV1Test {
             }
 
             // Check total supply.
-            assertEq(ertb.totalSupply(), totalSupply);
+            assertEq(ert.totalSupply(), totalSupply);
 
             // Check that a user balance did not change due to a mint by
             // another user.
             for (uint j; j < balances.length; j++) {
-                assertEq(ertb.balanceOf(toAddress(j)), balances[j]);
+                assertEq(ert.balanceOf(toAddress(j)), balances[j]);
             }
 
             // Change the underlier's supply and execute rebase.
-            underlier.burn(address(ertb), underlier.balanceOf(address(ertb)));
-            underlier.mint(address(ertb), testCase.newSupplyTarget);
+            underlier.burn(address(ert), underlier.balanceOf(address(ert)));
+            underlier.mint(address(ert), testCase.newSupplyTarget);
 
             vm.expectEmit(false, false, false, false);
             emit Rebase(0, 0); // we don't know the new values, so we just emit a dummy value
 
-            ertb.rebase();
+            ert.rebase();
 
             // Check that the user balances rebased into the "right direction",
             // i.e. expanded on expansion, contracted on contraction and did not
             // change during equilibrium rebase.
             for (uint j; j < balances.length; j++) {
                 if (testCase.newSupplyTarget > totalSupply) {
-                    assertTrue(ertb.balanceOf(toAddress(j)) > balances[j]);
+                    assertTrue(ert.balanceOf(toAddress(j)) > balances[j]);
                 } else if (testCase.newSupplyTarget < totalSupply) {
-                    assertTrue(ertb.balanceOf(toAddress(j)) < balances[j]);
+                    assertTrue(ert.balanceOf(toAddress(j)) < balances[j]);
                 } else {
-                    assertEq(ertb.balanceOf(toAddress(j)), balances[j]);
+                    assertEq(ert.balanceOf(toAddress(j)), balances[j]);
                 }
             }
 
             // Execute second rebase to bring the supply back to initial.
-            underlier.burn(address(ertb), underlier.balanceOf(address(ertb)));
-            underlier.mint(address(ertb), totalSupply);
+            underlier.burn(address(ert), underlier.balanceOf(address(ert)));
+            underlier.mint(address(ert), totalSupply);
 
             vm.expectEmit(false, false, false, false);
             emit Rebase(0, 0); // we don't know the new values, so we just emit a dummy value
 
-            ertb.rebase();
+            ert.rebase();
 
             // Check that user balances did not change compared to initial.
             for (uint j; j < balances.length; j++) {
-                assertEq(ertb.balanceOf(toAddress(j)), balances[j]);
+                assertEq(ert.balanceOf(toAddress(j)), balances[j]);
             }
         }
     }
 
     function testNoRebaseIfZeroSupplyTarget() public {
-        underlier.mint(address(ertb), 10e18);
-        ertb.rebase();
+        underlier.mint(address(ert), 10e18);
+        ert.rebase();
 
-        uint supplyBefore = ertb.totalSupply();
+        uint supplyBefore = ert.totalSupply();
         assertEq(supplyBefore, 10e18);
 
-        underlier.burn(address(ertb), 10e18);
-        ertb.rebase();
+        underlier.burn(address(ert), 10e18);
+        ert.rebase();
 
-        uint supplyAfter = ertb.totalSupply();
+        uint supplyAfter = ert.totalSupply();
 
         // Did not adjust the supply.
         assertEq(supplyAfter, supplyBefore);
     }
 
     function testNoRebaseIfMaxSupplyTarget() public {
-        underlier.mint(address(ertb), 10e18);
-        ertb.rebase();
+        underlier.mint(address(ert), 10e18);
+        ert.rebase();
 
-        uint supplyBefore = ertb.totalSupply();
+        uint supplyBefore = ert.totalSupply();
         assertEq(supplyBefore, 10e18);
 
-        underlier.mint(address(ertb), MAX_SUPPLY - 10e18 + 1);
-        ertb.rebase();
+        underlier.mint(address(ert), MAX_SUPPLY - 10e18 + 1);
+        ert.rebase();
 
-        uint supplyAfter = ertb.totalSupply();
+        uint supplyAfter = ert.totalSupply();
 
         // Did not adjust the supply.
         assertEq(supplyAfter, supplyBefore);
@@ -145,12 +145,12 @@ contract RebaseTest is ElasticReceiptTokenV1Test {
 
         vm.startPrank(user);
         {
-            underlier.approve(address(ertb), balance);
-            ertb.mint(balance);
+            underlier.approve(address(ert), balance);
+            ert.mint(balance);
         }
         vm.stopPrank();
 
-        ertb.rebase();
+        ert.rebase();
     }
 
     function toAddress(uint a) public pure returns (address) {

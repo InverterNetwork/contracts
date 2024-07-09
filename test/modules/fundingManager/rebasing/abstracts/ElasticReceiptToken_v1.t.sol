@@ -3,14 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ElasticReceiptTokenBaseV1Mock} from
-    "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptTokenBaseV1Mock.sol";
-
 import {ElasticReceiptTokenV1Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptTokenV1Mock.sol";
-
-import {ElasticReceiptTokenUpgradeableV1Mock} from
-    "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptTokenUpgradeableV1Mock.sol";
 
 import {ERC20Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
@@ -23,9 +17,7 @@ import {ERC20Mock} from
  */
 abstract contract ElasticReceiptTokenV1Test is Test {
     // SuT
-    ElasticReceiptTokenBaseV1Mock ertb;
     ElasticReceiptTokenV1Mock ert;
-    ElasticReceiptTokenUpgradeableV1Mock ertUpgradeable;
 
     // Mocks
     ERC20Mock underlier;
@@ -44,16 +36,9 @@ abstract contract ElasticReceiptTokenV1Test is Test {
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
 
-        ertb = new ElasticReceiptTokenBaseV1Mock(
-            address(underlier), NAME, SYMBOL, uint8(DECIMALS)
-        );
-
         ert = new ElasticReceiptTokenV1Mock(
             address(underlier), NAME, SYMBOL, uint8(DECIMALS)
         );
-
-        ertUpgradeable = new ElasticReceiptTokenUpgradeableV1Mock();
-        ertUpgradeable.init(address(underlier), NAME, SYMBOL, uint8(DECIMALS));
     }
 
     modifier assumeTestAmount(uint amount) {
@@ -63,7 +48,7 @@ abstract contract ElasticReceiptTokenV1Test is Test {
 
     modifier assumeTestAddress(address who) {
         vm.assume(who != address(0));
-        vm.assume(who != address(ertb));
+        vm.assume(who != address(ert));
         _;
     }
 
@@ -72,8 +57,8 @@ abstract contract ElasticReceiptTokenV1Test is Test {
 
         vm.startPrank(user);
         {
-            underlier.approve(address(ertb), type(uint).max);
-            ertb.mint(erts);
+            underlier.approve(address(ert), type(uint).max);
+            ert.mint(erts);
         }
         vm.stopPrank();
     }
