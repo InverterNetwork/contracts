@@ -383,8 +383,9 @@ contract LM_PC_KPIRewarder_v1 is
     ) public override {
         // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
         if (assertionData[assertionId].dataId == bytes32(0x0)) {
-            revert
-                Module__LM_PC_KPIRewarder_v1__CallbackFromNonexistentAssertionId();
+            revert Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+                assertionId
+            );
         }
 
         // First, we perform checks and state management on the parent function.

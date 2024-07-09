@@ -1237,9 +1237,12 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         vm.prank(address(ooV3));
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__CallbackFromNonexistentAssertionId
-                .selector
+            abi.encodeWithSelector(
+                ILM_PC_KPIRewarder_v1
+                    .Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId
+                    .selector,
+                fake_ID
+            )
         );
         kpiManager.assertionResolvedCallback(fake_ID, true);
 
