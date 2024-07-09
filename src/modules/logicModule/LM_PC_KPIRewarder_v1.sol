@@ -389,7 +389,7 @@ contract LM_PC_KPIRewarder_v1 is
                             resolvedKPI.trancheValues[i] - trancheStart;
 
                         rewardAmount +=
-                            achievedReward * (trancheRewardValue / trancheEnd); // since the trancheRewardValue will be a very big number.
+                            achievedReward * trancheRewardValue / trancheEnd;
                     }
                     // else -> no reward
 
