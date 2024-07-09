@@ -83,6 +83,7 @@ contract ModuleFactoryV1Test is Test {
     }
 
     function testDeploymentInvariants() public {
+        assertTrue(factory.reverter() != address(0));
         // Invariants: Ownable2Step
         assertEq(factory.owner(), governanceContract);
         assertEq(factory.pendingOwner(), address(0));
@@ -247,8 +248,6 @@ contract ModuleFactoryV1Test is Test {
 
     //--------------------------------------------------------------------------
     // Tests: createModule
-
-    error hm();
 
     function testCreateModule(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
