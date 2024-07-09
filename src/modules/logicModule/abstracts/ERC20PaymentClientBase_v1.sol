@@ -11,7 +11,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // Internal Dependencies
 import {
     Module_v1,
-    ERC165,
+    ERC165Upgradeable,
     ContextUpgradeable
 } from "src/modules/base/Module_v1.sol";
 

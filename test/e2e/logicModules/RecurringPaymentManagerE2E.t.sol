@@ -13,7 +13,7 @@ import {
     LM_PC_RecurringPayments_v1,
     ILM_PC_RecurringPayments_v1,
     IERC20PaymentClientBase_v1,
-    ERC165
+    ERC165Upgradeable
 } from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 // Modules that are used in this E2E test
@@ -113,7 +113,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_RecurringPayments_v1).interfaceId
                 )
             ) {

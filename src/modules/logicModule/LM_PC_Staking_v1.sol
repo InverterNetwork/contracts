@@ -14,7 +14,7 @@ import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
 import {
     ERC20PaymentClientBase_v1,
     Module_v1,
-    ERC165
+    ERC165Upgradeable
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // External Interfaces
@@ -292,7 +292,7 @@ contract LM_PC_Staking_v1 is
     ///@dev direct distribution of earned rewards via the payment processor
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
-        uint amount = _earned(recipient, rewardValue);
+        uint amount = rewards[recipient];
         // Set rewards to zero
         rewards[recipient] = 0;
 

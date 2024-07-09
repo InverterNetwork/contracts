@@ -8,9 +8,11 @@ import {IModuleFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // External Dependencies
-import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
+import {ERC2771ContextUpgradeable} from
+    "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   ModuleManagerBase
@@ -32,14 +34,14 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 abstract contract ModuleManagerBase_v1 is
     IModuleManagerBase_v1,
     Initializable,
-    ERC2771Context,
-    ERC165
+    ERC2771ContextUpgradeable,
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IModuleManagerBase_v1).interfaceId
@@ -134,7 +136,9 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Initializer
 
-    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {}
+    constructor(address _trustedForwarder)
+        ERC2771ContextUpgradeable(_trustedForwarder)
+    {}
 
     function __ModuleManager_init(
         address _moduleFactory,
@@ -323,7 +327,9 @@ abstract contract ModuleManagerBase_v1 is
         if (
             module.code.length == 0 || module == address(0)
                 || module == address(this)
-                || !ERC165(module).supportsInterface(type(IModule_v1).interfaceId)
+                || !ERC165Upgradeable(module).supportsInterface(
+                    type(IModule_v1).interfaceId
+                )
         ) {
             revert ModuleManagerBase__InvalidModuleAddress();
         }
@@ -351,26 +357,26 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     // IERC2771Context
-    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771ContextUpgradeable Contract in the IOrchestrator_v1
     // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
 
     function isTrustedForwarder(address forwarder)
         public
         view
         virtual
-        override(IModuleManagerBase_v1, ERC2771Context)
+        override(IModuleManagerBase_v1, ERC2771ContextUpgradeable)
         returns (bool)
     {
-        return ERC2771Context.isTrustedForwarder(forwarder);
+        return ERC2771ContextUpgradeable.isTrustedForwarder(forwarder);
     }
 
     function trustedForwarder()
         public
         view
         virtual
-        override(IModuleManagerBase_v1, ERC2771Context)
+        override(IModuleManagerBase_v1, ERC2771ContextUpgradeable)
         returns (address)
     {
-        return ERC2771Context.trustedForwarder();
+        return ERC2771ContextUpgradeable.trustedForwarder();
     }
 }
