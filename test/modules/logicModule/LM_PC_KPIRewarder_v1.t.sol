@@ -27,7 +27,8 @@ import {
     LM_PC_KPIRewarder_v1,
     ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v1
+    ILM_PC_Staking_v1,
+    OptimisticOracleV3CallbackRecipientInterface
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
 
 import {
@@ -222,6 +223,18 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         kpiManager.init(_orchestrator, _METADATA, bytes(""));
+    }
+
+    function test_InterfaceInheritanceTree() public {
+        kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v1).interfaceId);
+        kpiManager.supportsInterface(type(ILM_PC_Staking_v1).interfaceId);
+        kpiManager.supportsInterface(
+            type(IOptimisticOracleIntegrator).interfaceId
+        );
+        kpiManager.supportsInterface(
+            type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+        );
+        kpiManager.supportsInterface(type(IModule_v1).interfaceId);
     }
 
     // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards

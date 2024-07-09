@@ -48,10 +48,11 @@ contract LM_PC_KPIRewarder_v1 is
         public
         view
         virtual
-        override(LM_PC_Staking_v1, Module_v1)
+        override(OptimisticOracleIntegrator, LM_PC_Staking_v1)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_KPIRewarder_v1).interfaceId
+            || interfaceId == type(ILM_PC_Staking_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
