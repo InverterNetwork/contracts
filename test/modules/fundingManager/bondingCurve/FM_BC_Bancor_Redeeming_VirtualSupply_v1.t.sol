@@ -104,10 +104,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     );
     event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
     event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
-
-    //--------------------------------------------------------------------------
-    // Events
     event TransferOrchestratorToken(address indexed to, uint amount);
+    event CollateralTokenSet(address indexed token);
 
     function setUp() public virtual {
         // Deploy contracts
@@ -141,6 +139,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+
+        vm.expectEmit(true, true, true, true, address(_token));
+        emit CollateralTokenSet(address(_token));
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -306,9 +307,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.startPrank(buyer);
         {
-            vm.expectRevert(
-                // This results in an overflow of the bonding curve math
-            );
+            vm.expectRevert();
+            // This results in an overflow of the bonding curve math
             bondingCurveFundingManager.buy(amount, amount);
         }
         vm.stopPrank();
@@ -338,9 +338,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         vm.startPrank(buyer);
         {
-            vm.expectRevert(
-                // This results in an overflow of the bonding curve math
-            );
+            vm.expectRevert();
+            // This results in an overflow of the bonding curve math
             bondingCurveFundingManager.buy(amount, amount);
         }
         vm.stopPrank();
