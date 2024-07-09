@@ -359,12 +359,12 @@ contract LM_PC_KPIRewarder_v1 is
             oo.getAssertion(assertionId).expirationTime;
 
         if (block.timestamp < assertionExpirationTime) {
-            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck();
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
         }
 
         try oo.settleAssertion(assertionId) {
             // If the assertion can be settled, it doesn't qualify as stuck and we revert
-            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck();
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
         } catch {
             delete assertionConfig[assertionId];
             delete assertionData[assertionId];

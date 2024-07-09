@@ -98,6 +98,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         address indexed recipient, address indexed token, uint amount
     );
 
+    event DeletedStuckAssertion(bytes32 indexed assertionId);
+
     //=========================================================================================
     // Setup
 
@@ -1271,6 +1273,8 @@ contract LM_PC_KPIRewarder_v1_dequeueTest is LM_PC_KPIRewarder_v1Test {
     testDeleteStuckAssertion
     ├── When the assertion isn't stored locally
     │    └── It should revert
+    |── When the assertion hasn't expired yet
+    │    └── It should revert
     ├── When the assertion CAN be resolved
     │    └── It should revert
     └── When the assertion CAN NOT be resolved
@@ -1299,6 +1303,37 @@ contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
         kpiManager.deleteStuckAssertion(assertionId);
     }
 
+    function test_RevertWhen_TheAssertionHasNotExpired(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        // it should revert
+
+        vm.assume(users.length > 1);
+
+        uint assertedIntermediateValue = 250;
+
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
+
+        // Assertion hasn't expired yet
+        vm.warp(block.timestamp + 1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_KPIRewarder_v1
+                    .Module__LM_PC_KPIRewarder_v1__AssertionNotStuck
+                    .selector,
+                createdID
+            )
+        );
+        kpiManager.deleteStuckAssertion(createdID);
+    }
+
     function test_RevertWhen_TheAssertionCanBeResolved(
         address[] memory users,
         uint[] memory amounts
@@ -1316,18 +1351,8 @@ contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
             users, amounts, assertedIntermediateValue, true
         );
 
-        /*vm.startPrank(address(ooV3));
-        vm.expectEmit(true, true, true, true, address(kpiManager));
-        // vm.expectEmit(false, false, false, false);
-        emit DataAssertionResolved(
-            false,
-            MOCK_ASSERTION_DATA_ID,
-            bytes32(assertedIntermediateValue),
-            MOCK_ASSERTER_ADDRESS,
-            createdID
-        );
-        kpiManager.assertionResolvedCallback(createdID, false);
-        vm.stopPrank();*/
+        // Assertion could now be resolved
+        vm.warp(block.timestamp + DEFAULT_LIVENESS + 1);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1338,5 +1363,37 @@ contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
             )
         );
         kpiManager.deleteStuckAssertion(createdID);
+    }
+
+    function test_deleteStuckAssertion_WhenTheAssertionCannotBeResolved(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        // it should revert
+
+        vm.assume(users.length > 1);
+
+        uint assertedIntermediateValue = 250;
+
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
+
+        // Assertion could now be resolved
+        vm.warp(block.timestamp + DEFAULT_LIVENESS + 1);
+
+        // BUT: we burn the asserter's bond in the oov3, so the transfer will revert.
+        feeToken.burn(address(ooV3), ooV3.getMinimumBond(address(feeToken)));
+
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit DeletedStuckAssertion(createdID);
+        kpiManager.deleteStuckAssertion(createdID);
+
+        // Check assertion data is deleted
+        assertEq(kpiManager.getAssertion(createdID).asserter, address(0)); // address(0) asserters are not possible in the system
+        assertEq(kpiManager.getAssertionConfig(createdID).creationTime, 0);
     }
 }

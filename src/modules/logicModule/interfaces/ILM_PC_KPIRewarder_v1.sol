@@ -64,7 +64,7 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice The assertion that is being removed was not stuck
-    error Module__LM_PC_KPIRewarder_v1__AssertionNotStuck();
+    error Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(bytes32 assertionId);
 
     //--------------------------------------------------------------------------
     // Events
