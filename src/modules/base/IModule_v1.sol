@@ -20,7 +20,7 @@ interface IModule_v1 {
     /// @param parentOrchestrator The address of the orchestrator the module is linked to.
     /// @param moduleTitle The title of the module.
     event ModuleInitialized(
-        address indexed parentOrchestrator, string indexed moduleTitle
+        address indexed parentOrchestrator, string moduleTitle
     );
 
     //--------------------------------------------------------------------------
