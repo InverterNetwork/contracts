@@ -11,14 +11,16 @@ contract ElasticReceiptTokenV1Mock is ElasticReceiptToken_v1 {
     // Is of type ERC20.
     address public underlier;
 
-    constructor(
-        address underlier_,
+    constructor(address underlier_) {
+        underlier = underlier_;
+    }
+
+    function public__ElasticReceiptToken_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_
-    ) {
+    ) public {
         __ElasticReceiptToken_init(name_, symbol_, decimals_);
-        underlier = underlier_;
     }
 
     function _supplyTarget()

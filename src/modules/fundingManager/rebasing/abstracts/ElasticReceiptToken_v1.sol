@@ -9,7 +9,6 @@ import {
 } from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // External Dependencies
-import {ContextUpgradeable} from "@oz-up/utils/ContextUpgradeable.sol";
 import {
     ERC165Upgradeable,
     Initializable
@@ -68,8 +67,7 @@ import {
  */
 abstract contract ElasticReceiptToken_v1 is
     IRebasingERC20,
-    ERC165Upgradeable,
-    ContextUpgradeable
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
@@ -269,7 +267,7 @@ abstract contract ElasticReceiptToken_v1 is
     {
         uint bits = _tokensToBits(tokens);
 
-        _transfer(_msgSender(), to, tokens, bits);
+        _transfer(msg.sender, to, tokens, bits);
 
         return true;
     }
@@ -286,7 +284,7 @@ abstract contract ElasticReceiptToken_v1 is
     {
         uint bits = _tokensToBits(tokens);
 
-        _useAllowance(from, _msgSender(), tokens);
+        _useAllowance(from, msg.sender, tokens);
         _transfer(from, to, tokens, bits);
 
         return true;
@@ -300,10 +298,10 @@ abstract contract ElasticReceiptToken_v1 is
         onAfterRebase
         returns (bool)
     {
-        uint bits = _accountBits[_msgSender()];
+        uint bits = _accountBits[msg.sender];
         uint tokens = _bitsToTokens(bits);
 
-        _transfer(_msgSender(), to, tokens, bits);
+        _transfer(msg.sender, to, tokens, bits);
 
         return true;
     }
@@ -325,9 +323,9 @@ abstract contract ElasticReceiptToken_v1 is
             // Decrease allowance by one. This is a conservative security
             // compromise as the dust could otherwise be stolen.
             // Note that allowances could be off by one because of this.
-            _useAllowance(from, _msgSender(), 1);
+            _useAllowance(from, msg.sender, 1);
         } else {
-            _useAllowance(from, _msgSender(), tokens);
+            _useAllowance(from, msg.sender, tokens);
         }
 
         _transfer(from, to, tokens, bits);
@@ -342,13 +340,13 @@ abstract contract ElasticReceiptToken_v1 is
         validRecipient(spender)
         returns (bool)
     {
-        _tokenAllowances[_msgSender()][spender] = tokens;
+        _tokenAllowances[msg.sender][spender] = tokens;
 
-        emit Approval(_msgSender(), spender, tokens);
+        emit Approval(msg.sender, spender, tokens);
         return true;
     }
 
-    /// @notice Increases the amount of tokens that _msgSender() has allowed
+    /// @notice Increases the amount of tokens that msg.sender has allowed
     ///         to spender.
     /// @param spender The address of the spender.
     /// @param tokens The amount of tokens to increase allowance by.
@@ -357,15 +355,15 @@ abstract contract ElasticReceiptToken_v1 is
         public
         returns (bool)
     {
-        _tokenAllowances[_msgSender()][spender] += tokens;
+        _tokenAllowances[msg.sender][spender] += tokens;
 
         emit Approval(
-            _msgSender(), spender, _tokenAllowances[_msgSender()][spender]
+            msg.sender, spender, _tokenAllowances[msg.sender][spender]
         );
         return true;
     }
 
-    /// @notice Decreases the amount of tokens that _msgSender() has allowed
+    /// @notice Decreases the amount of tokens that msg.sender has allowed
     ///         to spender.
     /// @param spender The address of the spender.
     /// @param tokens The amount of tokens to decrease allowance by.
@@ -374,14 +372,14 @@ abstract contract ElasticReceiptToken_v1 is
         public
         returns (bool)
     {
-        if (tokens >= _tokenAllowances[_msgSender()][spender]) {
-            delete _tokenAllowances[_msgSender()][spender];
+        if (tokens >= _tokenAllowances[msg.sender][spender]) {
+            delete _tokenAllowances[msg.sender][spender];
         } else {
-            _tokenAllowances[_msgSender()][spender] -= tokens;
+            _tokenAllowances[msg.sender][spender] -= tokens;
         }
 
         emit Approval(
-            _msgSender(), spender, _tokenAllowances[_msgSender()][spender]
+            msg.sender, spender, _tokenAllowances[msg.sender][spender]
         );
         return true;
     }

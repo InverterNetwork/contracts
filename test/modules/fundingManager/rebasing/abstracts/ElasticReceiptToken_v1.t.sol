@@ -36,9 +36,8 @@ abstract contract ElasticReceiptTokenV1Test is Test {
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
 
-        ert = new ElasticReceiptTokenV1Mock(
-            address(underlier), NAME, SYMBOL, uint8(DECIMALS)
-        );
+        ert = new ElasticReceiptTokenV1Mock(address(underlier));
+        ert.init(NAME, SYMBOL, uint8(DECIMALS));
     }
 
     modifier assumeTestAmount(uint amount) {

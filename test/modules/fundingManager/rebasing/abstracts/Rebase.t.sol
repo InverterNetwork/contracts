@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import
     "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptToken_v1.t.sol";
 
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
 /**
  * @dev Rebase Tests.
  *
@@ -20,6 +22,30 @@ contract RebaseTest is ElasticReceiptTokenV1Test {
         uint[2] balances;
         // The new supply target for the rebase operation.
         uint newSupplyTarget;
+    }
+
+    // Tests the underlying ElasticReceiptToken
+    function testInitializesCorrectly() public {
+        vm.assume(keccak256(bytes(ert.name())) == keccak256(bytes(NAME)));
+        vm.assume(keccak256(bytes(ert.symbol())) == keccak256(bytes(SYMBOL)));
+        vm.assume(ert.decimals() == DECIMALS);
+        console.log(MAX_SUPPLY);
+        console.log(ert.scaledBalanceOf(address(0)));
+        console.log(type(uint).max);
+        vm.assume(
+            ert.scaledBalanceOf(address(0))
+                == type(uint).max / MAX_SUPPLY * MAX_SUPPLY
+        );
+    }
+
+    function testERTDoesntInitializeTwice() public {
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        ert.init(NAME, SYMBOL, uint8(DECIMALS));
+    }
+
+    function testERTDoesntInitializeOutsideOfInitialization() public {
+        vm.expectRevert(OZErrors.Initializable__NotInitializing);
+        ert.public__ElasticReceiptToken_init(NAME, SYMBOL, uint8(DECIMALS));
     }
 
     // Tests that if two rebase operations were executed, with the second one
