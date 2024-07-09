@@ -353,12 +353,10 @@ contract LM_PC_KPIRewarder_v1 is
             );
         }
 
-        // TODO make sure that the assertion has expired before trying to see if it settles (snippet below not working))
-
         uint assertionExpirationTime =
             oo.getAssertion(assertionId).expirationTime;
 
-        if (block.timestamp < assertionExpirationTime) {
+        if (block.timestamp <= assertionExpirationTime) {
             revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
         }
 
