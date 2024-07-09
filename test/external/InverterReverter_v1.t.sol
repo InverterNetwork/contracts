@@ -15,9 +15,6 @@ contract InverterReverterV1Test is Test {
         reverter = new InverterReverter_v1();
     }
 
-    //--------------------------------------------------------------------------
-    // Test: createDigest
-
     function testRevert(bytes memory data) public {
         vm.expectRevert(
             InverterReverter_v1.InverterReverter__ContractPaused.selector
