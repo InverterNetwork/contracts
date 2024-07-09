@@ -28,6 +28,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
     }
 
     uint public processPaymentsTriggered;
+    bool public validOrder = true;
 
     //--------------------------------------------------------------------------
     // IPaymentProcessor_v1 Functions
@@ -59,9 +60,15 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
 
     function validPaymentOrder(IERC20PaymentClientBase_v1.PaymentOrder memory)
         external
-        pure
+        view
         returns (bool valid)
     {
-        return true;
+        return validOrder;
+    }
+
+    //Mock Functions
+
+    function flipValidOrder() external {
+        validOrder = !validOrder;
     }
 }
