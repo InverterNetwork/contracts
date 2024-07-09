@@ -140,7 +140,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
-        vm.expectEmit(true, true, true, true, address(_token));
+        vm.expectEmit(true, true, true, true);
         emit CollateralTokenSet(address(_token));
 
         // Init Module
