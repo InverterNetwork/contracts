@@ -80,6 +80,10 @@ interface IBondingCurveBase_v1 {
         address indexed token, address indexed treasury, uint feeAmount
     );
 
+    /// @notice Event emitted when collateral token has been set
+    /// @param token The token that serves as collateral token making up the curve's reserve
+    event CollateralTokenSet(address indexed token);
+
     //--------------------------------------------------------------------------
     // Structs
     struct IssuanceToken {
