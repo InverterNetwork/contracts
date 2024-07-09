@@ -58,6 +58,8 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice An assertion can only by posted if the preceding one is resolved.
     error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
 
+    /// @notice Callback received references non existent assertionId
+    error Module__LM_PC_KPIRewarder_v1__CallbackFromNonexistentAssertionId();
     //--------------------------------------------------------------------------
     // Events
 
