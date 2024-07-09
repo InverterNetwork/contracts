@@ -300,10 +300,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _prepareBuyConditions(buyer, amount);
 
         // we set a virtual collateral supply that will not cover the amount to redeem
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.prank(admin_address);
         bondingCurveFundingManager.setVirtualCollateralSupply(
             type(uint).max - amount + 1
         );
+        _openCurveInteractions(); // Open Buy & sell
 
         vm.startPrank(buyer);
         {
@@ -333,8 +335,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _prepareBuyConditions(buyer, amount);
 
         // we set a virtual collateral supply that will not cover the amount to redeem
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.prank(admin_address);
         bondingCurveFundingManager.setVirtualIssuanceSupply(type(uint).max);
+        _openCurveInteractions(); // Open Buy & sell
 
         vm.startPrank(buyer);
         {
@@ -618,9 +622,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint userSellAmount = issuanceToken.balanceOf(seller);
         vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         // we set a virtual collateral supply that will not cover the amount to redeem
         vm.prank(admin_address);
         bondingCurveFundingManager.setVirtualIssuanceSupply(userSellAmount - 1);
+        _openCurveInteractions(); // Open Buy & sell
 
         vm.startPrank(seller);
         {
@@ -684,6 +690,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Set virtual collateral to some number
         uint newVirtualIssuanceSupply = userSellAmount * 2;
         uint newVirtualCollateral = amountIn * 2;
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.startPrank(admin_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
@@ -694,6 +701,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             );
         }
         vm.stopPrank();
+        _openCurveInteractions(); // Open Buy & sell
 
         uint decimalConverted_userSellAmount = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
@@ -796,6 +804,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Set virtual collateral to some number
         uint newVirtualIssuanceSupply = userSellAmount * 2;
         uint newVirtualCollateral = amountIn * 2;
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.startPrank(admin_address);
         {
             bondingCurveFundingManager.setSellFee(fee);
@@ -807,6 +816,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             );
         }
         vm.stopPrank();
+        _openCurveInteractions(); // Open Buy & sell
 
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
@@ -909,6 +919,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Set virtual collateral to some number
         uint newVirtualIssuanceSupply = userSellAmount * 2;
         uint newVirtualCollateral = amountIn * 2;
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.startPrank(admin_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
@@ -919,6 +930,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             );
         }
         vm.stopPrank();
+        _openCurveInteractions(); // Open Buy & sell
 
         uint decimalConverted_userSellAmount = bondingCurveFundingManager
             .call_convertAmountToRequiredDecimal(
@@ -1022,6 +1034,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint _virtualIssuanceSupplyBeforeBuy = amountIn * 1000;
         uint _virtualCollateralSupplyBeforeBuy = minAmountOut * 1000;
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.startPrank(admin_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
@@ -1032,6 +1045,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             );
         }
         vm.stopPrank();
+        _openCurveInteractions(); // Open Buy & sell
 
         uint32 _reserveRatioBuying =
             bondingCurveFundingManager.call_reserveRatioForBuying();
@@ -1085,6 +1099,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         ); // We mint all the other tokens to the fundingManager to make sure we'll have enough balance to pay out
 
         // Set virtual supplies
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.startPrank(admin_address);
         {
             bondingCurveFundingManager.setVirtualIssuanceSupply(
@@ -1095,6 +1110,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             );
         }
         vm.stopPrank();
+        _openCurveInteractions(); // Open Buy & sell
 
         // Calculate min amount out for selling
         uint minAmountOut =
@@ -1144,8 +1160,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testGetVirtualCollateralSupply(uint _supply) public {
         vm.assume(_supply > 0);
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.prank(admin_address);
         bondingCurveFundingManager.setVirtualCollateralSupply(_supply);
+        _openCurveInteractions(); // Open Buy & sell
 
         assertEq(
             _supply, bondingCurveFundingManager.getVirtualCollateralSupply()
@@ -1157,8 +1175,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testGetVirtualIssuanceSupply(uint _supply) public {
         vm.assume(_supply > 0);
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.prank(admin_address);
         bondingCurveFundingManager.setVirtualIssuanceSupply(_supply);
+        _openCurveInteractions(); // Open Buy & sell
 
         assertEq(_supply, bondingCurveFundingManager.getVirtualIssuanceSupply());
     }
@@ -1184,16 +1204,48 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setVirtualIssuanceSupply and _setVirtualIssuanceSupply function
-        ├── when caller is not the Orchestrator_v1 admin
-        │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
-                ├── when the new token supply is zero
-                │   └── it should revert
-                └── when the new token supply is above zero
-                    ├── it should set the new token supply
-                    └── it should emit an event
-
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function setVirtualIssuanceSupply() is called
+        │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
+        └── given the caller is the Orchestrator_v1 admin
+            ├── and the buy & sell curve are still open
+            │   └── when the function_setVirtualIssuanceSupply() is called
+            │       └── then it should revert
+            ├── and the new token supply is zero
+            │   └── when the function_setVirtualIssuanceSupply() is called
+            │       └── then it should revert
+            └── and the new token supply is > zero
+                └── when the function setVirtualIssuanceSupply() is called
+                    └── then it should set the new token supply
+                        └── and it should emit an event
     */
+
+    function testSetVirtualIssuanceSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address);
+        bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
+    }
+
+    function testSetVirtualIssuanceSupply_FailsGivenBuyAndSellCurveStillOpen(
+        uint _newSupply
+    ) public callerIsOrchestratorAdmin {
+        vm.assume(_newSupply != 0);
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
+    }
 
     function testSetVirtualIssuanceSupply_FailsIfZero()
         public
@@ -1201,6 +1253,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         uint _newSupply = 0;
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.expectRevert(
             IVirtualIssuanceSupplyBase_v1
                 .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
@@ -1215,6 +1268,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         vm.assume(_newSupply != 0);
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
@@ -1226,16 +1280,48 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setVirtualCollateralSupply and _setVirtualCollateralSupply function
-        ├── when caller is not the Orchestrator_v1 admin
-        │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
-                ├── when the new collateral supply is zero
-                │   └── it should revert
-                └── when the new collateral supply is above zero
-                    ├── it should set the new collateral supply
-                    └── it should emit an event
-
+        ├── given caller is not the Orchestrator_v1 admin
+        │   └── when the function setVirtualCollateralSupply() is called
+        │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
+        └── given the caller is the Orchestrator_v1 admin
+            ├── and the buy & sell curve are still open
+            │   └── when the setVirtualCollateralSupply() is called
+            │       └── then it should revert
+            ├── and the new token supply is zero
+            │   └── when the setVirtualCollateralSupply() is called
+            │       └── then it should revert
+            └── and the new token supply is > zero
+                └── when the function setVirtualCollateralSupply() is called
+                    └── then it should set the new token supply
+                        └── and it should emit an event
     */
+
+    function testSetVirtualCollateralSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                non_admin_address
+            )
+        );
+        vm.prank(non_admin_address);
+        bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
+    }
+
+    function testSetVirtualCollateralSupply_FailsGivenBuyAndSellCurveStillOpen(
+        uint _newSupply
+    ) public callerIsOrchestratorAdmin {
+        vm.assume(_newSupply != 0);
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
+    }
 
     function testSetVirtualCollateralSupply_FailsIfZero()
         public
@@ -1243,6 +1329,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         uint _newSupply = 0;
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.expectRevert(
             IVirtualCollateralSupplyBase_v1
                 .Module__VirtualCollateralSupplyBase__VirtualSupplyCannotBeZero
@@ -1257,6 +1344,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         vm.assume(_newSupply != 0);
 
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
@@ -1600,6 +1688,16 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _token.mint(buyer, amount);
         vm.prank(buyer);
         _token.approve(address(bondingCurveFundingManager), amount);
+    }
+
+    function _closeCurveInteractions() internal {
+        bondingCurveFundingManager.closeBuy();
+        bondingCurveFundingManager.closeSell();
+    }
+
+    function _openCurveInteractions() internal {
+        bondingCurveFundingManager.openBuy();
+        bondingCurveFundingManager.openSell();
     }
 
     // Helper function that:

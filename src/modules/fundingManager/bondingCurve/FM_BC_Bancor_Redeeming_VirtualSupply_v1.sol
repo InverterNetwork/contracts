@@ -519,6 +519,34 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         emit IssuanceTokenSet(_issuanceToken, _decimals);
     }
 
+    /// @dev Internal function to directly set the virtual collateral supply to a new value.
+    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    function _setVirtualCollateralSupply(uint _virtualSupply)
+        internal
+        override(VirtualCollateralSupplyBase_v1)
+    {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
+        }
+        super._setVirtualCollateralSupply(_virtualSupply);
+    }
+
+    /// @dev Internal function to directly set the virtual issuance supply to a new value.
+    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    function _setVirtualIssuanceSupply(uint _virtualSupply)
+        internal
+        override(VirtualIssuanceSupplyBase_v1)
+    {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
+        }
+        super._setVirtualIssuanceSupply(_virtualSupply);
+    }
+
     /// @dev Sets the reserve ratio for buying tokens.
     /// The function will revert if the ratio is greater than the constant PPM.
     ///
