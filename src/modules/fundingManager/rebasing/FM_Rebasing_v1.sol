@@ -15,6 +15,9 @@ import {
 } from "@fm/rebasing/abstracts/ElasticReceiptTokenUpgradeable_v1.sol";
 
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
+import {ERC2771ContextUpgradeable} from
+    "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+import {Context} from "@oz/utils/Context.sol";
 
 // External Interfaces
 import {
@@ -88,7 +91,7 @@ contract FM_Rebasing_v1 is
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
-    // Init Function
+    // Initialization
 
     /// @inheritdoc Module_v1
     function init(
@@ -129,18 +132,40 @@ contract FM_Rebasing_v1 is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
+    /// @notice Deposits a specified amount of tokens into the contract from the sender's account.
+    /// @dev    Reverts if attempting self-deposits or if the deposit exceeds the allowed cap,
+    ///         ensuring compliance with token issuance rules. Please Note: when using the transactionForwarder,
+    ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
+    /// @param amount The number of tokens to deposit.
     function deposit(uint amount) external {
         _deposit(_msgSender(), _msgSender(), amount);
     }
 
+    /// @notice Deposits a specified amount of tokens into the contract on behalf of another account.
+    /// @dev    Reverts if attempting self-deposits or if the deposit exceeds the allowed cap,
+    ///         ensuring compliance with token issuance rules. Please Note: when using the transactionForwarder,
+    ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
+    /// @param to The address to which the tokens are credited.
+    /// @param amount The number of tokens to deposit.
     function depositFor(address to, uint amount) external {
         _deposit(_msgSender(), to, amount);
     }
 
+    /// @notice Withdraws a specified amount of tokens from the sender's account back to their own address.
+    /// @dev    Reverts if the withdrawal amount exceeds the available balance.
+    ///         Please Note: when using the transactionForwarder, validate transaction success to
+    ///         prevent nonce exploitation and ensure transaction integrity.
+    /// @param amount The number of tokens to withdraw.
     function withdraw(uint amount) external {
         _withdraw(_msgSender(), _msgSender(), amount);
     }
 
+    /// @notice Withdraws a specified amount of tokens from the sender's account to another specified account.
+    /// @dev    Reverts if the withdrawal amount exceeds the available balance.
+    ///         Please Note: when using the transactionForwarder, validate transaction success to
+    ///         prevent nonce exploitation and ensure transaction integrity.
+    /// @param to The address to which the tokens are sent.
+    /// @param amount The number of tokens to withdraw.
     function withdrawTo(address to, uint amount) external {
         _withdraw(_msgSender(), to, amount);
     }
@@ -188,5 +213,40 @@ contract FM_Rebasing_v1 is
         token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overriden, because they are imported via the ElasticReceiptTokenBase_v1 as well
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Context)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the ElasticReceiptTokenBase_v1 as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Context)
+        returns (bytes calldata)
+    {
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Context)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }
