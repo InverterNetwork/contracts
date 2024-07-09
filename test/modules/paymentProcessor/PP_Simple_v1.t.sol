@@ -377,26 +377,23 @@ contract PP_SimpleV1Test is ModuleTest {
         );
     }
 
-    function test_ValidPaymentOrders(
+    function test_ValidPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
         address sender
     ) public {
         order.start = bound(order.start, 0, type(uint).max / 2);
         order.cliff = bound(order.cliff, 0, type(uint).max / 2);
 
-        bool expectedValue = false;
+        vm.startPrank(sender);
 
-        if (
-            paymentProcessor.original_validPaymentReceiver(order.recipient)
-                && paymentProcessor.original_validPaymentToken(order.paymentToken)
-                && paymentProcessor.original_validTotal(order.amount)
-        ) {
-            expectedValue = true;
-        }
-
-        vm.prank(sender);
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+            order.recipient
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
+            && paymentProcessor.original_validTotal(order.amount);
 
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+
+        vm.stopPrank();
     }
 
     function test_validPaymentReceiver(address addr, address sender) public {
