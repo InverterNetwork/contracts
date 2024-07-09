@@ -348,18 +348,18 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Calculate protocol fee amount if applicable
         if (_protocolFee > 0) {
             protocolFeeAmount = _totalAmount * _protocolFee / BPS;
+            // Revert if calculated protocol fee amount rounded down to zero
+            if (protocolFeeAmount == 0) {
+                revert Module__BondingCurveBase__TradeAmountToLow();
+            }
         }
         // Calculate workflow fee amount if applicable
         if (_workflowFee > 0) {
             workflowFeeAmount = _totalAmount * _workflowFee / BPS;
-        }
-
-        // Revert if calculated protocol/workflow fee amount rounded down to zero
-        if (_protocolFee > 0 && protocolFeeAmount == 0) {
-            revert Module__BondingCurveBase__BuyAmountToLow();
-        }
-        if (_workflowFee > 0 && workflowFeeAmount == 0) {
-            revert Module__BondingCurveBase__BuyAmountToLow();
+             // Revert if calculated workflow fee amount rounded down to zero
+            if (workflowFeeAmount == 0) {
+                revert Module__BondingCurveBase__TradeAmountToLow();
+            }
         }
 
         netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;

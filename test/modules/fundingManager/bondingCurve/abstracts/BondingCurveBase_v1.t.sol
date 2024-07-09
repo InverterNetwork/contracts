@@ -677,7 +677,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase__BuyAmountToLow
+                .Module__BondingCurveBase__TradeAmountToLow
                 .selector
         );
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
@@ -693,7 +693,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.expectRevert(
             IBondingCurveBase_v1
-                .Module__BondingCurveBase__BuyAmountToLow
+                .Module__BondingCurveBase__TradeAmountToLow
                 .selector
         );
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
