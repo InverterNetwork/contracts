@@ -85,7 +85,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     mapping(address => bool) public isVoter;
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    mapping(uint => Motion) public motions;
+    mapping(bytes32 => Motion) public motions;
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public motionCount;
@@ -177,7 +177,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Data Retrieval Functions
 
-    function getReceipt(uint _ID, address voter)
+    function getReceipt(bytes32 _ID, address voter)
         public
         view
         returns (Receipt memory)
@@ -255,10 +255,11 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     function createMotion(address target, bytes calldata action)
         external
         onlyVoter
-        returns (uint)
+        returns (bytes32)
     {
         // Cache motion's id.
-        uint motionId = motionCount;
+        bytes32 motionId =
+            keccak256(abi.encodePacked(target, action, motionCount));
 
         // Get pointer to motion.
         // Note that the motion instance is uninitialized.
@@ -282,7 +283,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         return motionId;
     }
 
-    function castVote(uint motionId, uint8 support) external onlyVoter {
+    function castVote(bytes32 motionId, uint8 support) external onlyVoter {
         // Revert if support invalid.
         // 0 = for
         // 1 = against
@@ -291,13 +292,13 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__InvalidSupport();
         }
 
-        // Revert if motionID invalid
-        if (motionId >= motionCount) {
-            revert Module__VotingRoleManager__InvalidMotionId();
-        }
-
         // Get pointer to the motion.
         Motion storage motion_ = motions[motionId];
+
+        // Revert if motionID invalid
+        if (motion_.startTimestamp == 0) {
+            revert Module__VotingRoleManager__InvalidMotionId();
+        }
 
         // Revert if voting duration exceeded
         if (block.timestamp > motion_.endTimestamp) {
@@ -330,12 +331,12 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         emit VoteCast(motionId, voter, support);
     }
 
-    function executeMotion(uint motionId) external {
+    function executeMotion(bytes32 motionId) external {
         // Get pointer to the motion.
         Motion storage motion_ = motions[motionId];
 
         // Revert if motionId invalid.
-        if (motionId >= motionCount) {
+        if (motion_.startTimestamp == 0) {
             revert Module__VotingRoleManager__InvalidMotionId();
         }
 

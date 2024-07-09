@@ -148,7 +148,7 @@ contract VotingRoleManagerE2E is E2ETest {
 
         // voter 1 sets up vote to create bounty
         vm.prank(voter1);
-        uint motionId = singleVoteGovernor.createMotion(
+        bytes32 motionId = singleVoteGovernor.createMotion(
             address(bountyManager),
             abi.encodeWithSelector(
                 ILM_PC_Bounties_v1.addBounty.selector,
@@ -189,7 +189,7 @@ contract VotingRoleManagerE2E is E2ETest {
 
     function _getMotionExecutionResult(
         AUT_EXT_VotingRoles_v1 singleVoteGovernor,
-        uint motionId
+        bytes32 motionId
     ) internal view returns (bool, bytes memory) {
         (
             , // address _addr
