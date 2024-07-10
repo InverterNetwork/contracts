@@ -327,6 +327,32 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager.call_executeAddModule(module);
     }
 
+    function testExecuteAddModule_FailsIfModuleLimitIsExceeded() public {
+        uint modulesUntilLimit = MAX_MODULES - moduleManager.modulesSize();
+        address[] memory modules = new address[](modulesUntilLimit + 1);
+
+        //Create MAX_MODULES amount of modules + 1
+        for (uint i = 0; i < modulesUntilLimit + 1; i++) {
+            modules[i] = address(new ModuleV1Mock());
+            moduleManager.call_initiateAddModuleWithTimelock(modules[i]);
+        }
+
+        vm.warp(block.timestamp + timelock);
+
+        //Just add MAX_MODULES amount of modules
+        for (uint i = 0; i < modulesUntilLimit; i++) {
+            moduleManager.call_executeAddModule(modules[i]);
+        }
+
+        vm.expectRevert(
+            IModuleManagerBase_v1
+                .ModuleManagerBase__ModuleAmountOverLimits
+                .selector
+        );
+        //Take last slot of created Modules to test limit
+        moduleManager.call_executeAddModule(modules[modulesUntilLimit]);
+    }
+
     function testInitiateAddModuleWithTimelock_FailsIfProxyNotRegistered()
         public
     {
