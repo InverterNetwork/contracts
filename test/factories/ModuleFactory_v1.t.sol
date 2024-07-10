@@ -80,6 +80,7 @@ contract ModuleFactoryV1Test is Test {
     function setUp() public {
         module = new ModuleImplementationV1Mock();
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
+        beacon.overrideReverter(reverter);
 
         factory = new ModuleFactory_v1(reverter, forwarder);
         factory.init(
@@ -115,6 +116,7 @@ contract ModuleFactoryV1Test is Test {
             );
 
             beaconI = new InverterBeaconV1OwnableMock(governanceContract);
+            beaconI.overrideReverter(reverter);
 
             beaconI.overrideImplementation(address(0x1));
 
@@ -228,6 +230,7 @@ contract ModuleFactoryV1Test is Test {
         InverterBeaconV1OwnableMock additionalBeacon =
             new InverterBeaconV1OwnableMock(governanceContract);
         additionalBeacon.overrideImplementation(address(module));
+        additionalBeacon.overrideReverter(reverter);
 
         vm.prank(governanceContract);
         factory.registerMetadata(DATA, beacon);
@@ -254,6 +257,7 @@ contract ModuleFactoryV1Test is Test {
             new InverterBeaconV1OwnableMock(address(0x1111111));
 
         notOwnedBeacon.overrideImplementation(address(0x1));
+        notOwnedBeacon.overrideReverter(reverter);
 
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
