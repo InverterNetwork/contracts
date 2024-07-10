@@ -283,6 +283,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         external
         onlyOrchestratorAdmin
     {
+        _cancelModuleUpdate(address(authorizer));
         _cancelModuleUpdate(address(authorizer_));
     }
 
@@ -328,6 +329,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         external
         onlyOrchestratorAdmin
     {
+        _cancelModuleUpdate(address(fundingManager));
         _cancelModuleUpdate(address(fundingManager_));
     }
 
@@ -365,11 +367,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     function cancelPaymentProcessorUpdate(
         IPaymentProcessor_v1 paymentProcessor_
     ) external onlyOrchestratorAdmin {
+        _cancelModuleUpdate(address(paymentProcessor));
         _cancelModuleUpdate(address(paymentProcessor_));
     }
 
     /// @inheritdoc IOrchestrator_v1
     function cancelModuleUpdate(address module_) external {
+        _enforceNonPrivilegedModuleInterfaceCheck(module_);
         _cancelModuleUpdate(module_);
     }
 
