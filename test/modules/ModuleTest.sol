@@ -31,10 +31,13 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
-
+// External Dependencies
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
 /**
  * @dev Base class for module implementation test contracts.
  */
+
 abstract contract ModuleTest is Test {
     OrchestratorV1Mock _orchestrator;
 
@@ -69,7 +72,16 @@ abstract contract ModuleTest is Test {
     //--------------------------------------------------------------------------
     // Setup
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
-        feeManager = new FeeManager_v1();
+        //Needs to be a proxy for the notInitialized Check
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    address(this), // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
         feeManager.init(address(this), treasury, 0, 0);
         governor.setFeeManager(address(feeManager));
 

@@ -106,7 +106,9 @@ contract OrchestratorFactory_v1 is
 
     constructor(address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice The factories initializer function.
     /// @param governor_ The address of the governor contract.

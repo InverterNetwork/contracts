@@ -111,7 +111,9 @@ contract ModuleFactory_v1 is
 
     constructor(address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice The factories initializer function.
     /// @param _governor The address of the governor contract.
