@@ -151,7 +151,11 @@ contract E2ETest is E2EModuleRegistry {
             new OrchestratorFactory_v1(address(forwarder));
 
         InverterBeacon_v1 orchestatorFactoryBeacon = new InverterBeacon_v1(
-            address(gov), 1, address(orchestatorFactoryImpl), 0
+            address(reverter),
+            address(gov),
+            1,
+            address(orchestatorFactoryImpl),
+            0
         ); //@note This needs to be updated to contain the correct versions / Think of concept for the orchestatorFactory Version
 
         orchestratorFactory = OrchestratorFactory_v1(
