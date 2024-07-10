@@ -27,6 +27,10 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
     uint public functionCalled;
     bool public forcefulCall;
 
+    function overrideReverter(address newReverter) public {
+        reverter = newReverter;
+    }
+
     function overrideImplementation(address implementation_) public {
         implementation = implementation_;
     }

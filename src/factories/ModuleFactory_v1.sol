@@ -84,6 +84,7 @@ contract ModuleFactory_v1 is
         // Revert if beacon's implementation is zero address.
         if (
             beacon.implementation() == address(0)
+                || beacon.getReverterAddress() != reverter
                 || Ownable2StepUpgradeable(address(beacon)).owner() != governor
         ) {
             revert ModuleFactory__InvalidInverterBeacon();
