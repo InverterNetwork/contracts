@@ -29,6 +29,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
+// External Dependencies
+import {Clones} from "@oz/proxy/Clones.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -97,7 +100,8 @@ contract OrchestratorFactoryV1Test is Test {
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
         beacon.overrideImplementation(address(target));
 
-        factory = new OrchestratorFactory_v1(address(0));
+        address impl = address(new OrchestratorFactory_v1(address(0)));
+        factory = OrchestratorFactory_v1(Clones.clone(impl));
         factory.init(moduleFactory.governor(), beacon, address(moduleFactory));
     }
 

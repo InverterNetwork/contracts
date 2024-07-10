@@ -236,9 +236,9 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
-        _ensureValidRecipient(order.recipient);
-        _ensureValidToken(order.paymentToken);
-        _ensureValidAmount(order.amount);
+        if (!(orchestrator().paymentProcessor().validPaymentOrder(order))) {
+            revert Module__ERC20PaymentClientBase__InvalidPaymentOrder();
+        }
     }
 
     //--------------------------------------------------------------------------
