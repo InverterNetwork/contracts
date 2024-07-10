@@ -438,7 +438,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal view returns (uint) {
         address[] memory receiverSearchArray = activePaymentReceivers[client];
 
-        uint length = activePaymentReceivers[client].length;
+        uint length = receiverSearchArray.length;
         for (uint i; i < length;) {
             if (receiverSearchArray[i] == paymentReceiver) {
                 return i;
