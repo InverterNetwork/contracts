@@ -7,6 +7,8 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IERC20Issuance_v1} from
+    "@fm/bondingCurve/interfaces/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -478,8 +480,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidTokenDecimal();
         }
-        super._setIssuanceToken(_issuanceToken);
+        issuanceToken = IERC20Issuance_v1(_issuanceToken);
         issuanceTokenDecimals = _decimals;
+        emit IssuanceTokenSet(_issuanceToken, _decimals);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.
