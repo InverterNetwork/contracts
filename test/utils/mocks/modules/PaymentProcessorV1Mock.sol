@@ -66,7 +66,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
         return validOrder;
     }
 
-    //Mock Functions
+    // Mock Functions
 
     function flipValidOrder() external {
         validOrder = !validOrder;

@@ -127,7 +127,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     function testAddPaymentOrderFailsForInvalidPaymentOrder() public {
-        //Set return Value of validPaymentOrder in the paymentProcessor to false
+        // Set return Value of validPaymentOrder in the paymentProcessor to false
         _paymentProcessor.flipValidOrder();
 
         vm.expectRevert(
