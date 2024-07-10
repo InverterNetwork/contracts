@@ -116,6 +116,7 @@ contract ModuleFactory_v1 is
     constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
     {
+        _disableInitializers();
         reverter = _reverter;
     }
 

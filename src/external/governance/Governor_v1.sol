@@ -116,6 +116,13 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
+    // Constructor
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    //--------------------------------------------------------------------------
     // Initialization
 
     /// @notice The module's initializer function.
