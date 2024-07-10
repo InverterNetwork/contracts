@@ -125,7 +125,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         // Deduct protocol sell fee from issuance, if applicable
@@ -199,7 +199,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         uint protocolFeeAmount;
@@ -257,7 +257,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Transfer tokens to receiver
-        collateralToken.transfer(_receiver, collateralRedeemAmount);
+        collateralToken.safeTransfer(_receiver, collateralRedeemAmount);
         // Emit event
         emit TokensSold(
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()

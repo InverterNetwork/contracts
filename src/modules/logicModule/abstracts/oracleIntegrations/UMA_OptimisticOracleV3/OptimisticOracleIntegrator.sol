@@ -39,6 +39,19 @@ abstract contract OptimisticOracleIntegrator is
 {
     using SafeERC20 for IERC20;
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module_v1)
+        returns (bool)
+    {
+        return interfaceId == type(IOptimisticOracleIntegrator).interfaceId
+            || interfaceId
+                == type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //==========================================================================
     // Constants
 

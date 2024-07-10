@@ -106,7 +106,9 @@ contract OrchestratorFactory_v1 is
 
     constructor(address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice The factories initializer function.
     /// @param governor_ The address of the governor contract.
@@ -169,7 +171,8 @@ contract OrchestratorFactory_v1 is
         _orchestrators[++_orchestratorIdCounter] = proxy;
 
         // Deploy and cache {IFundingManager_v1} module.
-        address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
+        address fundingManager = IModuleFactory_v1(moduleFactory)
+            .createAndInitModule(
             fundingManagerConfig.metadata,
             IOrchestrator_v1(proxy),
             fundingManagerConfig.configData,
@@ -177,7 +180,8 @@ contract OrchestratorFactory_v1 is
         );
 
         // Deploy and cache {IAuthorizer_v1} module.
-        address authorizer = IModuleFactory_v1(moduleFactory).createModule(
+        address authorizer = IModuleFactory_v1(moduleFactory)
+            .createAndInitModule(
             authorizerConfig.metadata,
             IOrchestrator_v1(proxy),
             authorizerConfig.configData,
@@ -185,7 +189,8 @@ contract OrchestratorFactory_v1 is
         );
 
         // Deploy and cache {IPaymentProcessor_v1} module.
-        address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
+        address paymentProcessor = IModuleFactory_v1(moduleFactory)
+            .createAndInitModule(
             paymentProcessorConfig.metadata,
             IOrchestrator_v1(proxy),
             paymentProcessorConfig.configData,
@@ -194,7 +199,7 @@ contract OrchestratorFactory_v1 is
 
         // Deploy and cache optional modules.
         address[] memory modules =
-            createModules(moduleConfigs, proxy, workflowConfig);
+            createModuleProxies(moduleConfigs, proxy, workflowConfig);
 
         emit OrchestratorCreated(_orchestratorIdCounter, proxy);
 
@@ -208,6 +213,9 @@ contract OrchestratorFactory_v1 is
             IPaymentProcessor_v1(paymentProcessor),
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
+
+        // Init the rest of the modules
+        initModules(modules, moduleConfigs, proxy);
 
         return IOrchestrator_v1(proxy);
     }
@@ -226,7 +234,7 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    function createModules(
+    function createModuleProxies(
         ModuleConfig[] memory moduleConfigs,
         address proxy,
         WorkflowConfig memory workflowConfig
@@ -235,14 +243,29 @@ contract OrchestratorFactory_v1 is
 
         address[] memory modules = new address[](moduleConfigs.length);
         for (uint i; i < moduleConfigs.length; ++i) {
-            modules[i] = IModuleFactory_v1(moduleFactory).createModule(
+            modules[i] = IModuleFactory_v1(moduleFactory).createModuleProxy(
                 moduleConfigs[i].metadata,
                 IOrchestrator_v1(proxy),
-                moduleConfigs[i].configData,
                 workflowConfig
             );
         }
         return modules;
+    }
+
+    function initModules(
+        address[] memory modules,
+        ModuleConfig[] memory moduleConfigs,
+        address proxy
+    ) internal {
+        // Deploy and cache optional modules.
+
+        for (uint i; i < modules.length; ++i) {
+            IModule_v1(modules[i]).init(
+                IOrchestrator_v1(proxy),
+                moduleConfigs[i].metadata,
+                moduleConfigs[i].configData
+            );
+        }
     }
 
     //--------------------------------------------------------------------------

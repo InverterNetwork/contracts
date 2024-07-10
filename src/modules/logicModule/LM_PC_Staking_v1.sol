@@ -292,7 +292,7 @@ contract LM_PC_Staking_v1 is
     ///@dev direct distribution of earned rewards via the payment processor
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
-        uint amount = _earned(recipient, rewardValue);
+        uint amount = rewards[recipient];
         // Set rewards to zero
         rewards[recipient] = 0;
 
@@ -346,7 +346,10 @@ contract LM_PC_Staking_v1 is
     }
 
     function _setStakingToken(address _token) internal {
-        if (_token == address(0)) {
+        if (
+            _token == address(0)
+                || _token == address(orchestrator().fundingManager().token())
+        ) {
             revert Module__LM_PC_Staking_v1__InvalidStakingToken();
         }
         stakingToken = _token;

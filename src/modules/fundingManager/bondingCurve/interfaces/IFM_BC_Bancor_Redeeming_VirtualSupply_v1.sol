@@ -17,6 +17,13 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     /// @notice Invalid deposit amount
     error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidDepositAmount();
 
+    /// @notice Invalid Bancor Formula contract
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidBancorFormula();
+
+    /// @notice Buying and Selling must be closed before changing the virtual supply
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+    );
+
     //--------------------------------------------------------------------------
     // Events
 

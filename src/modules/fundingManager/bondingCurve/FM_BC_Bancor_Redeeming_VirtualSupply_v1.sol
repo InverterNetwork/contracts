@@ -34,6 +34,9 @@ import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 // Libraries
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -156,6 +159,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
+        // Check for valid Bancor Formula
+        if (
+            !ERC165(bondingCurveProperties.formula).supportsInterface(
+                type(IBancorFormula).interfaceId
+            )
+        ) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidBancorFormula();
+        }
         // Set formula contract
         formula = IBancorFormula(bondingCurveProperties.formula);
         // Set virtual issuance token supply
@@ -296,8 +308,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(BondingCurveBase_v1)
         returns (uint)
     {
-        return uint(PPM) * uint(PPM) * virtualCollateralSupply
-            / (virtualIssuanceSupply * uint(reserveRatioForBuying));
+        return uint(PPM) * uint(PPM)
+            * FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
+            )
+            / (
+                FM_BC_Tools._convertAmountToRequiredDecimal(
+                    virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
+                ) * uint(reserveRatioForBuying)
+            );
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -309,8 +328,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        return uint(PPM) * uint(PPM) * virtualCollateralSupply
-            / (virtualIssuanceSupply * uint(reserveRatioForSelling));
+        return uint(PPM) * uint(PPM)
+            * FM_BC_Tools._convertAmountToRequiredDecimal(
+                virtualCollateralSupply, collateralTokenDecimals, eighteenDecimals
+            )
+            / (
+                FM_BC_Tools._convertAmountToRequiredDecimal(
+                    virtualIssuanceSupply, issuanceTokenDecimals, eighteenDecimals
+                ) * uint(reserveRatioForSelling)
+            );
     }
 
     /// @inheritdoc IFundingManager_v1
@@ -480,6 +506,43 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         issuanceTokenDecimals = _decimals;
     }
 
+    /// @dev Internal function to directly set the virtual collateral supply to a new value.
+    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    function _setVirtualCollateralSupply(uint _virtualSupply)
+        internal
+        override(VirtualCollateralSupplyBase_v1)
+    {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
+        }
+        super._setVirtualCollateralSupply(_virtualSupply);
+    }
+
+    /// @dev Internal function to directly set the virtual issuance supply to a new value.
+    ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
+    ///         is done for use in the Bancor Formulat
+    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    function _setVirtualIssuanceSupply(uint _virtualSupply)
+        internal
+        override(VirtualIssuanceSupplyBase_v1)
+    {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
+        }
+        // Check if virtual supply is big enough to ensure compatibility with relative issuance
+        // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
+        // so it will not result in a round down 0 value
+        if (_virtualSupply < 10 ** (issuanceTokenDecimals - 18)) {
+            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
+            );
+        }
+        super._setVirtualIssuanceSupply(_virtualSupply);
+    }
+
     /// @dev Sets the reserve ratio for buying tokens.
     /// The function will revert if the ratio is greater than the constant PPM.
     ///
@@ -506,20 +569,5 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
         }
-    }
-
-    /// @dev    Internal function to directly set the virtual issuance supply to a new value.
-    ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
-    ///         is done for use in the Bancor Formulat
-    /// @param  _virtualSupply The new value to set for the virtual issuance supply.
-    function _setVirtualIssuanceSupply(uint _virtualSupply) internal override {
-        // Check if virtual supply is big enough to ensure compatibility with relative issuance
-        // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
-        // so it will not result in a round down 0 value
-        if (_virtualSupply < 10 ** (issuanceTokenDecimals - 18)) {
-            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
-            );
-        }
-        super._setVirtualIssuanceSupply(_virtualSupply);
     }
 }
