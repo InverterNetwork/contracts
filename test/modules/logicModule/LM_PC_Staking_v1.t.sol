@@ -75,6 +75,20 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
+
+        address impl = address(new LM_PC_Staking_v1AccessMock());
+        stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
+        _setUpOrchestrator(stakingManager);
+        _authorizer.setIsAuthorized(address(this), true);
+
+        vm.expectRevert(
+            ILM_PC_Staking_v1
+                .Module__LM_PC_Staking_v1__InvalidStakingToken
+                .selector
+        );
+        stakingManager.init(
+            _orchestrator, _METADATA, abi.encode(address(_token))
+        );
     }
 
     //--------------------------------------------------------------------------
