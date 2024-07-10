@@ -166,7 +166,6 @@ contract ModuleFactoryV1Test is Test {
     function testRegisterMetadataOnlyCallableByOwner(address caller) public {
         vm.assume(caller != governanceContract);
         vm.assume(caller != address(0));
-        vm.assume(caller != governanceContract);
         vm.prank(caller);
 
         vm.expectRevert(
@@ -261,6 +260,20 @@ contract ModuleFactoryV1Test is Test {
         );
         vm.prank(governanceContract);
         factory.registerMetadata(DATA, notOwnedBeacon);
+    }
+
+    function testRegisterMetadataFailsIfBeaconIsNotLinkedToFactoryReverter(
+        address reverterAddress
+    ) public {
+        beacon.overrideReverter(reverterAddress);
+
+        if (reverterAddress != factory.reverter()) {
+            vm.expectRevert(
+                IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
+            );
+        }
+        vm.prank(governanceContract);
+        factory.registerMetadata(DATA, beacon);
     }
 
     //--------------------------------------------------------------------------
