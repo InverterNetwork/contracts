@@ -276,11 +276,11 @@ contract ModuleFactoryV1Test is Test {
             )
         );
 
-        //Test initialization is not possible anymore
+        // Test initialization is not possible anymore
         vm.expectRevert(Initializable.InvalidInitialization.selector);
         ModuleImplementationV1Mock(address(newModule)).initialize(1);
 
-        //Test that metadata was set properly
+        // Test that metadata was set properly
         assertEq(address(newModule.orchestrator()), address(orchestrator));
         assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
     }
@@ -336,7 +336,7 @@ contract ModuleFactoryV1Test is Test {
             expectedValue
         );
 
-        //Test initialization is still possible
+        // Test initialization is still possible
         ModuleImplementationV1Mock(address(newModule)).initialize(1);
     }
 

@@ -212,7 +212,7 @@ contract OrchestratorFactory_v1 is
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
-        //Init the rest of the modules
+        // Init the rest of the modules
         initModules(modules, moduleConfigs, proxy);
 
         return IOrchestrator_v1(proxy);
