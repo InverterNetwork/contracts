@@ -40,6 +40,9 @@ contract ModuleFactoryV1Test is Test {
     ModuleImplementationV1Mock module;
     InverterBeaconV1OwnableMock beacon;
 
+    address reverter = makeAddr("Reverter");
+    address forwarder = makeAddr("forwarder");
+
     address governanceContract = address(0x010101010101);
 
     IOrchestratorFactory_v1.WorkflowConfig workflowConfigNoIndependentUpdates =
@@ -78,7 +81,7 @@ contract ModuleFactoryV1Test is Test {
         module = new ModuleImplementationV1Mock();
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
 
-        factory = new ModuleFactory_v1(address(0));
+        factory = new ModuleFactory_v1(reverter, forwarder);
         factory.init(
             governanceContract,
             new IModule_v1.Metadata[](0),
@@ -87,7 +90,7 @@ contract ModuleFactoryV1Test is Test {
     }
 
     function testDeploymentInvariants() public {
-        assertTrue(factory.reverter() != address(0));
+        assertEq(factory.reverter(), reverter);
         // Invariants: Ownable2Step
         assertEq(factory.owner(), governanceContract);
         assertEq(factory.pendingOwner(), address(0));
@@ -96,7 +99,7 @@ contract ModuleFactoryV1Test is Test {
     function testInitForMultipleInitialRegistrations(uint metadataSets)
         public
     {
-        factory = new ModuleFactory_v1(address(0));
+        factory = new ModuleFactory_v1(reverter, forwarder);
         metadataSets = bound(metadataSets, 1, 10);
 
         IModule_v1.Metadata[] memory metadata =
@@ -130,7 +133,7 @@ contract ModuleFactoryV1Test is Test {
     function testInitFailsForMismatchedArrayLengths(uint number1, uint number2)
         public
     {
-        factory = new ModuleFactory_v1(address(0));
+        factory = new ModuleFactory_v1(reverter, forwarder);
         number1 = bound(number1, 1, 1000);
         number2 = bound(number2, 1, 1000);
 
