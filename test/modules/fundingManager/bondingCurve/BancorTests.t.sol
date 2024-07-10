@@ -17,17 +17,56 @@ contract BancorTests is Test {
         formula = address(bancorFormula);
     }
 
+    function test_BancorFormula_StepByStep() public {
+        uint PPM = 1_000_000;
+        uint32 RESERVE_RATIO = 300_000; // In PPM
+
+        uint INITIAL_SUPPLY = 12_000_000;
+        uint INITIAL_RESERVE = 6_600_000;
+
+        uint supply = INITIAL_SUPPLY;
+        uint reserve = INITIAL_RESERVE;
+
+        uint buyPerStep = 600_000e18;
+
+       for (uint i = 0; i < 10; i++) {
+                    console.log("=================================");
+            console.log("STEP %s: ", i + 1);
+            console.log("=================================");
+
+            console.log("\tSupply: \t\t", supply);
+            console.log("\tReserve: \t\t ", reserve);
+            console.log("\n");
+            uint spotPrice = uint(PPM) * uint(PPM) * reserve
+            / (supply * uint(RESERVE_RATIO));
+            console.log("Spot Price: \t\t", spotPrice);
+            console.log("\tDeposit Amount: \t", buyPerStep);
+            uint receivedAmount = bancorFormula.calculatePurchaseReturn(
+                supply, reserve, RESERVE_RATIO, buyPerStep
+            );
+            console.log("Received Amount after a deposit: ");
+            console.log("\t\t\t\t", receivedAmount);
+
+            supply += receivedAmount;
+            reserve += buyPerStep;
+        }
+    }
+
+
     function test_BancorFormula_WithExplanations() public {
         // VARIABLES
 
+
+        uint PPM = 1_000_000;
+
         uint NUM_OF_ROUNDS = 3;
 
-        uint SUPPLY_BASE = 1000; // Absolute value
-        uint BALANCE_BASE = 100; // Absolute value
+        uint SUPPLY_BASE = 12_000_000e18; // Absolute value
+        uint BALANCE_BASE = 6_600_000e18; // Absolute value
 
-        uint32 RESERVE_RATIO = 100_000; // In PPM
+        uint32 RESERVE_RATIO = 300_000; // In PPM
 
-        uint depositAmount = 100e18;
+        uint depositAmount = 600_000e18;
 
         console.log("########################################################");
         console.log("## TESTING UNEXPECTED BEHAVIOR IN THE BANCOR FORMULA ##");
@@ -60,6 +99,11 @@ contract BancorTests is Test {
             console.log("\n");
             console.log("\tDeposit Amount: \t", depositAmount);
 
+            uint spotPrice = (BALANCE_BASE )
+            / ((SUPPLY_BASE) * uint(RESERVE_RATIO));
+
+            console.log("Spot Price: \t\t", spotPrice);
+
             uint receivedAmount = bancorFormula.calculatePurchaseReturn(
                 SUPPLY_BASE, BALANCE_BASE, RESERVE_RATIO, depositAmount
             );
@@ -68,13 +112,18 @@ contract BancorTests is Test {
             console.log("\t\t\t\t", receivedAmount);
             console.log("---------------------------------");
             console.log("\n");
-
+/*
             console.log("With \"normal\" supply numbers:");
             console.log("---------------------------------");
             console.log("\tSupply: \t\t", SUPPLY_BASE * 1e18);
             console.log("\tBalance: \t\t ", BALANCE_BASE * 1e18);
             console.log("\n");
             console.log("\tDeposit Amount: \t", depositAmount);
+
+             spotPrice = uint(PPM) * uint(PPM) * BALANCE_BASE * 1e18
+            / (SUPPLY_BASE * 1e18 * uint(RESERVE_RATIO));
+
+            console.log("Spot Price: \t\t", spotPrice);
 
             receivedAmount = bancorFormula.calculatePurchaseReturn(
                 SUPPLY_BASE * 1e18,
@@ -95,6 +144,12 @@ contract BancorTests is Test {
             console.log("\n");
             console.log("\tDeposit Amount: \t", depositAmount);
 
+
+             spotPrice = uint(PPM) * uint(PPM) * BALANCE_BASE * 1e32
+            / (SUPPLY_BASE * 1e32 * uint(RESERVE_RATIO));
+
+            console.log("Spot Price: \t\t", spotPrice);
+
             receivedAmount = bancorFormula.calculatePurchaseReturn(
                 SUPPLY_BASE * 1e32,
                 BALANCE_BASE * 1e32,
@@ -105,7 +160,7 @@ contract BancorTests is Test {
             console.log("Received Amount after a deposit : ");
             console.log("\t\t\t\t", receivedAmount);
             console.log("---------------------------------");
-            console.log("\n");
+            console.log("\n");*/
 
             SUPPLY_BASE *= 2;
             BALANCE_BASE *= 2;
