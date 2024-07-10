@@ -163,9 +163,9 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
     uint internal constant MAX_SUPPLY = type(uint).max;
 
     uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
-    uint internal constant INITIAL_COLLATERAL_SUPPLY = 1;
-    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 200_000;
-    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 200_000;
+    uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 333_333;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 333_333;
     uint internal constant BUY_FEE = 0;
     uint internal constant SELL_FEE = 0;
     bool internal constant BUY_IS_OPEN = true;
