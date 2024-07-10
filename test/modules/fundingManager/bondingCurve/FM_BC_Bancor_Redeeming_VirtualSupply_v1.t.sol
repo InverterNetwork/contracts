@@ -105,7 +105,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
     event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
     event TransferOrchestratorToken(address indexed to, uint amount);
-    event CollateralTokenSet(address indexed token);
+    event CollateralTokenSet(address indexed token, uint8 decimals);
 
     function setUp() public virtual {
         // Deploy contracts
@@ -141,7 +141,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
 
         vm.expectEmit(true, true, true, true);
-        emit CollateralTokenSet(address(_token));
+        emit CollateralTokenSet(address(_token), DECIMALS);
 
         // Init Module
         bondingCurveFundingManager.init(

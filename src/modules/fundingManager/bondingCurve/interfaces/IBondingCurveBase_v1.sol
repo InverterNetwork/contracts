@@ -82,7 +82,7 @@ interface IBondingCurveBase_v1 {
 
     /// @notice Event emitted when collateral token has been set
     /// @param token The token that serves as collateral token making up the curve's reserve
-    event CollateralTokenSet(address indexed token);
+    event CollateralTokenSet(address indexed token, uint8 decimals);
 
     //--------------------------------------------------------------------------
     // Structs
