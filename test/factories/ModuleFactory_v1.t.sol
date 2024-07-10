@@ -28,9 +28,14 @@ import {ModuleImplementationV2Mock} from
     "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
+// External Dependencies
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+// External Dependencies
+import {Clones} from "@oz/proxy/Clones.sol";
 
 contract ModuleFactoryV1Test is Test {
     // SuT
@@ -74,7 +79,8 @@ contract ModuleFactoryV1Test is Test {
         module = new ModuleImplementationV1Mock();
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
 
-        factory = new ModuleFactory_v1(address(0));
+        address impl = address(new ModuleFactory_v1(address(0)));
+        factory = ModuleFactory_v1(Clones.clone(impl));
         factory.init(
             governanceContract,
             new IModule_v1.Metadata[](0),
@@ -91,7 +97,8 @@ contract ModuleFactoryV1Test is Test {
     function testInitForMultipleInitialRegistrations(uint metadataSets)
         public
     {
-        factory = new ModuleFactory_v1(address(0));
+        address impl = address(new ModuleFactory_v1(address(0)));
+        factory = ModuleFactory_v1(Clones.clone(impl));
         metadataSets = bound(metadataSets, 1, 10);
 
         IModule_v1.Metadata[] memory metadata =
@@ -123,7 +130,8 @@ contract ModuleFactoryV1Test is Test {
     function testInitFailsForMismatchedArrayLengths(uint number1, uint number2)
         public
     {
-        factory = new ModuleFactory_v1(address(0));
+        address impl = address(new ModuleFactory_v1(address(0)));
+        factory = ModuleFactory_v1(Clones.clone(impl));
         number1 = bound(number1, 1, 1000);
         number2 = bound(number2, 1, 1000);
 
@@ -248,13 +256,45 @@ contract ModuleFactoryV1Test is Test {
     //--------------------------------------------------------------------------
     // Tests: createModule
 
-    error hm();
-
-    function testCreateModule(
+    function testCreateAndInitModule(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IModule_v1.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
+    ) public {
+        _assumeValidMetadata(metadata);
+        _assumeValidOrchestrator(orchestrator);
+        _assumeValidWorkflowConfig(workflowConfig);
+
+        beacon.overrideImplementation(address(module));
+
+        // Register ModuleV1Mock for given metadata.
+        vm.prank(governanceContract);
+        factory.registerMetadata(metadata, beacon);
+
+        // Create new module instance.
+        IModule_v1 newModule = IModule_v1(
+            factory.createAndInitModule(
+                metadata,
+                IOrchestrator_v1(orchestrator),
+                configData,
+                workflowConfig
+            )
+        );
+
+        // Test initialization is not possible anymore
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        ModuleImplementationV1Mock(address(newModule)).initialize(1);
+
+        // Test that metadata was set properly
+        assertEq(address(newModule.orchestrator()), address(orchestrator));
+        assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
+    }
+
+    function testCreateModuleProxy(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IModule_v1.Metadata memory metadata,
+        address orchestrator
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -276,19 +316,14 @@ contract ModuleFactoryV1Test is Test {
 
         // Create new module instance.
         IModule_v1 newModule = IModule_v1(
-            factory.createModule(
-                metadata,
-                IOrchestrator_v1(orchestrator),
-                configData,
-                workflowConfig
+            factory.createModuleProxy(
+                metadata, IOrchestrator_v1(orchestrator), workflowConfig
             )
         );
 
         assertEq(
             factory.getOrchestratorOfProxy(address(newModule)), orchestrator
         );
-        assertEq(address(newModule.orchestrator()), address(orchestrator));
-        assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
 
         // Check for proper Proxy setup
 
@@ -306,6 +341,9 @@ contract ModuleFactoryV1Test is Test {
             ModuleImplementationV1Mock(address(newModule)).getMockVersion(),
             expectedValue
         );
+
+        // Test initialization is still possible
+        ModuleImplementationV1Mock(address(newModule)).initialize(1);
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
@@ -319,7 +357,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__UnregisteredMetadata.selector
         );
-        factory.createModule(
+        factory.createAndInitModule(
             metadata,
             IOrchestrator_v1(orchestrator),
             configData,

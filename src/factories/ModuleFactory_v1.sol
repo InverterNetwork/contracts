@@ -111,7 +111,9 @@ contract ModuleFactory_v1 is
 
     constructor(address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice The factories initializer function.
     /// @param _governor The address of the governor contract.
@@ -141,12 +143,25 @@ contract ModuleFactory_v1 is
     // Public Mutating Functions
 
     /// @inheritdoc IModuleFactory_v1
-    function createModule(
+    function createAndInitModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
+        address proxy =
+            createModuleProxy(metadata, orchestrator, workflowConfig);
+
+        IModule_v1(proxy).init(orchestrator, metadata, configData);
+
+        return proxy;
+    }
+
+    function createModuleProxy(
+        IModule_v1.Metadata memory metadata,
+        IOrchestrator_v1 orchestrator,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+    ) public returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
 
@@ -172,8 +187,6 @@ contract ModuleFactory_v1 is
             // Instead use the Beacon Structure Proxy
             proxy = address(new InverterBeaconProxy_v1(beacon));
         }
-
-        IModule_v1(proxy).init(orchestrator, metadata, configData);
 
         _orchestratorOfProxy[proxy] = address(orchestrator);
 
