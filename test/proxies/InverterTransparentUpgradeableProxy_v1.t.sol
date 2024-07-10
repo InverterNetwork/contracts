@@ -29,6 +29,9 @@ import {ModuleImplementationV1Mock} from
 import {ModuleImplementationV2Mock} from
     "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
 
+import {InverterReverter_v1} from
+    "src/external/reverter/InverterReverter_v1.sol";
+
 contract InverterTransparentUpgradeableProxyV1Test is Test {
     // SuT
     InverterTransparentUpgradeableProxy_v1 proxy;
@@ -127,6 +130,32 @@ contract InverterTransparentUpgradeableProxyV1Test is Test {
     }
 
     function testDirectUpgradeToNewestVersion() public {
+        beacon.overrideImplementation(address(implementation2));
+        beacon.overrideVersion(initialMajorVersion + 1, initialMinorVersion + 1);
+
+        proxyMock.direct_upgradeToNewestVersion();
+        assertEq(
+            ModuleImplementationV2Mock(address(proxyMock)).getMockVersion(), 2
+        );
+
+        (uint returnedMajorVersion, uint returnedMinorVersion) =
+            proxyMock.version();
+        assertEq(returnedMajorVersion, initialMajorVersion + 1);
+        assertEq(returnedMinorVersion, initialMinorVersion + 1);
+    }
+
+    function testUpgradeToReverterWorks() public {
+        beacon.overrideImplementation(address(new InverterReverter_v1()));
+
+        proxyMock.direct_upgradeToNewestVersion();
+
+        vm.expectRevert(
+            InverterReverter_v1.InverterReverter__ContractPaused.selector
+        );
+
+        ModuleImplementationV1Mock(address(proxyMock)).getMockVersion();
+
+        //Check if update afterwards functions again
         beacon.overrideImplementation(address(implementation2));
         beacon.overrideVersion(initialMajorVersion + 1, initialMinorVersion + 1);
 
