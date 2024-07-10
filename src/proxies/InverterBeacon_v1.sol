@@ -62,9 +62,9 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         uint newPatchVersion
     ) {
         if (
-            //Minor Version cant go down
+            // Minor Version cant go down
             newMinorVersion < minorVersion
-            //Patch Version cant go down or stay the same if minorVersion stays the same
+            // Patch Version cant go down or stay the same if minorVersion stays the same
             || newPatchVersion <= patchVersion
                 && newMinorVersion == minorVersion
         ) {
