@@ -220,7 +220,6 @@ abstract contract ModuleManagerBase_v1 is
     function _initiateAddModuleWithTimelock(address module)
         internal
         __ModuleManager_onlyAuthorized
-        moduleLimitNotExceeded
         isNotModule(module)
         validModule(module)
     {

@@ -408,30 +408,6 @@ contract ModuleManagerBaseV1Test is Test {
         }
     }
 
-    function testInitiateAddModuleWithTimelock_FailsIfLimitReached(
-        uint moduleAmount
-    ) public {
-        moduleAmount = bound(moduleAmount, MAX_MODULES + 1, 256);
-        address[] memory modules = createModules(moduleAmount, 256);
-
-        for (uint i; i < MAX_MODULES; ++i) {
-            moduleManager.call_initiateAddModuleWithTimelock(modules[i]);
-            vm.warp(block.timestamp + timelock);
-            vm.expectEmit(true, true, true, true);
-            emit ModuleAdded(modules[i]);
-            moduleManager.call_executeAddModule(modules[i]);
-
-            assertTrue(moduleManager.isModule(modules[i]));
-        }
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__ModuleAmountOverLimits
-                .selector
-        );
-        moduleManager.call_initiateAddModuleWithTimelock(modules[MAX_MODULES]);
-    }
-
     //----------------------------------
     // Tests: removeModules()
 
