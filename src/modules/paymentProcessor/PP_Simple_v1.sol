@@ -187,7 +187,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
-    ) external view returns (bool valid) {
+    ) external view returns (bool) {
         return validPaymentReceiver(order.recipient) && validTotal(order.amount)
             && validPaymentToken(order.paymentToken);
     }

@@ -61,7 +61,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
     function validPaymentOrder(IERC20PaymentClientBase_v1.PaymentOrder memory)
         external
         view
-        returns (bool valid)
+        returns (bool)
     {
         return validOrder;
     }

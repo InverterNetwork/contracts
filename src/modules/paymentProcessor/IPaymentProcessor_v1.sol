@@ -109,5 +109,5 @@ interface IPaymentProcessor_v1 {
     /// @return valid Bool if the Payment Order is valid
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
-    ) external view returns (bool valid);
+    ) external view returns (bool);
 }

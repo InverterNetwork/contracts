@@ -387,7 +387,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
-    ) external view returns (bool valid) {
+    ) external view returns (bool) {
         return validPaymentReceiver(order.recipient) && validTotal(order.amount)
             && validTimes(order.start, order.cliff, order.end)
             && validPaymentToken(order.paymentToken);
@@ -625,8 +625,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         uint _streamId
     ) internal {
         ++numStreams[_client][_order.recipient];
-
-        //@todo
 
         streams[_client][_order.recipient][_streamId] = Stream(
             _order.paymentToken,
