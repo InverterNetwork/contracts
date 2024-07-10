@@ -64,7 +64,7 @@ contract E2ETest is E2EModuleRegistry {
     // Mock token for funding.
     ERC20Mock token;
 
-    //Reverter
+    // Reverter
     InverterReverter_v1 reverter;
 
     // Forwarder
