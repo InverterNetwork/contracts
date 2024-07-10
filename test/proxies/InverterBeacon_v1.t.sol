@@ -164,7 +164,11 @@ contract InverterBeaconV1Test is Test {
         // Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 
-        beacon.upgradeTo(address(0), oldMinorVersion, oldPatchVersion, false);
+        if (oldMinorVersion != 0 || oldPatchVersion != 0) {
+            beacon.upgradeTo(
+                address(0), oldMinorVersion, oldPatchVersion, false
+            );
+        }
 
         vm.expectEmit(true, true, true, true);
         emit Upgraded(
