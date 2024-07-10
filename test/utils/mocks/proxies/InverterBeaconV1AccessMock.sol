@@ -6,6 +6,7 @@ contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
     bool useOriginal_setImplementation = true;
 
     constructor(
+        address reverter,
         address owner,
         uint _majorVersion,
         address _implementation,
@@ -13,6 +14,7 @@ contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
         uint _patchVersion
     )
         InverterBeacon_v1(
+            reverter,
             owner,
             _majorVersion,
             _implementation,
