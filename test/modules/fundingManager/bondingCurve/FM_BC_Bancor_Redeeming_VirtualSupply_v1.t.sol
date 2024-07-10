@@ -1211,6 +1211,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             ├── and the new token supply is zero
             │   └── when the function_setVirtualIssuanceSupply() is called
             │       └── then it should revert
+            ├── and the new token supply is zero after decimal conversion
+            │   └── when the function_setVirtualIssuanceSupply() is called
+            │       └── then it should revert
             └── and the new token supply is > zero
                 └── when the function setVirtualIssuanceSupply() is called
                     └── then it should set the new token supply
@@ -1244,10 +1247,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
     }
 
-    function testSetVirtualIssuanceSupply_FailsIfZero()
-        public
-        callerIsOrchestratorAdmin
-    {
+    function testInternalSetVirtualIssuanceSupply_RevertGivenIssuanceSupplyIsZero(
+    ) public {
         uint _newSupply = 0;
 
         _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
@@ -1256,21 +1257,34 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
                 .selector
         );
-        bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
+        bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
     }
 
-    function testSetVirtualIssuanceSupply(uint _newSupply)
-        public
-        callerIsOrchestratorAdmin
-    {
-        vm.assume(_newSupply != 0);
+    function testInternalSetVirtualIssuanceSupply_RevertGivenAfterDecimalConversionIssuanceSupplyIsZero(
+        uint _newSupply
+    ) public {
+        // vm.assume(_newSupply < 10 ** (DECIMALS - 18));
+        _newSupply = bound(_newSupply, 0, 10 ** (DECIMALS - 18) - 1);
+        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
 
+        vm.expectRevert(
+            IVirtualIssuanceSupplyBase_v1
+                .Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero
+                .selector
+        );
+        bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
+    }
+
+    function testInternalSetVirtualIssuanceSupply_WorksGivenIssuanceSupplyBiggerThanZero(
+        uint _newSupply
+    ) public {
+        vm.assume(_newSupply != 0);
         _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
         emit VirtualIssuanceSupplySet(_newSupply, INITIAL_ISSUANCE_SUPPLY);
-        bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
+        bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(), _newSupply
         );
