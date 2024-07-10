@@ -86,6 +86,13 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
+    // Constructor
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    //--------------------------------------------------------------------------
     // Initialization
 
     function init(
