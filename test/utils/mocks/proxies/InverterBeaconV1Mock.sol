@@ -16,6 +16,7 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
             || super.supportsInterface(interfaceId);
     }
 
+    address public reverter;
     address public implementation;
 
     bool public emergencyMode;
@@ -41,6 +42,10 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
 
     function version() external view returns (uint, uint) {
         return (majorVersion, minorVersion);
+    }
+
+    function getReverterAddress() external view virtual returns (address) {
+        return reverter;
     }
 
     function getImplementationAddress() external view returns (address) {

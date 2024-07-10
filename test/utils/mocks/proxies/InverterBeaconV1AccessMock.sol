@@ -6,11 +6,20 @@ contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
     bool useOriginal_setImplementation = true;
 
     constructor(
+        address reverter,
         address owner,
         uint _majorVersion,
         address _implementation,
         uint _minorVersion
-    ) InverterBeacon_v1(owner, _majorVersion, _implementation, _minorVersion) {}
+    )
+        InverterBeacon_v1(
+            reverter,
+            owner,
+            _majorVersion,
+            _implementation,
+            _minorVersion
+        )
+    {}
 
     function get_implementation() public view returns (address) {
         return _implementationAddress;

@@ -14,6 +14,9 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 import {InverterBeaconV1AccessMock} from
     "test/utils/mocks/proxies/InverterBeaconV1AccessMock.sol";
 
+import {InverterReverter_v1} from
+    "src/external/reverter/InverterReverter_v1.sol";
+
 // Mocks
 import {ModuleImplementationV1Mock} from
     "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
@@ -29,6 +32,8 @@ contract InverterBeaconV1Test is Test {
     // SuT
     InverterBeaconV1AccessMock beacon;
 
+    InverterReverter_v1 reverter = new InverterReverter_v1();
+
     ModuleImplementationV1Mock possibleImplementation =
         new ModuleImplementationV1Mock();
 
@@ -41,13 +46,18 @@ contract InverterBeaconV1Test is Test {
 
     function setUp() public {
         beacon = new InverterBeaconV1AccessMock(
-            address(this), 0, address(possibleImplementation), 0
+            address(reverter),
+            address(this),
+            0,
+            address(possibleImplementation),
+            0
         );
     }
 
     function testDeploymentInvariants() public {
         assertEq(beacon.owner(), address(this));
         assertEq(beacon.implementation(), address(possibleImplementation));
+        assertEq(beacon.getReverterAddress(), address(reverter));
 
         // Check that orchestrator's dependencies correctly initialized.
         // Ownable2Step:
@@ -215,7 +225,7 @@ contract InverterBeaconV1Test is Test {
 
         // Check that internal implementation stays the same
         assertEq(beacon.get_implementation(), address(toUpgrade1));
-        assertEq(beacon.implementation(), address(0));
+        assertEq(beacon.implementation(), address(reverter));
         assertTrue(beacon.emergencyModeActive());
     }
 
@@ -294,7 +304,7 @@ contract InverterBeaconV1Test is Test {
         } else {
             // if override shutdown is not active it should stay inactive
             if (!overrideShutdown) {
-                assertEq(beacon.implementation(), address(0));
+                assertEq(beacon.implementation(), address(reverter));
             } else {
                 assertFalse(beacon.emergencyModeActive());
                 assertEq(beacon.implementation(), address(toUpgrade2));
