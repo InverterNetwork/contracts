@@ -453,6 +453,7 @@ contract DeploymentScript is Script {
                 )
             )
         );
+
         initialMetadataRegistration.push(singleVoteGovernorMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
