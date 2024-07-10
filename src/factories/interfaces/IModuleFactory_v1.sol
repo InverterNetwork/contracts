@@ -55,16 +55,27 @@ interface IModuleFactory_v1 {
     /// @return The address of the governor contract
     function governor() external view returns (address);
 
-    /// @notice Creates a module instance identified by given metadata.
+    /// @notice Creates a module instance identified by given metadata and initiates it.
     /// @param metadata The module's metadata.
     /// @param orchestrator The orchestrator's instance of the module.
     /// @param configData The configData of the module
     /// @param workflowConfig The configData of the workflow
     /// @return Returns the address of the created module proxy
-    function createModule(
+    function createAndInitModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+    ) external returns (address);
+
+    /// @notice Creates a module proxy instance identified by given metadata.
+    /// @param metadata The module's metadata.
+    /// @param orchestrator The orchestrator's instance of the module.
+    /// @param workflowConfig The configData of the workflow
+    /// @return Returns the address of the created module proxy
+    function createModuleProxy(
+        IModule_v1.Metadata memory metadata,
+        IOrchestrator_v1 orchestrator,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address);
 

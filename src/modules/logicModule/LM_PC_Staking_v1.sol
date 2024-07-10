@@ -346,7 +346,10 @@ contract LM_PC_Staking_v1 is
     }
 
     function _setStakingToken(address _token) internal {
-        if (_token == address(0)) {
+        if (
+            _token == address(0)
+                || _token == address(orchestrator().fundingManager().token())
+        ) {
             revert Module__LM_PC_Staking_v1__InvalidStakingToken();
         }
         stakingToken = _token;
