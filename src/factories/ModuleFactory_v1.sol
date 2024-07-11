@@ -172,6 +172,15 @@ contract ModuleFactory_v1 is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
+        // Retrieve the currrent minor version of the beacon.
+        (, uint minorVersion) = beacon.version();
+
+        // If the minor version is uint max, this module has been
+        // sunset and can not be used for new workflows anymore.
+        if (minorVersion == type(uint).max) {
+            revert ModuleFactory__ModuleIsSunset();
+        }
+
         address proxy;
         // If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
