@@ -240,13 +240,13 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         uint[] memory trancheValues = new uint[](3);
         uint[] memory trancheRewards = new uint[](3);
 
-        trancheValues[0] = 100;
-        trancheValues[1] = 200;
-        trancheValues[2] = 300;
+        trancheValues[0] = 100e18;
+        trancheValues[1] = 200e18;
+        trancheValues[2] = 300e18;
 
-        trancheRewards[0] = 100e18;
-        trancheRewards[1] = 100e18;
-        trancheRewards[2] = 100e18;
+        trancheRewards[0] = 100e32;
+        trancheRewards[1] = 100e32;
+        trancheRewards[2] = 100e32;
 
         kpiManager.createKPI(false, trancheValues, trancheRewards);
     }
@@ -256,13 +256,13 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         uint[] memory trancheValues = new uint[](3);
         uint[] memory trancheRewards = new uint[](3);
 
-        trancheValues[0] = 100;
-        trancheValues[1] = 200;
-        trancheValues[2] = 300;
+        trancheValues[0] = 100e18;
+        trancheValues[1] = 200e18;
+        trancheValues[2] = 300e18;
 
-        trancheRewards[0] = 100e18;
-        trancheRewards[1] = 100e18;
-        trancheRewards[2] = 100e18;
+        trancheRewards[0] = 100e32;
+        trancheRewards[1] = 100e32;
+        trancheRewards[2] = 100e32;
 
         kpiManager.createKPI(true, trancheValues, trancheRewards);
     }
@@ -1025,7 +1025,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         vm.assume(users.length > 1);
 
-        uint assertedIntermediateValue = 250;
+        uint assertedIntermediateValue = 250e18;
 
         bytes32 createdID;
         uint totalStakedFunds;
@@ -1046,7 +1046,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(250e18, 1, 250e18, block.timestamp + 1);
+        emit RewardSet(250e32, 1, 250e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
@@ -1107,7 +1107,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
     ) external whenTheAssertionResolvedToTrue {
         // it should not pay out any amount from the uncompleted tranche at all
 
-        uint assertedIntermediateValue = 250;
+        uint assertedIntermediateValue = 250e18;
 
         bytes32 createdID;
         uint totalStakedFunds;
@@ -1130,7 +1130,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(200e18, 1, 200e18, block.timestamp + 1);
+        emit RewardSet(200e32, 1, 200e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
