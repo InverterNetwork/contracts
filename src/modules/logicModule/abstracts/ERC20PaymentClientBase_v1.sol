@@ -255,21 +255,12 @@ abstract contract ERC20PaymentClientBase_v1 is
             if (
                 token == address(__Module_orchestrator.fundingManager().token())
             ) {
-                // Trigger callback from orchestrator to transfer tokens
-                // to address(this).
-                bool ok;
-                (ok, /*returnData*/ ) = __Module_orchestrator
-                    .executeTxFromModule(
-                    address(__Module_orchestrator.fundingManager()),
-                    abi.encodeCall(
-                        IFundingManager_v1.transferOrchestratorToken,
-                        (address(this), amount - currentFunds)
-                    )
-                );
+                // Get FundingManager address from orchestrator to transfer tokens
+                // to address(this). Fails on ERC20 level if insufficient balance
 
-                if (!ok) {
-                    revert Module__ERC20PaymentClientBase__TokenTransferFailed();
-                }
+                __Module_orchestrator.fundingManager().transferOrchestratorToken(
+                    address(this), (amount - currentFunds)
+                );
             } else {
                 revert Module__ERC20PaymentClientBase__InsufficientFunds(token);
             }

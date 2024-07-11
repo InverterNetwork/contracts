@@ -7,6 +7,10 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
+// Internal Dependencies
+import {IERC20PaymentClientBase_v1} from
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -87,6 +91,13 @@ abstract contract Module_v1 is
         _checkRoleModifier(
             __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
         );
+        _;
+    }
+
+    /// @notice Modifier to guarantee function is only callable by a module registered within the
+    ///         workflows's Orchestrator and the module is implementing the PaymentClient interface.
+    modifier onlyPaymentClient() {
+        _onlyPaymentClientModifier();
         _;
     }
 
@@ -267,23 +278,6 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @dev Internal function to trigger a callback from the orchestrator.
-    /// @param data The call data for the orchestrator to call.
-    /// @return Whether the callback succeeded.
-    /// @return The return data of the callback.
-    function _triggerOrchestratorCallback(bytes memory data)
-        internal
-        returns (bool, bytes memory)
-    {
-        // Note that there is no check whether the orchestrator callback succeeded.
-        // This responsibility is delegated to the caller, i.e. downstream
-        // module implementation.
-        // However, the {IModule_v1} interface defines a generic error type for
-        // failed orchestrator callbacks that can be used to prevent different
-        // custom error types in each implementation.
-        return __Module_orchestrator.executeTxFromModule(address(this), data);
-    }
-
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
@@ -294,6 +288,15 @@ abstract contract Module_v1 is
         if (_msgSender() != address(__Module_orchestrator)) {
             revert Module__OnlyCallableByOrchestrator();
         }
+    }
+
+    function _onlyPaymentClientModifier() internal view {
+        if (
+            !__Module_orchestrator.isModule(_msgSender())
+                || !ERC165(_msgSender()).supportsInterface(
+                    type(IERC20PaymentClientBase_v1).interfaceId
+                )
+        ) revert Module__OnlyCallableByPaymentClient();
     }
 
     //--------------------------------------------------------------------------

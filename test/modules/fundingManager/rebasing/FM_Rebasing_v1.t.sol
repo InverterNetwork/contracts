@@ -27,6 +27,9 @@ import {
     FM_Rebasing_v1, IFundingManager_v1
 } from "@fm/rebasing/FM_Rebasing_v1.sol";
 
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+
 contract FM_RebasingV1Test is ModuleTest {
     struct UserDeposits {
         address[] users;
@@ -35,6 +38,7 @@ contract FM_RebasingV1Test is ModuleTest {
 
     // SuT
     FM_Rebasing_v1 fundingManager;
+    ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
 
     mapping(address => bool) _usersCache;
 
@@ -409,37 +413,42 @@ contract FM_RebasingV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Tests: OnlyOrchestrator Mutating Functions
 
-    function testTransferOrchestratorToken(address to, uint amount) public {}
+    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
+        address to,
+        uint amount
+    ) public {
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
 
-    function testTransferOrchestratorTokenFails(address caller, address to)
-        public
-    {
+        vm.prank(address(_erc20PaymentClientMock));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        fundingManager.transferOrchestratorToken(to, amount);
+    }
+
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
+        address to,
+        uint amount
+    ) public virtual {
         vm.assume(to != address(0) && to != address(fundingManager));
 
-        _token.mint(address(fundingManager), 2);
+        _token.mint(address(fundingManager), amount);
 
-        if (caller != address(_orchestrator)) {
-            vm.expectRevert(
-                IModule_v1.Module__OnlyCallableByOrchestrator.selector
-            );
+        assertEq(_token.balanceOf(to), 0);
+        assertEq(_token.balanceOf(address(fundingManager)), amount);
+
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
+        {
+            vm.expectEmit(true, true, true, true);
+            emit TransferOrchestratorToken(to, amount);
+
+            fundingManager.transferOrchestratorToken(to, amount);
         }
-        vm.prank(caller);
-        fundingManager.transferOrchestratorToken(address(0xBEEF), 1);
+        vm.stopPrank();
 
-        if (to == address(0) || to == address(fundingManager)) {
-            vm.expectRevert(
-                IFundingManager_v1
-                    .Module__FundingManager__InvalidAddress
-                    .selector
-            );
-        }
-
-        vm.prank(address(_orchestrator));
-
-        vm.expectEmit();
-        emit TransferOrchestratorToken(to, 1);
-
-        fundingManager.transferOrchestratorToken(to, 1);
+        assertEq(_token.balanceOf(to), amount);
+        assertEq(_token.balanceOf(address(fundingManager)), 0);
     }
 
     //--------------------------------------------------------------------------

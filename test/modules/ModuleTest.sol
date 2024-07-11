@@ -248,4 +248,10 @@ abstract contract ModuleTest is Test {
 
         return invalids;
     }
+
+    function _addLogicModuleToOrchestrator(address _logicModule) internal {
+        _orchestrator.initiateAddModuleWithTimelock(_logicModule);
+        vm.warp(block.timestamp + 73 hours);
+        _orchestrator.executeAddModule(_logicModule);
+    }
 }

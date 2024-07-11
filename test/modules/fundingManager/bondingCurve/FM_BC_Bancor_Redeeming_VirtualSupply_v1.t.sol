@@ -40,6 +40,8 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 // Mocks
 import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 import {RedeemingBondingCurveBaseV1Test} from
     "test/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
@@ -70,6 +72,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     address formula;
 
     ERC20Issuance_v1 issuanceToken;
+    ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
 
     address admin_address = address(0xA1BA);
     address non_admin_address = address(0xB0B);
@@ -1641,17 +1644,32 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // OnlyOrchestrator Mutating Functions
 
     /* Test transferOrchestratorToken 
-        ├── when caller is not the Orchestrator_v1 
-        │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
-                ├── it should send the funds to the specified address
-                └── it should emit an event?
+        ├── given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
+        │   └──and the conditions of the modifier are not met
+        │       └── when the function transferOrchestratorToken() gets called
+        │           └── then it should revert
+    └── given the caller is a PaymentClient module
+            └── and the PaymentClient module is registered in the Orchestrator
+                └── then is should send the funds to the specified address
+                    └── and it should emit an event
     */
 
-    function testTransferOrchestratorToken(address to, uint amount)
-        public
-        virtual
-    {
+    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
+        address caller,
+        address to,
+        uint amount
+    ) public {
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+
+        vm.prank(caller);
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        bondingCurveFundingManager.transferOrchestratorToken(to, amount);
+    }
+
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
+        address to,
+        uint amount
+    ) public virtual {
         vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
 
         _token.mint(address(bondingCurveFundingManager), amount);
@@ -1659,7 +1677,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(_token.balanceOf(to), 0);
         assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
 
-        vm.startPrank(address(_orchestrator));
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
         {
             vm.expectEmit(true, true, true, true);
             emit TransferOrchestratorToken(to, amount);
