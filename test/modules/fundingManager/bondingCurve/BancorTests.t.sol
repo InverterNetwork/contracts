@@ -17,17 +17,100 @@ contract BancorTests is Test {
         formula = address(bancorFormula);
     }
 
-    function test_BancorFormula_StepByStep() public {
+    function test_BancorFormula_suppylCalculationPlusBuys() public {
+        
         uint PPM = 1_000_000;
-        uint32 RESERVE_RATIO = 300_000; // In PPM
+        uint32 RESERVE_RATIO = 199_800; // In PPM
 
-        uint INITIAL_SUPPLY = 12_000_000;
-        uint INITIAL_RESERVE = 6_600_000;
+    
+        // We take the reserve form the logs for the TEC case and calculate the supply
+        uint INITIAL_RESERVE = 50000000000000000000000;
+        uint INITIAL_SUPPLY = PPM * (INITIAL_RESERVE) / (uint(RESERVE_RATIO) );
+
+        console.log("Reserve calculation: \t\t", INITIAL_RESERVE);
+        console.log("Supply calculation: \t\t", INITIAL_SUPPLY);
+
+
+        // perform a buy that should bring it up to the initial TEC state
+        uint amountToBuy = 200_000e18;
+
+        uint receivedAmount = bancorFormula.calculatePurchaseReturn(
+            INITIAL_SUPPLY, INITIAL_RESERVE, RESERVE_RATIO, amountToBuy
+        );
+
+        console.log("Received Amount after a deposit: ");
+        console.log("\t\t\t\t", receivedAmount);
+
+        console.log(" Total Supply: \t", INITIAL_SUPPLY + receivedAmount);
+        console.log(" Total Reserve: \t", INITIAL_RESERVE + amountToBuy);
+
+        // check
+
+    }
+
+    function test_BancorFormula_LowBalancesThroughSale() public {
+           uint PPM = 1_000_000;
+        uint32 RESERVE_RATIO = 199_800; // In PPM
+
+        uint INITIAL_SUPPLY = 195642169e16;
+        uint INITIAL_RESERVE = 39097931e16;
+
+        uint fixedStaticPrice = 1000220;
+
+        uint supplyCalculation = PPM* PPM * (66168439387169789) / (uint(RESERVE_RATIO) * 3);
+
+        console.log("Supply calculation: \t\t", supplyCalculation);
+
+        //uint INITIAL_SUPPLY = 1e12;
+        //uint INITIAL_RESERVE = 199_800;
 
         uint supply = INITIAL_SUPPLY;
         uint reserve = INITIAL_RESERVE;
 
-        uint buyPerStep = 600_000e18;
+        uint sellAmount = 1869622396000000000000000;
+
+                console.log("=================================");
+            console.log("TEST SALE: ");
+            console.log("=================================");
+
+            console.log("\tSupply: \t\t", supply);
+            console.log("\tReserve: \t\t ", reserve);
+            console.log("\n");
+            uint spotPrice = 1e12 * reserve
+            / (supply * uint(RESERVE_RATIO));
+            console.log("Spot Price: \t\t", spotPrice);
+            console.log("\tSell Amount: \t", sellAmount);
+            uint receivedAmount = bancorFormula.calculateSaleReturn(
+                supply, reserve, RESERVE_RATIO, sellAmount
+            );
+            console.log("Received Amount after a sale: ");
+            console.log("\t\t\t\t", receivedAmount);
+
+            console.log(" Remaining Supply: \t", supply - sellAmount);
+            console.log(" Remaining Reserve: \t", reserve - receivedAmount);
+
+            uint newSpotPrice = 1e12 * (reserve - receivedAmount)
+            / ((supply - sellAmount) * uint(RESERVE_RATIO));
+
+            console.log("New Spot Price: \t\t", newSpotPrice);
+    }
+
+
+
+    function test_BancorFormula_StepByStep() public {
+        uint PPM = 1_000_000;
+        uint32 RESERVE_RATIO = 199_800; // In PPM
+
+        //uint INITIAL_SUPPLY = 195642169e16;
+        //uint INITIAL_RESERVE = 39097931e16;
+
+        uint INITIAL_SUPPLY = 1e12;
+        uint INITIAL_RESERVE = 199_800;
+
+        uint supply = INITIAL_SUPPLY;
+        uint reserve = INITIAL_RESERVE;
+
+        uint buyPerStep = 39097930999999999800200;
 
        for (uint i = 0; i < 10; i++) {
                     console.log("=================================");
@@ -37,8 +120,10 @@ contract BancorTests is Test {
             console.log("\tSupply: \t\t", supply);
             console.log("\tReserve: \t\t ", reserve);
             console.log("\n");
-            uint spotPrice = uint(PPM) * uint(PPM) * reserve
+            uint spotPrice = 1e12 * reserve
             / (supply * uint(RESERVE_RATIO));
+
+
             console.log("Spot Price: \t\t", spotPrice);
             console.log("\tDeposit Amount: \t", buyPerStep);
             uint receivedAmount = bancorFormula.calculatePurchaseReturn(
@@ -99,10 +184,15 @@ contract BancorTests is Test {
             console.log("\n");
             console.log("\tDeposit Amount: \t", depositAmount);
 
-            uint spotPrice = (BALANCE_BASE )
+            uint spotPriceBuy = (BALANCE_BASE )
             / ((SUPPLY_BASE) * uint(RESERVE_RATIO));
 
-            console.log("Spot Price: \t\t", spotPrice);
+            console.log("Spot Price for buying: \t\t", spotPriceBuy);
+
+            uint spotPriceSell = (SUPPLY_BASE )
+            / ((BALANCE_BASE) * uint(RESERVE_RATIO));
+
+            console.log("Spot Price for selling: \t\t", spotPriceSell);
 
             uint receivedAmount = bancorFormula.calculatePurchaseReturn(
                 SUPPLY_BASE, BALANCE_BASE, RESERVE_RATIO, depositAmount
