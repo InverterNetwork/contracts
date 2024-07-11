@@ -10,6 +10,7 @@ import {
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 
 /**
  * @title Elastic Receipt Token Base
@@ -369,33 +370,31 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
 
         // Unchecked because the only math done is incrementing
         // the owner's nonce which cannot realistically overflow.
+        bytes32 permitHash;
         unchecked {
-            address recoveredAddress = ecrecover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19\x01",
-                        DOMAIN_SEPARATOR(),
-                        keccak256(
-                            abi.encode(
-                                PERMIT_TYPEHASH,
-                                owner,
-                                spender,
-                                value,
-                                _nonces[owner]++,
-                                deadline
-                            )
+            permitHash = keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR(),
+                    keccak256(
+                        abi.encode(
+                            PERMIT_TYPEHASH,
+                            owner,
+                            spender,
+                            value,
+                            _nonces[owner]++,
+                            deadline
                         )
                     )
-                ),
-                v,
-                r,
-                s
+                )
             );
-
-            require(recoveredAddress != address(0) && recoveredAddress == owner);
-
-            _tokenAllowances[owner][spender] = value;
         }
+
+        address recoveredAddress = ECDSA.recover(permitHash, v, r, s);
+
+        require(recoveredAddress == owner);
+
+        _tokenAllowances[owner][spender] = value;
 
         emit Approval(owner, spender, value);
     }
