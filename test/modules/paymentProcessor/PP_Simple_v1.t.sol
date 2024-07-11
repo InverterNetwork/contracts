@@ -125,8 +125,8 @@ contract PP_SimpleV1Test is ModuleTest {
             })
         );
 
-        //emit UnclaimableAmountAdded(paymentClient: 0x96d3F6c20EEd2697647F543fE6C08bC2Fbf39758, recipient: 0x0000000000000000000000000000000000002aac, amount: 3523273495 [3.523e9])
-        //emit UnclaimableAmountAdded(paymentClient: 0x96d3F6c20EEd2697647F543fE6C08bC2Fbf39758, token: ERC20Mock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], recipient: 0x0000000000000000000000000000000000002aac, amount: 3523273495 [3.523e9])
+        // emit UnclaimableAmountAdded(paymentClient: 0x96d3F6c20EEd2697647F543fE6C08bC2Fbf39758, recipient: 0x0000000000000000000000000000000000002aac, amount: 3523273495 [3.523e9])
+        // emit UnclaimableAmountAdded(paymentClient: 0x96d3F6c20EEd2697647F543fE6C08bC2Fbf39758, token: ERC20Mock: [0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f], recipient: 0x0000000000000000000000000000000000002aac, amount: 3523273495 [3.523e9])
 
         if (paymentsFail) {
             // transfers will fail by returning false now
@@ -160,7 +160,7 @@ contract PP_SimpleV1Test is ModuleTest {
         // Invariant: Payment processor does not hold funds.
         assertEq(_token.balanceOf(address(paymentProcessor)), 0);
 
-        //If call doesnt fail
+        // If call doesnt fail
         if (!paymentsFail) {
             // Check correct balances.
             assertEq(_token.balanceOf(address(recipient)), amount);
@@ -173,7 +173,7 @@ contract PP_SimpleV1Test is ModuleTest {
                 ),
                 0
             );
-        } //If call fails
+        } // If call fails
         else {
             assertEq(0, paymentClient.amountPaidCounter(address(_token)));
             assertEq(
@@ -285,7 +285,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(recipients.length < 30);
 
         for (uint i = 0; i < recipients.length; i++) {
-            //If recipient is invalid change it
+            // If recipient is invalid change it
             if (recipients[i] == address(0) || recipients[i].code.length != 0) {
                 recipients[i] = address(0x1);
             }
@@ -320,8 +320,8 @@ contract PP_SimpleV1Test is ModuleTest {
         for (uint i = 0; i < recipients.length; i++) {
             recipient = recipients[i];
 
-            //Check that recipients are not handled twice
-            //In case that the random array did it multiple times
+            // Check that recipients are not handled twice
+            // In case that the random array did it multiple times
             if (recipientsHandled[recipient]) continue;
             recipientsHandled[recipient] = true;
 
@@ -329,7 +329,7 @@ contract PP_SimpleV1Test is ModuleTest {
                 address(paymentClient), address(_token), recipient
             );
 
-            //Do call
+            // Do call
             vm.expectEmit(true, true, true, true);
             emit TokensReleased(recipient, address(_token), amount);
 
@@ -345,10 +345,10 @@ contract PP_SimpleV1Test is ModuleTest {
                 0
             );
 
-            //Amount send
+            // Amount send
             assertEq(_token.balanceOf(recipient), amount);
 
-            //Check that amountPaid is correct in PaymentClient
+            // Check that amountPaid is correct in PaymentClient
             amountPaid += amount;
             assertEq(
                 paymentClient.amountPaidCounter(address(_token)), amountPaid

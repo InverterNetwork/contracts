@@ -418,7 +418,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         feeManager = IFeeManager_v1(newFeeManager);
     }
 
-    //@dev internal function that checks if target address is a beacon and this contract has the ownership of it
+    /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it
     function isBeaconAccessible(address target) internal returns (bool) {
         // check if target is a contract
         if (target.code.length == 0) {

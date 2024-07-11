@@ -232,7 +232,7 @@ interface IGovernor_v1 {
     // Upgrade
 
     /// @notice Starts the upgrade process of a beacon by creating a timelock period after which the beacon can be upgraded via triggerUpgradeBeaconWithTimelock()
-    //@dev This function will override previous timelocks even if they are active
+    /// @dev This function will override previous timelocks even if they are active
     /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
     /// @param beacon The address of the beacon that is intended to be upgraded
     /// @param newImplementation The address of the intended new Implementation of the beacon.
