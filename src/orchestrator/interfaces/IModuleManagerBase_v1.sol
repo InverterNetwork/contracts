@@ -74,16 +74,6 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Executes a call to `to` with call data `data` either via call
-    /// @dev Only callable by enabled modules.
-    /// @param to The address to call.
-    /// @param data The call data.
-    /// @return Whether the call succeeded.
-    /// @return The return data of the call.
-    function executeTxFromModule(address to, bytes memory data)
-        external
-        returns (bool, bytes memory);
-
     /// @notice Returns whether the address `module` is added as module.
     /// @param module The module to check.
     /// @return True if module added, false otherwise.

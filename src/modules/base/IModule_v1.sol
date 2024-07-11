@@ -37,6 +37,9 @@ interface IModule_v1 {
     /// @notice Function is only callable by the orchestrator.
     error Module__OnlyCallableByOrchestrator();
 
+    /// @notice Function is only callable by a Payment Client
+    error Module__OnlyCallableByPaymentClient();
+
     /// @notice Given orchestrator address invalid.
     error Module__InvalidOrchestratorAddress();
 

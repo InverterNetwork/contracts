@@ -1000,21 +1000,6 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _governor.executeMotion(_voteID);
     }
 
-    function testOnlyGovernanceIsAuthorized(address _other) public {
-        vm.assume(_other != address(_governor));
-        vm.assume(_other != address(this));
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                _other
-            )
-        );
-        vm.prank(_other);
-        _orchestrator.executeTx(address(0), "");
-    }
-
     //--------------------------------------------------------------------------
     // TEST: VOTER MANAGEMENT
     function testAddVoters(address[] memory users) public {

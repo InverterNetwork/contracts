@@ -20,9 +20,6 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice Function is only callable by authorized caller.
     error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
 
-    /// @notice Execution of transaction failed.
-    error Orchestrator__ExecuteTxFailed();
-
     /// @notice The given module is not used in the orchestrator
     error Orchestrator__InvalidModuleType(address module);
 
@@ -179,14 +176,6 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @dev Only callable by authorized address.
     /// @dev Fails if module update has not been initiated
     function cancelModuleUpdate(address module) external;
-    /// @notice Executes a call on target `target` with call data `data`.
-    /// @dev Only callable by authorized caller.
-    /// @param target The address to call.
-    /// @param data The call data.
-    /// @return The return data of the call.
-    function executeTx(address target, bytes memory data)
-        external
-        returns (bytes memory);
 
     /// @notice Returns the orchestrator's id.
     /// @dev Unique id set by the {OrchestratorFactory_v1} during initialization.
