@@ -356,7 +356,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Calculate workflow fee amount if applicable
         if (_workflowFee > 0) {
             workflowFeeAmount = _totalAmount * _workflowFee / BPS;
-             // Revert if calculated workflow fee amount rounded down to zero
+            // Revert if calculated workflow fee amount rounded down to zero
             if (workflowFeeAmount == 0) {
                 revert Module__BondingCurveBase__TradeAmountToLow();
             }

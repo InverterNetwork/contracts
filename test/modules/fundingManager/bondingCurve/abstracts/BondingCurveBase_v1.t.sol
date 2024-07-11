@@ -338,7 +338,13 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
-        amount = bound(amount, 1, (type(uint).max / _bps)); // to prevent overflows
+        amount = bound(
+            amount,
+            _calculateMinDepositAmount(
+                _collateralFee, _workflowFee, _issuanceFee
+            ), // minAmount added like this because stack to deep
+            (type(uint).max / _bps)
+        ); // to prevent overflows
 
         // Set Fee
         if (_collateralFee != 0) {
@@ -653,17 +659,16 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint protocolFee,
         uint workflowFee
     ) public {
-        protocolFee = bound(protocolFee, 1, 2 ^ 128);
-        workflowFee = bound(workflowFee, 1, 2 ^ 128);
-
         uint _bps = bondingCurveFundingManager.call_BPS();
-        if (protocolFee + workflowFee > _bps) {
-            vm.expectRevert(
-                IBondingCurveBase_v1
-                    .Module__BondingCurveBase__FeeAmountToHigh
-                    .selector
-            );
-        }
+        protocolFee = bound(protocolFee, 1, _bps);
+        workflowFee = bound(workflowFee, 1, _bps);
+        vm.assume(protocolFee + workflowFee > _bps);
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__FeeAmountToHigh
+                .selector
+        );
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
             0, protocolFee, workflowFee
         );
@@ -714,8 +719,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        totalAmount = bound(totalAmount, 1, 2 ^ 128);
         workflowFee = bound(workflowFee, 1, _bps);
+
+        uint minAmount = _bps / workflowFee + 1; // calculate min amount
+        totalAmount = bound(totalAmount, minAmount, type(uint128).max);
 
         (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
@@ -731,8 +738,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint protocolFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        totalAmount = bound(totalAmount, 1, 2 ^ 128);
         protocolFee = bound(protocolFee, 1, _bps);
+
+        // calculate min amount
+        uint minAmount = _bps / protocolFee + 1;
+        totalAmount = bound(totalAmount, minAmount, type(uint128).max);
 
         (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
@@ -749,10 +759,12 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        totalAmount = bound(totalAmount, 1, 2 ^ 128);
         protocolFee = bound(protocolFee, 1, _bps);
         workflowFee = bound(workflowFee, 1, _bps);
         vm.assume(workflowFee + protocolFee < _bps);
+
+        uint minAmount = _calculateMinDepositAmount(protocolFee, workflowFee, 0);
+        totalAmount = bound(totalAmount, minAmount, type(uint128).max);
 
         (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount) =
         bondingCurveFundingManager.call_calculateNetAndSplitFees(
@@ -975,7 +987,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
-        _depositAmount = bound(_depositAmount, 1, 1e38);
+        uint minAmount = _calculateMinDepositAmount(
+            _collateralFee, _workflowFee, _issuanceFee
+        );
+
+        _depositAmount = bound(_depositAmount, minAmount, type(uint128).max);
 
         // Set Fee
         if (_collateralFee != 0) {
@@ -1161,5 +1177,34 @@ contract BondingCurveBaseV1Test is ModuleTest {
         _token.mint(buyer, amount);
         vm.prank(buyer);
         _token.approve(address(bondingCurveFundingManager), amount);
+    }
+
+    // Helper function which calculates the minimum deposit amount which will not revert based on rounding down issue with integer division
+    // when subtracting the fee amounts, given the different collateral and issuance fee.
+    function _calculateMinDepositAmount(
+        uint _collateralFee,
+        uint _workflowFee,
+        uint _issuanceFee
+    ) internal view returns (uint minAmount) {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        // Calculate minimum amount for the first call
+        uint minAmountCollateral =
+            _collateralFee != 0 ? _bps / _collateralFee + 1 : 1;
+        uint minAmountWorkflow = _workflowFee != 0 ? _bps / _workflowFee + 1 : 1;
+        uint minAmountFirstCall = minAmountCollateral > minAmountWorkflow
+            ? minAmountCollateral
+            : minAmountWorkflow;
+
+        // Calculate minimum amount for the second call, considering the effect of the first call
+        uint minAmountIssuance = _issuanceFee != 0
+            ? (_bps * _bps)
+                / (_issuanceFee * (_bps - _collateralFee - _workflowFee)) + 1
+            : 1;
+
+        // Use the larger of the two minimum amounts
+        minAmount = minAmountFirstCall > minAmountIssuance
+            ? minAmountFirstCall
+            : minAmountIssuance;
     }
 }

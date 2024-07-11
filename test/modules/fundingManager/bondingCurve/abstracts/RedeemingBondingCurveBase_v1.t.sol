@@ -307,12 +307,18 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 0, _bps);
-        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps - 1);
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
-        amount = bound(amount, 1, maxAmount);
+        amount = bound(
+            amount,
+            helperCalculateMinDepositAmount(
+                _collateralFee, _issuanceFee, _workflowFee
+            ),
+            maxAmount
+        );
 
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
@@ -551,17 +557,28 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                 _bps / _collateralFee + (_bps % _collateralFee > 0 ? 1 : 0);
         }
 
-        _depositAmount = helperMax(
-            helperMax(
-                minDepositAmountWorkflowFee, minDepositAmountCollateralFee
-            ),
-            minDepositAmountIssuanceFee
+        // Calculate the minimum amount for the combined collateral and workflow fees
+        uint minAmountCollateralAndWorkflow = helperMax(
+            minDepositAmountWorkflowFee, minDepositAmountCollateralFee
         );
+
+        // Calculate the overall minimum deposit amount
+        _depositAmount = helperMax(
+            minAmountCollateralAndWorkflow, minDepositAmountIssuanceFee
+        );
+
+        // Ensure the deposit amount is large enough for both fee calculations
+        if (_issuanceFee > 0) {
+            uint afterIssuanceFee =
+                (_depositAmount * (_bps - _issuanceFee)) / _bps;
+            if (afterIssuanceFee < minAmountCollateralAndWorkflow) {
+                _depositAmount = (minAmountCollateralAndWorkflow * _bps)
+                    / (_bps - _issuanceFee) + 1;
+            }
+        }
 
         return _depositAmount == 0 ? 1 : _depositAmount;
     }
-
-    event hm(uint hm);
 
     function testInternalCalculateSaleReturnWithFee(
         uint _depositAmount,
@@ -572,18 +589,17 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 0, _bps);
-        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps - 1);
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
         _depositAmount = bound(
             _depositAmount,
             helperCalculateMinDepositAmount(
-                _collateralFee, _issuanceFee, _collateralFee
+                _collateralFee, _issuanceFee, _workflowFee
             ),
             1e38
         );
-        emit hm(_depositAmount);
 
         // Set Fee
         if (_collateralFee != 0) {
