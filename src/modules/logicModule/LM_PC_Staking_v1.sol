@@ -250,7 +250,7 @@ contract LM_PC_Staking_v1 is
         }
     }
 
-    ///@dev This is the heart of the algorithm
+    /// @dev This is the heart of the algorithm
     /// The reward Value is the accumulation of all the rewards a user would get for a single token if they had staked at the beginning of the lifetime of this contract
     /// A "single" reward value or with the lack of a better word "reward period" is the rewardRate (so the rewards per second for the whole contract)
     /// multiplied by the time period it was active and dividing that with the total supply
@@ -289,7 +289,7 @@ contract LM_PC_Staking_v1 is
             + rewards[user];
     }
 
-    ///@dev direct distribution of earned rewards via the payment processor
+    /// @dev direct distribution of earned rewards via the payment processor
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
         uint amount = _earned(recipient, rewardValue);

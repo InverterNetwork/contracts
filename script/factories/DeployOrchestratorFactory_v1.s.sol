@@ -88,12 +88,13 @@ contract DeployOrchestratorFactory_v1 is Script {
             governor,
             orchestratorFactoryImplementation,
             1,
-            0 //@note do we have a way to smartly track these Versions?
+            0,
+            0 // @note do we have a way to smartly track these Versions?
         );
 
         address orchestratorImplementationBeacon =
         deployAndSetUpInverterBeacon_v1.deployInverterBeacon(
-            governor, orchestratorImplementation, 1, 0
+            governor, orchestratorImplementation, 1, 0, 0
         );
 
         orchestratorFactory = OrchestratorFactory_v1(orchestratorFactoryProxy);

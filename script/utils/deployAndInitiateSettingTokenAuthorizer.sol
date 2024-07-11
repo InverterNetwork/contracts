@@ -44,7 +44,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
     // Set the Module Metadata.
     // ===============================================================================================================
     IModule_v1.Metadata authorizerMetadata = IModule_v1.Metadata(
-        1, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
+        1, 0, 0, "https://github.com/InverterNetwork", "TokenAuthorizer"
     );
 
     // Decide on the workflowConfig

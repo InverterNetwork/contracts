@@ -114,7 +114,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         Contributor[] memory contributors,
         Bounty memory bounty
     ) internal view {
-        //@update to be in correct range
+        // @update to be in correct range
         uint length = contributors.length;
         // length cant be zero
         if (length == 0) {
@@ -215,7 +215,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     /// @dev List of Claim id's.
     LinkedIdList.List _claimList;
 
-    //@dev Connects contributor addresses to claim Ids
+    /// @dev Connects contributor addresses to claim Ids
     mapping(address => EnumerableSet.UintSet) contributorAddressToClaimIds;
 
     // Storage gap for future upgrades

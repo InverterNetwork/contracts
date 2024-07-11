@@ -92,7 +92,8 @@ contract GovernorV1Mock is IGovernor_v1 {
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
-        uint newMinorVersion
+        uint newMinorVersion,
+        uint newPatchVersion
     ) external {}
 
     function triggerUpgradeBeaconWithTimelock(address) external {}
@@ -106,9 +107,12 @@ contract GovernorV1Mock is IGovernor_v1 {
 
     function initiateBeaconShutdown(address) external {}
 
-    function forceUpgradeBeaconAndRestartImplementation(address, address, uint)
-        external
-    {}
+    function forceUpgradeBeaconAndRestartImplementation(
+        address,
+        address,
+        uint,
+        uint
+    ) external {}
 
     function restartBeaconImplementation(address) external {}
     //---------------------------

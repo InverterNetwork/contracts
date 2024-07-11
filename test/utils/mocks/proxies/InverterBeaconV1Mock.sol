@@ -22,6 +22,7 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
 
     uint public majorVersion;
     uint public minorVersion;
+    uint public patchVersion;
 
     uint public functionCalled;
     bool public forcefulCall;
@@ -30,17 +31,22 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
         implementation = implementation_;
     }
 
-    function overrideVersion(uint majorVersion_, uint minorVersion_) public {
+    function overrideVersion(
+        uint majorVersion_,
+        uint minorVersion_,
+        uint patchVersion_
+    ) public {
         majorVersion = majorVersion_;
         minorVersion = minorVersion_;
+        patchVersion = patchVersion_;
     }
 
     function overrideEmergencyMode(bool emergencyMode_) public {
         emergencyMode = emergencyMode_;
     }
 
-    function version() external view returns (uint, uint) {
-        return (majorVersion, minorVersion);
+    function version() external view returns (uint, uint, uint) {
+        return (majorVersion, minorVersion, patchVersion);
     }
 
     function getImplementationAddress() external view returns (address) {
@@ -51,10 +57,13 @@ contract InverterBeaconV1Mock is IInverterBeacon_v1, ERC165 {
         return emergencyMode;
     }
 
-    function upgradeTo(address impl, uint vers, bool force) external {
+    function upgradeTo(address impl, uint minor, uint patch, bool force)
+        external
+    {
         functionCalled++;
         implementation = impl;
-        minorVersion = vers;
+        minorVersion = minor;
+        patchVersion = patch;
         forcefulCall = force;
     }
 

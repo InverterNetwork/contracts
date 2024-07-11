@@ -21,13 +21,17 @@ contract UpgradeInverterBeacon_v1 is Script {
         address beacon,
         address implementation,
         uint minorVersion,
+        uint patchVersion,
         bool overrideShutdown
     ) external {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Upgrade the Beacon to the chosen implementation
             InverterBeacon_v1(beacon).upgradeTo(
-                address(implementation), minorVersion, overrideShutdown
+                address(implementation),
+                minorVersion,
+                patchVersion,
+                overrideShutdown
             );
         }
 

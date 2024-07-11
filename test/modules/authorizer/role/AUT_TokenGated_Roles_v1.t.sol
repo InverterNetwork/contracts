@@ -102,11 +102,13 @@ contract TokenGatedAUT_RoleV1Test is Test {
     // Module Constants
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 0;
+    uint constant PATCH_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Module";
 
-    IModule_v1.Metadata _METADATA =
-        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata _METADATA = IModule_v1.Metadata(
+        MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
+    );
 
     //--------------------------------------------------------------------------
     // Events

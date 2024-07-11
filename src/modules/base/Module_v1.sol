@@ -168,8 +168,12 @@ abstract contract Module_v1 is
     }
 
     /// @inheritdoc IModule_v1
-    function version() public view returns (uint, uint) {
-        return (__Module_metadata.majorVersion, __Module_metadata.minorVersion);
+    function version() public view returns (uint, uint, uint) {
+        return (
+            __Module_metadata.majorVersion,
+            __Module_metadata.minorVersion,
+            __Module_metadata.patchVersion
+        );
     }
 
     /// @inheritdoc IModule_v1

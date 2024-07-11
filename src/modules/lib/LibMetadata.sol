@@ -47,8 +47,11 @@ library LibMetadata {
             return false;
         }
 
-        // Invalid if version is v0.0.
-        if (metadata.majorVersion == 0 && metadata.minorVersion == 0) {
+        // Invalid if version is v0.0.0.
+        if (
+            metadata.majorVersion == 0 && metadata.minorVersion == 0
+                && metadata.patchVersion == 0
+        ) {
             return false;
         }
 

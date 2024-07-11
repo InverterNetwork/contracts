@@ -82,9 +82,11 @@ contract ModuleBaseV1Test is ModuleTest {
         // Version correctly set.
         uint majorVersion;
         uint minorVersion;
-        (majorVersion, minorVersion) = module.version();
+        uint patchVersion;
+        (majorVersion, minorVersion, patchVersion) = module.version();
         assertEq(majorVersion, _MAJOR_VERSION);
         assertEq(minorVersion, _MINOR_VERSION);
+        assertEq(patchVersion, _PATCH_VERSION);
 
         // _URL correctly set.
         assertEq(module.url(), _URL);
@@ -122,7 +124,9 @@ contract ModuleBaseV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__InvalidMetadata.selector);
         module.init(
             _orchestrator,
-            IModule_v1.Metadata(_MAJOR_VERSION, _MINOR_VERSION, "", _TITLE),
+            IModule_v1.Metadata(
+                _MAJOR_VERSION, _MINOR_VERSION, _PATCH_VERSION, "", _TITLE
+            ),
             _CONFIGDATA
         );
 
@@ -130,7 +134,9 @@ contract ModuleBaseV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__InvalidMetadata.selector);
         module.init(
             _orchestrator,
-            IModule_v1.Metadata(_MAJOR_VERSION, _MINOR_VERSION, _URL, ""),
+            IModule_v1.Metadata(
+                _MAJOR_VERSION, _MINOR_VERSION, _PATCH_VERSION, _URL, ""
+            ),
             _CONFIGDATA
         );
     }

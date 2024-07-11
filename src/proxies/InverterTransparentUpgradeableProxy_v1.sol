@@ -72,6 +72,9 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @dev The minor version of the implementation
     uint internal minorVersion;
 
+    /// @dev The patch version of the implementation
+    uint internal patchVersion;
+
     //--------------------------------------------------------------------------
     // Constructor
 
@@ -90,7 +93,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
 
         _beacon = beacon;
         _admin = initialOwner;
-        (majorVersion, minorVersion) = _beacon.version();
+        (majorVersion, minorVersion, patchVersion) = _beacon.version();
         // Set the storage value and emit an event for ERC-1967 compatibility
         ERC1967Utils.changeAdmin(initialOwner);
     }
@@ -102,8 +105,9 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @notice Returns the version of the linked implementation.
     /// @return The major version.
     /// @return The minor version.
-    function version() external view returns (uint, uint) {
-        return (majorVersion, minorVersion);
+    /// @return The patch version.
+    function version() external view returns (uint, uint, uint) {
+        return (majorVersion, minorVersion, patchVersion);
     }
 
     //--------------------------------------------------------------------------
@@ -116,7 +120,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
             _beacon.getImplementationAddress(), bytes("")
         );
         // Override version
-        (majorVersion, minorVersion) = _beacon.version();
+        (majorVersion, minorVersion, patchVersion) = _beacon.version();
     }
 
     /// @dev If caller is the admin process the call internally, otherwise transparently fallback to the proxy behavior.
