@@ -205,12 +205,6 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice The version of the orchestrator instance.
     function version() external pure returns (string memory);
 
-    /// @notice find the address of a given module using it's name in a orchestrator
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address);
-
     /// @notice The governor contract implementation used for protocol level interactions.
     function governor() external view returns (IGovernor_v1);
 }
