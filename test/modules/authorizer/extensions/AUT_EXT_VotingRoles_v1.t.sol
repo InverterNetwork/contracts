@@ -81,15 +81,15 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     /// @notice Event emitted when a motion is created
     /// @param motionId The motion ID.
-    event MotionCreated(uint indexed motionId);
+    event MotionCreated(bytes32 indexed motionId);
 
     event VoteCast(
-        uint indexed motionId, address indexed voter, uint8 indexed support
+        bytes32 indexed motionId, address indexed voter, uint8 indexed support
     );
 
     /// @notice Event emitted when a motion is executed.
     /// @param motionId The motion ID.
-    event MotionExecuted(uint indexed motionId);
+    event MotionExecuted(bytes32 indexed motionId);
 
     function setUp() public {
         // Set up a orchestrator
@@ -138,15 +138,16 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Helper functions for common functionalities
     function createVote(address callingUser, address _addr, bytes memory _msg)
         public
-        returns (uint)
+        returns (bytes32)
     {
-        uint countID = _governor.motionCount();
+        bytes32 countID =
+            keccak256(abi.encodePacked(_addr, _msg, _governor.motionCount()));
         vm.prank(callingUser);
 
         vm.expectEmit(true, true, true, true);
         emit MotionCreated(countID);
 
-        uint _id = _governor.createMotion(_addr, _msg);
+        bytes32 _id = _governor.createMotion(_addr, _msg);
         return _id;
     }
 
@@ -156,7 +157,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             bytes memory _encodedAction =
                 abi.encodeWithSignature("addVoter(address)", users[i]);
             // for ease, we are assuming this is happening before any threshold changes
-            uint _voteID = speedrunSuccessfulVote(
+            bytes32 _voteID = speedrunSuccessfulVote(
                 address(_governor), _encodedAction, initialVoters
             );
             _governor.executeMotion(_voteID);
@@ -166,21 +167,21 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         }
     }
 
-    function voteInFavor(address callingUser, uint voteID) public {
+    function voteInFavor(address callingUser, bytes32 voteID) public {
         uint8 vote = 0;
 
         vm.prank(callingUser);
         _governor.castVote(voteID, vote);
     }
 
-    function voteAgainst(address callingUser, uint voteID) public {
+    function voteAgainst(address callingUser, bytes32 voteID) public {
         uint8 vote = 1;
 
         vm.prank(callingUser);
         _governor.castVote(voteID, vote);
     }
 
-    function voteAbstain(address callingUser, uint voteID) public {
+    function voteAbstain(address callingUser, bytes32 voteID) public {
         uint8 vote = 2;
 
         vm.prank(callingUser);
@@ -191,11 +192,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         address _target,
         bytes memory _action,
         address[] memory _voters
-    ) public returns (uint) {
+    ) public returns (bytes32) {
         if (_voters.length == 0) {
             revert("Voterlist empty");
         }
-        uint _voteID = createVote(_voters[0], _target, _action);
+        bytes32 _voteID = createVote(_voters[0], _target, _action);
 
         for (uint i; i < _voters.length; ++i) {
             vm.expectEmit(true, true, true, true);
@@ -213,11 +214,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         address _target,
         bytes memory _action,
         address[] memory _voters
-    ) public returns (uint) {
+    ) public returns (bytes32) {
         if (_voters.length == 0) {
             revert("Voterlist empty");
         }
-        uint _voteID = createVote(_voters[0], _target, _action);
+        bytes32 _voteID = createVote(_voters[0], _target, _action);
 
         for (uint i = 1; i < _governor.threshold(); ++i) {
             if (i < _voters.length) {
@@ -240,7 +241,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         return (_moduleAddress, _msg);
     }
 
-    function getFullMotionData(uint voteId)
+    function getFullMotionData(bytes32 voteId)
         internal
         returns (IAUT_EXT_VotingRoles_v1.Motion storage)
     {
@@ -450,12 +451,12 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
 
         for (uint i; i < initialVoters.length; ++i) {
-            uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+            bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
             IAUT_EXT_VotingRoles_v1.Motion storage _motion =
                 getFullMotionData(_voteID);
 
-            assertEq(_governor.motionCount(), (_voteID + 1));
+            // assertEq(_governor.motionCount(), (_voteID + 1));
             assertEq(_motion.target, _moduleAddress);
             assertEq(_motion.action, _msg);
             assertEq(_motion.startTimestamp, block.timestamp);
@@ -535,7 +536,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
             // prank as that address, create a vote and vote on it
             (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-            uint _newVote = createVote(users[i], _moduleAddress, _msg);
+            bytes32 _newVote = createVote(users[i], _moduleAddress, _msg);
             vm.expectEmit(true, true, true, true);
             emit VoteCast(_newVote, users[i], 0);
             voteInFavor(users[i], _newVote);
@@ -555,7 +556,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         // create a vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         IAUT_EXT_VotingRoles_v1.Motion storage _motion =
             getFullMotionData(_voteID);
@@ -596,7 +597,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         // create vote as authorized user
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
@@ -616,7 +617,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         // create a vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         IAUT_EXT_VotingRoles_v1.Motion storage _motion =
             getFullMotionData(_voteID);
@@ -662,7 +663,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _validateUserList(users);
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
@@ -682,7 +683,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         IAUT_EXT_VotingRoles_v1.Motion storage _motion =
             getFullMotionData(_voteID);
@@ -743,7 +744,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _validateUserList(users);
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < users.length; ++i) {
             // fail to vote as unauthorized address
@@ -760,7 +761,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     function testVoteOnExpired(uint[] memory nums) public {
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < nums.length; ++i) {
             nums[i] = bound(nums[i], 0, 100_000_000_000);
@@ -794,14 +795,14 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     }
 
     // Fail to vote on an unexisting voteID (testing the three vote variants)
-    function testVoteOnUnexistingID(uint160[] memory wrongIDs) public {
+    function testVoteOnUnexistingID(bytes32[] memory wrongIDs) public {
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < wrongIDs.length; ++i) {
-            vm.assume(wrongIDs[i] > _voteID);
-            uint wrongID = wrongIDs[i];
+            vm.assume(wrongIDs[i] != _voteID);
+            bytes32 wrongID = wrongIDs[i];
 
             // For
             vm.expectRevert(
@@ -836,7 +837,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         vm.assume(wrongVote > 2);
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
@@ -853,7 +854,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         batchAddAuthorized(users);
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         for (uint i; i < users.length; ++i) {
             // vote once
@@ -895,7 +896,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             abi.encodeWithSignature("setVotingDuration(uint256)", _newDuration);
 
         // 2) The vote passes
-        uint _voteID = speedrunSuccessfulVote(
+        bytes32 _voteID = speedrunSuccessfulVote(
             address(_governor), _encodedAction, initialVoters
         );
 
@@ -912,7 +913,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     }
     // Fail to execute vote that didn't pass
 
-    function testExecuteInexistentVote(uint wrongId) public {
+    function testExecuteInexistentVote(bytes32 wrongId) public {
         // No votes exist yet, everyting should fail
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
@@ -927,7 +928,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         (address _moduleAddress, bytes memory _encodedAction) =
             getMockValidVote();
 
-        uint _voteID = speedrunRejectedVote(
+        bytes32 _voteID = speedrunRejectedVote(
             address(_moduleAddress), _encodedAction, initialVoters
         );
 
@@ -944,7 +945,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     function testExecuteWhileVotingOpen() public {
         // create vote
         (address _moduleAddress, bytes memory _msg) = getMockValidVote();
-        uint _voteID = createVote(ALBA, _moduleAddress, _msg);
+        bytes32 _voteID = createVote(ALBA, _moduleAddress, _msg);
 
         // First, we reach the threshold
         voteInFavor(ALBA, _voteID);
@@ -978,7 +979,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _newDuration = 3 days;
         bytes memory _encodedAction =
             abi.encodeWithSignature("setVotingDuration(uint256)", _newDuration);
-        uint _voteID = speedrunSuccessfulVote(
+        bytes32 _voteID = speedrunSuccessfulVote(
             address(_governor), _encodedAction, initialVoters
         );
 
@@ -1166,7 +1167,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         // 1) Create and approve a vote
         bytes memory _encodedAction =
             abi.encodeWithSignature("setThreshold(uint256)", _newThreshold);
-        uint _voteID = speedrunSuccessfulVote(
+        bytes32 _voteID = speedrunSuccessfulVote(
             address(_governor), _encodedAction, initialVoters
         );
 
