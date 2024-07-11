@@ -208,22 +208,6 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         return (type(uint).max, address(0));
     }
 
-    /// @inheritdoc IOrchestrator_v1
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address)
-    {
-        (uint moduleIndex, address moduleAddress) =
-            _isModuleUsedInOrchestrator(moduleName);
-        if (moduleIndex == type(uint).max) {
-            revert
-                Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
-        }
-
-        return moduleAddress;
-    }
-
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
