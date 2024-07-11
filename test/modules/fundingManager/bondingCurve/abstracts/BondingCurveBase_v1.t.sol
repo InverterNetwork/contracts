@@ -54,9 +54,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint receivedAmount,
         address buyer
     );
-    event IssuanceTokenUpdated(
-        address indexed oldToken, address indexed issuanceToken
-    );
+    event IssuanceTokenSet(address indexed token, uint8 decimals);
     event ProtocolFeeTransferred(
         address indexed token, address indexed treasury, uint feeAmount
     );
@@ -683,7 +681,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(netAmount, totalAmount - workflowFeeAmount);
         assertEq(protocolFeeAmount, 0);
-        assertEq(workflowFeeAmount, totalAmount * workflowFee / _bps);
+        assertEq(workflowFeeAmount, (totalAmount * workflowFee) / _bps);
     }
 
     function testInternalCalculateNetAndSplitFees_ProjectFee0(
@@ -699,7 +697,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
             totalAmount, protocolFee, 0
         );
         assertEq(netAmount, totalAmount - protocolFeeAmount);
-        assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
+        assertEq(protocolFeeAmount, (totalAmount * protocolFee) / _bps);
         assertEq(workflowFeeAmount, 0);
     }
 
@@ -720,8 +718,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
 
         assertEq(netAmount, totalAmount - protocolFeeAmount - workflowFeeAmount);
-        assertEq(protocolFeeAmount, totalAmount * protocolFee / _bps);
-        assertEq(workflowFeeAmount, totalAmount * workflowFee / _bps);
+        assertEq(protocolFeeAmount, (totalAmount * protocolFee) / _bps);
+        assertEq(workflowFeeAmount, (totalAmount * workflowFee) / _bps);
     }
 
     /* Test openBuy and _openBuy function
@@ -873,7 +871,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IssuanceTokenUpdated(tokenBefore, address(newIssuanceToken));
+        emit IssuanceTokenSet(address(newIssuanceToken), _newDecimals);
         bondingCurveFundingManager.call_setIssuanceToken(
             address(newIssuanceToken)
         );
@@ -952,8 +950,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Deduct protocol and project buy fee from collateral
         (
-            uint netCollateralDepositAmount, /* protocolFeeAmount */
-            , /* workflowFeeAmount */
+            uint netCollateralDepositAmount, /* protocolFeeAmount */ /* workflowFeeAmount */
+            ,
         ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
             _depositAmount, _collateralFee, _workflowFee
         );
@@ -962,8 +960,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Deduct protocol buy fee from issuance
         (
-            uint netIssuanceMintAmount, /* protocolFeeAmount */
-            , /* workflowFeeAmount */
+            uint netIssuanceMintAmount, /* protocolFeeAmount */ /* workflowFeeAmount */
+            ,
         ) = bondingCurveFundingManager.call_calculateNetAndSplitFees(
             netCollateralDepositAmount, _issuanceFee, 0
         );
