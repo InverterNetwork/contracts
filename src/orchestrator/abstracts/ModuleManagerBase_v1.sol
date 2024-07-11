@@ -165,6 +165,7 @@ abstract contract ModuleManagerBase_v1 is
         internal
         isNotModule(module)
         validModule(module)
+        moduleLimitNotExceeded
     {
         _commitAddModule(module);
     }
@@ -219,7 +220,6 @@ abstract contract ModuleManagerBase_v1 is
     function _initiateAddModuleWithTimelock(address module)
         internal
         __ModuleManager_onlyAuthorized
-        moduleLimitNotExceeded
         isNotModule(module)
         validModule(module)
     {
@@ -243,7 +243,7 @@ abstract contract ModuleManagerBase_v1 is
         // set timelock to inactive
         moduleAddressToTimelock[module].timelockActive = false;
 
-        _commitAddModule(module);
+        __ModuleManager_addModule(module);
     }
 
     function _executeRemoveModule(address module)
