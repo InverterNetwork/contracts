@@ -33,7 +33,11 @@ contract InverterBeaconV1Test is Test {
         new ModuleImplementationV1Mock();
 
     // Events copied from SuT
-    event Upgraded(address indexed implementation, uint newMinorVersion);
+    event Upgraded(
+        address indexed implementation,
+        uint newMinorVersion,
+        uint newPatchVersion
+    );
 
     event ShutdownInitiated();
 
@@ -41,7 +45,7 @@ contract InverterBeaconV1Test is Test {
 
     function setUp() public {
         beacon = new InverterBeaconV1AccessMock(
-            address(this), 0, address(possibleImplementation), 0
+            address(this), 0, address(possibleImplementation), 0, 0
         );
     }
 
@@ -55,62 +59,74 @@ contract InverterBeaconV1Test is Test {
         assertEq(beacon.pendingOwner(), address(0));
 
         // Check for version
-        (uint majorVersion, uint minorVersion) = beacon.version();
+        (uint majorVersion, uint minorVersion, uint patchVersion) =
+            beacon.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 0);
+        assertEq(patchVersion, 0);
     }
 
     //--------------------------------------------------------------------------
     // Test: modifier
 
-    function testZeroAsNewMinorVersion() public {
+    function testZeroAsNewMinorAndPatchVersion() public {
         // Check for version
-        (, uint minorVersionPre) = beacon.version();
+        (, uint minorVersionPre, uint patchVersionPre) = beacon.version();
         assertEq(minorVersionPre, 0);
+        assertEq(patchVersionPre, 0);
 
         // generate implementation address
         address implementation = address(new ModuleImplementationV1Mock());
 
         vm.expectRevert(
             IInverterBeacon_v1
-                .InverterBeacon__InvalidImplementationMinorVersion
+                .InverterBeacon__InvalidImplementationMinorOrPatchVersion
                 .selector
         );
 
         // Upgrade to an initial Version
-        beacon.upgradeTo(implementation, 0, false);
+        beacon.upgradeTo(implementation, 0, 0, false);
     }
 
-    function testNewMinorVersion(uint initialMinorVersion, uint newMinorVersion)
-        public
-    {
+    function testNewMinorOrPatchVersion(
+        uint initialVersion,
+        uint newMinorVersion,
+        uint newPatchVersion
+    ) public {
         // we can't upgrade to 0 version
         // as the 0 version can only be set during
         // initialization (first version ever set)
-        vm.assume(initialMinorVersion > 0);
+        vm.assume(initialVersion > 0);
 
         // generate implementation address
         address implementation = address(new ModuleImplementationV1Mock());
 
         // Upgrade to an initial Version
-        beacon.upgradeTo(implementation, initialMinorVersion, false);
+        beacon.upgradeTo(implementation, initialVersion, initialVersion, false);
 
         // Check for version
-        (, uint minorVersionPre) = beacon.version();
-        assertEq(minorVersionPre, initialMinorVersion);
+        (, uint minorVersionPre, uint patchVersionPre) = beacon.version();
+        assertEq(minorVersionPre, initialVersion);
+        assertEq(patchVersionPre, initialVersion);
 
-        if (newMinorVersion <= initialMinorVersion) {
+        if (
+            newMinorVersion < initialVersion
+                || newMinorVersion == initialVersion
+                    && newPatchVersion <= initialVersion
+        ) {
             vm.expectRevert(
                 IInverterBeacon_v1
-                    .InverterBeacon__InvalidImplementationMinorVersion
+                    .InverterBeacon__InvalidImplementationMinorOrPatchVersion
                     .selector
             );
         }
-        beacon.upgradeTo(implementation, newMinorVersion, false);
+        beacon.upgradeTo(
+            implementation, newMinorVersion, newPatchVersion, false
+        );
 
-        if (newMinorVersion > initialMinorVersion) {
+        if (newMinorVersion > initialVersion) {
             // Check for version
-            (, uint minorVersionPost) = beacon.version();
+            (, uint minorVersionPost,) = beacon.version();
             assertEq(minorVersionPost, newMinorVersion);
         }
     }
@@ -134,27 +150,41 @@ contract InverterBeaconV1Test is Test {
         address newImplementation,
         uint oldMinorVersion,
         uint newMinorVersion,
+        uint oldPatchVersion,
+        uint newPatchVersion,
         bool overrideShutdown
     ) public {
         // needs to be a valid upgrade
-        vm.assume(oldMinorVersion < newMinorVersion);
+        vm.assume(
+            newMinorVersion > oldMinorVersion
+                || newMinorVersion == oldMinorVersion
+                    && newPatchVersion > oldPatchVersion
+        );
 
         // Turn off setImplementation
         beacon.flipUseOriginal_setImplementation();
 
-        if (oldMinorVersion != 0) {
-            beacon.upgradeTo(address(0), oldMinorVersion, false);
+        if (oldMinorVersion != 0 || oldPatchVersion != 0) {
+            beacon.upgradeTo(
+                address(0), oldMinorVersion, oldPatchVersion, false
+            );
         }
 
         vm.expectEmit(true, true, true, true);
-        emit Upgraded(address(newImplementation), newMinorVersion);
-
-        beacon.upgradeTo(
-            address(newImplementation), newMinorVersion, overrideShutdown
+        emit Upgraded(
+            address(newImplementation), newMinorVersion, newPatchVersion
         );
 
-        (, uint minorVersion) = beacon.version();
+        beacon.upgradeTo(
+            address(newImplementation),
+            newMinorVersion,
+            newPatchVersion,
+            overrideShutdown
+        );
+
+        (, uint minorVersion, uint patchVersion) = beacon.version();
         assertEq(newMinorVersion, minorVersion);
+        assertEq(newPatchVersion, patchVersion);
     }
 
     function testUpgradeToPOC() public {
@@ -163,24 +193,27 @@ contract InverterBeaconV1Test is Test {
 
         uint majorVersion;
         uint minorVersion;
+        uint patchVersion;
 
         vm.expectEmit(true, true, true, true);
-        emit Upgraded(address(toUpgrade1), 1);
+        emit Upgraded(address(toUpgrade1), 1, 0);
 
-        beacon.upgradeTo(address(toUpgrade1), 1, false);
+        beacon.upgradeTo(address(toUpgrade1), 1, 0, false);
 
         assertEq(beacon.implementation(), address(toUpgrade1));
-        (majorVersion, minorVersion) = beacon.version();
+        (majorVersion, minorVersion, patchVersion) = beacon.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 1);
+        assertEq(patchVersion, 0);
 
         vm.expectEmit(true, true, true, true);
-        emit Upgraded(address(toUpgrade2), 2);
+        emit Upgraded(address(toUpgrade2), 2, 0);
 
-        beacon.upgradeTo(address(toUpgrade2), 2, false);
-        (majorVersion, minorVersion) = beacon.version();
+        beacon.upgradeTo(address(toUpgrade2), 2, 0, false);
+        (majorVersion, minorVersion, patchVersion) = beacon.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 2);
+        assertEq(patchVersion, 0);
 
         assertEq(beacon.implementation(), address(toUpgrade2));
     }
@@ -192,12 +225,12 @@ contract InverterBeaconV1Test is Test {
                 OZErrors.Ownable__UnauthorizedAccount, address(0xBEEF)
             )
         );
-        beacon.upgradeTo(address(this), 1, false);
+        beacon.upgradeTo(address(this), 1, 0, false);
 
         vm.expectRevert(
             IInverterBeacon_v1.InverterBeacon__InvalidImplementation.selector
         );
-        beacon.upgradeTo(address(0), 1, false);
+        beacon.upgradeTo(address(0), 1, 0, false);
     }
 
     //--------------------------------------------------------------------------
@@ -206,7 +239,7 @@ contract InverterBeaconV1Test is Test {
     function testShutDownImplementation() public {
         ModuleImplementationV1Mock toUpgrade1 = new ModuleImplementationV1Mock();
 
-        beacon.upgradeTo(address(toUpgrade1), 1, false);
+        beacon.upgradeTo(address(toUpgrade1), 1, 0, false);
 
         vm.expectEmit(true, true, true, true);
         emit ShutdownInitiated();
@@ -236,7 +269,7 @@ contract InverterBeaconV1Test is Test {
     function testRestartImplementation() public {
         ModuleImplementationV1Mock toUpgrade1 = new ModuleImplementationV1Mock();
 
-        beacon.upgradeTo(address(toUpgrade1), 1, false);
+        beacon.upgradeTo(address(toUpgrade1), 1, 0, false);
 
         beacon.shutDownImplementation();
 

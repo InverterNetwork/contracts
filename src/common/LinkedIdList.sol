@@ -155,7 +155,7 @@ library LinkedIdList {
         return self.list[id] != 0 && id != _SENTINEL;
     }
 
-    ///@dev id and prevId can be _SENTINEL
+    /// @dev id and prevId can be _SENTINEL
     function getPreviousId(List storage self, uint id)
         internal
         view
@@ -175,7 +175,7 @@ library LinkedIdList {
         }
     }
 
-    ///@dev id and nextId can be _SENTINEL
+    /// @dev id and nextId can be _SENTINEL
     function getNextId(List storage self, uint id)
         internal
         view

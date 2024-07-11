@@ -9,8 +9,17 @@ contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
         address owner,
         uint _majorVersion,
         address _implementation,
-        uint _minorVersion
-    ) InverterBeacon_v1(owner, _majorVersion, _implementation, _minorVersion) {}
+        uint _minorVersion,
+        uint _patchVersion
+    )
+        InverterBeacon_v1(
+            owner,
+            _majorVersion,
+            _implementation,
+            _minorVersion,
+            _patchVersion
+        )
+    {}
 
     function get_implementation() public view returns (address) {
         return _implementationAddress;

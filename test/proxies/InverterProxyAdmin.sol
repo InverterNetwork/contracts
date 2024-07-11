@@ -45,6 +45,7 @@ contract InverterProxyAdmin is Test {
 
     uint initialMajorVersion = 1;
     uint initialMinorVersion = 0;
+    uint initialPatchVersion = 0;
 
     address admin = makeAddr("admin");
 
@@ -58,7 +59,9 @@ contract InverterProxyAdmin is Test {
         implementation2 = new ModuleImplementationV2Mock();
 
         beacon.overrideImplementation(address(implementation1));
-        beacon.overrideVersion(initialMajorVersion, initialMinorVersion);
+        beacon.overrideVersion(
+            initialMajorVersion, initialMinorVersion, initialPatchVersion
+        );
 
         proxyAdmin = new InverterProxyAdmin_v1(admin);
         proxy = new InverterTransparentUpgradeableProxy_v1(
@@ -75,7 +78,9 @@ contract InverterProxyAdmin is Test {
 
         implementation1 = new ModuleImplementationV1Mock();
         beacon.overrideImplementation(address(implementation1));
-        beacon.overrideVersion(initialMajorVersion, initialMinorVersion);
+        beacon.overrideVersion(
+            initialMajorVersion, initialMinorVersion, initialPatchVersion
+        );
 
         vm.expectEmit(true, true, true, true);
         emit AdminChanged(address(0), address(proxyAdmin));
@@ -87,17 +92,25 @@ contract InverterProxyAdmin is Test {
         assertEq(proxyMock.direct__admin(), address(proxyAdmin));
         assertEq(proxyMock.direct__beacon(), address(beacon));
         assertEq(proxyMock.direct__implementation(), address(implementation1));
-        (uint returnedMajorVersion, uint returnedMinorVersion) =
-            proxyMock.version();
+        (
+            uint returnedMajorVersion,
+            uint returnedMinorVersion,
+            uint returnedPatchVersion
+        ) = proxyMock.version();
         assertEq(returnedMajorVersion, initialMajorVersion);
         assertEq(returnedMinorVersion, initialMinorVersion);
+        assertEq(returnedPatchVersion, initialPatchVersion);
     }
 
     function testUpgradeToNewestVersionFailsIfNotAdmin(address user) public {
         vm.assume(user != admin);
 
         beacon.overrideImplementation(address(implementation2));
-        beacon.overrideVersion(initialMajorVersion + 1, initialMinorVersion + 1);
+        beacon.overrideVersion(
+            initialMajorVersion + 1,
+            initialMinorVersion + 1,
+            initialPatchVersion + 1
+        );
 
         vm.expectRevert(
             abi.encodeWithSelector(OZErrors.Ownable__UnauthorizedAccount, user)
@@ -108,24 +121,36 @@ contract InverterProxyAdmin is Test {
             IInverterTransparentUpgradeableProxy_v1(address(proxyMock))
         );
 
-        (uint returnedMajorVersion, uint returnedMinorVersion) =
-            proxyMock.version();
+        (
+            uint returnedMajorVersion,
+            uint returnedMinorVersion,
+            uint returnedPatchVersion
+        ) = proxyMock.version();
         assertEq(returnedMajorVersion, initialMajorVersion);
         assertEq(returnedMinorVersion, initialMinorVersion);
+        assertEq(returnedPatchVersion, initialPatchVersion);
     }
 
     function testUpgradeToNewestVersion() public {
         beacon.overrideImplementation(address(implementation2));
-        beacon.overrideVersion(initialMajorVersion + 1, initialMinorVersion + 1);
+        beacon.overrideVersion(
+            initialMajorVersion + 1,
+            initialMinorVersion + 1,
+            initialPatchVersion + 1
+        );
 
         vm.prank(admin);
         proxyAdmin.upgradeToNewestVersion(
             IInverterTransparentUpgradeableProxy_v1(address(proxyMock))
         );
 
-        (uint returnedMajorVersion, uint returnedMinorVersion) =
-            proxyMock.version();
+        (
+            uint returnedMajorVersion,
+            uint returnedMinorVersion,
+            uint returnedPatchVersion
+        ) = proxyMock.version();
         assertEq(returnedMajorVersion, initialMajorVersion + 1);
         assertEq(returnedMinorVersion, initialMinorVersion + 1);
+        assertEq(returnedPatchVersion, initialPatchVersion + 1);
     }
 }

@@ -42,8 +42,10 @@ contract InverterBeaconProxyV1Test is Test {
 
         InverterBeaconProxy_v1 localProxy = new InverterBeaconProxy_v1(beacon);
 
-        (uint majorVersion, uint minorVersion) = localProxy.version();
+        (uint majorVersion, uint minorVersion, uint patchVersion) =
+            localProxy.version();
         assertEq(majorVersion, 0);
         assertEq(minorVersion, 0);
+        assertEq(patchVersion, 0);
     }
 }
