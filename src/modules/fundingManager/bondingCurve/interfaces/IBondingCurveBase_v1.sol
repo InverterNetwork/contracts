@@ -40,9 +40,7 @@ interface IBondingCurveBase_v1 {
     event BuyFeeUpdated(uint newBuyFee, uint oldBuyFee);
 
     /// @notice Event emitted when the issuance token is updated
-    event IssuanceTokenUpdated(
-        address indexed oldToken, address indexed issuanceToken
-    );
+    event IssuanceTokenSet(address indexed issuanceToken, uint8 decimals);
 
     /// @notice Event emitted when project collateral fee is withdrawn
     event ProjectCollateralFeeWithdrawn(address receiver, uint amount);
@@ -79,6 +77,10 @@ interface IBondingCurveBase_v1 {
     event ProtocolFeeTransferred(
         address indexed token, address indexed treasury, uint feeAmount
     );
+
+    /// @notice Event emitted when collateral token has been set
+    /// @param token The token that serves as collateral token making up the curve's reserve
+    event CollateralTokenSet(address indexed token, uint8 decimals);
 
     //--------------------------------------------------------------------------
     // Structs
