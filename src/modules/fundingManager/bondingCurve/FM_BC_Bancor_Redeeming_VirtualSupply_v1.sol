@@ -363,7 +363,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function transferOrchestratorToken(address to, uint amount)
         external
         virtual
-        onlyOrchestrator
+        onlyPaymentClient
     {
         __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 

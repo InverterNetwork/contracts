@@ -389,23 +389,6 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _executeRemoveModule(module_);
     }
 
-    /// @inheritdoc IOrchestrator_v1
-    function executeTx(address target, bytes memory data)
-        external
-        onlyOrchestratorAdmin
-        returns (bytes memory)
-    {
-        bool ok;
-        bytes memory returnData;
-        (ok, returnData) = target.call(data);
-
-        if (ok) {
-            return returnData;
-        } else {
-            revert Orchestrator__ExecuteTxFailed();
-        }
-    }
-
     // Enforces that the address is in fact a Module of the required type
     function _enforcePrivilegedModuleInterfaceCheck(
         address _contractAddr,

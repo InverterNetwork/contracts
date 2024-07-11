@@ -172,7 +172,7 @@ contract FM_Rebasing_v1 is
 
     function transferOrchestratorToken(address to, uint amount)
         external
-        onlyOrchestrator
+        onlyPaymentClient
         validAddress(to)
     {
         _transferOrchestratorToken(to, amount);

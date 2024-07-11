@@ -259,24 +259,6 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // onlyModule Functions
-
-    /// @inheritdoc IModuleManagerBase_v1
-    function executeTxFromModule(address to, bytes memory data)
-        external
-        virtual
-        onlyModule
-        returns (bool, bytes memory)
-    {
-        bool ok;
-        bytes memory returnData;
-
-        (ok, returnData) = to.call(data);
-
-        return (ok, returnData);
-    }
-
-    //--------------------------------------------------------------------------
     // Private Functions
 
     /// @dev Expects `module` to be valid module address.

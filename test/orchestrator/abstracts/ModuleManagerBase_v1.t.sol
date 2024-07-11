@@ -164,62 +164,6 @@ contract ModuleManagerBaseV1Test is Test {
     // Tests: Public View Functions
 
     //--------------------------------------------------------------------------
-    // Tests: Transaction Execution
-
-    function testExecuteTxFromModuleOnlyCallableByModule() public {
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__OnlyCallableByModule
-                .selector
-        );
-        moduleManager.executeTxFromModule(address(this), bytes(""));
-    }
-
-    function testExecuteTxFromModuleViaCall() public {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-        vm.warp(block.timestamp + timelock);
-        moduleManager.call_executeAddModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this), abi.encodeWithSignature("ok()")
-        );
-
-        assertTrue(ok_);
-        assertTrue(abi.decode(returnData, (bool)));
-    }
-
-    function testExecuteTxFromModuleViaCallFails() public {
-        address module = address(new ModuleV1Mock());
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-        vm.warp(block.timestamp + timelock);
-        moduleManager.call_executeAddModule(module);
-
-        bool ok_;
-        bytes memory returnData;
-
-        vm.prank(module);
-        (ok_, returnData) = moduleManager.executeTxFromModule(
-            address(this), abi.encodeWithSignature("fails()")
-        );
-
-        assertTrue(!ok_);
-    }
-
-    function ok() public pure returns (bool) {
-        return true;
-    }
-
-    function fails() public pure {
-        revert("failed");
-    }
-
-    //--------------------------------------------------------------------------
     // Tests: Module Management
 
     //----------------------------------

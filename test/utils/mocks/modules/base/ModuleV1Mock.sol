@@ -58,4 +58,7 @@ contract ModuleV1Mock is Module_v1 {
     {
         return _getFeeManagerIssuanceFeeData(functionSelector);
     }
+
+    // Empty function used to test the modifier `onlyPaymentClient`
+    function modifierOnlyPaymentClientCheck() external view onlyPaymentClient {}
 }
