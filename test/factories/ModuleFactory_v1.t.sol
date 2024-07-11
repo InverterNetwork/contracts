@@ -66,11 +66,13 @@ contract ModuleFactoryV1Test is Test {
     // Constants
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 0;
+    uint constant PATCH_VERSION = 0;
     string constant URL = "https://github.com/organization/module";
     string constant TITLE = "Payment Processor";
 
-    IModule_v1.Metadata DATA =
-        IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, TITLE);
+    IModule_v1.Metadata DATA = IModule_v1.Metadata(
+        MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
+    );
 
     function setUp() public {
         module = new ModuleImplementationV1Mock();
@@ -104,7 +106,9 @@ contract ModuleFactoryV1Test is Test {
 
         InverterBeaconV1OwnableMock beaconI;
         for (uint i = 0; i < metadataSets; i++) {
-            metadata[i] = IModule_v1.Metadata(i + 1, MINOR_VERSION, URL, TITLE);
+            metadata[i] = IModule_v1.Metadata(
+                i + 1, MINOR_VERSION, PATCH_VERSION, URL, TITLE
+            );
 
             beaconI = new InverterBeaconV1OwnableMock(governanceContract);
 
@@ -143,7 +147,9 @@ contract ModuleFactoryV1Test is Test {
 
         IModule_v1.Metadata[] memory metadata =
             new IModule_v1.Metadata[](number1);
-        metadata[0] = IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, "");
+        metadata[0] = IModule_v1.Metadata(
+            MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, ""
+        );
 
         factory.init(
             governanceContract, metadata, new IInverterBeacon_v1[](number2)
@@ -194,7 +200,10 @@ contract ModuleFactoryV1Test is Test {
         );
         vm.prank(governanceContract);
         factory.registerMetadata(
-            IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, "", TITLE), beacon
+            IModule_v1.Metadata(
+                MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, "", TITLE
+            ),
+            beacon
         );
 
         // Invalid if title empty.
@@ -203,7 +212,10 @@ contract ModuleFactoryV1Test is Test {
         );
         vm.prank(governanceContract);
         factory.registerMetadata(
-            IModule_v1.Metadata(MAJOR_VERSION, MINOR_VERSION, URL, ""), beacon
+            IModule_v1.Metadata(
+                MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, ""
+            ),
+            beacon
         );
     }
 

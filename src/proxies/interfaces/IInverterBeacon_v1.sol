@@ -11,8 +11,8 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @notice Given implementation invalid.
     error InverterBeacon__InvalidImplementation();
 
-    /// @notice Given implementation minor version is not higher than previous minor version.
-    error InverterBeacon__InvalidImplementationMinorVersion();
+    /// @notice Given implementation minor and patch version is not higher than previous minor version.
+    error InverterBeacon__InvalidImplementationMinorOrPatchVersion();
 
     //--------------------------------------------------------------------------
     // Events
@@ -24,7 +24,12 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @notice The Beacon was upgraded to a new implementation address.
     /// @param implementation The new implementation address.
     /// @param newMinorVersion The new minor version of the implementation contract.
-    event Upgraded(address indexed implementation, uint newMinorVersion);
+    /// @param newPatchVersion The new patch version of the implementation contract.
+    event Upgraded(
+        address indexed implementation,
+        uint newMinorVersion,
+        uint newPatchVersion
+    );
 
     /// @notice The Beacon shutdown was initiated.
     event ShutdownInitiated();
@@ -36,9 +41,10 @@ interface IInverterBeacon_v1 is IBeacon {
     // Public View Functions
 
     /// @notice Returns the version of the linked implementation.
-    /// @return The major version.
-    /// @return The minor version.
-    function version() external view returns (uint, uint);
+    /// @return Major version.
+    /// @return Minor version.
+    /// @return Patch version.
+    function version() external view returns (uint, uint, uint);
 
     /// @notice Returns the implementation address of the beacon.
     /// @return The address of the implementation.
@@ -56,10 +62,13 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @dev overrideShutdown Doesnt do anything if Beacon is not in emergency mode
     /// @dev Revert if new implementation invalid.
     /// @param newImplementation The new implementation address.
+    /// @param newMinorVersion The new minor version of the implementation contract.
+    /// @param newPatchVersion The new patch version of the implementation contract.
     /// @param overrideShutdown Flag to enable upgradeTo function to override the shutdown.
     function upgradeTo(
         address newImplementation,
         uint newMinorVersion,
+        uint newPatchVersion,
         bool overrideShutdown
     ) external;
 

@@ -25,48 +25,57 @@ contract LibMetadataTest is Test {
     function testMetadataIsValid(
         uint majorVersion,
         uint minorVersion,
+        uint patchVersion,
         string memory url,
         string memory title
     ) public {
-        vm.assume(majorVersion != 0 || minorVersion != 0);
+        vm.assume(majorVersion != 0 || minorVersion != 0 || patchVersion != 0);
         vm.assume(bytes(url).length != 0);
         vm.assume(bytes(title).length != 0);
 
-        IModule_v1.Metadata memory data =
-            IModule_v1.Metadata(majorVersion, minorVersion, url, title);
+        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+            majorVersion, minorVersion, patchVersion, url, title
+        );
 
         assertTrue(LibMetadata.isValid(data));
     }
 
-    function testMetadataInvalidIfURLEmpty(uint majorVersion, uint minorVersion)
-        public
-    {
-        vm.assume(majorVersion != 0 || minorVersion != 0);
-        IModule_v1.Metadata memory data =
-            IModule_v1.Metadata(majorVersion, minorVersion, "", "title");
+    function testMetadataInvalidIfURLEmpty(
+        uint majorVersion,
+        uint minorVersion,
+        uint patchVersion
+    ) public {
+        vm.assume(majorVersion != 0 || minorVersion != 0 || patchVersion != 0);
+        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+            majorVersion, minorVersion, patchVersion, "", "title"
+        );
 
         assertTrue(!LibMetadata.isValid(data));
     }
 
     function testMetadataInvalidIfTitleEmpty(
         uint majorVersion,
-        uint minorVersion
+        uint minorVersion,
+        uint patchVersion
     ) public {
-        vm.assume(majorVersion != 0 || minorVersion != 0);
+        vm.assume(majorVersion != 0 || minorVersion != 0 || patchVersion != 0);
 
-        IModule_v1.Metadata memory data =
-            IModule_v1.Metadata(majorVersion, minorVersion, "url", "");
+        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+            majorVersion, minorVersion, patchVersion, "url", ""
+        );
 
         assertTrue(!LibMetadata.isValid(data));
     }
 
     function testMetadataInvalidIfVersionOnlyZero(
         uint majorVersion,
-        uint minorVersion
+        uint minorVersion,
+        uint patchVersion
     ) public {
-        IModule_v1.Metadata memory data =
-            IModule_v1.Metadata(majorVersion, minorVersion, "url", "title");
-        if (majorVersion == 0 && minorVersion == 0) {
+        IModule_v1.Metadata memory data = IModule_v1.Metadata(
+            majorVersion, minorVersion, patchVersion, "url", "title"
+        );
+        if (majorVersion == 0 && minorVersion == 0 && patchVersion == 0) {
             assertFalse(LibMetadata.isValid(data));
         } else {
             assertTrue(LibMetadata.isValid(data));

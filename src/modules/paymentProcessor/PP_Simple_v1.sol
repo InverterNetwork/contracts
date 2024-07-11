@@ -132,17 +132,17 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
                 )
             );
 
-            //If call was success
+            // If call was success
             if (success && (data.length == 0 || abi.decode(data, (bool)))) {
                 emit TokensReleased(recipient, token_, amount);
 
-                //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+                // Make sure to let paymentClient know that amount doesnt have to be stored anymore
                 client.amountPaid(token_, amount);
             } else {
                 emit UnclaimableAmountAdded(
                     address(client), token_, recipient, amount
                 );
-                //Adds the walletId to the array of unclaimable wallet ids
+                // Adds the walletId to the array of unclaimable wallet ids
 
                 unclaimableAmountsForRecipient[address(client)][token_][recipient]
                 += amount;
@@ -193,18 +193,18 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         address token,
         address paymentReceiver
     ) internal {
-        //get amount
+        // get amount
 
         address sender = _msgSender();
-        //copy value over
+        // copy value over
         uint amount = unclaimableAmountsForRecipient[client][token][sender];
-        //Delete the field
+        // Delete the field
         delete unclaimableAmountsForRecipient[client][token][sender];
 
-        //Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        // Make sure to let paymentClient know that amount doesnt have to be stored anymore
         IERC20PaymentClientBase_v1(client).amountPaid(token, amount);
 
-        //Call has to succeed otherwise no state change
+        // Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
 
         emit TokensReleased(paymentReceiver, address(token), amount);

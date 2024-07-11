@@ -35,8 +35,7 @@ import {
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PP_StreamingV1Test is //@note do we want to do anything about these tests?
-    ModuleTest {
+contract PP_StreamingV1Test is ModuleTest {
     // SuT
     PP_Streaming_v1AccessMock paymentProcessor;
 
