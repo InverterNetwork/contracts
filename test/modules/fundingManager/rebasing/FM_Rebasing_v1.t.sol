@@ -44,9 +44,9 @@ contract FM_RebasingV1Test is ModuleTest {
 
     UserDeposits userDeposits;
 
-    /// The deposit cap of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
-    /// Note that this sets the deposit limit for the fundign manager.
-    uint internal constant DEPOSIT_CAP = 100_000_000e18;
+    // This cap is one power of ten lower than the MAX_SUPPLY of
+    // the underlying ElasticReceiptToken, just to be safe.
+    uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     // Other constants.
     uint private constant ORCHESTRATOR_ID = 1;

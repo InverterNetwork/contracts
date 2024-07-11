@@ -137,9 +137,11 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     uint private constant MAX_UINT = type(uint).max;
 
     /// @dev The max supply target allowed.
-    /// @dev Note that this constant is internal in order for downstream
-    ////     contracts to enforce this constraint directly.
-    uint internal constant MAX_SUPPLY = 1_000_000_000e18;
+    ///      Note that this constant is internal in order for downstream
+    ///      contracts to enforce this constraint directly.
+    ///      This limit was chosen as a balance between rebasing accuracy
+    ///      and supporting low-value tokens or high decimal tokens properly.
+    uint internal constant MAX_SUPPLY = 1_000_000_000_000_000_000e18;
 
     /// @dev The total amount of bits is a multiple of MAX_SUPPLY so that
     ///      BITS_PER_UNDERLYING is an integer.
