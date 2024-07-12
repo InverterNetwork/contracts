@@ -5,6 +5,14 @@ import "forge-std/Test.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+
+import {TransactionForwarder_v1} from
+    "src/external/forwarder/TransactionForwarder_v1.sol";
+
+import {OrchestratorV1Mock} from
+    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+
 import {ElasticReceiptBaseV1Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptBaseV1Mock.sol";
 
@@ -22,7 +30,9 @@ abstract contract ElasticReceiptBaseV1Test is Test {
     ElasticReceiptBaseV1Mock ert;
 
     // Mocks
+    OrchestratorV1Mock _erb_orchestrator;
     ERC20Mock underlier;
+    TransactionForwarder_v1 _forwarder;
 
     // Constants
     string internal constant NAME = "elastic receipt Token";
@@ -35,13 +45,31 @@ abstract contract ElasticReceiptBaseV1Test is Test {
     uint internal constant TOTAL_BITS = MAX_UINT - (MAX_UINT % MAX_SUPPLY);
     uint internal constant BITS_PER_UNDERLYING = TOTAL_BITS / MAX_SUPPLY;
 
+    // Module Constants
+    uint constant ERB_MAJOR_VERSION = 1;
+    uint constant ERB_MINOR_VERSION = 0;
+    string constant ERB_URL =
+        "https://github.com/organization/module/elasticReceiptBase";
+    string constant ERB_TITLE = "Module";
+
+    IModule_v1.Metadata _ERB_METADATA = IModule_v1.Metadata(
+        ERB_MAJOR_VERSION, ERB_MINOR_VERSION, ERB_URL, ERB_TITLE
+    );
+
+    bytes _erb_configData;
+
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
+        _forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
 
-        address impl = address(new ElasticReceiptBaseV1Mock());
+        address impl = address(new OrchestratorV1Mock(address(_forwarder)));
+        _erb_orchestrator = OrchestratorV1Mock(Clones.clone(impl));
+
+        impl = address(new ElasticReceiptBaseV1Mock());
         ert = ElasticReceiptBaseV1Mock(Clones.clone(impl));
 
-        ert.init(NAME, SYMBOL, uint8(DECIMALS));
+        _erb_configData = abi.encode(NAME, SYMBOL, uint8(DECIMALS));
+        ert.init(_erb_orchestrator, _ERB_METADATA, _erb_configData);
         ert.setUnderlier(address(underlier));
     }
 

@@ -39,6 +39,6 @@ contract Deployment is ElasticReceiptBaseV1Test {
         vm.stopPrank();
 
         vm.expectRevert();
-        ert.init(NAME, SYMBOL, uint8(DECIMALS));
+        ert.init(_erb_orchestrator, _ERB_METADATA, _erb_configData);
     }
 }

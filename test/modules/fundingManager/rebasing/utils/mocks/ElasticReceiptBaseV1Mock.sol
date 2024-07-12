@@ -3,8 +3,10 @@ pragma solidity ^0.8.0;
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-import {ElasticReceiptBase_v1} from
-    "@fm/rebasing/abstracts/ElasticReceiptBase_v1.sol";
+import {
+    ElasticReceiptBase_v1,
+    IOrchestrator_v1
+} from "@fm/rebasing/abstracts/ElasticReceiptBase_v1.sol";
 
 contract ElasticReceiptBaseV1Mock is ElasticReceiptBase_v1 {
     // The token's underlier.
@@ -16,11 +18,11 @@ contract ElasticReceiptBaseV1Mock is ElasticReceiptBase_v1 {
     }
 
     function public__ElasticReceiptBase_init(
-        string memory name_,
-        string memory symbol_,
-        uint8 decimals_
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
     ) public {
-        __ElasticReceiptBase_init(name_, symbol_, decimals_);
+        __ElasticReceiptBase_init(orchestrator_, metadata, configData);
     }
 
     function _supplyTarget()

@@ -40,12 +40,14 @@ contract RebaseTest is ElasticReceiptBaseV1Test {
 
     function testERTDoesntInitializeTwice() public {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        ert.init(NAME, SYMBOL, uint8(DECIMALS));
+        ert.init(_erb_orchestrator, _ERB_METADATA, _erb_configData);
     }
 
     function testERTDoesntInitializeOutsideOfInitialization() public {
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        ert.public__ElasticReceiptBase_init(NAME, SYMBOL, uint8(DECIMALS));
+        ert.public__ElasticReceiptBase_init(
+            _erb_orchestrator, _ERB_METADATA, _erb_configData
+        );
     }
 
     // Tests that if two rebase operations were executed, with the second one

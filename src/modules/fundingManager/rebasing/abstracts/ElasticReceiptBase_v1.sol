@@ -9,7 +9,7 @@ import {
 } from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v1, IOrchestrator_v1} from "src/modules/base/Module_v1.sol";
 
 // External Dependencies
 import {
@@ -215,36 +215,30 @@ abstract contract ElasticReceiptBase_v1 is IRebasingERC20, Module_v1 {
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
-    // Constructor
-
-    constructor() {
-        _disableInitializers();
-    }
-
-    //--------------------------------------------------------------------------
     // Initialization
 
-    function init(string memory name_, string memory symbol_, uint8 decimals_)
-        external
-        virtual
-        initializer
-    {
-        __ElasticReceiptBase_init(name_, symbol_, decimals_);
+    function init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
+    ) external virtual override(Module_v1) initializer {
+        __ElasticReceiptBase_init(orchestrator_, metadata, configData);
     }
 
     /// @dev Initializes the contract.
     /// @dev Reinitialization possible as long as no tokens minted.
     function __ElasticReceiptBase_init(
-        string memory name_,
-        string memory symbol_,
-        uint8 decimals_
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
     ) internal onlyInitializing {
+        __Module_init(orchestrator_, metadata);
+
         require(_totalTokenSupply == 0);
 
         // Set IERC20Metadata.
-        name = name_;
-        symbol = symbol_;
-        decimals = decimals_;
+        (name, symbol, decimals) =
+            abi.decode(configData, (string, string, uint8));
 
         // Total supply of bits are 'pre-mined' to zero address.
         //
