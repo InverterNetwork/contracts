@@ -397,6 +397,12 @@ contract FM_RebasingV1Test is ModuleTest {
         // Some time passes, and now half the users deposit their underliers again to continue funding (if they had any funds left).
         for (uint i; i < input.users.length / 2; ++i) {
             if (remainingFunds[i] != 0) {
+                uint actualBalance = _token.balanceOf(input.users[i]);
+                if (actualBalance < remainingFunds[i]) {
+                    // If it's not equal, it can be off by one due to rounding
+                    assertApproxEqAbs(actualBalance, remainingFunds[i], 1);
+                    remainingFunds[i] = actualBalance;
+                }
                 vm.prank(input.users[i]);
                 vm.expectEmit();
                 emit Deposit(input.users[i], input.users[i], remainingFunds[i]);
