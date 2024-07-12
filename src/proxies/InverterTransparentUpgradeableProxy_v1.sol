@@ -112,9 +112,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @dev Upgrades the implementation to the newest version listed in the beacon
     function upgradeToNewestVersion() internal virtual {
         // Override implementation
-        ERC1967Utils.upgradeToAndCall(
-            _beacon.getImplementationAddress(), bytes("")
-        );
+        ERC1967Utils.upgradeToAndCall(_beacon.implementation(), bytes(""));
         // Override version
         (majorVersion, minorVersion) = _beacon.version();
     }
