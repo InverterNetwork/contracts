@@ -45,7 +45,7 @@ contract FM_RebasingV1Test is ModuleTest {
     UserDeposits userDeposits;
 
     // This cap is one power of ten lower than the MAX_SUPPLY of
-    // the underlying ElasticReceiptToken, just to be safe.
+    // the underlying ElasticReceiptTokenBase, just to be safe.
     uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     // Other constants.
