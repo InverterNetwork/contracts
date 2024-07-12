@@ -180,7 +180,7 @@ abstract contract OptimisticOracleIntegrator is
     {
         asserter = asserter == address(0) ? _msgSender() : asserter;
         if (asserter == address(this)) {
-            //ensure we have enough balance
+            // ensure we have enough balance
             if (defaultCurrency.balanceOf(address(this)) < defaultBond) {
                 revert
                     Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
@@ -195,7 +195,7 @@ abstract contract OptimisticOracleIntegrator is
                     defaultBond
                 )
             );
-            //require(success && (data.length == 0 || abi.decode(data, (bool)))); -> taken over from SafeERC20 since we want to override the revert messsage
+            // require(success && (data.length == 0 || abi.decode(data, (bool)))); -> taken over from SafeERC20 since we want to override the revert messsage
             if (!success || (data.length > 0 && !abi.decode(data, (bool)))) {
                 revert
                     Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
