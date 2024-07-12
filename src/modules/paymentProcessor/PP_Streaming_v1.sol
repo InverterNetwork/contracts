@@ -33,6 +33,16 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          multiple clients and recipients, integrated with error handling for
  *          payments and managing active streaming schedules and their cancellations.
  *
+ *          DISCLAIMER: Known Limitations
+ *          This contract has a known limitation that could potentially lead to a Denial of Service
+ *          (DoS) attack. The `activePaymentReceivers` array for a client can grow unbounded,
+ *          which may cause gas-intensive operations to exceed block gas limits under certain
+ *          conditions. This could temporarily render some functions inoperable.
+ *
+ *          While this limitation does not directly risk user funds, it may temporarily prevent
+ *          users from staking, unstaking, or claiming rewards if exploited. The development
+ *          team is aware of this issue and may implement a fix in future upgrades if necessary.
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
