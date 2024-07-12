@@ -12,6 +12,7 @@ import {IOrchestratorFactory_v1} from
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 // Internal Dependencies
+
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {InverterTransparentUpgradeableProxy_v1} from
     "src/proxies/InverterTransparentUpgradeableProxy_v1.sol";
@@ -83,6 +84,7 @@ contract ModuleFactory_v1 is
         // Revert if beacon's implementation is zero address.
         if (
             beacon.implementation() == address(0)
+                || beacon.getReverterAddress() != reverter
                 || Ownable2StepUpgradeable(address(beacon)).owner() != governor
         ) {
             revert ModuleFactory__InvalidInverterBeacon();
@@ -92,6 +94,8 @@ contract ModuleFactory_v1 is
 
     //--------------------------------------------------------------------------
     // Storage
+
+    address public immutable reverter;
 
     /// @inheritdoc IModuleFactory_v1
     address public governor;
@@ -109,9 +113,11 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Constructor & Initializer
 
-    constructor(address _trustedForwarder)
+    constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
-    {}
+    {
+        reverter = _reverter;
+    }
 
     /// @notice The factories initializer function.
     /// @param _governor The address of the governor contract.

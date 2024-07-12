@@ -32,9 +32,15 @@ contract DeployModuleFactory_v1 is Script {
     function run() external returns (address) {
         // Read deployment settings from environment variables.
 
+        address reverter = vm.envAddress("REVERTER_ADDRESS");
         address governor = vm.envAddress("GOVERNOR_ADDRESS");
         address forwarder = vm.envAddress("FORWARDER_ADDRESS");
         // Check settings.
+
+        require(
+            reverter != address(0),
+            "DeployOrchestratorFactory_v1: Missing env variable: reverter contract"
+        );
 
         require(
             governor != address(0),
@@ -48,6 +54,7 @@ contract DeployModuleFactory_v1 is Script {
 
         // Deploy the moduleFactory.
         return run(
+            reverter,
             governor,
             forwarder,
             new IModule_v1.Metadata[](0),
@@ -56,8 +63,9 @@ contract DeployModuleFactory_v1 is Script {
     }
 
     function run(
-        address governor,
+        address reverter,
         address forwarder,
+        address governor,
         IModule_v1.Metadata[] memory initialMetadataRegistration,
         IInverterBeacon_v1[] memory initialBeaconRegistration
     ) public returns (address) {
@@ -66,7 +74,7 @@ contract DeployModuleFactory_v1 is Script {
         {
             // Deploy the moduleFactory.
             moduleFactoryImplementation =
-                address(new ModuleFactory_v1(forwarder));
+                address(new ModuleFactory_v1(reverter, forwarder));
         }
         vm.stopBroadcast();
 
@@ -75,7 +83,7 @@ contract DeployModuleFactory_v1 is Script {
 
         (moduleFactoryBeacon, moduleFactoryProxy) =
         deployAndSetUpInverterBeacon_v1.deployBeaconAndSetupProxy(
-            governor, moduleFactoryImplementation, 1, 0, 0
+            reverter, governor, moduleFactoryImplementation, 1, 0, 0
         );
 
         moduleFactory = ModuleFactory_v1(moduleFactoryProxy);

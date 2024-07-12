@@ -34,6 +34,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         {
             // Deploy the beacon.
             beacon = new InverterBeacon_v1(
+                ModuleFactory_v1(moduleFactory).reverter(),
                 owner,
                 metadata.majorVersion,
                 implementation,
@@ -56,6 +57,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
     }
 
     function deployBeaconAndSetupProxy(
+        address reverter,
         address owner,
         address implementation,
         uint majorVersion,
@@ -66,7 +68,12 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         {
             // Deploy the beacon.
             beacon = new InverterBeacon_v1(
-                owner, majorVersion, implementation, minorVersion, patchVersion
+                reverter,
+                owner,
+                majorVersion,
+                implementation,
+                minorVersion,
+                patchVersion
             );
 
             // return the proxy after creation
@@ -88,6 +95,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
     }
 
     function deployInverterBeacon(
+        address reverter,
         address owner,
         address implementation,
         uint majorVersion,
@@ -99,7 +107,12 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
             // Deploy the beacon.
 
             beacon = new InverterBeacon_v1(
-                owner, majorVersion, implementation, minorVersion, patchVersion
+                reverter,
+                owner,
+                majorVersion,
+                implementation,
+                minorVersion,
+                patchVersion
             );
         }
 

@@ -46,6 +46,10 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @return Patch version.
     function version() external view returns (uint, uint, uint);
 
+    /// @notice Returns the reverter address of the beacon.
+    /// @return The address of the reverter contract.
+    function getReverterAddress() external returns (address);
+
     /// @notice Returns the implementation address of the beacon.
     /// @return The address of the implementation.
     function getImplementationAddress() external returns (address);

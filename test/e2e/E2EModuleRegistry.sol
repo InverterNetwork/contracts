@@ -98,6 +98,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         rebasingFundingManagerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             rebasingFundingManagerMetadata.majorVersion,
             address(rebasingFundingManagerImpl),
@@ -172,6 +173,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata.majorVersion,
             address(bancorVirtualSupplyBondingCurveFundingManagerImpl),
@@ -218,6 +220,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         roleAuthorizerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             roleAuthorizerMetadata.majorVersion,
             address(roleAuthorizerImpl),
@@ -263,6 +266,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             tokenRoleAuthorizerMetadata.majorVersion,
             address(tokenRoleAuthorizerImpl),
@@ -306,6 +310,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         simplePaymentProcessorBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             simplePaymentProcessorMetadata.majorVersion,
             address(simplePaymentProcessorImpl),
@@ -350,6 +355,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         streamingPaymentProcessorBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             streamingPaymentProcessorMetadata.majorVersion,
             address(streamingPaymentProcessorImpl),
@@ -396,6 +402,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         recurringPaymentManagerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             recurringPaymentManagerMetadata.majorVersion,
             address(recurringPaymentManagerImpl),
@@ -440,6 +447,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         bountyManagerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             bountyManagerMetadata.majorVersion,
             address(bountyManagerImpl),
@@ -484,6 +492,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         LM_PC_Staking_v1Beacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             LM_PC_Staking_v1Metadata.majorVersion,
             address(LM_PC_Staking_v1Impl),
@@ -528,6 +537,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         LM_PC_KPIRewarder_v1Beacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             LM_PC_KPIRewarder_v1Metadata.majorVersion,
             address(LM_PC_KPIRewarder_v1Impl),
@@ -578,6 +588,7 @@ contract E2EModuleRegistry is Test {
 
         // Deploy module beacons.
         singleVoteGovernorBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             singleVoteGovernorMetadata.majorVersion,
             address(singleVoteGovernorImpl),
