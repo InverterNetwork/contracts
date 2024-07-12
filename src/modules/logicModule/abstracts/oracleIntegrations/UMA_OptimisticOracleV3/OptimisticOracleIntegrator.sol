@@ -172,7 +172,7 @@ abstract contract OptimisticOracleIntegrator is
     /// @dev Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds. This is
     /// because the block.timestamp is included in the claim. The consumer contract must store the returned assertionId
     /// identifiers to able to get the information using getData.
-    function assertDataFor(bytes32 dataId, bytes32 data, address asserter)
+    function assertDataFor(bytes32 dataId, bytes32 data_, address asserter)
         public
         virtual
         onlyModuleRole(ASSERTER_ROLE)
@@ -213,7 +213,7 @@ abstract contract OptimisticOracleIntegrator is
         assertionId = oo.assertTruth(
             abi.encodePacked(
                 "Data asserted: 0x", // in the example data is type bytes32 so we add the hex prefix 0x.
-                ClaimData.toUtf8Bytes(data),
+                ClaimData.toUtf8Bytes(data_),
                 " for dataId: 0x",
                 ClaimData.toUtf8Bytes(dataId),
                 " and asserter: 0x",
@@ -234,8 +234,8 @@ abstract contract OptimisticOracleIntegrator is
             bytes32(0) // No domain.
         );
         assertionData[assertionId] =
-            DataAssertion(dataId, data, asserter, false);
-        emit DataAsserted(dataId, data, asserter, assertionId);
+            DataAssertion(dataId, data_, asserter, false);
+        emit DataAsserted(dataId, data_, asserter, assertionId);
     }
 
     //==========================================================================

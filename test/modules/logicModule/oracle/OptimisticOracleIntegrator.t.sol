@@ -311,9 +311,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
 
     */
-    function testAssertDataForFails_whenCallerDoesNotHaveAsserterRole(
-        address who
-    ) public {
+    function testAssertDataForFails_whenCallerDoesNotHaveAsserterRole()
+        public
+    {
         bytes32 roleId = _authorizer.generateRoleId(
             address(ooIntegrator), ooIntegrator.ASSERTER_ROLE()
         );
