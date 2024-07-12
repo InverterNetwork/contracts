@@ -18,7 +18,7 @@ contract DeployTransactionForwarder_v1 is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    /// @notice Creates the implementatio of the transactionForwarder
+    /// @notice Creates the implementation of the transactionForwarder
     /// @return implementation The implementation of the TransactionForwarder_v1
     function run() external returns (address implementation) {
         vm.startBroadcast(deployerPrivateKey);
