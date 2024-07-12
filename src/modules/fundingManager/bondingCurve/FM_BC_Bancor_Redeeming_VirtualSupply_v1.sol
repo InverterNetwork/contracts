@@ -231,8 +231,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
     /// bonding curve algorithm.
     /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
-    /// Important: The Bancor Formula has an upper computational limit of (10^38). For tokens with
-    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
+    /// Important: The Bancor Formula has an upper computational limit of (10^38).
     /// While this is substantially large, it is crucial to be aware of this constraint.
     /// Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of collateral token depoisited.
