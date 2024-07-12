@@ -28,6 +28,9 @@ interface IModuleFactory_v1 {
     /// @notice Given metadata already registered.
     error ModuleFactory__MetadataAlreadyRegistered();
 
+    /// @notice Given module version is sunset.
+    error ModuleFactory__ModuleIsSunset();
+
     //--------------------------------------------------------------------------
     // Events
 
