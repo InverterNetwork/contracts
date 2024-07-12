@@ -9,11 +9,7 @@ import {
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
-import {
-    Module_v1,
-    ERC165,
-    ContextUpgradeable
-} from "src/modules/base/Module_v1.sol";
+import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -236,9 +232,9 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
-        _ensureValidRecipient(order.recipient);
-        _ensureValidToken(order.paymentToken);
-        _ensureValidAmount(order.amount);
+        if (!(orchestrator().paymentProcessor().validPaymentOrder(order))) {
+            revert Module__ERC20PaymentClientBase__InvalidPaymentOrder();
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -255,21 +251,12 @@ abstract contract ERC20PaymentClientBase_v1 is
             if (
                 token == address(__Module_orchestrator.fundingManager().token())
             ) {
-                // Trigger callback from orchestrator to transfer tokens
-                // to address(this).
-                bool ok;
-                (ok, /*returnData*/ ) = __Module_orchestrator
-                    .executeTxFromModule(
-                    address(__Module_orchestrator.fundingManager()),
-                    abi.encodeCall(
-                        IFundingManager_v1.transferOrchestratorToken,
-                        (address(this), amount - currentFunds)
-                    )
-                );
+                // Get FundingManager address from orchestrator to transfer tokens
+                // to address(this). Fails on ERC20 level if insufficient balance
 
-                if (!ok) {
-                    revert Module__ERC20PaymentClientBase__TokenTransferFailed();
-                }
+                __Module_orchestrator.fundingManager().transferOrchestratorToken(
+                    address(this), (amount - currentFunds)
+                );
             } else {
                 revert Module__ERC20PaymentClientBase__InsufficientFunds(token);
             }

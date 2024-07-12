@@ -20,7 +20,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     LM_PC_Staking_v1,
     ILM_PC_Staking_v1,
-    ReentrancyGuard,
+    ReentrancyGuardUpgradeable,
     IERC20PaymentClientBase_v1
 } from "@lm/LM_PC_Staking_v1.sol";
 
@@ -74,6 +74,20 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
+        );
+
+        address impl = address(new LM_PC_Staking_v1AccessMock());
+        stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
+        _setUpOrchestrator(stakingManager);
+        _authorizer.setIsAuthorized(address(this), true);
+
+        vm.expectRevert(
+            ILM_PC_Staking_v1
+                .Module__LM_PC_Staking_v1__InvalidStakingToken
+                .selector
+        );
+        stakingManager.init(
+            _orchestrator, _METADATA, abi.encode(address(_token))
         );
     }
 
@@ -274,7 +288,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
+                ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );
@@ -388,7 +402,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
+                ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );

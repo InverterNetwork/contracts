@@ -351,7 +351,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function transferOrchestratorToken(address to, uint amount)
         external
         virtual
-        onlyOrchestrator
+        onlyPaymentClient
     {
         __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
 
@@ -504,6 +504,43 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         }
         super._setIssuanceToken(_issuanceToken);
         issuanceTokenDecimals = _decimals;
+    }
+
+    /// @dev Internal function to directly set the virtual collateral supply to a new value.
+    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    function _setVirtualCollateralSupply(uint _virtualSupply)
+        internal
+        override(VirtualCollateralSupplyBase_v1)
+    {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
+        }
+        super._setVirtualCollateralSupply(_virtualSupply);
+    }
+
+    /// @dev Internal function to directly set the virtual issuance supply to a new value.
+    ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
+    ///         is done for use in the Bancor Formulat
+    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    function _setVirtualIssuanceSupply(uint _virtualSupply)
+        internal
+        override(VirtualIssuanceSupplyBase_v1)
+    {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
+        }
+        // Check if virtual supply is big enough to ensure compatibility with relative issuance
+        // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
+        // so it will not result in a round down 0 value
+        if (_virtualSupply < 10 ** (issuanceTokenDecimals - 18)) {
+            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
+            );
+        }
+        super._setVirtualIssuanceSupply(_virtualSupply);
     }
 
     /// @dev Sets the reserve ratio for buying tokens.

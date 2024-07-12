@@ -199,45 +199,23 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             }
 
             // Generate Streaming Payments for all orders
-            address _recipient;
-            address _token;
-            uint _streamId;
-            uint _amount;
-            uint _start;
-            uint _cliff;
-            uint _end;
-
             uint numOrders = orders.length;
 
             for (uint i; i < numOrders;) {
-                _recipient = orders[i].recipient;
-                _token = orders[i].paymentToken;
-                _streamId = numStreams[address(client)][_recipient] + 1;
-                _amount = orders[i].amount;
-                _start = orders[i].start;
-                _cliff = orders[i].cliff;
-                _end = orders[i].end;
-
                 _addPayment(
                     address(client),
-                    _recipient,
-                    _token,
-                    _streamId,
-                    _amount,
-                    _start,
-                    _cliff,
-                    _end
+                    orders[i],
+                    numStreams[address(client)][orders[i].recipient] + 1
                 );
 
                 emit PaymentOrderProcessed(
                     address(client),
-                    _recipient,
-                    _token,
-                    _streamId,
-                    _amount,
-                    _start,
-                    _cliff,
-                    _end
+                    orders[i].recipient,
+                    orders[i].paymentToken,
+                    orders[i].amount,
+                    orders[i].start,
+                    orders[i].cliff,
+                    orders[i].end
                 );
 
                 unchecked {
@@ -406,6 +384,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return paymentReceiverStreams;
     }
 
+    /// @inheritdoc IPaymentProcessor_v1
+    function validPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order
+    ) external view returns (bool) {
+        return validPaymentReceiver(order.recipient) && validTotal(order.amount)
+            && validTimes(order.start, order.cliff, order.end)
+            && validPaymentToken(order.paymentToken);
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions
 
@@ -451,7 +438,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal view returns (uint) {
         address[] memory receiverSearchArray = activePaymentReceivers[client];
 
-        uint length = activePaymentReceivers[client].length;
+        uint length = receiverSearchArray.length;
         for (uint i; i < length;) {
             if (receiverSearchArray[i] == paymentReceiver) {
                 return i;
@@ -629,56 +616,47 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///         depending on the module.
     /// @dev This function can handle multiple payment orders associated with a particular paymentReceiver for the same payment client
     ///      without overriding the earlier ones. The maximum payment orders for a paymentReceiver MUST BE capped at (2**256-1).
-    /// @param _paymentReceiver PaymentReceiver's address.
-    /// @param _total Total amount the paymentReceiver will receive per epoch.
-    /// @param _start Streaming start timestamp.
-    /// @param _cliff The duration of the cliff period.
-    /// @param _end Streaming end timestamp.
+    /// @param _client PaymentReceiver's address.
+    /// @param _order PaymentOrder that needs to be added
     /// @param _streamId ID of the new stream of the a particular paymentReceiver being added
     function _addPayment(
-        address client,
-        address _paymentReceiver,
-        address _token,
-        uint _streamId,
-        uint _total,
-        uint _start,
-        uint _cliff,
-        uint _end
+        address _client,
+        IERC20PaymentClientBase_v1.PaymentOrder memory _order,
+        uint _streamId
     ) internal {
-        ++numStreams[client][_paymentReceiver];
+        ++numStreams[_client][_order.recipient];
+
+        streams[_client][_order.recipient][_streamId] = Stream(
+            _order.paymentToken,
+            _streamId,
+            _order.amount,
+            0,
+            _order.start,
+            _order.cliff,
+            _order.end
+        );
+
+        // We do not want activePaymentReceivers[_client] to have duplicate paymentReceiver entries
+        // So we avoid pushing the _paymentReceiver to activePaymentReceivers[_client] if it already exists
         if (
-            !validPaymentReceiver(_paymentReceiver) || !validTotal(_total)
-                || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
+            _findAddressInActiveStreams(_client, _order.recipient)
+                == type(uint).max
         ) {
-            emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _token, _total, _start, _cliff, _end
-            );
-        } else {
-            streams[client][_paymentReceiver][_streamId] =
-                Stream(_token, _streamId, _total, 0, _start, _cliff, _end);
-
-            // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
-            // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
-            if (
-                _findAddressInActiveStreams(client, _paymentReceiver)
-                    == type(uint).max
-            ) {
-                activePaymentReceivers[client].push(_paymentReceiver);
-            }
-
-            activeStreams[client][_paymentReceiver].push(_streamId);
-
-            emit StreamingPaymentAdded(
-                client,
-                _paymentReceiver,
-                _token,
-                _streamId,
-                _total,
-                _start,
-                _cliff,
-                _end
-            );
+            activePaymentReceivers[_client].push(_order.recipient);
         }
+
+        activeStreams[_client][_order.recipient].push(_streamId);
+
+        emit StreamingPaymentAdded(
+            _client,
+            _order.recipient,
+            _order.paymentToken,
+            _streamId,
+            _order.amount,
+            _order.start,
+            _order.cliff,
+            _order.end
+        );
     }
 
     /// @notice used to claim all the payment orders associated with a particular paymentReceiver for a given payment client

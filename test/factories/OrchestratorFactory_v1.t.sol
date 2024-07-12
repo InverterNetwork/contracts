@@ -29,6 +29,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
 
+// External Dependencies
+import {Clones} from "@oz/proxy/Clones.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -97,7 +100,8 @@ contract OrchestratorFactoryV1Test is Test {
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
         beacon.overrideImplementation(address(target));
 
-        factory = new OrchestratorFactory_v1(address(0));
+        address impl = address(new OrchestratorFactory_v1(address(0)));
+        factory = OrchestratorFactory_v1(Clones.clone(impl));
         factory.init(moduleFactory.governor(), beacon, address(moduleFactory));
     }
 
@@ -219,6 +223,116 @@ contract OrchestratorFactoryV1Test is Test {
             address orchestrator = _deployOrchestrator();
             assertEq(orchestrator, factory.getOrchestratorByID(i));
         }
+    }
+
+    function testCreateOrchestratorReorgResilience(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        uint modulesLen
+    ) public {
+        address alice = address(0xA11CE);
+        address bob = address(0x606);
+
+        _assumeValidWorkflowConfig(workflowConfig);
+        // Note to stay reasonable
+        modulesLen = bound(modulesLen, 0, 50);
+
+        // Create optional ModuleConfig instances.
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs =
+            new IOrchestratorFactory_v1.ModuleConfig[](modulesLen);
+        for (uint i; i < modulesLen; ++i) {
+            moduleConfigs[i] = moduleConfig;
+        }
+
+        // Create a snapshot to revert to, to simulate a reorg later
+        uint snapshot = vm.snapshot();
+
+        vm.expectEmit(true, false, false, false);
+        emit OrchestratorCreated(1, address(0));
+
+        // Alice deploys original orchestrator
+        IOrchestrator_v1 orchestrator;
+        vm.startPrank(alice);
+        {
+            orchestrator = factory.createOrchestrator(
+                workflowConfig,
+                fundingManagerConfig,
+                authorizerConfig,
+                paymentProcessorConfig,
+                moduleConfigs
+            );
+        }
+        vm.stopPrank();
+
+        // Check that orchestrator's strorage correctly initialized.
+        assertEq(orchestrator.orchestratorId(), 1);
+        assertTrue(address(orchestrator.authorizer()) != address(0));
+        assertTrue(address(orchestrator.paymentProcessor()) != address(0));
+        assertTrue(address(orchestrator.governor()) == moduleFactory.governor());
+
+        // Module size should be the 3 enforced contracts + whatever is in the module config
+        assertEq(orchestrator.modulesSize(), 3 + moduleConfigs.length);
+
+        // Store the code size of the orchestrator before we reorg
+        uint sizePreReorg;
+        assembly {
+            sizePreReorg := extcodesize(orchestrator)
+        }
+
+        // Simulate reorg, revert to snapshot before the creation of the
+        // Orchestrator with id 1.
+        vm.revertTo(snapshot);
+
+        // Store the code size of the orchestrator after we reorg
+        uint sizePostReorg;
+        assembly {
+            sizePostReorg := extcodesize(orchestrator)
+        }
+
+        // Check whether the contracts actually disappeared, just to be safe
+        assertNotEq(sizePreReorg, sizePostReorg);
+        assertEq(sizePostReorg, 0);
+
+        // Simulate someone else deploying the workflow with the same exact input
+        // after the reorg
+        vm.expectEmit(true, false, false, false);
+        emit OrchestratorCreated(1, address(0));
+        IOrchestrator_v1 orchestrator_retry_bob;
+        vm.startPrank(bob);
+        {
+            orchestrator_retry_bob = factory.createOrchestrator(
+                workflowConfig,
+                fundingManagerConfig,
+                authorizerConfig,
+                paymentProcessorConfig,
+                moduleConfigs
+            );
+        }
+        vm.stopPrank();
+
+        // Address shouldn't match the original one, as create2 is based on
+        // the msgSender, which isn't Alice here
+        assertNotEq(address(orchestrator), address(orchestrator_retry_bob));
+
+        // Now Alice deploys the workflow again, after the reorg
+        vm.expectEmit(true, false, false, false);
+        emit OrchestratorCreated(2, address(0));
+        IOrchestrator_v1 orchestrator_retry_alice;
+        vm.startPrank(alice);
+        {
+            orchestrator_retry_alice = factory.createOrchestrator(
+                workflowConfig,
+                fundingManagerConfig,
+                authorizerConfig,
+                paymentProcessorConfig,
+                moduleConfigs
+            );
+        }
+        vm.stopPrank();
+
+        // The address of the original deployment matches the one of this
+        // new deployment, even with someone else doing the same deployment.
+        // -> success!
+        assertEq(address(orchestrator), address(orchestrator_retry_alice));
     }
 
     function _deployOrchestrator() private returns (address) {

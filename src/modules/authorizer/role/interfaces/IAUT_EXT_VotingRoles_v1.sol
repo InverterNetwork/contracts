@@ -94,19 +94,19 @@ interface IAUT_EXT_VotingRoles_v1 {
 
     /// @notice Event emitted when a motion is created
     /// @param motionId The motion ID.
-    event MotionCreated(uint indexed motionId);
+    event MotionCreated(bytes32 indexed motionId);
 
     /// @notice Event emitted when a vote is cast for a motion
     /// @param motionId The motion ID.
     /// @param voter The address of a voter
     /// @param motionId Value that indicates how the voter supports the motion
     event VoteCast(
-        uint indexed motionId, address indexed voter, uint8 indexed support
+        bytes32 indexed motionId, address indexed voter, uint8 indexed support
     );
 
     /// @notice Event emitted when a motion is executed.
     /// @param motionId The motion ID.
-    event MotionExecuted(uint indexed motionId);
+    event MotionExecuted(bytes32 indexed motionId);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -119,7 +119,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     function addVoter(address who) external;
     function removeVoter(address who) external;
 
-    function motions(uint motionId)
+    function motions(bytes32 motionId)
         external
         view
         returns (
@@ -147,7 +147,7 @@ interface IAUT_EXT_VotingRoles_v1 {
 
     function createMotion(address target, bytes calldata action)
         external
-        returns (uint);
-    function castVote(uint motionId, uint8 support) external;
-    function executeMotion(uint motionId) external;
+        returns (bytes32);
+    function castVote(bytes32 motionId, uint8 support) external;
+    function executeMotion(bytes32 motionId) external;
 }

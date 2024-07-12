@@ -55,6 +55,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         _setIssuanceToken(_newIssuanceToken);
     }
 
+    function call_setVirtualIssuanceSupply(uint _newSupply) external {
+        _setVirtualIssuanceSupply(_newSupply);
+    }
+
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,

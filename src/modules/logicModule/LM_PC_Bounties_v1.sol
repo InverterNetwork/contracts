@@ -14,7 +14,6 @@ import {
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
-    ERC165,
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
@@ -176,6 +175,10 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
             _claimRegistry[claimId].contributors;
 
         uint length = contributors.length;
+        // Validate contributor array is the same length
+        if (claimContribs.length != length) {
+            revert Module__LM_PC_Bounty__ContributorsChanged();
+        }
         for (uint i; i < length;) {
             if (
                 contributors[i].addr != claimContribs[i].addr

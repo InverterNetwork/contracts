@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import "../../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
+import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -200,7 +200,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         address[] memory modulesList = _orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_Bounties_v1).interfaceId
                 )
             ) {
