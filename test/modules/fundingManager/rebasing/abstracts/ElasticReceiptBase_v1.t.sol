@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+import {Clones} from "@oz/proxy/Clones.sol";
+
 import {ElasticReceiptBaseV1Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptBaseV1Mock.sol";
 
@@ -36,8 +38,11 @@ abstract contract ElasticReceiptBaseV1Test is Test {
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
 
-        ert = new ElasticReceiptBaseV1Mock(address(underlier));
+        address impl = address(new ElasticReceiptBaseV1Mock());
+        ert = ElasticReceiptBaseV1Mock(Clones.clone(impl));
+
         ert.init(NAME, SYMBOL, uint8(DECIMALS));
+        ert.setUnderlier(address(underlier));
     }
 
     modifier assumeTestAmount(uint amount) {

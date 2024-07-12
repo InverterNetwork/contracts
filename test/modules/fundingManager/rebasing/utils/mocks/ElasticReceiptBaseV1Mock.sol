@@ -11,8 +11,8 @@ contract ElasticReceiptBaseV1Mock is ElasticReceiptBase_v1 {
     // Is of type ERC20.
     address public underlier;
 
-    constructor(address underlier_) {
-        underlier = underlier_;
+    function setUnderlier(address _underlier) public {
+        underlier = _underlier;
     }
 
     function public__ElasticReceiptBase_init(
