@@ -1676,13 +1676,18 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     /* Test transferOrchestratorToken 
         ├── given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
-        │   └──and the conditions of the modifier are not met
+        │   └── and the conditions of the modifier are not met
         │       └── when the function transferOrchestratorToken() gets called
         │           └── then it should revert
-    └── given the caller is a PaymentClient module
-            └── and the PaymentClient module is registered in the Orchestrator
-                └── then is should send the funds to the specified address
-                    └── and it should emit an event
+        └── given the caller is a PaymentClient module
+                └── and the PaymentClient module is registered in the Orchestrator
+                    ├── and the withdraw amount + project collateral fee > FM collateral token balance
+                    │   └── when the function transferOrchestratorToken() gets called
+                    │       └── then it should revert
+                    └── and the FM has enough collateral token for amount to be transferred
+                            when the function transferOrchestratorToken() gets called
+                            └── then is should send the funds to the specified address
+                                └── and it should emit an event
     */
 
     function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
@@ -1695,6 +1700,45 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.prank(caller);
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
         bondingCurveFundingManager.transferOrchestratorToken(to, amount);
+    }
+
+    function testTransferOrchestratorToken_FailsGivenNotEnoughCollateralInFM(
+        address to,
+        uint amount,
+        uint projectCollateralFeeCollected
+    ) public virtual {
+        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
+
+        amount = bound(amount, 1, type(uint128).max);
+        projectCollateralFeeCollected =
+            bound(projectCollateralFeeCollected, 1, type(uint128).max);
+
+        // Add collateral fee collected to create fail scenario
+        bondingCurveFundingManager.setProjectCollateralFeeCollectedHelper(
+            projectCollateralFeeCollected
+        );
+        assertEq(
+            bondingCurveFundingManager.projectCollateralFeeCollected(),
+            projectCollateralFeeCollected
+        );
+        amount = amount + projectCollateralFeeCollected; // Withdraw amount which includes the fee
+
+        _token.mint(address(bondingCurveFundingManager), amount);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
+
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
+        {
+            vm.expectRevert(
+                IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                    .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidOrchestratorTokenWithdrawAmount
+                    .selector
+            );
+            bondingCurveFundingManager.transferOrchestratorToken(to, amount);
+        }
+        vm.stopPrank();
     }
 
     function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(

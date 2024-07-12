@@ -107,4 +107,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         return
             _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
     }
+
+    function setProjectCollateralFeeCollectedHelper(uint _amount) external {
+        projectCollateralFeeCollected = _amount;
+    }
 }
