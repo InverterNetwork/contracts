@@ -25,7 +25,8 @@ import {
 // Mocks
 import {
     IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock
+    ERC20PaymentClientBaseV1Mock,
+    ERC20
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 // Errors
@@ -424,19 +425,25 @@ contract PP_SimpleV1Test is ModuleTest {
     }
 
     function test_validPaymentToken(address _token, address sender) public {
-        bool expectedValue = true;
-        if (
-            _token == address(0) || _token == sender
-                || _token == address(paymentProcessor)
-                || _token == address(_orchestrator)
-        ) {
-            expectedValue = false;
-        }
+        
+        // Non-contract addresses or protected addresses should be invalid
+
+        bool expectedValue = false;
 
         vm.prank(sender);
 
         assertEq(
             paymentProcessor.original_validPaymentToken(_token), expectedValue
         );
+
+        ERC20 actualToken = ERC20(_token);
+
+                vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentToken(_token), true
+        );
+
+
     }
 }

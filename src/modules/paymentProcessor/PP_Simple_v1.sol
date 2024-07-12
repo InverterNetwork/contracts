@@ -133,7 +133,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             );
 
             //If call was success
-            if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+            if (
+                success && (data.length == 0 || abi.decode(data, (bool)))
+                    && token_.code.length != 0
+            ) {
                 emit TokensReleased(recipient, token_, amount);
 
                 //Make sure to let paymentClient know that amount doesnt have to be stored anymore
@@ -245,8 +248,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     function validPaymentToken(address _token) internal view returns (bool) {
         // Only a basic sanity check, the corresponding module should ensure it's sending an ERC20.
         return !(
-            _token == address(0) || _token == _msgSender()
-                || _token == address(this) || _token == address(orchestrator())
+             _token == address(this) || _token == address(orchestrator()) || _token.code.length == 0
         );
     }
 }

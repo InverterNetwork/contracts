@@ -710,7 +710,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             )
         );
 
-        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+        if (
+            success && (data.length == 0 || abi.decode(data, (bool)))
+                && _token.code.length != 0
+        ) {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             // Make sure to let paymentClient know that amount doesnt have to be stored anymore
@@ -863,7 +866,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // Only a basic sanity check, the corresponding module should ensure it's sending an ERC20.
         return !(
             _token == address(0) || _token == _msgSender()
-                || _token == address(this) || _token == address(orchestrator())
+                || _token == address(this) || _token == address(orchestrator() || _token.code.length == 0)
         );
     }
 }
