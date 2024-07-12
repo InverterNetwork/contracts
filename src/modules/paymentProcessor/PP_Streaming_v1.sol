@@ -43,6 +43,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          users from staking, unstaking, or claiming rewards if exploited. The development
  *          team is aware of this issue and may implement a fix in future upgrades if necessary.
  *
+ *          CAUTION: Workflow deployers should be especially careful when using this payment processor
+ *          with contracts that allow users to directly initiate payment streams. Such setups
+ *          are particularly vulnerable to this limitation and could more easily trigger a DoS condition.
+ *
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
