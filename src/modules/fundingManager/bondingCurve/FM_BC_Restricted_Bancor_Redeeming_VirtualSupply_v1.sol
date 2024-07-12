@@ -96,7 +96,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
         external
         view
         override
-        onlyOrchestrator
+        onlyPaymentClient
     {
         revert
             Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(

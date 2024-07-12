@@ -10,6 +10,7 @@ import {
 
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 
 /**
  * @title Elastic Receipt Token Base
@@ -137,9 +138,11 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     uint private constant MAX_UINT = type(uint).max;
 
     /// @dev The max supply target allowed.
-    /// @dev Note that this constant is internal in order for downstream
-    ////     contracts to enforce this constraint directly.
-    uint internal constant MAX_SUPPLY = 1_000_000_000e18;
+    ///      Note that this constant is internal in order for downstream
+    ///      contracts to enforce this constraint directly.
+    ///      This limit was chosen as a balance between rebasing accuracy
+    ///      and supporting low-value tokens or high decimal tokens properly.
+    uint internal constant MAX_SUPPLY = 1_000_000_000_000_000_000e18;
 
     /// @dev The total amount of bits is a multiple of MAX_SUPPLY so that
     ///      BITS_PER_UNDERLYING is an integer.
@@ -369,33 +372,29 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
 
         // Unchecked because the only math done is incrementing
         // the owner's nonce which cannot realistically overflow.
+        bytes32 permitHash;
         unchecked {
-            address recoveredAddress = ecrecover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19\x01",
-                        DOMAIN_SEPARATOR(),
-                        keccak256(
-                            abi.encode(
-                                PERMIT_TYPEHASH,
-                                owner,
-                                spender,
-                                value,
-                                _nonces[owner]++,
-                                deadline
-                            )
+            permitHash = keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR(),
+                    keccak256(
+                        abi.encode(
+                            PERMIT_TYPEHASH,
+                            owner,
+                            spender,
+                            value,
+                            _nonces[owner]++,
+                            deadline
                         )
                     )
-                ),
-                v,
-                r,
-                s
+                )
             );
-
-            require(recoveredAddress != address(0) && recoveredAddress == owner);
-
-            _tokenAllowances[owner][spender] = value;
         }
+
+        require(ECDSA.recover(permitHash, v, r, s) == owner);
+
+        _tokenAllowances[owner][spender] = value;
 
         emit Approval(owner, spender, value);
     }

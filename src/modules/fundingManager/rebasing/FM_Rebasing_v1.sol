@@ -77,7 +77,9 @@ contract FM_Rebasing_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
-    uint internal constant DEPOSIT_CAP = 100_000_000e18;
+    // This cap is one power of ten lower than the MAX_SUPPLY of
+    // the underlying ElasticReceiptToken, just to be safe.
+    uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -129,18 +131,40 @@ contract FM_Rebasing_v1 is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
+    /// @notice Deposits a specified amount of tokens into the contract from the sender's account.
+    /// @dev    Reverts if attempting self-deposits or if the deposit exceeds the allowed cap,
+    ///         ensuring compliance with token issuance rules. Please Note: when using the transactionForwarder,
+    ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
+    /// @param amount The number of tokens to deposit.
     function deposit(uint amount) external {
         _deposit(_msgSender(), _msgSender(), amount);
     }
 
+    /// @notice Deposits a specified amount of tokens into the contract on behalf of another account.
+    /// @dev    Reverts if attempting self-deposits or if the deposit exceeds the allowed cap,
+    ///         ensuring compliance with token issuance rules. Please Note: when using the transactionForwarder,
+    ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
+    /// @param to The address to which the tokens are credited.
+    /// @param amount The number of tokens to deposit.
     function depositFor(address to, uint amount) external {
         _deposit(_msgSender(), to, amount);
     }
 
+    /// @notice Withdraws a specified amount of tokens from the sender's account back to their own address.
+    /// @dev    Reverts if the withdrawal amount exceeds the available balance.
+    ///         Please Note: when using the transactionForwarder, validate transaction success to
+    ///         prevent nonce exploitation and ensure transaction integrity.
+    /// @param amount The number of tokens to withdraw.
     function withdraw(uint amount) external {
         _withdraw(_msgSender(), _msgSender(), amount);
     }
 
+    /// @notice Withdraws a specified amount of tokens from the sender's account to another specified account.
+    /// @dev    Reverts if the withdrawal amount exceeds the available balance.
+    ///         Please Note: when using the transactionForwarder, validate transaction success to
+    ///         prevent nonce exploitation and ensure transaction integrity.
+    /// @param to The address to which the tokens are sent.
+    /// @param amount The number of tokens to withdraw.
     function withdrawTo(address to, uint amount) external {
         _withdraw(_msgSender(), to, amount);
     }
@@ -150,7 +174,7 @@ contract FM_Rebasing_v1 is
 
     function transferOrchestratorToken(address to, uint amount)
         external
-        onlyOrchestrator
+        onlyPaymentClient
         validAddress(to)
     {
         _transferOrchestratorToken(to, amount);

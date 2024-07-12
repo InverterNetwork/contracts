@@ -120,6 +120,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier onlyWhenCurveInteractionsAreClosed() {
+        _checkCurveInteractionClosedModifier();
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -223,8 +231,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
     /// bonding curve algorithm.
     /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
-    /// Important: The Bancor Formula has an upper computational limit of (10^38). For tokens with
-    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
+    /// Important: The Bancor Formula has an upper computational limit of (10^38).
     /// While this is substantially large, it is crucial to be aware of this constraint.
     /// Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of collateral token depoisited.
@@ -351,9 +358,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function transferOrchestratorToken(address to, uint amount)
         external
         virtual
-        onlyOrchestrator
+        onlyPaymentClient
     {
-        __Module_orchestrator.fundingManager().token().safeTransfer(to, amount);
+        if (
+            amount
+                > token().balanceOf(address(this)) - projectCollateralFeeCollected
+        ) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidOrchestratorTokenWithdrawAmount(
+            );
+        }
+        token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
     }
@@ -374,6 +389,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         virtual
         override(VirtualIssuanceSupplyBase_v1)
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setVirtualIssuanceSupply(_virtualSupply);
     }
@@ -384,6 +400,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         virtual
         override(VirtualCollateralSupplyBase_v1)
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setVirtualCollateralSupply(_virtualSupply);
     }
@@ -393,6 +410,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setReserveRatioForBuying(_reserveRatio);
     }
@@ -402,6 +420,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setReserveRatioForSelling(_reserveRatio);
     }
@@ -506,6 +525,33 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         issuanceTokenDecimals = _decimals;
     }
 
+    /// @dev Internal function to directly set the virtual collateral supply to a new value.
+    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    function _setVirtualCollateralSupply(uint _virtualSupply)
+        internal
+        override(VirtualCollateralSupplyBase_v1)
+    {
+        super._setVirtualCollateralSupply(_virtualSupply);
+    }
+
+    /// @dev Internal function to directly set the virtual issuance supply to a new value.
+    ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
+    ///         is done for use in the Bancor Formulat
+    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    function _setVirtualIssuanceSupply(uint _virtualSupply)
+        internal
+        override(VirtualIssuanceSupplyBase_v1)
+    {
+        // Check if virtual supply is big enough to ensure compatibility with relative issuance
+        // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
+        // so it will not result in a round down 0 value
+        if (_virtualSupply < 10 ** (issuanceTokenDecimals - 18)) {
+            revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
+            );
+        }
+        super._setVirtualIssuanceSupply(_virtualSupply);
+    }
+
     /// @dev Sets the reserve ratio for buying tokens.
     /// The function will revert if the ratio is greater than the constant PPM.
     ///
@@ -531,6 +577,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         if (_reserveRatio == 0 || _reserveRatio > PPM) {
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
+        }
+    }
+
+    function _checkCurveInteractionClosedModifier() internal view {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
         }
     }
 }

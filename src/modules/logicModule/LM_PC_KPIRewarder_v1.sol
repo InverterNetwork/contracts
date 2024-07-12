@@ -48,10 +48,11 @@ contract LM_PC_KPIRewarder_v1 is
         public
         view
         virtual
-        override(LM_PC_Staking_v1, Module_v1)
+        override(OptimisticOracleIntegrator, LM_PC_Staking_v1)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_KPIRewarder_v1).interfaceId
+            || interfaceId == type(ILM_PC_Staking_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -342,6 +343,35 @@ contract LM_PC_KPIRewarder_v1 is
         }
     }
 
+    function deleteStuckAssertion(bytes32 assertionId)
+        public
+        onlyOrchestratorAdmin
+    {
+        // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
+        if (assertionData[assertionId].dataId == bytes32(0x0)) {
+            revert Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+                assertionId
+            );
+        }
+
+        uint assertionExpirationTime =
+            oo.getAssertion(assertionId).expirationTime;
+
+        if (block.timestamp <= assertionExpirationTime) {
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
+        }
+
+        try oo.settleAssertion(assertionId) {
+            // If the assertion can be settled, it doesn't qualify as stuck and we revert
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
+        } catch {
+            delete assertionConfig[assertionId];
+            delete assertionData[assertionId];
+            assertionPending = false;
+            emit DeletedStuckAssertion(assertionId);
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Optimistic Oracle Overrides:
 
@@ -350,6 +380,13 @@ contract LM_PC_KPIRewarder_v1 is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
+        // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
+        if (assertionData[assertionId].dataId == bytes32(0x0)) {
+            revert Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+                assertionId
+            );
+        }
+
         // First, we perform checks and state management on the parent function.
         super.assertionResolvedCallback(assertionId, assertedTruthfully);
 
@@ -383,7 +420,7 @@ contract LM_PC_KPIRewarder_v1 is
                             resolvedKPI.trancheValues[i] - trancheStart;
 
                         rewardAmount +=
-                            achievedReward * (trancheRewardValue / trancheEnd); // since the trancheRewardValue will be a very big number.
+                            achievedReward * trancheRewardValue / trancheEnd;
                     }
                     // else -> no reward
 

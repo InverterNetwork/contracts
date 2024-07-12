@@ -20,6 +20,8 @@ import {
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
@@ -103,16 +105,27 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
         );
     }
 
+    function testTransferOrchestratorToken_FailsGivenNotEnoughCollateralInFM(
+        address to,
+        uint amount,
+        uint projectCollateralFeeCollected
+    ) public override {
+        // Temp test override, as in dev branch we have already removed the restriction
+        // to call the transferOrchestratorToken() function
+    }
+
     // Override to test deactivation
-    function testTransferOrchestratorToken(address to, uint amount)
-        public
-        override
-    {
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
+        address to,
+        uint amount
+    ) public override {
         vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
 
         _token.mint(address(bondingCurveFundingManager), amount);
 
-        vm.startPrank(address(_orchestrator));
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
@@ -163,9 +176,9 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
     uint internal constant MAX_SUPPLY = type(uint).max;
 
     uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
-    uint internal constant INITIAL_COLLATERAL_SUPPLY = 1;
-    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 200_000;
-    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 200_000;
+    uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 333_333;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 333_333;
     uint internal constant BUY_FEE = 0;
     uint internal constant SELL_FEE = 0;
     bool internal constant BUY_IS_OPEN = true;

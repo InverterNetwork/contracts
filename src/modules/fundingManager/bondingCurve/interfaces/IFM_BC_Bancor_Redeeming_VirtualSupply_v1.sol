@@ -20,6 +20,13 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     /// @notice Invalid Bancor Formula contract
     error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidBancorFormula();
 
+    /// @notice Buying and Selling must be closed before changing the virtual supply
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+    );
+    /// @notice Funding manager does not hold the amount of collateral the payment client tries to transfer
+    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidOrchestratorTokenWithdrawAmount(
+    );
+
     //--------------------------------------------------------------------------
     // Events
 
