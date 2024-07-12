@@ -215,6 +215,13 @@ abstract contract ElasticReceiptBase_v1 is IRebasingERC20, Module_v1 {
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
+    // Constructor
+
+    constructor() {
+        _disableInitializers();
+    }
+
+    //--------------------------------------------------------------------------
     // Initialization
 
     function init(string memory name_, string memory symbol_, uint8 decimals_)
