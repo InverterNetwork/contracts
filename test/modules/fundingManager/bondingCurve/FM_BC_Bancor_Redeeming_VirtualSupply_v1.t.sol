@@ -426,11 +426,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         fee = bound(fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
+        uint minAmount = _bps / fee + 1; // Prevent rouding down fee to zero revert
 
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
         amount = _bound_for_decimal_conversion(
             amount,
-            1,
+            minAmount,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
@@ -786,10 +787,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint _bps = bondingCurveFundingManager.call_BPS();
         fee = bound(fee, 1, _bps);
 
+        uint minAmount = _bps / fee + 1;
+
         // We set a minimum high enough to discard most inputs that wouldn't mint even 1 token
         amountIn = _bound_for_decimal_conversion(
             amountIn,
-            100,
+            minAmount,
             1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
