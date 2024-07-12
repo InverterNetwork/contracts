@@ -195,8 +195,12 @@ abstract contract OptimisticOracleIntegrator is
                     defaultBond
                 )
             );
-            // require(success && (data.length == 0 || abi.decode(data, (bool)))); -> taken over from SafeERC20 since we want to override the revert messsage
-            if (!success || (data.length > 0 && !abi.decode(data, (bool)))) {
+            // require(success && (data.length == 0 || abi.decode(data, (bool))) && token.code.length != 0); -> taken over from SafeERC20 since we want to override the revert messsage
+
+            if (
+                !success || (data.length > 0 && !abi.decode(data, (bool)))
+                    || address(defaultCurrency).code.length == 0
+            ) {
                 revert
                     Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
                 );
