@@ -44,9 +44,9 @@ contract FM_RebasingV1Test is ModuleTest {
 
     UserDeposits userDeposits;
 
-    /// The deposit cap of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
-    /// Note that this sets the deposit limit for the fundign manager.
-    uint internal constant DEPOSIT_CAP = 100_000_000e18;
+    // This cap is one power of ten lower than the MAX_SUPPLY of
+    // the underlying ElasticReceiptToken, just to be safe.
+    uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     // Other constants.
     uint private constant ORCHESTRATOR_ID = 1;
@@ -397,6 +397,12 @@ contract FM_RebasingV1Test is ModuleTest {
         // Some time passes, and now half the users deposit their underliers again to continue funding (if they had any funds left).
         for (uint i; i < input.users.length / 2; ++i) {
             if (remainingFunds[i] != 0) {
+                uint actualBalance = _token.balanceOf(input.users[i]);
+                if (actualBalance < remainingFunds[i]) {
+                    // If it's not equal, it can be off by one due to rounding
+                    assertApproxEqAbs(actualBalance, remainingFunds[i], 1);
+                    remainingFunds[i] = actualBalance;
+                }
                 vm.prank(input.users[i]);
                 vm.expectEmit();
                 emit Deposit(input.users[i], input.users[i], remainingFunds[i]);
