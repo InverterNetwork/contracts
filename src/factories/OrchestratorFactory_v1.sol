@@ -88,6 +88,10 @@ contract OrchestratorFactory_v1 is
     /// @dev Starts counting from 1.
     uint private _orchestratorIdCounter;
 
+    /// @dev Maps a users address to a nonce
+    ///      Used for the create2-based deployment
+    mapping(address => uint) private _deploymentNonces;
+
     // Storage gap for future upgrades
     uint[50] private __gap;
 
@@ -152,12 +156,14 @@ contract OrchestratorFactory_v1 is
             // Overwriting the independentUpdateAdmin as the ProxyAdmin will
             // be the actual admin of the proxy
             workflowConfig.independentUpdateAdmin = address(
-                new InverterProxyAdmin_v1(workflowConfig.independentUpdateAdmin)
+                new InverterProxyAdmin_v1{salt: createSalt()}(
+                    workflowConfig.independentUpdateAdmin
+                )
             );
 
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1(
+                new InverterTransparentUpgradeableProxy_v1{salt: createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -165,7 +171,8 @@ contract OrchestratorFactory_v1 is
         // If not then
         else {
             // Instead use the Beacon Structure Proxy
-            proxy = address(new InverterBeaconProxy_v1(beacon));
+            proxy =
+                address(new InverterBeaconProxy_v1{salt: createSalt()}(beacon));
         }
 
         // Map orchestrator proxy
@@ -267,6 +274,15 @@ contract OrchestratorFactory_v1 is
                 moduleConfigs[i].configData
             );
         }
+    }
+
+    // Generated a salt for the create2-based deployment flow.
+    // This salt is the hash of (msgSender, nonce), where the
+    // nonce is an increasing number for each user.
+    function createSalt() internal returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
+        );
     }
 
     //--------------------------------------------------------------------------
