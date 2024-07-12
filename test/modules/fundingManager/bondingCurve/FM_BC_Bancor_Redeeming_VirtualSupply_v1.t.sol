@@ -1211,7 +1211,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         │   └── when the function setVirtualIssuanceSupply() is called
         │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
         └── given the caller is the Orchestrator_v1 admin
-            ├── and the buy & sell curve are still open
+            ├── and the buy | sell curve are still open (modifier test)
             │   └── when the function_setVirtualIssuanceSupply() is called
             │       └── then it should revert
             ├── and the new token supply is zero
@@ -1241,7 +1241,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
     }
 
-    function testSetVirtualIssuanceSupply_FailsGivenBuyAndSellCurveStillOpen(
+    function testSetVirtualIssuanceSupply_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
         uint _newSupply
     ) public callerIsOrchestratorAdmin {
         vm.assume(_newSupply != 0);
@@ -1301,7 +1301,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         │   └── when the function setVirtualCollateralSupply() is called
         │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
         └── given the caller is the Orchestrator_v1 admin
-            ├── and the buy & sell curve are still open
+            ├── and the buy | sell curve are still open (modifier test)
             │   └── when the setVirtualCollateralSupply() is called
             │       └── then it should revert
             ├── and the new token supply is zero
@@ -1328,7 +1328,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
     }
 
-    function testSetVirtualCollateralSupply_FailsGivenBuyAndSellCurveStillOpen(
+    function testSetVirtualCollateralSupply_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
         uint _newSupply
     ) public callerIsOrchestratorAdmin {
         vm.assume(_newSupply != 0);
@@ -1376,6 +1376,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         ├── when caller is not the Orchestrator_v1 admin
         │       └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator_v1 admin
+                ├── when buy | sell is still open (modifier test)
+                │       └── it should revert
                 ├── when reserve ratio is  0% 
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
@@ -1387,10 +1389,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
+
+    function testSetReserveRatioForBuying_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
+    ) public {
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setReserveRatioForBuying(10);
+    }
+
     function testSetReserveRatioForBuying_failsIfRatioIsZero()
         public
         callerIsOrchestratorAdmin
     {
+        _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
@@ -1403,6 +1417,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint32 _newRatio
     ) public callerIsOrchestratorAdmin {
         vm.assume(_newRatio > bondingCurveFundingManager.call_PPM());
+        _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
@@ -1417,7 +1432,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     {
         // manual bound for uint32
         _newRatio = (_newRatio % bondingCurveFundingManager.call_PPM()) + 1; // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
-
+        _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
@@ -1435,6 +1450,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         ├── when caller is not the Orchestrator_v1 admin
         │       └── it should revert (tested in base Module tests)
         └── when caller is the Orchestrator_v1 admin
+                ├── when buy | sell is still open (modifier test)
+                │       └── it should revert
                 ├── when reserve ratio is  0% 
                 │       └── it should revert
                 ├── when reserve ratio is below 100%
@@ -1446,10 +1463,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
+
+    function testSetReserveRatioForSelling_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
+    ) public {
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setReserveRatioForSelling(10);
+    }
+
     function testSetReserveRatioForSelling_failsIfRatioIsZero()
         public
         callerIsOrchestratorAdmin
     {
+        _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
@@ -1462,6 +1491,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint32 _newRatio
     ) public callerIsOrchestratorAdmin {
         vm.assume(_newRatio > bondingCurveFundingManager.call_PPM());
+        _closeCurveInteractions(); // Close interactions to enable setting of ratio
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio
@@ -1474,6 +1504,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         public
         callerIsOrchestratorAdmin
     {
+        _closeCurveInteractions(); // Close interactions to enable setting of ratio
         // manual bound for uint32
         _newRatio = (_newRatio % bondingCurveFundingManager.call_PPM()) + 1; // reserve ratio of 0% isn't allowed, 100% is (although it isn't really a curve anymore)
         vm.expectEmit(
@@ -1706,6 +1737,69 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         assertEq(_token.balanceOf(to), amount);
         assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
+    }
+
+    //--------------------------------------------------------------------------
+    // Modifier test
+
+    /* Test modifier onlyWhenCurveInteractionsAreClosed()
+        ├── given buying and selling are open
+        │   └── when a function with the modifier onlyWhenCurveInteractionsAreClosed() gets called
+        │       └── then it should revert
+        ├── given buying is open and selling is closed
+        │   └── when a function with the modifier onlyWhenCurveInteractionsAreClosed() gets called
+        │       └── then it should revert
+        ├── given buying is closed and selling is open
+        │   └── when a function with the modifier onlyWhenCurveInteractionsAreClosed() gets called
+        │       └── then it should revert
+        └── given buying is closed and selling is closed
+            └── when a function with the modifier onlyWhenCurveInteractionsAreClosed() gets called
+                └── then it should succeed
+    */
+
+    function testModifierOnlyWhenCurveInteractionsAreClosed_failsGivenBuyAndSellAreOpen(
+    ) external {
+        uint virtualSupply = 100e18;
+
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualIssuanceSupply(virtualSupply);
+    }
+
+    function testModifierOnlyWhenCurveInteractionsAreClosed_failsGivenBuyisOpenAndSellIsClosed(
+    ) external {
+        uint virtualSupply = 100e18;
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualIssuanceSupply(virtualSupply);
+    }
+
+    function testModifierOnlyWhenCurveInteractionsAreClosed_failsGivenBuyisClosedAndSellIsOpen(
+    ) external {
+        uint virtualSupply = 100e18;
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed
+                .selector
+        );
+        bondingCurveFundingManager.setVirtualIssuanceSupply(virtualSupply);
+    }
+
+    function testModifierOnlyWhenCurveInteractionsAreClosed_worksGivenBuyAndSellAreClosed(
+    ) external {
+        uint virtualSupply = 100e18;
+        _closeCurveInteractions();
+        bondingCurveFundingManager.setVirtualIssuanceSupply(virtualSupply);
     }
 
     //--------------------------------------------------------------------------

@@ -122,6 +122,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier onlyWhenCurveInteractionsAreClosed() {
+        _checkCurveInteractionClosedModifier();
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -386,6 +394,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         virtual
         override(VirtualIssuanceSupplyBase_v1)
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setVirtualIssuanceSupply(_virtualSupply);
     }
@@ -396,6 +405,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         virtual
         override(VirtualCollateralSupplyBase_v1)
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setVirtualCollateralSupply(_virtualSupply);
     }
@@ -405,6 +415,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setReserveRatioForBuying(_reserveRatio);
     }
@@ -414,6 +425,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         onlyOrchestratorAdmin
+        onlyWhenCurveInteractionsAreClosed
     {
         _setReserveRatioForSelling(_reserveRatio);
     }
@@ -525,11 +537,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         internal
         override(VirtualCollateralSupplyBase_v1)
     {
-        if (buyIsOpen == true || sellIsOpen == true) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
-            );
-        }
         super._setVirtualCollateralSupply(_virtualSupply);
     }
 
@@ -541,11 +548,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         internal
         override(VirtualIssuanceSupplyBase_v1)
     {
-        if (buyIsOpen == true || sellIsOpen == true) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
-            );
-        }
         // Check if virtual supply is big enough to ensure compatibility with relative issuance
         // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
         // so it will not result in a round down 0 value
@@ -581,6 +583,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         if (_reserveRatio == 0 || _reserveRatio > PPM) {
             revert
                 Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidReserveRatio();
+        }
+    }
+
+    function _checkCurveInteractionClosedModifier() internal view {
+        if (buyIsOpen == true || sellIsOpen == true) {
+            revert
+                Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
+            );
         }
     }
 }
