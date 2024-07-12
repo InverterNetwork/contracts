@@ -9,11 +9,7 @@ import {
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
-import {
-    Module_v1,
-    ERC165,
-    ContextUpgradeable
-} from "src/modules/base/Module_v1.sol";
+import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";

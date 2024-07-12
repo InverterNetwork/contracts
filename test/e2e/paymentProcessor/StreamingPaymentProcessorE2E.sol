@@ -12,13 +12,15 @@ import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
     LM_PC_RecurringPayments_v1,
-    ILM_PC_RecurringPayments_v1,
-    ERC165
+    ILM_PC_RecurringPayments_v1
 } from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 
 import {IPP_Streaming_v1} from "@pp/interfaces/IPP_Streaming_v1.sol";
+
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 contract StreamingPaymentProcessorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -106,7 +108,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_RecurringPayments_v1).interfaceId
                 )
             ) {
@@ -121,7 +123,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(IPP_Streaming_v1).interfaceId
                 )
             ) {

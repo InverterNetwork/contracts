@@ -399,7 +399,8 @@ contract PP_SimpleV1Test is ModuleTest {
     function test_validPaymentReceiver(address addr, address sender) public {
         bool expectedValue = true;
         if (
-            addr == address(0) || addr == sender || addr == address(this)
+            addr == address(0) || addr == sender
+                || addr == address(paymentProcessor)
                 || addr == address(_orchestrator)
                 || addr == address(_orchestrator.fundingManager().token())
         ) {

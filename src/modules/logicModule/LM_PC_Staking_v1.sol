@@ -13,8 +13,7 @@ import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
-    Module_v1,
-    ERC165
+    Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // External Interfaces
@@ -22,7 +21,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
+import {ReentrancyGuardUpgradeable} from
+    "@oz-up/utils/ReentrancyGuardUpgradeable.sol";
 
 /**
  * @title   Staking Module
@@ -41,7 +41,7 @@ import {ReentrancyGuard} from "@oz/utils/ReentrancyGuard.sol";
 contract LM_PC_Staking_v1 is
     ILM_PC_Staking_v1,
     ERC20PaymentClientBase_v1,
-    ReentrancyGuard
+    ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -101,6 +101,7 @@ contract LM_PC_Staking_v1 is
         Metadata memory metadata,
         bytes memory configData
     ) external virtual override(Module_v1) initializer {
+        __ReentrancyGuard_init();
         __Module_init(orchestrator_, metadata);
 
         address _stakingToken = abi.decode(configData, (address));
