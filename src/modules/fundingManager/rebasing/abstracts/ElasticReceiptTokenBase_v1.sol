@@ -390,9 +390,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
             );
         }
 
-        address recoveredAddress = ECDSA.recover(permitHash, v, r, s);
-
-        require(recoveredAddress == owner);
+        require(ECDSA.recover(permitHash, v, r, s) == owner);
 
         _tokenAllowances[owner][spender] = value;
 
