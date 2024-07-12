@@ -9,10 +9,8 @@ import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {
-    ElasticReceiptTokenUpgradeable_v1,
-    ElasticReceiptTokenBase_v1
-} from "@fm/rebasing/abstracts/ElasticReceiptTokenUpgradeable_v1.sol";
+import {ElasticReceiptTokenBase_v1} from
+    "@fm/rebasing/abstracts/ElasticReceiptTokenBase_v1.sol";
 
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
@@ -33,7 +31,7 @@ import {Strings} from "@oz/utils/Strings.sol";
  *          within the Inverter Network. It supports operations like deposits and withdrawals,
  *          implementing dynamic supply adjustments to maintain proportional ownership.
  *
- * @dev     Extends {ElasticReceiptTokenUpgradeable_v1} for rebasing functionalities and
+ * @dev     Extends {ElasticReceiptTokenBase_v1} for rebasing functionalities and
  *          implements {IFundingManager_v1} interface. Manages deposits up to a defined cap,
  *          preventing excess balance accumulation and ensuring operational integrity.
  *          Custom rebase mechanics are applied based on the actual token reserves.
@@ -44,16 +42,12 @@ import {Strings} from "@oz/utils/Strings.sol";
  *
  * @author  Inverter Network
  */
-contract FM_Rebasing_v1 is
-    IFundingManager_v1,
-    ElasticReceiptTokenUpgradeable_v1,
-    Module_v1
-{
+contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ElasticReceiptTokenUpgradeable_v1, Module_v1)
+        override(ElasticReceiptTokenBase_v1)
         returns (bool)
     {
         return interfaceId == type(IFundingManager_v1).interfaceId
@@ -78,7 +72,7 @@ contract FM_Rebasing_v1 is
     // Constants
 
     // This cap is one power of ten lower than the MAX_SUPPLY of
-    // the underlying ElasticReceiptToken, just to be safe.
+    // the underlying ElasticReceiptTokenBase, just to be safe.
     uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     //--------------------------------------------------------------------------
@@ -97,9 +91,7 @@ contract FM_Rebasing_v1 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
-        __Module_init(orchestrator_, metadata);
-
+    ) external override(ElasticReceiptTokenBase_v1) initializer {
         address orchestratorTokenAddress = abi.decode(configData, (address));
         _token = IERC20(orchestratorTokenAddress);
 
@@ -108,9 +100,12 @@ contract FM_Rebasing_v1 is
             abi.encodePacked("Inverter Funding Token - Orchestrator_v1 #", _id)
         );
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
-        // Initial upstream contracts.
-        __ElasticReceiptToken_init(
+        bytes memory underlyingConfigData = abi.encode(
             _name, _symbol, IERC20Metadata(orchestratorTokenAddress).decimals()
+        );
+        // Initial upstream contracts.
+        __ElasticReceiptTokenBase_init(
+            orchestrator_, metadata, underlyingConfigData
         );
     }
 
