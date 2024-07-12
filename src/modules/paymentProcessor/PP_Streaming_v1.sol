@@ -779,13 +779,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // As all of the stream ids should have been claimed we can delete the stream id array
         delete unclaimableStreams[client][token][sender];
 
+        // Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        IERC20PaymentClientBase_v1(client).amountPaid(address(token), amount);
+
         // Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
 
         emit TokensReleased(paymentReceiver, address(token), amount);
-
-        // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(address(token), amount);
     }
 
     /// @notice Virtual implementation of the stream formula.
