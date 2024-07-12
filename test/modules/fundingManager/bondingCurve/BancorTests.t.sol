@@ -15,42 +15,35 @@ contract BancorTests is Test {
         formula = address(bancorFormula);
     }
 
-    function test_BancorFormula_suppylCalculationPlusBuys() public {
-        uint PPM = 1_000_000;
-        uint32 RESERVE_RATIO = 199_800; // In PPM
+function _helper_getSupplyForGivenReserveAtSpotPrice(uint reserve, uint reserveRatio, uint spotPrice) internal pure returns (uint) {
+    return (1e12 * reserve) / (reserveRatio * spotPrice);
+}
 
-        // We take the reserve form the logs for the TEC case and calculate the supply
-        uint INITIAL_RESERVE = 50_000_000_000_000_000_000_000;
-        uint INITIAL_SUPPLY = PPM * (INITIAL_RESERVE) / (uint(RESERVE_RATIO));
 
-        console.log("Reserve calculation: \t\t", INITIAL_RESERVE);
-        console.log("Supply calculation: \t\t", INITIAL_SUPPLY);
 
-        // perform a buy that should bring it up to the initial TEC state
-        uint amountToBuy = 200_000e18;
+// ===========================================
+// ==            TEC PARAMETERS             ==
+// ===========================================
+uint32 TEC_RESERVE_RATIO = 199_800; // In PPM
+uint TEC_INITIAL_SUPPLY = 195_642_169e16;
+uint TEC_INITIAL_RESERVE = 39_097_931e16;
 
-        uint receivedAmount = bancorFormula.calculatePurchaseReturn(
-            INITIAL_SUPPLY, INITIAL_RESERVE, RESERVE_RATIO, amountToBuy
-        );
-
-        console.log("Received Amount after a deposit: ");
-        console.log("\t\t\t\t", receivedAmount);
-
-        console.log(" Total Supply: \t", INITIAL_SUPPLY + receivedAmount);
-        console.log(" Total Reserve: \t", INITIAL_RESERVE + amountToBuy);
-
-        // check
-    }
 
     uint[] reserveAmounts;
 
+
+/// @notice This test takes an initial state and performs sales to get to a poitn where the spot price is very small. It then buys back all the tokens, and verifies that the amounts received are the same as the initial ones.
     function test_BancorFormula_SellAndBuyStepByStep() public {
         uint PPM = 1_000_000;
-        uint32 RESERVE_RATIO = 199_800; // In PPM
+
 
         // TEC numbers
+        uint32 RESERVE_RATIO = 199_800; // In PPM
         uint INITIAL_SUPPLY = 195_642_169e16;
         uint INITIAL_RESERVE = 39_097_931e16;
+
+        uint test = _helper_getSupplyForGivenReserveAtSpotPrice(INITIAL_RESERVE, uint(RESERVE_RATIO), 1000200);
+        console.log("test", test);
 
         // These are minimal numbers. Spot price is 0
         //uint INITIAL_SUPPLY = 56421690000000000000000;
@@ -60,7 +53,7 @@ contract BancorTests is Test {
         // Please note that large sells can move the price below this amount. But they will need an equally big buys afterwards that pushes the balances over thsi limit again.
         //uint INITIAL_SUPPLY = 62131676819845007200000;
         //uint INITIAL_RESERVE = 12413909028605033;
-
+/*
         //Test
         RESERVE_RATIO = 333_333;
         INITIAL_SUPPLY = 3_000_003e18;
@@ -79,7 +72,7 @@ contract BancorTests is Test {
         /*uint 1_000_000 = 1e12/RESERVE_RATIO * 1_000_000e18/x;
         x = 1e12/RESERVE_RATIO * 1_000_000e18/1_000_000;
         x = 1e12/RESERVE_RATIO * 1e18;
-        x = 300000_300000000000000000*/
+        x = 300000_300000000000000000*//*
 
         // TODO: calculate the way to get the balance at a given reserve point if we have a defined curve
 
@@ -165,6 +158,7 @@ contract BancorTests is Test {
             1e12 * reserve / (supply * uint(RESERVE_RATIO));
         console.log("Spot Price after all buys: \t\t", spotPriceAfterBuys);
         console.log("=================================");
+        */
     }
 
     function test_BancorFormula_LowBalancesThroughSale() public {
@@ -216,20 +210,22 @@ contract BancorTests is Test {
 
     function test_BancorFormula_StepByStep() public {
         uint PPM = 1_000_000;
-        uint32 RESERVE_RATIO = 199_800; // In PPM
+        uint32 RESERVE_RATIO = 333_333; // In PPM
 
         //uint INITIAL_SUPPLY = 195642169e16;
         //uint INITIAL_RESERVE = 39097931e16;
-        uint32 RESERVE_RATIO = 199_800; // In PPM
         uint INITIAL_SUPPLY = 200_002_999_999_999_999_998_676;
         uint INITIAL_RESERVE = 296_306_333_665_498_798_599;
+
+        //uint INITIAL_SUPPLY = 100003000000000000000000;
+        //uint INITIAL_RESERVE = 37039881410555522331;
 
         uint supply = INITIAL_SUPPLY;
         uint reserve = INITIAL_RESERVE;
 
-        uint buyPerStep = 10e18;
+        uint buyPerStep = 1000e18;
 
-        for (uint i = 0; i < 10; i++) {
+        for (uint i = 0; i < 100; i++) {
             console.log("=================================");
             console.log("STEP %s: ", i + 1);
             console.log("=================================");
