@@ -1843,7 +1843,8 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
     function test_validPaymentReceiver(address addr, address sender) public {
         bool expectedValue = true;
         if (
-            addr == address(0) || addr == sender || addr == address(this)
+            addr == address(0) || addr == sender
+                || addr == address(paymentProcessor)
                 || addr == address(_orchestrator)
                 || addr == address(_orchestrator.fundingManager().token())
         ) {
