@@ -3,10 +3,10 @@ pragma solidity ^0.8.0;
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-import {ElasticReceiptToken_v1} from
-    "@fm/rebasing/abstracts/ElasticReceiptToken_v1.sol";
+import {ElasticReceiptBase_v1} from
+    "@fm/rebasing/abstracts/ElasticReceiptBase_v1.sol";
 
-contract ElasticReceiptTokenV1Mock is ElasticReceiptToken_v1 {
+contract ElasticReceiptBaseV1Mock is ElasticReceiptBase_v1 {
     // The token's underlier.
     // Is of type ERC20.
     address public underlier;
@@ -15,18 +15,18 @@ contract ElasticReceiptTokenV1Mock is ElasticReceiptToken_v1 {
         underlier = underlier_;
     }
 
-    function public__ElasticReceiptToken_init(
+    function public__ElasticReceiptBase_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_
     ) public {
-        __ElasticReceiptToken_init(name_, symbol_, decimals_);
+        __ElasticReceiptBase_init(name_, symbol_, decimals_);
     }
 
     function _supplyTarget()
         internal
         view
-        override(ElasticReceiptToken_v1)
+        override(ElasticReceiptBase_v1)
         returns (uint)
     {
         return ERC20(underlier).balanceOf(address(this));

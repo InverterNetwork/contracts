@@ -9,8 +9,8 @@ import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {ElasticReceiptToken_v1} from
-    "@fm/rebasing/abstracts/ElasticReceiptToken_v1.sol";
+import {ElasticReceiptBase_v1} from
+    "@fm/rebasing/abstracts/ElasticReceiptBase_v1.sol";
 
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
@@ -31,7 +31,7 @@ import {Strings} from "@oz/utils/Strings.sol";
  *          within the Inverter Network. It supports operations like deposits and withdrawals,
  *          implementing dynamic supply adjustments to maintain proportional ownership.
  *
- * @dev     Extends {ElasticReceiptToken_v1} for rebasing functionalities and
+ * @dev     Extends {ElasticReceiptBase_v1} for rebasing functionalities and
  *          implements {IFundingManager_v1} interface. Manages deposits up to a defined cap,
  *          preventing excess balance accumulation and ensuring operational integrity.
  *          Custom rebase mechanics are applied based on the actual token reserves.
@@ -42,16 +42,12 @@ import {Strings} from "@oz/utils/Strings.sol";
  *
  * @author  Inverter Network
  */
-contract FM_Rebasing_v1 is
-    IFundingManager_v1,
-    ElasticReceiptToken_v1,
-    Module_v1
-{
+contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptBase_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ElasticReceiptToken_v1, Module_v1)
+        override(ElasticReceiptBase_v1)
         returns (bool)
     {
         return interfaceId == type(IFundingManager_v1).interfaceId
@@ -76,7 +72,7 @@ contract FM_Rebasing_v1 is
     // Constants
 
     // This cap is one power of ten lower than the MAX_SUPPLY of
-    // the underlying ElasticReceiptToken, just to be safe.
+    // the underlying ElasticReceiptBase, just to be safe.
     uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     //--------------------------------------------------------------------------
@@ -107,7 +103,7 @@ contract FM_Rebasing_v1 is
         );
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
         // Initial upstream contracts.
-        __ElasticReceiptToken_init(
+        __ElasticReceiptBase_init(
             _name, _symbol, IERC20Metadata(orchestratorTokenAddress).decimals()
         );
     }
@@ -120,7 +116,7 @@ contract FM_Rebasing_v1 is
     function _supplyTarget()
         internal
         view
-        override(ElasticReceiptToken_v1)
+        override(ElasticReceiptBase_v1)
         returns (uint)
     {
         return token().balanceOf(address(this));

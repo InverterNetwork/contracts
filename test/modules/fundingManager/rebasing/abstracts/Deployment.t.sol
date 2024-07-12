@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import
-    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptToken_v1.t.sol";
+    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptBase_v1.t.sol";
 
 /**
  * @dev Deployment Tests.
  */
-contract Deployment is ElasticReceiptTokenV1Test {
+contract Deployment is ElasticReceiptBaseV1Test {
     function testInvariants() public {
         assertEq(ert.totalSupply(), 0);
         assertEq(ert.scaledBalanceOf(address(0)), TOTAL_BITS);

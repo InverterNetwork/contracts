@@ -8,6 +8,9 @@ import {
     IERC20Metadata
 } from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
+// Internal Dependencies
+import {Module_v1} from "src/modules/base/Module_v1.sol";
+
 // External Dependencies
 import {
     ERC165Upgradeable,
@@ -65,15 +68,12 @@ import {
  * @author Buttonwood Foundation
  * @author merkleplant
  */
-abstract contract ElasticReceiptToken_v1 is
-    IRebasingERC20,
-    ERC165Upgradeable
-{
+abstract contract ElasticReceiptBase_v1 is IRebasingERC20, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165Upgradeable)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(IRebasingERC20).interfaceId
@@ -143,9 +143,11 @@ abstract contract ElasticReceiptToken_v1 is
     uint private constant MAX_UINT = type(uint).max;
 
     /// @dev The max supply target allowed.
-    /// @dev Note that this constant is internal in order for downstream
-    ////     contracts to enforce this constraint directly.
-    uint internal constant MAX_SUPPLY = 1_000_000_000e18;
+    ///      Note that this constant is internal in order for downstream
+    ///      contracts to enforce this constraint directly.
+    ///      This limit was chosen as a balance between rebasing accuracy
+    ///      and supporting low-value tokens or high decimal tokens properly.
+    uint internal constant MAX_SUPPLY = 1_000_000_000_000_000_000e18;
 
     /// @dev The total amount of bits is a multiple of MAX_SUPPLY so that
     ///      BITS_PER_UNDERLYING is an integer.
@@ -219,12 +221,12 @@ abstract contract ElasticReceiptToken_v1 is
         virtual
         initializer
     {
-        __ElasticReceiptToken_init(name_, symbol_, decimals_);
+        __ElasticReceiptBase_init(name_, symbol_, decimals_);
     }
 
     /// @dev Initializes the contract.
     /// @dev Reinitialization possible as long as no tokens minted.
-    function __ElasticReceiptToken_init(
+    function __ElasticReceiptBase_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_

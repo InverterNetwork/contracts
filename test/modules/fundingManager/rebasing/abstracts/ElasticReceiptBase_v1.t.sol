@@ -3,21 +3,21 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ElasticReceiptTokenV1Mock} from
-    "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptTokenV1Mock.sol";
+import {ElasticReceiptBaseV1Mock} from
+    "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptBaseV1Mock.sol";
 
 import {ERC20Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
 
 /**
- * @dev Root contract for ElasticReceiptToken_v1 Test Contracts.
+ * @dev Root contract for ElasticReceiptBase_v1 Test Contracts.
  *
  *      Provides the setUp function, access to common test utils and internal
- *      constants from the ElasticReceiptToken_v1.
+ *      constants from the ElasticReceiptBase_v1.
  */
-abstract contract ElasticReceiptTokenV1Test is Test {
+abstract contract ElasticReceiptBaseV1Test is Test {
     // SuT
-    ElasticReceiptTokenV1Mock ert;
+    ElasticReceiptBaseV1Mock ert;
 
     // Mocks
     ERC20Mock underlier;
@@ -36,7 +36,7 @@ abstract contract ElasticReceiptTokenV1Test is Test {
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
 
-        ert = new ElasticReceiptTokenV1Mock(address(underlier));
+        ert = new ElasticReceiptBaseV1Mock(address(underlier));
         ert.init(NAME, SYMBOL, uint8(DECIMALS));
     }
 

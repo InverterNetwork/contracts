@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import
-    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptToken_v1.t.sol";
+    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptBase_v1.t.sol";
 
 /**
  * @dev Mint/Burn Tests.
  */
-contract MintBurn is ElasticReceiptTokenV1Test {
+contract MintBurn is ElasticReceiptBaseV1Test {
     function testFailMintMoreThanMaxSupply(address to) public {
         vm.assume(to != address(0));
 
