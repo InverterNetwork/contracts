@@ -20,6 +20,8 @@ import {
     IInverterBeacon_v1
 } from "src/proxies/InverterBeacon_v1.sol";
 
+import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
+
 // Factories
 import {
     ModuleFactory_v1,
@@ -123,7 +125,27 @@ contract E2ETest is E2EModuleRegistry {
             new IInverterBeacon_v1[](0)
         );
 
-        orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
+        // Deploy OrchestratorFactory_v1 implementation.
+        OrchestratorFactory_v1 orchestatorFactoryImpl =
+            new OrchestratorFactory_v1(address(forwarder));
+
+        InverterBeacon_v1 orchestatorFactoryBeacon = new InverterBeacon_v1(
+            address(reverter),
+            address(gov),
+            1,
+            address(orchestatorFactoryImpl),
+            0,
+            0
+        ); // @note This needs to be updated to contain the correct versions / Think of concept for the orchestatorFactory Version
+
+        orchestratorFactory = OrchestratorFactory_v1(
+            address(
+                new InverterBeaconProxy_v1(
+                    InverterBeacon_v1(orchestatorFactoryBeacon)
+                )
+            )
+        );
+
         orchestratorFactory.init(
             moduleFactory.governor(), orchestratorBeacon, address(moduleFactory)
         );
