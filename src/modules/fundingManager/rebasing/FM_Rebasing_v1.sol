@@ -77,7 +77,9 @@ contract FM_Rebasing_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
-    uint internal constant DEPOSIT_CAP = 100_000_000e18;
+    // This cap is one power of ten lower than the MAX_SUPPLY of
+    // the underlying ElasticReceiptToken, just to be safe.
+    uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     //--------------------------------------------------------------------------
     // Storage

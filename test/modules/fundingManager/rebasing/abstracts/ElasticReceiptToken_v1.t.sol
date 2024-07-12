@@ -37,7 +37,7 @@ abstract contract ElasticReceiptTokenV1Test is Test {
 
     // Constants copied from SuT.
     uint internal constant MAX_UINT = type(uint).max;
-    uint internal constant MAX_SUPPLY = 1_000_000_000e18;
+    uint internal constant MAX_SUPPLY = 1_000_000_000_000_000_000e18;
     uint internal constant TOTAL_BITS = MAX_UINT - (MAX_UINT % MAX_SUPPLY);
     uint internal constant BITS_PER_UNDERLYING = TOTAL_BITS / MAX_SUPPLY;
 
