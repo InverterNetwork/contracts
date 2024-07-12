@@ -25,7 +25,7 @@ contract RebaseTest is ElasticReceiptTokenBaseV1Test {
     }
 
     // Tests the underlying ElasticReceiptTokenBase
-    function testInitializesCorrectly() public {
+    function testInitializesCorrectly() public view {
         vm.assume(keccak256(bytes(ert.name())) == keccak256(bytes(NAME)));
         vm.assume(keccak256(bytes(ert.symbol())) == keccak256(bytes(SYMBOL)));
         vm.assume(ert.decimals() == DECIMALS);
