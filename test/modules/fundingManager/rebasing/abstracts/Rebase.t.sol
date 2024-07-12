@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import
-    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptBase_v1.t.sol";
+    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptTokenBase_v1.t.sol";
 
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -11,7 +11,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
  *
  *      Uses a table-driven test approach.
  */
-contract RebaseTest is ElasticReceiptBaseV1Test {
+contract RebaseTest is ElasticReceiptTokenBaseV1Test {
     /// @notice Event emitted when the balance scalar is updated.
     /// @param epoch The number of rebases since inception.
     /// @param newScalar The new scalar.
@@ -24,7 +24,7 @@ contract RebaseTest is ElasticReceiptBaseV1Test {
         uint newSupplyTarget;
     }
 
-    // Tests the underlying ElasticReceiptBase
+    // Tests the underlying ElasticReceiptTokenBase
     function testInitializesCorrectly() public {
         vm.assume(keccak256(bytes(ert.name())) == keccak256(bytes(NAME)));
         vm.assume(keccak256(bytes(ert.symbol())) == keccak256(bytes(SYMBOL)));
@@ -45,7 +45,7 @@ contract RebaseTest is ElasticReceiptBaseV1Test {
 
     function testERTDoesntInitializeOutsideOfInitialization() public {
         vm.expectRevert(OZErrors.Initializable__NotInitializing);
-        ert.public__ElasticReceiptBase_init(
+        ert.public__ElasticReceiptTokenBase_init(
             _erb_orchestrator, _ERB_METADATA, _erb_configData
         );
     }

@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import
-    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptBase_v1.t.sol";
+    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptTokenBase_v1.t.sol";
 
 /**
  * @dev ERC20 Tests.
  */
-contract ERC20 is ElasticReceiptBaseV1Test {
+contract ERC20 is ElasticReceiptTokenBaseV1Test {
     bytes32 constant PERMIT_TYPEHASH = keccak256(
         "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
     );

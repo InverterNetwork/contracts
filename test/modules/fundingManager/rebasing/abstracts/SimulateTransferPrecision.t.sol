@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import
-    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptBase_v1.t.sol";
+    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptTokenBase_v1.t.sol";
 
 /**
  * @dev Simulation to Test rhAmple's Transfer Precision.
@@ -25,7 +25,7 @@ import
  *              or contract from MAX_SUPPLY to 1.
  *
  */
-contract SimulateTransferPrecision is ElasticReceiptBaseV1Test {
+contract SimulateTransferPrecision is ElasticReceiptTokenBaseV1Test {
     // The granularity by which the supply should be adjusted in each iteration.
     // Should not be zero due to div by zero at compile time.
     uint constant MAX_ITERATIONS = 1;

@@ -13,21 +13,21 @@ import {TransactionForwarder_v1} from
 import {OrchestratorV1Mock} from
     "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
 
-import {ElasticReceiptBaseV1Mock} from
-    "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptBaseV1Mock.sol";
+import {ElasticReceiptTokenBaseV1Mock} from
+    "test/modules/fundingManager/rebasing/utils/mocks/ElasticReceiptTokenBaseV1Mock.sol";
 
 import {ERC20Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
 
 /**
- * @dev Root contract for ElasticReceiptBase_v1 Test Contracts.
+ * @dev Root contract for ElasticReceiptTokenBase_v1 Test Contracts.
  *
  *      Provides the setUp function, access to common test utils and internal
- *      constants from the ElasticReceiptBase_v1.
+ *      constants from the ElasticReceiptTokenBase_v1.
  */
-abstract contract ElasticReceiptBaseV1Test is Test {
+abstract contract ElasticReceiptTokenBaseV1Test is Test {
     // SuT
-    ElasticReceiptBaseV1Mock ert;
+    ElasticReceiptTokenBaseV1Mock ert;
 
     // Mocks
     OrchestratorV1Mock _erb_orchestrator;
@@ -49,7 +49,7 @@ abstract contract ElasticReceiptBaseV1Test is Test {
     uint constant ERB_MAJOR_VERSION = 1;
     uint constant ERB_MINOR_VERSION = 0;
     string constant ERB_URL =
-        "https://github.com/organization/module/elasticReceiptBase";
+        "https://github.com/organization/module/ElasticReceiptTokenBase";
     string constant ERB_TITLE = "Module";
 
     IModule_v1.Metadata _ERB_METADATA = IModule_v1.Metadata(
@@ -65,8 +65,8 @@ abstract contract ElasticReceiptBaseV1Test is Test {
         address impl = address(new OrchestratorV1Mock(address(_forwarder)));
         _erb_orchestrator = OrchestratorV1Mock(Clones.clone(impl));
 
-        impl = address(new ElasticReceiptBaseV1Mock());
-        ert = ElasticReceiptBaseV1Mock(Clones.clone(impl));
+        impl = address(new ElasticReceiptTokenBaseV1Mock());
+        ert = ElasticReceiptTokenBaseV1Mock(Clones.clone(impl));
 
         _erb_configData = abi.encode(NAME, SYMBOL, uint8(DECIMALS));
         ert.init(_erb_orchestrator, _ERB_METADATA, _erb_configData);

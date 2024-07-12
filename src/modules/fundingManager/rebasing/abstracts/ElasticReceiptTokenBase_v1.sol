@@ -19,7 +19,7 @@ import {
 import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 
 /**
- * @title Elastic Receipt Token
+ * @title Elastic Receipt Token Base
  *
  * @dev The Elastic Receipt Token is a rebase token that "continuously"
  *      syncs the token supply with a supply target.
@@ -68,8 +68,9 @@ import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
  *
  * @author Buttonwood Foundation
  * @author merkleplant
+ * @author Inverter Network
  */
-abstract contract ElasticReceiptBase_v1 is IRebasingERC20, Module_v1 {
+abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -222,12 +223,12 @@ abstract contract ElasticReceiptBase_v1 is IRebasingERC20, Module_v1 {
         Metadata memory metadata,
         bytes memory configData
     ) external virtual override(Module_v1) initializer {
-        __ElasticReceiptBase_init(orchestrator_, metadata, configData);
+        __ElasticReceiptTokenBase_init(orchestrator_, metadata, configData);
     }
 
     /// @dev Initializes the contract.
     /// @dev Reinitialization possible as long as no tokens minted.
-    function __ElasticReceiptBase_init(
+    function __ElasticReceiptTokenBase_init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
