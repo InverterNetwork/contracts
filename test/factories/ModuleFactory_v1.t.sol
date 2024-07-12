@@ -379,6 +379,122 @@ contract ModuleFactoryV1Test is Test {
         ModuleImplementationV1Mock(address(newModule)).initialize(1);
     }
 
+    function testCreateModuleReorgResilience(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IModule_v1.Metadata memory metadata,
+        address orchestrator
+    ) public {
+        address alice = address(0xA11CE);
+        address bob = address(0x606);
+
+        _assumeValidMetadata(metadata);
+        _assumeValidOrchestrator(orchestrator);
+        _assumeValidWorkflowConfig(workflowConfig);
+
+        beacon.overrideImplementation(address(module));
+
+        // Register ModuleV1Mock for given metadata.
+        vm.prank(governanceContract);
+        factory.registerMetadata(metadata, beacon);
+
+        // Create a snapshot to revert to, to simulate a reorg later
+        uint snapshot = vm.snapshot();
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(
+            orchestrator, address(0), LibMetadata.identifier(metadata)
+        );
+
+        IModule_v1 originalModule;
+        vm.startPrank(alice);
+        {
+            // Create new module instance.
+            originalModule = IModule_v1(
+                factory.createModuleProxy(
+                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                )
+            );
+        }
+        vm.stopPrank();
+
+        assertEq(
+            factory.getOrchestratorOfProxy(address(originalModule)),
+            orchestrator
+        );
+
+        // Store the code size of the module before we reorg
+        uint sizePreReorg;
+        assembly {
+            sizePreReorg := extcodesize(originalModule)
+        }
+
+        // Simulate reorg, revert to snapshot before the creation of the
+        // module.
+        vm.revertTo(snapshot);
+
+        // Store the code size of the module after we reorg
+        uint sizePostReorg;
+        assembly {
+            sizePostReorg := extcodesize(originalModule)
+        }
+
+        // Check whether the contracts actually disappeared, just to be safe
+        assertNotEq(sizePreReorg, sizePostReorg);
+        assertEq(sizePostReorg, 0);
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(
+            orchestrator, address(0), LibMetadata.identifier(metadata)
+        );
+
+        IModule_v1 redeployedModule_bob;
+        vm.startPrank(bob);
+        {
+            // Create new module instance.
+            redeployedModule_bob = IModule_v1(
+                factory.createModuleProxy(
+                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                )
+            );
+        }
+        vm.stopPrank();
+
+        // Address shouldn't match the original one, as create2 is based on
+        // the msgSender, which isn't Alice here
+        assertNotEq(address(originalModule), address(redeployedModule_bob));
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(
+            orchestrator, address(0), LibMetadata.identifier(metadata)
+        );
+
+        IModule_v1 redeployedModule_alice;
+        vm.startPrank(alice);
+        {
+            // Create new module instance.
+            redeployedModule_alice = IModule_v1(
+                factory.createModuleProxy(
+                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                )
+            );
+        }
+        vm.stopPrank();
+
+        // The address of the original deployment matches the one of this
+        // new deployment, even with someone else doing the same deployment.
+        // -> success!
+        assertEq(address(originalModule), address(redeployedModule_alice));
+    }
+
     function testCreateModuleFailsIfMetadataUnregistered(
         IModule_v1.Metadata memory metadata,
         address orchestrator,
