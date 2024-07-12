@@ -26,7 +26,8 @@ import {InverterProxyAdmin_v1} from "src/proxies/InverterProxyAdmin_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
@@ -43,7 +44,7 @@ import {
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
- * @dev     Utilizes {ERC2771Context} for meta-transaction capabilities and {ERC165} for interface
+ * @dev     Utilizes {ERC2771Context} for meta-transaction capabilities and {ERC165Upgradeable} for interface
  *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
@@ -58,13 +59,13 @@ contract OrchestratorFactory_v1 is
     IOrchestratorFactory_v1,
     ERC2771ContextUpgradeable,
     Ownable2StepUpgradeable,
-    ERC165
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IOrchestratorFactory_v1).interfaceId
@@ -122,7 +123,7 @@ contract OrchestratorFactory_v1 is
         __Ownable_init(governor_);
 
         if (
-            !ERC165(address(beacon_)).supportsInterface(
+            !ERC165Upgradeable(address(beacon_)).supportsInterface(
                 type(IInverterBeacon_v1).interfaceId
             )
         ) {

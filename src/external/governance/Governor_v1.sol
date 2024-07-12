@@ -14,7 +14,8 @@ import {
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from
     "@oz-up/access/AccessControlUpgradeable.sol";
@@ -27,7 +28,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  *          specified multisig addresses. It supports upgrades to beacon contracts through
  *          role-based permissions, enabling a timelocked upgrade process and emergency procedures.
  *
- *  @dev    Inherits from {ERC165} for interface detection, {AccessControlUpgradeable} for role-based
+ *  @dev    Inherits from {ERC165Upgradeable} for interface detection, {AccessControlUpgradeable} for role-based
  *          access control, and implements the {IGovernor_v1} interface for governance
  *          functionalities, i.e. setting the fee manager, setting the timelock, upgrading the
  *          beacons and exposing the emergency shutdown.
@@ -38,12 +39,16 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  *
  * @author  Inverter Network
  */
-contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
+contract Governor_v1 is
+    ERC165Upgradeable,
+    IGovernor_v1,
+    AccessControlUpgradeable
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(AccessControlUpgradeable, ERC165)
+        override(AccessControlUpgradeable, ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IGovernor_v1).interfaceId
