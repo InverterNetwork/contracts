@@ -103,6 +103,10 @@ contract ModuleFactory_v1 is
     /// @dev Mapping of proxy address to orchestrator address.
     mapping(address => address) private _orchestratorOfProxy;
 
+    /// @dev Maps a users address to a nonce
+    ///      Used for the create2-based deployment
+    mapping(address => uint) private _deploymentNonces;
+
     // Storage gap for future upgrades
     uint[50] private __gap;
 
@@ -177,7 +181,7 @@ contract ModuleFactory_v1 is
         if (workflowConfig.independentUpdates) {
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1(
+                new InverterTransparentUpgradeableProxy_v1{salt: createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -185,7 +189,8 @@ contract ModuleFactory_v1 is
         // If not then
         else {
             // Instead use the Beacon Structure Proxy
-            proxy = address(new InverterBeaconProxy_v1(beacon));
+            proxy =
+                address(new InverterBeaconProxy_v1{salt: createSalt()}(beacon));
         }
 
         _orchestratorOfProxy[proxy] = address(orchestrator);
@@ -231,6 +236,9 @@ contract ModuleFactory_v1 is
         _registerMetadata(metadata, beacon);
     }
 
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
@@ -247,6 +255,15 @@ contract ModuleFactory_v1 is
         // Register Metadata for beacon.
         _beacons[id] = beacon;
         emit MetadataRegistered(metadata, beacon);
+    }
+
+    // Generated a salt for the create2-based deployment flow.
+    // This salt is the hash of (msgSender, nonce), where the
+    // nonce is an increasing number for each user.
+    function createSalt() internal returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
+        );
     }
 
     //--------------------------------------------------------------------------
