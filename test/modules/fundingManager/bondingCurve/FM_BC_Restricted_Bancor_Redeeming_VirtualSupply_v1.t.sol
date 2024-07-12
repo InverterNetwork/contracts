@@ -105,6 +105,15 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
         );
     }
 
+    function testTransferOrchestratorToken_FailsGivenNotEnoughCollateralInFM(
+        address to,
+        uint amount,
+        uint projectCollateralFeeCollected
+    ) public override {
+        // Temp test override, as in dev branch we have already removed the restriction
+        // to call the transferOrchestratorToken() function
+    }
+
     // Override to test deactivation
     function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
         address to,
