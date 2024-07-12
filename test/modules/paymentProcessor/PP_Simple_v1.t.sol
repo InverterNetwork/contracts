@@ -26,7 +26,7 @@ import {
 import {
     IERC20PaymentClientBase_v1,
     ERC20PaymentClientBaseV1Mock,
-    ERC20
+    ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 // Errors
@@ -424,26 +424,30 @@ contract PP_SimpleV1Test is ModuleTest {
         assertEq(paymentProcessor.original_validTotal(_total), expectedValue);
     }
 
-    function test_validPaymentToken(address _token, address sender) public {
-        
+    function test_validPaymentToken(address randomToken, address sender)
+        public
+    {
         // Non-contract addresses or protected addresses should be invalid
-
-        bool expectedValue = false;
+        vm.assume(address(randomToken) != address(_token));
 
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentToken(_token), expectedValue
+            paymentProcessor.original_validPaymentToken(randomToken), false
         );
 
-        ERC20 actualToken = ERC20(_token);
+        // ERC20 addresses are valid
+        ERC20Mock actualToken = new ERC20Mock("Test", "TST");
 
-                vm.prank(sender);
-
+        vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(_token), true
+            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            true
         );
 
-
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(_token)), true
+        );
     }
 }

@@ -29,7 +29,8 @@ import {PP_Streaming_v1AccessMock} from
 
 import {
     IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock
+    ERC20PaymentClientBaseV1Mock,
+    ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 // Errors
@@ -1882,20 +1883,30 @@ contract PP_StreamingV1Test is //@note do we want to do anything about these tes
         );
     }
 
-    function test_validPaymentToken(address _token, address sender) public {
-        bool expectedValue = true;
-        if (
-            _token == address(0) || _token == sender
-                || _token == address(paymentProcessor)
-                || _token == address(_orchestrator)
-        ) {
-            expectedValue = false;
-        }
+    function test_validPaymentToken(address randomToken, address sender)
+        public
+    {
+        // Non-contract addresses or protected addresses should be invalid
+        vm.assume(address(randomToken) != address(_token));
 
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentToken(_token), expectedValue
+            paymentProcessor.original_validPaymentToken(randomToken), false
+        );
+
+        // ERC20 addresses are valid
+        ERC20Mock actualToken = new ERC20Mock("Test", "TST");
+
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            true
+        );
+
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(_token)), true
         );
     }
 
