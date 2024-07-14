@@ -39,7 +39,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     error Module__VotingRoleManager__InvalidVoterAddress();
 
     /// @notice The threshold cannot exceed the amount of voters
-    ///         or be too low to be considered safe
+    ///         or be too low to be considered safe.
     error Module__VotingRoleManager__InvalidThreshold();
 
     /// @notice The supplied voting duration is invalid.
