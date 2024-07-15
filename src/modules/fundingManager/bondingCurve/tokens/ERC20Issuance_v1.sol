@@ -33,14 +33,14 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
     // State Variables
-    address public allowedMinter;
+    mapping(address => bool) public allowedMinters;
     uint public MAX_SUPPLY;
     uint8 internal _decimals;
 
     //------------------------------------------------------------------------------
     // Modifiers
     modifier onlyMinter() {
-        if (_msgSender() != allowedMinter) {
+        if (!allowedMinters[_msgSender()]) {
             revert IERC20Issuance__CallerIsNotMinter();
         }
         _;
@@ -57,7 +57,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
         address initialAdmin_,
         address initialMinter_
     ) ERC20(name_, symbol_) Ownable(initialAdmin_) {
-        _setMinter(initialMinter_);
+        _setMinter(initialMinter_, true);
         MAX_SUPPLY = maxSupply_;
         _decimals = decimals_;
     }
@@ -70,8 +70,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
     }
 
     /// @inheritdoc IERC20Issuance_v1
-    function setMinter(address _minter) external onlyOwner {
-        _setMinter(_minter);
+    function setMinter(address _minter, bool _allowed) external onlyOwner {
+        _setMinter(_minter, _allowed);
     }
 
     /// @inheritdoc IERC20Issuance_v1
@@ -92,9 +92,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
 
     /// @notice Sets the address of the minter.
     /// @param _minter The address of the minter.
-    function _setMinter(address _minter) internal {
-        // Note to @Zitzak: Since the token should work independently, I wouldn't control that the minter is a module. Also, setting the minter to zero may be useful in some cases.
-        allowedMinter = _minter;
-        emit MinterSet(_minter);
+    function _setMinter(address _minter, bool _allowed) internal {
+        allowedMinters[_minter] = _allowed;
+        emit MinterSet(_minter, _allowed);
     }
 }

@@ -14,6 +14,8 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 contract ERC20IssuanceTest is Test {
     ERC20Issuance_v1 token;
 
+    event MinterSet(address indexed minter, bool allowed);
+
     function setUp() public {
         token = new ERC20Issuance_v1(
             "Test Token",
@@ -30,7 +32,7 @@ contract ERC20IssuanceTest is Test {
     ├── When the caller is not the Admin
     │   └── It should revert
     └── When the caller is the Admin
-    └── It should set the new minter address
+    └── It should set the new minter address rights
     */
 
     function testSetMinterFails_IfCallerNotAdmin() public {
@@ -43,14 +45,42 @@ contract ERC20IssuanceTest is Test {
                 )
             );
 
-            token.setMinter(address(this));
+            token.setMinter(address(this), true);
         }
     }
 
-    function test_setMinter() public {
-        token.setMinter(address(0xB0B));
+    function test_setMinter(address minter) public {
+        vm.expectEmit(true, true, true, true);
+        emit MinterSet(minter, true);
 
-        assertEq(token.allowedMinter(), address(0xB0B));
+        token.setMinter(minter, true);
+
+        assertTrue(token.allowedMinters(minter));
+
+        vm.expectEmit(true, true, true, true);
+        emit MinterSet(minter, false);
+
+        token.setMinter(minter, false);
+
+        assertFalse(token.allowedMinters(minter));
+    }
+
+    function test_setMinter_Idempotence(address minter, bool allowed) public {
+        // Sometimes we the initial state is that the address is allowed
+        if (uint(uint160(minter)) % 2 == 0) {
+            token.setMinter(minter, true);
+        }
+
+        // state before
+        bool allowedBefore = token.allowedMinters(minter);
+
+        vm.expectEmit(true, true, true, true);
+        emit MinterSet(minter, allowed);
+
+        token.setMinter(minter, allowed);
+
+        // state after
+        assertEq(token.allowedMinters(minter), allowed);
     }
 
     /*

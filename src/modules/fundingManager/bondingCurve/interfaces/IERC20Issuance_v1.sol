@@ -8,7 +8,7 @@ interface IERC20Issuance_v1 is IERC20 {
     // Events
 
     /// @notice Emitted when the minter is set.
-    event MinterSet(address indexed minter);
+    event MinterSet(address indexed minter, bool allowed);
 
     //--------------------------------------------------------------------------
     // Errors
@@ -19,9 +19,10 @@ interface IERC20Issuance_v1 is IERC20 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Sets the address of the minter.
+    /// @notice Sets the minting rights of an address.
     /// @param _minter The address of the minter.
-    function setMinter(address _minter) external;
+    /// @param _allowed If the address is allowed to mint or not
+    function setMinter(address _minter, bool _allowed) external;
 
     /// @notice Mints new tokens
     /// @param _to The address of the recipient.
