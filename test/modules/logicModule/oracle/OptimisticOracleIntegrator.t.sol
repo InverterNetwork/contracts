@@ -301,9 +301,9 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
                         the assertion gets stored with a unique id
                         emits an event
             when the asserter address is not 0
-                    when the caller does not have enough funds for the bond
+                    when the asserter does not have enough funds for the bond
                         reverts
-                    when the caller has enough funds for the bond
+                    when the asserter has enough funds for the bond
                         the contract takes the funds for the bond
                         the OO receives the bond
                         the assertion gets stored with a unique id
@@ -311,8 +311,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
 
 
     */
-    // Maybe better here?
-    function testAssertDataFor_whenCallerDoesNotHaveAsserterRole(address who)
+    function testAssertDataForFails_whenCallerDoesNotHaveAsserterRole()
         public
     {
         bytes32 roleId = _authorizer.generateRoleId(
@@ -332,8 +331,103 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         );
     }
 
-    function testAssertDataFor_whenAsserterAddressIsZero() public {
-        address prankUser = address(0x987654321);
+    function testAssertDataForFails_whenAsserterDoesNotHaveEnoughFundsForBond(
+        address prankUser
+    ) public {
+        _validateAddress(prankUser);
+        _token.mint(prankUser, 1e9);
+        vm.prank(prankUser);
+        _token.approve(address(ooIntegrator), 1e20);
+        // get user balance before
+        uint userBalanceBefore = _token.balanceOf(prankUser);
+        // get OO balance before
+        uint ooBalanceBefore = _token.balanceOf(address(ooV3));
+
+        // Since we are using the mockauthorizer, the asserter has the asserter role
+        vm.prank(prankUser);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOptimisticOracleIntegrator
+                    .Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond
+                    .selector
+            )
+        );
+        ooIntegrator.assertDataFor(
+            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, prankUser
+        );
+
+        // assert user balance has been reduced by $bond
+        assertEq(_token.balanceOf(prankUser), userBalanceBefore);
+        // assert OO balance has ben increased by $bond
+        assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore);
+    }
+
+    function testAssertDataForFails_whenAsserterIsZeroAndCallerDoesNotHaveEnoughFundsForBond(
+        address prankUser
+    ) public {
+        _validateAddress(prankUser);
+        _token.mint(prankUser, 1e9);
+        vm.prank(prankUser);
+        _token.approve(address(ooIntegrator), 1e20);
+        // get user balance before
+        uint userBalanceBefore = _token.balanceOf(prankUser);
+        // get OO balance before
+        uint ooBalanceBefore = _token.balanceOf(address(ooV3));
+
+        // Since we are using the mockauthorizer, the asserter has the asserter role
+        vm.prank(prankUser);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOptimisticOracleIntegrator
+                    .Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond
+                    .selector
+            )
+        );
+        ooIntegrator.assertDataFor(
+            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, address(0)
+        );
+
+        // assert user balance has been reduced by $bond
+        assertEq(_token.balanceOf(prankUser), userBalanceBefore);
+        // assert OO balance has ben increased by $bond
+        assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore);
+    }
+
+    function testAssertDataForFails_whenAsserterIsOOIntegratorAndItDoesNotHaveEnoughFundsForBond(
+    ) public {
+        address prankUser = address(ooIntegrator);
+        _token.mint(prankUser, 1e9);
+        vm.prank(prankUser);
+        _token.approve(address(ooIntegrator), 1e20);
+        // get user balance before
+        uint userBalanceBefore = _token.balanceOf(prankUser);
+        // get OO balance before
+        uint ooBalanceBefore = _token.balanceOf(address(ooV3));
+
+        // Since we are using the mockauthorizer, the asserter has the asserter role
+        vm.prank(prankUser);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOptimisticOracleIntegrator
+                    .Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond
+                    .selector
+            )
+        );
+        ooIntegrator.assertDataFor(
+            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, address(ooIntegrator)
+        );
+
+        // assert user balance has been reduced by $bond
+        assertEq(_token.balanceOf(prankUser), userBalanceBefore);
+        // assert OO balance has ben increased by $bond
+        assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore);
+    }
+
+    function testAssertDataFor_whenAsserterAddressIsZero(address prankUser)
+        public
+    {
+        // the bond is paid by the caller
+        _validateAddress(prankUser);
         _token.mint(prankUser, 1e18);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);
@@ -345,7 +439,7 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         // Since we are using the mockauthorizer, the asserter has the asserter role
         vm.prank(prankUser);
         ooIntegrator.assertDataFor(
-            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, address(0)
+            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, prankUser
         );
 
         // assert user balance has been reduced by $bond
@@ -354,33 +448,36 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
         assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore + 1e18);
     }
 
-    function testAssertDataForFails_whenCallerDoesNotHaveEnoughFundsForBond()
-        public
-    {
+    function testAssertDataFor_whenAsserterAddressIsOOIntegrator() public {
         address prankUser = address(0x987654321);
-        _token.mint(prankUser, 1e9);
-        vm.prank(prankUser);
-        _token.approve(address(ooIntegrator), 1e20);
-        // get user balance before
+        _token.mint(address(ooIntegrator), 1e18);
+
+        // pre-state
         uint userBalanceBefore = _token.balanceOf(prankUser);
-        // get OO balance before
+        uint ooIntegratorBalanceBefore = _token.balanceOf(address(ooIntegrator));
         uint ooBalanceBefore = _token.balanceOf(address(ooV3));
 
         // Since we are using the mockauthorizer, the asserter has the asserter role
         vm.prank(prankUser);
-        vm.expectRevert();
         ooIntegrator.assertDataFor(
-            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, prankUser
+            MOCK_ASSERTION_DATA_ID, MOCK_ASSERTION_DATA, address(ooIntegrator)
         );
 
-        // assert user balance has been reduced by $bond
+        // assert user balance stayed the same
         assertEq(_token.balanceOf(prankUser), userBalanceBefore);
-        // assert OO balance has ben increased by $bond
-        assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore);
+        // assert OO integrator balance has decreased by $bond
+        assertEq(
+            _token.balanceOf(address(ooIntegrator)),
+            ooIntegratorBalanceBefore - 1e18
+        );
+        // assert OO balance has increased by $bond
+        assertEq(_token.balanceOf(address(ooV3)), ooBalanceBefore + 1e18);
     }
 
-    function testAssertDataFor_whenAsserterAddressIsNotZero() public {
-        address prankUser = address(0x987654321);
+    function testAssertDataFor_whenAsserterAddressIsNotZero(address prankUser)
+        public
+    {
+        _validateAddress(prankUser);
         _token.mint(prankUser, 1e18);
         vm.prank(prankUser);
         _token.approve(address(ooIntegrator), 1e20);

@@ -352,7 +352,6 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
         );
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 3);
 
