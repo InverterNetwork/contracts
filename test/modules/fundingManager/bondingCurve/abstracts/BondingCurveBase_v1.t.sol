@@ -1169,11 +1169,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
     */
 
     function testInternalEnsureNonZeroTradeParameters_FailsGivenDepositAmountIsZero(
-        uint _depositAmount,
         uint _minAmountOut
     ) external {
-        vm.assume(_depositAmount == 0);
-        vm.assume(_minAmountOut > 0);
+        uint _depositAmount = 0;
+
+        _minAmountOut = bound(_minAmountOut, 1, type(uint128).max);
         vm.expectRevert(
             IBondingCurveBase_v1
                 .Module__BondingCurveBase__InvalidDepositAmount
@@ -1185,11 +1185,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     function testInternalEnsureNonZeroTradeParameters_FailsGivenMinAmountOutIsZero(
-        uint _depositAmount,
-        uint _minAmountOut
+        uint _depositAmount
     ) external {
-        vm.assume(_depositAmount > 0);
-        vm.assume(_minAmountOut == 0);
+        uint _minAmountOut = 0;
+
+        _depositAmount = bound(_depositAmount, 1, type(uint128).max);
         vm.expectRevert(
             IBondingCurveBase_v1
                 .Module__BondingCurveBase__InvalidMinAmountOut
