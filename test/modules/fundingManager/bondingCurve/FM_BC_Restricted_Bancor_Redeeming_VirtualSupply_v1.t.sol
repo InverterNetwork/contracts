@@ -325,7 +325,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
         }
     }
 
-    function testSellFor_FailsIfCallerNotAuthorized() public {
+    function testsellTo_FailsIfCallerNotAuthorized() public {
         address _seller = makeAddr("seller");
         address _receiver = makeAddr("receiver");
         uint _sellAmount = 1;
@@ -343,7 +343,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
                     _seller
                 )
             );
-            bondingCurveFundingManager.sellFor(
+            bondingCurveFundingManager.sellTo(
                 _receiver, _sellAmount, _sellAmount
             );
         }
