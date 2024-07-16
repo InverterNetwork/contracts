@@ -1915,17 +1915,5 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         minAmount = minAmountFirstCall > minAmountIssuance
             ? minAmountFirstCall
             : minAmountIssuance;
-
-        // // Ensure the final amount after all fee deductions is at least 1
-        // while (true) {
-        //     uint afterFirstFees = (minAmount * (_bps - _collateralFee - _workflowFee)) / _bps;
-        //     uint finalAmount = (afterFirstFees * (_bps - _issuanceFee)) / _bps;
-
-        //     if (finalAmount > 0) {
-        //         break;
-        //     }
-
-        //     minAmount += 1e18;
-        // }
     }
 }
