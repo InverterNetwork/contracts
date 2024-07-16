@@ -1,4 +1,4 @@
-name: CI
+name: Size Check
 on:
   push:
     branches:
@@ -10,7 +10,6 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
-  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
 
 jobs:
   run-ci:
@@ -24,8 +23,5 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Run scripts
-        run: make testScripts
-
-      - name: Run tests
-        run: make test
+      - name: Verify contract sizes
+        run: make check-size
