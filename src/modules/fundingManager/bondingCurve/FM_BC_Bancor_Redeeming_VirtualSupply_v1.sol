@@ -230,7 +230,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    /// @notice Redeem tokens and directs the proceeds to a specified receiver address. This function is subject
+    /// @notice Redeem tokens and direct the proceeds to a specified receiver address. This function is subject
     /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
     /// bonding curve algorithm.
     /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
