@@ -210,7 +210,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     /// @dev The supply target MUST never be zero or higher than MAX_SUPPLY,
     ///      otherwise no supply adjustment can be executed.
     /// @dev Has to be implemented in downstream contract.
-    function _supplyTarget() internal virtual returns (uint);
+    function _supplyTarget() internal view virtual returns (uint);
 
     //--------------------------------------------------------------------------
     // Public ERC20-like Mutating Functions
@@ -419,6 +419,13 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
 
     /// @inheritdoc IERC20
     function balanceOf(address who) public view returns (uint) {
+        // If the supply target is zero (i.e. no deposited tokens),
+        // we hard return zero as the balance, as the user might have
+        // dust bits (which happens if the funds are used via the workflow
+        // and not withdrawn normally) which they can not use though.
+        if (_supplyTarget() == 0) {
+            return 0;
+        }
         return _accountBits[who] / _bitsPerToken;
     }
 
@@ -550,15 +557,21 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     ///      updates the bit-tokens conversion rate and the total token supply.
     function _rebase() private {
         uint supplyTarget = _supplyTarget();
+        uint activeBits = _activeBits();
 
         // Do not adjust supply if target is outside of valid supply range.
-        // Note to not revert as this would make transfer's impossible.
-        if (supplyTarget == 0 || supplyTarget > MAX_SUPPLY) {
+        // Note: to not revert as this would make transfer's impossible.
+        if ((supplyTarget == 0 && activeBits == 0) || supplyTarget > MAX_SUPPLY)
+        {
             return;
         }
 
         // Adjust conversion rate and total token supply.
-        _bitsPerToken = _activeBits() / supplyTarget;
+        // Note: If the supply target is zero and active bits exist (which means
+        //       that the deposited funds are used up), we use a supply target of
+        //       1, i.e. just use the active bits here.
+        _bitsPerToken =
+            supplyTarget == 0 ? activeBits : activeBits / supplyTarget;
         _totalTokenSupply = supplyTarget;
 
         // Notify about new rebase.
