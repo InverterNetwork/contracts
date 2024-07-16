@@ -188,6 +188,7 @@ contract LM_PC_KPIRewarder_v1 is
 
         assertionPending = true;
 
+        // TODO
         // (return assertionId)
     }
 
@@ -258,8 +259,8 @@ contract LM_PC_KPIRewarder_v1 is
         return (KpiNum);
     }
 
-    // ===========================================================
-    // Overrides:
+    //--------------------------------------------------------------------------
+    // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
 
     /// @inheritdoc ILM_PC_Staking_v1
     function stake(uint amount)
@@ -361,7 +362,7 @@ contract LM_PC_KPIRewarder_v1 is
                             resolvedKPI.trancheValues[i] - trancheStart;
 
                         rewardAmount +=
-                            achievedReward * trancheRewardValue / trancheEnd;
+                            (achievedReward * trancheRewardValue) / trancheEnd;
                     }
                     // else -> no reward
 
