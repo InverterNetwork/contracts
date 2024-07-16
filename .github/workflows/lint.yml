@@ -1,24 +1,27 @@
 name: Lint
 
 on:
-  push:
-    branches:
-      - main
-      - dev
-  pull_request:
-    branches:
-      - '*'
+    push:
+        branches:
+            - main
+            - dev
+    pull_request:
+        branches:
+            - "*"
+
+env:
+    FOUNDRY_PROFILE: ci
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
 
-      - name: Check formatting
-        run: forge fmt --check
+            - name: Check formatting
+              run: forge fmt --check

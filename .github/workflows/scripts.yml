@@ -1,28 +1,29 @@
 name: Scripts
+
 on:
-  push:
-    branches:
-      - main
-      - dev
-  pull_request:
-    branches:
-      - '*'
+    push:
+        branches:
+            - main
+            - dev
+    pull_request:
+        branches:
+            - "*"
 
 env:
-  FOUNDRY_PROFILE: ci
-  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
+    FOUNDRY_PROFILE: ci
+    SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
 
 jobs:
-  verify-scripts:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+    verify-scripts:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
 
-      - name: Install dependencies
-        run: make install
+            - name: Install dependencies
+              run: make install
 
-      - name: Run scripts
-        run: make testScripts
+            - name: Run scripts
+              run: make testScripts
