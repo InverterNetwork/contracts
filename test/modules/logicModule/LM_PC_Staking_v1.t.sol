@@ -20,7 +20,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     LM_PC_Staking_v1,
     ILM_PC_Staking_v1,
-    ReentrancyGuard,
+    ReentrancyGuardUpgradeable,
     IERC20PaymentClientBase_v1
 } from "@lm/LM_PC_Staking_v1.sol";
 
@@ -288,7 +288,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
+                ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );
@@ -402,7 +402,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
+                ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );
