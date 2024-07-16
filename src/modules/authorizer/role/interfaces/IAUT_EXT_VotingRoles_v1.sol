@@ -39,7 +39,8 @@ interface IAUT_EXT_VotingRoles_v1 {
     error Module__VotingRoleManager__InvalidVoterAddress();
 
     /// @notice The threshold cannot exceed the amount of voters
-    error Module__VotingRoleManager__UnreachableThreshold();
+    ///         or be too low to be considered safe.
+    error Module__VotingRoleManager__InvalidThreshold();
 
     /// @notice The supplied voting duration is invalid.
     error Module__VotingRoleManager__InvalidVotingDuration();
@@ -117,7 +118,11 @@ interface IAUT_EXT_VotingRoles_v1 {
     function isVoter(address who) external view returns (bool);
 
     function addVoter(address who) external;
+    function addVoterAndUpdateThreshold(address who, uint newThreshold)
+        external;
     function removeVoter(address who) external;
+    function removeVoterAndUpdateThreshold(address who, uint newThreshold)
+        external;
 
     function motions(bytes32 motionId)
         external
