@@ -79,7 +79,7 @@ contract DeploymentScript is Script {
     DeployLM_PC_RecurringPayments_v1 deployRecurringPaymentManager =
         new DeployLM_PC_RecurringPayments_v1();
     // Utils
-    DeployAUT_EXT_VotingRoles_v1 deploySingleVoteGovernor =
+    DeployAUT_EXT_VotingRoles_v1 deployVotingRoles =
         new DeployAUT_EXT_VotingRoles_v1();
 
     // InverterReverter_v1
@@ -120,7 +120,7 @@ contract DeploymentScript is Script {
     address bountyManager;
     address recurringPaymentManager;
     // Utils
-    address singleVoteGovernor;
+    address votingRoles;
 
     // ------------------------------------------------------------------------
     // Beacons
@@ -140,7 +140,7 @@ contract DeploymentScript is Script {
     address bountyManagerBeacon;
     address recurringPaymentManagerBeacon;
     // Utils
-    address singleVoteGovernorBeacon;
+    address votingRolesBeacon;
 
     // ------------------------------------------------------------------------
     // Deployed Proxy Contracts
@@ -249,7 +249,7 @@ contract DeploymentScript is Script {
     // ------------------------------------------------------------------------
     // Utils
 
-    IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata votingRolesMetadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -356,7 +356,7 @@ contract DeploymentScript is Script {
         bountyManager = deployBountyManager.run();
         recurringPaymentManager = deployRecurringPaymentManager.run();
         // Utils
-        singleVoteGovernor = deploySingleVoteGovernor.run();
+        votingRoles = deployVotingRoles.run();
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -426,16 +426,16 @@ contract DeploymentScript is Script {
                 )
             )
         );
-        initialMetadataRegistration.push(singleVoteGovernorMetadata);
+        initialMetadataRegistration.push(votingRolesMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter,
                     address(governor),
-                    singleVoteGovernor,
-                    singleVoteGovernorMetadata.majorVersion,
-                    singleVoteGovernorMetadata.minorVersion,
-                    singleVoteGovernorMetadata.patchVersion
+                    votingRoles,
+                    votingRolesMetadata.majorVersion,
+                    votingRolesMetadata.minorVersion,
+                    votingRolesMetadata.patchVersion
                 )
             )
         );
