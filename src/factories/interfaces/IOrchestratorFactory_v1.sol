@@ -37,6 +37,13 @@ interface IOrchestratorFactory_v1 {
         uint indexed orchestratorId, address indexed orchestratorAddress
     );
 
+    /// @notice Event emitted when a new orchestrator factory is initialized.
+    /// @param beacon The address of the beacon associated with the factory.
+    /// @param moduleFactory The address of the module factory.
+    event OrchestratorFactoryInitialized(
+        address indexed beacon, address indexed moduleFactory
+    );
+
     //--------------------------------------------------------------------------
     // Structs
 
