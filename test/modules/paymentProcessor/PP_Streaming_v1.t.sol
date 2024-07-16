@@ -614,94 +614,6 @@ contract PP_StreamingV1Test is ModuleTest {
         }
     }
 
-    function test_processPayments_discardsInvalidPaymentOrders() public {
-        address[] memory recipients = createInvalidRecipients();
-
-        uint invalidAmt = 0;
-
-        vm.warp(1000);
-        vm.startPrank(address(paymentClient));
-
-        // Check addinng invalid recipients
-
-        // we don't mind about adding address(this)in this case
-        for (uint i = 0; i < recipients.length - 1; ++i) {
-            paymentClient.addPaymentOrderUnchecked(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: 100,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + 100
-                })
-            );
-        }
-        // Expect the correct number and sequence of emits
-        for (uint i = 0; i < recipients.length - 1; ++i) {
-            vm.expectEmit(true, true, true, true);
-            emit InvalidStreamingOrderDiscarded(
-                recipients[i],
-                address(_token),
-                100,
-                block.timestamp,
-                0,
-                block.timestamp + 100
-            );
-        }
-
-        // Call processPayments and expect emits
-        paymentProcessor.processPayments(paymentClient);
-
-        // Check adding an invalid amount
-
-        paymentClient.addPaymentOrderUnchecked(
-            IERC20PaymentClientBase_v1.PaymentOrder({
-                recipient: address(0xB0B),
-                paymentToken: address(_token),
-                amount: invalidAmt,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp + 100
-            })
-        );
-        vm.expectEmit(true, true, true, true);
-        emit InvalidStreamingOrderDiscarded(
-            address(0xB0B),
-            address(_token),
-            invalidAmt,
-            block.timestamp,
-            0,
-            block.timestamp + 100
-        );
-        paymentProcessor.processPayments(paymentClient);
-
-        // Check adding an invalid end time
-
-        paymentClient.addPaymentOrderUnchecked(
-            IERC20PaymentClientBase_v1.PaymentOrder({
-                recipient: address(0xB0B),
-                paymentToken: address(_token),
-                amount: invalidAmt,
-                start: block.timestamp,
-                cliff: 500,
-                end: block.timestamp + 100
-            })
-        );
-        vm.expectEmit(true, true, true, true);
-        emit InvalidStreamingOrderDiscarded(
-            address(0xB0B),
-            address(_token),
-            invalidAmt,
-            block.timestamp,
-            500,
-            block.timestamp + 100
-        );
-        paymentProcessor.processPayments(paymentClient);
-
-        vm.stopPrank();
-    }
-
     function test_processPayments_streamInfoGetsDeletedPostFullPayment(
         address[] memory recipients,
         uint128[] memory amounts,
@@ -1902,8 +1814,88 @@ contract PP_StreamingV1Test is ModuleTest {
             console.log("start + cliff > end");
         }
 
-        bool result = paymentProcessor.getValidTimes(start, cliff, end);
+        bool result = paymentProcessor.original_validTimes(start, cliff, end);
         assertEq(result, resultShouldBe);
+    }
+
+    function test_ValidPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        address sender
+    ) public {
+        order.start = bound(order.start, 0, type(uint).max / 2);
+        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+
+        vm.startPrank(sender);
+
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+            order.recipient
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
+            && paymentProcessor.original_validTimes(
+                order.start, order.cliff, order.end
+            ) && paymentProcessor.original_validTotal(order.amount);
+
+        assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+
+        vm.stopPrank();
+    }
+
+    function test_validPaymentReceiver(address addr, address sender) public {
+        bool expectedValue = true;
+        if (
+            addr == address(0) || addr == sender
+                || addr == address(paymentProcessor)
+                || addr == address(_orchestrator)
+                || addr == address(_orchestrator.fundingManager().token())
+        ) {
+            expectedValue = false;
+        }
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+        );
+    }
+
+    function test_validTotal(uint _total) public {
+        bool expectedValue = true;
+        if (_total == 0) {
+            expectedValue = false;
+        }
+
+        assertEq(paymentProcessor.original_validTotal(_total), expectedValue);
+    }
+
+    function test_validTimes(uint _start, uint _cliff, uint _end) public {
+        _start = bound(_start, 0, type(uint).max / 2);
+        _cliff = bound(_cliff, 0, type(uint).max / 2);
+
+        bool expectedValue = true;
+        if (_start + _cliff > _end) {
+            expectedValue = false;
+        }
+
+        assertEq(
+            paymentProcessor.original_validTimes(_start, _cliff, _end),
+            expectedValue
+        );
+    }
+
+    function test_validPaymentToken(address _token, address sender) public {
+        bool expectedValue = true;
+        if (
+            _token == address(0) || _token == sender
+                || _token == address(paymentProcessor)
+                || _token == address(_orchestrator)
+        ) {
+            expectedValue = false;
+        }
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentToken(_token), expectedValue
+        );
     }
 
     //--------------------------------------------------------------------------

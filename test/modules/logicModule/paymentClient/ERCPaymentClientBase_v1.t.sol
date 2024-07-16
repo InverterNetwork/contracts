@@ -126,52 +126,25 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         );
     }
 
-    function testAddPaymentOrderFailsForInvalidRecipient() public {
-        address[] memory invalids = _createInvalidRecipients();
-        uint amount = 1e18;
-        uint end = block.timestamp;
+    function testAddPaymentOrderFailsForInvalidPaymentOrder() public {
+        // Set return Value of validPaymentOrder in the paymentProcessor to false
+        _paymentProcessor.flipValidOrder();
 
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidRecipient
-                    .selector
-            );
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: invalids[0],
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: end
-                })
-            );
-        }
-    }
-
-    function testAddPaymentOrderFailsForInvalidAmount() public {
-        address recipient = address(0xCAFE);
-        uint[] memory invalids = _createInvalidAmounts();
-        uint end = block.timestamp;
-
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidAmount
-                    .selector
-            );
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: invalids[0],
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: end
-                })
-            );
-        }
+        vm.expectRevert(
+            IERC20PaymentClientBase_v1
+                .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                .selector
+        );
+        paymentClient.addPaymentOrder(
+            IERC20PaymentClientBase_v1.PaymentOrder({
+                recipient: address(0),
+                paymentToken: address(_token),
+                amount: 1,
+                start: block.timestamp,
+                cliff: 0,
+                end: block.timestamp
+            })
+        );
     }
 
     //----------------------------------
