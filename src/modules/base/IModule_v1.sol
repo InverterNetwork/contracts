@@ -19,9 +19,9 @@ interface IModule_v1 {
 
     /// @notice Module has been initialized.
     /// @param parentOrchestrator The address of the orchestrator the module is linked to.
-    /// @param moduleTitle The title of the module.
+    /// @param metadata The metadata of the module.
     event ModuleInitialized(
-        address indexed parentOrchestrator, string moduleTitle
+        address indexed parentOrchestrator, Metadata metadata
     );
 
     //--------------------------------------------------------------------------
