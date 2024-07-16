@@ -5,7 +5,8 @@ pragma solidity 0.8.23;
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
@@ -15,7 +16,7 @@ import {Ownable2StepUpgradeable} from
  * @notice  This contract manages the different fees possible on a protocol level.
  *          The different fees can be fetched publicly and be set by the owner of the contract.
  *
- *  @dev    Inherits from {ERC165} for interface detection, {Ownable2StepUpgradeable} for owner-based
+ *  @dev    Inherits from {ERC165Upgradeable} for interface detection, {Ownable2StepUpgradeable} for owner-based
  *          access control, and implements the {IFeeManager_v1} interface.
  *
  * @custom:security-contact security@inverter.network
@@ -24,16 +25,20 @@ import {Ownable2StepUpgradeable} from
  *
  * @author  Inverter Network
  */
-contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
+contract FeeManager_v1 is
+    ERC165Upgradeable,
+    IFeeManager_v1,
+    Ownable2StepUpgradeable
+{
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IFeeManager_v1).interfaceId
-            || ERC165.supportsInterface(interfaceId);
+            || ERC165Upgradeable.supportsInterface(interfaceId);
     }
 
     //--------------------------------------------------------------------------

@@ -19,7 +19,8 @@ import {InverterTransparentUpgradeableProxy_v1} from
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // External Interfaces
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // External Dependencies
 import {
@@ -53,13 +54,13 @@ contract ModuleFactory_v1 is
     IModuleFactory_v1,
     ERC2771ContextUpgradeable,
     Ownable2StepUpgradeable,
-    ERC165
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IModuleFactory_v1).interfaceId

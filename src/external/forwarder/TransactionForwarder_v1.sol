@@ -19,7 +19,7 @@ import {Context} from "@oz/utils/Context.sol";
  *          transactions (multi-call), facilitating complex, multi-step interactions within a single
  *          transaction.
  *
- * @dev     Integrates {ERC2771Forwarder} and Context to manage and relay meta transactions.
+ * @dev     Integrates {ERC2771Forwarder} and {Context} to manage and relay meta transactions.
  *          It handles nonce management, signature verification, and ensures only trusted calls
  *          are forwarded.
  *
@@ -34,9 +34,6 @@ contract TransactionForwarder_v1 is
     ERC2771Forwarder,
     Context
 {
-    // Storage gap for future upgrades
-    uint[50] private __gap;
-
     //--------------------------------------------------------------------------
     // Initialization
 

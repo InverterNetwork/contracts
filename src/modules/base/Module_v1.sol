@@ -20,7 +20,8 @@ import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   Module
@@ -47,13 +48,13 @@ abstract contract Module_v1 is
     IModule_v1,
     Initializable,
     ERC2771ContextUpgradeable,
-    ERC165
+    ERC165Upgradeable
 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IModule_v1).interfaceId
@@ -293,7 +294,7 @@ abstract contract Module_v1 is
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())
-                || !ERC165(_msgSender()).supportsInterface(
+                || !ERC165Upgradeable(_msgSender()).supportsInterface(
                     type(IERC20PaymentClientBase_v1).interfaceId
                 )
         ) revert Module__OnlyCallableByPaymentClient();
