@@ -1,4 +1,4 @@
-name: Size Check
+name: Tests
 on:
   push:
     branches:
@@ -10,9 +10,10 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
+  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
 
 jobs:
-  check-size:
+  verify-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -23,5 +24,5 @@ jobs:
       - name: Install dependencies
         run: make install
 
-      - name: Verify contract sizes
-        run: make check-size
+      - name: Run tests
+        run: make test

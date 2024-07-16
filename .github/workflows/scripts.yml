@@ -1,4 +1,4 @@
-name: CI
+name: Scripts
 on:
   push:
     branches:
@@ -13,7 +13,7 @@ env:
   SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
 
 jobs:
-  run-ci:
+  verify-scripts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -26,6 +26,3 @@ jobs:
 
       - name: Run scripts
         run: make testScripts
-
-      - name: Run tests
-        run: make test
