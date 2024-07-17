@@ -19,14 +19,14 @@ contract DeployAUT_EXT_VotingRoles_v1 is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    AUT_EXT_VotingRoles_v1 singleVoteGovernor;
+    AUT_EXT_VotingRoles_v1 AUT_EXT_VotingRoles_v1_Implementation;
 
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the singleVoteGovernor.
+            // Deploy the AUT_EXT_VotingRoles_v1_Implementation.
 
-            singleVoteGovernor = new AUT_EXT_VotingRoles_v1();
+            AUT_EXT_VotingRoles_v1_Implementation = new AUT_EXT_VotingRoles_v1();
         }
 
         vm.stopBroadcast();
@@ -34,9 +34,9 @@ contract DeployAUT_EXT_VotingRoles_v1 is Script {
         // Log the deployed AUT_EXT_VotingRoles_v1 contract address.
         console2.log(
             "Deployment of AUT_EXT_VotingRoles_v1 Implementation at address",
-            address(singleVoteGovernor)
+            address(AUT_EXT_VotingRoles_v1_Implementation)
         );
 
-        return address(singleVoteGovernor);
+        return address(AUT_EXT_VotingRoles_v1_Implementation);
     }
 }

@@ -50,7 +50,8 @@ contract deployAndSwitchTokenAuthorizer is Script {
     ModuleFactory_v1 moduleFactory = ModuleFactory_v1(moduleFactoryAddress);
     Orchestrator_v1 orchestrator = Orchestrator_v1(orchestratorAddress);
 
-    LM_PC_Bounties_v1 bountyManager = LM_PC_Bounties_v1(bountyManagerAddress);
+    LM_PC_Bounties_v1 LM_PC_Bounties_v1_Implementation =
+        LM_PC_Bounties_v1(bountyManagerAddress);
 
     function run() public {
         vm.startBroadcast(orchestratorAdminPrivateKey);
@@ -76,13 +77,16 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
         // make all LM_PC_Bounties_v1 roles tokenGated
         bytes32 claimRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
+            bountyManagerAddress,
+            LM_PC_Bounties_v1_Implementation.CLAIMANT_ROLE()
         );
         bytes32 bountyRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.BOUNTY_ISSUER_ROLE()
+            bountyManagerAddress,
+            LM_PC_Bounties_v1_Implementation.BOUNTY_ISSUER_ROLE()
         );
         bytes32 verifyRoleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.VERIFIER_ROLE()
+            bountyManagerAddress,
+            LM_PC_Bounties_v1_Implementation.VERIFIER_ROLE()
         );
 
         // manually set tokenGated, token and threshold for all roles

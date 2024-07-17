@@ -20,21 +20,22 @@ contract giveBountyManagerRoles is Script {
 
     address bountyManagerAddress =
         vm.envAddress("DEPLOYED_BOUNTY_MANAGER_ADDRESS"); // The exisiting Bounty Manager instance
-    LM_PC_Bounties_v1 bountyManager = LM_PC_Bounties_v1(bountyManagerAddress);
+    LM_PC_Bounties_v1 LM_PC_Bounties_v1_Implementation =
+        LM_PC_Bounties_v1(bountyManagerAddress);
 
     address beneficiary = vm.envAddress("ROLE_BENEFICIARY_ADDRESS"); // The address that will be granted the roles
 
     function run() public {
         vm.startBroadcast(orchestratorAdmin);
 
-        bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ISSUER_ROLE(), beneficiary
+        LM_PC_Bounties_v1_Implementation.grantModuleRole(
+            LM_PC_Bounties_v1_Implementation.BOUNTY_ISSUER_ROLE(), beneficiary
         );
-        bountyManager.grantModuleRole(
-            bountyManager.CLAIMANT_ROLE(), beneficiary
+        LM_PC_Bounties_v1_Implementation.grantModuleRole(
+            LM_PC_Bounties_v1_Implementation.CLAIMANT_ROLE(), beneficiary
         );
-        bountyManager.grantModuleRole(
-            bountyManager.VERIFIER_ROLE(), beneficiary
+        LM_PC_Bounties_v1_Implementation.grantModuleRole(
+            LM_PC_Bounties_v1_Implementation.VERIFIER_ROLE(), beneficiary
         );
 
         vm.stopBroadcast();

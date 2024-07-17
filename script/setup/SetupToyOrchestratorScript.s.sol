@@ -76,24 +76,24 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // Funding Manager: Metadata, token address
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(token))
+            FM_Rebasing_v1_Metadata, abi.encode(address(token))
         );
 
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
-                .ModuleConfig(simplePaymentProcessorMetadata, bytes(""));
+                .ModuleConfig(PP_Simple_v1_Metadata, bytes(""));
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(orchestratorAdmin)
+            AUT_Roles_v1_Metadata, abi.encode(orchestratorAdmin)
         );
 
         // BountyManager: Metadata, salary precision, fee percentage, fee treasury address
         IOrchestratorFactory_v1.ModuleConfig memory bountyManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            bountyManagerMetadata, abi.encode("")
+            LM_PC_Bounties_v1_Metadata, abi.encode("")
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.

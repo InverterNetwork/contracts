@@ -18,14 +18,14 @@ contract DeployLM_PC_Bounties_v1 is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    LM_PC_Bounties_v1 bountyManager;
+    LM_PC_Bounties_v1 LM_PC_Bounties_v1_Implementation;
 
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the LM_PC_Bounties_v1.
 
-            bountyManager = new LM_PC_Bounties_v1();
+            LM_PC_Bounties_v1_Implementation = new LM_PC_Bounties_v1();
         }
 
         vm.stopBroadcast();
@@ -33,9 +33,9 @@ contract DeployLM_PC_Bounties_v1 is Script {
         // Log the deployed LM_PC_Bounties_v1 contract address.
         console2.log(
             "Deployment of LM_PC_Bounties_v1 Implementation at address",
-            address(bountyManager)
+            address(LM_PC_Bounties_v1_Implementation)
         );
 
-        return address(bountyManager);
+        return address(LM_PC_Bounties_v1_Implementation);
     }
 }

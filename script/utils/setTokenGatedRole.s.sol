@@ -49,7 +49,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
         // This script assumes we want to set the Role in the LM_PC_Bounties_v1. Change if appropriate.
         address bountyManagerAddress = scriptConstants.bountyManagerAddress();
-        LM_PC_Bounties_v1 bountyManager =
+        LM_PC_Bounties_v1 LM_PC_Bounties_v1_Implementation =
             LM_PC_Bounties_v1(bountyManagerAddress);
 
         // ===============================================================================================================
@@ -78,7 +78,8 @@ contract deployAndSwitchTokenAuthorizer is Script {
 
         // Choose the role to be modified. In this example we will use the CLAIMANT_ROLE
         bytes32 roleId = deployedAuthorizer.generateRoleId(
-            bountyManagerAddress, bountyManager.CLAIMANT_ROLE()
+            bountyManagerAddress,
+            LM_PC_Bounties_v1_Implementation.CLAIMANT_ROLE()
         );
 
         // First, we mark the Role as Token-Gated

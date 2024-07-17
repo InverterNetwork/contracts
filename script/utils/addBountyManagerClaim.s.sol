@@ -18,7 +18,8 @@ contract addClaim is Script {
     // Introduce corresponding bounty manager and user addresses here
     // ===============================================================================================================
     address bountyManagerAddress = scriptConstants.bountyManagerAddress();
-    LM_PC_Bounties_v1 bountyManager = LM_PC_Bounties_v1(bountyManagerAddress);
+    LM_PC_Bounties_v1 LM_PC_Bounties_v1_Implementation =
+        LM_PC_Bounties_v1(bountyManagerAddress);
 
     address user1 = scriptConstants.addBountyManagerClaim_user1();
     address user2 = scriptConstants.addBountyManagerClaim_user2();
@@ -37,7 +38,7 @@ contract addClaim is Script {
 
         vm.startBroadcast(orchestratorAdmin);
 
-        uint claimId = bountyManager.addClaim(
+        uint claimId = LM_PC_Bounties_v1_Implementation.addClaim(
             1, contributors, scriptConstants.emptyBytes()
         );
 

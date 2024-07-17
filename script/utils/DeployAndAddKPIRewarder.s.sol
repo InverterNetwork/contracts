@@ -22,12 +22,12 @@ contract DeployKPIRewarder is Script {
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
-    LM_PC_KPIRewarder_v1 kpiRewarder;
+    LM_PC_KPIRewarder_v1 LM_PC_KPIRewarder_v1_Implementation;
     //Beacon
     DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
         new DeployAndSetUpInverterBeacon_v1();
     address moduleFactory = 0x1b852726489a43645C4414aC59171AB48be23D57; // current sepolia factory address
-    IModule_v1.Metadata kpiRewarderMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata LM_PC_KPIRewarder_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
         "https://github.com/InverterNetwork/inverter-contracts",
@@ -38,18 +38,21 @@ contract DeployKPIRewarder is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the KPIRewarder_v1.
-            kpiRewarder = new LM_PC_KPIRewarder_v1();
+            LM_PC_KPIRewarder_v1_Implementation = new LM_PC_KPIRewarder_v1();
         }
         vm.stopBroadcast();
         // Log the deployed KPIRewarder_v1 contract address.
         console2.log(
             "Deployment of KPIRewarder_v1 Implementation at address",
-            address(kpiRewarder)
+            address(LM_PC_KPIRewarder_v1_Implementation)
         );
         address kpiRewarderBeacon = deployAndSetupInverterBeacon_v1
             .deployAndRegisterInFactory(
-            deployer, address(kpiRewarder), moduleFactory, kpiRewarderMetadata
+            deployer,
+            address(LM_PC_KPIRewarder_v1_Implementation),
+            moduleFactory,
+            LM_PC_KPIRewarder_v1_Metadata
         );
-        return address(kpiRewarder);
+        return address(LM_PC_KPIRewarder_v1_Implementation);
     }
 }

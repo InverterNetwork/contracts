@@ -139,7 +139,7 @@ contract SetupQuadraticAcceleratorWorkflow is Test, DeploymentScript {
         IOrchestratorFactory_v1.ModuleConfig memory
             bondingCurveFundingManagerConfig = IOrchestratorFactory_v1
                 .ModuleConfig(
-                restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata,
                 abi.encode(
                     buf_issuanceToken,
                     orchestratorOwner,
@@ -151,18 +151,18 @@ contract SetupQuadraticAcceleratorWorkflow is Test, DeploymentScript {
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
-                .ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
+                .ModuleConfig(PP_Streaming_v1_Metadata, bytes(""));
 
         // Authorizer: Metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(orchestratorOwner)
+            AUT_Roles_v1_Metadata, abi.encode(orchestratorOwner)
         );
 
         // Bounty Manager:
         IOrchestratorFactory_v1.ModuleConfig memory paymentRouterFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            paymentRouterMetadata, abi.encode("")
+            LM_PC_PaymentRouter_v1_Metadata, abi.encode("")
         );
 
         // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.

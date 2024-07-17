@@ -18,14 +18,14 @@ contract DeployAUT_Role_v1 is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    AUT_Roles_v1 roleAuthorizer;
+    AUT_Roles_v1 AUT_Roles_v1_Implementation;
 
     function run() external returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the listAuthorizer.
 
-            roleAuthorizer = new AUT_Roles_v1();
+            AUT_Roles_v1_Implementation = new AUT_Roles_v1();
         }
 
         vm.stopBroadcast();
@@ -33,9 +33,9 @@ contract DeployAUT_Role_v1 is Script {
         // Log the deployed AUT_Roles_v1 contract address.
         console2.log(
             "Deployment of AUT_Roles_v1 Implementation at address",
-            address(roleAuthorizer)
+            address(AUT_Roles_v1_Implementation)
         );
 
-        return address(roleAuthorizer);
+        return address(AUT_Roles_v1_Implementation);
     }
 }
