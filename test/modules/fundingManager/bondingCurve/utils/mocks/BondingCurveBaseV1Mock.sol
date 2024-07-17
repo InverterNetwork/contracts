@@ -148,4 +148,11 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     function setProjectCollateralFeeCollectedHelper(uint _amount) external {
         projectCollateralFeeCollected = _amount;
     }
+
+    function call_ensureNonZeroTradeParameters(
+        uint _depositAmount,
+        uint _minAmountOut
+    ) external pure {
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+    }
 }

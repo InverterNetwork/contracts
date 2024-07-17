@@ -114,7 +114,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
         virtual
         returns (uint redeemAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        // Set min amount out to 1 for price calculation
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
 
         // Get protocol fee percentages
         (
@@ -191,7 +192,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         internal
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
         // Get protocol fee percentages and treasury addresses
         (
             address collateralTreasury,

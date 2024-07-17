@@ -30,6 +30,9 @@ interface IBondingCurveBase_v1 {
     /// @notice Buy amount in relation to fee percentage to small, results in round down fee amount to zero
     error Module__BondingCurveBase__TradeAmountTooLow();
 
+    /// @notice The minimum amount out cannot be zero
+    error Module__BondingCurveBase__InvalidMinAmountOut();
+
     //--------------------------------------------------------------------------
     // Events
 

@@ -128,7 +128,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         returns (uint mintAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        // Set min amount out to 1 for price calculation
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
         // Get protocol fee percentages
         (
             ,
@@ -226,7 +227,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
 
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
@@ -422,9 +423,15 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
-    function _validateDepositAmount(uint _depositAmount) internal pure {
+    function _ensureNonZeroTradeParameters(
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal pure {
         if (_depositAmount == 0) {
             revert Module__BondingCurveBase__InvalidDepositAmount();
+        }
+        if (_minAmountOut == 0) {
+            revert Module__BondingCurveBase__InvalidMinAmountOut();
         }
     }
 

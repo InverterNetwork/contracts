@@ -328,8 +328,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
     ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
-        _collateralFee = bound(_collateralFee, 0, _bps);
-        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _collateralFee = bound(_collateralFee, 0, _bps - 1);
+        _issuanceFee = bound(_issuanceFee, 0, _bps - 1);
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
@@ -1147,6 +1147,47 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
             projectTradeFeeCollected - _amount
+        );
+    }
+
+    /*  Test internal _ensureNonZeroTradeParameters()
+        ├── given the depositAmount == 0
+        │   └── when the internal function _ensureNonZeroTradeParameters() gets called
+        │       └── then it should revert
+        └── given the minAmountOut == 0
+            └── when the internal function _ensureNonZeroTradeParameters() gets called
+                └── then it should revert
+    */
+
+    function testInternalEnsureNonZeroTradeParameters_FailsGivenDepositAmountIsZero(
+        uint _minAmountOut
+    ) external {
+        uint _depositAmount = 0;
+
+        _minAmountOut = bound(_minAmountOut, 1, type(uint128).max);
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidDepositAmount
+                .selector
+        );
+        bondingCurveFundingManager.call_ensureNonZeroTradeParameters(
+            _depositAmount, _minAmountOut
+        );
+    }
+
+    function testInternalEnsureNonZeroTradeParameters_FailsGivenMinAmountOutIsZero(
+        uint _depositAmount
+    ) external {
+        uint _minAmountOut = 0;
+
+        _depositAmount = bound(_depositAmount, 1, type(uint128).max);
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__InvalidMinAmountOut
+                .selector
+        );
+        bondingCurveFundingManager.call_ensureNonZeroTradeParameters(
+            _depositAmount, _minAmountOut
         );
     }
 
