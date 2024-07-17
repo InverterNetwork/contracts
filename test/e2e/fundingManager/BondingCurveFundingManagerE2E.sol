@@ -50,15 +50,9 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
         // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties =
-        IBondingCurveBase_v1.IssuanceToken({
-            name: "Bonding Curve Token",
-            symbol: "BCT",
-            decimals: 18,
-            maxSupply: type(uint).max - 1
-        });
-
-        address issuanceTokenAdmin = address(this);
+        issuanceToken = new ERC20Issuance_v1(
+            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
+        );
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -77,12 +71,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(
-                    issuanceToken_properties,
-                    issuanceTokenAdmin,
-                    bc_properties,
-                    token
-                )
+                abi.encode(address(issuanceToken), bc_properties, token)
             )
         );
 
@@ -127,7 +116,7 @@ contract BondingCurveFundingManagerE2E is E2ETest {
             address(orchestrator.fundingManager())
         );
 
-        issuanceToken = ERC20Issuance_v1(fundingManager.getIssuanceToken());
+        issuanceToken.setMinter(address(fundingManager), true);
 
         // IMPORTANT
         // =========

@@ -18,12 +18,7 @@ contract ERC20IssuanceTest is Test {
 
     function setUp() public {
         token = new ERC20Issuance_v1(
-            "Test Token",
-            "TT",
-            18,
-            type(uint).max - 1,
-            address(this),
-            address(this)
+            "Test Token", "TT", 18, type(uint).max - 1, address(this)
         );
     }
 

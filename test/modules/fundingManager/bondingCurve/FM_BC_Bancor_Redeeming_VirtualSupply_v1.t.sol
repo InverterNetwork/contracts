@@ -109,17 +109,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     function setUp() public virtual {
         // Deploy contracts
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties;
+        issuanceToken = new ERC20Issuance_v1(
+            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
+        );
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -148,15 +146,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken_properties,
-                admin_address,
+                address(issuanceToken),
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
 
-        issuanceToken =
-            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
+        // we grant minting rights to the bonding curve
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
     }
 
     function testSupportsInterface() public {
@@ -1404,12 +1401,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         vm.expectRevert(
@@ -1433,12 +1425,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         vm.expectRevert(
@@ -1461,12 +1448,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         // No authentication since it's an internal function exposed by the mock contract
