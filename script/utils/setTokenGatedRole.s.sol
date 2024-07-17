@@ -22,10 +22,10 @@ import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol"
 
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
-import {ScriptConstants} from "../script-constants.sol";
+import {DeploymentConstants} from "../DeploymentConstants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {
-    ScriptConstants scriptConstants = new ScriptConstants();
+    DeploymentConstants scriptConstants = new DeploymentConstants();
     // ===============================================================================================================
     // NOTE: This script has to be executed by the Orchestrator_v1 admin address.
     // IT IS STRONGLY RECOMMENDED TO STORE THE PRIVATE KEY TO THAT ADDRESS IN A SEPARATE .ENV FILE

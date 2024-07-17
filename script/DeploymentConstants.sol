@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract ScriptConstants {
+/*
+This file contains constants for deployments on different chains.
+
+
+*/
+
+contract DeploymentConstants {
     ///////////////////////
     // Common Constants
     ///////////////////////

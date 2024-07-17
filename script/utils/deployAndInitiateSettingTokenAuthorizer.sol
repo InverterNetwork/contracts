@@ -20,12 +20,12 @@ import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol"
 
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
-import {ScriptConstants} from "../script-constants.sol";
+import {DeploymentConstants} from "../DeploymentConstants.sol";
 
 contract deployAndSwitchTokenAuthorizer is Script {
     DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
         new DeployAndSetUpInverterBeacon_v1();
-    ScriptConstants scriptConstants = new ScriptConstants();
+    DeploymentConstants scriptConstants = new DeploymentConstants();
 
     uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");

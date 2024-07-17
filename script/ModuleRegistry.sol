@@ -97,7 +97,7 @@ import {DeployAUT_EXT_VotingRoles_v1} from
 //--------------------------------------------------------------------------
 
 contract ModuleRegistry {
-    //  FACTORIES
+    //  FACTORIES AND BEACONS
     //--------------------------------------------------------------------------
 
     // OrchestratorFactory

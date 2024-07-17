@@ -6,10 +6,10 @@ import "forge-std/Script.sol";
 import {
     LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
-import {ScriptConstants} from "../script-constants.sol";
+import {DeploymentConstants} from "../DeploymentConstants.sol";
 
 contract addClaim is Script {
-    ScriptConstants scriptConstants = new ScriptConstants();
+    DeploymentConstants scriptConstants = new DeploymentConstants();
     uint orchestratorAdminPrivateKey =
         vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address orchestratorAdmin = vm.addr(orchestratorAdminPrivateKey);

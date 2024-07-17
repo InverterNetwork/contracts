@@ -15,11 +15,11 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
     LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
-import {ScriptConstants} from "../script-constants.sol";
+import {DeploymentConstants} from "../DeploymentConstants.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
-    ScriptConstants scriptConstants = new ScriptConstants();
+    DeploymentConstants scriptConstants = new DeploymentConstants();
 
     // ------------------------------------------------------------------------
     // Fetch Environment Variables

@@ -30,7 +30,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract SetupQuadraticAcceleratorWorkflow is Test, DeploymentScript {
-    //ScriptConstants scriptConstants = new ScriptConstants();
+    //DeploymentConstants scriptConstants = new DeploymentConstants();
 
     // ========================================================================
     // ENVIRONMENT VARIABLES OR CONSTANTS

@@ -15,45 +15,21 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 
-contract DeploymentScript is ModuleRegistry, Script {
+contract MainnetDeploymentScript is ModuleRegistry, Script {
     error BeaconProxyDeploymentFailed();
 
     // ------------------------------------------------------------------------
 
-    // Beacon
+    // Beacon Deployment Script
     DeployAndSetUpInverterBeacon_v1 deployAndSetupInverterBeacon_v1 =
         new DeployAndSetUpInverterBeacon_v1();
 
-    // ------------------------------------------------------------------------
-    // Deployed Implementation Contracts
-
-    // ------------------------------------------------------------------------
-    // Beacons
-
     // TransactionForwarder_v1
-    address forwarder;
-    address forwarderBeacon;
+    address forwarder_Proxy;
+    address forwarder_Beacon;
 
-    address governor;
-    address feeManager;
-
-    // Funding Manager
-    address rebasingFundingManagerBeacon;
-    address bancorBondingCurveFundingManagerBeacon;
-    address restrictedBancorBondingCurveFundingManagerBeacon;
-    // Authorizer
-    address roleAuthorizerBeacon;
-    address tokenGatedRoleAuthorizerBeacon;
-    // Payment Processor
-    address simplePaymentProcessorBeacon;
-    address streamingPaymentProcessorBeacon;
-    // Logic Module
-    address bountyManagerBeacon;
-    address recurringPaymentManagerBeacon;
-    address paymentRouterBeacon;
-    address kpiRewarderBeacon;
-    // Utils
-    address singleVoteGovernorBeacon;
+    address governor_Proxy;
+    address feeManager_Proxy;
 
     IModule_v1.Metadata[] initialMetadataRegistration;
     IInverterBeacon_v1[] initialBeaconRegistration;
@@ -61,8 +37,10 @@ contract DeploymentScript is ModuleRegistry, Script {
     /// @notice Deploys all necessary factories, beacons and implementations
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
+        // TODO: Salted deployments! Check where the commit is and add it.
+
         // Fetch the deployer details
-        uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
+        uint deployerPrivateKey = vm.envUint("WALLET_DEPLOYER_PK");
         address deployer = vm.addr(deployerPrivateKey);
 
         // Fetch the Multisig addresses
@@ -85,7 +63,7 @@ contract DeploymentScript is ModuleRegistry, Script {
 
         console2.log("Deploy Fee Manager \n");
 
-        feeManager = deployFeeManager.createProxy(
+        feeManager_Proxy = deployFeeManager.createProxy(
             reverter_Implementation, communityMultisig
         ); //@note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
 
@@ -94,8 +72,8 @@ contract DeploymentScript is ModuleRegistry, Script {
         );
         console2.log("Governance Contract \n");
 
-        (governor, governor_Implementation) = deployGovernor.run(
-            communityMultisig, teamMultisig, 1 weeks, feeManager
+        (governor_Proxy, governor_Implementation) = deployGovernor.run(
+            communityMultisig, teamMultisig, 1 weeks, feeManager_Proxy
         );
 
         console2.log(
@@ -105,8 +83,8 @@ contract DeploymentScript is ModuleRegistry, Script {
         console2.log("Init Fee Manager \n");
 
         deployFeeManager.init(
-            feeManager,
-            address(governor),
+            feeManager_Proxy,
+            address(governor_Proxy),
             treasury, // treasury
             100, // Collateral Fee 1%
             100 // Issuance Fee 1%
@@ -128,10 +106,10 @@ contract DeploymentScript is ModuleRegistry, Script {
         forwarder_Implementation = deployTransactionForwarder.run();
 
         // Deploy beacon and actual proxy
-        (forwarderBeacon, forwarder) = deployAndSetupInverterBeacon_v1
+        (forwarder_Beacon, forwarder_Proxy) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(
             reverter_Implementation,
-            address(governor),
+            address(governor_Proxy),
             forwarder_Implementation,
             1,
             0,
@@ -139,12 +117,15 @@ contract DeploymentScript is ModuleRegistry, Script {
         );
 
         if (
-            forwarder == forwarder_Implementation
-                || forwarder == forwarderBeacon
+            forwarder_Proxy == forwarder_Implementation
+                || forwarder_Proxy == forwarder_Beacon
         ) {
             revert BeaconProxyDeploymentFailed();
         }
 
+        // =============================================================================
+        // Deploy Module Implementations
+        // =============================================================================
         console2.log(
             "-----------------------------------------------------------------------------"
         );
@@ -173,22 +154,79 @@ contract DeploymentScript is ModuleRegistry, Script {
         // Utils
         AUT_EXT_VotingRoles_v1_Implementation = deploySingleVoteGovernor.run();
 
+        // =============================================================================
+        // Deploy Module Beacons and prepare their metadata registration
+        // =============================================================================
+
         console2.log(
             "-----------------------------------------------------------------------------"
         );
         console2.log(
             "Deploy module beacons and register in module factory v1 \n"
         );
+
         // Deploy Modules and fill the intitial init list
 
         // Funding Manager
 
+        _do_InitialMetadataAndBeaconRegistration_for_FundingManagers();
+
+        // Authorizer
+
+        _do_InitialMetadataAndBeaconRegistration_for_Authorizers();
+
+        // Payment Processor
+
+        _do_InitialMetadataAndBeaconRegistration_for_PaymentProcessors();
+
+        // Logic Module
+
+        _do_InitialMetadataAndBeaconRegistration_for_LogicModules();
+
+        
+
+        // =============================================================================
+        // Deploy Factories and register all modules
+        // =============================================================================
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Deploy factory implementations \n");
+
+        // Deploy module factory v1 implementation
+        moduleFactory = deployModuleFactory.run(
+            reverter_Implementation,
+            forwarder_Proxy,
+            address(governor_Proxy),
+            initialMetadataRegistration,
+            initialBeaconRegistration
+        );
+
+        // Deploy orchestrator Factory implementation
+        orchestratorFactory = deployOrchestratorFactory.run(
+            address(governor_Proxy),
+            orchestrator_Implementation,
+            moduleFactory,
+            forwarder_Proxy
+        );
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+
+        return (orchestratorFactory);
+    }
+
+    function _do_InitialMetadataAndBeaconRegistration_for_FundingManagers()
+        internal
+    {
         initialMetadataRegistration.push(FM_Rebasing_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     FM_Rebasing_v1_Implementation,
                     FM_Rebasing_v1_Metadata.majorVersion,
                     FM_Rebasing_v1_Metadata.minorVersion,
@@ -203,7 +241,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     FM_BC_Bancor_Redeeming_VirtualSupply_v1_Implementation,
                     FM_BC_Bancor_Redeeming_VirtualSupply_v1_Metadata
                         .majorVersion,
@@ -222,7 +260,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Implementation,
                     FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata
                         .majorVersion,
@@ -233,13 +271,17 @@ contract DeploymentScript is ModuleRegistry, Script {
                 )
             )
         );
-        // Authorizer
+    }
+
+    function _do_InitialMetadataAndBeaconRegistration_for_Authorizers()
+        internal
+    {
         initialMetadataRegistration.push(AUT_Roles_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     AUT_Roles_v1_Implementation,
                     AUT_Roles_v1_Metadata.majorVersion,
                     AUT_Roles_v1_Metadata.minorVersion,
@@ -252,7 +294,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     AUT_TokenGated_Roles_v1_Implementation,
                     AUT_TokenGated_Roles_v1_Metadata.majorVersion,
                     AUT_TokenGated_Roles_v1_Metadata.minorVersion,
@@ -266,7 +308,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     AUT_EXT_VotingRoles_v1_Implementation,
                     AUT_EXT_VotingRoles_v1_Metadata.majorVersion,
                     AUT_EXT_VotingRoles_v1_Metadata.minorVersion,
@@ -274,13 +316,17 @@ contract DeploymentScript is ModuleRegistry, Script {
                 )
             )
         );
-        // Payment Processor
+    }
+
+    function _do_InitialMetadataAndBeaconRegistration_for_PaymentProcessors()
+        internal
+    {
         initialMetadataRegistration.push(PP_Simple_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     PP_Simple_v1_Implementation,
                     PP_Simple_v1_Metadata.majorVersion,
                     PP_Simple_v1_Metadata.minorVersion,
@@ -293,7 +339,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     PP_Streaming_v1_Implementation,
                     PP_Streaming_v1_Metadata.majorVersion,
                     PP_Streaming_v1_Metadata.minorVersion,
@@ -301,13 +347,17 @@ contract DeploymentScript is ModuleRegistry, Script {
                 )
             )
         );
-        // Logic Module
+    }
+
+    function _do_InitialMetadataAndBeaconRegistration_for_LogicModules()
+        internal
+    {
         initialMetadataRegistration.push(LM_PC_Bounties_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     LM_PC_Bounties_v1_Implementation,
                     LM_PC_Bounties_v1_Metadata.majorVersion,
                     LM_PC_Bounties_v1_Metadata.minorVersion,
@@ -320,7 +370,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     LM_PC_RecurringPayments_v1_Implementation,
                     LM_PC_RecurringPayments_v1_Metadata.majorVersion,
                     LM_PC_RecurringPayments_v1_Metadata.minorVersion,
@@ -333,7 +383,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     LM_PC_KPIRewarder_v1_Implementation,
                     LM_PC_KPIRewarder_v1_Metadata.majorVersion,
                     LM_PC_KPIRewarder_v1_Metadata.minorVersion,
@@ -346,7 +396,7 @@ contract DeploymentScript is ModuleRegistry, Script {
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
                     reverter_Implementation,
-                    address(governor),
+                    address(governor_Proxy),
                     LM_PC_PaymentRouter_v1_Implementation,
                     LM_PC_PaymentRouter_v1_Metadata.majorVersion,
                     LM_PC_PaymentRouter_v1_Metadata.minorVersion,
@@ -354,33 +404,5 @@ contract DeploymentScript is ModuleRegistry, Script {
                 )
             )
         );
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
-        console2.log("Deploy factory implementations \n");
-
-        // Deploy module factory v1 implementation
-        moduleFactory = deployModuleFactory.run(
-            reverter_Implementation,
-            forwarder,
-            address(governor),
-            initialMetadataRegistration,
-            initialBeaconRegistration
-        );
-
-        // Deploy orchestrator Factory implementation
-        orchestratorFactory = deployOrchestratorFactory.run(
-            address(governor),
-            orchestrator_Implementation,
-            moduleFactory,
-            forwarder
-        );
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
-
-        return (orchestratorFactory);
     }
 }

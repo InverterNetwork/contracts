@@ -6,7 +6,7 @@ import "forge-std/Script.sol";
 import {
     LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
-import {ScriptConstants} from "../script-constants.sol";
+import {DeploymentConstants} from "../DeploymentConstants.sol";
 
 contract giveBountyManagerRoles is Script {
     // ==============================================================================================================
