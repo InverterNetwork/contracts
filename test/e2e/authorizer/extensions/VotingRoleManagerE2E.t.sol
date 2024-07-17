@@ -74,15 +74,15 @@ contract VotingRoleManagerE2E is E2ETest {
             )
         );
 
-        setUpSingleVoteGovernor();
+        setUpVotingRoles();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                singleVoteGovernorMetadata, abi.encode(initialVoters, 2, 3 days)
+                votingRolesMetadata, abi.encode(initialVoters, 2, 3 days)
             )
         );
     }
 
-    function test_e2e_SingleVoteGovernor() public {
+    function test_e2e_VotingRoles() public {
         //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------
@@ -113,12 +113,12 @@ contract VotingRoleManagerE2E is E2ETest {
         }
 
         // Find AUT_EXT_VotingRoles_v1
-        AUT_EXT_VotingRoles_v1 singleVoteGovernor;
+        AUT_EXT_VotingRoles_v1 votingRoles;
 
         for (uint i; i < modulesList.length; ++i) {
             try IAUT_EXT_VotingRoles_v1(modulesList[i]).isVoter(address(0))
             returns (bool) {
-                singleVoteGovernor = AUT_EXT_VotingRoles_v1(modulesList[i]);
+                votingRoles = AUT_EXT_VotingRoles_v1(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -127,11 +127,11 @@ contract VotingRoleManagerE2E is E2ETest {
 
         // We make the governor the only admin
         bytes32 adminRole = authorizer.getAdminRole();
-        authorizer.grantRole(adminRole, address(singleVoteGovernor));
+        authorizer.grantRole(adminRole, address(votingRoles));
 
         // we authorize governance to create  bounties
         bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ISSUER_ROLE(), address(singleVoteGovernor)
+            bountyManager.BOUNTY_ISSUER_ROLE(), address(votingRoles)
         );
 
         // By having address(this) renounce the Admin Role, all changes from now on need to go through the AUT_EXT_VotingRoles_v1
@@ -148,7 +148,7 @@ contract VotingRoleManagerE2E is E2ETest {
 
         // voter 1 sets up vote to create bounty
         vm.prank(voter1);
-        uint motionId = singleVoteGovernor.createMotion(
+        uint motionId = votingRoles.createMotion(
             address(bountyManager),
             abi.encodeWithSelector(
                 ILM_PC_Bounties_v1.addBounty.selector,
@@ -164,18 +164,18 @@ contract VotingRoleManagerE2E is E2ETest {
         // Vote happens
         //--------------------------------------------------------------------------
         vm.prank(voter1);
-        singleVoteGovernor.castVote(motionId, 0);
+        votingRoles.castVote(motionId, 0);
         vm.prank(voter2);
-        singleVoteGovernor.castVote(motionId, 0);
+        votingRoles.castVote(motionId, 0);
         vm.prank(voter3);
-        singleVoteGovernor.castVote(motionId, 0);
+        votingRoles.castVote(motionId, 0);
 
         vm.warp(block.timestamp + 3 days);
         //--------------------------------------------------------------------------
         // Execute Vote
         //--------------------------------------------------------------------------
         vm.prank(voter1);
-        singleVoteGovernor.executeMotion(motionId);
+        votingRoles.executeMotion(motionId);
 
         vm.warp(block.timestamp + 2);
 
@@ -188,7 +188,7 @@ contract VotingRoleManagerE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        AUT_EXT_VotingRoles_v1 singleVoteGovernor,
+        AUT_EXT_VotingRoles_v1 votingRoles,
         uint motionId
     ) internal view returns (bool, bytes memory) {
         (
@@ -203,7 +203,7 @@ contract VotingRoleManagerE2E is E2ETest {
             , // uint _excAt
             bool _excRes,
             bytes memory _excData
-        ) = singleVoteGovernor.motions(motionId);
+        ) = votingRoles.motions(motionId);
 
         return (_excRes, _excData);
     }

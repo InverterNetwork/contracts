@@ -559,11 +559,11 @@ contract E2EModuleRegistry is Test {
 
     // AUT_EXT_VotingRoles_v1
 
-    AUT_EXT_VotingRoles_v1 singleVoteGovernorImpl;
+    AUT_EXT_VotingRoles_v1 votingRolesImpl;
 
-    InverterBeacon_v1 singleVoteGovernorBeacon;
+    InverterBeacon_v1 votingRolesBeacon;
 
-    IModule_v1.Metadata singleVoteGovernorMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata votingRolesMetadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -575,33 +575,33 @@ contract E2EModuleRegistry is Test {
     address[] initialVoters =
         [makeAddr("voter1"), makeAddr("voter2"), makeAddr("voter3")];
 
-    IOrchestratorFactory_v1.ModuleConfig singleVoteGovernorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig votingRolesFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        singleVoteGovernorMetadata,
+        votingRolesMetadata,
         abi.encode(initialVoters, 2, 3 days)  
     ); 
     */
 
-    function setUpSingleVoteGovernor() internal {
+    function setUpVotingRoles() internal {
         // Deploy module implementations.
-        singleVoteGovernorImpl = new AUT_EXT_VotingRoles_v1();
+        votingRolesImpl = new AUT_EXT_VotingRoles_v1();
 
         // Deploy module beacons.
-        singleVoteGovernorBeacon = new InverterBeacon_v1(
+        votingRolesBeacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
-            singleVoteGovernorMetadata.majorVersion,
-            address(singleVoteGovernorImpl),
-            singleVoteGovernorMetadata.minorVersion,
-            singleVoteGovernorMetadata.patchVersion
+            votingRolesMetadata.majorVersion,
+            address(votingRolesImpl),
+            votingRolesMetadata.minorVersion,
+            votingRolesMetadata.patchVersion
         );
 
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
             moduleFactory,
-            singleVoteGovernorMetadata,
-            IInverterBeacon_v1(singleVoteGovernorBeacon)
+            votingRolesMetadata,
+            IInverterBeacon_v1(votingRolesBeacon)
         );
     }
 }
