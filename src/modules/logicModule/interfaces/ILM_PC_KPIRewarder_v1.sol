@@ -125,8 +125,7 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice Returns the Assertion Configuration for a given assertionId
     /// @param assertionId The id of the Assertion to return
-    function getAssertionConfig(bytes32 assertionId)
-        external
-        view
-        returns (RewardRoundConfiguration memory);
+    function getAssertionConfig(
+        bytes32 assertionId
+    ) external view returns (RewardRoundConfiguration memory);
 }
