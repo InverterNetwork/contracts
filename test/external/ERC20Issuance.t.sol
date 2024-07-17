@@ -27,6 +27,16 @@ contract ERC20IssuanceTest is Test {
         );
     }
 
+    function testInit() public {
+        assertEq(token.name(), "Test Token");
+        assertEq(token.symbol(), "TT");
+        assertEq(token.decimals(), 18);
+        assertEq(token.MAX_SUPPLY(), type(uint).max - 1);
+        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.owner(), address(this));
+        assertEq(token.allowedMinters(address(this)), true);
+    }
+
     /*
     test setMinter
     ├── When the caller is not the Admin

@@ -57,6 +57,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
         address initialAdmin_,
         address initialMinter_
     ) ERC20(name_, symbol_) Ownable(initialAdmin_) {
+        _setMinter(initialAdmin_, true);
         _setMinter(initialMinter_, true);
         MAX_SUPPLY = maxSupply_;
         _decimals = decimals_;
