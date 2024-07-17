@@ -1,4 +1,4 @@
-name: Lint
+name: Size Check
 
 on:
     push:
@@ -13,15 +13,16 @@ env:
     FOUNDRY_PROFILE: ci
 
 jobs:
-    lint:
+    check-size:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
 
             - name: Install Foundry
               uses: foundry-rs/foundry-toolchain@v1
-              with:
-                  version: nightly
 
-            - name: Check formatting
-              run: forge fmt --check
+            - name: Install dependencies
+              run: make install
+
+            - name: Verify contract sizes
+              run: make check-size
