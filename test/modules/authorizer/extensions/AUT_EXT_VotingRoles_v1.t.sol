@@ -502,7 +502,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                 )
             );
             vm.prank(users[i]); // authorized, but not Module
-            _governor.addVoter(users[i]);
+            if (i % 3 == 0) {
+                _governor.addVoterAndUpdateThreshold(users[i], 3);
+            } else {
+                _governor.addVoter(users[i]);
+            }
         }
     }
 
@@ -519,7 +523,11 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
                 )
             );
             vm.prank(users[i]); // authorized, but not Module
-            _governor.removeVoter(users[i]);
+            if (i % 3 == 0) {
+                _governor.removeVoterAndUpdateThreshold(users[i], 1);
+            } else {
+                _governor.removeVoter(users[i]);
+            }
         }
     }
 
@@ -1007,10 +1015,21 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         vm.startPrank(address(_governor));
         for (uint i; i < users.length; ++i) {
+            uint before = _governor.threshold();
+
             vm.expectEmit();
             emit VoterAdded(users[i]);
 
-            _governor.addVoter(users[i]);
+            // every third one, we increase the threshold by one as well
+            if (i % 3 == 0) {
+                vm.expectEmit();
+                emit ThresholdUpdated(before, before + 1);
+                _governor.addVoterAndUpdateThreshold(users[i], before + 1);
+                assertEq(_governor.threshold(), before + 1);
+            } else {
+                _governor.addVoter(users[i]);
+                assertEq(_governor.threshold(), before);
+            }
         }
 
         for (uint i; i < users.length; ++i) {
@@ -1063,7 +1082,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         // this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
-                .Module__VotingRoleManager__UnreachableThreshold
+                .Module__VotingRoleManager__InvalidThreshold
                 .selector
         );
         _governor.removeVoter(BOB);
@@ -1074,10 +1093,26 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Fail to remove Authorized addresses until the voterlist is empty
     function testRemoveUntilVoterListEmpty() public {
         vm.startPrank(address(_governor));
-        _governor.setThreshold(0);
 
+        // threshold is 2 out of 3 before this
         _governor.removeVoter(COBIE);
+
+        // regular remove would fail  as it would bring it to
+        // 2 out of 1 with the threshold of 2
+        vm.expectRevert(
+            IAUT_EXT_VotingRoles_v1
+                .Module__VotingRoleManager__InvalidThreshold
+                .selector
+        );
         _governor.removeVoter(BOB);
+        assertEq(_governor.threshold(), 2);
+
+        // try to remove again, this time including a reduction
+        // of the threshold to 1
+        vm.expectEmit();
+        emit ThresholdUpdated(2, 1);
+        _governor.removeVoterAndUpdateThreshold(BOB, 1);
+        assertEq(_governor.threshold(), 1);
 
         // this call would leave a 1 person list with a threshold of 2
         vm.expectRevert(
@@ -1101,7 +1136,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Set a new threshold
     function testMotionSetThreshold() public {
         uint oldThreshold = _governor.threshold();
-        uint newThreshold = 1;
+        uint newThreshold = 3;
 
         vm.prank(address(_governor));
 
@@ -1113,17 +1148,36 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         assertEq(_governor.threshold(), newThreshold);
     }
 
-    // Fail to set a threshold that's too damn high
-    function testSetUnreachableThreshold(uint newThreshold) public {
+    // Fail to set a threshold that's too damn high or too damn low
+    function testSetInvalidThreshold(uint newThreshold) public {
+        // Test too high
         vm.assume(newThreshold > _governor.voterCount());
 
         vm.expectRevert(
             IAUT_EXT_VotingRoles_v1
-                .Module__VotingRoleManager__UnreachableThreshold
+                .Module__VotingRoleManager__InvalidThreshold
                 .selector
         );
         vm.prank(address(_governor));
         _governor.setThreshold(newThreshold);
+
+        // Test too low
+        vm.expectRevert(
+            IAUT_EXT_VotingRoles_v1
+                .Module__VotingRoleManager__InvalidThreshold
+                .selector
+        );
+        vm.prank(address(_governor));
+        _governor.setThreshold(1);
+
+        // Test too low with zero
+        vm.expectRevert(
+            IAUT_EXT_VotingRoles_v1
+                .Module__VotingRoleManager__InvalidThreshold
+                .selector
+        );
+        vm.prank(address(_governor));
+        _governor.setThreshold(0);
     }
 
     // Fail to change threshold when not the module itself
@@ -1147,7 +1201,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
     // Change the threshold by going through governance
     function testGovernanceThresholdChange() public {
-        uint _newThreshold = 1;
+        uint _newThreshold = 3;
 
         // 1) Create and approve a vote
         bytes memory _encodedAction =

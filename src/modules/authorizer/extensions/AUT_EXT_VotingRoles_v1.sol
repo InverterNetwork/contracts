@@ -128,11 +128,8 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__EmptyVoters();
         }
 
-        // Revert if threshold higher than number of voters, i.e. threshold being
-        // unreachable.
-        if (threshold_ > votersLen) {
-            revert Module__VotingRoleManager__UnreachableThreshold();
-        }
+        // Revert if the threshold is set incorrectly
+        validateThreshold(votersLen, threshold_);
 
         // Revert if votingDuration outside of bounds.
         if (
@@ -190,14 +187,9 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Configuration Functions
 
-    function setThreshold(uint newThreshold) external onlySelf {
-        // Revert if newThreshold higher than number of voters.
-        if (newThreshold > voterCount) {
-            revert Module__VotingRoleManager__UnreachableThreshold();
-        }
-
-        // Note that a threshold of zero is valid because a orchestrator can only be
-        // created by a voter anyway.
+    function setThreshold(uint newThreshold) public onlySelf {
+        // Revert if the threshold is set incorrectly
+        validateThreshold(voterCount, newThreshold);
 
         emit ThresholdUpdated(threshold, newThreshold);
         threshold = newThreshold;
@@ -219,7 +211,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Voter Management Functions
 
-    function addVoter(address who) external onlySelf isValidVoterAddress(who) {
+    function addVoter(address who) public onlySelf isValidVoterAddress(who) {
         if (!isVoter[who]) {
             isVoter[who] = true;
             unchecked {
@@ -229,15 +221,37 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         }
     }
 
-    function removeVoter(address who) external onlySelf {
+    function addVoterAndUpdateThreshold(address who, uint newThreshold)
+        external
+    {
+        // Add the new voter
+        addVoter(who);
+
+        // Set the new threshold (also validates it)
+        setThreshold(newThreshold);
+    }
+
+    function removeVoter(address who) public onlySelf {
+        _removeVoter(who);
+
+        // Revert if the threshold would be invalid after this
+        validateThreshold(voterCount, threshold);
+    }
+
+    function removeVoterAndUpdateThreshold(address who, uint newThreshold)
+        external
+        onlySelf
+    {
+        _removeVoter(who);
+
+        // Set the new threshold (also validates it)
+        setThreshold(newThreshold);
+    }
+
+    function _removeVoter(address who) internal {
         // Revert if trying to remove the last voter
         if (voterCount == 1) {
             revert Module__VotingRoleManager__EmptyVoters();
-        }
-
-        // Revert if removal would leave threshold unreachable
-        if (voterCount <= threshold) {
-            revert Module__VotingRoleManager__UnreachableThreshold();
         }
 
         if (isVoter[who]) {
@@ -368,5 +382,21 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         motion_.executionReturnData = returnData;
 
         emit MotionExecuted(motionId);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal
+
+    function validateThreshold(uint _voters, uint _threshold) internal pure {
+        // Revert if one of these conditions is met
+        // - Threshold is higher than the amount of voters
+        // - There are less than 3 voters and the threshold is set to 0
+        // - There are 3 or more voters and the threshold is less than 2
+        if (
+            _threshold > _voters || (_voters >= 3 && _threshold < 2)
+                || (_voters < 3 && _threshold == 0)
+        ) {
+            revert Module__VotingRoleManager__InvalidThreshold();
+        }
     }
 }
