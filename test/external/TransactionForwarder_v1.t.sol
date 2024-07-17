@@ -34,7 +34,7 @@ contract TransactionForwarderV1Test is Test {
         uint signerPrivateKey
     ) public {
         // Restrict the signerKey to a space where it still should work
-        signerPrivateKey = bound(signerPrivateKey, 1, 2 ^ 128);
+        signerPrivateKey = bound(signerPrivateKey, 1, 2 ** 128);
 
         // Derive signer from signerkey
         address signer = vm.addr(signerPrivateKey);
