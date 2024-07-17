@@ -46,26 +46,17 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice The KPI number is invalid
     error Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
 
-    /// @notice The Queue for new stakers is full
-    error Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
-
     /// @notice The Token used paying the bond cannot be the same that is being staked.
     error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
-
-    /// @notice The stake amount is invalid
-    error Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
 
     /// @notice An assertion can only by posted if the preceding one is resolved.
     error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
 
+    /// @notice The user cannot stake while an assertion is unresolved
+    error Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending();
+
     //--------------------------------------------------------------------------
     // Events
-
-    /// @notice Event emitted when a user stake is enqueued
-    event StakeEnqueued(address indexed user, uint amount);
-
-    /// @notice Event emitted when a user stake is dequeued before staking
-    event StakeDequeued(address indexed user, uint amount);
 
     /// @notice Event emitted when a KPI is created
     event KPICreated(
@@ -117,15 +108,9 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @param amount The amount to deposit
     function depositFeeFunds(uint amount) external;
 
-    /// @notice Remove a users funds from the staking queue
-    function dequeueStake() external;
-
     /// @notice Returns the KPI with the given number
     /// @param KPInum The number of the KPI to return
     function getKPI(uint KPInum) external view returns (KPI memory);
-
-    /// @notice Returns the current queue to stake in the contract
-    function getStakingQueue() external view returns (address[] memory);
 
     /// @notice Returns the Assertion Configuration for a given assertionId
     /// @param assertionId The id of the Assertion to return
@@ -133,8 +118,4 @@ interface ILM_PC_KPIRewarder_v1 {
         external
         view
         returns (RewardRoundConfiguration memory);
-
-    /// @notice Sets the minimum amount a user must stake
-    /// @param _minimumStake The minimum amount
-    function setMinimumStake(uint _minimumStake) external;
 }

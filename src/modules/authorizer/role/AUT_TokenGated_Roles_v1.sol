@@ -133,8 +133,25 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
                     role, who
                 );
             }
-            try TokenInterface(who).balanceOf(address(this)) {}
-            catch {
+
+            // Check that address has code attached
+            uint32 size;
+            assembly {
+                size := extcodesize(who)
+            }
+            if (size == 0) {
+                revert Module__AUT_TokenGated_Roles__InvalidToken(who);
+            }
+
+            // Execute a balanceOf call to the address
+            (bool success, bytes memory data) = who.call(
+                abi.encodeWithSelector(
+                    TokenInterface.balanceOf.selector, address(this)
+                )
+            );
+            // If the call was either unsuccessful or the return data is not
+            // 32 bytes long (i.e. not a uint256), it's deemed invalid
+            if (!success || data.length != 32) {
                 revert Module__AUT_TokenGated_Roles__InvalidToken(who);
             }
         }
