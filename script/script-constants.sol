@@ -5,7 +5,33 @@ contract ScriptConstants {
     ///////////////////////
     // Common Constants
     ///////////////////////
+    // Generela Protocol Constants
+
     bytes public emptyBytes = "0x0";
+
+    // Factory Addresses
+    address public orchestratorFactoryImplementation;
+    address public orchestratorFactory;
+
+    address public moduleFactoryImplementation;
+    address public moduleFactory;
+
+    // Protocol Multisigs
+    address communityMultisig;
+    address teamMultisig;
+
+    // Protocol Addresses
+    address protocol_Reverter;
+    address protocol_Governor;
+    address protocol_FeeManager;
+    address protocol_Treasury;
+    address protocol_Forwarder;
+
+    ///////////////////////
+    // Additional Constants
+    ///////////////////////
+    // Constants for specific runs go here
+
     address public bountyManagerAddress =
         0x3F65847e68EB9fa561238BC4416f8766322c13eD;
     address public moduleFactoryAddress =
