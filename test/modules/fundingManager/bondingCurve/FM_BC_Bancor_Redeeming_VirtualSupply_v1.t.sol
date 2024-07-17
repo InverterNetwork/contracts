@@ -59,10 +59,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
 
-    uint internal constant INITIAL_ISSUANCE_SUPPLY = 1;
-    uint internal constant INITIAL_COLLATERAL_SUPPLY = 3;
-    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 333_333;
-    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 333_333;
+    uint internal constant INITIAL_ISSUANCE_SUPPLY = 195_642_169e16;
+    uint internal constant INITIAL_COLLATERAL_SUPPLY = 39_097_931e16;
+    uint32 internal constant RESERVE_RATIO_FOR_BUYING = 199_800;
+    uint32 internal constant RESERVE_RATIO_FOR_SELLING = 199_800;
     uint internal constant BUY_FEE = 0;
     uint internal constant SELL_FEE = 0;
     bool internal constant BUY_IS_OPEN = true;
@@ -358,7 +358,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Above an amount of 1e38 the BancorFormula starts to revert.
         amount = _bound_for_decimal_conversion(
             amount,
-            1,
+            1e16,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
@@ -426,7 +426,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         fee = bound(fee, 1, (_bps - 1)); // 100% buy fees are not allowed.
-        uint minAmount = _bps / fee + 1; // Prevent rouding down fee to zero revert
+        uint minAmount = 1e16;
 
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
         amount = _bound_for_decimal_conversion(
@@ -517,7 +517,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
         amount = _bound_for_decimal_conversion(
             amount,
-            1,
+            1e16,
             1e38,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
@@ -546,6 +546,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             bondingCurveFundingManager.call_reserveRatioForBuying(),
             decimalConverted_depositAmount
         );
+        // MinAmountOut cannot be 0. Set to 1 accordingly
+        formulaReturn = formulaReturn == 0 ? 1 : formulaReturn;
 
         // Execution
         vm.prank(buyer);
@@ -649,7 +651,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
         amount = _bound_for_decimal_conversion(
             amount,
-            1,
+            1e16,
             1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
@@ -785,14 +787,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
-        fee = bound(fee, 1, _bps);
-
-        uint minAmount = _bps / fee + 1;
+        fee = bound(fee, 1, _bps - 1);
 
         // We set a minimum high enough to discard most inputs that wouldn't mint even 1 token
         amountIn = _bound_for_decimal_conversion(
             amountIn,
-            minAmount,
+            1e16,
             1e36,
             bondingCurveFundingManager.call_collateralTokenDecimals(),
             issuanceToken.decimals()
@@ -806,38 +806,32 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint userSellAmount = _prepareSellConditions(seller, amountIn);
         vm.assume(userSellAmount > 0); // we discard buy-ins so small they wouldn't cause underflow
 
-        // Set sell Fee
-        // Set virtual supply to some number above _sellAmount
-        // Set virtual collateral to some number
-        uint newVirtualIssuanceSupply = userSellAmount * 2;
-        uint newVirtualCollateral = amountIn * 2;
-        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
-        vm.startPrank(admin_address);
-        {
-            bondingCurveFundingManager.setSellFee(fee);
-            bondingCurveFundingManager.setVirtualIssuanceSupply(
-                newVirtualIssuanceSupply
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                newVirtualCollateral
-            );
-        }
-        vm.stopPrank();
-        _openCurveInteractions(); // Open Buy & sell
+        // Get virtual supplies before sell
+        uint newVirtualIssuanceSupply =
+            bondingCurveFundingManager.getVirtualIssuanceSupply();
+        uint newVirtualCollateral =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
+        // setSellFee
+        vm.prank(admin_address);
+        bondingCurveFundingManager.setSellFee(fee);
 
         // Use formula to get expected return values
-        uint formulaReturn = bondingCurveFundingManager.formula()
+        uint normalized_formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
+            bondingCurveFundingManager.call_convertAmountToRequiredDecimal(
+                bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(
+                ),
+                18,
+                issuanceToken.decimals()
+            ),
+            bondingCurveFundingManager.call_convertAmountToRequiredDecimal(
+                bondingCurveFundingManager
+                    .call_getFormulaVirtualCollateralSupply(),
+                18,
+                _token.decimals()
+            ),
             bondingCurveFundingManager.call_reserveRatioForSelling(),
             userSellAmount
-        );
-
-        // normalize the formulaReturn. This is the amount in the context of the collateral token
-        uint normalized_formulaReturn = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
-            formulaReturn, 18, _token.decimals()
         );
 
         // We calculate how much if the initial deposit we should get back based on the fee
@@ -1030,32 +1024,18 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     */
 
     function testStaticPriceForBuyingNonFuzzing() public {
-        uint amountIn = 100;
+        uint amountIn = 100e16;
         uint minAmountOut =
             bondingCurveFundingManager.calculatePurchaseReturn(amountIn);
         address buyer = makeAddr("buyer");
         _prepareBuyConditions(buyer, amountIn);
 
-        // Set virtual supplies to a relatively high value before buying
-        // This way the buy-in won't modify the price too much
-        uint _virtualIssuanceSupplyBeforeBuy = amountIn * 1000;
-        uint _virtualCollateralSupplyBeforeBuy = minAmountOut * 1000;
+        // Get virtual supplies before buy
+        uint _virtualIssuanceSupplyBeforeBuy =
+            bondingCurveFundingManager.getVirtualIssuanceSupply();
+        uint _virtualCollateralSupplyBeforeBuy =
+            bondingCurveFundingManager.getVirtualCollateralSupply();
 
-        _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
-        vm.startPrank(admin_address);
-        {
-            bondingCurveFundingManager.setVirtualIssuanceSupply(
-                _virtualIssuanceSupplyBeforeBuy
-            );
-            bondingCurveFundingManager.setVirtualCollateralSupply(
-                _virtualCollateralSupplyBeforeBuy
-            );
-        }
-        vm.stopPrank();
-        _openCurveInteractions(); // Open Buy & sell
-
-        uint32 _reserveRatioBuying =
-            bondingCurveFundingManager.call_reserveRatioForBuying();
         // Calculate static price before buy
         uint staticPriceBeforeBuy =
             bondingCurveFundingManager.getStaticPriceForBuying();
@@ -1064,7 +1044,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.prank(buyer);
         bondingCurveFundingManager.buy(amountIn, minAmountOut);
 
-        // Get virtual supply after buy
+        // Get virtual supplies after buy
         uint _virtualIssuanceSupplyAfterBuy =
             bondingCurveFundingManager.getVirtualIssuanceSupply();
         uint _virtualCollateralSupplyAfterBuy =
@@ -1076,6 +1056,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Collateral has been added to the supply
         assertGt(
             _virtualCollateralSupplyAfterBuy, _virtualCollateralSupplyBeforeBuy
+        );
+        // Issuance has been added to the supply
+        assertGt(
+            _virtualIssuanceSupplyAfterBuy, _virtualIssuanceSupplyBeforeBuy
         );
         // Static price has increased after buy
         assertGt(staticPriceAfterBuy, staticPriceBeforeBuy);
@@ -1902,5 +1886,34 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.stopPrank();
 
         return userSellAmount;
+    }
+
+    // Helper function which calculates the minimum deposit amount which will not revert based on rounding down issue with integer division
+    // when subtracting the fee amounts, given the different collateral and issuance fee.
+    function _calculateMinDepositAmount(
+        uint _collateralFee,
+        uint _workflowFee,
+        uint _issuanceFee
+    ) internal view returns (uint minAmount) {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        // Calculate minimum amount for the first call
+        uint minAmountCollateral =
+            _collateralFee != 0 ? _bps / _collateralFee + 1 : 1;
+        uint minAmountWorkflow = _workflowFee != 0 ? _bps / _workflowFee + 1 : 1;
+        uint minAmountFirstCall = minAmountCollateral > minAmountWorkflow
+            ? minAmountCollateral
+            : minAmountWorkflow;
+
+        // Calculate minimum amount for the second call, considering the effect of the first call
+        uint minAmountIssuance = _issuanceFee != 0
+            ? (_bps * _bps)
+                / (_issuanceFee * (_bps - _collateralFee - _workflowFee)) + 1
+            : 1;
+
+        // Use the larger of the two minimum amounts
+        minAmount = minAmountFirstCall > minAmountIssuance
+            ? minAmountFirstCall
+            : minAmountIssuance;
     }
 }
