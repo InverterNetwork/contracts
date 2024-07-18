@@ -22,6 +22,8 @@ import {PaymentProcessorV1Mock} from
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
 
+    uint public howManyCalls;
+
     address public governor = address(0x99999);
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
@@ -86,5 +88,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
 
     function registerMetadata(IModule_v1.Metadata memory, IInverterBeacon_v1)
         external
-    {}
+    {
+        howManyCalls++;
+    }
 }

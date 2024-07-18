@@ -25,6 +25,12 @@ contract GovernorV1Mock is IGovernor_v1 {
         returns (Timelock memory)
     {}
 
+    function getLinkedBeacons()
+        external
+        view
+        returns (IInverterBeacon_v1[] memory)
+    {}
+
     //--------------------------------------------------------------------------
     // FeeManager
 
@@ -34,6 +40,10 @@ contract GovernorV1Mock is IGovernor_v1 {
 
     function setFeeManager(address newFeeManager) external {
         feeManager = newFeeManager;
+    }
+
+    function getModuleFactory() external pure returns (address) {
+        return address(0);
     }
 
     function setModuleFactory(address) external {}
