@@ -38,7 +38,7 @@ contract ERC20IssuanceTest is Test {
     ├── When the caller is not the Admin
     │   └── It should revert
     └── When the caller is the Admin
-    └── It should set the new minter address rights
+        └── It should set the new minter address rights
     */
 
     function testSetMinterFails_IfCallerNotAdmin() public {
@@ -77,9 +77,6 @@ contract ERC20IssuanceTest is Test {
             token.setMinter(minter, true);
         }
 
-        // state before
-        bool allowedBefore = token.allowedMinters(minter);
-
         vm.expectEmit(true, true, true, true);
         emit MinterSet(minter, allowed);
 
@@ -113,10 +110,10 @@ contract ERC20IssuanceTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-            ERC20Capped.ERC20ExceededCap.selector,
-            excessiveSupply,
-            token.cap() )
-
+                ERC20Capped.ERC20ExceededCap.selector,
+                excessiveSupply,
+                token.cap()
+            )
         );
         token.mint(address(this), excessiveSupply);
     }
