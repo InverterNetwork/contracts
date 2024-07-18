@@ -41,15 +41,17 @@ interface IRedeemingBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Redeem tokens on behalf of a specified receiver address.
-    /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
+    /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
+    /// @dev    Executes a sell order, with the proceeds being sent directly to the _receiver's address.
+    ///         This function wraps the `_sellOrder` internal function with specified parameters to handle
+    ///         the transaction and direct the proceeds.
     /// @param _receiver The address that will receive the redeemed tokens.
-    /// @param _depositAmount The amount of issued token to deposited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+    /// @param _depositAmount The amount of tokens to be sold.
+    /// @param _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         external;
 
-    /// @notice Sell collateral for the sender's address.
+    /// @notice Redeem collateral for the sender's address.
     /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
     /// @param _depositAmount The amount of issued token deposited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.

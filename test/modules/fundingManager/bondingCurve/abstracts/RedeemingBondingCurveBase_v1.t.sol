@@ -178,10 +178,10 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                 .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
                 .selector
         );
-        bondingCurveFundingManager.sellFor(non_admin_address, 100, 100);
+        bondingCurveFundingManager.sellTo(non_admin_address, 100, 100);
     }
 
-    // test modifier on sellFor function
+    // test modifier on sellTo function
 
     function testPassingModifiersOnSellOrderFor(uint sellAmount) public {
         // Setup
@@ -202,7 +202,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         // Execution
         vm.prank(seller);
-        bondingCurveFundingManager.sellFor(receiver, sellAmount, sellAmount);
+        bondingCurveFundingManager.sellTo(receiver, sellAmount, sellAmount);
 
         // Post-checks
         uint redeemAmount = _token.balanceOf(receiver) - receiverBalanceBefore;

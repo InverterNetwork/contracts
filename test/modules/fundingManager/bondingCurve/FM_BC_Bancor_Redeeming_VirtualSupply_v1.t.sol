@@ -873,7 +873,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         );
     }
 
-    // test sellFor function
+    // test sellTo function
     //  - Both modifiers have been tested in the upstream tests
     //  - Sell order branches are tested in sell tests
     //  - The goal of this test is just to verify that the tokens get sent to a different receiver
@@ -940,7 +940,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Perform the sell
         vm.startPrank(seller);
         {
-            bondingCurveFundingManager.sellFor(
+            bondingCurveFundingManager.sellTo(
                 to, userSellAmount, normalized_formulaReturn
             );
         }
