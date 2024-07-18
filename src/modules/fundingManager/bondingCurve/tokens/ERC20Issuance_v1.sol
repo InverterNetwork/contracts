@@ -7,6 +7,7 @@ import {IERC20Issuance_v1} from
 
 // External Dependencies
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
@@ -31,10 +32,9 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author Inverter Network
  */
-contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
+contract ERC20Issuance_v1 is IERC20Issuance_v1,  ERC20Capped, Ownable {
     // State Variables
     mapping(address => bool) public allowedMinters;
-    uint public MAX_SUPPLY;
     uint8 internal _decimals;
 
     //------------------------------------------------------------------------------
@@ -55,9 +55,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
         uint8 decimals_,
         uint maxSupply_,
         address initialAdmin_
-    ) ERC20(name_, symbol_) Ownable(initialAdmin_) {
+    ) ERC20(name_, symbol_) ERC20Capped(maxSupply_) Ownable(initialAdmin_) {
         _setMinter(initialAdmin_, true);
-        MAX_SUPPLY = maxSupply_;
         _decimals = decimals_;
     }
 
@@ -75,9 +74,6 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20, Ownable {
 
     /// @inheritdoc IERC20Issuance_v1
     function mint(address _to, uint _amount) external onlyMinter {
-        if (totalSupply() + _amount > MAX_SUPPLY) {
-            revert IERC20Issuance__MintExceedsSupplyCap();
-        }
         _mint(_to, _amount);
     }
 

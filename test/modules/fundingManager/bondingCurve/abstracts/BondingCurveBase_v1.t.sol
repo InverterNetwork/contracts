@@ -874,7 +874,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);
         assertEq(issuanceTokenAfter.decimals(), _newDecimals);
-        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+        assertEq(issuanceTokenAfter.cap(), _newMaxSupply);
     }
 
     /* Test internal _calculatePurchaseReturn function

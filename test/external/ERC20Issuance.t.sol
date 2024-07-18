@@ -6,7 +6,8 @@ import "forge-std/Test.sol";
 // SuT
 import {
     ERC20Issuance_v1,
-    IERC20Issuance_v1
+    IERC20Issuance_v1,
+    ERC20Capped
 } from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
 
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
@@ -26,7 +27,7 @@ contract ERC20IssuanceTest is Test {
         assertEq(token.name(), "Test Token");
         assertEq(token.symbol(), "TT");
         assertEq(token.decimals(), 18);
-        assertEq(token.MAX_SUPPLY(), type(uint).max - 1);
+        assertEq(token.cap(), type(uint).max - 1);
         assertEq(token.balanceOf(address(this)), 0);
         assertEq(token.owner(), address(this));
         assertEq(token.allowedMinters(address(this)), true);
@@ -108,16 +109,20 @@ contract ERC20IssuanceTest is Test {
     }
 
     function testMintFails_IfMintExceedsMaximumSupply() public {
-        uint excessiveSupply = token.MAX_SUPPLY() + 1;
+        uint excessiveSupply = token.cap() + 1;
 
         vm.expectRevert(
-            IERC20Issuance_v1.IERC20Issuance__MintExceedsSupplyCap.selector
+            abi.encodeWithSelector(
+            ERC20Capped.ERC20ExceededCap.selector,
+            excessiveSupply,
+            token.cap() )
+
         );
         token.mint(address(this), excessiveSupply);
     }
 
     function test_Mint(uint amount) public {
-        vm.assume(amount < token.MAX_SUPPLY());
+        vm.assume(amount < token.cap());
 
         uint supplyBefore = token.totalSupply();
 
@@ -145,7 +150,7 @@ contract ERC20IssuanceTest is Test {
     }
 
     function test_Burn(uint amount) public {
-        vm.assume(amount < token.MAX_SUPPLY());
+        vm.assume(amount < token.cap());
 
         uint supplyBefore = token.totalSupply();
 
