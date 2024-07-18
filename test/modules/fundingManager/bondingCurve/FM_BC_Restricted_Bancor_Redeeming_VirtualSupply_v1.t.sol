@@ -10,7 +10,7 @@ import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
 import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
@@ -21,7 +21,7 @@ import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 import {
     FM_BC_Bancor_Redeeming_VirtualSupplyV1Test,

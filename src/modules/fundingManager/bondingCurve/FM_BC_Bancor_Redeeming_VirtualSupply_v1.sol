@@ -7,8 +7,7 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IERC20Issuance_v1} from
-    "@fm/bondingCurve/interfaces/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -30,7 +29,7 @@ import {
     VirtualIssuanceSupplyBase_v1
 } from "@fm/bondingCurve/abstracts/VirtualIssuanceSupplyBase_v1.sol";
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
