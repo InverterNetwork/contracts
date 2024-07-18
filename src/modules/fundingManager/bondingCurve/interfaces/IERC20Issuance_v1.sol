@@ -14,8 +14,6 @@ interface IERC20Issuance_v1 is IERC20 {
     // Errors
     error IERC20Issuance__CallerIsNotMinter();
 
-    error IERC20Issuance__MintExceedsSupplyCap();
-
     //--------------------------------------------------------------------------
     // Functions
 

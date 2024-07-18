@@ -1480,7 +1480,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);
         assertEq(issuanceTokenAfter.decimals(), _newDecimals);
-        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+        assertEq(issuanceTokenAfter.cap(), _newMaxSupply);
 
         // we also check the decimals have been cached correctly
 
