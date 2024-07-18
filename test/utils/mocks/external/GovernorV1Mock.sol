@@ -11,10 +11,18 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 
 contract GovernorV1Mock is IGovernor_v1 {
     address feeManager;
+
+    uint public howManyCalls;
     //--------------------------------------------------------------------------
     // Initialization
 
     function init(address, address, uint, address, address) external {}
+
+    function moduleFactoryInitCallback(IInverterBeacon_v1[] calldata)
+        external
+    {
+        howManyCalls++;
+    }
 
     //--------------------------------------------------------------------------
     // Getter Functions
