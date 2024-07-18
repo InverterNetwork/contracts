@@ -15,7 +15,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {

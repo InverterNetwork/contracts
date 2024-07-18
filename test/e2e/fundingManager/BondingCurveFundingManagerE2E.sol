@@ -10,7 +10,7 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // SuT
 import {
