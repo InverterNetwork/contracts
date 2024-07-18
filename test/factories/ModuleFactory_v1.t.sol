@@ -271,6 +271,7 @@ contract ModuleFactoryV1Test is Test {
         address reverterAddress
     ) public {
         beacon.overrideReverter(reverterAddress);
+        beacon.overrideImplementation(address(new ModuleImplementationV2Mock()));
 
         if (reverterAddress != factory.reverter()) {
             vm.expectRevert(
