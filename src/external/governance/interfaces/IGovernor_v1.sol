@@ -295,6 +295,10 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon that should be shut down
     function initiateBeaconShutdown(address beacon) external;
 
+    /// @notice Initiates the shutdown of all linked beacons
+    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE
+    function initiateBeaconShutdownForAllLinkedBeacons() external;
+
     /// @notice This function forces the upgrade of a beacon and restarts the implementation afterwards
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
     /// @param beacon The address of the beacon that is intended to be upgraded and restarted

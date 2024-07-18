@@ -126,6 +126,7 @@ contract GovernorV1Mock is IGovernor_v1 {
     // Emergency Shutdown
 
     function initiateBeaconShutdown(address) external {}
+    function initiateBeaconShutdownForAllLinkedBeacons() external {}
 
     function forceUpgradeBeaconAndRestartImplementation(
         address,
