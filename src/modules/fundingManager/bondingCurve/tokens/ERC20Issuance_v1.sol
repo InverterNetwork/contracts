@@ -32,7 +32,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author Inverter Network
  */
-contract ERC20Issuance_v1 is IERC20Issuance_v1,  ERC20Capped, Ownable {
+contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     // State Variables
     mapping(address => bool) public allowedMinters;
     uint8 internal _decimals;
@@ -87,8 +87,9 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1,  ERC20Capped, Ownable {
     //------------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Sets the address of the minter.
+    /// @notice Sets the minting rights of an address.
     /// @param _minter The address of the minter.
+    /// @param _allowed If the address is allowed to mint or not
     function _setMinter(address _minter, bool _allowed) internal {
         allowedMinters[_minter] = _allowed;
         emit MinterSet(_minter, _allowed);
