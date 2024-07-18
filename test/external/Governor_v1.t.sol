@@ -65,7 +65,8 @@ contract GovernorV1Test is Test {
             communityMultisig,
             teamMultisig,
             timelockPeriod,
-            address(makeAddr("FeeManager"))
+            address(makeAddr("FeeManager")),
+            address(makeAddr("Modulefactory"))
         );
 
         // Create beacon owned by governor
@@ -248,7 +249,8 @@ contract GovernorV1Test is Test {
             communityMultisig,
             teamMultisig,
             timelockPeriod,
-            makeAddr("FeeManager")
+            makeAddr("FeeManager"),
+            address(makeAddr("Modulefactory"))
         );
 
         address impl = address(new Governor_v1());
@@ -260,7 +262,11 @@ contract GovernorV1Test is Test {
             )
         );
         gov.init(
-            address(0), teamMultisig, timelockPeriod, makeAddr("FeeManager")
+            address(0),
+            teamMultisig,
+            timelockPeriod,
+            makeAddr("FeeManager"),
+            address(makeAddr("Modulefactory"))
         );
 
         // validAddress(newTeamMultisig)
@@ -273,7 +279,8 @@ contract GovernorV1Test is Test {
             communityMultisig,
             address(0),
             timelockPeriod,
-            makeAddr("FeeManager")
+            makeAddr("FeeManager"),
+            address(makeAddr("Modulefactory"))
         );
 
         // validTimelockPeriod(newTimelockPeriod)
@@ -282,7 +289,13 @@ contract GovernorV1Test is Test {
                 IGovernor_v1.Governor__InvalidTimelockPeriod.selector, 0
             )
         );
-        gov.init(communityMultisig, teamMultisig, 0, makeAddr("FeeManager"));
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            0,
+            makeAddr("FeeManager"),
+            address(makeAddr("Modulefactory"))
+        );
 
         // validAddress(newFeeManager)
         vm.expectRevert(
@@ -291,7 +304,28 @@ contract GovernorV1Test is Test {
             )
         );
 
-        gov.init(communityMultisig, teamMultisig, timelockPeriod, address(0));
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            address(0),
+            address(makeAddr("Modulefactory"))
+        );
+
+        // validAddress(initialFeeManager)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__InvalidAddress.selector, address(0)
+            )
+        );
+
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            makeAddr("FeeManager"),
+            address(0)
+        );
     }
 
     //--------------------------------------------------------------------------

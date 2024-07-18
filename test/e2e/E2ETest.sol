@@ -77,8 +77,10 @@ contract E2ETest is E2EModuleRegistry {
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
-        // Deploy the Fee Manager
+        // Deploy a reverter used to enable proper pausing
+        reverter = new InverterReverter_v1();
 
+        // Deploy the Fee Manager
         feeManager = FeeManager_v1(
             address(
                 new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
@@ -103,7 +105,16 @@ contract E2ETest is E2EModuleRegistry {
             )
         );
 
-        gov.init(communityMultisig, teamMultisig, 1 weeks, address(feeManager));
+        moduleFactory =
+            new ModuleFactory_v1(address(reverter), address(forwarder));
+
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            1 weeks,
+            address(feeManager),
+            address(moduleFactory)
+        );
 
         // Deploy a Mock funding token for testing.
 
@@ -111,9 +122,6 @@ contract E2ETest is E2EModuleRegistry {
         DEFAULT_BEACON_OWNER = address(gov);
 
         token = new ERC20Mock("Mock", "MOCK");
-
-        // Deploy a reverter used to enable proper pausing
-        reverter = new InverterReverter_v1();
 
         // Deploy a forwarder used to enable metatransactions
         forwarder = new TransactionForwarder_v1();
@@ -140,6 +148,7 @@ contract E2ETest is E2EModuleRegistry {
                 )
             )
         );
+        
         moduleFactory.init(
             address(gov),
             new IModule_v1.Metadata[](0),
