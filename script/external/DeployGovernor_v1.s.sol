@@ -145,7 +145,7 @@ contract DeployGovernor_v1 is Script {
         uint timelockPeriod,
         address initialFeeManager,
         address initialModuleManager
-    ) public returns (address, address) {
+    ) public {
         vm.startBroadcast(deployerPrivateKey);
         {
             Governor_v1(governorProxy).init(

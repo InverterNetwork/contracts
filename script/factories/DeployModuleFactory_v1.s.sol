@@ -103,4 +103,56 @@ contract DeployModuleFactory_v1 is Script {
 
         return address(moduleFactory);
     }
+
+    function createProxy(address reverter, address forwarder, address governor)
+        external
+        returns (address proxy, address implementation)
+    {
+        address moduleFactoryImplementation;
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the moduleFactory.
+            moduleFactoryImplementation =
+                address(new ModuleFactory_v1(reverter, forwarder));
+        }
+        vm.stopBroadcast();
+
+        address moduleFactoryBeacon;
+        address moduleFactoryProxy;
+
+        (moduleFactoryBeacon, moduleFactoryProxy) =
+        deployAndSetUpInverterBeacon_v1.deployBeaconAndSetupProxy(
+            reverter, governor, moduleFactoryImplementation, 1, 0, 0
+        );
+
+        moduleFactory = ModuleFactory_v1(moduleFactoryProxy);
+
+        // Log the deployed Governor_v1 address.
+        console2.log(
+            "Deployment of ModuleFactory_v1 implementation at address",
+            moduleFactoryProxy
+        );
+
+        return (moduleFactoryProxy, address(moduleFactoryImplementation));
+    }
+
+    function init(
+        address moduleFactoryProxy,
+        address governor,
+        IModule_v1.Metadata[] memory initialMetadataRegistration,
+        IInverterBeacon_v1[] memory initialBeaconRegistration
+    ) external {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            ModuleFactory_v1(moduleFactoryProxy).init(
+                governor, initialMetadataRegistration, initialBeaconRegistration
+            );
+        }
+        vm.stopBroadcast();
+
+        // Log
+        console2.log(
+            "Initialization of ModuleFactory_v1 at address ", moduleFactoryProxy
+        );
+    }
 }

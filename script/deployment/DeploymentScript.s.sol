@@ -496,26 +496,12 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Deploy factory implementations \n");
+        console2.log("Setup last implementations \n");
 
         // Deploy module factory v1 implementation
-        moduleFactory = deployModuleFactory.run(
-            reverter,
-            forwarder,
-            address(governor),
-            initialMetadataRegistration,
-            initialBeaconRegistration
+        (moduleFactory,) = deployModuleFactory.createProxy(
+            reverter, forwarder, address(governor)
         );
-
-        // Deploy orchestrator Factory implementation
-        orchestratorFactory = deployOrchestratorFactory.run(
-            address(governor), orchestrator, moduleFactory, forwarder
-        );
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
-        console2.log("Init Governor \n");
 
         deployGovernor.init(
             governor,
@@ -524,6 +510,19 @@ contract DeploymentScript is Script {
             1 weeks,
             feeManager,
             moduleFactory
+        );
+
+        // Init module factory v1
+        deployModuleFactory.init(
+            moduleFactory,
+            address(governor),
+            initialMetadataRegistration,
+            initialBeaconRegistration
+        );
+
+        // Deploy orchestrator Factory implementation
+        orchestratorFactory = deployOrchestratorFactory.run(
+            address(governor), orchestrator, moduleFactory, forwarder
         );
 
         console2.log(
