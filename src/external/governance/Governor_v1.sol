@@ -57,6 +57,20 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Modifier
 
+    modifier onlyLinkedModuleFactory() {
+        if (_msgSender() != address(moduleFactory)) {
+            revert Governor__OnlyLinkedModuleFactory();
+        }
+        _;
+    }
+
+    modifier linkedBeaconsEmpty() {
+        if (linkedBeacons.length != 0) {
+            revert Governor__LinkedBeaconsNotEmpty();
+        }
+        _;
+    }
+
     modifier validAddress(address adr) {
         if (adr == address(0)) {
             revert Governor__InvalidAddress(adr);
@@ -114,8 +128,9 @@ contract Governor_v1 is
     IFeeManager_v1 private feeManager;
     IModuleFactory_v1 private moduleFactory;
 
-    uint public timelockPeriod;
+    IInverterBeacon_v1[] private linkedBeacons;
 
+    uint public timelockPeriod;
     mapping(address => IGovernor_v1.Timelock) private beaconTimelock;
 
     // Storage gap for future upgrades
@@ -172,6 +187,22 @@ contract Governor_v1 is
         _setModuleFactory(initialModuleFactory);
     }
 
+    function moduleFactoryInitCallback(
+        IInverterBeacon_v1[] calldata registeredBeacons
+    ) external onlyLinkedModuleFactory linkedBeaconsEmpty {
+        //Make sure Beacons are accessible for Governor
+        uint length = registeredBeacons.length;
+        for (uint i = 0; i < length; i++) {
+            if (!isBeaconAccessible(address(registeredBeacons[i]))) {
+                revert Governor__BeaconNotAccessible(
+                    address(registeredBeacons[i])
+                );
+            }
+        }
+
+        linkedBeacons = registeredBeacons;
+    }
+
     //--------------------------------------------------------------------------
     // Getter Functions
 
@@ -182,6 +213,15 @@ contract Governor_v1 is
         returns (Timelock memory)
     {
         return beaconTimelock[beacon];
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function getLinkedBeacons()
+        external
+        view
+        returns (IInverterBeacon_v1[] memory)
+    {
+        return linkedBeacons;
     }
 
     //--------------------------------------------------------------------------
@@ -198,6 +238,11 @@ contract Governor_v1 is
         onlyRole(COMMUNITY_MULTISIG_ROLE)
     {
         _setFeeManager(newFeeManager);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function getModuleFactory() external view returns (address) {
+        return address(moduleFactory);
     }
 
     /// @inheritdoc IGovernor_v1
@@ -281,7 +326,8 @@ contract Governor_v1 is
         IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
-    ) external onlyCommunityOrTeamMultisig {
+    ) external onlyCommunityOrTeamMultisig accessibleBeacon(address(beacon)) {
+        linkedBeacons.push(beacon);
         moduleFactory.registerMetadata(metadata, beacon);
     }
 

@@ -28,6 +28,12 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice This function can only be accessed by the linked ModuleFactory
+    error Governor__OnlyLinkedModuleFactory();
+
+    /// @notice This function can only be called when the Linked beacon Array is empty
+    error Governor__LinkedBeaconsNotEmpty();
+
     /// @notice The given address is invalid
     error Governor__InvalidAddress(address adr);
 
@@ -136,12 +142,23 @@ interface IGovernor_v1 {
         view
         returns (Timelock memory);
 
+    /// @notice Returns the list of currently linked beacons
+    /// @return LinkedBeacons The array of InverterBeacons that are currently linked to the governor
+    function getLinkedBeacons()
+        external
+        view
+        returns (IInverterBeacon_v1[] memory);
+
     //--------------------------------------------------------------------------
     // FeeManager
 
     /// @notice Returns the FeeManager address
     /// @return Address of the FeeManager
     function getFeeManager() external view returns (address);
+
+    /// @notice Returns the ModuleFactory address
+    /// @return Address of the ModuleFactory
+    function getModuleFactory() external view returns (address);
 
     /// @notice Sets the address of the FeeManager
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
