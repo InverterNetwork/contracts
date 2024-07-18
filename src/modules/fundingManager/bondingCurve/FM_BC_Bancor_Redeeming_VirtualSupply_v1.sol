@@ -230,7 +230,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    /// @notice Redeem tokens on behalf of a specified receiver address. This function is subject
+    /// @notice Redeem tokens and direct the proceeds to a specified receiver address. This function is subject
     /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
     /// bonding curve algorithm.
     /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
@@ -240,7 +240,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @param _receiver The address that will receive the redeemed tokens.
     /// @param _depositAmount The amount of issued token to deposited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
@@ -253,7 +253,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _subVirtualCollateralAmount(redeemAmount);
     }
 
-    /// @notice Sell collateral for the sender's address. This function is subject
+    /// @notice Redeem collateral for the sender's address. This function is subject
     /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
     /// bonding curve algorithm.
     /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
@@ -269,7 +269,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         override(RedeemingBondingCurveBase_v1)
         sellingIsEnabled
     {
-        sellFor(_msgSender(), _depositAmount, _minAmountOut);
+        sellTo(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     //--------------------------------------------------------------------------

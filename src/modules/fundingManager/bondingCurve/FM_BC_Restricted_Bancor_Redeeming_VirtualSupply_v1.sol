@@ -68,12 +68,12 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
     /// @dev added role check
-    function sellFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         override
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
-        super.sellFor(_receiver, _depositAmount, _minAmountOut);
+        super.sellTo(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Mints a specified amount of Issuance Tokens to a designated receiver address. Deactivated in this implementation..
