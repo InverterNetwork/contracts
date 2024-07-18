@@ -1,0 +1,148 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - main
+            - dev
+    pull_request:
+        branches:
+            - "*"
+
+env:
+    FOUNDRY_PROFILE: ci
+    SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
+
+jobs:
+    compile:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Compile contracts
+              run: forge build
+
+            - name: Save compiled artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+    check-size:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Check contract sizes
+              run: make check-size
+
+    verify-formatting:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Verify formatting
+              run: forge fmt --check
+
+    verify-scripts:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Run scripts
+              run: make testScripts
+
+    verify-tests:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Run tests
+              run: make test
