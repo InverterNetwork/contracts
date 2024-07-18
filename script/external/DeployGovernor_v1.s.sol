@@ -31,6 +31,7 @@ contract DeployGovernor_v1 is Script {
         address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
         address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
         address feeManager = vm.envAddress("FEE_MANAGER_ADDRESS");
+        address moduleFactory = vm.envAddress("MODULE_FACTORY_ADDRESS");
         uint timelockPeriod = 1 weeks;
         // Check settings.
 
@@ -49,15 +50,27 @@ contract DeployGovernor_v1 is Script {
             "DeployOrchestratorFactory_v1: Missing env variable: feeManager"
         );
 
+        require(
+            moduleFactory != address(0),
+            "DeployOrchestratorFactory_v1: Missing env variable: moduleFactory"
+        );
+
         // Deploy the Governor_v1.
-        return run(communityMultisig, teamMultisig, timelockPeriod, feeManager);
+        return run(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            feeManager,
+            moduleFactory
+        );
     }
 
     function run(
         address communityMultisig,
         address teamMultisig,
         uint timelockPeriod,
-        address initialFeeManager
+        address initialFeeManager,
+        address initialModuleManager
     ) public returns (address, address) {
         vm.startBroadcast(deployerPrivateKey);
         {
@@ -78,7 +91,8 @@ contract DeployGovernor_v1 is Script {
                 communityMultisig,
                 teamMultisig,
                 timelockPeriod,
-                initialFeeManager
+                initialFeeManager,
+                initialModuleManager
             );
         }
 
@@ -91,5 +105,61 @@ contract DeployGovernor_v1 is Script {
         console2.log("Deployment of Governor_v1 at address", address(gov));
 
         return (address(gov), address(govImplementation));
+    }
+
+    function createProxy(address communityMultisig)
+        external
+        returns (address proxy, address implementation)
+    {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the Governor_v1.
+            govImplementation = new Governor_v1();
+
+            // Deploy Governance Contract
+            gov = Governor_v1(
+                address(
+                    new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                        address(govImplementation), // Implementation Address
+                        communityMultisig, // Admin
+                        bytes("") // data field that could have been used for calls, but not necessary
+                    )
+                )
+            );
+        }
+
+        vm.stopBroadcast();
+
+        // Log the deployed Governor_v1 address.
+        console2.log(
+            "Deployment of Governor_v1 implementation at address", address(gov)
+        );
+
+        return (address(gov), address(govImplementation));
+    }
+
+    function init(
+        address governorProxy,
+        address communityMultisig,
+        address teamMultisig,
+        uint timelockPeriod,
+        address initialFeeManager,
+        address initialModuleManager
+    ) public returns (address, address) {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            Governor_v1(governorProxy).init(
+                communityMultisig,
+                teamMultisig,
+                timelockPeriod,
+                initialFeeManager,
+                initialModuleManager
+            );
+        }
+
+        vm.stopBroadcast();
+
+        // Log
+        console2.log("Initialization of Governor at address ", governorProxy);
     }
 }

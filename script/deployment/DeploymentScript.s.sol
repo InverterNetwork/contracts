@@ -289,11 +289,10 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Governance Contract \n");
+        console2.log("Deploy Governance Contract \n");
 
-        (governor, governorImplementation) = deployGovernor.run(
-            communityMultisig, teamMultisig, 1 weeks, feeManager
-        );
+        (governor, governorImplementation) =
+            deployGovernor.createProxy(communityMultisig);
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -511,6 +510,20 @@ contract DeploymentScript is Script {
         // Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
             address(governor), orchestrator, moduleFactory, forwarder
+        );
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log("Init Governor \n");
+
+        deployGovernor.init(
+            governor,
+            communityMultisig,
+            teamMultisig,
+            1 weeks,
+            feeManager,
+            moduleFactory
         );
 
         console2.log(

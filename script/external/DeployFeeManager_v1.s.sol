@@ -151,5 +151,8 @@ contract DeployFeeManager_v1 is Script {
             );
         }
         vm.stopBroadcast();
+
+        // Log
+        console2.log("Initialization of Fee Manager at address ", feeManager);
     }
 }
