@@ -366,6 +366,27 @@ contract GovernorV1Test is Test {
         gov.setFeeManager(address(0));
     }
 
+    function testSetModuleFactoryModifierInPosition() public {
+        // onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setModuleFactory(address(0x1));
+
+        // validAddress(newModuleFactory)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__InvalidAddress.selector, address(0)
+            )
+        );
+        vm.prank(address(communityMultisig));
+        gov.setModuleFactory(address(0));
+    }
+
     function testSetFeeManagerMaxFeeModifierInPosition() public {
         // onlyRole(COMMUNITY_MULTISIG_ROLE)
         vm.expectRevert(
