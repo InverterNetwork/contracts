@@ -127,6 +127,10 @@ interface IGovernor_v1 {
         address initialModuleFactory
     ) external;
 
+    function moduleFactoryInitCallback(
+        IInverterBeacon_v1[] calldata registeredBeacons
+    ) external;
+
     //--------------------------------------------------------------------------
     // Getter Functions
 

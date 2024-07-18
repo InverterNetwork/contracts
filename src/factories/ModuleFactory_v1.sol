@@ -10,6 +10,7 @@ import {
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 
 // Internal Dependencies
 
@@ -141,6 +142,10 @@ contract ModuleFactory_v1 is
                 initialMetadataRegistration[i], initialBeaconRegistration[i]
             );
         }
+
+        IGovernor_v1(_governor).moduleFactoryInitCallback(
+            initialBeaconRegistration
+        );
     }
 
     //--------------------------------------------------------------------------
