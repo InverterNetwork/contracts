@@ -885,6 +885,55 @@ contract GovernorV1Test is Test {
         gov.initiateBeaconShutdown(address(unownedBeaconMock));
     }
 
+    function testInitiateBeaconShutdownForAllLinkedBeacons(uint beaconAmount)
+        public
+    {
+        vm.assume(beaconAmount < 1000);
+
+        //Create beacons
+        IInverterBeacon_v1[] memory newBeacons =
+            new IInverterBeacon_v1[](beaconAmount);
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            newBeacons[i] = IInverterBeacon_v1(
+                address(new InverterBeaconV1OwnableMock(address(gov)))
+            );
+        }
+
+        //Fill Governor with beacons
+        vm.prank(address(modFactory));
+        gov.moduleFactoryInitCallback(newBeacons);
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit BeaconShutdownInitiated(address(newBeacons[i]));
+        }
+
+        vm.prank(address(communityMultisig));
+        gov.initiateBeaconShutdownForAllLinkedBeacons();
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            // Make sure ownedBeaconMock got called
+            assertEq(
+                InverterBeaconV1OwnableMock(address(newBeacons[i]))
+                    .functionCalled(),
+                1
+            );
+        }
+    }
+
+    function testInitiateBeaconShutdownForAllLinkedBeaconsModifierInPosition()
+        public
+    {
+        // onlyCommunityOrTeamMultisig
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__OnlyCommunityOrTeamMultisig.selector
+            )
+        );
+        gov.initiateBeaconShutdownForAllLinkedBeacons();
+    }
+
     function testForceUpgradeBeaconAndRestartImplementation() public {
         vm.expectEmit(true, true, true, true);
         emit BeaconForcefullyUpgradedAndImplementationRestarted(

@@ -424,6 +424,18 @@ contract Governor_v1 is
     }
 
     /// @inheritdoc IGovernor_v1
+    function initiateBeaconShutdownForAllLinkedBeacons()
+        external
+        onlyCommunityOrTeamMultisig
+    {
+        uint length = linkedBeacons.length;
+        for (uint i = 0; i < length; i++) {
+            linkedBeacons[i].shutDownImplementation();
+            emit BeaconShutdownInitiated(address(linkedBeacons[i]));
+        }
+    }
+
+    /// @inheritdoc IGovernor_v1
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
