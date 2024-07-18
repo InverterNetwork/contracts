@@ -118,10 +118,11 @@ interface IGovernor_v1 {
     // Initialization
 
     function init(
-        address communityMultisig,
-        address teamMultisig,
-        uint timelockPeriod,
-        address initialFeeManager
+        address newCommunityMultisig,
+        address newTeamMultisig,
+        uint newTimelockPeriod,
+        address initialFeeManager,
+        address initialModuleFactory
     ) external;
 
     //--------------------------------------------------------------------------
@@ -146,6 +147,11 @@ interface IGovernor_v1 {
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
     /// @param newFeeManager The address of the new FeeManager
     function setFeeManager(address newFeeManager) external;
+
+    /// @notice Sets the address of the ModuleFactory
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @param newModuleFactory The address of the new ModuleFactory
+    function setModuleFactory(address newModuleFactory) external;
 
     /// @notice Sets the maximum fee percentage that can be assigned in the linked FeeManager
     /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE

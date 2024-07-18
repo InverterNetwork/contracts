@@ -112,6 +112,7 @@ contract Governor_v1 is
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
     IFeeManager_v1 private feeManager;
+    IModuleFactory_v1 private moduleFactory;
 
     uint public timelockPeriod;
 
@@ -134,11 +135,14 @@ contract Governor_v1 is
     /// @param newCommunityMultisig The address of the community multisig
     /// @param newTeamMultisig The address of the team multisig
     /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
+    /// @param initialFeeManager The intially linked Fee Manager
+    /// @param initialModuleFactory The initially linked Module Factory
     function init(
         address newCommunityMultisig,
         address newTeamMultisig,
         uint newTimelockPeriod,
-        address initialFeeManager
+        address initialFeeManager,
+        address initialModuleFactory
     )
         external
         initializer
@@ -165,6 +169,7 @@ contract Governor_v1 is
         _setTimelockPeriod(newTimelockPeriod);
 
         _setFeeManager(initialFeeManager);
+        _setModuleFactory(initialModuleFactory);
     }
 
     //--------------------------------------------------------------------------
@@ -193,6 +198,14 @@ contract Governor_v1 is
         onlyRole(COMMUNITY_MULTISIG_ROLE)
     {
         _setFeeManager(newFeeManager);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setModuleFactory(address newModuleFactory)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        _setModuleFactory(newModuleFactory);
     }
 
     /// @inheritdoc IGovernor_v1
@@ -435,6 +448,15 @@ contract Governor_v1 is
     {
         timelockPeriod = newTimelockPeriod;
         emit TimelockPeriodSet(newTimelockPeriod);
+    }
+
+    /// @dev sets the internal FeeManager address
+    /// @param newModuleFactory the address of the new moduleFactory
+    function _setModuleFactory(address newModuleFactory)
+        internal
+        validAddress(newModuleFactory)
+    {
+        moduleFactory = IModuleFactory_v1(newModuleFactory);
     }
 
     /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it
