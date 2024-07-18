@@ -14,7 +14,7 @@ contract GovernorV1Mock is IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Initialization
 
-    function init(address, address, uint, address) external {}
+    function init(address, address, uint, address, address) external {}
 
     //--------------------------------------------------------------------------
     // Getter Functions
@@ -36,7 +36,9 @@ contract GovernorV1Mock is IGovernor_v1 {
         feeManager = newFeeManager;
     }
 
-    function setFeeManagerMaxFee(uint maxFee) external {}
+    function setModuleFactory(address) external {}
+
+    function setFeeManagerMaxFee(uint) external {}
 
     function setFeeManagerDefaultProtocolTreasury(address) external {}
 
