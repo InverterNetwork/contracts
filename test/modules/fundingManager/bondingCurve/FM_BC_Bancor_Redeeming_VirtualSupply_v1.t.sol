@@ -15,7 +15,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {
@@ -109,17 +109,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     function setUp() public virtual {
         // Deploy contracts
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties;
+        issuanceToken = new ERC20Issuance_v1(
+            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
+        );
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -148,15 +146,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken_properties,
-                admin_address,
+                address(issuanceToken),
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
 
-        issuanceToken =
-            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
+        // we grant minting rights to the bonding curve
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
     }
 
     function testSupportsInterface() public {
@@ -1399,17 +1396,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < 7);
+        vm.assume(_newMaxSupply != 0);
 
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         vm.expectRevert(
@@ -1428,17 +1421,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < _token.decimals());
+        vm.assume(_newMaxSupply != 0);
 
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         vm.expectRevert(
@@ -1456,17 +1445,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         public
     {
         vm.assume(_newDecimals >= 7 && _newDecimals >= _token.decimals());
+        vm.assume(_newMaxSupply != 0);
 
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         // No authentication since it's an internal function exposed by the mock contract
@@ -1480,7 +1465,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);
         assertEq(issuanceTokenAfter.decimals(), _newDecimals);
-        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+        assertEq(issuanceTokenAfter.cap(), _newMaxSupply);
 
         // we also check the decimals have been cached correctly
 
