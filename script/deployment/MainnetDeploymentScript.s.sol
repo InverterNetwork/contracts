@@ -40,7 +40,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         // TODO: Salted deployments! Check where the commit is and add it.
 
         // Fetch the deployer details
-        uint deployerPrivateKey = vm.envUint("WALLET_DEPLOYER_PK");
+        uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
         address deployer = vm.addr(deployerPrivateKey);
 
         // Fetch the Multisig addresses
@@ -92,17 +92,6 @@ contract MainnetDeploymentScript is ModuleRegistry {
             100 // Issuance Fee 1%
         );
 
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
-
-        console2.log("Deploy orchestrator implementation \n");
-        // Orchestrator_v1
-        orchestrator_Implementation = deployOrchestrator.run();
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
         console2.log("Deploy forwarder implementation and proxy \n");
         // Deploy TransactionForwarder_v1 implementation
         forwarder_Implementation = deployTransactionForwarder.run();
@@ -124,6 +113,18 @@ contract MainnetDeploymentScript is ModuleRegistry {
         ) {
             revert BeaconProxyDeploymentFailed();
         }
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+
+        console2.log("Deploy orchestrator implementation \n");
+        // Orchestrator_v1
+        orchestrator_Implementation = deployOrchestrator.run(forwarder_Proxy);
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
 
         // =============================================================================
         // Deploy Module Implementations, Beacons and prepare their metadata registration
@@ -390,9 +391,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
                 )
             )
         );
-
-        // Payment Router
-        LM_PC_PaymentRouter_v1_Implementation = deployPaymentRouter.run();
+        // KPI Rewarder
+        LM_PC_KPIRewarder_v1_Implementation = deployKPIRewarder.run();
 
         initialMetadataRegistration.push(LM_PC_KPIRewarder_v1_Metadata);
 
@@ -409,8 +409,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
             )
         );
 
-        // KPI Rewarder
-        LM_PC_KPIRewarder_v1_Implementation = deployKPIRewarder.run();
+        // Payment Router
+        LM_PC_PaymentRouter_v1_Implementation = deployPaymentRouter.run();
 
         initialMetadataRegistration.push(LM_PC_PaymentRouter_v1_Metadata);
 

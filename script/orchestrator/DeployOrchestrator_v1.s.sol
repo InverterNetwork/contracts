@@ -16,12 +16,12 @@ contract DeployOrchestrator_v1 is Script {
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address forwarderAddress = vm.envAddress("FORWARDER_ADDRESS");
+    //address forwarderAddress = vm.envAddress("FORWARDER_ADDRESS");
     address deployer = vm.addr(deployerPrivateKey);
 
     Orchestrator_v1 orchestrator;
 
-    function run() external returns (address) {
+    function run(address forwarderAddress) public returns (address) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the orchestrator.
