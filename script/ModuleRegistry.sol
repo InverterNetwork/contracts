@@ -106,6 +106,7 @@ contract ModuleRegistry is Script {
     using Strings for string;
     // ------------------------------------------------------------------------
     // Fetch Environment Variables
+
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
@@ -113,8 +114,6 @@ contract ModuleRegistry is Script {
         public
         returns (address implementation)
     {
-
-
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the Module Implementation.
@@ -130,19 +129,30 @@ contract ModuleRegistry is Script {
             contractName,
             implementation
         );
-
-
     }
 
-    function giantSwitchFromHell(string memory contractName) internal returns (address)
+    function giantSwitchFromHell(string memory contractName)
+        internal
+        returns (address)
     {
         // Funding Managers
         if (Strings.equal(contractName, "FM_Rebasing_v1")) {
             return address(new FM_Rebasing_v1());
-        } else if (Strings.equal(contractName, "FM_BC_Bancor_Redeeming_VirtualSupply_v1")) {
+        } else if (
+            Strings.equal(
+                contractName, "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
+            )
+        ) {
             return address(new FM_BC_Bancor_Redeeming_VirtualSupply_v1());
-        } else if (Strings.equal(contractName, "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1")) {
-            return address(new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1());
+        } else if (
+            Strings.equal(
+                contractName,
+                "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
+            )
+        ) {
+            return address(
+                new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1()
+            );
         }
         // Authorizer
         else if (Strings.equal(contractName, "AUT_Roles_v1")) {

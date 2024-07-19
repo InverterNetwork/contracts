@@ -37,7 +37,7 @@ contract DeployFeeManager_v1 is Script {
             // Check settings.
         require(
             reverter != address(0),
-            "DeployOrchestratorFactory_v1: Missing env variable: reverter contract"
+            "DeployFeeManager: Missing env variable: reverter contract"
         );
         require(
             governor != address(0),

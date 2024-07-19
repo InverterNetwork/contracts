@@ -50,6 +50,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
         // Fetch the treasury address
         address treasury = vm.envAddress("TREASURY_ADDRESS");
 
+        // TODO: Deploy protocol singleton proxies here
+
         console2.log(
             "-----------------------------------------------------------------------------"
         );
@@ -151,6 +153,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
         // Logic Module
 
         _setup_LogicModules();
+
+        // TODO: Initialize protocol singleton proxies here
 
         // =============================================================================
         // Deploy Factories and register all modules

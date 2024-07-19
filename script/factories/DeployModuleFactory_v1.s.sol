@@ -39,17 +39,17 @@ contract DeployModuleFactory_v1 is Script {
 
         require(
             reverter != address(0),
-            "DeployOrchestratorFactory_v1: Missing env variable: reverter contract"
+            "DeployModuleFactory_v1: Missing env variable: reverter contract"
         );
 
         require(
             governor != address(0),
-            "DeployOrchestratorFactory_v1: Missing env variable: governor contract"
+            "DeployModuleFactory_v1: Missing env variable: governor contract"
         );
 
         require(
             forwarder != address(0),
-            "DeployOrchestratorFactory_v1: Missing env variable: forwarder"
+            "DeployModuleFactory_v1: Missing env variable: forwarder"
         );
 
         // Deploy the moduleFactory.
