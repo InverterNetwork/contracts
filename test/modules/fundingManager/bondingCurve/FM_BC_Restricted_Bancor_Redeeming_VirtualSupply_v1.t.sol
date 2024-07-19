@@ -40,17 +40,15 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
 {
     function setUp() public override {
         // Deploy contracts
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties;
+        issuanceToken = new ERC20Issuance_v1(
+            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
+        );
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -77,15 +75,14 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken_properties,
-                admin_address,
+                address(issuanceToken),
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
 
-        issuanceToken =
-            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
+        // we grant minting rights to the bonding curve
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
         // Grant necessary roles for the Upstream tests to pass
 
@@ -155,17 +152,15 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
 
     function setUp() public {
         // Deploy contracts
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties;
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties;
+        issuanceToken = new ERC20Issuance_v1(
+            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
+        );
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
 
-        issuanceToken_properties.name = NAME;
-        issuanceToken_properties.symbol = SYMBOL;
-        issuanceToken_properties.decimals = DECIMALS;
-        issuanceToken_properties.maxSupply = MAX_SUPPLY;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties;
 
         bc_properties.formula = formula;
         bc_properties.reserveRatioForBuying = RESERVE_RATIO_FOR_BUYING;
@@ -194,15 +189,14 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
             _orchestrator,
             _METADATA,
             abi.encode(
-                issuanceToken_properties,
-                admin_address,
+                address(issuanceToken),
                 bc_properties,
                 _token // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
             )
         );
 
-        issuanceToken =
-            ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
+        // we grant minting rights to the bonding curve
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
         // Since we tested the success case in the Upstream tests, we now only need to verify revert on unauthorized calls
     }

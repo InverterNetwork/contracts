@@ -128,25 +128,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
-        IssuanceToken memory issuanceTokenData;
-        address tokenAdmin;
+        address _issuanceToken;
         BondingCurveProperties memory bondingCurveProperties;
         address _acceptedToken;
 
-        (issuanceTokenData, tokenAdmin, bondingCurveProperties, _acceptedToken)
-        = abi.decode(
-            configData,
-            (IssuanceToken, address, BondingCurveProperties, address)
-        );
-
-        ERC20Issuance_v1 _issuanceToken = new ERC20Issuance_v1(
-            issuanceTokenData.name,
-            issuanceTokenData.symbol,
-            issuanceTokenData.decimals,
-            issuanceTokenData.maxSupply,
-            tokenAdmin,
-            address(this)
-        );
+        (_issuanceToken, bondingCurveProperties, _acceptedToken) =
+            abi.decode(configData, (address, BondingCurveProperties, address));
 
         // Set accepted token
         _token = IERC20(_acceptedToken);
