@@ -9,7 +9,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {
@@ -72,13 +72,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
         formula = address(new BancorFormula());
 
         issuanceToken = new ERC20Issuance_v1(
-            NAME,
-            SYMBOL,
-            DECIMALS,
-            type(uint).max,
-            address(this),
-            address(bondingCurveFundingManager)
+            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
         );
+
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
@@ -851,6 +848,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         public
     {
         vm.assume(_newDecimals > 0);
+        vm.assume(_newMaxSupply != 0);
 
         address tokenBefore =
             address(bondingCurveFundingManager.getIssuanceToken());
@@ -859,12 +857,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         string memory _symbol = "NEW";
 
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name,
-            _symbol,
-            _newDecimals,
-            _newMaxSupply,
-            address(this),
-            address(this)
+            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
         );
 
         // Emit event
@@ -882,7 +875,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);
         assertEq(issuanceTokenAfter.decimals(), _newDecimals);
-        assertEq(issuanceTokenAfter.MAX_SUPPLY(), _newMaxSupply);
+        assertEq(issuanceTokenAfter.cap(), _newMaxSupply);
     }
 
     /* Test internal _calculatePurchaseReturn function
