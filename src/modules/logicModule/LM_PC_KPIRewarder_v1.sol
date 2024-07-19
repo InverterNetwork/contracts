@@ -188,7 +188,6 @@ contract LM_PC_KPIRewarder_v1 is
 
         assertionPending = true;
 
-        // TODO
         // (return assertionId)
     }
 

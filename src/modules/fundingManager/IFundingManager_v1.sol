@@ -39,7 +39,7 @@ interface IFundingManager_v1 {
 
     /// @notice Event emitted when collateral token has been set
     /// @param token The token that serves as collateral token making up the curve's reserve
-    event ReserveTokenSet(address indexed token, uint8 decimals);
+    event CollateralTokenSet(address indexed token, uint8 decimals);
 
     //--------------------------------------------------------------------------
     // Functions

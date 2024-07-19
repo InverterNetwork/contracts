@@ -109,7 +109,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
             orchestrator_, metadata, underlyingConfigData
         );
 
-        emit ReserveTokenSet(orchestratorTokenAddress, reserveTokenDecimals);
+        emit CollateralTokenSet(orchestratorTokenAddress, reserveTokenDecimals);
     }
 
     function token() public view returns (IERC20) {
