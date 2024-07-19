@@ -110,7 +110,7 @@ contract ModuleRegistry is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    function deployImplementation(string memory contractName)
+    function deployModuleImplementation(string memory contractName)
         public
         returns (address implementation)
     {
@@ -125,7 +125,7 @@ contract ModuleRegistry is Script {
 
         // Log the deployed Module contract address.
         console2.log(
-            "Deployment of %s Implementation at addressc %s",
+            "Deployment of %s Implementation at address %s",
             contractName,
             implementation
         );
@@ -238,8 +238,6 @@ contract ModuleRegistry is Script {
 
     // Rebasing Funding Manager
     address FM_Rebasing_v1_Implementation;
-    DeployFM_Rebasing_v1 deployRebasingFundingManager =
-        new DeployFM_Rebasing_v1();
     IModule_v1.Metadata FM_Rebasing_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
