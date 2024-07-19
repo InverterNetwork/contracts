@@ -23,15 +23,15 @@ contract DeploymentConstants {
     address public moduleFactory;
 
     // Protocol Multisigs
-    address communityMultisig;
-    address teamMultisig;
+    address public communityMultisig;
+    address public teamMultisig;
 
     // Protocol Addresses
-    address protocol_Reverter;
-    address protocol_Governor;
-    address protocol_FeeManager;
-    address protocol_Treasury;
-    address protocol_Forwarder;
+    address public protocol_Reverter;
+    address public protocol_Governor;
+    address public protocol_FeeManager;
+    address public protocol_Treasury;
+    address public protocol_Forwarder;
 
     ///////////////////////
     // Additional Constants

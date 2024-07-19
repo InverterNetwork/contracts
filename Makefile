@@ -101,7 +101,7 @@ testE2e: # Run e2e test suite
 .PHONY: testScripts
 testScripts: # Run e2e test suite
 	@echo "### Run scripts"
- 	
+ 	## Clean up after script refactor
 	## external
 	@forge script script/external/DeployGovernor_v1.s.sol
 	@forge script script/external/DeployTransactionForwarder_v1.s.sol
@@ -140,7 +140,7 @@ testScripts: # Run e2e test suite
 	@forge script script/setup/SetupToyOrchestratorScript.s.sol
 
 	## Deployment
-	@forge script script/deployment/DeploymentScript.s.sol
+	@forge script script/deployment/MainnetDeploymentScript.s.sol
 
 # -----------------------------------------------------------------------------
 # Static Analyzers

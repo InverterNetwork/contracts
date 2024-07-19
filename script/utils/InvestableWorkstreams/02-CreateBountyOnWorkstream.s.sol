@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import "../../deployment/DeploymentScript.s.sol";
+import "../../deployment/MainnetDeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";

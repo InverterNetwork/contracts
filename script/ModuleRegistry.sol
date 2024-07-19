@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+import "forge-std/Script.sol";
+
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 // Factories
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
@@ -27,6 +30,8 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Authorization
@@ -44,6 +49,7 @@ import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
 import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
+import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 // Import scripts:
 import {DeployModuleFactory_v1} from
@@ -96,7 +102,77 @@ import {DeployAUT_EXT_VotingRoles_v1} from
 //      );
 //--------------------------------------------------------------------------
 
-contract ModuleRegistry {
+contract ModuleRegistry is Script {
+    using Strings for string;
+    // ------------------------------------------------------------------------
+    // Fetch Environment Variables
+    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
+    address deployer = vm.addr(deployerPrivateKey);
+
+    function deployImplementation(string memory contractName)
+        public
+        returns (address implementation)
+    {
+
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the Module Implementation.
+
+            implementation = giantSwitchFromHell(contractName);
+        }
+
+        vm.stopBroadcast();
+
+        // Log the deployed Module contract address.
+        console2.log(
+            "Deployment of %s Implementation at addressc %s",
+            contractName,
+            implementation
+        );
+
+
+    }
+
+    function giantSwitchFromHell(string memory contractName) internal returns (address)
+    {
+        // Funding Managers
+        if (Strings.equal(contractName, "FM_Rebasing_v1")) {
+            return address(new FM_Rebasing_v1());
+        } else if (Strings.equal(contractName, "FM_BC_Bancor_Redeeming_VirtualSupply_v1")) {
+            return address(new FM_BC_Bancor_Redeeming_VirtualSupply_v1());
+        } else if (Strings.equal(contractName, "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1")) {
+            return address(new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1());
+        }
+        // Authorizer
+        else if (Strings.equal(contractName, "AUT_Roles_v1")) {
+            return address(new AUT_Roles_v1());
+        } else if (Strings.equal(contractName, "AUT_TokenGated_Roles_v1")) {
+            return address(new AUT_TokenGated_Roles_v1());
+        } else if (Strings.equal(contractName, "AUT_EXT_VotingRoles_v1")) {
+            return address(new AUT_EXT_VotingRoles_v1());
+        }
+        // Payment Processors
+        else if (Strings.equal(contractName, "PP_Simple_v1")) {
+            return address(new PP_Simple_v1());
+        } else if (Strings.equal(contractName, "PP_Streaming_v1")) {
+            return address(new PP_Streaming_v1());
+        }
+        // Logic Modules
+        else if (Strings.equal(contractName, "LM_PC_PaymentRouter_v1")) {
+            return address(new LM_PC_PaymentRouter_v1());
+        } else if (Strings.equal(contractName, "LM_PC_Bounties_v1")) {
+            return address(new LM_PC_Bounties_v1());
+        } else if (Strings.equal(contractName, "LM_PC_RecurringPayments_v1")) {
+            return address(new LM_PC_RecurringPayments_v1());
+        } else if (Strings.equal(contractName, "LM_PC_KPIRewarder_v1")) {
+            return address(new LM_PC_KPIRewarder_v1());
+        } else if (Strings.equal(contractName, "LM_PC_Staking_v1")) {
+            return address(new LM_PC_Staking_v1());
+        }
+        revert("Unknown Module");
+    }
+
     //  FACTORIES AND BEACONS
     //--------------------------------------------------------------------------
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
-import "../deployment/DeploymentScript.s.sol";
+import "../deployment/MainnetDeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
@@ -18,7 +18,7 @@ import {
 import {DeploymentConstants} from "../DeploymentConstants.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
-contract SetupToyOrchestratorScript is Test, DeploymentScript {
+contract SetupToyOrchestratorScript is Test, MainnetDeploymentScript {
     DeploymentConstants scriptConstants = new DeploymentConstants();
 
     // ------------------------------------------------------------------------
@@ -58,7 +58,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // token = ERC20Mock(0x5eb14c2e7D0cD925327d74ae4ce3fC692ff8ABEF);
 
         // Then, we run the deployment script to deploy the factories, implementations and Beacons.
-        address orchestratorFactory = DeploymentScript.run();
+        address orchestratorFactory = MainnetDeploymentScript.run();
 
         // We use the exisiting orchestratorFactory address
         // address orchestratorFactory = 0x690d5000D278f90B167354975d019c747B78032e;
