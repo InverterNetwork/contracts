@@ -848,6 +848,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         public
     {
         vm.assume(_newDecimals > 0);
+        vm.assume(_newMaxSupply != 0);
 
         address tokenBefore =
             address(bondingCurveFundingManager.getIssuanceToken());

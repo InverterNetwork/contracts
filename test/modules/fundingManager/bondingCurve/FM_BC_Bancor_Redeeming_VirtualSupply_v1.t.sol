@@ -1396,6 +1396,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < 7);
+        vm.assume(_newMaxSupply != 0);
 
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
@@ -1420,6 +1421,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         uint8 _newDecimals
     ) public {
         vm.assume(_newDecimals < _token.decimals());
+        vm.assume(_newMaxSupply != 0);
 
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
@@ -1443,6 +1445,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         public
     {
         vm.assume(_newDecimals >= 7 && _newDecimals >= _token.decimals());
+        vm.assume(_newMaxSupply != 0);
 
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
