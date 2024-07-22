@@ -22,7 +22,6 @@ contract PP_Simple_v1AccessMock is PP_Simple_v1 {
 
     function original_validPaymentToken(address _token)
         external
-        view
         returns (bool)
     {
         return validPaymentToken(_token);
