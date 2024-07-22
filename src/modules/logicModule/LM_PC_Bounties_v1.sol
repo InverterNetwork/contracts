@@ -19,7 +19,7 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Libraries
-import {LinkedIdList} from "src/common/LinkedIdList.sol";
+import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 // External Libraries
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
