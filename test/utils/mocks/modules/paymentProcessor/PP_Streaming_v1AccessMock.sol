@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+// Internal Interfaces
+import {IERC20PaymentClientBase_v1} from
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 // Internal Dependencies
 import {PP_Streaming_v1} from "@pp/PP_Streaming_v1.sol";
 
@@ -25,6 +28,31 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         return unclaimableAmountsForStream[client][token][sender][id];
     }
 
-    //--------------------------------------------------------------------------
-    // Internal Functions
+    function original_validPaymentReceiver(address addr)
+        external
+        view
+        returns (bool)
+    {
+        return validPaymentReceiver(addr);
+    }
+
+    function original_validTotal(uint _total) external pure returns (bool) {
+        return validTotal(_total);
+    }
+
+    function original_validTimes(uint _start, uint _cliff, uint _end)
+        external
+        pure
+        returns (bool)
+    {
+        return validTimes(_start, _cliff, _end);
+    }
+
+    function original_validPaymentToken(address _token)
+        external
+        view
+        returns (bool)
+    {
+        return validPaymentToken(_token);
+    }
 }

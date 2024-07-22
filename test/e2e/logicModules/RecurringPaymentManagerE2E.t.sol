@@ -12,8 +12,7 @@ import {
 import {
     LM_PC_RecurringPayments_v1,
     ILM_PC_RecurringPayments_v1,
-    IERC20PaymentClientBase_v1,
-    ERC165
+    IERC20PaymentClientBase_v1
 } from "@lm/LM_PC_RecurringPayments_v1.sol";
 
 // Modules that are used in this E2E test
@@ -23,6 +22,8 @@ import {
     IERC20PaymentClientBase_v1
 } from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 contract RecurringPaymentManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -113,7 +114,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_RecurringPayments_v1).interfaceId
                 )
             ) {

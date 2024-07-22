@@ -94,7 +94,7 @@ contract OrchestratorE2E is E2ETest {
         uint modulesBefore = orchestrator.modulesSize(); // We store the number of modules the orchestrator has
 
         // Create the module via the moduleFactory
-        address bountyManager = moduleFactory.createModule(
+        address bountyManager = moduleFactory.createAndInitModule(
             bountyManagerMetadata, orchestrator, bytes(""), workflowConfig
         );
 
@@ -120,14 +120,14 @@ contract OrchestratorE2E is E2ETest {
         // In case there is a need to replace the  paymentProcessor / fundingManager / authorizer
 
         // Create the new modules via the moduleFactory
-        address newPaymentProcessor = moduleFactory.createModule(
+        address newPaymentProcessor = moduleFactory.createAndInitModule(
             simplePaymentProcessorMetadata,
             orchestrator,
             bytes(""),
             workflowConfig
         );
 
-        address newFundingManager = moduleFactory.createModule(
+        address newFundingManager = moduleFactory.createAndInitModule(
             rebasingFundingManagerMetadata,
             orchestrator,
             abi.encode(address(orchestrator.fundingManager().token())),
@@ -137,7 +137,7 @@ contract OrchestratorE2E is E2ETest {
         address[] memory initialAuthorizedAddresses = new address[](1);
         initialAuthorizedAddresses[0] = address(this);
 
-        address newAuthorizer = moduleFactory.createModule(
+        address newAuthorizer = moduleFactory.createAndInitModule(
             roleAuthorizerMetadata,
             orchestrator,
             abi.encode(initialAuthorizedAddresses),

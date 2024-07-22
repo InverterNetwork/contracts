@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {IERC20Errors} from "@oz/interfaces/draft-IERC6093.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -126,52 +127,25 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         );
     }
 
-    function testAddPaymentOrderFailsForInvalidRecipient() public {
-        address[] memory invalids = _createInvalidRecipients();
-        uint amount = 1e18;
-        uint end = block.timestamp;
+    function testAddPaymentOrderFailsForInvalidPaymentOrder() public {
+        // Set return Value of validPaymentOrder in the paymentProcessor to false
+        _paymentProcessor.flipValidOrder();
 
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidRecipient
-                    .selector
-            );
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: invalids[0],
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: end
-                })
-            );
-        }
-    }
-
-    function testAddPaymentOrderFailsForInvalidAmount() public {
-        address recipient = address(0xCAFE);
-        uint[] memory invalids = _createInvalidAmounts();
-        uint end = block.timestamp;
-
-        for (uint i; i < invalids.length; ++i) {
-            vm.expectRevert(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidAmount
-                    .selector
-            );
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: invalids[0],
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: end
-                })
-            );
-        }
+        vm.expectRevert(
+            IERC20PaymentClientBase_v1
+                .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                .selector
+        );
+        paymentClient.addPaymentOrder(
+            IERC20PaymentClientBase_v1.PaymentOrder({
+                recipient: address(0),
+                paymentToken: address(_token),
+                amount: 1,
+                start: block.timestamp,
+                cliff: 0,
+                end: block.timestamp
+            })
+        );
     }
 
     //----------------------------------
@@ -380,31 +354,22 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         _orchestrator.setInterceptData(true);
 
-        if (currentFunds >= amountRequired) {
-            _orchestrator.setExecuteTxBoolReturn(true);
-            // NoOp as we already have enough funds
-            assertEq(bytes(""), _orchestrator.executeTxData());
-        } else {
+        if (currentFunds > amountRequired) {
+            paymentClient.originalEnsureTokenBalance(address(_token));
+        } else if (
+            _token.balanceOf(address(_fundingManager))
+                < order.amount - _token.balanceOf(address(paymentClient))
+        ) {
             // Check that Error works correctly
             vm.expectRevert(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__TokenTransferFailed
-                    .selector
+                abi.encodeWithSelector(
+                    IERC20Errors.ERC20InsufficientBalance.selector,
+                    _fundingManager,
+                    _token.balanceOf(address(_fundingManager)),
+                    order.amount - _token.balanceOf(address(paymentClient))
+                )
             );
             paymentClient.originalEnsureTokenBalance(address(_token));
-
-            _orchestrator.setExecuteTxBoolReturn(true);
-
-            paymentClient.originalEnsureTokenBalance(address(_token));
-
-            // callback from orchestrator to transfer tokens has to be in this form
-            assertEq(
-                abi.encodeCall(
-                    IFundingManager_v1.transferOrchestratorToken,
-                    (address(paymentClient), amountRequired - currentFunds)
-                ),
-                _orchestrator.executeTxData()
-            );
         }
     }
 

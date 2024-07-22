@@ -120,7 +120,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         )
     {
         return _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
     }
 
@@ -147,5 +147,12 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function setProjectCollateralFeeCollectedHelper(uint _amount) external {
         projectCollateralFeeCollected = _amount;
+    }
+
+    function call_ensureNonZeroTradeParameters(
+        uint _depositAmount,
+        uint _minAmountOut
+    ) external pure {
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
     }
 }

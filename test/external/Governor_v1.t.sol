@@ -18,6 +18,8 @@ import {InverterBeaconV1OwnableMock} from
 // External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
+import {Clones} from "@oz/proxy/Clones.sol";
+
 contract GovernorV1Test is Test {
     // SuT
     Governor_v1 gov;
@@ -57,7 +59,8 @@ contract GovernorV1Test is Test {
     event OwnershipAccepted(address adr);
 
     function setUp() public {
-        gov = new Governor_v1();
+        address impl = address(new Governor_v1());
+        gov = Governor_v1(Clones.clone(impl));
         gov.init(
             communityMultisig,
             teamMultisig,
@@ -248,7 +251,8 @@ contract GovernorV1Test is Test {
             makeAddr("FeeManager")
         );
 
-        gov = new Governor_v1();
+        address impl = address(new Governor_v1());
+        gov = Governor_v1(Clones.clone(impl));
         // validAddress(newCommunityMultisig)
         vm.expectRevert(
             abi.encodeWithSelector(
