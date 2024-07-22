@@ -99,7 +99,6 @@ testScripts: # Run e2e test suite
 
 	## fundingManager
 	@forge script script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol
-	@forge script script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol
 	
 	## authorizer
 	@forge script script/modules/authorizer/DeployAUT_Role_v1.s.sol
@@ -119,7 +118,7 @@ testScripts: # Run e2e test suite
 	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol
 
 	## setup
-	@forge script script/setup/SetupToyOrchestratorScript.s.sol
+	# @forge script script/setup/SetupToyOrchestratorScript.s.sol
 
 	## Deployment
 	@forge script script/deployment/DeploymentScript.s.sol

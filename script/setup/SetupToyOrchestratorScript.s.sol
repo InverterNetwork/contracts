@@ -7,6 +7,16 @@ import "forge-std/Test.sol";
 import "../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+
 import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -16,7 +26,6 @@ import {
     LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {ScriptConstants} from "../script-constants.sol";
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract SetupToyOrchestratorScript is Test, DeploymentScript {
     ScriptConstants scriptConstants = new ScriptConstants();
@@ -42,6 +51,28 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
 
     address[] initialAuthorizedAddresses;
 
+    // NOTE: In case the script should be run on a chain WITHOUT an already deployed formula or collateral token,
+    //       comment the following lines and uncomment the pre-steps in the run() function
+
+    address bancorFormulaAddress = vm.envAddress("BANCOR_FORMULA_ADDRESS");
+    BancorFormula formula = BancorFormula(bancorFormulaAddress);
+
+    // ========================================================================
+    // BONDING CURVE PARAMETERS
+
+    string CURVE_TOKEN_NAME = "Bonding Curve Issuance Token";
+    string CURVE_TOKEN_SYMBOL = "BCRG";
+    uint8 CURVE_TOKEN_DECIMALS = 18;
+
+    uint32 RESERVE_RATIO_FOR_BUYING = 333_333;
+    uint32 RESERVE_RATIO_FOR_SELLING = 333_333;
+    uint BUY_FEE = 0;
+    uint SELL_FEE = 100;
+    bool BUY_IS_OPEN = true;
+    bool SELL_IS_OPEN = false;
+    uint INITIAL_ISSUANCE_SUPPLY = 100;
+    uint INITIAL_COLLATERAL_SUPPLY = 33;
+
     //-------------------------------------------------------------------------
     // Script
 
@@ -49,10 +80,19 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // ------------------------------------------------------------------------
         // Setup
 
-        // First we deploy a mock ERC20 to act as funding token for the orchestrator. It has a public mint function.
+        // If there's no formula or token deployment on the chain, we deploy them
         vm.startBroadcast(orchestratorAdminPrivateKey);
         {
+            formula = new BancorFormula();
+            console2.log(
+                "\t-Bancor Bonding Curve Formula deployed at address: %s ",
+                address(formula)
+            );
+            //!!!! This is not a real ERC20 implementation. Before going into production change this deployment!!!!
             token = new ERC20Mock("Inverter USD", "iUSD");
+            console2.log(
+                "\t-Inverter Mock USD Deployed at address: %s ", address(token)
+            );
         }
         vm.stopBroadcast();
         // token = ERC20Mock(0x5eb14c2e7D0cD925327d74ae4ce3fC692ff8ABEF);
@@ -73,11 +113,41 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             independentUpdateAdmin: address(0)
         });
 
-        // Funding Manager: Metadata, token address
-        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
-        IOrchestratorFactory_v1.ModuleConfig(
-            rebasingFundingManagerMetadata, abi.encode(address(token))
-        );
+        // Funding Manager: Issunaance Token, Bonding Curve Metadata, collateral token address
+        IBondingCurveBase_v1.IssuanceToken memory buf_issuanceToken =
+        IBondingCurveBase_v1.IssuanceToken({
+            name: CURVE_TOKEN_NAME,
+            symbol: CURVE_TOKEN_SYMBOL,
+            decimals: CURVE_TOKEN_DECIMALS,
+            maxSupply: type(uint).max
+        });
+
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            buf_bondingCurveProperties =
+            IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties({
+                formula: address(formula),
+                reserveRatioForBuying: RESERVE_RATIO_FOR_BUYING,
+                reserveRatioForSelling: RESERVE_RATIO_FOR_SELLING,
+                buyFee: BUY_FEE,
+                sellFee: SELL_FEE,
+                buyIsOpen: BUY_IS_OPEN,
+                sellIsOpen: SELL_IS_OPEN,
+                initialIssuanceSupply: INITIAL_ISSUANCE_SUPPLY,
+                initialCollateralSupply: INITIAL_COLLATERAL_SUPPLY
+            });
+
+        // Funding Manager: Virtual Supply Bonding Curve Funding Manager
+        IOrchestratorFactory_v1.ModuleConfig memory
+            bondingCurveFundingManagerConfig = IOrchestratorFactory_v1
+                .ModuleConfig(
+                bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                abi.encode(
+                    buf_issuanceToken,
+                    orchestratorAdmin,
+                    buf_bondingCurveProperties,
+                    address(token)
+                )
+            );
 
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
@@ -109,7 +179,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
             test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
                 workflowConfig,
-                fundingManagerFactoryConfig,
+                bondingCurveFundingManagerConfig,
                 authorizerFactoryConfig,
                 paymentProcessorFactoryConfig,
                 additionalModuleConfig
@@ -200,8 +270,10 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
         // It's best, if the admin deposits them right after deployment.
 
         // Initial Deposit => 10e18;
-        FM_Rebasing_v1 fundingManager =
-            FM_Rebasing_v1(address(test_orchestrator.fundingManager()));
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+            address(test_orchestrator.fundingManager())
+        );
 
         vm.startBroadcast(orchestratorAdminPrivateKey);
         {
@@ -215,8 +287,8 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
                 scriptConstants.orchestratorTokenDepositAmount()
             );
 
-            fundingManager.deposit(
-                scriptConstants.orchestratorTokenDepositAmount()
+            fundingManager.buy(
+                scriptConstants.orchestratorTokenDepositAmount(), 1
             );
         }
         vm.stopBroadcast();
@@ -230,7 +302,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
                 address(fundingManager),
                 scriptConstants.funder1TokenDepositAmount()
             );
-            fundingManager.deposit(scriptConstants.funder1TokenDepositAmount());
+            fundingManager.buy(scriptConstants.funder1TokenDepositAmount(), 1);
         }
         vm.stopBroadcast();
         console2.log("\t -Funder 1: Deposit Performed");
