@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {AUT_EXT_VotingRoles_v1} from
-    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+    "src/modules/authorizer/role/AUT_EXT_VotingRoles_v1.sol";
 
 /**
  * @title AUT_EXT_VotingRoles_v1 Deployment Script

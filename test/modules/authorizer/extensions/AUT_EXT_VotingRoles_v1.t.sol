@@ -8,7 +8,7 @@ import "forge-std/console.sol";
 import {
     AUT_EXT_VotingRoles_v1,
     IAUT_EXT_VotingRoles_v1
-} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+} from "src/modules/authorizer/role/AUT_EXT_VotingRoles_v1.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

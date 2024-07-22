@@ -18,7 +18,7 @@ import {
 import {
     AUT_EXT_VotingRoles_v1,
     IAUT_EXT_VotingRoles_v1
-} from "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+} from "src/modules/authorizer/role/AUT_EXT_VotingRoles_v1.sol";
 
 contract VotingRoleManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
