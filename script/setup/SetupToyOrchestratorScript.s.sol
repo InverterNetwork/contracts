@@ -287,7 +287,9 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
                 scriptConstants.orchestratorTokenDepositAmount()
             );
 
-            fundingManager.buy(scriptConstants.orchestratorTokenDepositAmount());
+            fundingManager.buy(
+                scriptConstants.orchestratorTokenDepositAmount(), 1
+            );
         }
         vm.stopBroadcast();
         console2.log("\t -Initialization Funding Done");
@@ -300,7 +302,7 @@ contract SetupToyOrchestratorScript is Test, DeploymentScript {
                 address(fundingManager),
                 scriptConstants.funder1TokenDepositAmount()
             );
-            fundingManager.buy(scriptConstants.funder1TokenDepositAmount());
+            fundingManager.buy(scriptConstants.funder1TokenDepositAmount(), 1);
         }
         vm.stopBroadcast();
         console2.log("\t -Funder 1: Deposit Performed");
