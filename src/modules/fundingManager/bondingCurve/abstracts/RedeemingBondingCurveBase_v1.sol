@@ -114,7 +114,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
         virtual
         returns (uint redeemAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        // Set min amount out to 1 for price calculation
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
 
         // Get protocol fee percentages
         (
@@ -125,7 +126,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         // Deduct protocol sell fee from issuance, if applicable
@@ -191,7 +192,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         internal
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
         // Get protocol fee percentages and treasury addresses
         (
             address collateralTreasury,
@@ -199,7 +200,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             uint collateralSellFeePercentage,
             uint issuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_sellOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         uint protocolFeeAmount;
@@ -257,7 +258,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
         // Transfer tokens to receiver
-        collateralToken.transfer(_receiver, collateralRedeemAmount);
+        collateralToken.safeTransfer(_receiver, collateralRedeemAmount);
         // Emit event
         emit TokensSold(
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()

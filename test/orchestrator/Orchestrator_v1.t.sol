@@ -253,6 +253,40 @@ contract OrchestratorV1Test is Test {
         );
     }
 
+    function testExecuteSetAuthorizer_FailsIfWrongModuleType(
+        uint orchestratorId,
+        uint moduleAmount
+    ) public {
+        types.assumeValidOrchestratorId(orchestratorId);
+
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        // Create new authorizer module
+        address newAuthorizer = address(0x8888);
+
+        // set the new payment processor module. First the verification function reverts, then the setter.
+        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                newAuthorizer
+            )
+        );
+        orchestrator.executeSetAuthorizer(IAuthorizer_v1(newAuthorizer));
+        assertTrue(orchestrator.authorizer() == authorizer);
+    }
+
     function testInitiateSetAuthorizerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
@@ -365,6 +399,43 @@ contract OrchestratorV1Test is Test {
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 
+    function testExecuteSetFundingManager_FailsIfWrongModuleType(
+        uint orchestratorId,
+        uint moduleAmount
+    ) public {
+        types.assumeValidOrchestratorId(orchestratorId);
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+        FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
+            IERC20(address(0xA11CE))
+        );
+
+        // Create new funding manager module
+        address newFundingManager = address(0x8888);
+
+        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                newFundingManager
+            )
+        );
+        orchestrator.executeSetFundingManager(
+            IFundingManager_v1(newFundingManager)
+        );
+        assertTrue(orchestrator.fundingManager() == fundingManager);
+    }
+
     function testInitiateAndExecuteSetFundingManager_failsIfMismatchedTokens(
         uint orchestratorId,
         uint moduleAmount
@@ -466,6 +537,42 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.initiateSetPaymentProcessorWithTimelock(
+            IPaymentProcessor_v1(newPaymentProcessor)
+        );
+
+        assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
+    }
+
+    function testExecuteSetPaymentProcessor_FailsIfWrongModuleType(
+        uint orchestratorId,
+        uint moduleAmount
+    ) public {
+        types.assumeValidOrchestratorId(orchestratorId);
+        // Initialize orchestrator.
+        orchestrator.init(
+            orchestratorId,
+            address(moduleFactory),
+            createModules(moduleAmount),
+            fundingManager,
+            authorizer,
+            paymentProcessor,
+            governor
+        );
+
+        authorizer.setIsAuthorized(address(this), true);
+
+        // Create new payment processor module
+        address newPaymentProcessor = address(0x8888);
+
+        // set the new payment processor module. First the verification function reverts, then the setter.
+        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOrchestrator_v1.Orchestrator__InvalidModuleType.selector,
+                newPaymentProcessor
+            )
+        );
+        orchestrator.executeSetPaymentProcessor(
             IPaymentProcessor_v1(newPaymentProcessor)
         );
 
@@ -621,92 +728,6 @@ contract OrchestratorV1Test is Test {
                 .selector
         );
         orchestrator.executeRemoveModule(currentPaymentProcessor);
-    }
-
-    //--------------------------------------------------------------------------
-    // Tests: Transaction Execution
-
-    function testExecuteTx(uint orchestratorId, uint moduleAmount) public {
-        types.assumeValidOrchestratorId(orchestratorId);
-
-        // Initialize orchestrator.
-        orchestrator.init(
-            orchestratorId,
-            address(moduleFactory),
-            createModules(moduleAmount),
-            fundingManager,
-            authorizer,
-            paymentProcessor,
-            governor
-        );
-        authorizer.setIsAuthorized(address(this), true);
-
-        bytes memory returnData = orchestrator.executeTx(
-            address(this), abi.encodeWithSignature("ok()")
-        );
-        assertTrue(abi.decode(returnData, (bool)));
-    }
-
-    function testExecuteTxFailsIfCallFails(
-        uint orchestratorId,
-        uint moduleAmount
-    ) public {
-        types.assumeValidOrchestratorId(orchestratorId);
-
-        // Initialize orchestrator.
-        orchestrator.init(
-            orchestratorId,
-            address(moduleFactory),
-            createModules(moduleAmount),
-            fundingManager,
-            authorizer,
-            paymentProcessor,
-            governor
-        );
-
-        authorizer.setIsAuthorized(address(this), true);
-
-        vm.expectRevert(IOrchestrator_v1.Orchestrator__ExecuteTxFailed.selector);
-        orchestrator.executeTx(
-            address(this), abi.encodeWithSignature("fails()")
-        );
-    }
-
-    function testExecuteTxFailsIfCallerNotAuthorized(
-        uint orchestratorId,
-        uint moduleAmount
-    ) public {
-        types.assumeValidOrchestratorId(orchestratorId);
-
-        // Initialize orchestrator.
-        orchestrator.init(
-            orchestratorId,
-            address(moduleFactory),
-            createModules(moduleAmount),
-            fundingManager,
-            authorizer,
-            paymentProcessor,
-            governor
-        );
-
-        authorizer.setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IOrchestrator_v1.Orchestrator__CallerNotAuthorized.selector,
-                authorizer.getAdminRole(),
-                address(this)
-            )
-        );
-        orchestrator.executeTx(address(this), abi.encodeWithSignature("ok()"));
-    }
-
-    function ok() public pure returns (bool) {
-        return true;
-    }
-
-    function fails() public pure {
-        revert("failed");
     }
 
     //--------------------------------------------------------------------------

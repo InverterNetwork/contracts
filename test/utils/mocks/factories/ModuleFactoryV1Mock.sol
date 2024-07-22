@@ -13,11 +13,14 @@ import {
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+
 import {FundingManagerV1Mock} from
     "test/utils/mocks/modules/FundingManagerV1Mock.sol";
 import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+
+import {Clones} from "@oz/proxy/Clones.sol";
 
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
@@ -36,7 +39,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         1, 1, 0, "https://paymentprocessor.com", "PP_Simple_v1"
     );
 
-    function createModule(
+    function createAndInitModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1,
         bytes memory,
@@ -61,6 +64,14 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
         } else {
             return address(new ModuleV1Mock());
         }
+    }
+
+    function createModuleProxy(
+        IModule_v1.Metadata memory,
+        IOrchestrator_v1,
+        IOrchestratorFactory_v1.WorkflowConfig memory
+    ) external returns (address) {
+        return Clones.clone(address(new ModuleV1Mock()));
     }
 
     function getBeaconAndId(IModule_v1.Metadata memory metadata)

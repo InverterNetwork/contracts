@@ -19,6 +19,9 @@ import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol"
 
 import {IPP_Streaming_v1} from "@pp/interfaces/IPP_Streaming_v1.sol";
 
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 contract StreamingPaymentProcessorE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
@@ -102,17 +105,32 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
         fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        recurringPaymentManager = LM_PC_RecurringPayments_v1(
-            orchestrator.findModuleAddressInOrchestrator(
-                "LM_PC_RecurringPayments_v1"
-            )
-        );
+        address[] memory modulesList = orchestrator.listModules();
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
+                    type(ILM_PC_RecurringPayments_v1).interfaceId
+                )
+            ) {
+                recurringPaymentManager =
+                    LM_PC_RecurringPayments_v1(modulesList[i]);
+                break;
+            }
+        }
+
         // check if the recurringPaymentManager is initialized correctly or not.
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
-        streamingPaymentProcessor = PP_Streaming_v1(
-            orchestrator.findModuleAddressInOrchestrator("PP_Streaming_v1")
-        );
+        for (uint i; i < modulesList.length; ++i) {
+            if (
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
+                    type(IPP_Streaming_v1).interfaceId
+                )
+            ) {
+                streamingPaymentProcessor = PP_Streaming_v1(modulesList[i]);
+                break;
+            }
+        }
 
         // deposit some funds to fundingManager
         uint initialDeposit = 10e22;

@@ -42,6 +42,9 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given amount invalid.
     error Module__ERC20PaymentClientBase__InvalidAmount();
 
+    /// @notice Given paymentOrder is invalid.
+    error Module__ERC20PaymentClientBase__InvalidPaymentOrder();
+
     /// @notice Given end invalid.
     error Module__ERC20PaymentClientBase__Invalidend();
 

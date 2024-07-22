@@ -22,17 +22,6 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IFundingManager_v1 public fundingManager;
     IGovernor_v1 public governor;
 
-    bool public executeTxBoolReturn;
-    bytes public executeTxData;
-
-    function executeTxFromModule(address, bytes memory data)
-        external
-        returns (bool, bytes memory)
-    {
-        executeTxData = data;
-        return (executeTxBoolReturn, bytes(""));
-    }
-
     function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external {}
 
     function cancelPaymentProcessorUpdate(
@@ -106,11 +95,6 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         paymentProcessor = paymentProcessor_;
     }
 
-    function executeTx(address target, bytes memory data)
-        external
-        returns (bytes memory)
-    {}
-
     function orchestratorId() external view returns (uint) {}
 
     function authorizer() external view returns (IAuthorizer_v1) {}
@@ -118,12 +102,6 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     function version() external pure returns (string memory) {}
 
     function manager() external view returns (address) {}
-
-    function findModuleAddressInOrchestrator(string calldata moduleName)
-        external
-        view
-        returns (address)
-    {}
 
     function verifyAddressIsPaymentProcessor(address paymentProcessorAddress)
         external
@@ -159,11 +137,5 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     // Mock Helper Functions
     function setToken(IERC20 token_) external {
         token = token_;
-    }
-
-    function setExecuteTxBoolReturn(
-        bool boo //<--- this is a scary function
-    ) external {
-        executeTxBoolReturn = boo;
     }
 }

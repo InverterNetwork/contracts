@@ -55,6 +55,14 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @notice The user cannot stake while an assertion is unresolved
     error Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending();
 
+    /// @notice Callback received references non existent assertionId
+    error Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+        bytes32 assertionId
+    );
+
+    /// @notice The assertion that is being removed was not stuck
+    error Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(bytes32 assertionId);
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -77,6 +85,9 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
     event FeeFundsDeposited(address indexed token, uint amount);
+
+    /// @notice Event emitted when a stuck assertion gets deleted
+    event DeletedStuckAssertion(bytes32 indexed assertionId);
 
     //--------------------------------------------------------------------------
     // Functions

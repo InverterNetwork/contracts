@@ -77,7 +77,7 @@ contract deployAndSwitchTokenAuthorizer is Script {
         vm.startBroadcast(orchestratorAdminPrivateKey);
 
         // moduleFactory -> create Module
-        address deployedAuthorizerAddress = moduleFactory.createModule(
+        address deployedAuthorizerAddress = moduleFactory.createAndInitModule(
             authorizerMetadata,
             IOrchestrator_v1(orchestrator),
             authorizerFactoryConfig.configData,

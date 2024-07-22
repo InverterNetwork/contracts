@@ -2,16 +2,16 @@
 pragma solidity ^0.8.0;
 
 import
-    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptToken_v1.t.sol";
+    "test/modules/fundingManager/rebasing/abstracts/ElasticReceiptTokenBase_v1.t.sol";
 
 /**
  * @dev Simulation to Test rhAmple's Transfer Precision.
  *
  *      Tests the following invariant:
  *
- *      If address A transfers x ertbs to address B, A's resulting external
- *      balance decreased by precisely x ertbs and B's external balance
- *      increased by precisely x ertbs.
+ *      If address A transfers x erts to address B, A's resulting external
+ *      balance decreased by precisely x erts and B's external balance
+ *      increased by precisely x erts.
  *
  *      To run the simulation, adjust the following two constants:
  *
@@ -25,7 +25,7 @@ import
  *              or contract from MAX_SUPPLY to 1.
  *
  */
-contract SimulateTransferPrecision is ElasticReceiptTokenV1Test {
+contract SimulateTransferPrecision is ElasticReceiptTokenBaseV1Test {
     // The granularity by which the supply should be adjusted in each iteration.
     // Should not be zero due to div by zero at compile time.
     uint constant MAX_ITERATIONS = 1;
@@ -58,17 +58,17 @@ contract SimulateTransferPrecision is ElasticReceiptTokenV1Test {
 
         // Users give infinite approval of mock tokens to downstream contract.
         vm.prank(u1);
-        underlier.approve(address(ertb), type(uint).max);
+        underlier.approve(address(ert), type(uint).max);
         vm.prank(u2);
-        underlier.approve(address(ertb), type(uint).max);
+        underlier.approve(address(ert), type(uint).max);
 
-        // Users give infinite approval of ertbs to this contract.
+        // Users give infinite approval of erts to this contract.
         vm.prank(u1);
-        ertb.approve(address(this), type(uint).max);
+        ert.approve(address(this), type(uint).max);
         vm.prank(u2);
-        ertb.approve(address(this), type(uint).max);
+        ert.approve(address(this), type(uint).max);
 
-        // User 1 receives currentSupply of ertbs.
+        // User 1 receives currentSupply of erts.
         mintToUser(u1, currentSupply);
 
         uint iteration;
@@ -98,29 +98,29 @@ contract SimulateTransferPrecision is ElasticReceiptTokenV1Test {
             // Mint/Burn nextSupplyChange of underlier tokens to downstream
             // contract to simulate expansion/contraction and execute rebase.
             if (SIMULATE_EXPANSION) {
-                underlier.mint(address(ertb), nextSupplyChange);
+                underlier.mint(address(ert), nextSupplyChange);
             } else {
-                underlier.burn(address(ertb), nextSupplyChange);
+                underlier.burn(address(ert), nextSupplyChange);
             }
-            ertb.rebase();
+            ert.rebase();
 
-            // Cache balance, send 1e-9 ertb back and forth,
+            // Cache balance, send 1e-9 ert back and forth,
             // and check if balance is same afterwards.
-            uint balanceU1 = ertb.balanceOf(u1);
-            uint balanceU2 = ertb.balanceOf(u2);
-            ertb.transferFrom(u1, u2, 1);
-            ertb.transferFrom(u2, u1, 1);
-            assertEq(balanceU1, ertb.balanceOf(u1));
-            assertEq(balanceU2, ertb.balanceOf(u2));
+            uint balanceU1 = ert.balanceOf(u1);
+            uint balanceU2 = ert.balanceOf(u2);
+            ert.transferFrom(u1, u2, 1);
+            ert.transferFrom(u2, u1, 1);
+            assertEq(balanceU1, ert.balanceOf(u1));
+            assertEq(balanceU2, ert.balanceOf(u2));
 
-            // Cache balance, send whole ertb balance back and forth,
+            // Cache balance, send whole ert balance back and forth,
             // and check if balance is same afterwards.
-            balanceU1 = ertb.balanceOf(u1);
-            balanceU2 = ertb.balanceOf(u2);
-            ertb.transferFrom(u1, u2, ertb.balanceOf(u1));
-            ertb.transferFrom(u2, u1, ertb.balanceOf(u2));
-            assertEq(balanceU1, ertb.balanceOf(u1));
-            assertEq(balanceU2, ertb.balanceOf(u2));
+            balanceU1 = ert.balanceOf(u1);
+            balanceU2 = ert.balanceOf(u2);
+            ert.transferFrom(u1, u2, ert.balanceOf(u1));
+            ert.transferFrom(u2, u1, ert.balanceOf(u2));
+            assertEq(balanceU1, ert.balanceOf(u1));
+            assertEq(balanceU2, ert.balanceOf(u2));
         }
     }
 }

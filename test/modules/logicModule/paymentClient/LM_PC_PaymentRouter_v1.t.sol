@@ -133,11 +133,6 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
 contract LM_PC_PaymentRouter_v1_Test_pushPayment is
     LM_PC_PaymentRouter_v1_Test
 {
-    modifier whenTheCallerHasThePAYMENT_PUSHER_ROLE() {
-        vm.startPrank(paymentPusher_user);
-        _;
-    }
-
     function test_WhenTheCallerDoesntHaveThePAYMENT_PUSHER_ROLE(address caller)
         external
     {
@@ -156,86 +151,6 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
         );
         paymentRouter.pushPayment(address(0), address(0), 0, 0, 0, 0);
         vm.stopPrank();
-    }
-
-    function test_WhenTheRecipientIsIncorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should revert with the corresponding error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidRecipient
-                    .selector
-            )
-        );
-        paymentRouter.pushPayment(
-            address(0), po_paymentToken, po_amount, po_start, po_cliff, po_end
-        );
-    }
-
-    function test_WhenThePaymentTokenIsIncorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should revert with the corresponding error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidToken
-                    .selector
-            )
-        );
-        paymentRouter.pushPayment(
-            po_recipient, address(0), po_amount, po_start, po_cliff, po_end
-        );
-    }
-
-    function test_WhenTheAmountIsIncorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should revert with the corresponding error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidAmount
-                    .selector
-            )
-        );
-        paymentRouter.pushPayment(
-            po_recipient, po_paymentToken, 0, po_start, po_cliff, po_end
-        );
-    }
-
-    function test_WhenThePaymentOrderIsCorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should add the Payment Order to the array of Payment Orders
-        // It should emit an event
-        // It should call processPayments
-        // It should emit an event
-
-        uint paymentsTriggeredBefore =
-            _paymentProcessor.processPaymentsTriggered();
-
-        vm.expectEmit(true, true, true, true);
-        emit PaymentOrderAdded(po_recipient, po_paymentToken, po_amount);
-        vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(
-            address(0), address(0), address(0), 0, 0, 0, 0
-        ); // since we are using a mock.
-
-        paymentRouter.pushPayment(
-            po_recipient, po_paymentToken, po_amount, po_start, po_cliff, po_end
-        );
-
-        assertEq(
-            _paymentProcessor.processPaymentsTriggered(),
-            paymentsTriggeredBefore + 1
-        );
     }
 }
 

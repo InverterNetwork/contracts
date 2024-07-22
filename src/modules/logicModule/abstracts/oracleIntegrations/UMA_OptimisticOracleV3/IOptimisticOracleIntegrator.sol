@@ -50,6 +50,9 @@ interface IOptimisticOracleIntegrator is
     /// @notice Bond given for the specified currency is below minimum
     error Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
 
+    /// @notice Asserter holds insufficient funds to pay for bond
+    error Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond();
+
     //==========================================================================
     // Functions
 

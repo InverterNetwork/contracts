@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 
 // Internal Dependencies
 import {ModuleTest, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
-import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
+import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 
@@ -237,7 +237,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_KPIRewarder_v1).interfaceId
                 )
             ) {

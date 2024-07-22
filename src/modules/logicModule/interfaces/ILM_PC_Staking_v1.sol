@@ -4,7 +4,7 @@ interface ILM_PC_Staking_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Given stakinng token address is invalid.
+    /// @notice Given staking token address is invalid.
     error Module__LM_PC_Staking_v1__InvalidStakingToken();
 
     /// @notice Given Duration is invalid.

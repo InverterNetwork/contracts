@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";

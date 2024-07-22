@@ -32,6 +32,8 @@ import {FundingManagerV1Mock} from
 import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -354,5 +356,36 @@ contract ModuleBaseV1Test is ModuleTest {
             // If not it should be full data without the clipping
             assertEq(perceivedData, metaTxCallData);
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // Modifier
+
+    /* Test modifier onlyPaymentClient
+        ├── given the caller is not a PaymentClient
+        │   └── when the function modifierOnlyPaymentClientCheck() gets called
+        │       └── then it should revert
+        └── given the caller is a PaymentClient module
+            └── and the PaymentClient module is not registered in the Orchestrator
+                └── when the function modifierOnlyPaymentClientCheck() gets called
+                    └── then it should revert
+    */
+
+    function testOnlyPaymentClientModifier_worksGivenCallerIsNotPaymentClient(
+        address _notPaymentClient
+    ) public {
+        vm.prank(address(_notPaymentClient));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        module.modifierOnlyPaymentClientCheck();
+    }
+
+    function testOnlyPaymentClientModifier_worksGivenCallerIsPaymentClientButNotRegisteredModule(
+    ) public {
+        ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock =
+            new ERC20PaymentClientBaseV1Mock();
+
+        vm.prank(address(_erc20PaymentClientMock));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        module.modifierOnlyPaymentClientCheck();
     }
 }

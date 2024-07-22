@@ -15,15 +15,13 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 import {FM_Rebasing_v1} from
     "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 // SuT
-import {
-    LM_PC_Staking_v1,
-    ILM_PC_Staking_v1,
-    ERC165
-} from "@lm/LM_PC_Staking_v1.sol";
+import {LM_PC_Staking_v1, ILM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
 // import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -132,7 +130,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_Staking_v1).interfaceId
                 )
             ) {

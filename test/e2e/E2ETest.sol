@@ -77,10 +77,22 @@ contract E2ETest is E2EModuleRegistry {
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
-        feeManager = new FeeManager_v1();
+        // Deploy the Fee Manager
+
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    communityMultisig, // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
+
         feeManager.init(address(this), treasury, 0, 0);
 
         // Deploy Governance Contract
+
         gov = Governor_v1(
             address(
                 new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
@@ -92,9 +104,6 @@ contract E2ETest is E2EModuleRegistry {
         );
 
         gov.init(communityMultisig, teamMultisig, 1 weeks, address(feeManager));
-
-        vm.prank(communityMultisig);
-        gov.setFeeManager(address(feeManager));
 
         // Deploy a Mock funding token for testing.
 
@@ -116,9 +125,21 @@ contract E2ETest is E2EModuleRegistry {
             address(reverter), address(gov), 1, address(orchestratorImpl), 0, 0
         ); //@note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
 
-        // Deploy Factories.
-        moduleFactory =
+        // Deploy ModuleFactory_v1 implementation.
+        ModuleFactory_v1 moduleFactoryImpl =
             new ModuleFactory_v1(address(reverter), address(forwarder));
+
+        InverterBeacon_v1 moduleFactoryBeacon = new InverterBeacon_v1(
+            address(reverter), address(gov), 1, address(moduleFactoryImpl), 0, 0
+        );
+
+        moduleFactory = ModuleFactory_v1(
+            address(
+                new InverterBeaconProxy_v1(
+                    InverterBeacon_v1(moduleFactoryBeacon)
+                )
+            )
+        );
         moduleFactory.init(
             address(gov),
             new IModule_v1.Metadata[](0),
@@ -174,7 +195,6 @@ contract E2ETest is E2EModuleRegistry {
         }
 
         // Create orchestrator
-
         return orchestratorFactory.createOrchestrator(
             _config,
             _moduleConfigurations[0],

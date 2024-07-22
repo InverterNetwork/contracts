@@ -1,8 +1,9 @@
 pragma solidity ^0.8.0;
 
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
-contract BancorFormulaMock is IBancorFormula {
+contract BancorFormulaMock is IBancorFormula, ERC165 {
     function calculatePurchaseReturn(
         uint _supply,
         uint _connectorBalance,
