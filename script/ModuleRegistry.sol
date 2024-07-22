@@ -56,8 +56,6 @@ import {DeployModuleFactory_v1} from
     "script/factories/DeployModuleFactory_v1.s.sol";
 import {DeployOrchestratorFactory_v1} from
     "script/factories/DeployOrchestratorFactory_v1.s.sol";
-import {DeployLM_PC_Bounties_v1} from
-    "script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol";
 
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
 import {DeployFeeManager_v1} from "script/external/DeployFeeManager_v1.s.sol";
@@ -67,28 +65,6 @@ import {DeployTransactionForwarder_v1} from
     "script/external/DeployTransactionForwarder_v1.s.sol";
 import {DeployOrchestrator_v1} from
     "script/orchestrator/DeployOrchestrator_v1.s.sol";
-import {DeployPP_Simple_v1} from
-    "script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol";
-import {DeployFM_Rebasing_v1} from
-    "script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol";
-import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
-import {DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "script/modules/fundingManager/DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.s.sol";
-import {DeployAUT_Role_v1} from
-    "script/modules/authorizer/DeployAUT_Role_v1.s.sol";
-import {DeployAUT_TokenGated_Role_v1} from
-    "script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol";
-import {DeployPP_Streaming_v1} from
-    "script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol";
-import {DeployLM_PC_RecurringPayments_v1} from
-    "script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol";
-import {DeployLM_PC_PaymentRouter_v1} from
-    "script/modules/logicModule/DeployLM_PC_PaymentRouter_v1.s.sol";
-import {DeployLM_PC_KPIRewarder_v1} from
-    "script/modules/logicModule/DeployLM_PC_KPIRewarder.s.sol";
-import {DeployAUT_EXT_VotingRoles_v1} from
-    "script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol";
 
 //--------------------------------------------------------------------------
 // General Module Registry Information
@@ -248,9 +224,6 @@ contract ModuleRegistry is Script {
 
     // Bancor Virtual Supply Bonding Curve Funding Manager
     address FM_BC_Bancor_Redeeming_VirtualSupply_v1_Implementation;
-    DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1
-        deployBancorVirtualSupplyBondingCurveFundingManager =
-            new DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1();
     IModule_v1.Metadata FM_BC_Bancor_Redeeming_VirtualSupply_v1_Metadata =
     IModule_v1.Metadata(
         1,
@@ -262,9 +235,6 @@ contract ModuleRegistry is Script {
 
     // Restricted Bancor Virtual Supply Bonding Curve Funding Manager
     address FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Implementation;
-    DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
-        deployRestrictedBancorVirtualSupplyBondingCurveFundingManager =
-            new DeployFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1();
     IModule_v1.Metadata
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata = IModule_v1
             .Metadata(
@@ -279,7 +249,6 @@ contract ModuleRegistry is Script {
     // -----------------------------------------------------------------------------
     // RoleAuthorizer
     address AUT_Roles_v1_Implementation;
-    DeployAUT_Role_v1 deployRoleAuthorizer = new DeployAUT_Role_v1();
     IModule_v1.Metadata AUT_Roles_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -290,8 +259,6 @@ contract ModuleRegistry is Script {
 
     // TokenGated RoleAuthorizer
     address AUT_TokenGated_Roles_v1_Implementation;
-    DeployAUT_TokenGated_Role_v1 deployTokenGatedRoleAuthorizer =
-        new DeployAUT_TokenGated_Role_v1();
     IModule_v1.Metadata AUT_TokenGated_Roles_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -302,8 +269,6 @@ contract ModuleRegistry is Script {
 
     // Single Vote Governor
     address AUT_EXT_VotingRoles_v1_Implementation;
-    DeployAUT_EXT_VotingRoles_v1 deploySingleVoteGovernor =
-        new DeployAUT_EXT_VotingRoles_v1();
     IModule_v1.Metadata AUT_EXT_VotingRoles_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -316,7 +281,6 @@ contract ModuleRegistry is Script {
     // -----------------------------------------------------------------------------
     // Simple Payment Processor
     address PP_Simple_v1_Implementation;
-    DeployPP_Simple_v1 deploySimplePaymentProcessor = new DeployPP_Simple_v1();
     IModule_v1.Metadata PP_Simple_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -327,8 +291,6 @@ contract ModuleRegistry is Script {
 
     // Streaming Payment Processor
     address PP_Streaming_v1_Implementation;
-    DeployPP_Streaming_v1 deployStreamingPaymentProcessor =
-        new DeployPP_Streaming_v1();
     IModule_v1.Metadata PP_Streaming_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -342,7 +304,6 @@ contract ModuleRegistry is Script {
 
     // Bounty Manager
     address LM_PC_Bounties_v1_Implementation;
-    DeployLM_PC_Bounties_v1 deployBountyManager = new DeployLM_PC_Bounties_v1();
     IModule_v1.Metadata LM_PC_Bounties_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -353,8 +314,6 @@ contract ModuleRegistry is Script {
 
     // Recurring Payment Manager
     address LM_PC_RecurringPayments_v1_Implementation;
-    DeployLM_PC_RecurringPayments_v1 deployRecurringPaymentManager =
-        new DeployLM_PC_RecurringPayments_v1();
     IModule_v1.Metadata LM_PC_RecurringPayments_v1_Metadata = IModule_v1
         .Metadata(
         1,
@@ -366,8 +325,6 @@ contract ModuleRegistry is Script {
 
     // Payment Router
     address LM_PC_PaymentRouter_v1_Implementation;
-    DeployLM_PC_PaymentRouter_v1 deployPaymentRouter =
-        new DeployLM_PC_PaymentRouter_v1();
     IModule_v1.Metadata LM_PC_PaymentRouter_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -378,8 +335,6 @@ contract ModuleRegistry is Script {
 
     // KPI Rewarder
     address LM_PC_KPIRewarder_v1_Implementation;
-    DeployLM_PC_KPIRewarder_v1 deployKPIRewarder =
-        new DeployLM_PC_KPIRewarder_v1();
     IModule_v1.Metadata LM_PC_KPIRewarder_v1_Metadata = IModule_v1.Metadata(
         1,
         0,
