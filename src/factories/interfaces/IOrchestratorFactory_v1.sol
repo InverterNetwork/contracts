@@ -41,7 +41,11 @@ interface IOrchestratorFactory_v1 {
     // Structs
 
     struct WorkflowConfig {
+        /// @dev bool wether the workflow should use the independent proxy structure
+        /// In case of true it will not use the standard beacon proxy structure
         bool independentUpdates;
+        /// @dev The address that will be assigned the admin role of the independent update proxy
+        /// Will be disregarded in case independentUpdates is false
         address independentUpdateAdmin;
     }
 
@@ -55,12 +59,15 @@ interface IOrchestratorFactory_v1 {
 
     /// @notice Creates a new orchestrator_v1.
     /// @param workflowConfig The workflow's config data.
+    /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1}
+    ///                         instance.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
     ///                         instance.
     /// @param paymentProcessorConfig The config data for the orchestrator's
     ///                               {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config
     ///                      data.
+    /// @return CreatedOrchestrator Returns the created orchestrator instance
     function createOrchestrator(
         WorkflowConfig memory workflowConfig,
         ModuleConfig memory fundingManagerConfig,
@@ -70,15 +77,19 @@ interface IOrchestratorFactory_v1 {
     ) external returns (IOrchestrator_v1);
 
     /// @notice Returns the {IOrchestrator_v1} beacon address.
+    /// @return OrchestratorImplementationBeacon The Beacon of the Orchestrator Implementation
     function beacon() external view returns (IInverterBeacon_v1);
 
     /// @notice Returns the {IModuleFactory_v1} implementation address.
+    /// @return ModuleFactoryAddress The address of the linked Module Factory
     function moduleFactory() external view returns (address);
 
     /// @notice Returns the {IOrchestrator_v1} address that corresponds to the given id.
     /// @param id The requested orchestrator's id.
+    /// @return orchestratorAddress The address of the corresponding orchestrator
     function getOrchestratorByID(uint id) external view returns (address);
 
     /// @notice Returns the counter of the current orchestrator id
+    /// @return id The id of the next created orchestrator
     function getOrchestratorIDCounter() external view returns (uint);
 }
