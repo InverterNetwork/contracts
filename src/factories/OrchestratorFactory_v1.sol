@@ -60,6 +60,7 @@ contract OrchestratorFactory_v1 is
     Ownable2StepUpgradeable,
     ERC165
 {
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -87,7 +88,7 @@ contract OrchestratorFactory_v1 is
     /// @dev Starts counting from 1.
     uint private _orchestratorIdCounter;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------------
@@ -222,13 +223,18 @@ contract OrchestratorFactory_v1 is
         return _orchestrators[id];
     }
 
+    /// @inheritdoc IOrchestratorFactory_v1
     function getOrchestratorIDCounter() external view returns (uint) {
         return _orchestratorIdCounter;
     }
 
+    /// @dev Creates the modules based on their module configs
+    /// @param moduleConfigs THe config data of the modules that will be created with this function call
+    /// @param orchestratorProxy The address of the orchestrator Proxy that will be linked to the modules
+    /// @param workflowConfig The workflow's config data
     function createModules(
         ModuleConfig[] memory moduleConfigs,
-        address proxy,
+        address orchestratorProxy,
         WorkflowConfig memory workflowConfig
     ) internal returns (address[] memory) {
         // Deploy and cache optional modules.
@@ -237,7 +243,7 @@ contract OrchestratorFactory_v1 is
         for (uint i; i < moduleConfigs.length; ++i) {
             modules[i] = IModuleFactory_v1(moduleFactory).createModule(
                 moduleConfigs[i].metadata,
-                IOrchestrator_v1(proxy),
+                IOrchestrator_v1(orchestratorProxy),
                 moduleConfigs[i].configData,
                 workflowConfig
             );
