@@ -5,25 +5,19 @@ pragma solidity 0.8.23;
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 
 // External Dependencies
-import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
+import {ERC20, ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
 import {Context} from "@oz/utils/Context.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
-
-// External Libraries
-import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title   ERC20 Issuance Token
  *
- * @notice  This contract creates an ERC20 token with the ability to mint and burn tokens and a
- *          supply cap.
+ * @notice  This contract creates an ERC20 token with a supply cap and a whitelist-gated functionality to mint and burn tokens.
  *
- * @dev     The contract implements functionalties for:
- *          - opening and closing the issuance of tokens.
- *          - setting and subtracting of fees, expressed in BPS and subtracted from the collateral.
- *          - calculating the issuance amount by means of an abstract function to be implemented in
- *             the downstream contract.
+ * @dev     The contract implements functionalities for:
+ *          - Managing a whitelist of allowed minters.
+ *          - Minting and burning tokens by members of said whitelist.
+ *          - Enforcing a supply cap on minted tokens.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
@@ -34,7 +28,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     // State Variables
     mapping(address => bool) public allowedMinters;
-    uint8 internal _decimals;
+    uint8 internal immutable _decimals;
 
     //------------------------------------------------------------------------------
     // Modifiers
