@@ -17,20 +17,20 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a particular payment client
     /// @dev for _streamId, valid values will start from 1. 0 is not a valid id.
-    /// @param _paymentToken: The address of the token that is being used for the payment
-    /// @param _streamId: A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
-    /// @param _total: The total amount that the paymentReceiver should eventually get.
-    /// @param _released: The amount that has been claimed by the paymentReceiver till now.
-    /// @param _start: The start date of the streaming period.
-    /// @param _cliff: The duration of the cliff period.
-    /// @param _end: The ending of the streaming period.
     struct Stream {
+        //@notice The address of the token that is being used for the payment
         address _paymentToken;
+        //@notice A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
         uint _streamId;
+        //@notice The total amount that the paymentReceiver should eventually get.
         uint _total;
+        //@notice The amount that has been claimed by the paymentReceiver till now.
         uint _released;
+        //@notice The start date of the streaming period.
         uint _start;
+        //@notice The duration of the cliff period.
         uint _cliff;
+        //@notice The ending of the streaming period.
         uint _end;
     }
 
@@ -122,16 +122,24 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     error Module__PP_Streaming__InsufficientTokenBalanceInClient();
 
     /// @notice paymentReceiver's streamId for the paymentClient is not valid
+    /// @param paymentClient The payment client that originated the order.
+    /// @param paymentReceiver The address that will receive the payment.
+    /// @param streamId ID of the streaming payment order that was processed
     error Module__PP_Streaming__InvalidStream(
         address paymentClient, address paymentReceiver, uint streamId
     );
 
     /// @notice paymentReceiver's streamId for the paymentClient is no longer active
+    /// @param paymentClient The payment client that originated the order.
+    /// @param paymentReceiver The address that will receive the payment.
+    /// @param streamId ID of the streaming payment order that was processed
     error Module__PP_Streaming__InactiveStream(
         address paymentClient, address paymentReceiver, uint streamId
     );
 
     /// @notice the paymentReceiver for the given paymentClient does not exist (anymore)
+    /// @param paymentClient The payment client that originated the order.
+    /// @param paymentReceiver The address that will receive the payment.
     error Module__PP_Streaming__InvalidPaymentReceiver(
         address paymentClient, address paymentReceiver
     );
@@ -177,6 +185,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which start is fetched
+    /// @return start timestamp of the payment order
     function startForSpecificStream(
         address client,
         address paymentReceiver,
@@ -187,6 +196,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which cliff is fetched
+    /// @return cliff duration of the payment order
     function cliffForSpecificStream(
         address client,
         address paymentReceiver,
@@ -197,6 +207,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which end is fetched
+    /// @return end timestamp of the payment order
     function endForSpecificStream(
         address client,
         address paymentReceiver,
@@ -207,6 +218,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which released is fetched
+    /// @return released amount of the payment order
     function releasedForSpecificStream(
         address client,
         address paymentReceiver,
@@ -218,6 +230,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which the streamed amount is fetched
     /// @param timestamp the time upto which we want the streamed amount
+    /// @return streamed amount of the stream with id = streamId
     function streamedAmountForSpecificStream(
         address client,
         address paymentReceiver,
@@ -229,6 +242,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param client address of the payment client
     /// @param paymentReceiver PaymentReceiver's address.
     /// @param streamId Id of the wallet for which the releasable amount is fetched
+    /// @return releasable amount of the stream with id = streamId
     function releasableForSpecificStream(
         address client,
         address paymentReceiver,
@@ -239,6 +253,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @dev the paymentReceiver must be an active paymentReceiver for the particular payment client
     /// @param client Address of the payment client
     /// @param paymentReceiver Address of the paymentReceiver
+    /// @return all streams for a particular payment client and payment receiver
     function viewAllPaymentOrders(address client, address paymentReceiver)
         external
         view
@@ -248,6 +263,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @dev this function is for convenience and can be easily figured out by other means in the codebase.
     /// @param client Address of the payment client
     /// @param paymentReceiver Address of the paymentReceiver
+    /// @return true if the paymentReceiver is active for the payment client
     function isActivePaymentReceiver(address client, address paymentReceiver)
         external
         view
