@@ -28,7 +28,7 @@ interface ITransactionForwarder_v1 {
     // Errors
 
     /// @notice The request `from` doesn't match with the recovered `signer`.
-    /// @param SingleCall The call that failed
+    /// @param call The call that failed
     error CallFailed(SingleCall call);
 
     //--------------------------------------------------------------------------
