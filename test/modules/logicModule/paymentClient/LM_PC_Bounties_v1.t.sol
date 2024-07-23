@@ -320,8 +320,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 
-    function testContributorsNotChanged(
-        bool isChanged,
+    function testContributorsNotChanged_FailsGivenBountyIsChanged(
         address changeAddress,
         uint changeAmount
     ) public {
@@ -339,21 +338,58 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint claimId =
             bountyManager.addClaim(bountyId, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        if (isChanged) {
-            ILM_PC_Bounties_v1.Contributor[] memory changedContributors =
-                DEFAULT_CONTRIBUTORS;
+        ILM_PC_Bounties_v1.Contributor[] memory changedContributors =
+            DEFAULT_CONTRIBUTORS;
 
-            changedContributors[0] = ILM_PC_Bounties_v1.Contributor({
+        changedContributors[0] = ILM_PC_Bounties_v1.Contributor({
+            addr: changeAddress,
+            claimAmount: changeAmount
+        });
+        bountyManager.updateClaimContributors(claimId, changedContributors);
+        vm.expectRevert(
+            ILM_PC_Bounties_v1
+                .Module__LM_PC_Bounty__ContributorsChanged
+                .selector
+        );
+
+        bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
+    }
+
+    function testContributorsNotChanged_FailsGivenBountyArrayLengthHasChanged(
+        address changeAddress,
+        uint changeAmount
+    ) public {
+        changeAmount = bound(changeAmount, 1, 50_000_000);
+        if (
+            changeAddress == address(0)
+                || changeAddress == address(bountyManager)
+                || changeAddress == address(_orchestrator)
+        ) {
+            changeAddress = address(1);
+        }
+        _token.mint(address(_fundingManager), 150_000_000);
+
+        uint bountyId = bountyManager.addBounty(1, 150_000_000, bytes(""));
+        uint claimId =
+            bountyManager.addClaim(bountyId, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        // Append element to contributor array to change the length
+        DEFAULT_CONTRIBUTORS.push(
+            ILM_PC_Bounties_v1.Contributor({
                 addr: changeAddress,
                 claimAmount: changeAmount
-            });
-            bountyManager.updateClaimContributors(claimId, changedContributors);
-            vm.expectRevert(
-                ILM_PC_Bounties_v1
-                    .Module__LM_PC_Bounty__ContributorsChanged
-                    .selector
-            );
-        }
+            })
+        );
+
+        bountyManager.updateClaimContributors(claimId, DEFAULT_CONTRIBUTORS);
+
+        // Remove appended element to check with original array
+        DEFAULT_CONTRIBUTORS.pop();
+        vm.expectRevert(
+            ILM_PC_Bounties_v1
+                .Module__LM_PC_Bounty__ContributorsChanged
+                .selector
+        );
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 

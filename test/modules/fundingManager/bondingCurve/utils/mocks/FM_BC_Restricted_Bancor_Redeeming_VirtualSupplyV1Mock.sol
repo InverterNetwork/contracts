@@ -95,6 +95,10 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         return decimalConvertedVirtualIssuanceSupply;
     }
 
+    function call_setVirtualIssuanceSupply(uint _newSupply) external {
+        _setVirtualIssuanceSupply(_newSupply);
+    }
+
     // Note: this function returns the virtual collateral supply in the same format it will be fed to the Bancor formula
     function call_getFormulaVirtualCollateralSupply()
         external
@@ -106,5 +110,9 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
             virtualCollateralSupply, collateralTokenDecimals, 18
         );
         return decimalConvertedVirtualCollateralSupply;
+    }
+
+    function setProjectCollateralFeeCollectedHelper(uint _amount) external {
+        projectCollateralFeeCollected = _amount;
     }
 }

@@ -86,7 +86,8 @@ interface IPaymentProcessor_v1 {
     /// @notice Getter for the amount of tokens that could not be claimed.
     /// @param client address of the payment client
     /// @param token address of the payment token
-    /// @param paymentReceiver PaymentReceiver's address.
+    /// @param paymentReceiver PaymentReceiver's address
+    /// @return amount Amount of tokens that could not be claimed
     function unclaimable(address client, address token, address paymentReceiver)
         external
         view
@@ -102,4 +103,11 @@ interface IPaymentProcessor_v1 {
         address token,
         address receiver
     ) external;
+
+    /// @notice Function that checks if the given PaymentOrder was valid
+    /// @param order The IERC20PaymentClientBase_v1 Order that needs to be checked
+    /// @return valid Bool if the Payment Order is valid
+    function validPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order
+    ) external returns (bool);
 }

@@ -133,7 +133,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             );
 
             // If call was success
-            if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+            if (
+                success && (data.length == 0 || abi.decode(data, (bool)))
+                    && token_.code.length != 0
+            ) {
                 emit TokensReleased(recipient, token_, amount);
 
                 // Make sure to let paymentClient know that amount doesnt have to be stored anymore
@@ -184,6 +187,17 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
+    /// @inheritdoc IPaymentProcessor_v1
+    function validPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order
+    ) external returns (bool) {
+        return validPaymentReceiver(order.recipient) && validTotal(order.amount)
+            && validPaymentToken(order.paymentToken);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
     /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
     /// @param client address of the payment client
     /// @param token address of the payment token
@@ -208,5 +222,37 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
 
         emit TokensReleased(paymentReceiver, address(token), amount);
+    }
+
+    /// @notice validate address input.
+    /// @param addr Address to validate.
+    /// @return True if address is valid.
+    function validPaymentReceiver(address addr) internal view returns (bool) {
+        return !(
+            addr == address(0) || addr == _msgSender() || addr == address(this)
+                || addr == address(orchestrator())
+                || addr == address(orchestrator().fundingManager().token())
+        );
+    }
+
+    /// @notice validate uint total amount input.
+    /// @param _total uint to validate.
+    /// @return True if uint is valid.
+    function validTotal(uint _total) internal pure returns (bool) {
+        return !(_total == 0);
+    }
+
+    /// @notice validate payment token input.
+    /// @param _token Address of the token to validate.
+    /// @return True if address is valid.
+    function validPaymentToken(address _token) internal returns (bool) {
+        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding module should ensure it's sending an ERC20.
+
+        (bool success, bytes memory data) = _token.call(
+            abi.encodeWithSelector(
+                IERC20(_token).balanceOf.selector, address(this)
+            )
+        );
+        return (success && data.length != 0 && _token.code.length != 0);
     }
 }

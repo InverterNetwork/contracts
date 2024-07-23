@@ -290,7 +290,7 @@ interface IGovernor_v1 {
     // Ownable2Step
 
     /// @notice Accepts the ownership over the target address
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE
+    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE or TEAM_MULTISIG_ROLE
     /// @param adr The address of target that wants to hand over the ownership
     function acceptOwnership(address adr) external;
 }

@@ -28,9 +28,14 @@ import {ModuleImplementationV2Mock} from
     "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
+// External Dependencies
+import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+// External Dependencies
+import {Clones} from "@oz/proxy/Clones.sol";
 
 contract ModuleFactoryV1Test is Test {
     // SuT
@@ -82,7 +87,8 @@ contract ModuleFactoryV1Test is Test {
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
         beacon.overrideReverter(reverter);
 
-        factory = new ModuleFactory_v1(reverter, forwarder);
+        address impl = address(new ModuleFactory_v1(reverter, address(0)));
+        factory = ModuleFactory_v1(Clones.clone(impl));
         factory.init(
             governanceContract,
             new IModule_v1.Metadata[](0),
@@ -100,7 +106,8 @@ contract ModuleFactoryV1Test is Test {
     function testInitForMultipleInitialRegistrations(uint metadataSets)
         public
     {
-        factory = new ModuleFactory_v1(reverter, forwarder);
+        address impl = address(new ModuleFactory_v1(reverter, address(0)));
+        factory = ModuleFactory_v1(Clones.clone(impl));
         metadataSets = bound(metadataSets, 1, 10);
 
         IModule_v1.Metadata[] memory metadata =
@@ -135,7 +142,8 @@ contract ModuleFactoryV1Test is Test {
     function testInitFailsForMismatchedArrayLengths(uint number1, uint number2)
         public
     {
-        factory = new ModuleFactory_v1(reverter, forwarder);
+        address impl = address(new ModuleFactory_v1(reverter, address(0)));
+        factory = ModuleFactory_v1(Clones.clone(impl));
         number1 = bound(number1, 1, 1000);
         number2 = bound(number2, 1, 1000);
 
@@ -285,11 +293,45 @@ contract ModuleFactoryV1Test is Test {
     //--------------------------------------------------------------------------
     // Tests: createModule
 
-    function testCreateModule(
+    function testCreateAndInitModule(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IModule_v1.Metadata memory metadata,
         address orchestrator,
         bytes memory configData
+    ) public {
+        _assumeValidMetadata(metadata);
+        _assumeValidOrchestrator(orchestrator);
+        _assumeValidWorkflowConfig(workflowConfig);
+
+        beacon.overrideImplementation(address(module));
+
+        // Register ModuleV1Mock for given metadata.
+        vm.prank(governanceContract);
+        factory.registerMetadata(metadata, beacon);
+
+        // Create new module instance.
+        IModule_v1 newModule = IModule_v1(
+            factory.createAndInitModule(
+                metadata,
+                IOrchestrator_v1(orchestrator),
+                configData,
+                workflowConfig
+            )
+        );
+
+        // Test initialization is not possible anymore
+        vm.expectRevert(Initializable.InvalidInitialization.selector);
+        ModuleImplementationV1Mock(address(newModule)).initialize(1);
+
+        // Test that metadata was set properly
+        assertEq(address(newModule.orchestrator()), address(orchestrator));
+        assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
+    }
+
+    function testCreateModuleProxy(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IModule_v1.Metadata memory metadata,
+        address orchestrator
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -309,19 +351,14 @@ contract ModuleFactoryV1Test is Test {
 
         // Create new module instance.
         IModule_v1 newModule = IModule_v1(
-            factory.createModule(
-                metadata,
-                IOrchestrator_v1(orchestrator),
-                configData,
-                workflowConfig
+            factory.createModuleProxy(
+                metadata, IOrchestrator_v1(orchestrator), workflowConfig
             )
         );
 
         assertEq(
             factory.getOrchestratorOfProxy(address(newModule)), orchestrator
         );
-        assertEq(address(newModule.orchestrator()), address(orchestrator));
-        assertEq(newModule.identifier(), LibMetadata.identifier(metadata));
 
         // Check for proper Proxy setup
 
@@ -339,6 +376,119 @@ contract ModuleFactoryV1Test is Test {
             ModuleImplementationV1Mock(address(newModule)).getMockVersion(),
             expectedValue
         );
+
+        // Test initialization is still possible
+        ModuleImplementationV1Mock(address(newModule)).initialize(1);
+    }
+
+    function testCreateModuleReorgResilience(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IModule_v1.Metadata memory metadata,
+        address orchestrator
+    ) public {
+        address alice = address(0xA11CE);
+        address bob = address(0x606);
+
+        _assumeValidMetadata(metadata);
+        _assumeValidOrchestrator(orchestrator);
+        _assumeValidWorkflowConfig(workflowConfig);
+
+        beacon.overrideImplementation(address(module));
+
+        // Register ModuleV1Mock for given metadata.
+        vm.prank(governanceContract);
+        factory.registerMetadata(metadata, beacon);
+
+        // Create a snapshot to revert to, to simulate a reorg later
+        uint snapshot = vm.snapshot();
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(orchestrator, address(0), metadata);
+
+        IModule_v1 originalModule;
+        vm.startPrank(alice);
+        {
+            // Create new module instance.
+            originalModule = IModule_v1(
+                factory.createModuleProxy(
+                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                )
+            );
+        }
+        vm.stopPrank();
+
+        assertEq(
+            factory.getOrchestratorOfProxy(address(originalModule)),
+            orchestrator
+        );
+
+        // Store the code size of the module before we reorg
+        uint sizePreReorg;
+        assembly {
+            sizePreReorg := extcodesize(originalModule)
+        }
+
+        // Simulate reorg, revert to snapshot before the creation of the
+        // module.
+        vm.revertTo(snapshot);
+
+        // Store the code size of the module after we reorg
+        uint sizePostReorg;
+        assembly {
+            sizePostReorg := extcodesize(originalModule)
+        }
+
+        // Check whether the contracts actually disappeared, just to be safe
+        assertNotEq(sizePreReorg, sizePostReorg);
+        assertEq(sizePostReorg, 0);
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(orchestrator, address(0), metadata);
+
+        IModule_v1 redeployedModule_bob;
+        vm.startPrank(bob);
+        {
+            // Create new module instance.
+            redeployedModule_bob = IModule_v1(
+                factory.createModuleProxy(
+                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                )
+            );
+        }
+        vm.stopPrank();
+
+        // Address shouldn't match the original one, as create2 is based on
+        // the msgSender, which isn't Alice here
+        assertNotEq(address(originalModule), address(redeployedModule_bob));
+
+        // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
+        vm.expectEmit(true, false, false, false);
+
+        // We emit the event we expect to see.
+        emit ModuleCreated(orchestrator, address(0), metadata);
+
+        IModule_v1 redeployedModule_alice;
+        vm.startPrank(alice);
+        {
+            // Create new module instance.
+            redeployedModule_alice = IModule_v1(
+                factory.createModuleProxy(
+                    metadata, IOrchestrator_v1(orchestrator), workflowConfig
+                )
+            );
+        }
+        vm.stopPrank();
+
+        // The address of the original deployment matches the one of this
+        // new deployment, even with someone else doing the same deployment.
+        // -> success!
+        assertEq(address(originalModule), address(redeployedModule_alice));
     }
 
     function testCreateModuleFailsIfMetadataUnregistered(
@@ -352,7 +502,7 @@ contract ModuleFactoryV1Test is Test {
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__UnregisteredMetadata.selector
         );
-        factory.createModule(
+        factory.createAndInitModule(
             metadata,
             IOrchestrator_v1(orchestrator),
             configData,
