@@ -402,7 +402,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
-    ) external view returns (bool) {
+    ) external returns (bool) {
         return validPaymentReceiver(order.recipient) && validTotal(order.amount)
             && validTimes(order.start, order.cliff, order.end)
             && validPaymentToken(order.paymentToken);
@@ -725,7 +725,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             )
         );
 
-        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+        if (
+            success && (data.length == 0 || abi.decode(data, (bool)))
+                && _token.code.length != 0
+        ) {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             // Make sure to let paymentClient know that amount doesnt have to be stored anymore
@@ -874,11 +877,14 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice validate payment token input.
     /// @param _token Address of the token to validate.
     /// @return True if address is valid.
-    function validPaymentToken(address _token) internal view returns (bool) {
-        // Only a basic sanity check, the corresponding module should ensure it's sending an ERC20.
-        return !(
-            _token == address(0) || _token == _msgSender()
-                || _token == address(this) || _token == address(orchestrator())
+    function validPaymentToken(address _token) internal returns (bool) {
+        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding module should ensure it's sending an ERC20.
+
+        (bool success, bytes memory data) = _token.call(
+            abi.encodeWithSelector(
+                IERC20(_token).balanceOf.selector, address(this)
+            )
         );
+        return (success && data.length != 0 && _token.code.length != 0);
     }
 }
