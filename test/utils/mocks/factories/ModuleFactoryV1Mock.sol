@@ -22,7 +22,9 @@ import {PaymentProcessorV1Mock} from
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
 
-    address public governor = address(0x99999);
+    address public governor = address(0x999999);
+    address public reverter = address(0x111111);
+
     IOrchestratorFactory_v1.WorkflowConfig public givenWorkflowConfig;
 
     IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
