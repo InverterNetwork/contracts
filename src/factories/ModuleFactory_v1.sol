@@ -56,6 +56,7 @@ contract ModuleFactory_v1 is
     Ownable2StepUpgradeable,
     ERC165Upgradeable
 {
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -96,6 +97,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @inheritdoc IModuleFactory_v1
     address public immutable reverter;
 
     /// @inheritdoc IModuleFactory_v1
@@ -106,6 +108,7 @@ contract ModuleFactory_v1 is
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     /// @dev Mapping of proxy address to orchestrator address.
+    /// @dev moduleProxy => {IOrchestrator_v1}
     mapping(address => address) private _orchestratorOfProxy;
 
     /// @dev Maps a users address to a nonce
@@ -118,6 +121,9 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Constructor & Initializer
 
+    /// @notice The factories initializer function.
+    /// @param _reverter The address of the Reverter contract.
+    /// @param _trustedForwarder The address of the trusted forwarder contract.
     constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
     {
@@ -252,6 +258,9 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    ///@dev Internal function to register metadata
+    ///@param metadata The metadata to register
+    ///@param beacon The beacon to register the metadata to
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
