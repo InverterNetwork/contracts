@@ -34,15 +34,24 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     //--------------------------------------------------------------------------
     // Structs
     struct BondingCurveProperties {
-        address formula; // The formula contract used to calculate the issucance and redemption rate
-        uint32 reserveRatioForBuying; // The reserve ratio, expressed in PPM, used for issuance on the bonding curve
-        uint32 reserveRatioForSelling; // The reserve ratio, expressed in PPM, used for redeeming on the bonding curve
-        uint buyFee; // The buy fee expressed in base points
-        uint sellFee; // The sell fee expressed in base points
-        bool buyIsOpen; // The indicator used for enabling/disabling the buying functionalities on deployment
-        bool sellIsOpen; // The indicator used for enabling/disabling the selling functionalties on deployment
-        uint initialIssuanceSupply; // The initial virtual issuance token supply
-        uint initialCollateralSupply; // The initial virtual collateral token supply
+        /// @notice The formula contract used to calculate the issucance and redemption rate
+        address formula;
+        /// @notice The reserve ratio, expressed in PPM, used for issuance on the bonding curve
+        uint32 reserveRatioForBuying;
+        /// @notice The reserve ratio, expressed in PPM, used for redeeming on the bonding curve
+        uint32 reserveRatioForSelling;
+        /// @notice The buy fee expressed in base points
+        uint buyFee;
+        /// @notice The sell fee expressed in base points
+        uint sellFee;
+        /// @notice The indicator used for enabling/disabling the buying functionalities on deployment
+        bool buyIsOpen;
+        /// @notice The indicator used for enabling/disabling the selling functionalties on deployment
+        bool sellIsOpen;
+        /// @notice The initial virtual issuance token supply
+        uint initialIssuanceSupply;
+        /// @notice The initial virtual collateral token supply
+        uint initialCollateralSupply;
     }
 
     //--------------------------------------------------------------------------
