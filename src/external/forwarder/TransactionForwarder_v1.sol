@@ -38,18 +38,16 @@ contract TransactionForwarder_v1 is
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
-    // Initialization
-
     // Constructor
+
+    /// @notice Initializes the contract
+    /// @param name The name of the contract
     constructor(string memory name) ERC2771Forwarder(name) {}
 
     //--------------------------------------------------------------------------
     // Metatransaction Helper Functions
 
-    /// @notice Creates a digest for the given ForwardRequestData
-    /// @dev The signature field of the given ForwardRequestData can be empty
-    /// @param req The ForwardRequest you want to get the digest from
-    /// @return digest The digest needed to create a signature for the request
+    /// @inheritdoc ITransactionForwarder_v1
     function createDigest(ForwardRequestData memory req)
         external
         view
@@ -100,6 +98,9 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Internal
 
+    /// @notice Returns the digest for the given ForwardRequestData
+    /// @param req The ForwardRequest you want to get the digest from
+    /// @return digest The digest needed to create a signature for the request
     function _getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
         internal
         view
