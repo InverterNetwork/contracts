@@ -8,7 +8,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165, Module_v1} from "src/modules/base/Module_v1.sol";
 import {
     ElasticReceiptTokenUpgradeable_v1,
     ElasticReceiptTokenBase_v1
@@ -49,6 +49,7 @@ contract FM_Rebasing_v1 is
     ElasticReceiptTokenUpgradeable_v1,
     Module_v1
 {
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -77,11 +78,13 @@ contract FM_Rebasing_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
+    /// @dev The maximum amount of tokens that can be deposited.
     uint internal constant DEPOSIT_CAP = 100_000_000e18;
 
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev The token that is used for the rebasing.
     IERC20 private _token;
 
     // Storage gap for future upgrades
@@ -112,35 +115,36 @@ contract FM_Rebasing_v1 is
         );
     }
 
+    /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         return _token;
-    }
-
-    /// @dev Returns the current token balance as supply target.
-    function _supplyTarget()
-        internal
-        view
-        override(ElasticReceiptTokenBase_v1)
-        returns (uint)
-    {
-        return token().balanceOf(address(this));
     }
 
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
+    /// @notice Deposits `amount` of tokens from `msg.sender` to `msg.sender`.
+    /// @param amount The amount of tokens to deposit.
     function deposit(uint amount) external {
         _deposit(_msgSender(), _msgSender(), amount);
     }
 
+    /// @notice Deposits `amount` of tokens from `msg.sender` to `to`.
+    /// @param to The address to deposit to.
+    /// @param amount The amount of tokens to deposit.
     function depositFor(address to, uint amount) external {
         _deposit(_msgSender(), to, amount);
     }
 
+    /// @notice Withdraws `amount` of tokens from `msg.sender` to `msg.sender`.
+    /// @param amount The amount of tokens to withdraw.
     function withdraw(uint amount) external {
         _withdraw(_msgSender(), _msgSender(), amount);
     }
 
+    /// @notice Withdraws `amount` of tokens from `msg.sender` to `to`.
+    /// @param to The address to withdraw to.
+    /// @param amount The amount of tokens to withdraw.
     function withdrawTo(address to, uint amount) external {
         _withdraw(_msgSender(), to, amount);
     }
@@ -148,6 +152,7 @@ contract FM_Rebasing_v1 is
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Mutating Functions
 
+    /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to, uint amount)
         external
         onlyOrchestrator
@@ -157,8 +162,23 @@ contract FM_Rebasing_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Internal Mutating Functions
+    // Internal Functions
 
+    /// @dev Returns the current token balance as supply target.
+    /// @return The current token balance as supply target.
+    function _supplyTarget()
+        internal
+        view
+        override(ElasticReceiptTokenBase_v1)
+        returns (uint)
+    {
+        return token().balanceOf(address(this));
+    }
+
+    /// @dev Deposits tokens into the contract.
+    /// @param from The address to deposit from.
+    /// @param to The address to deposit to.
+    /// @param amount The amount of tokens to deposit.
     function _deposit(address from, address to, uint amount) internal {
         // Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
@@ -176,6 +196,10 @@ contract FM_Rebasing_v1 is
         emit Deposit(from, to, amount);
     }
 
+    /// @dev Withdraws `amount` of tokens from the funds of `from` to `to`.
+    /// @param from The address to withdraw from.
+    /// @param to The address to withdraw to.
+    /// @param amount The amount of tokens to withdraw.
     function _withdraw(address from, address to, uint amount) internal {
         amount = _burn(from, amount);
 
@@ -184,6 +208,12 @@ contract FM_Rebasing_v1 is
         emit Withdrawal(from, to, amount);
     }
 
+    //--------------------------------------------------------------------------
+    // IFundingManager_v1 Functions
+
+    /// @notice Transfers `amount` of tokens from the orchestrator to `to`.
+    /// @param to The address to transfer to.
+    /// @param amount The amount of tokens to transfer.
     function _transferOrchestratorToken(address to, uint amount) internal {
         token().safeTransfer(to, amount);
 
