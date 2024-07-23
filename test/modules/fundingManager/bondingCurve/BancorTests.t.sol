@@ -15,34 +15,133 @@ contract BancorTests is Test {
         formula = address(bancorFormula);
     }
 
-function _helper_getSupplyForGivenReserveAtSpotPrice(uint reserve, uint reserveRatio, uint spotPrice) internal pure returns (uint) {
-    return (1e12 * reserve) / (reserveRatio * spotPrice);
-}
+    function _helper_getSupplyForGivenReserveAtSpotPrice(
+        uint reserve,
+        uint reserveRatio,
+        uint spotPrice
+    ) internal pure returns (uint) {
+        return (1e12 * reserve) / (reserveRatio * spotPrice);
+    }
+
+    /*
+    MSG from rohan:
+
+    Scenario 1: Financially Conservative Approach
+
+    Reserve Ratio: Low (16%)
+    Initial Reserve Requirements: $1.8M (assuming Prb current price at 11 Lira)
+    Outcomes:
+    Lower fee collection (Model estimate: ~ 3%, Industry Expert estimate: 8%)
+    Less volatility reduction
+    Moderate Growth in reserves (Model estimate ROI: ~33.42%)
+    Scenario 2: Balanced Approach
 
 
 
-// ===========================================
-// ==            TEC PARAMETERS             ==
-// ===========================================
-uint32 TEC_RESERVE_RATIO = 199_800; // In PPM
-uint TEC_INITIAL_SUPPLY = 195_642_169e16;
-uint TEC_INITIAL_RESERVE = 39_097_931e16;
+    -> ReserveRatio: 160_000
+    -> initialReserve: 1_800_000e18
+    -> spotPrice: 11e18
 
+    Reserve Ratio: Medium (25%)
+    Initial Reserve Requirements: $2.4M
+    Outcomes:
+    Optimal fee collection (Model estimate: ~ 3.7%, Industry Expert estimate: 12%)
+    Moderate volatility reduction
+    Higher Growth in reserves (Model estimate: ~38)
+    Scenario 3: Financially Aggressive Approach
+
+    -> ReserveRatio: 250_000
+    -> initialReserve: 2_400_000e18
+    -> spotPrice: 11e18
+
+
+    Reserve Ratio: High (35%)
+    Initial Reserve Requirements: $3.7 M
+    Outcomes:
+    Fee collection (Model estimate: ~ 4%, Industry Expert estimate: 15%)
+    Optimal volatility reduction
+    Highest potential reserve +fees growth (Model estimate ROI: 44.9%)
+
+    -> ReserveRatio: 250_000
+    -> initialReserve: 2_400_000e18
+    -> spotPrice: 11e18
+
+
+
+
+    */
+
+    function test_logRohanParams() public view {
+        console.log("=================================");
+        console.log("Scenario 1: Financially Conservative Approach");
+
+        uint32 RESERVE_RATIO = 160_000; // In PPM
+        uint INITIAL_RESERVE = 1_800_000e18;
+        uint SPOT_PRICE = 11e6; // relationship in PPM; 1:1 = 1_000_000
+        uint INITIAL_SUPPLY = _helper_getSupplyForGivenReserveAtSpotPrice(
+            INITIAL_RESERVE, RESERVE_RATIO, SPOT_PRICE
+        );
+
+        console.log("=================================");
+        console.log("Reserve Ratio: %s", RESERVE_RATIO);
+        console.log("Initial Reserve Requirements: %s", INITIAL_RESERVE);
+        console.log("Initial Supply: %s", INITIAL_SUPPLY);
+        console.log("Spot Price: %s", SPOT_PRICE);
+
+        console.log("=================================");
+        console.log("Scenario 2: Balanced Approach");
+        console.log("=================================");
+
+        RESERVE_RATIO = 250_000; // In PPM
+        INITIAL_RESERVE = 2_400_000e18;
+        SPOT_PRICE = 11e6;
+        INITIAL_SUPPLY = _helper_getSupplyForGivenReserveAtSpotPrice(
+            INITIAL_RESERVE, RESERVE_RATIO, SPOT_PRICE
+        );
+
+        console.log("Reserve Ratio: %s", RESERVE_RATIO);
+        console.log("Initial Reserve Requirements: %s", INITIAL_RESERVE);
+        console.log("Initial Supply: %s", INITIAL_SUPPLY);
+        console.log("Spot Price: %s", SPOT_PRICE);
+
+        console.log("=================================");
+        console.log("Scenario 3: Financially Aggressive Approach");
+        console.log("=================================");
+
+        RESERVE_RATIO = 350_000; // In PPM
+        INITIAL_RESERVE = 3_700_000e18;
+        SPOT_PRICE = 11e6;
+        INITIAL_SUPPLY = _helper_getSupplyForGivenReserveAtSpotPrice(
+            INITIAL_RESERVE, RESERVE_RATIO, SPOT_PRICE
+        );
+
+        console.log("Reserve Ratio: %s", RESERVE_RATIO);
+        console.log("Initial Reserve Requirements: %s", INITIAL_RESERVE);
+        console.log("Initial Supply: %s", INITIAL_SUPPLY);
+        console.log("Spot Price: %s", SPOT_PRICE);
+    }
+
+    // ===========================================
+    // ==            TEC PARAMETERS             ==
+    // ===========================================
+    uint32 TEC_RESERVE_RATIO = 199_800; // In PPM
+    uint TEC_INITIAL_SUPPLY = 195_642_169e16;
+    uint TEC_INITIAL_RESERVE = 39_097_931e16;
 
     uint[] reserveAmounts;
 
-
-/// @notice This test takes an initial state and performs sales to get to a poitn where the spot price is very small. It then buys back all the tokens, and verifies that the amounts received are the same as the initial ones.
+    /// @notice This test takes an initial state and performs sales to get to a poitn where the spot price is very small. It then buys back all the tokens, and verifies that the amounts received are the same as the initial ones.
     function test_BancorFormula_SellAndBuyStepByStep() public {
         uint PPM = 1_000_000;
-
 
         // TEC numbers
         uint32 RESERVE_RATIO = 199_800; // In PPM
         uint INITIAL_SUPPLY = 195_642_169e16;
         uint INITIAL_RESERVE = 39_097_931e16;
 
-        uint test = _helper_getSupplyForGivenReserveAtSpotPrice(INITIAL_RESERVE, uint(RESERVE_RATIO), 1000200);
+        uint test = _helper_getSupplyForGivenReserveAtSpotPrice(
+            INITIAL_RESERVE, uint(RESERVE_RATIO), 1_000_200
+        );
         console.log("test", test);
 
         // These are minimal numbers. Spot price is 0
@@ -53,7 +152,7 @@ uint TEC_INITIAL_RESERVE = 39_097_931e16;
         // Please note that large sells can move the price below this amount. But they will need an equally big buys afterwards that pushes the balances over thsi limit again.
         //uint INITIAL_SUPPLY = 62131676819845007200000;
         //uint INITIAL_RESERVE = 12413909028605033;
-/*
+        /*
         //Test
         RESERVE_RATIO = 333_333;
         INITIAL_SUPPLY = 3_000_003e18;
@@ -72,7 +171,8 @@ uint TEC_INITIAL_RESERVE = 39_097_931e16;
         /*uint 1_000_000 = 1e12/RESERVE_RATIO * 1_000_000e18/x;
         x = 1e12/RESERVE_RATIO * 1_000_000e18/1_000_000;
         x = 1e12/RESERVE_RATIO * 1e18;
-        x = 300000_300000000000000000*//*
+        x = 300000_300000000000000000*/
+        /*
 
         // TODO: calculate the way to get the balance at a given reserve point if we have a defined curve
 
@@ -163,17 +263,17 @@ uint TEC_INITIAL_RESERVE = 39_097_931e16;
 
     function test_BancorFormula_LowBalancesThroughSale() public {
         uint PPM = 1_000_000;
-        uint32 RESERVE_RATIO = 199_800; // In PPM
+        uint32 RESERVE_RATIO = 160000; // In PPM
 
-        uint INITIAL_SUPPLY = 195_642_169e16;
-        uint INITIAL_RESERVE = 39_097_931e16;
+        uint INITIAL_SUPPLY = 1022727272727272727272727;
+        uint INITIAL_RESERVE = 1800000000000000000000000;
 
-        uint fixedStaticPrice = 1_000_220;
+        uint fixedStaticPrice = 11000000;
 
-        uint supplyCalculation =
+        /*uint supplyCalculation =
             PPM * PPM * (66_168_439_387_169_789) / (uint(RESERVE_RATIO) * 3);
 
-        console.log("Supply calculation: \t\t", supplyCalculation);
+        console.log("Supply calculation: \t\t", supplyCalculation);*/
 
         //uint INITIAL_SUPPLY = 1e12;
         //uint INITIAL_RESERVE = 199_800;
@@ -181,7 +281,7 @@ uint TEC_INITIAL_RESERVE = 39_097_931e16;
         uint supply = INITIAL_SUPPLY;
         uint reserve = INITIAL_RESERVE;
 
-        uint sellAmount = 1_869_622_396_000_000_000_000_000;
+        uint sellAmount = 900000e18;
 
         console.log("=================================");
         console.log("TEST SALE: ");
