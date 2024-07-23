@@ -21,8 +21,6 @@ import {DeployLM_PC_Bounties_v1} from
 
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
 import {DeployFeeManager_v1} from "script/external/DeployFeeManager_v1.s.sol";
-import {DeployInverterReverter_v1} from
-    "script/external/DeployInverterReverter_v1.s.sol";
 import {DeployTransactionForwarder_v1} from
     "script/external/DeployTransactionForwarder_v1.s.sol";
 import {DeployOrchestrator_v1} from
@@ -77,10 +75,6 @@ contract DeploymentScript is Script {
     // Utils
     DeployAUT_EXT_VotingRoles_v1 deployVotingRoles =
         new DeployAUT_EXT_VotingRoles_v1();
-
-    // InverterReverter_v1
-    DeployInverterReverter_v1 deployInverterReverter =
-        new DeployInverterReverter_v1();
     // TransactionForwarder_v1
     DeployTransactionForwarder_v1 deployTransactionForwarder =
         new DeployTransactionForwarder_v1();
@@ -146,9 +140,6 @@ contract DeploymentScript is Script {
 
     // FeeManager
     address feeManager;
-
-    // InverterReverter_v1
-    address reverter;
 
     // TransactionForwarder_v1
     address forwarder;
@@ -260,17 +251,10 @@ contract DeploymentScript is Script {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Deploy reverter\n");
-        // Reverter
-        reverter = deployInverterReverter.run();
-
-        console2.log(
-            "-----------------------------------------------------------------------------"
-        );
 
         console2.log("Deploy Fee Manager \n");
 
-        feeManager = deployFeeManager.createProxy(reverter, communityMultisig); //@note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
+        feeManager = deployFeeManager.createProxy(communityMultisig); // @note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -313,7 +297,7 @@ contract DeploymentScript is Script {
         // Deploy beacon and actual proxy
         (forwarderBeacon, forwarder) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(
-            reverter, address(governor), forwarderImplementation, 1, 0, 0
+            address(governor), forwarderImplementation, 1, 0, 0
         );
 
         if (
@@ -353,13 +337,13 @@ contract DeploymentScript is Script {
 
         // Funding Manager
 
+
         initialMetadataRegistration.push(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     bancorBondingCurveFundingManager,
                     bancorVirtualSupplyBondingCurveFundingManagerMetadata
@@ -376,7 +360,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     roleAuthorizer,
                     roleAuthorizerMetadata.majorVersion,
@@ -389,7 +372,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     tokenGatedRoleAuthorizer,
                     tokenGatedRoleAuthorizerMetadata.majorVersion,
@@ -402,7 +384,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     votingRoles,
                     votingRolesMetadata.majorVersion,
@@ -416,7 +397,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     simplePaymentProcessor,
                     simplePaymentProcessorMetadata.majorVersion,
@@ -429,7 +409,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     streamingPaymentProcessor,
                     streamingPaymentProcessorMetadata.majorVersion,
@@ -443,7 +422,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     bountyManager,
                     bountyManagerMetadata.majorVersion,
@@ -456,7 +434,6 @@ contract DeploymentScript is Script {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
                     address(governor),
                     recurringPaymentManager,
                     recurringPaymentManagerMetadata.majorVersion,
@@ -473,9 +450,8 @@ contract DeploymentScript is Script {
 
         // Deploy module factory v1 implementation
         moduleFactory = deployModuleFactory.run(
-            reverter,
-            forwarder,
             address(governor),
+            forwarder,
             initialMetadataRegistration,
             initialBeaconRegistration
         );

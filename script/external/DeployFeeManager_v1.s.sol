@@ -28,17 +28,13 @@ contract DeployFeeManager_v1 is Script {
     function run() external returns (address) {
         // Read deployment settings from environment variables.
 
-        address reverter = vm.envAddress("REVERTER_ADDRESS");
         address governor = vm.envAddress("GOVERNOR_ADDRESS");
         address defaultProtocolTreasury =
             vm.envAddress("COMMUNITY_MULTISIG_ADDRESS"); // Community Multisig as default treasury
         uint defaultCollateralFee = 100; // Should be 1%
         uint defaultIssuanceFee = 100; // Should be 1%
-            // Check settings.
-        require(
-            reverter != address(0),
-            "DeployOrchestratorFactory_v1: Missing env variable: reverter contract"
-        );
+        // Check settings.
+
         require(
             governor != address(0),
             "DeployFeeManager: Missing env variable: governor"
@@ -51,7 +47,6 @@ contract DeployFeeManager_v1 is Script {
 
         // Deploy the Governor.
         return run(
-            reverter,
             governor,
             defaultProtocolTreasury,
             defaultCollateralFee,
@@ -62,7 +57,6 @@ contract DeployFeeManager_v1 is Script {
     /// @notice Creates the implementation of the FeeManager
     /// @return implementation The implementation of the FeeManager
     function run(
-        address reverter,
         address owner,
         address defaultProtocolTreasury,
         uint defaultCollateralFee,
@@ -80,9 +74,7 @@ contract DeployFeeManager_v1 is Script {
         address feeManagerProxy;
 
         (feeManagerBeacon, feeManagerProxy) = deployAndSetUpInverterBeacon_v1
-            .deployBeaconAndSetupProxy(
-            reverter, owner, feeManagerImplementation, 1, 0, 0
-        );
+            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0, 0);
 
         FeeManager_v1 feeManager = FeeManager_v1(feeManagerProxy);
 
@@ -106,7 +98,7 @@ contract DeployFeeManager_v1 is Script {
         );
     }
 
-    function createProxy(address reverter, address owner)
+    function createProxy(address owner)
         external
         returns (address implementation)
     {
@@ -122,9 +114,7 @@ contract DeployFeeManager_v1 is Script {
         address feeManagerProxy;
 
         (feeManagerBeacon, feeManagerProxy) = deployAndSetUpInverterBeacon_v1
-            .deployBeaconAndSetupProxy(
-            reverter, owner, feeManagerImplementation, 1, 0, 0
-        );
+            .deployBeaconAndSetupProxy(owner, feeManagerImplementation, 1, 0, 0);
 
         implementation = address(FeeManager_v1(feeManagerProxy));
         // Log

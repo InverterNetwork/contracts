@@ -45,7 +45,6 @@ contract ModuleFactoryV1Test is Test {
     ModuleImplementationV1Mock module;
     InverterBeaconV1OwnableMock beacon;
 
-    address reverter = makeAddr("Reverter");
     address forwarder = makeAddr("forwarder");
 
     address governanceContract = address(0x010101010101);
@@ -85,10 +84,8 @@ contract ModuleFactoryV1Test is Test {
     function setUp() public {
         module = new ModuleImplementationV1Mock();
         beacon = new InverterBeaconV1OwnableMock(governanceContract);
-        beacon.overrideReverter(reverter);
 
-        address impl = address(new ModuleFactory_v1(reverter, address(0)));
-        factory = ModuleFactory_v1(Clones.clone(impl));
+        factory = new ModuleFactory_v1(address(0));
         factory.init(
             governanceContract,
             new IModule_v1.Metadata[](0),
@@ -97,7 +94,6 @@ contract ModuleFactoryV1Test is Test {
     }
 
     function testDeploymentInvariants() public {
-        assertEq(factory.reverter(), reverter);
         // Invariants: Ownable2Step
         assertEq(factory.owner(), governanceContract);
         assertEq(factory.pendingOwner(), address(0));
@@ -106,8 +102,7 @@ contract ModuleFactoryV1Test is Test {
     function testInitForMultipleInitialRegistrations(uint metadataSets)
         public
     {
-        address impl = address(new ModuleFactory_v1(reverter, address(0)));
-        factory = ModuleFactory_v1(Clones.clone(impl));
+        factory = new ModuleFactory_v1(address(0));
         metadataSets = bound(metadataSets, 1, 10);
 
         IModule_v1.Metadata[] memory metadata =
@@ -123,7 +118,6 @@ contract ModuleFactoryV1Test is Test {
             );
 
             beaconI = new InverterBeaconV1OwnableMock(governanceContract);
-            beaconI.overrideReverter(reverter);
 
             beaconI.overrideImplementation(address(0x1));
 
@@ -142,8 +136,7 @@ contract ModuleFactoryV1Test is Test {
     function testInitFailsForMismatchedArrayLengths(uint number1, uint number2)
         public
     {
-        address impl = address(new ModuleFactory_v1(reverter, address(0)));
-        factory = ModuleFactory_v1(Clones.clone(impl));
+        factory = new ModuleFactory_v1(address(0));
         number1 = bound(number1, 1, 1000);
         number2 = bound(number2, 1, 1000);
 
@@ -177,6 +170,7 @@ contract ModuleFactoryV1Test is Test {
         vm.assume(caller != governanceContract);
         vm.assume(caller != forwarder);
         vm.assume(caller != address(0));
+        vm.assume(caller != governanceContract);
         vm.prank(caller);
 
         vm.expectRevert(
@@ -239,7 +233,6 @@ contract ModuleFactoryV1Test is Test {
         InverterBeaconV1OwnableMock additionalBeacon =
             new InverterBeaconV1OwnableMock(governanceContract);
         additionalBeacon.overrideImplementation(address(module));
-        additionalBeacon.overrideReverter(reverter);
 
         vm.prank(governanceContract);
         factory.registerMetadata(DATA, beacon);
@@ -266,7 +259,6 @@ contract ModuleFactoryV1Test is Test {
             new InverterBeaconV1OwnableMock(address(0x1111111));
 
         notOwnedBeacon.overrideImplementation(address(0x1));
-        notOwnedBeacon.overrideReverter(reverter);
 
         vm.expectRevert(
             IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
@@ -275,25 +267,12 @@ contract ModuleFactoryV1Test is Test {
         factory.registerMetadata(DATA, notOwnedBeacon);
     }
 
-    function testRegisterMetadataFailsIfBeaconIsNotLinkedToFactoryReverter(
-        address reverterAddress
-    ) public {
-        beacon.overrideReverter(reverterAddress);
-        beacon.overrideImplementation(address(new ModuleImplementationV2Mock()));
-
-        if (reverterAddress != factory.reverter()) {
-            vm.expectRevert(
-                IModuleFactory_v1.ModuleFactory__InvalidInverterBeacon.selector
-            );
-        }
-        vm.prank(governanceContract);
-        factory.registerMetadata(DATA, beacon);
-    }
-
     //--------------------------------------------------------------------------
     // Tests: createModule
 
-    function testCreateAndInitModule(
+    error hm();
+
+    function testCreateModule(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IModule_v1.Metadata memory metadata,
         address orchestrator,

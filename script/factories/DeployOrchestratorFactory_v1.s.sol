@@ -5,8 +5,6 @@ import "forge-std/Script.sol";
 import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
-import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
-
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 
@@ -87,7 +85,6 @@ contract DeployOrchestratorFactory_v1 is Script {
 
         (orchestratorFactoryBeacon, orchestratorFactoryProxy) =
         deployAndSetUpInverterBeacon_v1.deployBeaconAndSetupProxy(
-            ModuleFactory_v1(moduleFactory).reverter(),
             governor,
             orchestratorFactoryImplementation,
             1,
@@ -97,12 +94,7 @@ contract DeployOrchestratorFactory_v1 is Script {
 
         address orchestratorImplementationBeacon =
         deployAndSetUpInverterBeacon_v1.deployInverterBeacon(
-            ModuleFactory_v1(moduleFactory).reverter(),
-            governor,
-            orchestratorImplementation,
-            1,
-            0,
-            0
+            governor, orchestratorImplementation, 1, 0, 0
         );
 
         orchestratorFactory = OrchestratorFactory_v1(orchestratorFactoryProxy);

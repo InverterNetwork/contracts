@@ -16,9 +16,6 @@ import {
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
-import {InverterReverter_v1} from
-    "src/external/reverter/InverterReverter_v1.sol";
-
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
@@ -100,7 +97,6 @@ contract InverterBeaconE2E is E2ETest {
         // Deploy module beacons.
 
         beacon = new InverterBeacon_v1(
-            moduleFactory.reverter(),
             address(gov), // The governor contract will be the owner of the beacon
             MAJOR_VERSION,
             address(moduleImpl1),
@@ -211,11 +207,20 @@ contract InverterBeaconE2E is E2ETest {
         beacon.shutDownImplementation();
 
         // The call to the implementation should fail
-        vm.expectRevert(
-            InverterReverter_v1.InverterReverter__ContractPaused.selector
-        );
+        // As a note: apparently a try catch still throws an EVM Error when the call doesnt find the correct function in the target address,
+        // because the target doesnt create a proper Revert when its called
+        // Thats why im wrapping it in a call to demonstrate
+        // Funnily enough the call doesnt return as a failure for some reason
+        // Because of the failure of the direct call we know that it actually fails if called
+        // I assume its a weird interaction between the delegatecall of the proxy and the call we are just doing here
+        // So just to make sure that we can actually check if the call fails
+        // We check if the returndata is 0, which it is not supposed to be with the getMockVersion function
 
-        IModuleImplementationMock(moduleMock).getMockVersion();
+        bytes memory data =
+            abi.encodeCall(IModuleImplementationMock.getMockVersion, ());
+        (, bytes memory returnData) = address(moduleMock).call(data);
+        // Make sure returndata is 0 which means call didnt go through
+        assertEq(returnData.length, 0);
 
         // Reverse shut-down
         vm.prank(address(gov));

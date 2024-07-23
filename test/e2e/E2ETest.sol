@@ -10,8 +10,6 @@ import {E2EModuleRegistry} from "test/e2e/E2EModuleRegistry.sol";
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 
-import {InverterReverter_v1} from
-    "src/external/reverter/InverterReverter_v1.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
@@ -19,8 +17,6 @@ import {
     InverterBeacon_v1,
     IInverterBeacon_v1
 } from "src/proxies/InverterBeacon_v1.sol";
-
-import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 
 // Factories
 import {
@@ -66,9 +62,6 @@ contract E2ETest is E2EModuleRegistry {
     // Mock token for funding.
     ERC20Mock token;
 
-    // Reverter
-    InverterReverter_v1 reverter;
-
     // Forwarder
     TransactionForwarder_v1 forwarder;
 
@@ -112,9 +105,6 @@ contract E2ETest is E2EModuleRegistry {
 
         token = new ERC20Mock("Mock", "MOCK");
 
-        // Deploy a reverter used to enable proper pausing
-        reverter = new InverterReverter_v1();
-
         // Deploy a forwarder used to enable metatransactions
         forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
 
@@ -122,51 +112,18 @@ contract E2ETest is E2EModuleRegistry {
         orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
         orchestratorBeacon = new InverterBeacon_v1(
-            address(reverter), address(gov), 1, address(orchestratorImpl), 0, 0
-        ); //@note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
+            address(gov), 1, address(orchestratorImpl), 0, 0
+        ); // @note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
 
-        // Deploy ModuleFactory_v1 implementation.
-        ModuleFactory_v1 moduleFactoryImpl =
-            new ModuleFactory_v1(address(reverter), address(forwarder));
-
-        InverterBeacon_v1 moduleFactoryBeacon = new InverterBeacon_v1(
-            address(reverter), address(gov), 1, address(moduleFactoryImpl), 0, 0
-        );
-
-        moduleFactory = ModuleFactory_v1(
-            address(
-                new InverterBeaconProxy_v1(
-                    InverterBeacon_v1(moduleFactoryBeacon)
-                )
-            )
-        );
+        // Deploy Factories.
+        moduleFactory = new ModuleFactory_v1(address(forwarder));
         moduleFactory.init(
             address(gov),
             new IModule_v1.Metadata[](0),
             new IInverterBeacon_v1[](0)
         );
 
-        // Deploy OrchestratorFactory_v1 implementation.
-        OrchestratorFactory_v1 orchestatorFactoryImpl =
-            new OrchestratorFactory_v1(address(forwarder));
-
-        InverterBeacon_v1 orchestatorFactoryBeacon = new InverterBeacon_v1(
-            address(reverter),
-            address(gov),
-            1,
-            address(orchestatorFactoryImpl),
-            0,
-            0
-        ); // @note This needs to be updated to contain the correct versions / Think of concept for the orchestatorFactory Version
-
-        orchestratorFactory = OrchestratorFactory_v1(
-            address(
-                new InverterBeaconProxy_v1(
-                    InverterBeacon_v1(orchestatorFactoryBeacon)
-                )
-            )
-        );
-
+        orchestratorFactory = new OrchestratorFactory_v1(address(forwarder));
         orchestratorFactory.init(
             moduleFactory.governor(), orchestratorBeacon, address(moduleFactory)
         );
