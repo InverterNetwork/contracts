@@ -54,6 +54,10 @@ interface IModuleFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Returns the address of the Reverter contract
+    /// @return ReverterAddress The address of the Reverter contract
+    function reverter() external view returns (address);
+
     /// @notice Returns the governor_v1 contract address
     /// @return The address of the governor contract
     function governor() external view returns (address);
@@ -63,7 +67,7 @@ interface IModuleFactory_v1 {
     /// @param orchestrator The orchestrator's instance of the module.
     /// @param configData The configData of the module
     /// @param workflowConfig The configData of the workflow
-    /// @return Returns the address of the created module proxy
+    /// @return moduleProxyAddress Returns the address of the created module proxy
     function createAndInitModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
@@ -85,8 +89,8 @@ interface IModuleFactory_v1 {
     /// @notice Returns the {IInverterBeacon_v1} instance registered and the id for given
     ///         metadata.
     /// @param metadata The module's metadata.
-    /// @return The module's {IInverterBeacon_v1} instance registered.
-    /// @return The metadata's id.
+    /// @return beacon The module's {IInverterBeacon_v1} instance registered.
+    /// @return id The metadata's id.
     function getBeaconAndId(IModule_v1.Metadata memory metadata)
         external
         view
@@ -94,7 +98,7 @@ interface IModuleFactory_v1 {
 
     /// @notice Returns the orchestrator address of a beacon proxy.
     /// @param proxy The beacon proxy address.
-    /// @return The corresponding orchestrator address for the provided proxy.
+    /// @return orchestratorAddress The corresponding orchestrator address for the provided proxy.
     function getOrchestratorOfProxy(address proxy)
         external
         view
