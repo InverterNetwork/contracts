@@ -45,6 +45,7 @@ contract LM_PC_Staking_v1 is
 {
     using SafeERC20 for IERC20;
 
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -59,6 +60,8 @@ contract LM_PC_Staking_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev modifier to check if the duration is valid
+    /// @param duration duration of the reward period
     modifier validDuration(uint duration) {
         if (duration == 0) {
             revert Module__LM_PC_Staking_v1__InvalidDuration();
@@ -82,11 +85,14 @@ contract LM_PC_Staking_v1 is
     uint internal lastUpdate;
 
     /// @dev mapping of balances of each user in the staking token
+    /// address => balance
     mapping(address => uint) internal _balances;
     /// @dev mapping of reward Values that are needed to calculate the rewards that a user should receive
     /// @dev should change everytime the user stakes or unstakes funds
+    /// address => rewardValue
     mapping(address => uint) internal userRewardValue;
     /// @dev mapping of how many reward tokens the user accumulated
+    /// address => earned
     mapping(address => uint) internal rewards;
 
     // Storage gap for future upgrades
@@ -107,6 +113,8 @@ contract LM_PC_Staking_v1 is
         __LM_PC_Staking_v1_init(_stakingToken);
     }
 
+    /// @dev Initializes the staking contract
+    /// @param _stakingToken The address of the token that can be staked
     function __LM_PC_Staking_v1_init(address _stakingToken)
         internal
         onlyInitializing
@@ -218,6 +226,9 @@ contract LM_PC_Staking_v1 is
     //--------------------------------------------------------------------------
     // Private Functions
 
+    /// @dev Stakes tokens
+    /// @param depositFor The address of the user
+    /// @param amount The amount of tokens to stake
     function _stake(address depositFor, uint amount) internal virtual {
         _update(depositFor);
 
@@ -235,7 +246,9 @@ contract LM_PC_Staking_v1 is
         emit Staked(depositFor, amount);
     }
 
+    /// @dev Updates the reward value and the timestamp of the last update
     /// @dev This has to trigger on every major change of the state of the contract
+    /// @param triggerAddress The address of the user
     function _update(address triggerAddress) internal {
         // Set a new reward value
         rewardValue = _calculateRewardValue();
@@ -250,11 +263,13 @@ contract LM_PC_Staking_v1 is
         }
     }
 
+    /// @dev Calculates the reward value
     /// @dev This is the heart of the algorithm
     /// The reward Value is the accumulation of all the rewards a user would get for a single token if they had staked at the beginning of the lifetime of this contract
     /// A "single" reward value or with the lack of a better word "reward period" is the rewardRate (so the rewards per second for the whole contract)
     /// multiplied by the time period it was active and dividing that with the total supply
     /// This "single" value is essentially what a single token would have earned in that time period
+    /// @return The reward value
     function _calculateRewardValue() internal view returns (uint) {
         // In case the totalSupply is 0 the rewardValue doesnt change
         if (totalSupply == 0) {
@@ -268,16 +283,22 @@ contract LM_PC_Staking_v1 is
             + rewardValue; // add the old rewardValue to the new "single" rewardValue
     }
 
+    /// @dev Calculates the timestamp where rewards will be distributed
     /// @dev The function returns either the current timestamp or the last timestamp where rewards will be distributed, based on which one is earlier
     /// Is necessary to calculate the exact rewardValue at the end of the reward lifespan
     /// If not included rewards would be distributed forever
+    /// @return The timestamp where rewards will be distributed
     function _getRewardDistributionTimestamp() internal view returns (uint) {
         return rewardsEnd <= block.timestamp ? rewardsEnd : block.timestamp;
     }
 
+    /// @dev Calculates how much a user earned for their stake up to this point
     /// @dev internal function to calculate how much a user earned for their stake up to this point
     /// Uses the difference between the current Reward Value and the reward value when the user staked their tokens
     /// in combination with their current balance to calculate their earnings
+    /// @param user The address of the user
+    /// @param providedRewardValue The reward value
+    /// @return The amount of tokens the user earned
     function _earned(address user, uint providedRewardValue)
         internal
         view
@@ -289,7 +310,9 @@ contract LM_PC_Staking_v1 is
             + rewards[user];
     }
 
+    /// @dev Distributes earned rewards via the payment processor
     /// @dev direct distribution of earned rewards via the payment processor
+    /// @param recipient The address of the user
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
         uint amount = _earned(recipient, rewardValue);
@@ -314,7 +337,10 @@ contract LM_PC_Staking_v1 is
         emit RewardsDistributed(recipient, amount);
     }
 
+    /// @dev Sets the rewards
     /// @dev for contracts that inherit
+    /// @param amount The amount of tokens to distribute
+    /// @param duration The duration of the reward period
     function _setRewards(uint amount, uint duration)
         internal
         validAmount(amount)
@@ -345,6 +371,8 @@ contract LM_PC_Staking_v1 is
         emit RewardSet(amount, duration, rewardRate, rewardsEnd);
     }
 
+    /// @dev Sets the staking token
+    /// @param _token The address of the token that can be staked
     function _setStakingToken(address _token) internal {
         if (_token == address(0)) {
             revert Module__LM_PC_Staking_v1__InvalidStakingToken();
