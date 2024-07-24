@@ -127,7 +127,7 @@ contract DeployModuleFactory_v1 is Script {
 
         moduleFactory = ModuleFactory_v1(moduleFactoryProxy);
 
-        // Log the deployed Governor_v1 address.
+        // Log the deployed ModuleFactory_v1 address.
         console2.log(
             "Deployment of ModuleFactory_v1 implementation at address",
             moduleFactoryProxy

@@ -131,9 +131,7 @@ contract DeployGovernor_v1 is Script {
         vm.stopBroadcast();
 
         // Log the deployed Governor_v1 address.
-        console2.log(
-            "Deployment of Governor_v1 implementation at address", address(gov)
-        );
+        console2.log("Deployment of Governor_v1 proxy at address", address(gov));
 
         return (address(gov), address(govImplementation));
     }

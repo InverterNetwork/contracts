@@ -489,7 +489,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         feeManager = IFeeManager_v1(newFeeManager);
     }
 
-    /// @dev sets the internal FeeManager address
+    /// @dev sets the internal ModuleFactory address
     /// @param newModuleFactory the address of the new moduleFactory
     function _setModuleFactory(address newModuleFactory)
         internal
