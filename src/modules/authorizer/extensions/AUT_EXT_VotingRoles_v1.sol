@@ -9,7 +9,7 @@ import {IAUT_EXT_VotingRoles_v1} from
     "src/modules/authorizer/role/interfaces/IAUT_EXT_VotingRoles_v1.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165, Module_v1} from "src/modules/base/Module_v1.sol";
 /**
  * @title   Voting Role Manager
  *
@@ -29,6 +29,7 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  */
 
 contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -43,6 +44,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev Reverts if caller is not the module itself.
     modifier onlySelf() {
         if (_msgSender() != address(this)) {
             revert Module__CallerNotAuthorized(
@@ -52,6 +54,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
+    /// @dev Reverts if caller is not a voter.
     modifier onlyVoter() {
         if (!isVoter[_msgSender()]) {
             revert Module__VotingRoleManager__CallerNotVoter();
@@ -59,6 +62,8 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
+    /// @dev Reverts if voter address is invalid.
+    /// @param voter The address to check.
     modifier isValidVoterAddress(address voter) {
         if (
             voter == address(0) || voter == address(this)
@@ -174,6 +179,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Data Retrieval Functions
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function getReceipt(bytes32 _ID, address voter)
         public
         view
@@ -187,6 +193,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Configuration Functions
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function setThreshold(uint newThreshold) public onlySelf {
         // Revert if the threshold is set incorrectly
         validateThreshold(voterCount, newThreshold);
@@ -195,6 +202,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         threshold = newThreshold;
     }
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function setVotingDuration(uint newVoteDuration) external onlySelf {
         // Revert if votingDuration outside of bounds.
         if (
@@ -211,6 +219,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Voter Management Functions
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function addVoter(address who) public onlySelf isValidVoterAddress(who) {
         if (!isVoter[who]) {
             isVoter[who] = true;
@@ -221,6 +230,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         }
     }
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function addVoterAndUpdateThreshold(address who, uint newThreshold)
         external
     {
@@ -231,6 +241,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         setThreshold(newThreshold);
     }
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function removeVoter(address who) public onlySelf {
         _removeVoter(who);
 
@@ -238,6 +249,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         validateThreshold(voterCount, threshold);
     }
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function removeVoterAndUpdateThreshold(address who, uint newThreshold)
         external
         onlySelf
@@ -248,6 +260,8 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         setThreshold(newThreshold);
     }
 
+    /// @dev Removes a voter from the list of voters.
+    /// @param who The address of the voter to remove.
     function _removeVoter(address who) internal {
         // Revert if trying to remove the last voter
         if (voterCount == 1) {
@@ -266,6 +280,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Governance Functions
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function createMotion(address target, bytes calldata action)
         external
         onlyVoter
@@ -297,6 +312,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         return motionId;
     }
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function castVote(bytes32 motionId, uint8 support) external onlyVoter {
         // Revert if support invalid.
         // 0 = for
@@ -345,6 +361,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         emit VoteCast(motionId, voter, support);
     }
 
+    /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function executeMotion(bytes32 motionId) external {
         // Get pointer to the motion.
         Motion storage motion_ = motions[motionId];
