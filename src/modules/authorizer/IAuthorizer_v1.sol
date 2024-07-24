@@ -9,6 +9,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Errors
 
     /// @notice The function is only callable by an active Module.
+    /// @param module The address of the module
     error Module__Authorizer__NotActiveModule(address module);
 
     /// @notice The function is only callable if the Module is self-managing its roles.
@@ -30,6 +31,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     ///         the current transaction.
     /// @param role The identifier of the role we want to check
     /// @param who  The address on which to perform the check.
+    /// @return bool Returns if the address holds the role
     /// @dev It will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
     function hasModuleRole(bytes32 role, address who)
         external
@@ -39,6 +41,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice Helper function to generate a bytes32 role hash for a module role
     /// @param module The address of the module to generate the hash for
     /// @param role  The ID number of the role to generate the hash for
+    /// @return bytes32 Returns the generated role hash
     function generateRoleId(address module, bytes32 role)
         external
         returns (bytes32);
