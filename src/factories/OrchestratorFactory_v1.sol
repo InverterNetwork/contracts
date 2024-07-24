@@ -91,6 +91,7 @@ contract OrchestratorFactory_v1 is
 
     /// @dev Maps a users address to a nonce
     ///      Used for the create2-based deployment
+    /// address => nonce
     mapping(address => uint) private _deploymentNonces;
 
     /// @dev Storage gap for future upgrades

@@ -150,6 +150,9 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @notice Removes a voter.
     /// @param who The address to remove.
     function removeVoter(address who) external;
+    /// @notice Removes a voter and updates the threshold.
+    /// @param who The address to remove.
+    /// @param newThreshold The new threshold.
     function removeVoterAndUpdateThreshold(address who, uint newThreshold)
         external;
 

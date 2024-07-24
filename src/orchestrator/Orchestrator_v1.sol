@@ -23,6 +23,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // External Dependencies
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
+// External Dependencies
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+
 // External Libraries
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
@@ -52,6 +55,7 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  */
 contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc ERC165
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -77,6 +81,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _;
     }
 
+    /// @notice Modifier to guarantee that the given module is a logic module
+    ///         and not the authorizer or the fundingManager or the paymentProcessor.
+    /// @param module_ The module to be checked.
     /// @notice Modifier to guarantee that the given module is a logic module
     ///         and not the authorizer or the fundingManager or the paymentProcessor.
     /// @param module_ The module to be checked.
@@ -480,6 +487,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IModuleManagerBase_v1
     /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
     /// we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
+    /// @inheritdoc IModuleManagerBase_v1
+    /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
+    /// we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)
         public
         view
@@ -490,6 +500,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         return ModuleManagerBase_v1.isTrustedForwarder(forwarder);
     }
 
+    /// @inheritdoc IModuleManagerBase_v1
     /// @inheritdoc IModuleManagerBase_v1
     function trustedForwarder()
         public

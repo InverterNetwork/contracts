@@ -81,6 +81,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     // Storage
 
     /// @dev The token that is used for the rebasing.
+    /// @dev The token that is used for the rebasing.
     IERC20 private _token;
 
     // Storage gap for future upgrades
@@ -112,6 +113,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
         );
     }
 
+    /// @inheritdoc IFundingManager_v1
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         return _token;
@@ -162,6 +164,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     // OnlyOrchestrator Mutating Functions
 
     /// @inheritdoc IFundingManager_v1
+    /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to, uint amount)
         external
         onlyPaymentClient
@@ -171,6 +174,23 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     }
 
     //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev Returns the current token balance as supply target.
+    /// @return The current token balance as supply target.
+    function _supplyTarget()
+        internal
+        view
+        override(ElasticReceiptTokenBase_v1)
+        returns (uint)
+    {
+        return token().balanceOf(address(this));
+    }
+
+    /// @dev Deposits tokens into the contract.
+    /// @param from The address to deposit from.
+    /// @param to The address to deposit to.
+    /// @param amount The amount of tokens to deposit.
     // Internal Functions
 
     /// @dev Returns the current token balance as supply target.
@@ -209,6 +229,10 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     /// @param from The address to withdraw from.
     /// @param to The address to withdraw to.
     /// @param amount The amount of tokens to withdraw.
+    /// @dev Withdraws `amount` of tokens from the funds of `from` to `to`.
+    /// @param from The address to withdraw from.
+    /// @param to The address to withdraw to.
+    /// @param amount The amount of tokens to withdraw.
     function _withdraw(address from, address to, uint amount) internal {
         amount = _burn(from, amount);
 
@@ -217,6 +241,12 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
         emit Withdrawal(from, to, amount);
     }
 
+    //--------------------------------------------------------------------------
+    // IFundingManager_v1 Functions
+
+    /// @notice Transfers `amount` of tokens from the orchestrator to `to`.
+    /// @param to The address to transfer to.
+    /// @param amount The amount of tokens to transfer.
     //--------------------------------------------------------------------------
     // IFundingManager_v1 Functions
 
