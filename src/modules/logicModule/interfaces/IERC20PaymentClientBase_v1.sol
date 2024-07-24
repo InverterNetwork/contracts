@@ -31,6 +31,7 @@ interface IERC20PaymentClientBase_v1 {
     error Module__ERC20PaymentClientBase__TokenTransferFailed();
 
     /// @notice Insufficient funds to fulfill the payment.
+    /// @param token The token in which the payment was made.
     error Module__ERC20PaymentClientBase__InsufficientFunds(address token);
 
     /// @notice Given recipient invalid.
@@ -53,6 +54,7 @@ interface IERC20PaymentClientBase_v1 {
 
     /// @notice Added a payment order.
     /// @param recipient The address that will receive the payment.
+    /// @param token The token in which to pay.
     /// @param amount The amount of tokens the payment consists of.
     event PaymentOrderAdded(
         address indexed recipient, address indexed token, uint amount
@@ -62,9 +64,12 @@ interface IERC20PaymentClientBase_v1 {
     // Functions
 
     /// @notice Returns the list of outstanding payment orders.
+    /// @return list of payment orders
     function paymentOrders() external view returns (PaymentOrder[] memory);
 
     /// @notice Returns the total outstanding token payment amount.
+    /// @param token The token in which to pay.
+    /// @return total amount of token to pay
     function outstandingTokenAmount(address token)
         external
         view
@@ -72,17 +77,17 @@ interface IERC20PaymentClientBase_v1 {
 
     /// @notice Collects outstanding payment orders.
     /// @dev Marks the orders as completed for the client.
-    ///      The responsibility to fulfill the orders are now in the caller's
-    ///      hand!
     /// @return list of payment orders
-    /// @return total amount of token to pay
+    /// @return list of token addresses
+    /// @return list of amounts
     function collectPaymentOrders()
         external
         returns (PaymentOrder[] memory, address[] memory, uint[] memory);
 
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly
     /// @dev Payment Client will reduce the total amount of tokens it will stock up by the given amount
-    /// This has to be called by a paymentProcessor
+    /// @dev This has to be called by a paymentProcessor
+    /// @param token The token in which the payment was made.
     /// @param amount amount of tokens that have been paid out
     function amountPaid(address token, uint amount) external;
 }
