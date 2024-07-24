@@ -22,6 +22,9 @@ import {
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
+// External Dependencies
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+
 /**
  * @title   KPI Rewarder Module
  *
@@ -44,6 +47,7 @@ contract LM_PC_KPIRewarder_v1 is
 {
     using SafeERC20 for IERC20;
 
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -68,11 +72,16 @@ contract LM_PC_KPIRewarder_v1 is
     //--------------------------------------------------------------------------
 
     // KPI and Configuration Storage
+    /// @notice The number of KPIs created
     uint public KPICounter;
+    /// @notice Registry of KPIs
+    /// id -> KPI
     mapping(uint => KPI) public registryOfKPIs;
+    /// @notice Registry of Assertion Configurations
+    /// assertionId -> RewardRoundConfiguration
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
-    // For locking certain utilities when there are assertions open
+    /// @notice For locking certain utilities when there are assertions open
     bool public assertionPending;
 
     // Storage gap for future upgrades
@@ -186,8 +195,6 @@ contract LM_PC_KPIRewarder_v1 is
         );
 
         assertionPending = true;
-
-        // (return assertionId)
     }
 
     //--------------------------------------------------------------------------

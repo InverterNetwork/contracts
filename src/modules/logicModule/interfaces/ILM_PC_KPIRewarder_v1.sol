@@ -59,6 +59,12 @@ interface ILM_PC_KPIRewarder_v1 {
     // Events
 
     /// @notice Event emitted when a KPI is created
+    /// @param KPI_Id The id of the KPI
+    /// @param numOfTranches The number of tranches in the KPI
+    /// @param totalKPIRewards The total rewards for the KPI
+    /// @param continuous Whether the KPI is continuous or not
+    /// @param trancheValues The values at which each tranche ends
+    /// @param trancheRewards The rewards to be distributed at completion of each tranche
     event KPICreated(
         uint indexed KPI_Id,
         uint numOfTranches,
@@ -68,6 +74,11 @@ interface ILM_PC_KPIRewarder_v1 {
         uint[] trancheRewards
     );
 
+    /// @notice Event emitted when a reward round is configured
+    /// @param assertionId The id of the assertion
+    /// @param creationTime The timestamp the assertion was created
+    /// @param assertedValue The value that was asserted
+    /// @param KpiToUse The KPI to be used for distribution once the assertion confirms
     event RewardRoundConfigured(
         bytes32 indexed assertionId,
         uint creationTime,
@@ -76,6 +87,8 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract
+    /// @param token The token used for the deposit
+    /// @param amount The amount deposited
     event FeeFundsDeposited(address indexed token, uint amount);
 
     //--------------------------------------------------------------------------
@@ -98,6 +111,7 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @param _continuous Should the tranche rewards be distributed continuously or in steps
     /// @param _trancheValues The value at which the tranches end
     /// @param _trancheRewards The rewards to be distributed at completion of each tranche
+    /// @return The KPI id
     function createKPI(
         bool _continuous,
         uint[] calldata _trancheValues,
@@ -110,10 +124,12 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice Returns the KPI with the given number
     /// @param KPInum The number of the KPI to return
+    /// @return The KPI
     function getKPI(uint KPInum) external view returns (KPI memory);
 
     /// @notice Returns the Assertion Configuration for a given assertionId
     /// @param assertionId The id of the Assertion to return
+    /// @return The Assertion Configuration
     function getAssertionConfig(bytes32 assertionId)
         external
         view
