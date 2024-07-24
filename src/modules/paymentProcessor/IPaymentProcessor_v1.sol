@@ -46,6 +46,7 @@ interface IPaymentProcessor_v1 {
 
     /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.
     /// @param recipient The address that will receive the payment.
+    /// @param token The token address in which the payment should have happened.
     /// @param amount The amount of tokens the payment consists of.
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
