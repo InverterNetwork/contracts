@@ -147,7 +147,17 @@ interface IAUT_EXT_VotingRoles_v1 {
 
     /// @notice Gets the motion data.
     /// @param motionId The ID of the motion.
-    /// @return The motion data.
+    /// @return target The address of the contract to execute the action on.
+    /// @return action The action data to execute on the target contract.
+    /// @return startTimestamp The timestamp at which the motion starts.
+    /// @return endTimestamp The timestamp at which the motion ends.
+    /// @return requiredThreshold The required threshold of votes to pass the motion.
+    /// @return forVotes The number of votes in favor of the motion.
+    /// @return againstVotes The number of votes against the motion.
+    /// @return abstainVotes The number of votes abstaining from the motion.
+    /// @return executedAt The timestamp at which the motion was executed.
+    /// @return executionResult The result of the execution.
+    /// @return executionReturnData The return data of the execution.
     function motions(uint motionId)
         external
         view
