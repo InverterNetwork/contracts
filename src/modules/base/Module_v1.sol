@@ -45,6 +45,7 @@ abstract contract Module_v1 is
     ERC2771ContextUpgradeable,
     ERC165
 {
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -101,6 +102,7 @@ abstract contract Module_v1 is
         _;
     }
 
+    /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRoleAdmin(bytes32 role) {
         bytes32 moduleRole = __Module_orchestrator.authorizer().generateRoleId(
             address(this), role
@@ -194,6 +196,7 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // Role Management
 
+    /// @inheritdoc IModule_v1
     function grantModuleRole(bytes32 role, address target)
         external
         onlyModuleRoleAdmin(role)
@@ -201,6 +204,7 @@ abstract contract Module_v1 is
         __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
     }
 
+    /// @inheritdoc IModule_v1
     function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyModuleRoleAdmin(role)
@@ -210,6 +214,7 @@ abstract contract Module_v1 is
         );
     }
 
+    /// @inheritdoc IModule_v1
     function revokeModuleRole(bytes32 role, address target)
         external
         onlyModuleRoleAdmin(role)
@@ -217,6 +222,7 @@ abstract contract Module_v1 is
         __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
     }
 
+    /// @inheritdoc IModule_v1
     function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
         external
         onlyModuleRoleAdmin(role)
@@ -284,12 +290,16 @@ abstract contract Module_v1 is
         return __Module_orchestrator.executeTxFromModule(address(this), data);
     }
 
+    /// @dev Checks if the caller has the specified role.
+    /// @param role The role to check.
+    /// @param addr The address to check.
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
         }
     }
 
+    /// @dev Checks if the caller is the orchestrator.
     function _onlyOrchestratorModifier() internal view {
         if (_msgSender() != address(__Module_orchestrator)) {
             revert Module__OnlyCallableByOrchestrator();

@@ -6,11 +6,17 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 interface IModule_v1 {
+    /// @notice The module's metadata.
     struct Metadata {
+        /// @notice The module's major version.
         uint majorVersion;
+        /// @notice The module's minor version.
         uint minorVersion;
+        /// @notice The module's patch version.
         uint patchVersion;
+        /// @notice The module's URL.
         string url;
+        /// @notice The module's title.
         string title;
     }
 
@@ -28,6 +34,8 @@ interface IModule_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
+    /// @param role The role that is required.
+    /// @param caller The address that is required to have the role.
     error Module__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Function is only callable by the orchestrator.
@@ -83,13 +91,25 @@ interface IModule_v1 {
     /// @return The module's orchestrator.
     function orchestrator() external view returns (IOrchestrator_v1);
 
+    /// @notice Grants a module role to a target address.
+    /// @param role The role to grant.
+    /// @param target The target address to grant the role to.
     function grantModuleRole(bytes32 role, address target) external;
 
+    /// @notice Grants a module role to multiple target addresses.
+    /// @param role The role to grant.
+    /// @param targets The target addresses to grant the role to.
     function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external;
 
+    /// @notice Revokes a module role from a target address.
+    /// @param role The role to revoke.
+    /// @param target The target address to revoke the role from.
     function revokeModuleRole(bytes32 role, address target) external;
 
+    /// @notice Revokes a module role from multiple target addresses.
+    /// @param role The role to revoke.
+    /// @param targets The target addresses to revoke the role from.
     function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
         external;
 }
