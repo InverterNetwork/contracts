@@ -56,7 +56,7 @@ contract ModuleFactory_v1 is
     Ownable2StepUpgradeable,
     ERC165Upgradeable
 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

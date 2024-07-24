@@ -23,7 +23,8 @@ import {
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   KPI Rewarder Module
@@ -47,7 +48,7 @@ contract LM_PC_KPIRewarder_v1 is
 {
     using SafeERC20 for IERC20;
 
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

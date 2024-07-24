@@ -8,7 +8,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IRebasingERC20} from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
 // Internal Dependencies
-import {ERC165, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 import {ElasticReceiptTokenBase_v1} from
     "@fm/rebasing/abstracts/ElasticReceiptTokenBase_v1.sol";
 
@@ -43,7 +43,7 @@ import {Strings} from "@oz/utils/Strings.sol";
  * @author  Inverter Network
  */
 contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

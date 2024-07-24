@@ -9,7 +9,7 @@ import {IAUT_EXT_VotingRoles_v1} from
     "src/modules/authorizer/role/interfaces/IAUT_EXT_VotingRoles_v1.sol";
 
 // Internal Dependencies
-import {ERC165, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 /**
  * @title   Voting Role Manager
  *
@@ -29,7 +29,7 @@ import {ERC165, Module_v1} from "src/modules/base/Module_v1.sol";
  */
 
 contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

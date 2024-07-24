@@ -203,7 +203,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param _ID The ID of the motion.
     /// @param voter The address of the voter.
     /// @return The receipt of the voter.
-    function getReceipt(uint _ID, address voter)
+    function getReceipt(bytes32 _ID, address voter)
         external
         view
         returns (Receipt memory);

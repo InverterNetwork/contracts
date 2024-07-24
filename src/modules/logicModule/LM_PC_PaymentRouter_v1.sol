@@ -19,7 +19,8 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   Payment Router
@@ -41,7 +42,7 @@ contract LM_PC_PaymentRouter_v1 is
     ILM_PC_PaymentRouter_v1,
     ERC20PaymentClientBase_v1
 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

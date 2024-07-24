@@ -61,7 +61,7 @@ contract OrchestratorFactory_v1 is
     Ownable2StepUpgradeable,
     ERC165Upgradeable
 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -88,10 +88,6 @@ contract OrchestratorFactory_v1 is
     /// @dev The counter of the current orchestrator id.
     /// @dev Starts counting from 1.
     uint private _orchestratorIdCounter;
-
-    /// @dev Maps a users address to a nonce
-    ///      Used for the create2-based deployment
-    mapping(address => uint) private _deploymentNonces;
 
     /// @dev Maps a users address to a nonce
     ///      Used for the create2-based deployment

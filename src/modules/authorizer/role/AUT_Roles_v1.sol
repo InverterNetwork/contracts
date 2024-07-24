@@ -11,7 +11,8 @@ import {IOrchestrator_v1} from
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
@@ -41,7 +42,7 @@ contract AUT_Roles_v1 is
     AccessControlEnumerableUpgradeable,
     Module_v1
 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

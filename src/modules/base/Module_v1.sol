@@ -50,7 +50,7 @@ abstract contract Module_v1 is
     ERC2771ContextUpgradeable,
     ERC165Upgradeable
 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

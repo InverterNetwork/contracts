@@ -19,6 +19,10 @@ import {
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardUpgradeable} from
@@ -45,7 +49,7 @@ contract LM_PC_Staking_v1 is
 {
     using SafeERC20 for IERC20;
 
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

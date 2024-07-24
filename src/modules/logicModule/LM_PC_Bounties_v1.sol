@@ -17,6 +17,10 @@ import {
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 // Internal Libraries
 import {LinkedIdList} from "src/common/LinkedIdList.sol";
 
@@ -42,7 +46,7 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
  * @author  Inverter Network
  */
 contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

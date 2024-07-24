@@ -13,7 +13,8 @@ import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 import {AccessControlUpgradeable} from
     "@oz-up/access/AccessControlUpgradeable.sol";
@@ -43,7 +44,7 @@ interface TokenInterface {
  * @author  Inverter Network
  */
 contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view

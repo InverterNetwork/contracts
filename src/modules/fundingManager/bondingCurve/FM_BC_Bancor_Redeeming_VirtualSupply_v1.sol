@@ -10,7 +10,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
-import {ERC165, Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 
 import {
     IBondingCurveBase_v1,
@@ -36,7 +36,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Libraries
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
@@ -70,7 +71,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     VirtualCollateralSupplyBase_v1,
     RedeemingBondingCurveBase_v1
 {
-    /// @inheritdoc ERC165
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -158,7 +159,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         // Check for valid Bancor Formula
         if (
-            !ERC165(bondingCurveProperties.formula).supportsInterface(
+            !ERC165Upgradeable(bondingCurveProperties.formula).supportsInterface(
                 type(IBancorFormula).interfaceId
             )
         ) {
