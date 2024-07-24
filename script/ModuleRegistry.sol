@@ -15,6 +15,8 @@ import {IOrchestratorFactory_v1} from
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {InverterReverter_v1} from
     "src/external/reverter/InverterReverter_v1.sol";
+import {FeeManager_v1 } from "@ex/fees/FeeManager_v1.sol";
+import {TransactionForwarder_v1} from "@ex/forwarder/TransactionForwarder_v1.sol";
 
 // Beacon
 import {
@@ -24,7 +26,9 @@ import {
 
 // Modules
 // =============================================================================
+import{ Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+
 
 // Funding Managers
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
@@ -52,17 +56,13 @@ import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 // Import scripts:
-import {DeployModuleFactory_v1} from
+import {ModuleFactory_v1, DeployModuleFactory_v1} from
     "script/factories/DeployModuleFactory_v1.s.sol";
-import {DeployOrchestratorFactory_v1} from
+import {OrchestratorFactory_v1, DeployOrchestratorFactory_v1} from
     "script/factories/DeployOrchestratorFactory_v1.s.sol";
 
 import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
 import {DeployFeeManager_v1} from "script/external/DeployFeeManager_v1.s.sol";
-import {DeployInverterReverter_v1} from
-    "script/external/DeployInverterReverter_v1.s.sol";
-import {DeployTransactionForwarder_v1} from
-    "script/external/DeployTransactionForwarder_v1.s.sol";
 import {DeployOrchestrator_v1} from
     "script/orchestrator/DeployOrchestrator_v1.s.sol";
 
@@ -71,8 +71,7 @@ import {DeployOrchestrator_v1} from
 //--------------------------------------------------------------------------
 // # TEMPLATE
 // For each Module, this file should declare:
-//      address moduleInstance;
-//      DeployModule deployModule = new DeployModule();
+//      address moduleImplementation;  // The implementation address owill be stored here
 //      IModule_v1.Metadata moduleMetadata = IModule_v1.Metadata(
 //          1, 1, "https://github.com/inverter/module", "ModuleName"
 //      );
@@ -86,7 +85,7 @@ contract ModuleRegistry is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    function deployModuleImplementation(string memory contractName)
+    function deployImplementation(string memory contractName, bytes memory constructorArgs)
         public
         returns (address implementation)
     {
@@ -94,7 +93,7 @@ contract ModuleRegistry is Script {
         {
             // Deploy the Module Implementation.
 
-            implementation = giantSwitchFromHell(contractName);
+            implementation = giantSwitchFromHell(contractName, constructorArgs);
         }
 
         vm.stopBroadcast();
@@ -107,12 +106,36 @@ contract ModuleRegistry is Script {
         );
     }
 
-    function giantSwitchFromHell(string memory contractName)
+    function giantSwitchFromHell(string memory contractName, bytes memory constructorArgs)
         internal
         returns (address)
     {
+        // Orchestrator
+        if (Strings.equal(contractName, "Orchestrator_v1")) {
+            address forwarder = abi.decode(constructorArgs, (address));
+            return address(new Orchestrator_v1(forwarder));
+        }
+        // Protocol Contracts
+        else if (Strings.equal(contractName, "Governor_v1")) {
+            return address(new Governor_v1());     
+        } else if (Strings.equal(contractName, "FeeManager_v1")) {
+            return address(new FeeManager_v1());
+        } else if (Strings.equal(contractName, "InverterReverter_v1")) {
+            return address(new InverterReverter_v1());
+        } else if (Strings.equal(contractName, "TransactionForwarder_v1")) {
+            string memory name = abi.decode(constructorArgs, (string));
+            return address(new TransactionForwarder_v1(name));
+        } 
+        // Factories
+        else if (Strings.equal(contractName, "ModuleFactory_v1")) {
+            (address reverter, address forwarder) = abi.decode(constructorArgs, (address, address));
+            return address(new ModuleFactory_v1(reverter, forwarder));
+        } else if (Strings.equal(contractName, "OrchestratorFactory_v1")) {
+            address forwarder = abi.decode(constructorArgs, (address));
+            return address(new OrchestratorFactory_v1(forwarder));   
+        }
         // Funding Managers
-        if (Strings.equal(contractName, "FM_Rebasing_v1")) {
+        else if (Strings.equal(contractName, "FM_Rebasing_v1")) {
             return address(new FM_Rebasing_v1());
         } else if (
             Strings.equal(
@@ -188,14 +211,10 @@ contract ModuleRegistry is Script {
 
     // InverterReverter_v1
     address reverter_Implementation;
-    DeployInverterReverter_v1 deployInverterReverter =
-        new DeployInverterReverter_v1();
     // No Metadata
 
     // TransactionForwarder_v1
     address forwarder_Implementation;
-    DeployTransactionForwarder_v1 deployTransactionForwarder =
-        new DeployTransactionForwarder_v1();
     // No Metadata
 
     // -----------------------------------------------------------------------------

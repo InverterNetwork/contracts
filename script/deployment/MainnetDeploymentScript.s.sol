@@ -59,13 +59,15 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
         console2.log("Deploy reverter\n");
         // Reverter
-        reverter_Implementation = deployInverterReverter.run();
+        reverter_Implementation = deployImplementation("InverterReverter_v1", bytes(""));
 
         console2.log(
             "-----------------------------------------------------------------------------"
         );
 
         console2.log("Deploy Fee Manager \n");
+
+        feeManager_Implementation = deployImplementation("FeeManager_v1", bytes("")); // TODO adapt separate deploy script
 
         feeManager_Proxy = deployFeeManager.createProxy(
             reverter_Implementation, communityMultisig
@@ -75,6 +77,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
             "-----------------------------------------------------------------------------"
         );
         console2.log("Governance Contract \n");
+
+        governor_Implementation = deployImplementation("Governor_v1", bytes("")); // TODO adapt separate deploy script
 
         (governor_Proxy, governor_Implementation) = deployGovernor.run(
             communityMultisig, teamMultisig, 1 weeks, feeManager_Proxy
@@ -96,7 +100,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         console2.log("Deploy forwarder implementation and proxy \n");
         // Deploy TransactionForwarder_v1 implementation
-        forwarder_Implementation = deployTransactionForwarder.run();
+        bytes memory constructorArgs = abi.encode("Inverter Transaction Forwarder");
+        forwarder_Implementation = deployImplementation("TransactionForwarder_v1", constructorArgs);
 
         // Deploy beacon and actual proxy
         (forwarder_Beacon, forwarder_Proxy) = deployAndSetupInverterBeacon_v1
@@ -195,7 +200,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
     function _setup_FundingManagers() internal {
         // Rebasing Funding Manager
         FM_Rebasing_v1_Implementation =
-            deployModuleImplementation(FM_Rebasing_v1_Metadata.title);
+            deployImplementation(FM_Rebasing_v1_Metadata.title, bytes(""));
         initialMetadataRegistration.push(FM_Rebasing_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -212,8 +217,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // Bancor Virtual Supply Bonding Curve Funding Manager
         FM_BC_Bancor_Redeeming_VirtualSupply_v1_Implementation =
-        deployModuleImplementation(
-            FM_BC_Bancor_Redeeming_VirtualSupply_v1_Metadata.title
+        deployImplementation(
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1_Metadata.title, bytes("")
         );
 
         initialMetadataRegistration.push(
@@ -238,8 +243,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // Restricted Bancor Virtual Supply Bonding Curve Funding Manager
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Implementation =
-        deployModuleImplementation(
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata.title
+        deployImplementation(
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata.title, bytes("")
         );
 
         initialMetadataRegistration.push(
@@ -266,7 +271,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
     function _setup_Authorizers() internal {
         // RoleAuthorizer
         AUT_Roles_v1_Implementation =
-            deployModuleImplementation(AUT_Roles_v1_Metadata.title);
+            deployImplementation(AUT_Roles_v1_Metadata.title, bytes(""));
 
         initialMetadataRegistration.push(AUT_Roles_v1_Metadata);
 
@@ -285,7 +290,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // TokenGated RoleAuthorizer
         AUT_TokenGated_Roles_v1_Implementation =
-            deployModuleImplementation(AUT_TokenGated_Roles_v1_Metadata.title);
+            deployImplementation(AUT_TokenGated_Roles_v1_Metadata.title, bytes(""));
 
         initialMetadataRegistration.push(AUT_TokenGated_Roles_v1_Metadata);
 
@@ -304,7 +309,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // Single Vote Governor
         AUT_EXT_VotingRoles_v1_Implementation =
-            deployModuleImplementation(AUT_EXT_VotingRoles_v1_Metadata.title);
+            deployImplementation(AUT_EXT_VotingRoles_v1_Metadata.title, bytes(""));
         initialMetadataRegistration.push(AUT_EXT_VotingRoles_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -323,7 +328,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
     function _setup_PaymentProcessors() internal {
         //  Simple Payment Processor
         PP_Simple_v1_Implementation =
-            deployModuleImplementation(PP_Simple_v1_Metadata.title);
+            deployImplementation(PP_Simple_v1_Metadata.title, bytes(""));
 
         initialMetadataRegistration.push(PP_Simple_v1_Metadata);
 
@@ -342,7 +347,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         //  Streaming Payment Processor
         PP_Streaming_v1_Implementation =
-            deployModuleImplementation(PP_Streaming_v1_Metadata.title);
+            deployImplementation(PP_Streaming_v1_Metadata.title, bytes(""));
 
         initialMetadataRegistration.push(PP_Streaming_v1_Metadata);
 
@@ -363,7 +368,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
     function _setup_LogicModules() internal {
         // Bounty Manager
         LM_PC_Bounties_v1_Implementation =
-            deployModuleImplementation(LM_PC_Bounties_v1_Metadata.title);
+            deployImplementation(LM_PC_Bounties_v1_Metadata.title, bytes(""));
         initialMetadataRegistration.push(LM_PC_Bounties_v1_Metadata);
 
         initialBeaconRegistration.push(
@@ -381,7 +386,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // Recurring Payment Manager
         LM_PC_RecurringPayments_v1_Implementation =
-            deployModuleImplementation(LM_PC_RecurringPayments_v1_Metadata.title);
+            deployImplementation(LM_PC_RecurringPayments_v1_Metadata.title, bytes(""));
 
         initialMetadataRegistration.push(LM_PC_RecurringPayments_v1_Metadata);
 
@@ -399,7 +404,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
         // KPI Rewarder
         LM_PC_KPIRewarder_v1_Implementation =
-            deployModuleImplementation(LM_PC_KPIRewarder_v1_Metadata.title);
+            deployImplementation(LM_PC_KPIRewarder_v1_Metadata.title, bytes(""));
         initialMetadataRegistration.push(LM_PC_KPIRewarder_v1_Metadata);
 
         initialBeaconRegistration.push(
@@ -417,7 +422,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // Payment Router
         LM_PC_PaymentRouter_v1_Implementation =
-            deployModuleImplementation(LM_PC_PaymentRouter_v1_Metadata.title);
+            deployImplementation(LM_PC_PaymentRouter_v1_Metadata.title, bytes(""));
 
         initialMetadataRegistration.push(LM_PC_PaymentRouter_v1_Metadata);
 

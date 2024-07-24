@@ -31,7 +31,7 @@ contract DeployGovernor_v1 is Script {
         address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
         address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
         address feeManager = vm.envAddress("FEE_MANAGER_ADDRESS");
-        uint timelockPeriod = 1 weeks;
+        uint timelockPeriod = 1 weeks; // TODO: Use DeploymentConstants for this
         // Check settings.
 
         require(
