@@ -38,6 +38,8 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     error ModuleManagerBase__ModuleAmountOverLimits();
 
     /// @notice Timelock still active for the given module address.
+    /// @param _module The module address.
+    /// @param _timelockUntil The unix timestamp until the timelock is active.
     error ModuleManagerBase__ModuleUpdateTimelockStillActive(
         address _module, uint _timelockUntil
     );
@@ -94,20 +96,24 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     function listModules() external view returns (address[] memory);
 
     /// @notice Returns the number of modules.
+    /// @return The number of modules.
     function modulesSize() external view returns (uint8);
 
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
     // @dev We imitate here the EIP2771 Standard to enable metatransactions
 
-    // @notice Returns wether the given address is the trusted forwarder or not
-    // @dev Exposes the ERC2771 isTrusted Forwarder
+    /// @notice Returns wether the given address is the trusted forwarder or not
+    /// @dev Exposes the ERC2771 isTrusted Forwarder
+    /// @param forwarder The address to check.
+    /// @return True if the address is the trusted forwarder, false otherwise.
     function isTrustedForwarder(address forwarder)
         external
         view
         returns (bool);
 
-    // @notice Returns the trusted forwarder for metatransactions
-    // @dev Exposes the ERC2771 isTrusted Forwarder
+    /// @notice Returns the trusted forwarder for metatransactions
+    /// @dev Exposes the ERC2771 isTrusted Forwarder
+    /// @return The trusted forwarder address.
     function trustedForwarder() external view returns (address);
 }
