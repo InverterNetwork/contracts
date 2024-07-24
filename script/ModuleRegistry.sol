@@ -15,8 +15,9 @@ import {IOrchestratorFactory_v1} from
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {InverterReverter_v1} from
     "src/external/reverter/InverterReverter_v1.sol";
-import {FeeManager_v1 } from "@ex/fees/FeeManager_v1.sol";
-import {TransactionForwarder_v1} from "@ex/forwarder/TransactionForwarder_v1.sol";
+import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
+import {TransactionForwarder_v1} from
+    "@ex/forwarder/TransactionForwarder_v1.sol";
 
 // Beacon
 import {
@@ -26,9 +27,8 @@ import {
 
 // Modules
 // =============================================================================
-import{ Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-
 
 // Funding Managers
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
@@ -56,15 +56,15 @@ import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 // Import scripts:
-import {ModuleFactory_v1, DeployModuleFactory_v1} from
-    "script/factories/DeployModuleFactory_v1.s.sol";
-import {OrchestratorFactory_v1, DeployOrchestratorFactory_v1} from
-    "script/factories/DeployOrchestratorFactory_v1.s.sol";
+import {
+    ModuleFactory_v1,
+    DeployModuleFactory_v1
+} from "script/factories/DeployModuleFactory_v1.s.sol";
+import {
+    OrchestratorFactory_v1,
+    DeployOrchestratorFactory_v1
+} from "script/factories/DeployOrchestratorFactory_v1.s.sol";
 
-import {DeployGovernor_v1} from "script/external/DeployGovernor_v1.s.sol";
-import {DeployFeeManager_v1} from "script/external/DeployFeeManager_v1.s.sol";
-import {DeployOrchestrator_v1} from
-    "script/orchestrator/DeployOrchestrator_v1.s.sol";
 
 //--------------------------------------------------------------------------
 // General Module Registry Information
@@ -85,10 +85,10 @@ contract ModuleRegistry is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    function deployImplementation(string memory contractName, bytes memory constructorArgs)
-        public
-        returns (address implementation)
-    {
+    function deployImplementation(
+        string memory contractName,
+        bytes memory constructorArgs
+    ) public returns (address implementation) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the Module Implementation.
@@ -106,10 +106,10 @@ contract ModuleRegistry is Script {
         );
     }
 
-    function giantSwitchFromHell(string memory contractName, bytes memory constructorArgs)
-        internal
-        returns (address)
-    {
+    function giantSwitchFromHell(
+        string memory contractName,
+        bytes memory constructorArgs
+    ) internal returns (address) {
         // Orchestrator
         if (Strings.equal(contractName, "Orchestrator_v1")) {
             address forwarder = abi.decode(constructorArgs, (address));
@@ -117,7 +117,7 @@ contract ModuleRegistry is Script {
         }
         // Protocol Contracts
         else if (Strings.equal(contractName, "Governor_v1")) {
-            return address(new Governor_v1());     
+            return address(new Governor_v1());
         } else if (Strings.equal(contractName, "FeeManager_v1")) {
             return address(new FeeManager_v1());
         } else if (Strings.equal(contractName, "InverterReverter_v1")) {
@@ -125,14 +125,15 @@ contract ModuleRegistry is Script {
         } else if (Strings.equal(contractName, "TransactionForwarder_v1")) {
             string memory name = abi.decode(constructorArgs, (string));
             return address(new TransactionForwarder_v1(name));
-        } 
+        }
         // Factories
         else if (Strings.equal(contractName, "ModuleFactory_v1")) {
-            (address reverter, address forwarder) = abi.decode(constructorArgs, (address, address));
+            (address reverter, address forwarder) =
+                abi.decode(constructorArgs, (address, address));
             return address(new ModuleFactory_v1(reverter, forwarder));
         } else if (Strings.equal(contractName, "OrchestratorFactory_v1")) {
             address forwarder = abi.decode(constructorArgs, (address));
-            return address(new OrchestratorFactory_v1(forwarder));   
+            return address(new OrchestratorFactory_v1(forwarder));
         }
         // Funding Managers
         else if (Strings.equal(contractName, "FM_Rebasing_v1")) {
@@ -189,33 +190,68 @@ contract ModuleRegistry is Script {
     address orchestratorFactory;
     DeployOrchestratorFactory_v1 deployOrchestratorFactory =
         new DeployOrchestratorFactory_v1();
+    IModule_v1.Metadata orchestratorFactory_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "OrchestratorFactory_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
     // No Metadata
 
     // ModuleFactory
     address moduleFactory;
     DeployModuleFactory_v1 deployModuleFactory = new DeployModuleFactory_v1();
-    // No Metadata
+    IModule_v1.Metadata moduleFactory_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "ModuleFactory_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // PROTOCOL GOVERNANCE
     // -----------------------------------------------------------------------------
 
     // Governor_v1
     address governor_Implementation;
-    DeployGovernor_v1 deployGovernor = new DeployGovernor_v1();
-    // No Metadata
+    IModule_v1.Metadata governor_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "Governor_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // FeeManager
     address feeManager_Implementation;
-    DeployFeeManager_v1 deployFeeManager = new DeployFeeManager_v1();
-    // No Metadata
+    IModule_v1.Metadata feeManager_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "FeeManager_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // InverterReverter_v1
     address reverter_Implementation;
-    // No Metadata
+    IModule_v1.Metadata reverter_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "InverterReverter_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // TransactionForwarder_v1
     address forwarder_Implementation;
-    // No Metadata
+    IModule_v1.Metadata forwarder_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "TransactionForwarder_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // -----------------------------------------------------------------------------
     // ORCHESTRATOR AND MODULES
@@ -223,8 +259,13 @@ contract ModuleRegistry is Script {
 
     // Orchestrator_v1
     address orchestrator_Implementation;
-    DeployOrchestrator_v1 deployOrchestrator = new DeployOrchestrator_v1();
-    // No Metadata
+    IModule_v1.Metadata orchestrator_Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "Orchestrator_v1"
+    ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // -----------------------------------------------------------------------------
 

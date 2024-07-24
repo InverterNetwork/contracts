@@ -11,6 +11,9 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
+import {Governor_v1} from "@ex/governance/Governor_v1.sol";
+import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
+
 // Import scripts:
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
@@ -28,11 +31,16 @@ contract MainnetDeploymentScript is ModuleRegistry {
     address forwarder_Proxy;
     address forwarder_Beacon;
 
+    address governor_Beacon;
     address governor_Proxy;
+
+    address feeManager_Beacon;
     address feeManager_Proxy;
 
     IModule_v1.Metadata[] initialMetadataRegistration;
     IInverterBeacon_v1[] initialBeaconRegistration;
+
+    bytes buf_constructorArgs;
 
     /// @notice Deploys all necessary factories, beacons and implementations
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
@@ -59,7 +67,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
         console2.log("Deploy reverter\n");
         // Reverter
-        reverter_Implementation = deployImplementation("InverterReverter_v1", bytes(""));
+        reverter_Implementation =
+            deployImplementation("InverterReverter_v1", bytes(""));
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -67,11 +76,23 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         console2.log("Deploy Fee Manager \n");
 
-        feeManager_Implementation = deployImplementation("FeeManager_v1", bytes("")); // TODO adapt separate deploy script
+        feeManager_Implementation =
+            deployImplementation("FeeManager_v1", bytes(""));
 
-        feeManager_Proxy = deployFeeManager.createProxy(
-            reverter_Implementation, communityMultisig
-        ); //@note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
+        (feeManager_Beacon, feeManager_Proxy) = deployAndSetupInverterBeacon_v1
+            .deployBeaconAndSetupProxy(
+            feeManager_Metadata.title,
+            reverter_Implementation,
+            communityMultisig,
+            feeManager_Implementation,
+            feeManager_Metadata.majorVersion,
+            feeManager_Metadata.minorVersion,
+            feeManager_Metadata.patchVersion
+        );
+
+        //feeManager_Proxy = deployFeeManager.createProxy(
+        //    reverter_Implementation, communityMultisig
+        //); //@note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -80,38 +101,42 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         governor_Implementation = deployImplementation("Governor_v1", bytes("")); // TODO adapt separate deploy script
 
-        (governor_Proxy, governor_Implementation) = deployGovernor.run(
-            communityMultisig, teamMultisig, 1 weeks, feeManager_Proxy
+        (governor_Beacon, governor_Proxy) = 
+        deployAndSetupInverterBeacon_v1.deployBeaconAndSetupProxy(
+            governor_Metadata.title,
+            reverter_Implementation,
+            communityMultisig,
+            governor_Implementation,
+            governor_Metadata.majorVersion,
+            governor_Metadata.minorVersion,
+            governor_Metadata.patchVersion
         );
+
+        /*(governor_Proxy, governor_Implementation) = deployGovernor.run(
+            communityMultisig, teamMultisig, 1 weeks, feeManager_Proxy
+        );*/
 
         console2.log(
             "-----------------------------------------------------------------------------"
         );
 
-        console2.log("Init Fee Manager \n");
-
-        deployFeeManager.init(
-            feeManager_Proxy,
-            address(governor_Proxy),
-            treasury, // treasury
-            100, // Collateral Fee 1%
-            100 // Issuance Fee 1%
-        );
-
         console2.log("Deploy forwarder implementation and proxy \n");
         // Deploy TransactionForwarder_v1 implementation
-        bytes memory constructorArgs = abi.encode("Inverter Transaction Forwarder");
-        forwarder_Implementation = deployImplementation("TransactionForwarder_v1", constructorArgs);
+        buf_constructorArgs =
+            abi.encode("Inverter Transaction Forwarder");
+        forwarder_Implementation =
+            deployImplementation("TransactionForwarder_v1", buf_constructorArgs);
 
         // Deploy beacon and actual proxy
         (forwarder_Beacon, forwarder_Proxy) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(
+            forwarder_Metadata.title,
             reverter_Implementation,
             address(governor_Proxy),
             forwarder_Implementation,
-            1,
-            0,
-            0
+            forwarder_Metadata.majorVersion,
+            forwarder_Metadata.minorVersion,
+            forwarder_Metadata.patchVersion
         );
 
         if (
@@ -127,7 +152,9 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         console2.log("Deploy orchestrator implementation \n");
         // Orchestrator_v1
-        orchestrator_Implementation = deployOrchestrator.run(forwarder_Proxy);
+        buf_constructorArgs = abi.encode(forwarder_Proxy);
+        orchestrator_Implementation =
+            deployImplementation(orchestrator_Metadata.title, buf_constructorArgs);
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -164,9 +191,41 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // TODO: Initialize protocol singleton proxies here
 
+        // initialize feeManager
+        console2.log("Init Fee Manager \n");
+
+        // TODO: use script constants
+        vm.startBroadcast(deployerPrivateKey);
+        {
+        FeeManager_v1(feeManager_Proxy).init(
+            address(governor_Proxy),
+            treasury, // treasury
+            100, // Collateral Fee 1%
+            100 // Issuance Fee 1%
+        );
+        }
+         vm.stopBroadcast();
+
+        // intialize Governor
+                console2.log("Init Governor \n");
+
+        // TODO: use script constants
+        vm.startBroadcast(deployerPrivateKey);
+        {
+        Governor_v1(governor_Proxy).init(
+            communityMultisig,
+            teamMultisig,
+            1 weeks, //timelockPeriod ,
+            feeManager_Proxy
+        );
+        }
+         vm.stopBroadcast();
+
         // =============================================================================
         // Deploy Factories and register all modules
         // =============================================================================
+
+        // TODO: check out if here  we can remove scirpts too
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -205,6 +264,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    FM_Rebasing_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     FM_Rebasing_v1_Implementation,
@@ -228,6 +288,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    FM_BC_Bancor_Redeeming_VirtualSupply_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     FM_BC_Bancor_Redeeming_VirtualSupply_v1_Implementation,
@@ -244,7 +305,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
         // Restricted Bancor Virtual Supply Bonding Curve Funding Manager
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Implementation =
         deployImplementation(
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata.title, bytes("")
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata.title,
+            bytes("")
         );
 
         initialMetadataRegistration.push(
@@ -254,6 +316,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Metadata
+                        .title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1_Implementation,
@@ -278,6 +342,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    AUT_Roles_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     AUT_Roles_v1_Implementation,
@@ -289,14 +354,16 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
 
         // TokenGated RoleAuthorizer
-        AUT_TokenGated_Roles_v1_Implementation =
-            deployImplementation(AUT_TokenGated_Roles_v1_Metadata.title, bytes(""));
+        AUT_TokenGated_Roles_v1_Implementation = deployImplementation(
+            AUT_TokenGated_Roles_v1_Metadata.title, bytes("")
+        );
 
         initialMetadataRegistration.push(AUT_TokenGated_Roles_v1_Metadata);
 
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    AUT_TokenGated_Roles_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     AUT_TokenGated_Roles_v1_Implementation,
@@ -308,12 +375,14 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
 
         // Single Vote Governor
-        AUT_EXT_VotingRoles_v1_Implementation =
-            deployImplementation(AUT_EXT_VotingRoles_v1_Metadata.title, bytes(""));
+        AUT_EXT_VotingRoles_v1_Implementation = deployImplementation(
+            AUT_EXT_VotingRoles_v1_Metadata.title, bytes("")
+        );
         initialMetadataRegistration.push(AUT_EXT_VotingRoles_v1_Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    AUT_EXT_VotingRoles_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     AUT_EXT_VotingRoles_v1_Implementation,
@@ -335,6 +404,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    PP_Simple_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     PP_Simple_v1_Implementation,
@@ -354,6 +424,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    PP_Streaming_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     PP_Streaming_v1_Implementation,
@@ -374,6 +445,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    LM_PC_Bounties_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     LM_PC_Bounties_v1_Implementation,
@@ -385,14 +457,16 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
 
         // Recurring Payment Manager
-        LM_PC_RecurringPayments_v1_Implementation =
-            deployImplementation(LM_PC_RecurringPayments_v1_Metadata.title, bytes(""));
+        LM_PC_RecurringPayments_v1_Implementation = deployImplementation(
+            LM_PC_RecurringPayments_v1_Metadata.title, bytes("")
+        );
 
         initialMetadataRegistration.push(LM_PC_RecurringPayments_v1_Metadata);
 
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    LM_PC_RecurringPayments_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     LM_PC_RecurringPayments_v1_Implementation,
@@ -410,6 +484,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    LM_PC_KPIRewarder_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     LM_PC_KPIRewarder_v1_Implementation,
@@ -421,14 +496,16 @@ contract MainnetDeploymentScript is ModuleRegistry {
         );
 
         // Payment Router
-        LM_PC_PaymentRouter_v1_Implementation =
-            deployImplementation(LM_PC_PaymentRouter_v1_Metadata.title, bytes(""));
+        LM_PC_PaymentRouter_v1_Implementation = deployImplementation(
+            LM_PC_PaymentRouter_v1_Metadata.title, bytes("")
+        );
 
         initialMetadataRegistration.push(LM_PC_PaymentRouter_v1_Metadata);
 
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+                    LM_PC_PaymentRouter_v1_Metadata.title,
                     reverter_Implementation,
                     address(governor_Proxy),
                     LM_PC_PaymentRouter_v1_Implementation,

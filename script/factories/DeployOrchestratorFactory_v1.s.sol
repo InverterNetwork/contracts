@@ -87,6 +87,7 @@ contract DeployOrchestratorFactory_v1 is Script {
 
         (orchestratorFactoryBeacon, orchestratorFactoryProxy) =
         deployAndSetUpInverterBeacon_v1.deployBeaconAndSetupProxy(
+            "OrchestratorFactory_v1",
             ModuleFactory_v1(moduleFactory).reverter(),
             governor,
             orchestratorFactoryImplementation,
@@ -97,6 +98,7 @@ contract DeployOrchestratorFactory_v1 is Script {
 
         address orchestratorImplementationBeacon =
         deployAndSetUpInverterBeacon_v1.deployInverterBeacon(
+            "Orchestrator_v1",
             ModuleFactory_v1(moduleFactory).reverter(),
             governor,
             orchestratorImplementation,

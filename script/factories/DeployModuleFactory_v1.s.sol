@@ -83,7 +83,13 @@ contract DeployModuleFactory_v1 is Script {
 
         (moduleFactoryBeacon, moduleFactoryProxy) =
         deployAndSetUpInverterBeacon_v1.deployBeaconAndSetupProxy(
-            reverter, governor, moduleFactoryImplementation, 1, 0, 0
+            "ModuleFactory_v1",
+            reverter,
+            governor,
+            moduleFactoryImplementation,
+            1,
+            0,
+            0
         );
 
         moduleFactory = ModuleFactory_v1(moduleFactoryProxy);

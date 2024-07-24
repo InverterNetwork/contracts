@@ -38,6 +38,10 @@ contract UpgradeInverterBeacon_v1 is Script {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("Implementation upgraded at address", address(beacon));
+        console2.log(
+            "Implementation for Inverter Beacon at %s upgraded to %s",
+            address(beacon),
+            address(implementation)
+        );
     }
 }

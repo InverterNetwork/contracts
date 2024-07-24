@@ -22,14 +22,17 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
 
-    InverterBeacon_v1 beacon;
+    //InverterBeacon_v1 beacon;
 
+    // TODO move out of here (probably to a new script)
     function deployAndRegisterInFactory(
         address owner,
         address implementation,
         address moduleFactory,
         IModule_v1.Metadata calldata metadata
     ) external returns (address) {
+        InverterBeacon_v1 beacon;
+
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
@@ -57,6 +60,7 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
     }
 
     function deployBeaconAndSetupProxy(
+        string memory implementationName,
         address reverter,
         address owner,
         address implementation,
@@ -64,55 +68,57 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
         uint minorVersion,
         uint patchVersion
     ) external returns (address beaconAddress, address proxy) {
+        // Deploy the beacon.
+        beaconAddress = deployInverterBeacon(
+            implementationName,
+            reverter,
+            owner,
+            implementation,
+            majorVersion,
+            minorVersion,
+            patchVersion
+        );
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the beacon.
-            beacon = new InverterBeacon_v1(
-                reverter,
-                owner,
-                majorVersion,
-                implementation,
-                minorVersion,
-                patchVersion
+            // return the proxy after creation
+            proxy = address(
+                new InverterBeaconProxy_v1(InverterBeacon_v1(beaconAddress))
             );
 
-            // return the proxy after creation
-            proxy =
-                address(new InverterBeaconProxy_v1(InverterBeacon_v1(beacon)));
-
             // cast to address for return
-            beaconAddress = address(beacon);
+            //beaconAddress = address(beacon);
         }
         vm.stopBroadcast();
 
-        // Log the deployed Beacon contract address.
         console2.log(
-            "Deployment of InverterBeacon_v1 at address: ", beaconAddress
-        );
-        console2.log(
-            "Creation of InverterBeaconProxy_v1 at address: ", address(proxy)
+            "Creation of InverterBeaconProxy_v1 for %s at address: %s",
+            implementationName,
+            address(proxy)
         );
     }
 
     function deployInverterBeacon(
+        string memory implementationName,
         address reverter,
         address owner,
         address implementation,
         uint majorVersion,
         uint minorVersion,
         uint patchVersion
-    ) public returns (address) {
+    ) public returns (address beacon) {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the beacon.
 
-            beacon = new InverterBeacon_v1(
-                reverter,
-                owner,
-                majorVersion,
-                implementation,
-                minorVersion,
-                patchVersion
+            beacon = address(
+                new InverterBeacon_v1(
+                    reverter,
+                    owner,
+                    majorVersion,
+                    implementation,
+                    minorVersion,
+                    patchVersion
+                )
             );
         }
 
@@ -120,9 +126,11 @@ contract DeployAndSetUpInverterBeacon_v1 is Script {
 
         // Log the deployed Beacon contract address.
         console2.log(
-            "Deployment of InverterBeacon_v1 at address", address(beacon)
+            "Deployment of Inverter Beacon for %s at address %s",
+            implementationName,
+            beacon
         );
 
-        return address(beacon);
+        return beacon;
     }
 }
