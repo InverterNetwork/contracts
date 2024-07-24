@@ -17,32 +17,46 @@ interface ILM_PC_Staking_v1 {
     // Events
 
     /// @notice Event emitted when a reward is added.
+    /// @param rewardAmount The amount of tokens to distribute
+    /// @param duration The duration of the reward period
+    /// @param newRewardRate The new reward rate
+    /// @param newRewardsEnd The new timestamp of when the rewards will end
     event RewardSet(
         uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
     );
 
     /// @notice Event emitted when a user stakes an amount.
+    /// @param user The address of the user
+    /// @param amount The amount of tokens staked
     event Staked(address indexed user, uint amount);
 
     /// @notice Event emitted when a user unstakes an amount.
+    /// @param user The address of the user
+    /// @param amount The amount of tokens unstaked
     event Unstaked(address indexed user, uint amount);
 
     /// @notice Event emitted when a user receives Rewards.
+    /// @param user The address of the user
+    /// @param amount The amount of tokens earned
     event RewardsDistributed(address indexed user, uint amount);
 
     //--------------------------------------------------------------------------
     // Getter Functions
 
     /// @notice Returns address of the token users can stake
+    /// @return The address of the token
     function stakingToken() external view returns (address);
 
     /// @notice Returns the total supply of staked tokens of this contract
+    /// @return The total supply of staked tokens
     function totalSupply() external view returns (uint);
 
     /// @notice Returns how much Tokens will be distributed per second to all users that staked in this contract
+    /// @return The reward rate
     function rewardRate() external view returns (uint);
 
     /// @notice Returns when the rewards will not be distributed anymore
+    /// @return The timestamp of when the rewards will end
     function rewardsEnd() external view returns (uint);
 
     /// @notice Returns the amount of tokens a user staked in this contract
@@ -51,6 +65,7 @@ interface ILM_PC_Staking_v1 {
 
     /// @notice Returns the amount of tokens earned up until now by the current stake of a user
     /// @param user The address of a user that staked
+    /// @return The amount of tokens earned
     function earned(address user) external view returns (uint);
 
     /// @notice Returns a estimation of how much rewards will be earned with the current state of the staking contract
@@ -58,6 +73,7 @@ interface ILM_PC_Staking_v1 {
     /// @dev the estimated result could be 0 if the estimated rewards are not high enough
     /// @param amount : how much token are staked
     /// @param duration : how long the tokens will be staked
+    /// @return The estimated amount of tokens earned
     function estimateReward(uint amount, uint duration)
         external
         view
