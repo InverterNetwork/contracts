@@ -101,8 +101,8 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         governor_Implementation = deployImplementation("Governor_v1", bytes("")); // TODO adapt separate deploy script
 
-        (governor_Beacon, governor_Proxy) = 
-        deployAndSetupInverterBeacon_v1.deployBeaconAndSetupProxy(
+        (governor_Beacon, governor_Proxy) = deployAndSetupInverterBeacon_v1
+            .deployBeaconAndSetupProxy(
             governor_Metadata.title,
             reverter_Implementation,
             communityMultisig,
@@ -122,8 +122,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         console2.log("Deploy forwarder implementation and proxy \n");
         // Deploy TransactionForwarder_v1 implementation
-        buf_constructorArgs =
-            abi.encode("Inverter Transaction Forwarder");
+        buf_constructorArgs = abi.encode("Inverter Transaction Forwarder");
         forwarder_Implementation =
             deployImplementation("TransactionForwarder_v1", buf_constructorArgs);
 
@@ -153,8 +152,9 @@ contract MainnetDeploymentScript is ModuleRegistry {
         console2.log("Deploy orchestrator implementation \n");
         // Orchestrator_v1
         buf_constructorArgs = abi.encode(forwarder_Proxy);
-        orchestrator_Implementation =
-            deployImplementation(orchestrator_Metadata.title, buf_constructorArgs);
+        orchestrator_Implementation = deployImplementation(
+            orchestrator_Metadata.title, buf_constructorArgs
+        );
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -197,29 +197,29 @@ contract MainnetDeploymentScript is ModuleRegistry {
         // TODO: use script constants
         vm.startBroadcast(deployerPrivateKey);
         {
-        FeeManager_v1(feeManager_Proxy).init(
-            address(governor_Proxy),
-            treasury, // treasury
-            100, // Collateral Fee 1%
-            100 // Issuance Fee 1%
-        );
+            FeeManager_v1(feeManager_Proxy).init(
+                address(governor_Proxy),
+                treasury, // treasury
+                100, // Collateral Fee 1%
+                100 // Issuance Fee 1%
+            );
         }
-         vm.stopBroadcast();
+        vm.stopBroadcast();
 
         // intialize Governor
-                console2.log("Init Governor \n");
+        console2.log("Init Governor \n");
 
         // TODO: use script constants
         vm.startBroadcast(deployerPrivateKey);
         {
-        Governor_v1(governor_Proxy).init(
-            communityMultisig,
-            teamMultisig,
-            1 weeks, //timelockPeriod ,
-            feeManager_Proxy
-        );
+            Governor_v1(governor_Proxy).init(
+                communityMultisig,
+                teamMultisig,
+                1 weeks, //timelockPeriod ,
+                feeManager_Proxy
+            );
         }
-         vm.stopBroadcast();
+        vm.stopBroadcast();
 
         // =============================================================================
         // Deploy Factories and register all modules
