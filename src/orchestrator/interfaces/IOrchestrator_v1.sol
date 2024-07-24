@@ -18,15 +18,20 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
+    /// @param role The role of the caller.
+    /// @param caller The caller address.
     error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Execution of transaction failed.
     error Orchestrator__ExecuteTxFailed();
 
     /// @notice The given module is not used in the orchestrator
+    /// @param module The module address.
     error Orchestrator__InvalidModuleType(address module);
 
     /// @notice The token of the new funding manager is not the same as the current funding manager.
+    /// @param currentToken The current token.
+    /// @param newToken The new token.
     error Orchestrator__MismatchedTokenForFundingManager(
         address currentToken, address newToken
     );
@@ -78,6 +83,13 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     // Functions
 
     /// @notice Initialization function.
+    /// @param orchestratorId The id of the orchestrator.
+    /// @param moduleFactory_ The address of the module factory.
+    /// @param modules The addresses of the modules used in the orchestrator.
+    /// @param fundingManager The address of the funding manager module.
+    /// @param authorizer The address of the authorizer module.
+    /// @param paymentProcessor The address of the payment processor module.
+    /// @param governor The address of the governor contract.
     function init(
         uint orchestratorId,
         address moduleFactory_,
@@ -158,6 +170,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     ///         The functions specific to updating these 3 module categories should be used instead
     /// @dev Only callable by authorized address.
     /// @dev Fails if address not added as module.
+    /// @param module The module address to remove.
     function initiateRemoveModuleWithTimelock(address module) external;
 
     /// @notice Adds address `module` as module.
@@ -178,7 +191,9 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     ///         from the Orchestrator
     /// @dev Only callable by authorized address.
     /// @dev Fails if module update has not been initiated
+    /// @param module The module address to remove.
     function cancelModuleUpdate(address module) external;
+
     /// @notice Executes a call on target `target` with call data `data`.
     /// @dev Only callable by authorized caller.
     /// @param target The address to call.
@@ -190,27 +205,31 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
 
     /// @notice Returns the orchestrator's id.
     /// @dev Unique id set by the {OrchestratorFactory_v1} during initialization.
+    /// @return The orchestrator's id.
     function orchestratorId() external view returns (uint);
 
     /// @notice The {IFundingManager_v1} implementation used to hold and distribute Funds.
+    /// @return The {IFundingManager_v1} implementation
     function fundingManager() external view returns (IFundingManager_v1);
 
     /// @notice The {IAuthorizer_v1} implementation used to authorize addresses.
+    /// @return The {IAuthorizer_v1} implementation
     function authorizer() external view returns (IAuthorizer_v1);
 
     /// @notice The {IPaymentProcessor_v1} implementation used to process module
     ///         payments.
+    /// @return The {IPaymentProcessor_v1} implementation
     function paymentProcessor() external view returns (IPaymentProcessor_v1);
 
-    /// @notice The version of the orchestrator instance.
-    function version() external pure returns (string memory);
-
     /// @notice find the address of a given module using it's name in a orchestrator
+    /// @param moduleName The name of the module to be searched.
+    /// @return The address of the module.
     function findModuleAddressInOrchestrator(string calldata moduleName)
         external
         view
         returns (address);
 
     /// @notice The governor contract implementation used for protocol level interactions.
+    /// @return The governor contract implementation
     function governor() external view returns (IGovernor_v1);
 }

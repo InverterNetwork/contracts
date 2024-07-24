@@ -710,13 +710,6 @@ contract OrchestratorV1Test is Test {
     }
 
     //--------------------------------------------------------------------------
-    // Tests: Other
-
-    function testVersion() public {
-        assertEq(orchestrator.version(), "1");
-    }
-
-    //--------------------------------------------------------------------------
     // Helper Functions
 
     function createModules(uint amount)
