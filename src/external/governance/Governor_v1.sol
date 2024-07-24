@@ -508,7 +508,7 @@ contract Governor_v1 is
         emit TimelockPeriodSet(newTimelockPeriod);
     }
 
-    /// @dev sets the internal FeeManager address
+    /// @dev sets the internal ModuleFactory address
     /// @param newModuleFactory the address of the new moduleFactory
     function _setModuleFactory(address newModuleFactory)
         internal
