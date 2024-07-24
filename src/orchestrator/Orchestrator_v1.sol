@@ -399,7 +399,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         external
         onlyOrchestratorAdmin
         updatingModuleAlreadyStarted(address(authorizer_))
-        whenTimelockExpired(address(authorizer_))
+        timelockExpired(address(authorizer_))
     {
         _executeRemoveModule(address(authorizer));
 
@@ -621,11 +621,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // IERC2771Context
 
-    /// @notice Verifies whether the given address is a trusted forwarder.
+    /// @inheritdoc IModuleManagerBase_v1
     /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
     /// we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
-    /// @param forwarder The address to be verified.
-    /// @return True if the given address is a trusted forwarder.
     function isTrustedForwarder(address forwarder)
         public
         view
@@ -636,8 +634,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         return ModuleManagerBase_v1.isTrustedForwarder(forwarder);
     }
 
-    /// @notice The trusted forwarder address.
-    /// @return The trusted forwarder address.
+    /// @inheritdoc IModuleManagerBase_v1
     function trustedForwarder()
         public
         view
