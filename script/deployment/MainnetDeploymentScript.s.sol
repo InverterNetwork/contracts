@@ -8,7 +8,8 @@ import {ModuleRegistry} from "script/ModuleRegistry.sol";
 // Import interfaces:
 
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
@@ -37,6 +38,14 @@ contract MainnetDeploymentScript is ModuleRegistry {
     address feeManager_Beacon;
     address feeManager_Proxy;
 
+    address orchestratorFactory_Implementation;
+    address orchestratorFactory_Beacon;
+    address orchestratorFactory_Proxy;
+
+    address moduleFactory_Implementation;
+    address moduleFactory_Beacon;
+    address moduleFactory_Proxy;
+
     IModule_v1.Metadata[] initialMetadataRegistration;
     IInverterBeacon_v1[] initialBeaconRegistration;
 
@@ -57,8 +66,6 @@ contract MainnetDeploymentScript is ModuleRegistry {
 
         // Fetch the treasury address
         address treasury = vm.envAddress("TREASURY_ADDRESS");
-
-        // TODO: Deploy protocol singleton proxies here
 
         // TODO: Clean up all the mentions of deployABCD() module contracts and calls
 
@@ -156,8 +163,67 @@ contract MainnetDeploymentScript is ModuleRegistry {
             orchestrator_Metadata.title, buf_constructorArgs
         );
 
+        address orchestratorImplementationBeacon =
+        deployAndSetupInverterBeacon_v1.deployInverterBeacon(
+            orchestrator_Metadata.title,
+            reverter_Implementation,
+            address(governor_Proxy),
+            orchestrator_Implementation,
+            orchestrator_Metadata.majorVersion,
+            orchestrator_Metadata.minorVersion,
+            orchestrator_Metadata.patchVersion
+        );
+
         console2.log(
             "-----------------------------------------------------------------------------"
+        );
+
+        // =============================================================================
+        // Deploy Orchestrator and Module Factory implementations and beacons
+        // =============================================================================
+
+        console2.log(
+            "-----------------------------------------------------------------------------"
+        );
+        console2.log(
+            "Deploy orchestrator and module factory implementations and beacons \n"
+        );
+
+        // Deploy orchestratorFactory
+        console2.log("Deploy orchestratorFactory implementation and proxy \n");
+        // Deploy TransactionForwarder_v1 implementation
+        buf_constructorArgs = abi.encode(forwarder_Proxy);
+        orchestratorFactory_Implementation = deployImplementation(
+            orchestratorFactory_Metadata.title, buf_constructorArgs
+        );
+
+        (orchestratorFactory_Beacon, orchestratorFactory_Proxy) =
+        deployAndSetupInverterBeacon_v1.deployBeaconAndSetupProxy(
+            orchestratorFactory_Metadata.title,
+            reverter_Implementation,
+            address(governor_Proxy),
+            orchestratorFactory_Implementation,
+            orchestratorFactory_Metadata.majorVersion,
+            orchestratorFactory_Metadata.minorVersion,
+            orchestratorFactory_Metadata.patchVersion
+        );
+
+        // Deploy moduleFactory
+        buf_constructorArgs =
+            abi.encode(reverter_Implementation, forwarder_Proxy);
+        moduleFactory_Implementation = deployImplementation(
+            moduleFactory_Metadata.title, buf_constructorArgs
+        );
+
+        (moduleFactory_Beacon, moduleFactory_Proxy) =
+        deployAndSetupInverterBeacon_v1.deployBeaconAndSetupProxy(
+            moduleFactory_Metadata.title,
+            reverter_Implementation,
+            address(governor_Proxy),
+            moduleFactory_Implementation,
+            moduleFactory_Metadata.majorVersion,
+            moduleFactory_Metadata.minorVersion,
+            moduleFactory_Metadata.patchVersion
         );
 
         // =============================================================================
@@ -230,16 +296,17 @@ contract MainnetDeploymentScript is ModuleRegistry {
         console2.log(
             "-----------------------------------------------------------------------------"
         );
-        console2.log("Deploy factory implementations \n");
+        console2.log("Initialze factory implementations \n");
 
         // Deploy module factory v1 implementation
-        moduleFactory = deployModuleFactory.run(
+        /* moduleFactory = deployModuleFactory.run(
             reverter_Implementation,
             forwarder_Proxy,
             address(governor_Proxy),
             initialMetadataRegistration,
             initialBeaconRegistration
         );
+        
 
         // Deploy orchestrator Factory implementation
         orchestratorFactory = deployOrchestratorFactory.run(
@@ -248,6 +315,27 @@ contract MainnetDeploymentScript is ModuleRegistry {
             moduleFactory,
             forwarder_Proxy
         );
+
+        */
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            OrchestratorFactory_v1(orchestratorFactory_Proxy).init(
+                address(governor_Proxy),
+                IInverterBeacon_v1(orchestratorImplementationBeacon),
+                moduleFactory_Proxy
+            );
+        }
+        vm.stopBroadcast();
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            ModuleFactory_v1(moduleFactory_Proxy).init(
+                address(governor_Proxy),
+                initialMetadataRegistration,
+                initialBeaconRegistration
+            );
+        }
+        vm.stopBroadcast();
 
         console2.log(
             "-----------------------------------------------------------------------------"

@@ -57,13 +57,13 @@ import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 // Import scripts:
 import {
-    ModuleFactory_v1,
-    DeployModuleFactory_v1
-} from "script/factories/DeployModuleFactory_v1.s.sol";
+    ModuleFactory_v1
+
+} from "src/factories/ModuleFactory_v1.sol";
 import {
-    OrchestratorFactory_v1,
-    DeployOrchestratorFactory_v1
-} from "script/factories/DeployOrchestratorFactory_v1.s.sol";
+    OrchestratorFactory_v1
+
+} from "src/factories/OrchestratorFactory_v1.sol";
 
 //--------------------------------------------------------------------------
 // General Module Registry Information
@@ -187,8 +187,6 @@ contract ModuleRegistry is Script {
 
     // OrchestratorFactory
     address orchestratorFactory;
-    DeployOrchestratorFactory_v1 deployOrchestratorFactory =
-        new DeployOrchestratorFactory_v1();
     IModule_v1.Metadata orchestratorFactory_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -200,7 +198,6 @@ contract ModuleRegistry is Script {
 
     // ModuleFactory
     address moduleFactory;
-    DeployModuleFactory_v1 deployModuleFactory = new DeployModuleFactory_v1();
     IModule_v1.Metadata moduleFactory_Metadata = IModule_v1.Metadata(
         1,
         0,
