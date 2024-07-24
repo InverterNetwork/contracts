@@ -285,8 +285,17 @@ contract FeeManager_v1 is
         bytes4 functionSelector,
         bool set,
         uint fee
-    ) external onlyOwner {
-        _setCollateralWorkflowFee(workflow, module, functionSelector, set, fee);
+    ) external onlyOwner validFee(fee) {
+        bytes32 moduleFunctionHash =
+            getModuleFunctionHash(module, functionSelector);
+
+        Fee storage f = workflowCollateralFees[workflow][moduleFunctionHash];
+        f.set = set;
+        f.value = fee;
+
+        emit CollateralWorkflowFeeSet(
+            workflow, module, functionSelector, set, fee
+        );
     }
 
     /// @inheritdoc IFeeManager_v1
@@ -341,25 +350,6 @@ contract FeeManager_v1 is
     {
         defaultIssuanceFee = _defaultIssuanceFee;
         emit DefaultIssuanceFeeSet(_defaultIssuanceFee);
-    }
-
-    function _setCollateralWorkflowFee(
-        address workflow,
-        address module,
-        bytes4 functionSelector,
-        bool set,
-        uint fee
-    ) internal validFee(fee) {
-        bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
-
-        Fee storage f = workflowCollateralFees[workflow][moduleFunctionHash];
-        f.set = set;
-        f.value = fee;
-
-        emit CollateralWorkflowFeeSet(
-            workflow, module, functionSelector, set, fee
-        );
     }
 
     function _setIssuanceWorkflowFee(
