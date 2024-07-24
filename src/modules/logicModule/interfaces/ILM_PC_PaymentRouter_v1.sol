@@ -2,11 +2,16 @@
 pragma solidity ^0.8.0;
 
 interface ILM_PC_PaymentRouter_v1 {
+    //--------------------------------------------------------------------------
+    // Mutating Functions
+
     /// @notice Adds a new Payment Order.
     /// @dev Reverts if an argument invalid.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The token in which to pay.
     /// @param amount The amount of tokens the payment consists of.
+    /// @param start The timestamp at which the payment SHOULD be fulfilled.
+    /// @param cliff The duration of the payment cliff.
     /// @param end The timestamp at which the payment SHOULD be fulfilled.
     function pushPayment(
         address recipient,
