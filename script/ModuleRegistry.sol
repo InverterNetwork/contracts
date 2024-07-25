@@ -56,14 +56,8 @@ import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 // Import scripts:
-import {
-    ModuleFactory_v1
-
-} from "src/factories/ModuleFactory_v1.sol";
-import {
-    OrchestratorFactory_v1
-
-} from "src/factories/OrchestratorFactory_v1.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 //--------------------------------------------------------------------------
 // General Module Registry Information

@@ -341,7 +341,7 @@ contract MainnetDeploymentScript is ModuleRegistry {
             "-----------------------------------------------------------------------------"
         );
 
-        return (orchestratorFactory);
+        return (orchestratorFactory_Proxy);
     }
 
     function _setup_FundingManagers() internal {
