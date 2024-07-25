@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import "../../deployment/DeploymentScript.s.sol";
 
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IModule_v1, ERC165} from "src/modules/base/Module_v1.sol";
+import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -16,7 +16,8 @@ import {
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
-    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
+    ERC20Issuance_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {IBondingCurveBase_v1} from
@@ -44,6 +45,9 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         vm.envAddress("BONDING_CURVE_COLLATERAL_TOKEN");
     ERC20 collateralToken = ERC20(collateralTokenAddress);
 
+    address issuanceTokenAddress = vm.envAddress("BONDING_CURVE_ISSUANCE_TOKEN");
+    ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
+
     address bancorFormulaAddress = vm.envAddress("BANCOR_FORMULA_ADDRESS");
     BancorFormula formula = BancorFormula(bancorFormulaAddress);
 
@@ -53,6 +57,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
     string CURVE_TOKEN_NAME = "Bonding Curve Issuance Token";
     string CURVE_TOKEN_SYMBOL = "BCRG";
     uint8 CURVE_TOKEN_DECIMALS = 18;
+    uint CURVE_TOKEN_MAX_SUPPLY = type(uint).max;
 
     uint32 RESERVE_RATIO_FOR_BUYING = 333_333;
     uint32 RESERVE_RATIO_FOR_SELLING = 333_333;
@@ -91,9 +96,24 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
             );
             //!!!! This is not a real ERC20 implementation. Before going into production change this deployment!!!!
             collateralToken = new ERC20Mock("Inverter USD", "iUSD");
+            collateralTokenAddress = address(collateralToken);
             console2.log(
                 "\t-Inverter Mock USD Deployed at address: %s ",
-                address(collateralToken)
+                collateralTokenAddress
+            );
+
+            // create the issuance token
+            issuanceToken = new ERC20Issuance_v1(
+                CURVE_TOKEN_NAME,
+                CURVE_TOKEN_SYMBOL,
+                CURVE_TOKEN_DECIMALS,
+                CURVE_TOKEN_MAX_SUPPLY,
+                orchestratorAdmin
+            );
+            issuanceTokenAddress = address(issuanceToken);
+            console2.log(
+                "\t-Issuance Token deployed at address: %s ",
+                issuanceTokenAddress
             );
         }
         vm.stopBroadcast();
@@ -109,14 +129,6 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
             independentUpdateAdmin: address(0)
-        });
-
-        IBondingCurveBase_v1.IssuanceToken memory buf_issuanceToken =
-        IBondingCurveBase_v1.IssuanceToken({
-            name: CURVE_TOKEN_NAME,
-            symbol: CURVE_TOKEN_SYMBOL,
-            decimals: CURVE_TOKEN_DECIMALS,
-            maxSupply: type(uint).max
         });
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
@@ -139,10 +151,9 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 .ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 abi.encode(
-                    buf_issuanceToken,
-                    orchestratorAdmin,
+                    issuanceTokenAddress,
                     buf_bondingCurveProperties,
-                    address(collateralToken)
+                    collateralTokenAddress
                 )
             );
 
@@ -181,6 +192,11 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
                 paymentProcessorFactoryConfig,
                 additionalModuleConfig
             );
+
+            // We also whitelist the created BondingCurveFundingManager to be able to mint the issuance token
+            issuanceToken.setMinter(
+                address(IOrchestrator_v1(_orchestrator).fundingManager()), true
+            );
         }
         vm.stopBroadcast();
 
@@ -190,7 +206,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
 
         address orchestratorToken =
             address(IOrchestrator_v1(_orchestrator).fundingManager().token());
-        assertEq(orchestratorToken, address(collateralToken));
+        assertEq(orchestratorToken, collateralTokenAddress);
 
         // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
         // active modules, let's use that to get the address of the BountyManager.
@@ -200,7 +216,7 @@ contract SetupInvestableWorkstream is Test, DeploymentScript {
         address[] memory modulesList = _orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_Bounties_v1).interfaceId
                 )
             ) {

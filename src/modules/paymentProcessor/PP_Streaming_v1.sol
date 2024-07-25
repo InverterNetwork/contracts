@@ -33,6 +33,21 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          multiple clients and recipients, integrated with error handling for
  *          payments and managing active streaming schedules and their cancellations.
  *
+ *          DISCLAIMER: Known Limitations
+ *          This contract has a known limitation that could potentially lead to a Denial of Service
+ *          (DoS) attack. The `activePaymentReceivers` array for a client can grow unbounded,
+ *          which may cause gas-intensive operations to exceed block gas limits under certain
+ *          conditions. This could temporarily render some functions inoperable.
+ *
+ *          While this limitation does not directly risk user funds, it may temporarily prevent
+ *          users from staking, unstaking, or claiming rewards if exploited. The development
+ *          team is aware of this issue and may implement a fix in future upgrades if necessary.
+ *
+ *          CAUTION: Workflow deployers should be especially careful when using this payment processor
+ *          with contracts that allow users to directly initiate payment streams. Such setups
+ *          are particularly vulnerable to this limitation and could more easily trigger a DoS condition.
+ *
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
@@ -199,45 +214,23 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             }
 
             // Generate Streaming Payments for all orders
-            address _recipient;
-            address _token;
-            uint _streamId;
-            uint _amount;
-            uint _start;
-            uint _cliff;
-            uint _end;
-
             uint numOrders = orders.length;
 
             for (uint i; i < numOrders;) {
-                _recipient = orders[i].recipient;
-                _token = orders[i].paymentToken;
-                _streamId = numStreams[address(client)][_recipient] + 1;
-                _amount = orders[i].amount;
-                _start = orders[i].start;
-                _cliff = orders[i].cliff;
-                _end = orders[i].end;
-
                 _addPayment(
                     address(client),
-                    _recipient,
-                    _token,
-                    _streamId,
-                    _amount,
-                    _start,
-                    _cliff,
-                    _end
+                    orders[i],
+                    numStreams[address(client)][orders[i].recipient] + 1
                 );
 
                 emit PaymentOrderProcessed(
                     address(client),
-                    _recipient,
-                    _token,
-                    _streamId,
-                    _amount,
-                    _start,
-                    _cliff,
-                    _end
+                    orders[i].recipient,
+                    orders[i].paymentToken,
+                    orders[i].amount,
+                    orders[i].start,
+                    orders[i].cliff,
+                    orders[i].end
                 );
 
                 unchecked {
@@ -406,6 +399,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return paymentReceiverStreams;
     }
 
+    /// @inheritdoc IPaymentProcessor_v1
+    function validPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order
+    ) external returns (bool) {
+        return validPaymentReceiver(order.recipient) && validTotal(order.amount)
+            && validTimes(order.start, order.cliff, order.end)
+            && validPaymentToken(order.paymentToken);
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions
 
@@ -451,7 +453,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal view returns (uint) {
         address[] memory receiverSearchArray = activePaymentReceivers[client];
 
-        uint length = activePaymentReceivers[client].length;
+        uint length = receiverSearchArray.length;
         for (uint i; i < length;) {
             if (receiverSearchArray[i] == paymentReceiver) {
                 return i;
@@ -629,56 +631,47 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///         depending on the module.
     /// @dev This function can handle multiple payment orders associated with a particular paymentReceiver for the same payment client
     ///      without overriding the earlier ones. The maximum payment orders for a paymentReceiver MUST BE capped at (2**256-1).
-    /// @param _paymentReceiver PaymentReceiver's address.
-    /// @param _total Total amount the paymentReceiver will receive per epoch.
-    /// @param _start Streaming start timestamp.
-    /// @param _cliff The duration of the cliff period.
-    /// @param _end Streaming end timestamp.
+    /// @param _client PaymentReceiver's address.
+    /// @param _order PaymentOrder that needs to be added
     /// @param _streamId ID of the new stream of the a particular paymentReceiver being added
     function _addPayment(
-        address client,
-        address _paymentReceiver,
-        address _token,
-        uint _streamId,
-        uint _total,
-        uint _start,
-        uint _cliff,
-        uint _end
+        address _client,
+        IERC20PaymentClientBase_v1.PaymentOrder memory _order,
+        uint _streamId
     ) internal {
-        ++numStreams[client][_paymentReceiver];
+        ++numStreams[_client][_order.recipient];
+
+        streams[_client][_order.recipient][_streamId] = Stream(
+            _order.paymentToken,
+            _streamId,
+            _order.amount,
+            0,
+            _order.start,
+            _order.cliff,
+            _order.end
+        );
+
+        // We do not want activePaymentReceivers[_client] to have duplicate paymentReceiver entries
+        // So we avoid pushing the _paymentReceiver to activePaymentReceivers[_client] if it already exists
         if (
-            !validPaymentReceiver(_paymentReceiver) || !validTotal(_total)
-                || !validTimes(_start, _cliff, _end) || !validPaymentToken(_token)
+            _findAddressInActiveStreams(_client, _order.recipient)
+                == type(uint).max
         ) {
-            emit InvalidStreamingOrderDiscarded(
-                _paymentReceiver, _token, _total, _start, _cliff, _end
-            );
-        } else {
-            streams[client][_paymentReceiver][_streamId] =
-                Stream(_token, _streamId, _total, 0, _start, _cliff, _end);
-
-            // We do not want activePaymentReceivers[client] to have duplicate paymentReceiver entries
-            // So we avoid pushing the _paymentReceiver to activePaymentReceivers[client] if it already exists
-            if (
-                _findAddressInActiveStreams(client, _paymentReceiver)
-                    == type(uint).max
-            ) {
-                activePaymentReceivers[client].push(_paymentReceiver);
-            }
-
-            activeStreams[client][_paymentReceiver].push(_streamId);
-
-            emit StreamingPaymentAdded(
-                client,
-                _paymentReceiver,
-                _token,
-                _streamId,
-                _total,
-                _start,
-                _cliff,
-                _end
-            );
+            activePaymentReceivers[_client].push(_order.recipient);
         }
+
+        activeStreams[_client][_order.recipient].push(_streamId);
+
+        emit StreamingPaymentAdded(
+            _client,
+            _order.recipient,
+            _order.paymentToken,
+            _streamId,
+            _order.amount,
+            _order.start,
+            _order.cliff,
+            _order.end
+        );
     }
 
     /// @notice used to claim all the payment orders associated with a particular paymentReceiver for a given payment client
@@ -732,7 +725,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             )
         );
 
-        if (success && (data.length == 0 || abi.decode(data, (bool)))) {
+        if (
+            success && (data.length == 0 || abi.decode(data, (bool)))
+                && _token.code.length != 0
+        ) {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             // Make sure to let paymentClient know that amount doesnt have to be stored anymore
@@ -801,13 +797,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // As all of the stream ids should have been claimed we can delete the stream id array
         delete unclaimableStreams[client][token][sender];
 
+        // Make sure to let paymentClient know that amount doesnt have to be stored anymore
+        IERC20PaymentClientBase_v1(client).amountPaid(address(token), amount);
+
         // Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
 
         emit TokensReleased(paymentReceiver, address(token), amount);
-
-        // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(address(token), amount);
     }
 
     /// @notice Virtual implementation of the stream formula.
@@ -873,17 +869,22 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         pure
         returns (bool)
     {
-        return !(_start >= type(uint).max && _start + _cliff > _end);
+        // _start + _cliff should be less or equal to _end
+        // this already implies that _start is not greater than _end
+        return _start + _cliff <= _end;
     }
 
     /// @notice validate payment token input.
     /// @param _token Address of the token to validate.
     /// @return True if address is valid.
-    function validPaymentToken(address _token) internal view returns (bool) {
-        // Only a basic sanity check, the corresponding module should ensure it's sending an ERC20.
-        return !(
-            _token == address(0) || _token == _msgSender()
-                || _token == address(this) || _token == address(orchestrator())
+    function validPaymentToken(address _token) internal returns (bool) {
+        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding module should ensure it's sending an ERC20.
+
+        (bool success, bytes memory data) = _token.call(
+            abi.encodeWithSelector(
+                IERC20(_token).balanceOf.selector, address(this)
+            )
         );
+        return (success && data.length != 0 && _token.code.length != 0);
     }
 }

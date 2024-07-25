@@ -8,8 +8,7 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External Interfaces
-import {IERC20Issuance_v1} from
-    "@fm/bondingCurve/interfaces/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -129,7 +128,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         returns (uint mintAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        // Set min amount out to 1 for price calculation
+        _ensureNonZeroTradeParameters(_depositAmount, 1);
         // Get protocol fee percentages
         (
             ,
@@ -139,7 +139,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
 
         // Deduct protocol and project buy fee from collateral, if applicable
@@ -227,7 +227,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
     {
-        _validateDepositAmount(_depositAmount);
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
 
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
@@ -243,7 +243,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             uint collateralBuyFeePercentage,
             uint issuanceBuyFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
 
         // Get net amount, protocol and workflow fee amounts
@@ -323,14 +323,17 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _getFeeManagerIssuanceFeeData(_selector);
     }
 
-    /// @dev Calculates the propotion of the fees for the given amount and returns them plus the amount minus the fees
+    /// @dev    Calculates the proportion of the fees for the given amount and returns them plus the amount minus the fees
+    ///         Reverts under the following two conditions:
+    ///             - if (workflow fee + protocol fee) > BPS
+    ///             - if protocol fee amount or workflow fee amounts == 0 given the fee percentage is not zero. This
+    ///                 would indicate a rouding down to zero due to integer division
     /// @param _totalAmount The amount from which the fees will be taken
     /// @param _protocolFee The protocol fee percentage in relation to the BPS that will be applied to the totalAmount
     /// @param _workflowFee The workflow fee percentage in relation to the BPS that will be applied to the totalAmount
-    /// @return netAmount The total amount minus the combined fee amount
-    /// @return protocolFeeAmount The fee amount of the protocol fee
-    /// @return workflowFeeAmount The fee amount of the workflow fee
-
+    /// @return netAmount   The total amount minus the combined fee amount
+    /// @return protocolFeeAmount   The fee amount of the protocol fee
+    /// @return workflowFeeAmount   The fee amount of the workflow fee
     function _calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,
@@ -343,8 +346,23 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         if ((_protocolFee + _workflowFee) > BPS) {
             revert Module__BondingCurveBase__FeeAmountToHigh();
         }
-        protocolFeeAmount = (_totalAmount * _protocolFee) / BPS;
-        workflowFeeAmount = (_totalAmount * _workflowFee) / BPS;
+        // Calculate protocol fee amount if applicable
+        if (_protocolFee > 0) {
+            protocolFeeAmount = _totalAmount * _protocolFee / BPS;
+            // Revert if calculated protocol fee amount rounded down to zero
+            if (protocolFeeAmount == 0) {
+                revert Module__BondingCurveBase__TradeAmountTooLow();
+            }
+        }
+        // Calculate workflow fee amount if applicable
+        if (_workflowFee > 0) {
+            workflowFeeAmount = _totalAmount * _workflowFee / BPS;
+            // Revert if calculated workflow fee amount rounded down to zero
+            if (workflowFeeAmount == 0) {
+                revert Module__BondingCurveBase__TradeAmountTooLow();
+            }
+        }
+
         netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
     }
 
@@ -405,9 +423,15 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
-    function _validateDepositAmount(uint _depositAmount) internal pure {
+    function _ensureNonZeroTradeParameters(
+        uint _depositAmount,
+        uint _minAmountOut
+    ) internal pure {
         if (_depositAmount == 0) {
             revert Module__BondingCurveBase__InvalidDepositAmount();
+        }
+        if (_minAmountOut == 0) {
+            revert Module__BondingCurveBase__InvalidMinAmountOut();
         }
     }
 

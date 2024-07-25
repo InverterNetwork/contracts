@@ -28,8 +28,6 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
-        // NOTE: The final BancorBondingCurve deploys an issuance token on intialization. or ease of testing, these mocks of the abstract contracts receive the address of a pre-deployed one
-
         (
             address _issuanceToken,
             address _formula,
@@ -122,7 +120,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         )
     {
         return _getFunctionFeesAndTreasuryAddresses(
-            bytes4(keccak256(bytes("_buyOrder(address, uint, uint)")))
+            bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
     }
 
@@ -149,5 +147,12 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     function setProjectCollateralFeeCollectedHelper(uint _amount) external {
         projectCollateralFeeCollected = _amount;
+    }
+
+    function call_ensureNonZeroTradeParameters(
+        uint _depositAmount,
+        uint _minAmountOut
+    ) external pure {
+        _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
     }
 }

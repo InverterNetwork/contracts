@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {IAUT_TokenGated_Roles_v1} from
@@ -134,15 +134,6 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
                 );
             }
 
-            // Check that address has code attached
-            uint32 size;
-            assembly {
-                size := extcodesize(who)
-            }
-            if (size == 0) {
-                revert Module__AUT_TokenGated_Roles__InvalidToken(who);
-            }
-
             // Execute a balanceOf call to the address
             (bool success, bytes memory data) = who.call(
                 abi.encodeWithSelector(
@@ -151,7 +142,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
             );
             // If the call was either unsuccessful or the return data is not
             // 32 bytes long (i.e. not a uint256), it's deemed invalid
-            if (!success || data.length != 32) {
+            if (!success || data.length != 32 || who.code.length == 0) {
                 revert Module__AUT_TokenGated_Roles__InvalidToken(who);
             }
         }

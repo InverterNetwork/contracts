@@ -14,8 +14,7 @@ import {
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
-    Module_v1,
-    ERC165
+    Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
 // Internal Libraries

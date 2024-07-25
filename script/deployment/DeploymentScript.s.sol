@@ -29,8 +29,6 @@ import {DeployOrchestrator_v1} from
     "script/orchestrator/DeployOrchestrator_v1.s.sol";
 import {DeployPP_Simple_v1} from
     "script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol";
-import {DeployFM_Rebasing_v1} from
-    "script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol";
 import {DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol";
 import {DeployAUT_Role_v1} from
@@ -61,8 +59,6 @@ contract DeploymentScript is Script {
     DeployOrchestratorFactory_v1 deployOrchestratorFactory =
         new DeployOrchestratorFactory_v1();
     // Funding Manager
-    DeployFM_Rebasing_v1 deployRebasingFundingManager =
-        new DeployFM_Rebasing_v1();
     DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1
         deployBancorVirtualSupplyBondingCurveFundingManager =
             new DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1();
@@ -108,7 +104,6 @@ contract DeploymentScript is Script {
     address governorImplementation;
 
     // Funding Manager
-    address rebasingFundingManager;
     address bancorBondingCurveFundingManager;
     // Authorizer
     address roleAuthorizer;
@@ -128,7 +123,6 @@ contract DeploymentScript is Script {
     // TransactionForwarder_v1
     address forwarderBeacon;
     // Funding Manager
-    address rebasingFundingManagerBeacon;
     address bancorBondingCurveFundingManagerBeacon;
     // Authorizer
     address roleAuthorizerBeacon;
@@ -171,14 +165,6 @@ contract DeploymentScript is Script {
 
     // ------------------------------------------------------------------------
     // Funding Manager
-
-    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "FM_Rebasing_v1"
-    );
 
     IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
     IModule_v1.Metadata(
@@ -342,7 +328,6 @@ contract DeploymentScript is Script {
         // Deploy implementation contracts.
 
         // Funding Manager
-        rebasingFundingManager = deployRebasingFundingManager.run();
         bancorBondingCurveFundingManager =
             deployBancorVirtualSupplyBondingCurveFundingManager.run();
         // Authorizer
@@ -367,19 +352,6 @@ contract DeploymentScript is Script {
 
         // Funding Manager
 
-        initialMetadataRegistration.push(rebasingFundingManagerMetadata);
-        initialBeaconRegistration.push(
-            IInverterBeacon_v1(
-                deployAndSetupInverterBeacon_v1.deployInverterBeacon(
-                    reverter,
-                    address(governor),
-                    rebasingFundingManager,
-                    rebasingFundingManagerMetadata.majorVersion,
-                    rebasingFundingManagerMetadata.minorVersion,
-                    rebasingFundingManagerMetadata.patchVersion
-                )
-            )
-        );
         initialMetadataRegistration.push(
             bancorVirtualSupplyBondingCurveFundingManagerMetadata
         );

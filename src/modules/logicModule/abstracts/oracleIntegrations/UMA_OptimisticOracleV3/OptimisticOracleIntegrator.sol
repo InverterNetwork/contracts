@@ -39,6 +39,19 @@ abstract contract OptimisticOracleIntegrator is
 {
     using SafeERC20 for IERC20;
 
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(Module_v1)
+        returns (bool)
+    {
+        return interfaceId == type(IOptimisticOracleIntegrator).interfaceId
+            || interfaceId
+                == type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     //==========================================================================
     // Constants
 
@@ -172,16 +185,40 @@ abstract contract OptimisticOracleIntegrator is
     /// @dev Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds. This is
     /// because the block.timestamp is included in the claim. The consumer contract must store the returned assertionId
     /// identifiers to able to get the information using getData.
-    function assertDataFor(bytes32 dataId, bytes32 data, address asserter)
+    function assertDataFor(bytes32 dataId, bytes32 data_, address asserter)
         public
         virtual
         onlyModuleRole(ASSERTER_ROLE)
         returns (bytes32 assertionId)
     {
         asserter = asserter == address(0) ? _msgSender() : asserter;
-        defaultCurrency.safeTransferFrom(
-            _msgSender(), address(this), defaultBond
-        );
+        if (asserter == address(this)) {
+            // ensure we have enough balance
+            if (defaultCurrency.balanceOf(address(this)) < defaultBond) {
+                revert
+                    Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
+                );
+            }
+        } else {
+            (bool success, bytes memory data) = address(defaultCurrency).call(
+                abi.encodeWithSelector(
+                    defaultCurrency.transferFrom.selector,
+                    _msgSender(),
+                    address(this),
+                    defaultBond
+                )
+            );
+            // require(success && (data.length == 0 || abi.decode(data, (bool))) && token.code.length != 0); -> taken over from SafeERC20 since we want to override the revert messsage
+
+            if (
+                !success || (data.length > 0 && !abi.decode(data, (bool)))
+                    || address(defaultCurrency).code.length == 0
+            ) {
+                revert
+                    Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond(
+                );
+            }
+        }
         defaultCurrency.safeIncreaseAllowance(address(oo), defaultBond);
 
         // The claim we want to assert is the first argument of assertTruth. It must contain all of the relevant
@@ -193,7 +230,7 @@ abstract contract OptimisticOracleIntegrator is
         assertionId = oo.assertTruth(
             abi.encodePacked(
                 "Data asserted: 0x", // in the example data is type bytes32 so we add the hex prefix 0x.
-                ClaimData.toUtf8Bytes(data),
+                ClaimData.toUtf8Bytes(data_),
                 " for dataId: 0x",
                 ClaimData.toUtf8Bytes(dataId),
                 " and asserter: 0x",
@@ -214,8 +251,8 @@ abstract contract OptimisticOracleIntegrator is
             bytes32(0) // No domain.
         );
         assertionData[assertionId] =
-            DataAssertion(dataId, data, asserter, false);
-        emit DataAsserted(dataId, data, asserter, assertionId);
+            DataAssertion(dataId, data_, asserter, false);
+        emit DataAsserted(dataId, data_, asserter, assertionId);
     }
 
     //==========================================================================

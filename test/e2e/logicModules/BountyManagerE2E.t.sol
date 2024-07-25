@@ -10,11 +10,11 @@ import {
 
 // SuT
 import {
-    LM_PC_Bounties_v1,
-    ILM_PC_Bounties_v1,
-    ERC165
+    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 contract BountyManagerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -98,7 +98,7 @@ contract BountyManagerE2E is E2ETest {
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
-                ERC165(modulesList[i]).supportsInterface(
+                ERC165Upgradeable(modulesList[i]).supportsInterface(
                     type(ILM_PC_Bounties_v1).interfaceId
                 )
             ) {

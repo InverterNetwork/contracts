@@ -8,7 +8,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
 import {
@@ -71,13 +71,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         formula = address(new BancorFormula());
 
         issuanceToken = new ERC20Issuance_v1(
-            NAME,
-            SYMBOL,
-            DECIMALS,
-            type(uint).max,
-            address(this),
-            address(bondingCurveFundingManager)
+            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
         );
+
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
+
         _setUpOrchestrator(bondingCurveFundingManager);
 
         _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
@@ -307,12 +305,18 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 0, _bps);
-        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps - 1);
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
         uint maxAmount = type(uint).max / _bps; // to prevent overflows
-        amount = bound(amount, 1, maxAmount);
+        amount = bound(
+            amount,
+            helperCalculateMinDepositAmount(
+                _collateralFee, _issuanceFee, _workflowFee
+            ),
+            maxAmount
+        );
 
         address seller = makeAddr("seller");
         _prepareSellConditions(seller, amount);
@@ -524,6 +528,56 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(functionReturn, _depositAmount);
     }
 
+    function helperMax(uint a, uint b) public pure returns (uint) {
+        return a >= b ? a : b;
+    }
+
+    function helperCalculateMinDepositAmount(
+        uint _collateralFee,
+        uint _issuanceFee,
+        uint _workflowFee
+    ) public view returns (uint _depositAmount) {
+        uint _bps = bondingCurveFundingManager.call_BPS();
+
+        uint minDepositAmountWorkflowFee = 0;
+        uint minDepositAmountIssuanceFee = 0;
+        uint minDepositAmountCollateralFee = 0;
+        if (_workflowFee > 0) {
+            minDepositAmountWorkflowFee =
+                _bps / _workflowFee + (_bps % _workflowFee > 0 ? 1 : 0);
+        }
+        if (_issuanceFee > 0) {
+            minDepositAmountIssuanceFee =
+                _bps / _issuanceFee + (_bps % _issuanceFee > 0 ? 1 : 0);
+        }
+        if (_collateralFee > 0) {
+            minDepositAmountCollateralFee =
+                _bps / _collateralFee + (_bps % _collateralFee > 0 ? 1 : 0);
+        }
+
+        // Calculate the minimum amount for the combined collateral and workflow fees
+        uint minAmountCollateralAndWorkflow = helperMax(
+            minDepositAmountWorkflowFee, minDepositAmountCollateralFee
+        );
+
+        // Calculate the overall minimum deposit amount
+        _depositAmount = helperMax(
+            minAmountCollateralAndWorkflow, minDepositAmountIssuanceFee
+        );
+
+        // Ensure the deposit amount is large enough for both fee calculations
+        if (_issuanceFee > 0) {
+            uint afterIssuanceFee =
+                (_depositAmount * (_bps - _issuanceFee)) / _bps;
+            if (afterIssuanceFee < minAmountCollateralAndWorkflow) {
+                _depositAmount = (minAmountCollateralAndWorkflow * _bps)
+                    / (_bps - _issuanceFee) + 1;
+            }
+        }
+
+        return _depositAmount == 0 ? 1 : _depositAmount;
+    }
+
     function testInternalCalculateSaleReturnWithFee(
         uint _depositAmount,
         uint _collateralFee,
@@ -533,11 +587,17 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
         _collateralFee = bound(_collateralFee, 0, _bps);
-        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _issuanceFee = bound(_issuanceFee, 0, _bps - 1);
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 
-        _depositAmount = bound(_depositAmount, 1, 1e38);
+        _depositAmount = bound(
+            _depositAmount,
+            helperCalculateMinDepositAmount(
+                _collateralFee, _issuanceFee, _workflowFee
+            ),
+            1e38
+        );
 
         // Set Fee
         if (_collateralFee != 0) {
