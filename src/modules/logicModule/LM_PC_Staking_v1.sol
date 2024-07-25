@@ -267,11 +267,9 @@ contract LM_PC_Staking_v1 is
             return rewardValue;
         }
 
-        return (
-            (_getRewardDistributionTimestamp() - lastUpdate) * rewardRate * 1e36
-        ) // Get the time difference between the last time it was updated and now (or in case the reward period ended the rewardEnd timestamp)
-            // Multiply it with the rewardrate to get the rewards distributed for all of the stakers together
-            // for the later division we need a value to compensate for the loss of precision. This value will be counteracted in earned()
+        return (_getRewardDistributionTimestamp() - lastUpdate) // Get the time difference between the last time it was updated and now (or in case the reward period ended the rewardEnd timestamp)
+            * rewardRate // Multiply it with the rewardrate to get the rewards distributed for all of the stakers together
+            * 1e36 // for the later division we need a value to compensate for the loss of precision. This value will be counteracted in earned()
             / totalSupply // divide it by the totalSupply to get the rewards per token
             + rewardValue; // add the old rewardValue to the new "single" rewardValue
     }
@@ -291,8 +289,8 @@ contract LM_PC_Staking_v1 is
         view
         returns (uint)
     {
-        return ((providedRewardValue - userRewardValue[user]) * _balances[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
-            // multiply by users balance of tokens to get their share of the token rewards
+        return (providedRewardValue - userRewardValue[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
+            * _balances[user] // multiply by users balance of tokens to get their share of the token rewards
             / 1e36 // See comment in _calculateRewardValue();
             + rewards[user];
     }
