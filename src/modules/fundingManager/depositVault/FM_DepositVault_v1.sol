@@ -89,9 +89,14 @@ contract FM_DepositVault_v1 is
         Metadata memory metadata,
         bytes memory configData
     ) external override initializer {
+        __Module_init(orchestrator_, metadata);
+
         address orchestratorTokenAddress = abi.decode(configData, (address));
         _token = IERC20(orchestratorTokenAddress);
     }
+
+    //--------------------------------------------------------------------------
+    // Public View Functions
 
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
@@ -103,7 +108,10 @@ contract FM_DepositVault_v1 is
 
     /// @inheritdoc IFM_DepositVault_v1
     function deposit(uint amount) external {
-        _deposit(_msgSender(), amount);
+        address from = _msgSender();
+        token().safeTransferFrom(from, address(this), amount);
+
+        emit Deposit(from, amount);
     }
 
     //--------------------------------------------------------------------------
@@ -115,26 +123,6 @@ contract FM_DepositVault_v1 is
         onlyPaymentClient
         validAddress(to)
     {
-        _transferOrchestratorToken(to, amount);
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Mutating Functions
-
-    /// @notice Deposits a specified amount of tokens into the contract
-    /// @dev    Reverts if attempting self-deposits
-    /// @param from The address from which the tokens are taken.
-    /// @param amount The number of tokens to deposit.
-    function _deposit(address from, uint amount) internal {
-        token().safeTransferFrom(from, address(this), amount);
-
-        emit Deposit(from, amount);
-    }
-
-    /// @dev Transfers orchestrator tokens to the specified address.
-    /// @param to The address to transfer to.
-    /// @param amount The amount of tokens to transfer.
-    function _transferOrchestratorToken(address to, uint amount) internal {
         token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
