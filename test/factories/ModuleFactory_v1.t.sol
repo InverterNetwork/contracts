@@ -309,7 +309,7 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(module));
 
         // Register ModuleV1Mock for given metadata.
-        vm.prank(governanceContract);
+        vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
         // Create new module instance.
@@ -334,7 +334,8 @@ contract ModuleFactoryV1Test is Test {
     function testCreateModuleProxy(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IModule_v1.Metadata memory metadata,
-        address orchestrator
+        address orchestrator,
+        bytes memory configData
     ) public {
         _assumeValidMetadata(metadata);
         _assumeValidOrchestrator(orchestrator);
@@ -433,7 +434,7 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(module));
 
         // Register ModuleV1Mock for given metadata.
-        vm.prank(governanceContract);
+        vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
         // Create a snapshot to revert to, to simulate a reorg later
