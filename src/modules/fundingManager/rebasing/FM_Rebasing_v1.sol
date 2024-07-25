@@ -196,11 +196,11 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     function _deposit(address from, address to, uint amount) internal {
         // Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
-            revert Module__FundingManager__CannotSelfDeposit();
+            revert Module__RebasingERC20__CannotSelfDeposit();
         }
 
         if ((amount + token().balanceOf(address(this))) > DEPOSIT_CAP) {
-            revert Module__FundingManager__DepositCapReached();
+            revert Module__RebasingERC20__DepositCapReached();
         }
 
         _mint(to, amount);

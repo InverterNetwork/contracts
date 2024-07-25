@@ -11,26 +11,8 @@ interface IFundingManager_v1 {
     /// @dev Invalid Address
     error Module__FundingManager__InvalidAddress();
 
-    /// @notice Function is only callable by authorized address.
-    error Module__FundingManager__CannotSelfDeposit();
-
-    /// @notice There is a cap on deposits.
-    error Module__FundingManager__DepositCapReached();
-
     //--------------------------------------------------------------------------
     // Events
-
-    /// @notice Event emitted when a deposit takes place.
-    /// @param _from The address depositing tokens.
-    /// @param _for The address that will receive the receipt tokens.
-    /// @param _amount The amount of tokens deposited.
-    event Deposit(address indexed _from, address indexed _for, uint _amount);
-
-    /// @notice Event emitted when a withdrawal takes place.
-    /// @param _from The address supplying the receipt tokens.
-    /// @param _for The address that will receive the underlying tokens.
-    /// @param _amount The amount of underlying tokens withdrawn.
-    event Withdrawal(address indexed _from, address indexed _for, uint _amount);
 
     /// @notice Event emitted when a transferal of orchestrator tokens takes place.
     /// @param _to The address that will receive the underlying tokens.
@@ -44,6 +26,8 @@ interface IFundingManager_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
+    /// @notice Returns the token
+    /// @return The token
     function token() external view returns (IERC20);
 
     /// @notice Transfer a specified amount of Tokens to a designated receiver address.
