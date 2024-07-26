@@ -14,10 +14,7 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 
 // External Interfaces
-import {
-    IERC20,
-    IERC20Metadata
-} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
 import {ERC165Upgradeable} from
@@ -25,12 +22,11 @@ import {ERC165Upgradeable} from
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-import {Strings} from "@oz/utils/Strings.sol";
 
 /**
  * @title   Deposit Vault Funding Manager
  *
- * @notice  This contract allows users to deposit tokens that fund the workflow.
+ * @notice  This contract allows users to deposit tokens to fund the workflow.
  *
  * @dev     Implements {IFundingManager_v1} interface.
  *
@@ -77,7 +73,7 @@ contract FM_DepositVault_v1 is
     /// @dev The token that is deposited.
     IERC20 private _token;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
