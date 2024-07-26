@@ -49,7 +49,8 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
         view
         returns (bool);
 
-    /// @notice Returns the threshold amount necessary to qualify for a given token role
+    /// @notice Returns the threshold balance in a given token necessary to qualify for a specific role. If the value is 0, the supplied token is not part of the role's gating
+    /// @dev Note: In case the queried role is not token gated, all calls will return 0
     /// @param roleId The role to be checked on.
     /// @param token The token to check the threshold for.
     function getThresholdValue(bytes32 roleId, address token)
