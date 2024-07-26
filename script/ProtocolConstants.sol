@@ -9,7 +9,6 @@ This file contains protocol-wide constants for critical information and addresse
 */
 
 contract ProtocolConstants is Script {
-
     // ------------------------------------------------------------------------
     // Important addresses
     // ------------------------------------------------------------------------
