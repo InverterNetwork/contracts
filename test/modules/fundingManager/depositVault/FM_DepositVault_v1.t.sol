@@ -102,7 +102,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
     function testDeposit(address user, uint amount) public {
         vm.assume(
             user != address(0) && user != address(_token)
-                && user != vault.trustedForwarder()
+                && user != address(vault) && user != vault.trustedForwarder()
         );
 
         _token.mint(user, amount);
