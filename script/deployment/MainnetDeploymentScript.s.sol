@@ -19,7 +19,7 @@ import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 
-contract MainnetDeploymentScript is ModuleRegistry {
+contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
     error BeaconProxyDeploymentFailed();
 
     // ------------------------------------------------------------------------
@@ -55,17 +55,6 @@ contract MainnetDeploymentScript is ModuleRegistry {
     /// @return factory The addresses of the fully deployed orchestrator factory. All other addresses should be accessible from this.
     function run() public virtual returns (address factory) {
         // TODO: Salted deployments! Check where the commit is and add it.
-
-        // Fetch the deployer details
-        uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-        address deployer = vm.addr(deployerPrivateKey);
-
-        // Fetch the Multisig addresses
-        address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
-        address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
-
-        // Fetch the treasury address
-        address treasury = vm.envAddress("TREASURY_ADDRESS");
 
         // TODO: Clean up all the mentions of deployABCD() module contracts and calls
 

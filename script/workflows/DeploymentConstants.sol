@@ -2,64 +2,43 @@
 pragma solidity ^0.8.0;
 
 /*
-This file contains constants for deployments on different chains.
+This file contains constants for existing deployments on different chains.
+
+The addresses stored here are the ones that should be called directly by the scripts (i.e. the proxies). To keep this file manageable, it sohuld only sotre the most important "high level" addresses. More specific addresses (i.e. the Becon for a specific module) should be found inside the scripts that need them.
+
+Each deployment is stored as a struct.
 
 
 */
 
 contract DeploymentConstants {
-    ///////////////////////
-    // Common Constants
-    ///////////////////////
-    // Generela Protocol Constants
+    struct DeploymentDetails {
+        // Factory Addresses
+        address orchestratorFactory;
+        address moduleFactory;
+        // Protocol level addresses
+        address protocol_Reverter;
+        address protocol_Governor;
+        address protocol_FeeManager;
+        address protocol_Treasury;
+        address protocol_Forwarder;
+        // Module dependencies
+        address bancorFormula;
+        address umaOptimisticOracleV3;
+        address mockERC20; // Testnet only
+    }
 
-    bytes public emptyBytes = "0x0";
+    // =============================================================================
+    // Existing Deployments
+    // =============================================================================
 
-    // Factory Addresses
-    address public orchestratorFactoryImplementation;
-    address public orchestratorFactory;
+    /*
+    // Deployment Details mainnet_constants  = new DeploymentDetails({
+        orchestratorFactory = 0x...,
+        moduleFactory = 0x...,
+        etc.   
 
-    address public moduleFactoryImplementation;
-    address public moduleFactory;
+    });
 
-    // Protocol Multisigs
-    address public communityMultisig;
-    address public teamMultisig;
-
-    // Protocol Addresses
-    address public protocol_Reverter;
-    address public protocol_Governor;
-    address public protocol_FeeManager;
-    address public protocol_Treasury;
-    address public protocol_Forwarder;
-
-    ///////////////////////
-    // Additional Constants
-    ///////////////////////
-    // Constants for specific runs go here
-
-    address public bountyManagerAddress =
-        0x3F65847e68EB9fa561238BC4416f8766322c13eD;
-    address public moduleFactoryAddress =
-        0xc8DAAbCc110F1271967aFd450B45d308A9B72Ff2;
-    address public orchestratorAddress =
-        0x1c9373fae3bB828f3cb9001326415A3dBe5cCd0C;
-    address public receiptTokenAddress =
-        0x94A988C49a84b990bc1750bC516b4EE63327442c;
-
-    ////////////////////////////////////////
-    // Add Bounty Manager Claim Constants
-    ////////////////////////////////////////
-    address public addBountyManagerClaim_user1 =
-        0x9518a55e5cd4Ac650A37a6Ab6c352A3146D2C9BD;
-    address public addBountyManagerClaim_user2 =
-        0x3064A400b5e74BeA12391058930EfD95a6911970;
-
-    uint public addBountyManagerClaim_user1_amount = 100_000_000_000_000_000_000;
-    uint public addBountyManagerClaim_user2_amount = 100_000_000_000_000_000_000;
-
-    uint public orchestratorTokenDepositAmount = 10e18;
-    uint public funder1TokenDepositAmount = 1000e18;
-    uint public addBounty_minimumPayoutAmount = 100e18;
-    uint public addBounty_maximumPayoutAmount = 250e18;
+    */
 }

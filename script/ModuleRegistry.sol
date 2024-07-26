@@ -62,8 +62,13 @@ import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 //--------------------------------------------------------------------------
 // General Module Registry Information
 //--------------------------------------------------------------------------
-// # TEMPLATE
-// For each Module, this file should declare:
+// Thif file acts as a general registry for all modules in the inverter protocol.
+//
+// It can be divided into two sections:
+//      1. A generalized implementation deployment function
+//      2. A list of module implentation addresses and metadata to be used by inheriting scripts.
+//
+// For each Module, the list should declare:
 //      address moduleImplementation;  // The implementation address owill be stored here
 //      IModule_v1.Metadata moduleMetadata = IModule_v1.Metadata(
 //          1, 1, "https://github.com/inverter/module", "ModuleName"
