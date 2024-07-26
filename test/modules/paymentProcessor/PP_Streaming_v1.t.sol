@@ -1319,9 +1319,7 @@ contract PP_StreamingV1Test is ModuleTest {
         // calling cancelRunningPayments also calls claim() so no need to repeat?
         vm.prank(address(paymentClient));
         vm.expectEmit(true, true, true, true);
-        emit PaymentReceiverRemoved(
-            address(paymentClient), recipients[0]
-        );
+        emit PaymentReceiverRemoved(address(paymentClient), recipients[0]);
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.
