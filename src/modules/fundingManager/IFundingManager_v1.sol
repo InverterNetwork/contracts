@@ -8,9 +8,6 @@ interface IFundingManager_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @dev Invalid Address
-    error Module__FundingManager__InvalidAddress();
-
     //--------------------------------------------------------------------------
     // Events
 

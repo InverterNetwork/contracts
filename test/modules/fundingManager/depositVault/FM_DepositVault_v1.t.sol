@@ -74,21 +74,6 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vault.init(_orchestrator, _METADATA, abi.encode());
     }
 
-    //--------------------------------------------------------------------------//
-    // Tests:Modifiers
-
-    function testValidAddress(address adr) public {
-        if (adr == address(0) || adr == address(vault)) {
-            vm.expectRevert(
-                IFundingManager_v1
-                    .Module__FundingManager__InvalidAddress
-                    .selector
-            );
-        }
-        vm.prank(address(client));
-        vault.transferOrchestratorToken(adr, 0);
-    }
-
     //--------------------------------------------------------------------------
     // Tests: Public View Functions
 
@@ -142,9 +127,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
         vault.transferOrchestratorToken(address(this), 0);
 
-        vm.expectRevert(
-            IFundingManager_v1.Module__FundingManager__InvalidAddress.selector
-        );
+        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
         vm.prank(address(client));
         vault.transferOrchestratorToken(address(0), 0);
     }

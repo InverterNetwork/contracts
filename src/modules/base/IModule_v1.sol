@@ -54,6 +54,9 @@ interface IModule_v1 {
     /// @param funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
+    /// @dev Invalid Address
+    error Module__InvalidAddress();
+
     //--------------------------------------------------------------------------
     // Functions
 

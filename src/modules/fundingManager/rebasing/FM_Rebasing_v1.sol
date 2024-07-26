@@ -59,17 +59,6 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
-    // Modifier
-
-    /// @dev Checks if the given Address is valid.
-    modifier validAddress(address to) {
-        if (to == address(0) || to == address(this)) {
-            revert Module__FundingManager__InvalidAddress();
-        }
-        _;
-    }
-
-    //--------------------------------------------------------------------------
     // Constants
 
     /// @dev The maximum amount of tokens that can be deposited.
