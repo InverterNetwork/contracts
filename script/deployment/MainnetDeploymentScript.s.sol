@@ -56,6 +56,7 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
     function run() public virtual returns (address factory) {
         // TODO: Salted deployments! Check where the commit is and add it.
 
+        // TODO: Make logs pretty
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -85,16 +86,12 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
             feeManager_Metadata.patchVersion
         );
 
-        //feeManager_Proxy = deployFeeManager.createProxy(
-        //    reverter_Implementation, communityMultisig
-        //); //@note owner of the FeeManagerBeacon will be the communityMultisig. Is that alright or should I change it to Governor? Needs more refactoring that way
-
         console2.log(
             "-----------------------------------------------------------------------------"
         );
         console2.log("Governance Contract \n");
 
-        governor_Implementation = deployImplementation("Governor_v1", bytes("")); // TODO adapt separate deploy script
+        governor_Implementation = deployImplementation("Governor_v1", bytes(""));
 
         (governor_Beacon, governor_Proxy) = deployAndSetupInverterBeacon_v1
             .deployBeaconAndSetupProxy(
@@ -106,10 +103,6 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
             governor_Metadata.minorVersion,
             governor_Metadata.patchVersion
         );
-
-        /*(governor_Proxy, governor_Implementation) = deployGovernor.run(
-            communityMultisig, teamMultisig, 1 weeks, feeManager_Proxy
-        );*/
 
         console2.log(
             "-----------------------------------------------------------------------------"
@@ -243,7 +236,9 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
 
         _setup_LogicModules();
 
-        // TODO: Initialize protocol singleton proxies here
+        // =============================================================================
+        // Initialize Protocol Singleton Proxies
+        // =============================================================================
 
         // initialize feeManager
         console2.log("Init Fee Manager \n");
@@ -279,32 +274,11 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
         // Deploy Factories and register all modules
         // =============================================================================
 
-        // TODO: check out if here  we can remove scirpts too
-
         console2.log(
             "-----------------------------------------------------------------------------"
         );
         console2.log("Initialze factory implementations \n");
 
-        // Deploy module factory v1 implementation
-        /* moduleFactory = deployModuleFactory.run(
-            reverter_Implementation,
-            forwarder_Proxy,
-            address(governor_Proxy),
-            initialMetadataRegistration,
-            initialBeaconRegistration
-        );
-        
-
-        // Deploy orchestrator Factory implementation
-        orchestratorFactory = deployOrchestratorFactory.run(
-            address(governor_Proxy),
-            orchestrator_Implementation,
-            moduleFactory,
-            forwarder_Proxy
-        );
-
-        */
         vm.startBroadcast(deployerPrivateKey);
         {
             OrchestratorFactory_v1(orchestratorFactory_Proxy).init(

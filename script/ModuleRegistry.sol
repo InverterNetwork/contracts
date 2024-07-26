@@ -65,7 +65,7 @@ import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 // Thif file acts as a general registry for all modules in the inverter protocol.
 //
 // It can be divided into two sections:
-//      1. A generalized implementation deployment function
+//      1. A generalized 'implementation deployment' function
 //      2. A list of module implentation addresses and metadata to be used by inheriting scripts.
 //
 // For each Module, the list should declare:
@@ -104,6 +104,7 @@ contract ModuleRegistry is Script {
         );
     }
 
+    // @FHieser Before you start thinking about making an enum ;) You cannot easily print the contract name if you are donig that, which makes the logs a lot messier
     function giantSwitchFromHell(
         string memory contractName,
         bytes memory constructorArgs
@@ -193,7 +194,6 @@ contract ModuleRegistry is Script {
         "https://github.com/InverterNetwork/inverter-contracts",
         "OrchestratorFactory_v1"
     ); // Stored for practical use in the scripts, the metadata is not stored onchain
-    // No Metadata
 
     // ModuleFactory
     address moduleFactory;

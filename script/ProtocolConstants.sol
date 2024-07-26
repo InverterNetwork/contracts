@@ -4,11 +4,16 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 /*
-This file contains protocol-wide constants for critical roles and addresses in deployments, like the deployer and multisigs. They are loaded from the environment variables.
+This file contains protocol-wide constants for critical information and addresses in deployments, like the deployer and multisigs. They are loaded from the environment variables.
 
 */
 
 contract ProtocolConstants is Script {
+
+    // ------------------------------------------------------------------------
+    // Important addresses
+    // ------------------------------------------------------------------------
+
     // Fetch the deployer details
     uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
     address deployer = vm.addr(deployerPrivateKey);
@@ -19,4 +24,15 @@ contract ProtocolConstants is Script {
 
     // Fetch the treasury address
     address treasury = vm.envAddress("TREASURY_ADDRESS");
+
+    // ------------------------------------------------------------------------
+    // Important Configuration Data
+    // ------------------------------------------------------------------------
+
+    // FeeManager
+    uint defaultCollateralFee;
+    uint defaultIssuanceFee;
+
+    // Governor
+    uint timelockPeriod;
 }
