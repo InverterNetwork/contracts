@@ -56,7 +56,6 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
     function run() public virtual returns (address factory) {
         // TODO: Salted deployments! Check where the commit is and add it.
 
-        // TODO: Clean up all the mentions of deployABCD() module contracts and calls
 
         console2.log(
             "-----------------------------------------------------------------------------"

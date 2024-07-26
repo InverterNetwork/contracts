@@ -16,49 +16,7 @@ import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
  *
  * @author Inverter Network
  */
-contract DeployAndSetUpInverterBeacon_v1 is Script {
-    // ------------------------------------------------------------------------
-    // Fetch Environment Variables
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address deployer = vm.addr(deployerPrivateKey);
-
-    //InverterBeacon_v1 beacon;
-
-    // TODO move out of here (probably to a new script)
-    function deployAndRegisterInFactory(
-        address owner,
-        address implementation,
-        address moduleFactory,
-        IModule_v1.Metadata calldata metadata
-    ) external returns (address) {
-        InverterBeacon_v1 beacon;
-
-        vm.startBroadcast(deployerPrivateKey);
-        {
-            // Deploy the beacon.
-            beacon = new InverterBeacon_v1(
-                ModuleFactory_v1(moduleFactory).reverter(),
-                owner,
-                metadata.majorVersion,
-                implementation,
-                metadata.minorVersion,
-                metadata.patchVersion
-            );
-
-            // Register Metadata at the ModuleFactory_v1
-            ModuleFactory_v1(moduleFactory).registerMetadata(metadata, beacon);
-        }
-        vm.stopBroadcast();
-
-        // Log the deployed Beacon contract address.
-        console2.log(
-            "Deployment of InverterBeacon_v1 at address", address(beacon)
-        );
-        console2.log("Implementation upgraded and Metadata registered");
-
-        return address(beacon);
-    }
-
+contract DeployAndSetUpInverterBeacon_v1 is Script, ProtocolConstants {
     function deployBeaconAndSetupProxy(
         string memory implementationName,
         address reverter,

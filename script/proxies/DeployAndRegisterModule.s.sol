@@ -19,7 +19,7 @@ import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
  * @author Inverter Network
  */
 
-// TODO: Test!!!!
+// TODO: Test!!!! Right  this is just an educated guess
 
 contract DeployAndRegisterModule is
     Script,
@@ -32,19 +32,24 @@ contract DeployAndRegisterModule is
     IModule_v1.Metadata new_module_metadata = IModule_v1.Metadata().copy(); // Reference here the new module's metadata stored in the ModuleRegistry
     adddress target_moduleFactory = address(0x0); // Reference here to the target deployed moduleFactory
     bytes constructor_args; // Reference here to the constructor args for the new module
-    
-    
-    function run(
-   ) external returns (address) {
-        InverterBeacon_v1 beacon;
-        address module_implementation,
 
-        if ((metadata.majorVersion == 0 && metadata.minorVersion == 0 && metadata.patchVersion == 0)  || target_moduleFactory == address(0)) {
-            revert("Please fill out the required data in the contract before running the script");
+    function run() external returns (address) {
+        InverterBeacon_v1 beacon;
+        address module_implementation;
+
+        if (
+            (
+                metadata.majorVersion == 0 && metadata.minorVersion == 0
+                    && metadata.patchVersion == 0
+            ) || target_moduleFactory == address(0)
+        ) {
+            revert(
+                "Please fill out the required data in the contract before running the script"
+            );
         }
 
         module_implementation =
-            deployImplementation(new_module_metadata.title, constructor_args); 
+            deployImplementation(new_module_metadata.title, constructor_args);
 
         vm.startBroadcast(deployerPrivateKey);
         {
@@ -59,7 +64,9 @@ contract DeployAndRegisterModule is
             );
 
             // Register Metadata at the ModuleFactory_v1
-            ModuleFactory_v1(moduleFactory).registerMetadata(new_module_metadata, beacon);
+            ModuleFactory_v1(moduleFactory).registerMetadata(
+                new_module_metadata, beacon
+            );
         }
         vm.stopBroadcast();
 
