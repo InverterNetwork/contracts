@@ -43,8 +43,6 @@ contract DeployAndSetUpInverterBeacon_v1 is Script, ProtocolConstants {
                 new InverterBeaconProxy_v1(InverterBeacon_v1(beaconAddress))
             );
 
-            // cast to address for return
-            //beaconAddress = address(beacon);
         }
         vm.stopBroadcast();
 
