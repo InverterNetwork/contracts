@@ -19,7 +19,7 @@ import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 import {DeployAndSetUpInverterBeacon_v1} from
     "script/proxies/DeployAndSetUpInverterBeacon_v1.s.sol";
 
-contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
+contract MainnetDeploymentScript is ModuleRegistry {
     error BeaconProxyDeploymentFailed();
 
     // ------------------------------------------------------------------------
@@ -38,11 +38,9 @@ contract MainnetDeploymentScript is ModuleRegistry, ProtocolConstants {
     address feeManager_Beacon;
     address feeManager_Proxy;
 
-    address orchestratorFactory_Implementation;
     address orchestratorFactory_Beacon;
     address orchestratorFactory_Proxy;
 
-    address moduleFactory_Implementation;
     address moduleFactory_Beacon;
     address moduleFactory_Proxy;
 

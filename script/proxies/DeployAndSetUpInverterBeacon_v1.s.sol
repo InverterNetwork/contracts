@@ -2,6 +2,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
+import {ProtocolConstants} from "script/ProtocolConstants.sol";
+
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";

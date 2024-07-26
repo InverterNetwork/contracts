@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
+import {ProtocolConstants} from "script/ProtocolConstants.sol";
+
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
 // Factories
@@ -75,13 +77,8 @@ import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 //      );
 //--------------------------------------------------------------------------
 
-contract ModuleRegistry is Script {
+contract ModuleRegistry is Script, ProtocolConstants {
     using Strings for string;
-    // ------------------------------------------------------------------------
-    // Fetch Environment Variables
-
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address deployer = vm.addr(deployerPrivateKey);
 
     function deployImplementation(
         string memory contractName,
@@ -186,7 +183,7 @@ contract ModuleRegistry is Script {
     //--------------------------------------------------------------------------
 
     // OrchestratorFactory
-    address orchestratorFactory;
+    address orchestratorFactory_Implementation;
     IModule_v1.Metadata orchestratorFactory_Metadata = IModule_v1.Metadata(
         1,
         0,
@@ -196,7 +193,7 @@ contract ModuleRegistry is Script {
     ); // Stored for practical use in the scripts, the metadata is not stored onchain
 
     // ModuleFactory
-    address moduleFactory;
+    address moduleFactory_Implementation;
     IModule_v1.Metadata moduleFactory_Metadata = IModule_v1.Metadata(
         1,
         0,
