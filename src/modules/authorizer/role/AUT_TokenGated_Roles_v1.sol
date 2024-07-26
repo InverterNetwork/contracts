@@ -188,20 +188,6 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // Overloaded and overriden functions
 
-    function hasRole(bytes32 roleId, address who)
-        public
-        view
-        virtual
-        override(AccessControlUpgradeable, IAccessControl)
-        returns (bool)
-    {
-        if (isTokenGated[roleId]) {
-            return _hasTokenRole(roleId, who);
-        } else {
-            return super.hasRole(roleId, who);
-        }
-    }
-
     /// @notice Grants a role to an address
     /// @param role The role to grant
     /// @param who The address to grant the role to
@@ -315,5 +301,25 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         }
 
         return false;
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    /// @notice In case the role is token gated, it will check if {who} holds a balance
+    ///         above the threshold for at least one of the required tokens
+    /// @dev Since this function uses msgSender to generate the roleId, this should only
+    ///      be used by modules. Users should call hasRole() or hasTokenRole().
+    function hasModuleRole(bytes32 role, address who)
+        external
+        view
+        virtual
+        override(AUT_Roles_v1, IAuthorizer_v1)
+        returns (bool)
+    {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        if (isTokenGated[roleId]) {
+            return _hasTokenRole(roleId, who);
+        } else {
+            return hasRole(roleId, who);
+        }
     }
 }

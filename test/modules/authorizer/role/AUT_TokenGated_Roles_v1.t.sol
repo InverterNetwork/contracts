@@ -124,6 +124,14 @@ contract TokenGatedAUT_RoleV1Test is Test {
     /// @param newValue The new value of the threshold.
     event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
 
+    /// @notice Event emitted when `account` is revoked of `role`.
+    /// @param role The role that was revoked.
+    /// @param account The account that has the role revoked.
+    /// @param sender The account that performed the revocation.
+    event RoleRevoked(
+        bytes32 indexed role, address indexed account, address indexed sender
+    );
+
     function setUp() public {
         address authImpl = address(new AUT_TokenGated_Roles_v1());
         _authorizer = AUT_TokenGated_Roles_v1(Clones.clone(authImpl));
@@ -566,12 +574,20 @@ contract TokenGatedAUT_RoleV1Test is Test {
         assertEq(
             _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 500
         );
+        assertEq(true, _authorizer.hasRole(moduleRoleId, address(roleToken)));
+
+        assertEq(
+            false, _authorizer.hasTokenRole(moduleRoleId, address(roleToken))
+        );
+        assertEq(false, _authorizer.hasModuleRole(role, address(roleToken)));
 
         _authorizer.revokeRoleFromModule(role, address(roleToken));
 
         assertEq(
             _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 0
         );
+
+        assertEq(false, _authorizer.hasRole(moduleRoleId, address(roleToken)));
 
         // Grant the same role again, with different Threshold
         _authorizer.grantTokenRoleFromModule(role, address(roleToken), 250);
@@ -674,6 +690,98 @@ contract TokenGatedAUT_RoleV1Test is Test {
             if (hasNFT[i]) {
                 roleNft.burn(roleNft.idCounter() - 1);
             }
+        }
+    }
+
+    function testFuzzTokenAuthorizationAndRevoke(
+        uint threshold,
+        address[] calldata callers,
+        uint[] calldata amounts
+    ) public {
+        vm.assume(callers.length <= amounts.length);
+        vm.assume(threshold != 0);
+
+        // This implcitly confirms ERC20 compatibility
+
+        // We burn the tokens created on setup
+        roleToken.burn(BOB, 1000);
+        roleToken.burn(CLOE, 10);
+
+        bytes32 roleId = setUpTokenGatedRole(
+            address(mockModule), ROLE_TOKEN, address(roleToken), threshold
+        );
+
+        assertEq(true, _authorizer.hasRole(roleId, address(roleToken))); // The token has been added to the core authorizer mapping
+
+        assertEq(
+            false, _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken))
+        ); // The token itself  does not have the role
+        assertEq(
+            _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken)),
+            _authorizer.hasTokenRole(roleId, address(roleToken))
+        ); // We ensure both ways to check give the same result
+
+        for (uint i = 0; i < callers.length; i++) {
+            if (callers[i] == address(0)) {
+                // cannot mint to 0 address
+                continue;
+            }
+
+            roleToken.mint(callers[i], amounts[i]);
+
+            // we ensure both ways to check give the same result
+            vm.prank(address(mockModule));
+            bool result = _authorizer.hasModuleRole(ROLE_TOKEN, callers[i]);
+            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
+
+            // we verify the result is correct
+            if (amounts[i] >= threshold) {
+                assertTrue(result);
+            } else {
+                assertFalse(result);
+            }
+
+            // we burn the minted tokens to avoid overflows
+            roleToken.burn(callers[i], amounts[i]);
+        }
+
+        // Now we revoke the token from the role
+        vm.startPrank(address(mockModule));
+        vm.expectEmit();
+        emit ChangedTokenThreshold(roleId, address(roleToken), 0);
+        emit RoleRevoked(roleId, address(roleToken), address(mockModule));
+
+        _authorizer.revokeRoleFromModule(ROLE_TOKEN, address(roleToken));
+        vm.stopPrank();
+
+        assertEq(false, _authorizer.hasRole(roleId, address(roleToken))); // The token has been revoked from the core authorizer mapping
+
+        assertEq(
+            false, _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken))
+        ); // The token itsef still does not have the role
+        assertEq(
+            _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken)),
+            _authorizer.hasTokenRole(roleId, address(roleToken))
+        ); // We ensure both ways to check give the same result
+
+        for (uint i = 0; i < callers.length; i++) {
+            if (callers[i] == address(0)) {
+                // cannot mint to 0 address
+                continue;
+            }
+
+            roleToken.mint(callers[i], amounts[i]);
+
+            // we ensure both ways to check give the same result
+            vm.prank(address(mockModule));
+            bool result = _authorizer.hasModuleRole(ROLE_TOKEN, callers[i]);
+            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
+
+            // we verify the user is not authorized
+            assertFalse(result);
+
+            // we burn the minted tokens to avoid overflows
+            roleToken.burn(callers[i], amounts[i]);
         }
     }
 }
