@@ -71,6 +71,8 @@ contract ModuleFactoryV1Test is Test {
         IModule_v1.Metadata metadata
     );
 
+    event GovernorSet(address indexed governor);
+
     // Constants
     uint constant MAJOR_VERSION = 1;
     uint constant MINOR_VERSION = 0;
@@ -89,6 +91,8 @@ contract ModuleFactoryV1Test is Test {
 
         address impl = address(new ModuleFactory_v1(reverter, address(0)));
         factory = ModuleFactory_v1(Clones.clone(impl));
+        vm.expectEmit(true, false, false, false);
+        emit GovernorSet(governanceContract);
         factory.init(
             governanceContract,
             new IModule_v1.Metadata[](0),

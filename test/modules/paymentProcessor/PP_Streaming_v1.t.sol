@@ -91,6 +91,10 @@ contract PP_StreamingV1Test is ModuleTest {
         address indexed recipient, address indexed token, uint amount
     );
 
+    event PaymentReceiverRemoved(
+        address indexed paymentClient, address indexed paymentReceiver
+    );
+
     function setUp() public {
         address impl = address(new PP_Streaming_v1AccessMock());
         paymentProcessor = PP_Streaming_v1AccessMock(Clones.clone(impl));
@@ -1314,6 +1318,8 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // calling cancelRunningPayments also calls claim() so no need to repeat?
         vm.prank(address(paymentClient));
+        vm.expectEmit(true, true, true, true);
+        emit PaymentReceiverRemoved(address(paymentClient), recipients[0]);
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.

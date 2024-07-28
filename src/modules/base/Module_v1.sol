@@ -168,7 +168,7 @@ abstract contract Module_v1 is
         }
         __Module_metadata = metadata;
 
-        emit ModuleInitialized(address(orchestrator_), metadata.title);
+        emit ModuleInitialized(address(orchestrator_), metadata);
     }
 
     //--------------------------------------------------------------------------

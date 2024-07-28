@@ -114,15 +114,15 @@ contract FeeManager_v1 is
         __Ownable_init(owner);
 
         // initial max fee is 10%
-        maxFee = 1000;
+        _setMaxFee(1000);
 
         if (_defaultCollateralFee > maxFee || _defaultIssuanceFee > maxFee) {
             revert FeeManager__InvalidFee();
         }
 
-        defaultProtocolTreasury = _defaultProtocolTreasury;
-        defaultCollateralFee = _defaultCollateralFee;
-        defaultIssuanceFee = _defaultIssuanceFee;
+        _setDefaultProtocolTreasury(_defaultProtocolTreasury);
+        _setDefaultCollateralFee(_defaultCollateralFee);
+        _setDefaultIssuanceFee(_defaultIssuanceFee);
     }
 
     //--------------------------------------------------------------------------
@@ -175,7 +175,8 @@ contract FeeManager_v1 is
         // In case workflow fee is set return it
         if (workflowCollateralFees[workflow][moduleFunctionHash].set) {
             return workflowCollateralFees[workflow][moduleFunctionHash].value;
-        } // otherwise return default fee
+        }
+        // otherwise return default fee
         else {
             return defaultCollateralFee;
         }
@@ -193,7 +194,8 @@ contract FeeManager_v1 is
         // In case workflow fee is set return it
         if (workflowIssuanceFees[workflow][moduleFunctionHash].set) {
             return workflowIssuanceFees[workflow][moduleFunctionHash].value;
-        } // otherwise return default fee
+        }
+        // otherwise return default fee
         else {
             return defaultIssuanceFee;
         }
@@ -231,8 +233,7 @@ contract FeeManager_v1 is
 
     /// @inheritdoc IFeeManager_v1
     function setMaxFee(uint _maxFee) external onlyOwner validMaxFee(_maxFee) {
-        maxFee = _maxFee;
-        emit MaxFeeSet(_maxFee);
+        _setMaxFee(_maxFee);
     }
 
     //---------------------------
@@ -265,20 +266,16 @@ contract FeeManager_v1 is
     function setDefaultCollateralFee(uint _defaultCollateralFee)
         external
         onlyOwner
-        validFee(_defaultCollateralFee)
     {
-        defaultCollateralFee = _defaultCollateralFee;
-        emit DefaultCollateralFeeSet(_defaultCollateralFee);
+        _setDefaultCollateralFee(_defaultCollateralFee);
     }
 
     /// @inheritdoc IFeeManager_v1
     function setDefaultIssuanceFee(uint _defaultIssuanceFee)
         external
         onlyOwner
-        validFee(_defaultIssuanceFee)
     {
-        defaultIssuanceFee = _defaultIssuanceFee;
-        emit DefaultIssuanceFeeSet(_defaultIssuanceFee);
+        _setDefaultIssuanceFee(_defaultIssuanceFee);
     }
 
     /// @inheritdoc IFeeManager_v1
@@ -308,7 +305,60 @@ contract FeeManager_v1 is
         bytes4 functionSelector,
         bool set,
         uint fee
-    ) external onlyOwner validFee(fee) {
+    ) external onlyOwner {
+        _setIssuanceWorkflowFee(workflow, module, functionSelector, set, fee);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function getModuleFunctionHash(address module, bytes4 functionSelector)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(module, functionSelector));
+    }
+
+    function _setDefaultProtocolTreasury(address _defaultProtocolTreasury)
+        internal
+        validAddress(_defaultProtocolTreasury)
+    {
+        defaultProtocolTreasury = _defaultProtocolTreasury;
+        emit DefaultProtocolTreasurySet(_defaultProtocolTreasury);
+    }
+
+    function _setWorkflowTreasury(address workflow, address treasury)
+        internal
+        validAddress(treasury)
+    {
+        workflowTreasuries[workflow] = treasury;
+        emit WorkflowTreasurySet(workflow, treasury);
+    }
+
+    function _setDefaultCollateralFee(uint _defaultCollateralFee)
+        internal
+        validFee(_defaultCollateralFee)
+    {
+        defaultCollateralFee = _defaultCollateralFee;
+        emit DefaultCollateralFeeSet(_defaultCollateralFee);
+    }
+
+    function _setDefaultIssuanceFee(uint _defaultIssuanceFee)
+        internal
+        validFee(_defaultIssuanceFee)
+    {
+        defaultIssuanceFee = _defaultIssuanceFee;
+        emit DefaultIssuanceFeeSet(_defaultIssuanceFee);
+    }
+
+    function _setIssuanceWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) internal validFee(fee) {
         bytes32 moduleFunctionHash =
             getModuleFunctionHash(module, functionSelector);
 
@@ -321,14 +371,8 @@ contract FeeManager_v1 is
         );
     }
 
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    function getModuleFunctionHash(address module, bytes4 functionSelector)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encodePacked(module, functionSelector));
+    function _setMaxFee(uint _maxFee) internal validMaxFee(_maxFee) {
+        maxFee = _maxFee;
+        emit MaxFeeSet(_maxFee);
     }
 }

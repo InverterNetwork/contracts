@@ -116,12 +116,15 @@ contract LM_PC_RecurringPayments_v1 is
         // Set empty list of RecurringPayment
         _paymentList.init();
 
-        epochLength = abi.decode(configData, (uint));
+        uint newEpochLength = abi.decode(configData, (uint));
+        epochLength = newEpochLength;
 
         // revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
+
+        emit EpochLengthSet(newEpochLength);
     }
 
     //--------------------------------------------------------------------------

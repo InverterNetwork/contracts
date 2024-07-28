@@ -30,6 +30,22 @@ interface ILM_PC_Staking_v1 {
     /// @notice Event emitted when a user receives Rewards.
     event RewardsDistributed(address indexed user, uint amount);
 
+    /// @notice Event emitted for each major change of state.
+    /// @param triggerAddress Address of user if state change was triggered by a staking action. Else can be zero.
+    /// @param rewardValue Variable necessary to calculate how much rewards a staker is eligible for.
+    /// @param lastUpdate Timestamp of last state change.
+    /// @param earnedRewards How much a user earned up to point of state change.
+    event Updated(
+        address indexed triggerAddress,
+        uint rewardValue,
+        uint lastUpdate,
+        uint earnedRewards
+    );
+
+    /// @notice Event emitted when staking token is set.
+    /// @param token Address of token that can be staked.
+    event StakingTokenSet(address indexed token);
+
     //--------------------------------------------------------------------------
     // Getter Functions
 

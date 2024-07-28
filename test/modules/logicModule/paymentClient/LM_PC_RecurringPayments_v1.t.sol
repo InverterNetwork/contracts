@@ -40,6 +40,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     );
     event RecurringPaymentRemoved(uint indexed recurringPaymentId);
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
+    event EpochLengthSet(uint epochLength);
 
     function setUp() public {
         // Add Module to Mock Orchestrator_v1
@@ -68,6 +69,9 @@ contract LM_PC_RecurringV1Test is ModuleTest {
                 .Module__LM_PC_RecurringPayments__InvalidEpochLength
                 .selector
         );
+
+        vm.expectEmit(true, true, true, true);
+        emit EpochLengthSet(1 weeks);
 
         // Init Module wrongly
         recurringPaymentManager.init(

@@ -625,6 +625,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         // pop the last element of the array
         activePaymentReceivers[client].pop();
+
+        emit PaymentReceiverRemoved(client, paymentReceiver);
     }
 
     /// @notice Adds a new payment containing the details of the monetary flow

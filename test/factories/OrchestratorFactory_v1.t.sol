@@ -54,6 +54,9 @@ contract OrchestratorFactoryV1Test is Test {
     event OrchestratorCreated(
         uint indexed orchestratorId, address indexed orchestratorAddress
     );
+    event OrchestratorFactoryInitialized(
+        address indexed beacon, address indexed moduleFactory
+    );
 
     // Mocks
     ModuleFactoryV1Mock moduleFactory;
@@ -103,6 +106,10 @@ contract OrchestratorFactoryV1Test is Test {
 
         address impl = address(new OrchestratorFactory_v1(address(0)));
         factory = OrchestratorFactory_v1(Clones.clone(impl));
+        vm.expectEmit(true, false, false, false);
+        emit OrchestratorFactoryInitialized(
+            address(beacon), address(moduleFactory)
+        );
         factory.init(moduleFactory.governor(), beacon, address(moduleFactory));
     }
 
