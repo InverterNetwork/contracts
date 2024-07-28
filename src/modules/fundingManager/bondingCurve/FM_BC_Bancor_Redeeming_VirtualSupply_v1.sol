@@ -187,7 +187,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // Set selling functionality to open if true. By default selling is false
         sellIsOpen = bondingCurveProperties.sellIsOpen;
 
-        emit CollateralTokenSet(_acceptedToken, collateralTokenDecimals);
+        emit OrchestratorTokenSet(_acceptedToken, collateralTokenDecimals);
     }
 
     //--------------------------------------------------------------------------

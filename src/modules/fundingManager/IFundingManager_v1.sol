@@ -37,6 +37,10 @@ interface IFundingManager_v1 {
     /// @param _amount The amount of underlying tokens transfered.
     event TransferOrchestratorToken(address indexed _to, uint _amount);
 
+    /// @notice Event emitted when collateral token has been set
+    /// @param token The token that serves as collateral token making up the curve's reserve
+    event OrchestratorTokenSet(address indexed token, uint8 decimals);
+
     //--------------------------------------------------------------------------
     // Functions
 

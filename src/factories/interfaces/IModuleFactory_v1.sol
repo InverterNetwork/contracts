@@ -51,6 +51,10 @@ interface IModuleFactory_v1 {
         IModule_v1.Metadata metadata
     );
 
+    /// @notice Event emitted when governor is set.
+    /// @param governor The address of the governor.
+    event GovernorSet(address indexed governor);
+
     //--------------------------------------------------------------------------
     // Functions
 

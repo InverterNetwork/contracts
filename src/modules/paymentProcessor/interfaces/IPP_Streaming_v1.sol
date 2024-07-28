@@ -115,6 +115,13 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint amount
     );
 
+    /// @notice Emitted when an address is removed from the list of active payment receiver, eg because all payments have been fulfilled by a client.
+    /// @param paymentClient The address of the payment client.
+    /// @param paymentReceiver The address of the recipient that is removed.
+    event PaymentReceiverRemoved(
+        address indexed paymentClient, address indexed paymentReceiver
+    );
+
     //--------------------------------------------------------------------------
     // Errors
 

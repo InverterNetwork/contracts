@@ -150,7 +150,7 @@ contract LM_PC_Staking_v1 is
             // Get full amount back
             return amount * duration * rewardRate;
         }
-        return amount * duration * rewardRate / totalSupply;
+        return (amount * duration * rewardRate) / totalSupply;
     }
 
     //--------------------------------------------------------------------------
@@ -239,16 +239,21 @@ contract LM_PC_Staking_v1 is
     /// @dev This has to trigger on every major change of the state of the contract
     function _update(address triggerAddress) internal {
         // Set a new reward value
-        rewardValue = _calculateRewardValue();
+        uint newRewardValue = _calculateRewardValue();
+        rewardValue = newRewardValue;
 
         // Set timestamp correctly
-        lastUpdate = _getRewardDistributionTimestamp();
+        uint newLastUpdate = _getRewardDistributionTimestamp();
+        lastUpdate = newLastUpdate;
 
         // If trigger address is 0 then its not a user
+        uint earned;
         if (triggerAddress != address(0)) {
-            rewards[triggerAddress] = _earned(triggerAddress, rewardValue);
+            earned = _earned(triggerAddress, rewardValue);
+            rewards[triggerAddress] = earned;
             userRewardValue[triggerAddress] = rewardValue;
         }
+        emit Updated(triggerAddress, newRewardValue, newLastUpdate, earned);
     }
 
     /// @dev This is the heart of the algorithm
@@ -354,5 +359,6 @@ contract LM_PC_Staking_v1 is
             revert Module__LM_PC_Staking_v1__InvalidStakingToken();
         }
         stakingToken = _token;
+        emit StakingTokenSet(_token);
     }
 }

@@ -162,7 +162,7 @@ contract Governor_v1 is
         // grant COMMUNITY_MULTISIG_ROLE to specified address
         _grantRole(TEAM_MULTISIG_ROLE, newTeamMultisig);
 
-        timelockPeriod = newTimelockPeriod;
+        _setTimelockPeriod(newTimelockPeriod);
 
         _setFeeManager(initialFeeManager);
     }
@@ -347,10 +347,8 @@ contract Governor_v1 is
     function setTimelockPeriod(uint newTimelockPeriod)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        validTimelockPeriod(newTimelockPeriod)
     {
-        timelockPeriod = newTimelockPeriod;
-        emit TimelockPeriodSet(newTimelockPeriod);
+        _setTimelockPeriod(newTimelockPeriod);
     }
 
     //---------------------------
@@ -428,6 +426,15 @@ contract Governor_v1 is
         validAddress(newFeeManager)
     {
         feeManager = IFeeManager_v1(newFeeManager);
+        emit FeeManagerUpdated(newFeeManager);
+    }
+
+    function _setTimelockPeriod(uint newTimelockPeriod)
+        internal
+        validTimelockPeriod(newTimelockPeriod)
+    {
+        timelockPeriod = newTimelockPeriod;
+        emit TimelockPeriodSet(newTimelockPeriod);
     }
 
     /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it

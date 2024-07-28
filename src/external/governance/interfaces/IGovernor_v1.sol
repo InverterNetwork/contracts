@@ -82,6 +82,10 @@ interface IGovernor_v1 {
     /// @param beacon The address of the beacon
     event BeaconUpgradedCanceled(address beacon);
 
+    /// @notice Event emitted when the fee manager is updated
+    /// @param feeManager The address of the fee manager
+    event FeeManagerUpdated(address feeManager);
+
     /// @notice Event emitted when a timelock period is set
     /// @param newTimelockPeriod The new timelock period
     event TimelockPeriodSet(uint newTimelockPeriod);
