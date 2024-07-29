@@ -97,18 +97,23 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     ) external override(ElasticReceiptTokenBase_v1) initializer {
         address orchestratorTokenAddress = abi.decode(configData, (address));
         _token = IERC20(orchestratorTokenAddress);
+        uint8 reserveTokenDecimals =
+            IERC20Metadata(orchestratorTokenAddress).decimals();
 
         string memory _id = orchestrator_.orchestratorId().toString();
         string memory _name = string(
             abi.encodePacked("Inverter Funding Token - Orchestrator_v1 #", _id)
         );
         string memory _symbol = string(abi.encodePacked("IFT-", _id));
-        bytes memory underlyingConfigData = abi.encode(
-            _name, _symbol, IERC20Metadata(orchestratorTokenAddress).decimals()
-        );
+        bytes memory underlyingConfigData =
+            abi.encode(_name, _symbol, reserveTokenDecimals);
         // Initial upstream contracts.
         __ElasticReceiptTokenBase_init(
             orchestrator_, metadata, underlyingConfigData
+        );
+
+        emit OrchestratorTokenSet(
+            orchestratorTokenAddress, reserveTokenDecimals
         );
     }
 

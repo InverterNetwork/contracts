@@ -48,6 +48,13 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     event Staked(address indexed user, uint amount);
     event Unstaked(address indexed user, uint amount);
     event RewardsDistributed(address indexed user, uint amount);
+    event Updated(
+        address indexed triggerAddress,
+        uint rewardValue,
+        uint lastUpdate,
+        uint earnedRewards
+    );
+    event StakingTokenSet(address indexed token);
 
     function setUp() public {
         // Add Module to Mock Orchestrator
@@ -56,7 +63,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
-
+        vm.expectEmit(true, true, true, true);
+        emit StakingTokenSet(address(stakingToken));
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
@@ -530,6 +538,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             expectedUserRewardValue =
                 stakingManager.direct_calculateRewardValue();
         }
+        vm.expectEmit(true, true, true, false);
+        emit Updated(
+            trigger, expectedRewards, stakingManager.getLastUpdate(), 0
+        );
 
         stakingManager.direct_update(trigger);
 

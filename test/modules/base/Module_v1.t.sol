@@ -50,9 +50,9 @@ contract ModuleBaseV1Test is ModuleTest {
 
     /// @notice Module has been initialized.
     /// @param parentOrchestrator The address of the orchestrator the module is linked to.
-    /// @param moduleTitle The title of the module.
+    /// @param metadata The metadata of the module.
     event ModuleInitialized(
-        address indexed parentOrchestrator, string moduleTitle
+        address indexed parentOrchestrator, IModule_v1.Metadata metadata
     );
 
     function setUp() public {
@@ -62,7 +62,7 @@ contract ModuleBaseV1Test is ModuleTest {
         _setUpOrchestrator(module);
 
         vm.expectEmit(true, true, true, false);
-        emit ModuleInitialized(address(_orchestrator), _TITLE);
+        emit ModuleInitialized(address(_orchestrator), _METADATA);
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }

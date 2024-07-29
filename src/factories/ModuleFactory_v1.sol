@@ -153,6 +153,8 @@ contract ModuleFactory_v1 is
                 initialMetadataRegistration[i], initialBeaconRegistration[i]
             );
         }
+
+        emit GovernorSet(_governor);
     }
 
     //--------------------------------------------------------------------------

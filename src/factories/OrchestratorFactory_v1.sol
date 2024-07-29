@@ -134,9 +134,9 @@ contract OrchestratorFactory_v1 is
         ) {
             revert OrchestratorFactory__InvalidBeacon();
         }
-
         beacon = beacon_;
         moduleFactory = moduleFactory_;
+        emit OrchestratorFactoryInitialized(address(beacon_), moduleFactory_);
     }
 
     //--------------------------------------------------------------------------

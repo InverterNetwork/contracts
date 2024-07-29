@@ -6,7 +6,6 @@ import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 
 // External Dependencies
 import {ERC20, ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
-import {Context} from "@oz/utils/Context.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**

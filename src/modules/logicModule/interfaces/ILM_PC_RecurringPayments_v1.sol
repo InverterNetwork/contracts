@@ -54,6 +54,10 @@ interface ILM_PC_RecurringPayments_v1 {
     /// @param currentEpoch The current epoch.
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
+    /// @notice Event emitted when the epoch length is set.
+    /// @param epochLength The epoch length.
+    event EpochLengthSet(uint epochLength);
+
     //--------------------------------------------------------------------------
     // Getter Functions
 
