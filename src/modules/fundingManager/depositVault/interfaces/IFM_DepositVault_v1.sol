@@ -15,15 +15,16 @@ interface IFM_DepositVault_v1 {
 
     /// @notice Deposits a specified amount of tokens into the contract from the sender's account.
     /// @dev    Reverts if attempting self-deposits
-    /// @dev When using the transactionForwarder, validate transaction success to prevent nonce exploitation and ensure transaction integrity.
+    /// @dev    When using the transactionForwarder, validate transaction success to prevent nonce
+    ///         exploitation and ensure transaction integrity.
     /// @param amount The number of tokens to deposit.
     function deposit(uint amount) external;
 
     /// @notice Deposits a specified amount of tokens into the contract for the address defined in
     ///         the `from` parameter.
     /// @dev    Reverts if attempting self-deposits
-    /// @dev    Note: when using the transactionForwarder,
-    ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
+    /// @dev    When using the transactionForwarder, validate transaction success to prevent nonce
+    ///         exploitation and ensure transaction integrity.
     /// @param from The address to deposit tokens for.
     /// @param amount The number of tokens to deposit.
     function depositFor(address from, uint amount) external;
