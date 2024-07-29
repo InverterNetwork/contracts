@@ -279,7 +279,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
-    /// @param role The id number of the role
+    /// @param role The id of the role
     /// @param who The user we want to check on
     /// @return bool Returns if grant has been succesful
     function _grantRole(bytes32 role, address who)
