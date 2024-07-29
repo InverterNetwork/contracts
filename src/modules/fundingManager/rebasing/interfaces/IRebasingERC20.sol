@@ -22,10 +22,10 @@ interface IRebasingERC20 is IERC20Metadata {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Function is only callable by authorized address.
+    /// @notice Self-deposits are not allowed.
     error Module__RebasingERC20__CannotSelfDeposit();
 
-    /// @notice There is a cap on deposits.
+    /// @notice The balance would exceed the cap on deposits.
     error Module__RebasingERC20__DepositCapReached();
 
     //--------------------------------------------------------------------------
