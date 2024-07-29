@@ -10,7 +10,7 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 
 import {
     IBondingCurveBase_v1,
@@ -36,7 +36,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Libraries
 import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
@@ -70,6 +71,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     VirtualCollateralSupplyBase_v1,
     RedeemingBondingCurveBase_v1
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -157,7 +159,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         // Check for valid Bancor Formula
         if (
-            !ERC165(bondingCurveProperties.formula).supportsInterface(
+            !ERC165Upgradeable(bondingCurveProperties.formula).supportsInterface(
                 type(IBancorFormula).interfaceId
             )
         ) {
@@ -266,7 +268,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     /// 100,000,000. Transactions exceeding this limit will be reverted.
     /// @param _depositAmount The amount of issued token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
         public
@@ -572,6 +573,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         reserveRatioForSelling = _reserveRatio;
     }
 
+    /// @dev Validates the reserve ratio for buying and selling.
+    /// The function will revert if the ratio is greater than the constant PPM.
+    ///
+    /// @param _reserveRatio The reserve ratio to be validated. Must be <= PPM.
     function _validateReserveRatio(uint32 _reserveRatio) internal pure {
         if (_reserveRatio == 0 || _reserveRatio > PPM) {
             revert

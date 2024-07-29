@@ -47,15 +47,15 @@ interface IInverterBeacon_v1 is IBeacon {
     function version() external view returns (uint, uint, uint);
 
     /// @notice Returns the reverter address of the beacon.
-    /// @return The address of the reverter contract.
+    /// @return ReverterAddress The address of the reverter contract.
     function getReverterAddress() external returns (address);
 
     /// @notice Returns the implementation address of the beacon.
-    /// @return The address of the implementation.
+    /// @return ImplementationAddress The address of the implementation.
     function getImplementationAddress() external returns (address);
 
     /// @notice Returns wether the beacon is in emergency mode or not.
-    /// @return Is the beacon in emergency mode.
+    /// @return emergencyModeActive Is the beacon in emergency mode.
     function emergencyModeActive() external view returns (bool);
 
     //--------------------------------------------------------------------------

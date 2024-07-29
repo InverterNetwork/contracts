@@ -28,6 +28,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     }
 
     struct Claim {
+        /// @dev The id of the bounty this claim belongs to
         uint bountyId;
         /// @dev The contributors of the claim
         ///      MUST not be empty
@@ -208,6 +209,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
 
     /// @notice Adds a new Claim.
     /// @dev Reverts if an argument invalid.
+    /// @param bountyId The id of the bounty this claim belongs to
     /// @param contributors The contributor information for the Claim
     /// @param details The Claim's details.
     /// @return The newly added Claim's id.

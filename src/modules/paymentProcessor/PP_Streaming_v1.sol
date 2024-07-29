@@ -11,7 +11,7 @@ import {
 } from "@pp/interfaces/IPP_Streaming_v1.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -55,6 +55,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @author  Inverter Network
  */
 contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -122,6 +123,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _;
     }
 
+    /// @notice checks that the paymentReceiver is an active paymentReceiver
     modifier activePaymentReceiver(address client, address paymentReceiver) {
         if (activeStreams[client][paymentReceiver].length == 0) {
             revert Module__PP_Streaming__InvalidPaymentReceiver(

@@ -28,12 +28,16 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     error Module__AUT_TokenGated_Roles__RoleNotEmpty();
 
     /// @notice The token doesn't support balance query.
+    /// @param token The token address that is not supported.
     error Module__AUT_TokenGated_Roles__InvalidToken(address token);
 
     /// @notice The given threshold is invalid
+    /// @param threshold The threshold that is not valid.
     error Module__AUT_TokenGated_Roles__InvalidThreshold(uint threshold);
 
     /// @notice The role is token-gated but no threshold is set.
+    /// @param role The role that doesnt have threshold
+    /// @param token The token for which the threshold was not set.
     error Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold(
         bytes32 role, address token
     );
@@ -44,6 +48,7 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice Checks if an account qualifies for a token-gated role.
     /// @param role The role to be checked.
     /// @param who The account to be checked.
+    /// @return True if the account qualifies for the role.
     function hasTokenRole(bytes32 role, address who)
         external
         view
@@ -52,6 +57,7 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice Returns the threshold amount necessary to qualify for a given token role
     /// @param roleId The role to be checked on.
     /// @param token The token to check the threshold for.
+    /// @return The threshold amount necessary to qualify for a given token role
     function getThresholdValue(bytes32 roleId, address token)
         external
         returns (uint);
