@@ -2,12 +2,15 @@
 pragma solidity ^0.8.0;
 
 interface ILM_PC_RecurringPayments_v1 {
+    /// @notice Struct that holds the information of a RecurringPayment
     struct RecurringPayment {
+        /// @dev The amount of tokens that will be paid out upon triggering the RecurringPayment
         uint amount;
-        // in which epoch this should start
+        /// @dev The epoch in which the RecurringPayment should start
         uint startEpoch;
-        // When was the last epoch this Payment was triggered
+        /// @dev When was the last epoch this RecurringPayment was triggered
         uint lastTriggeredEpoch;
+        /// @dev The recipient address that should receive tokens
         address recipient;
     }
 
@@ -84,6 +87,7 @@ interface ILM_PC_RecurringPayments_v1 {
         returns (uint prevId);
 
     /// @notice Returns whether RecurringPayment with id `id` exists.
+    /// @param id The id of the RecurringPayment to test.
     /// @return True if RecurringPayment with id `id` exists, false otherwise.
     function isExistingRecurringPaymentId(uint id)
         external

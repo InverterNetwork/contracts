@@ -11,7 +11,8 @@ import {IOrchestrator_v1} from
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
@@ -41,6 +42,7 @@ contract AUT_Roles_v1 is
     AccessControlEnumerableUpgradeable,
     Module_v1
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -54,6 +56,7 @@ contract AUT_Roles_v1 is
 
     //--------------------------------------------------------------------------
     // Storage
+    /// @notice The role that is used as a placeholder for a burned admin role
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
@@ -64,6 +67,7 @@ contract AUT_Roles_v1 is
     // Modifiers
 
     /// @notice Verifies that the caller is an active module
+    /// @param module The address of the module
     modifier onlyModule(address module) {
         if (!orchestrator().isModule(module)) {
             revert Module__Authorizer__NotActiveModule(module);
@@ -72,6 +76,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @notice Verifies that the admin being removed is not the last one
+    /// @param role The id number of the role
     modifier notLastAdmin(bytes32 role) {
         if (
             role == DEFAULT_ADMIN_ROLE
@@ -83,6 +88,8 @@ contract AUT_Roles_v1 is
     }
 
     /// @notice Verifies that the admin being added is not the orchestrator
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
     modifier noSelfAdmin(bytes32 role, address who) {
         if (role == DEFAULT_ADMIN_ROLE && who == address(orchestrator())) {
             revert Module__Authorizer__OrchestratorCannotHaveAdminRole();
@@ -106,6 +113,8 @@ contract AUT_Roles_v1 is
         __RoleAuthorizer_init(initialAdmin);
     }
 
+    /// @notice Initializes the role authorizer
+    /// @param initialAdmin The initial admin of the role authorizer
     function __RoleAuthorizer_init(address initialAdmin)
         internal
         onlyInitializing
@@ -123,37 +132,6 @@ contract AUT_Roles_v1 is
 
         // set the initial admin as the DEFAULT_ADMIN_ROLE
         _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
-    }
-
-    //--------------------------------------------------------------------------
-    // Overloaded and overriden functions
-
-    /// @notice Overrides {_revokeRole} to prevent having an empty ADMIN role
-    /// @param role The id number of the role
-    /// @param who The user we want to check on
-    /// @return bool Returns if revoke has been succesful
-    function _revokeRole(bytes32 role, address who)
-        internal
-        virtual
-        override
-        notLastAdmin(role)
-        returns (bool)
-    {
-        return super._revokeRole(role, who);
-    }
-
-    /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
-    /// @param role The id number of the role
-    /// @param who The user we want to check on
-    /// @return bool Returns if grant has been succesful
-    function _grantRole(bytes32 role, address who)
-        internal
-        virtual
-        override
-        noSelfAdmin(role, who)
-        returns (bool)
-    {
-        return super._grantRole(role, who);
     }
 
     //--------------------------------------------------------------------------
@@ -281,6 +259,37 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function getAdminRole() public pure returns (bytes32) {
         return DEFAULT_ADMIN_ROLE;
+    }
+
+    //--------------------------------------------------------------------------
+    // Overloaded and overriden functions
+
+    /// @notice Overrides {_revokeRole} to prevent having an empty ADMIN role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @return bool Returns if revoke has been succesful
+    function _revokeRole(bytes32 role, address who)
+        internal
+        virtual
+        override
+        notLastAdmin(role)
+        returns (bool)
+    {
+        return super._revokeRole(role, who);
+    }
+
+    /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
+    /// @param role The id number of the role
+    /// @param who The user we want to check on
+    /// @return bool Returns if grant has been succesful
+    function _grantRole(bytes32 role, address who)
+        internal
+        virtual
+        override
+        noSelfAdmin(role, who)
+        returns (bool)
+    {
+        return super._grantRole(role, who);
     }
 
     //--------------------------------------------------------------------------

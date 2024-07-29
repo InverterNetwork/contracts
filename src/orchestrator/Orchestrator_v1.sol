@@ -20,6 +20,10 @@ import {ModuleManagerBase_v1} from
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 // External Libraries
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
@@ -48,6 +52,7 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  * @author  Inverter Network
  */
 contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -73,6 +78,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _;
     }
 
+    /// @notice Modifier to guarantee that the given module is a logic module
+    ///         and not the authorizer or the fundingManager or the paymentProcessor.
+    /// @param module_ The module to be checked.
     modifier onlyLogicModules(address module_) {
         // Revert given module to be removed is equal to current authorizer
         if (module_ == address(authorizer)) {
@@ -171,58 +179,6 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // Module search functions
-
-    /// @notice verifies whether a orchestrator with the title `moduleName` has been used in this orchestrator
-    /// @dev The query string and the module title should be **exactly** same, as in same whitespaces, same capitalizations, etc.
-    /// @param moduleName Query string which is the title of the module to be searched in the orchestrator
-    /// @return uint256 index of the module in the list of modules used in the orchestrator
-    /// @return address address of the module with title `moduleName`
-    function _isModuleUsedInOrchestrator(string calldata moduleName)
-        private
-        view
-        returns (uint, address)
-    {
-        address[] memory moduleAddresses = listModules();
-        uint moduleAddressesLength = moduleAddresses.length;
-        string memory currentModuleName;
-        uint index;
-
-        for (; index < moduleAddressesLength;) {
-            currentModuleName = IModule_v1(moduleAddresses[index]).title();
-
-            if (bytes(currentModuleName).length == bytes(moduleName).length) {
-                if (
-                    keccak256(abi.encodePacked(currentModuleName))
-                        == keccak256(abi.encodePacked(moduleName))
-                ) {
-                    return (index, moduleAddresses[index]);
-                }
-            }
-
-            unchecked {
-                ++index;
-            }
-        }
-
-        return (type(uint).max, address(0));
-    }
-
-    //--------------------------------------------------------------------------
-    // Upstream Function Implementations
-
-    /// @dev Only addresses authorized via the {IAuthorizer_v1} instance can manage
-    ///      modules.
-    function __ModuleManager_isAuthorized(address who)
-        internal
-        view
-        override(ModuleManagerBase_v1)
-        returns (bool)
-    {
-        return authorizer.hasRole(authorizer.getAdminRole(), who);
-    }
-
-    //--------------------------------------------------------------------------
     // onlyOrchestratorAdmin Functions
 
     /// @inheritdoc IOrchestrator_v1
@@ -244,7 +200,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         external
         onlyOrchestratorAdmin
         updatingModuleAlreadyStarted(address(newAuthorizer))
-        whenTimelockExpired(address(newAuthorizer))
+        timelockExpired(address(newAuthorizer))
     {
         address newAuthorizerAddress = address(newAuthorizer);
         _enforcePrivilegedModuleInterfaceCheck(
@@ -389,7 +345,27 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _executeRemoveModule(module_);
     }
 
-    // Enforces that the address is in fact a Module of the required type
+    //--------------------------------------------------------------------------
+    // Upstream Function Implementations
+
+    /// @dev Only addresses authorized via the {IAuthorizer_v1} instance can manage
+    ///      modules.
+    function __ModuleManager_isAuthorized(address who)
+        internal
+        view
+        override(ModuleManagerBase_v1)
+        returns (bool)
+    {
+        return authorizer.hasRole(authorizer.getAdminRole(), who);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @notice Enforces that the address is in fact a Module of the required type
+    /// @dev The function reverts if the given address is not a module of the required type.
+    /// @param _contractAddr The address to be checked.
+    /// @param _privilegedInterfaceId The required interface id.
     function _enforcePrivilegedModuleInterfaceCheck(
         address _contractAddr,
         bytes4 _privilegedInterfaceId
@@ -427,17 +403,11 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // View Functions
-
-    /// @inheritdoc IOrchestrator_v1
-    function version() external pure returns (string memory) {
-        return "1";
-    }
-
     // IERC2771Context
-    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
-    // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
 
+    /// @inheritdoc IModuleManagerBase_v1
+    /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
+    /// we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)
         public
         view
@@ -448,6 +418,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         return ModuleManagerBase_v1.isTrustedForwarder(forwarder);
     }
 
+    /// @inheritdoc IModuleManagerBase_v1
     function trustedForwarder()
         public
         view
