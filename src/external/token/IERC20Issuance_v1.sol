@@ -17,6 +17,8 @@ interface IERC20Issuance_v1 is IERC20 {
     //--------------------------------------------------------------------------
     // Functions
 
+    // Write
+
     /// @notice Sets the minting rights of an address.
     /// @param _minter The address of the minter.
     /// @param _allowed If the address is allowed to mint or not
@@ -31,4 +33,13 @@ interface IERC20Issuance_v1 is IERC20 {
     /// @param _from The address of the owner.
     /// @param _amount The amount of tokens to burn.
     function burn(address _from, uint _amount) external;
+
+    // Read
+
+    /// @notice Mapping of allowed minters
+    /// @param _minter The address of the minter.
+    function allowedMinters(address _minter) external view returns (bool);
+
+    // /// @notice Returns contract owner
+    // function owner() external view returns (address);
 }
