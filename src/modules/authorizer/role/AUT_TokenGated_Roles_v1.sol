@@ -98,8 +98,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @notice Grants a role to an address
     /// @param role The role to grant
     /// @param who The address to grant the role to
-    /// @return bool Returns if the role has been granted succesful
-    /// @dev Overrides {_grantRole} from AccessControl to enforce interface implementation and threshold existence when role is token-gated
+    /// @return bool Returns true if the role has been granted succesfully
+    /// @dev Overrides {_grantRole} from AUT_ROLES_v1 to enforce interface implementation and threshold existence when role is token-gated
     /// @dev Please note: current check for validating a valid token is not conclusive and could be
     ///         circumvented through a callback() function
     function _grantRole(bytes32 role, address who)

@@ -135,9 +135,7 @@ contract AUT_Roles_v1 is
         _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, ORCHESTRATOR_OWNER_ROLE);
         // grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
-
-        // If there is no initial owner specfied or the initial owner is the same as the deployer
-
+        // grant OWNER Role to initial owner address
         _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
     }
 
@@ -159,7 +157,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
-    /// @param role The id number of the role
+    /// @param role The id of the role
     /// @param who The user we want to check on
     /// @return bool Returns if grant has been succesful
     function _grantRole(bytes32 role, address who)
