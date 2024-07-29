@@ -131,10 +131,11 @@ contract AUT_Roles_v1 is
         _setRoleAdmin(DEFAULT_ADMIN_ROLE, ORCHESTRATOR_OWNER_ROLE);
 
         // Set up MANAGER role structure:
+        // -> set OWNER as admin of DEFAULT_ADMIN_ROLE
         _setRoleAdmin(ORCHESTRATOR_MANAGER_ROLE, ORCHESTRATOR_OWNER_ROLE);
         // grant MANAGER Role to specified address
         _grantRole(ORCHESTRATOR_MANAGER_ROLE, initialManager);
-        // grant Owner Role to initial owner address
+        // grant OWNER Role to initial owner address
         _grantRole(ORCHESTRATOR_OWNER_ROLE, initialOwner);
     }
 
