@@ -24,6 +24,27 @@ import {IPIM_WorkflowFactory} from
     "src/factories/interfaces/IPIM_WorkflowFactory.sol";
 
 interface IPIM_WorkflowFactory {
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a new PIM workflow is created.
+    // TODO
+    event PIMWorkflowCreated(address indexed issuanceToken);
+
+    /// @notice Event emitted factory owner sets new fee..
+    /// @param fee The fee in basis points.
+    event FeeSet(uint fee);
+
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Struct for the issuance token parameters.
+    /// @custom:member name The name of the issuance token.
+    /// @custom:member symbol The symbol of the issuance token.
+    /// @custom:member decimals The decimals of the issuance token.
+    /// @custom:member maxSupply The maximum supply of the issuance token.
+    /// @custom:member initialAdmin The owner and initial minter of the issuance token.
     struct IssuanceTokenParams {
         string name;
         string symbol;
@@ -32,6 +53,14 @@ interface IPIM_WorkflowFactory {
         address initialAdmin;
     }
 
+    /// @notice Struct for the issuance token parameters.
+    /// @custom:member metadata The module's metadata.
+    /// @custom:member bcProperties The bonding curve's properties.
+    /// @custom:member issuanceTokenParams The issuance token's parameters.
+    /// @custom:member recipient The recipient of the initial issuance token supply.
+    /// @custom:member collateralToken The collateral token.
+    /// @custom:member isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
+    /// @custom:member isRenouncedWorkflow If admin rights over the workflow should be renounced.
     struct PIMConfig {
         IModule_v1.Metadata metadata;
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
@@ -43,6 +72,30 @@ interface IPIM_WorkflowFactory {
         bool isRenouncedWorkflow;
     }
 
-    event PIMWorkflowCreated(address indexed issuanceToken);
-    event FeeSet(uint fees);
+    //--------------------------------------------------------------------------
+    // Functions
+
+    /// @notice Deploys a workflow with a bonding curve and an issuance token
+    /// @param _workflowConfig The workflow's config data.
+    /// @param _authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
+    /// @param _paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
+    /// @param _moduleConfigs Variable length set of optional module's config data.
+    /// @param _PIMConfig The configuration for the issuance token and the bonding curve.
+    /// @return Returns the address of orchestrator and the address of the issuance token.
+    function createPIMWorkflow(
+        IOrchestratorFactory_v1.WorkflowConfig memory _workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory _authorizerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory _paymentProcessorConfig,
+        IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigs,
+        IPIM_WorkflowFactory.PIMConfig memory _PIMConfig
+    ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
+
+    /// @notice Ownable. Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
+    /// @param fee Fee in basis points.
+    function setFee(uint _fee) external;
+
+    /// @notice Ownable. Withdraws the complete balance of the specified token to the specified address.
+    /// @param _token The token to withdraw.
+    /// @param _to The recipient of the withdrawn tokens.
+    function withdrawFee(IERC20 _token, address _to) external;
 }

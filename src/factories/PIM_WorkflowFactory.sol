@@ -30,6 +30,10 @@ contract PIM_WorkflowFactory is Ownable {
         orchestratorFactory = _orchestratorFactory;
     }
 
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
+
+    /// @inheritdoc IPIM_WorkflowFactory
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory _workflowConfig,
         IOrchestratorFactory_v1.ModuleConfig memory _authorizerConfig,
@@ -51,8 +55,7 @@ contract PIM_WorkflowFactory is Ownable {
 
         // mint initial issuance supply to recipient
         issuanceToken.mint(
-            _PIMConfig.recipient,
-            _PIMConfig.bcProperties.initialIssuanceSupply
+            _PIMConfig.recipient, _PIMConfig.bcProperties.initialIssuanceSupply
         );
 
         // assemble fundingManager config and deploy orchestrator
@@ -111,16 +114,22 @@ contract PIM_WorkflowFactory is Ownable {
         return (orchestrator, issuanceToken);
     }
 
+    //--------------------------------------------------------------------------
+    // onlyOwner Functions
+
+    /// @inheritdoc IPIM_WorkflowFactory
     function setFee(uint _fee) external onlyOwner {
         fee = _fee;
         emit IPIM_WorkflowFactory.FeeSet(_fee);
     }
 
+    /// @inheritdoc IPIM_WorkflowFactory
     function withdrawFee(IERC20 _token, address _to) external onlyOwner {
-        _token.transfer(
-            _to, _token.balanceOf(address(this))
-        );
+        _token.transfer(_to, _token.balanceOf(address(this)));
     }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
 
     function _manageInitialCollateral(
         address _fundingManager,

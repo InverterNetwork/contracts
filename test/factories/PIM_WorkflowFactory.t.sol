@@ -384,7 +384,6 @@ contract PIM_WorkflowFactoryTest is E2ETest {
         assertEq(token.balanceOf(alice), 100);
     }
 
-
     function testWithdrawFee_FailsIfCallerIsNotOwner() public {
         vm.prank(alice);
         // CHECK: tx reverts
