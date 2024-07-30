@@ -275,7 +275,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         // set fee on factory
         uint feeInBasisPoints = 100;
         vm.prank(factoryDeployer);
-        factory.setFee(feeInBasisPoints);
+        factory.setCreationFee(feeInBasisPoints);
 
         // make sure that deployer has enough collateral to pay fee and approve
         uint expectedFeeAmount = initialCollateral * feeInBasisPoints / 10_000;
@@ -331,17 +331,17 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
     }
 
-    function testSetFee() public {
+    function testSetCreationFee() public {
         vm.prank(factoryDeployer);
         // CHECK: event is emitted
         vm.expectEmit(true, true, true, true);
         emit IPIM_WorkflowFactory_v1.FeeSet(100);
         // CHEK: fee is set
-        factory.setFee(100);
-        assertEq(factory.fee(), 100);
+        factory.setCreationFee(100);
+        assertEq(factory.creationFee(), 100);
     }
 
-    function testSetFee_FailsIfCallerIsNotOwner() public {
+    function testSetCreationFee_FailsIfCallerIsNotOwner() public {
         vm.prank(alice);
         // CHECK: tx reverts
         vm.expectRevert(
@@ -349,20 +349,20 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 Ownable.OwnableUnauthorizedAccount.selector, alice
             )
         );
-        factory.setFee(100);
+        factory.setCreationFee(100);
     }
 
-    function testWithdrawFee() public {
+    function testWithdrawCreationFee() public {
         // send tokens to factory
         token.mint(address(factory), 100);
 
         vm.prank(factoryDeployer);
-        factory.withdrawFee(token, alice);
+        factory.withdrawCreationFee(token, alice);
         // CHECK: tokens are sent to alice
         assertEq(token.balanceOf(alice), 100);
     }
 
-    function testWithdrawFee_FailsIfCallerIsNotOwner() public {
+    function testWithdrawCreationFee_FailsIfCallerIsNotOwner() public {
         vm.prank(alice);
         // CHECK: tx reverts
         vm.expectRevert(
@@ -370,6 +370,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 Ownable.OwnableUnauthorizedAccount.selector, alice
             )
         );
-        factory.withdrawFee(token, alice);
+        factory.withdrawCreationFee(token, alice);
     }
 }

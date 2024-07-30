@@ -100,12 +100,12 @@ interface IPIM_WorkflowFactory_v1 {
 
     /// @notice Ownable. Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
     /// @param newFee Fee in basis points.
-    function setFee(uint newFee) external;
+    function setCreationFee(uint newFee) external;
 
     /// @notice Ownable. Withdraws the complete balance of the specified token to the specified address.
     /// @param token The token to withdraw.
     /// @param to The recipient of the withdrawn tokens.
-    function withdrawFee(IERC20 token, address to) external;
+    function withdrawCreationFee(IERC20 token, address to) external;
 
     /// @notice Returns the address of the orchestrator factory.
     /// @return Address of the orchestrator factory.
@@ -113,5 +113,5 @@ interface IPIM_WorkflowFactory_v1 {
 
     /// @notice Returns the fee in basis points.
     /// @return Fee in basis points.
-    function fee() external view returns (uint);
+    function creationFee() external view returns (uint);
 }

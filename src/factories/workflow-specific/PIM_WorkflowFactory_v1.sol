@@ -33,7 +33,11 @@ contract PIM_WorkflowFactory_v1 is
     // store address of orchestratorfactory
     address public orchestratorFactory;
     // relative fees on collateral token in basis points
-    uint public fee;
+    uint public creationFee;
+
+    // mapping of orchestrator address to fee recipient address
+    mapping(address orchestrator => address feeRecipient) private _feeRecipients;
+
 
     constructor(
         address _orchestratorFactory,
@@ -141,13 +145,13 @@ contract PIM_WorkflowFactory_v1 is
     // onlyOwner Functions
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
-    function setFee(uint newFee) external onlyOwner {
-        fee = newFee;
+    function setCreationFee(uint newFee) external onlyOwner {
+        creationFee = newFee;
         emit IPIM_WorkflowFactory_v1.FeeSet(newFee);
     }
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
-    function withdrawFee(IERC20 token, address to) external onlyOwner {
+    function withdrawCreationFee(IERC20 token, address to) external onlyOwner {
         token.transfer(to, token.balanceOf(address(this)));
     }
 
@@ -163,7 +167,7 @@ contract PIM_WorkflowFactory_v1 is
             _msgSender(), fundingManager, initialCollateralSupply
         );
 
-        if (fee > 0) {
+        if (creationFee > 0) {
             uint feeAmount = _calculateFee(initialCollateralSupply);
             IERC20(collateralToken).transferFrom(
                 _msgSender(), address(this), feeAmount
@@ -194,7 +198,7 @@ contract PIM_WorkflowFactory_v1 is
     }
 
     function _calculateFee(uint collateralAmount) private view returns (uint) {
-        return collateralAmount * fee / 10_000;
+        return collateralAmount * creationFee / 10_000;
     }
 
     //--------------------------------------------------------------------------
