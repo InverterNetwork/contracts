@@ -106,4 +106,12 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param token The token to withdraw.
     /// @param to The recipient of the withdrawn tokens.
     function withdrawFee(IERC20 token, address to) external;
+
+    /// @notice Returns the address of the orchestrator factory.
+    /// @return Address of the orchestrator factory.
+    function orchestratorFactory() external view returns (address);
+
+    /// @notice Returns the fee in basis points.
+    /// @return Fee in basis points.
+    function fee() external view returns (uint);
 }
