@@ -27,7 +27,14 @@ interface IPIM_WorkflowFactory {
 
     /// @notice Event emitted when a new PIM workflow is created.
     // TODO
-    event PIMWorkflowCreated(address indexed issuanceToken);
+    event PIMWorkflowCreated(
+        address indexed bondingCurve,
+        address indexed issuanceToken,
+        address indexed deployer,
+        address recipient,
+        bool isRenouncedIssuanceToken,
+        bool isRenouncedWorkflow
+    );
 
     /// @notice Event emitted factory owner sets new fee..
     /// @param fee The fee in basis points.
@@ -73,26 +80,26 @@ interface IPIM_WorkflowFactory {
     // Functions
 
     /// @notice Deploys a workflow with a bonding curve and an issuance token
-    /// @param _workflowConfig The workflow's config data.
-    /// @param _authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
-    /// @param _paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
-    /// @param _moduleConfigs Variable length set of optional module's config data.
-    /// @param _PIMConfig The configuration for the issuance token and the bonding curve.
+    /// @param workflowConfig The workflow's config data.
+    /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
+    /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
+    /// @param moduleConfigs Variable length set of optional module's config data.
+    /// @param PIMConfig The configuration for the issuance token and the bonding curve.
     /// @return Returns the address of orchestrator and the address of the issuance token.
     function createPIMWorkflow(
-        IOrchestratorFactory_v1.WorkflowConfig memory _workflowConfig,
-        IOrchestratorFactory_v1.ModuleConfig memory _authorizerConfig,
-        IOrchestratorFactory_v1.ModuleConfig memory _paymentProcessorConfig,
-        IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigs,
-        IPIM_WorkflowFactory.PIMConfig memory _PIMConfig
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
+        IPIM_WorkflowFactory.PIMConfig memory PIMConfig
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
     /// @notice Ownable. Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
-    /// @param _fee Fee in basis points.
-    function setFee(uint _fee) external;
+    /// @param newFee Fee in basis points.
+    function setFee(uint newFee) external;
 
     /// @notice Ownable. Withdraws the complete balance of the specified token to the specified address.
-    /// @param _token The token to withdraw.
-    /// @param _to The recipient of the withdrawn tokens.
-    function withdrawFee(IERC20 _token, address _to) external;
+    /// @param token The token to withdraw.
+    /// @param to The recipient of the withdrawn tokens.
+    function withdrawFee(IERC20 token, address to) external;
 }

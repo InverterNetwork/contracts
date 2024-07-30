@@ -35,47 +35,47 @@ contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
 
     /// @inheritdoc IPIM_WorkflowFactory
     function createPIMWorkflow(
-        IOrchestratorFactory_v1.WorkflowConfig memory _workflowConfig,
-        IOrchestratorFactory_v1.ModuleConfig memory _authorizerConfig,
-        IOrchestratorFactory_v1.ModuleConfig memory _paymentProcessorConfig,
-        IOrchestratorFactory_v1.ModuleConfig[] memory _moduleConfigs,
-        IPIM_WorkflowFactory.PIMConfig memory _PIMConfig
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
+        IPIM_WorkflowFactory.PIMConfig memory PIMConfig
     )
         external
         returns (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken)
     {
         // deploy issuance token
         ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
-            _PIMConfig.issuanceTokenParams.name,
-            _PIMConfig.issuanceTokenParams.symbol,
-            _PIMConfig.issuanceTokenParams.decimals,
-            _PIMConfig.issuanceTokenParams.maxSupply,
+            PIMConfig.issuanceTokenParams.name,
+            PIMConfig.issuanceTokenParams.symbol,
+            PIMConfig.issuanceTokenParams.decimals,
+            PIMConfig.issuanceTokenParams.maxSupply,
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
 
         // mint initial issuance supply to recipient
         issuanceToken.mint(
-            _PIMConfig.recipient, _PIMConfig.bcProperties.initialIssuanceSupply
+            PIMConfig.recipient, PIMConfig.bcProperties.initialIssuanceSupply
         );
 
         // assemble fundingManager config and deploy orchestrator
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            _PIMConfig.metadata,
+            PIMConfig.metadata,
             abi.encode(
                 address(issuanceToken),
-                _PIMConfig.bcProperties,
-                _PIMConfig.collateralToken
+                PIMConfig.bcProperties,
+                PIMConfig.collateralToken
             )
         );
         IOrchestrator_v1 orchestrator = IOrchestratorFactory_v1(
             orchestratorFactory
         ).createOrchestrator(
-            _workflowConfig,
+            workflowConfig,
             fundingManagerConfig,
-            _authorizerConfig,
-            _paymentProcessorConfig,
-            _moduleConfigs
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
         );
 
         // get bonding curve (= funding manager) address
@@ -86,30 +86,37 @@ contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
         issuanceToken.setMinter(address(this), false);
 
         // if renounced token flag is set, renounce ownership over token, else transfer ownership to initial admin
-        if (_PIMConfig.isRenouncedIssuanceToken) {
+        if (PIMConfig.isRenouncedIssuanceToken) {
             _transferTokenOwnership(issuanceToken, address(0));
         } else {
             _transferTokenOwnership(
-                issuanceToken, _PIMConfig.issuanceTokenParams.initialAdmin
+                issuanceToken, PIMConfig.issuanceTokenParams.initialAdmin
             );
         }
 
         // if renounced workflow flag is set, renounce admin rights over workflow, else transfer admin rights to initial admin
-        if (_PIMConfig.isRenouncedWorkflow) {
+        if (PIMConfig.isRenouncedWorkflow) {
             _transferWorkflowAdminRights(orchestrator, address(0));
         } else {
             _transferWorkflowAdminRights(
-                orchestrator, _PIMConfig.issuanceTokenParams.initialAdmin
+                orchestrator, PIMConfig.issuanceTokenParams.initialAdmin
             );
         }
 
         _manageInitialCollateral(
             fundingManager,
-            _PIMConfig.collateralToken,
-            _PIMConfig.bcProperties.initialCollateralSupply
+            PIMConfig.collateralToken,
+            PIMConfig.bcProperties.initialCollateralSupply
         );
 
-        emit IPIM_WorkflowFactory.PIMWorkflowCreated(address(issuanceToken));
+        emit IPIM_WorkflowFactory.PIMWorkflowCreated(
+            fundingManager,
+            address(issuanceToken),
+            msg.sender,
+            PIMConfig.recipient,
+            PIMConfig.isRenouncedIssuanceToken,
+            PIMConfig.isRenouncedWorkflow
+        );
 
         return (orchestrator, issuanceToken);
     }
@@ -118,63 +125,63 @@ contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
     // onlyOwner Functions
 
     /// @inheritdoc IPIM_WorkflowFactory
-    function setFee(uint _fee) external onlyOwner {
-        fee = _fee;
-        emit IPIM_WorkflowFactory.FeeSet(_fee);
+    function setFee(uint newFee) external onlyOwner {
+        fee = newFee;
+        emit IPIM_WorkflowFactory.FeeSet(newFee);
     }
 
     /// @inheritdoc IPIM_WorkflowFactory
-    function withdrawFee(IERC20 _token, address _to) external onlyOwner {
-        _token.transfer(_to, _token.balanceOf(address(this)));
+    function withdrawFee(IERC20 token, address to) external onlyOwner {
+        token.transfer(to, token.balanceOf(address(this)));
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
     function _manageInitialCollateral(
-        address _fundingManager,
-        address _collateralToken,
-        uint _initialCollateralSupply
+        address fundingManager,
+        address collateralToken,
+        uint initialCollateralSupply
     ) internal {
-        IERC20(_collateralToken).transferFrom(
-            msg.sender, _fundingManager, _initialCollateralSupply
+        IERC20(collateralToken).transferFrom(
+            msg.sender, fundingManager, initialCollateralSupply
         );
 
         if (fee > 0) {
-            uint feeAmount = _calculateFee(_initialCollateralSupply);
-            IERC20(_collateralToken).transferFrom(
+            uint feeAmount = _calculateFee(initialCollateralSupply);
+            IERC20(collateralToken).transferFrom(
                 msg.sender, address(this), feeAmount
             );
         }
     }
 
     function _transferTokenOwnership(
-        ERC20Issuance_v1 _issuanceToken,
-        address _newAdmin
+        ERC20Issuance_v1 issuanceToken,
+        address newAdmin
     ) private {
-        if (_newAdmin == address(0)) {
-            _issuanceToken.renounceOwnership();
+        if (newAdmin == address(0)) {
+            issuanceToken.renounceOwnership();
         } else {
-            _issuanceToken.transferOwnership(_newAdmin);
+            issuanceToken.transferOwnership(newAdmin);
         }
     }
 
     function _transferWorkflowAdminRights(
-        IOrchestrator_v1 _orchestrator,
-        address _newAdmin
+        IOrchestrator_v1 orchestrator,
+        address newAdmin
     ) private {
-        bytes32 adminRole = _orchestrator.authorizer().getAdminRole();
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
         // if renounced flag is set, add zero address as admin (because workflow must have at least one admin set)
-        _orchestrator.authorizer().grantRole(adminRole, _newAdmin);
+        orchestrator.authorizer().grantRole(adminRole, newAdmin);
         // and revoke admin role from factory
-        _orchestrator.authorizer().revokeRole(adminRole, address(this));
+        orchestrator.authorizer().revokeRole(adminRole, address(this));
     }
 
-    function _calculateFee(uint _collateralAmount)
+    function _calculateFee(uint collateralAmount)
         internal
         view
         returns (uint)
     {
-        return _collateralAmount * fee / 10_000;
+        return collateralAmount * fee / 10_000;
     }
 }

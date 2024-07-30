@@ -16,8 +16,8 @@ import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {PIM_WorkflowFactory} from "src/factories/workflow-specific/PIM_WorkflowFactory.sol";
-import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
+import {PIM_WorkflowFactory} from
+    "src/factories/workflow-specific/PIM_WorkflowFactory.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
@@ -109,6 +109,12 @@ contract PIM_WorkflowFactoryTest is E2ETest {
     }
 
     function testcreatePIMWorkflow() public {
+        // CHECK: event is emitted
+        vm.expectEmit(false, false, false, false);
+        emit IPIM_WorkflowFactory.PIMWorkflowCreated(
+            address(0), address(0), factoryDeployer, alice, true, true
+        );
+
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
