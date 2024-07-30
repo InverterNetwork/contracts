@@ -10,8 +10,8 @@ import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IPIM_WorkflowFactory} from
-    "src/factories/interfaces/IPIM_WorkflowFactory.sol";
+import {IPIM_WorkflowFactory_v1} from
+    "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
 import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
@@ -20,7 +20,7 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IPIM_WorkflowFactory {
+interface IPIM_WorkflowFactory_v1 {
     //--------------------------------------------------------------------------
     // Events
 
@@ -95,7 +95,7 @@ interface IPIM_WorkflowFactory {
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IPIM_WorkflowFactory.PIMConfig memory PIMConfig
+        IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
     /// @notice Ownable. Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.

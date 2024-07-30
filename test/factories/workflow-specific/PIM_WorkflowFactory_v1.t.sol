@@ -10,23 +10,23 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IPIM_WorkflowFactory} from
-    "src/factories/interfaces/IPIM_WorkflowFactory.sol";
+import {IPIM_WorkflowFactory_v1} from
+    "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
 import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {PIM_WorkflowFactory} from
-    "src/factories/workflow-specific/PIM_WorkflowFactory.sol";
+import {PIM_WorkflowFactory_v1} from
+    "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-contract PIM_WorkflowFactoryTest is E2ETest {
+contract PIM_WorkflowFactory_v1Test is E2ETest {
     // SuT
-    PIM_WorkflowFactory factory;
+    PIM_WorkflowFactory_v1 factory;
 
     // Deployment Parameters
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
@@ -34,7 +34,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig;
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
-    IPIM_WorkflowFactory.IssuanceTokenParams issuanceTokenParams;
+    IPIM_WorkflowFactory_v1.IssuanceTokenParams issuanceTokenParams;
 
     address factoryDeployer = vm.addr(1);
     address workflowDeployer = vm.addr(2);
@@ -49,7 +49,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
         super.setUp();
 
         // deploy new factory
-        factory = new PIM_WorkflowFactory(
+        factory = new PIM_WorkflowFactory_v1(
             address(orchestratorFactory), factoryDeployer, mockTrustedForwarder
         );
         assert(factory.owner() == factoryDeployer);
@@ -96,7 +96,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
         });
 
         // Deploy Issuance Token
-        issuanceTokenParams = IPIM_WorkflowFactory.IssuanceTokenParams({
+        issuanceTokenParams = IPIM_WorkflowFactory_v1.IssuanceTokenParams({
             name: "Bonding Curve Token",
             symbol: "BCT",
             decimals: 18,
@@ -112,7 +112,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
     function testcreatePIMWorkflow() public {
         // CHECK: event is emitted
         vm.expectEmit(false, false, false, false);
-        emit IPIM_WorkflowFactory.PIMWorkflowCreated(
+        emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
             address(0), address(0), factoryDeployer, alice, true, true
         );
 
@@ -122,7 +122,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -164,7 +164,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -193,7 +193,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -221,7 +221,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -249,7 +249,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -288,7 +288,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -320,7 +320,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -348,7 +348,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
             badAuthorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory.PIMConfig({
+            IPIM_WorkflowFactory_v1.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -364,7 +364,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
         vm.prank(factoryDeployer);
         // CHECK: event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IPIM_WorkflowFactory.FeeSet(100);
+        emit IPIM_WorkflowFactory_v1.FeeSet(100);
         // CHEK: fee is set
         factory.setFee(100);
         assertEq(factory.fee(), 100);

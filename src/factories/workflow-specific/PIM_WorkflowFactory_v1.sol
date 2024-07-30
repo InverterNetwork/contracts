@@ -8,8 +8,8 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IPIM_WorkflowFactory} from
-    "src/factories/interfaces/IPIM_WorkflowFactory.sol";
+import {IPIM_WorkflowFactory_v1} from
+    "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -22,10 +22,10 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
-contract PIM_WorkflowFactory is
+contract PIM_WorkflowFactory_v1 is
     Ownable2Step,
     ERC2771Context,
-    IPIM_WorkflowFactory
+    IPIM_WorkflowFactory_v1
 {
     // store address of orchestratorfactory
     address public orchestratorFactory;
@@ -43,13 +43,13 @@ contract PIM_WorkflowFactory is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IPIM_WorkflowFactory
+    /// @inheritdoc IPIM_WorkflowFactory_v1
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IPIM_WorkflowFactory.PIMConfig memory PIMConfig
+        IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
     )
         external
         returns (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken)
@@ -119,7 +119,7 @@ contract PIM_WorkflowFactory is
             PIMConfig.bcProperties.initialCollateralSupply
         );
 
-        emit IPIM_WorkflowFactory.PIMWorkflowCreated(
+        emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
             fundingManager,
             address(issuanceToken),
             _msgSender(),
@@ -134,13 +134,13 @@ contract PIM_WorkflowFactory is
     //--------------------------------------------------------------------------
     // onlyOwner Functions
 
-    /// @inheritdoc IPIM_WorkflowFactory
+    /// @inheritdoc IPIM_WorkflowFactory_v1
     function setFee(uint newFee) external onlyOwner {
         fee = newFee;
-        emit IPIM_WorkflowFactory.FeeSet(newFee);
+        emit IPIM_WorkflowFactory_v1.FeeSet(newFee);
     }
 
-    /// @inheritdoc IPIM_WorkflowFactory
+    /// @inheritdoc IPIM_WorkflowFactory_v1
     function withdrawFee(IERC20 token, address to) external onlyOwner {
         token.transfer(to, token.balanceOf(address(this)));
     }
