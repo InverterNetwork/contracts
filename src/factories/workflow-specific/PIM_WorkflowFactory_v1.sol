@@ -27,6 +27,9 @@ contract PIM_WorkflowFactory_v1 is
     ERC2771Context,
     IPIM_WorkflowFactory_v1
 {
+    //--------------------------------------------------------------------------
+    // State Variables
+
     // store address of orchestratorfactory
     address public orchestratorFactory;
     // relative fees on collateral token in basis points
@@ -46,7 +49,6 @@ contract PIM_WorkflowFactory_v1 is
     /// @inheritdoc IPIM_WorkflowFactory_v1
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
-        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
@@ -68,18 +70,25 @@ contract PIM_WorkflowFactory_v1 is
             PIMConfig.recipient, PIMConfig.bcProperties.initialIssuanceSupply
         );
 
-        // assemble fundingManager config and deploy orchestrator
+        // assemble fundingManager config, authorizer config and deploy orchestrator
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            PIMConfig.metadata,
+            PIMConfig.fundingManagerMetadata,
             abi.encode(
                 address(issuanceToken),
                 PIMConfig.bcProperties,
                 PIMConfig.collateralToken
             )
         );
-        orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
-            .createOrchestrator(
+
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
+            PIMConfig.authorizerMetadata, abi.encode(address(this))
+        );
+        
+        orchestrator = IOrchestratorFactory_v1(
+            orchestratorFactory
+        ).createOrchestrator(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
@@ -104,9 +113,7 @@ contract PIM_WorkflowFactory_v1 is
         }
 
         // if renounced workflow flag is set, renounce admin rights over workflow, else transfer admin rights to initial admin
-        if (PIMConfig.isRenouncedWorkflow) {
-            _transferWorkflowAdminRights(orchestrator, address(0));
-        } else {
+        if (!PIMConfig.isRenouncedWorkflow) {
             _transferWorkflowAdminRights(
                 orchestrator, PIMConfig.issuanceTokenParams.initialAdmin
             );
