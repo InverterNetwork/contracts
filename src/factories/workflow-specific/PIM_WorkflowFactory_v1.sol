@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+import "forge-std/console.sol";
+
+
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -10,6 +13,8 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IPIM_WorkflowFactory_v1} from
     "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -42,8 +47,11 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier onlyPimFeeRecipient() {
-        if (_msgSender() != _pimFeeRecipients[_msgSender()]) {
+    modifier onlyPimFeeRecipient(address fundingManager) {
+        console.log("MODIFIER");
+        console.log("FUNDING MANAGER: ", fundingManager);
+        console.log("RECIPIENT: ", _pimFeeRecipients[fundingManager]);
+        if (_msgSender() != _pimFeeRecipients[fundingManager]) {
             revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
         }
         _;
@@ -132,8 +140,11 @@ contract PIM_WorkflowFactory_v1 is
         // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to initial admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the deployer as fee recipient eligible to claim buy/sell fees
+            console.log("SETTING FEE RECIPIENT: ", _msgSender());
+            console.log("FOR FUNDING MANAGER: ", fundingManager);
             _pimFeeRecipients[fundingManager] = _msgSender();
         } else {
+            // TODO: check if initial admin is the right target
             _transferWorkflowAdminRights(
                 orchestrator, PIMConfig.issuanceTokenParams.initialAdmin
             );
@@ -171,6 +182,17 @@ contract PIM_WorkflowFactory_v1 is
     /// @inheritdoc IPIM_WorkflowFactory_v1
     function withdrawCreationFee(IERC20 token, address to) external onlyOwner {
         token.transfer(to, token.balanceOf(address(this)));
+    }
+
+    // onlyPimFeeRecipient
+
+    function withdrawPimFee(address fundingManager, address to)
+        external
+        onlyPimFeeRecipient(fundingManager)
+    {
+        IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
+            to, IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected()
+        );
     }
 
     //--------------------------------------------------------------------------

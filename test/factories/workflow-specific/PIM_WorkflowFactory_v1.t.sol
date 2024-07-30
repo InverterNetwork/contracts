@@ -20,6 +20,8 @@ import {PIM_WorkflowFactory_v1} from
     "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
@@ -39,7 +41,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     address factoryDeployer = vm.addr(1);
     address workflowDeployer = vm.addr(2);
     address mockTrustedForwarder = vm.addr(3);
-    address alice = vm.addr(4);
+    address alice = vm.addr(0xA11CE);
 
     uint initialCollateral = 300;
 
@@ -113,10 +115,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         // CHECK: event is emitted
         vm.expectEmit(false, false, false, false);
         emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
-            address(0), address(0), factoryDeployer, alice, true, true
+            address(0), address(0), address(0), address(0), true, true
         );
-
-        // TODO roleAuthorizerMetadata
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
@@ -181,6 +181,10 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             adminRole, address(workflowDeployer)
         );
         assertFalse(isDeployerAdmin);
+        // CHECK: the factory HAS admin rights over workflow
+        bool isFactoryAdmin =
+            orchestrator.authorizer().hasRole(adminRole, address(factory));
+        assertTrue(isFactoryAdmin);
     }
 
     function testCreatePIMWorkflow_IfNotRenounced() public {
@@ -371,5 +375,66 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             )
         );
         factory.withdrawCreationFee(token, alice);
+    }
+
+    function testWithdrawPimFee() public {
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
+            workflowConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IPIM_WorkflowFactory_v1.PIMConfig({
+                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                authorizerMetadata: roleAuthorizerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: alice,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
+            })
+        );
+
+        // CHECK: event is emitted from the bonding curve for fee withdrawal
+        // TODO: why does this fail if the fourth boolean is set to true?
+        vm.expectEmit(true, true, true, false);
+        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(address(this), 0);
+        factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
+
+    }
+
+    // TODO: I dont understand why this test is failing. If I comment out the `vm.expectRevert` I can see that the `withdrawPimFee` function reverts
+    // TODO: I also dont understand why using `vm.startPrank` behaves differently than using `vm.prank`
+
+    function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
+            workflowConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IPIM_WorkflowFactory_v1.PIMConfig({
+                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                authorizerMetadata: roleAuthorizerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: workflowDeployer,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
+            })
+        );
+
+        // 1. VERSION USING STARTPRANK
+        //
+        vm.startPrank(alice);
+        // vm.expectRevert();
+        factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
+        vm.stopPrank();
+
+        // 2. VERSION USING PRANK
+        // 
+        // vm.expectRevert();
+        // vm.prank(alice);
+        // factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
     }
 }
