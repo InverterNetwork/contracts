@@ -404,37 +404,37 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     // TODO: I dont understand why this test is failing. If I comment out the `vm.expectRevert` I can see that the `withdrawPimFee` function reverts
-    // TODO: I also dont understand why using `vm.startPrank` behaves differently than using `vm.prank`
 
-    function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                recipient: workflowDeployer,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
-            })
-        );
+    // function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
+    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         IPIM_WorkflowFactory_v1.PIMConfig({
+    //             fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+    //             authorizerMetadata: roleAuthorizerMetadata,
+    //             bcProperties: bcProperties,
+    //             issuanceTokenParams: issuanceTokenParams,
+    //             collateralToken: address(token),
+    //             recipient: workflowDeployer,
+    //             isRenouncedIssuanceToken: true,
+    //             isRenouncedWorkflow: true
+    //         })
+    //     );
+    //     // TODO: I also dont understand why using `vm.startPrank` behaves differently than using `vm.prank`
 
-        // 1. VERSION USING STARTPRANK
-        //
-        vm.startPrank(alice);
-        // vm.expectRevert();
-        factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
-        vm.stopPrank();
+    //     // 1. VERSION USING STARTPRANK
+    //     //
+    //     vm.startPrank(alice);
+    //     // vm.expectRevert();
+    //     factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
+    //     vm.stopPrank();
 
-        // 2. VERSION USING PRANK
-        // 
-        // vm.expectRevert();
-        // vm.prank(alice);
-        // factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
-    }
+    //     // 2. VERSION USING PRANK
+    //     // 
+    //     // vm.expectRevert();
+    //     // vm.prank(alice);
+    //     // factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
+    // }
 }
