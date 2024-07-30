@@ -20,7 +20,7 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 // External Dependencies
 import {Ownable} from "@oz/access/Ownable.sol";
 
-contract PIM_WorkflowFactory is Ownable {
+contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
     // store address of orchestratorfactory
     address public orchestratorFactory;
     // relative fees on collateral token in basis points

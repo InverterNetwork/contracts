@@ -5,10 +5,7 @@ pragma solidity ^0.8.0;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-
-// External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     IOrchestratorFactory_v1,
@@ -22,9 +19,9 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IPIM_WorkflowFactory} from
     "src/factories/interfaces/IPIM_WorkflowFactory.sol";
+import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 interface IPIM_WorkflowFactory {
-
     //--------------------------------------------------------------------------
     // Events
 
@@ -40,11 +37,11 @@ interface IPIM_WorkflowFactory {
     // Structs
 
     /// @notice Struct for the issuance token parameters.
-    /// @custom:member name The name of the issuance token.
-    /// @custom:member symbol The symbol of the issuance token.
-    /// @custom:member decimals The decimals of the issuance token.
-    /// @custom:member maxSupply The maximum supply of the issuance token.
-    /// @custom:member initialAdmin The owner and initial minter of the issuance token.
+    /// @param name The name of the issuance token.
+    /// @param symbol The symbol of the issuance token.
+    /// @param decimals The decimals of the issuance token.
+    /// @param maxSupply The maximum supply of the issuance token.
+    /// @param initialAdmin The owner and initial minter of the issuance token.
     struct IssuanceTokenParams {
         string name;
         string symbol;
@@ -54,13 +51,13 @@ interface IPIM_WorkflowFactory {
     }
 
     /// @notice Struct for the issuance token parameters.
-    /// @custom:member metadata The module's metadata.
-    /// @custom:member bcProperties The bonding curve's properties.
-    /// @custom:member issuanceTokenParams The issuance token's parameters.
-    /// @custom:member recipient The recipient of the initial issuance token supply.
-    /// @custom:member collateralToken The collateral token.
-    /// @custom:member isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
-    /// @custom:member isRenouncedWorkflow If admin rights over the workflow should be renounced.
+    /// @param metadata The module's metadata.
+    /// @param bcProperties The bonding curve's properties.
+    /// @param issuanceTokenParams The issuance token's parameters.
+    /// @param recipient The recipient of the initial issuance token supply.
+    /// @param collateralToken The collateral token.
+    /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
+    /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
     struct PIMConfig {
         IModule_v1.Metadata metadata;
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
@@ -91,7 +88,7 @@ interface IPIM_WorkflowFactory {
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
     /// @notice Ownable. Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
-    /// @param fee Fee in basis points.
+    /// @param _fee Fee in basis points.
     function setFee(uint _fee) external;
 
     /// @notice Ownable. Withdraws the complete balance of the specified token to the specified address.

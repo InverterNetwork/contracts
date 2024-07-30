@@ -16,7 +16,7 @@ import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {PIM_WorkflowFactory} from "src/factories/PIM_WorkflowFactory.sol";
+import {PIM_WorkflowFactory} from "src/factories/workflow-specific/PIM_WorkflowFactory.sol";
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
