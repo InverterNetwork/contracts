@@ -109,7 +109,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         token.approve(address(factory), initialCollateral);
     }
 
-    function testcreatePIMWorkflow() public {
+    function testCreatePIMWorkflow() public {
         // CHECK: event is emitted
         vm.expectEmit(false, false, false, false);
         emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
@@ -157,7 +157,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertFalse(isFactoryStillAdmin);
     }
 
-    function testcreatePIMWorkflow_IfFullyRenounced() public {
+    function testCreatePIMWorkflow_IfFullyRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
@@ -186,7 +186,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertFalse(isDeployerAdmin);
     }
 
-    function testcreatePIMWorkflow_IfNotRenounced() public {
+    function testCreatePIMWorkflow_IfNotRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
@@ -214,7 +214,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(isDeployerAdmin);
     }
 
-    function testcreatePIMWorkflow_IfTokenRenounced() public {
+    function testCreatePIMWorkflow_IfTokenRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
@@ -242,7 +242,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(isDeployerAdmin);
     }
 
-    function testcreatePIMWorkflow_IfWorkflowRenounced() public {
+    function testCreatePIMWorkflow_IfWorkflowRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
@@ -270,7 +270,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertFalse(isDeployerAdmin);
     }
 
-    function testcreatePIMWorkflow_WithFee() public {
+    function testCreatePIMWorkflow_WithFee() public {
         // set fee on factory
         uint feeInBasisPoints = 100;
         vm.prank(factoryDeployer);
@@ -306,7 +306,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertEq(token.balanceOf(address(factory)), expectedFeeAmount);
     }
 
-    function testcreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
+    function testCreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
         public
     {
         address deployer = address(0xB0B);
@@ -332,7 +332,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
     }
 
-    function testcreatePIMWorkflow_Renounced_FailsWhenFactoryNotAdmin()
+    function testCreatePIMWorkflow_Renounced_FailsWhenFactoryNotAdmin()
         public
     {
         IOrchestratorFactory_v1.ModuleConfig memory badAuthorizerConfig =
