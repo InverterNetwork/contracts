@@ -10,13 +10,13 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveFactory_v1} from
-    "src/factories/interfaces/IBondingCurveFactory_v1.sol";
+import {IPIM_WorkflowFactory} from
+    "src/factories/interfaces/IPIM_WorkflowFactory.sol";
 import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {BondingCurveFactory_v1} from "src/factories/BondingCurveFactory_v1.sol";
+import {PIM_WorkflowFactory} from "src/factories/PIM_WorkflowFactory.sol";
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
@@ -24,9 +24,9 @@ import {Ownable} from "@oz/access/Ownable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-contract BondingCurveFactoryV1Test is E2ETest {
+contract PIM_WorkflowFactoryTest is E2ETest {
     // SuT
-    BondingCurveFactory_v1 factory;
+    PIM_WorkflowFactory factory;
 
     // Deployment Parameters
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
@@ -34,7 +34,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig;
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
-    IBondingCurveFactory_v1.IssuanceTokenParams issuanceTokenParams;
+    IPIM_WorkflowFactory.IssuanceTokenParams issuanceTokenParams;
 
     address factoryDeployer = vm.addr(3);
     address workflowDeployer = vm.addr(1);
@@ -42,13 +42,13 @@ contract BondingCurveFactoryV1Test is E2ETest {
 
     uint initialCollateral = 300;
 
-    event BcPimCreated(address indexed issuanceToken);
+    event PIMWorkflowCreated(address indexed issuanceToken);
 
     function setUp() public override {
         super.setUp();
 
         // deploy new factory
-        factory = new BondingCurveFactory_v1(
+        factory = new PIM_WorkflowFactory(
             address(orchestratorFactory), factoryDeployer
         );
         assert(factory.owner() == factoryDeployer);
@@ -95,7 +95,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
         });
 
         // Deploy Issuance Token
-        issuanceTokenParams = IBondingCurveFactory_v1.IssuanceTokenParams({
+        issuanceTokenParams = IPIM_WorkflowFactory.IssuanceTokenParams({
             name: "Bonding Curve Token",
             symbol: "BCT",
             decimals: 18,
@@ -108,14 +108,14 @@ contract BondingCurveFactoryV1Test is E2ETest {
         token.approve(address(factory), initialCollateral);
     }
 
-    function testCreateBondingCurve() public {
+    function testcreatePIMWorkflow() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -150,14 +150,14 @@ contract BondingCurveFactoryV1Test is E2ETest {
         assertFalse(isFactoryStillAdmin);
     }
 
-    function testCreateBondingCurve_IfFullyRenounced() public {
+    function testcreatePIMWorkflow_IfFullyRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -179,14 +179,14 @@ contract BondingCurveFactoryV1Test is E2ETest {
         assertFalse(isDeployerAdmin);
     }
 
-    function testCreateBondingCurve_IfNotRenounced() public {
+    function testcreatePIMWorkflow_IfNotRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -207,14 +207,14 @@ contract BondingCurveFactoryV1Test is E2ETest {
         assertTrue(isDeployerAdmin);
     }
 
-    function testCreateBondingCurve_IfTokenRenounced() public {
+    function testcreatePIMWorkflow_IfTokenRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -235,14 +235,14 @@ contract BondingCurveFactoryV1Test is E2ETest {
         assertTrue(isDeployerAdmin);
     }
 
-    function testCreateBondingCurve_IfWorkflowRenounced() public {
+    function testcreatePIMWorkflow_IfWorkflowRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -263,7 +263,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
         assertFalse(isDeployerAdmin);
     }
 
-    function testCreateBondingCurve_WithFee() public {
+    function testcreatePIMWorkflow_WithFee() public {
         // set fee on factory
         uint feeInBasisPoints = 100;
         vm.prank(factoryDeployer);
@@ -276,12 +276,12 @@ contract BondingCurveFactoryV1Test is E2ETest {
 
         // create bonding curve
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -299,7 +299,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
         assertEq(token.balanceOf(address(factory)), expectedFeeAmount);
     }
 
-    function testCreateBondingCurve_FailsWithoutCollateralTokenApproval()
+    function testcreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
         public
     {
         address deployer = address(0xB0B);
@@ -308,12 +308,12 @@ contract BondingCurveFactoryV1Test is E2ETest {
         vm.expectRevert();
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -325,7 +325,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
         );
     }
 
-    function testCreateBondingCurve_Renounced_FailsWhenFactoryNotAdmin()
+    function testcreatePIMWorkflow_Renounced_FailsWhenFactoryNotAdmin()
         public
     {
         IOrchestratorFactory_v1.ModuleConfig memory badAuthorizerConfig =
@@ -336,12 +336,12 @@ contract BondingCurveFactoryV1Test is E2ETest {
         vm.expectRevert();
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createBondingCurve(
+        factory.createPIMWorkflow(
             workflowConfig,
             badAuthorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IBondingCurveFactory_v1.LaunchConfig({
+            IPIM_WorkflowFactory.PIMConfig({
                 metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
@@ -357,7 +357,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
         vm.prank(factoryDeployer);
         // CHECK: event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IBondingCurveFactory_v1.FeeSet(100);
+        emit IPIM_WorkflowFactory.FeeSet(100);
         // CHEK: fee is set
         factory.setFee(100);
         assertEq(factory.fee(), 100);

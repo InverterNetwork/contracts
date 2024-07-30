@@ -20,10 +20,10 @@ import {IOrchestrator_v1} from
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IBondingCurveFactory_v1} from
-    "src/factories/interfaces/IBondingCurveFactory_v1.sol";
+import {IPIM_WorkflowFactory} from
+    "src/factories/interfaces/IPIM_WorkflowFactory.sol";
 
-interface IBondingCurveFactory_v1 {
+interface IPIM_WorkflowFactory {
     struct IssuanceTokenParams {
         string name;
         string symbol;
@@ -32,7 +32,7 @@ interface IBondingCurveFactory_v1 {
         address initialAdmin;
     }
 
-    struct LaunchConfig {
+    struct PIMConfig {
         IModule_v1.Metadata metadata;
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
             bcProperties;
@@ -43,6 +43,6 @@ interface IBondingCurveFactory_v1 {
         bool isRenouncedWorkflow;
     }
 
-    event BcPimCreated(address indexed issuanceToken);
+    event PIMWorkflowCreated(address indexed issuanceToken);
     event FeeSet(uint fees);
 }
