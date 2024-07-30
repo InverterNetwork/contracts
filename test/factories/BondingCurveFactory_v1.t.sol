@@ -132,7 +132,8 @@ contract BondingCurveFactoryV1Test is E2ETest {
         );
         // CHECK: initial collateral supply IS sent to bonding curve
         assertEq(
-            token.balanceOf(address(orchestrator.fundingManager())), bcProperties.initialCollateralSupply
+            token.balanceOf(address(orchestrator.fundingManager())),
+            bcProperties.initialCollateralSupply
         );
         // CHECK: factory DOES NOT have minting rights on token anymore
         bool isFactoryStillMinter =
@@ -266,10 +267,10 @@ contract BondingCurveFactoryV1Test is E2ETest {
         // set fee on factory
         uint feeInBasisPoints = 100;
         vm.prank(factoryDeployer);
-        factory.setFees(feeInBasisPoints);
+        factory.setFee(feeInBasisPoints);
 
         // make sure that deployer has enough collateral to pay fee and approve
-        uint expectedFeeAmount = initialCollateral * feeInBasisPoints / 10000;
+        uint expectedFeeAmount = initialCollateral * feeInBasisPoints / 10_000;
         token.mint(address(factory), expectedFeeAmount);
         token.approve(address(factory), initialCollateral + expectedFeeAmount);
 
@@ -293,13 +294,9 @@ contract BondingCurveFactoryV1Test is E2ETest {
 
         // CHECK: bonding curve HAS received initial collateral supply
         address bc = address(orchestrator.fundingManager());
-        assertEq(
-            token.balanceOf(bc), bcProperties.initialCollateralSupply
-        );
+        assertEq(token.balanceOf(bc), bcProperties.initialCollateralSupply);
         // CHECK: factory HAS received fee
-        assertEq(
-            token.balanceOf(address(factory)), expectedFeeAmount
-        );
+        assertEq(token.balanceOf(address(factory)), expectedFeeAmount);
     }
 
     function testCreateBondingCurve_FailsWithoutCollateralTokenApproval()
@@ -354,5 +351,48 @@ contract BondingCurveFactoryV1Test is E2ETest {
                 isRenouncedWorkflow: true
             })
         );
+    }
+
+    function testSetFee() public {
+        vm.prank(factoryDeployer);
+        // CHECK: event is emitted
+        vm.expectEmit(true, true, true, true);
+        emit IBondingCurveFactory_v1.FeeSet(100);
+        // CHEK: fee is set
+        factory.setFee(100);
+        assertEq(factory.fee(), 100);
+    }
+
+    function testSetFee_FailsIfCallerIsNotOwner() public {
+        vm.prank(alice);
+        // CHECK: tx reverts
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector, alice
+            )
+        );
+        factory.setFee(100);
+    }
+
+    function testWithdrawFee() public {
+        // send tokens to factory
+        token.mint(address(factory), 100);
+
+        vm.prank(factoryDeployer);
+        factory.withdrawFee(token, alice);
+        // CHECK: tokens are sent to alice
+        assertEq(token.balanceOf(alice), 100);
+    }
+
+
+    function testWithdrawFee_FailsIfCallerIsNotOwner() public {
+        vm.prank(alice);
+        // CHECK: tx reverts
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Ownable.OwnableUnauthorizedAccount.selector, alice
+            )
+        );
+        factory.withdrawFee(token, alice);
     }
 }

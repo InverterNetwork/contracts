@@ -100,31 +100,41 @@ contract BondingCurveFactory_v1 is Ownable {
             );
         }
 
-        _manageInitialCollateral(fundingManager, _launchConfig.collateralToken, _launchConfig.bcProperties.initialCollateralSupply);
+        _manageInitialCollateral(
+            fundingManager,
+            _launchConfig.collateralToken,
+            _launchConfig.bcProperties.initialCollateralSupply
+        );
 
         emit IBondingCurveFactory_v1.BcPimCreated(address(issuanceToken));
 
         return (orchestrator, issuanceToken);
     }
 
-    function setFees(uint _fee) external onlyOwner {
+    function setFee(uint _fee) external onlyOwner {
         fee = _fee;
         emit IBondingCurveFactory_v1.FeeSet(_fee);
     }
 
-    function _manageInitialCollateral(address fundingManager, address collateralToken, uint initialCollateralSupply) internal {
-        IERC20(collateralToken).transferFrom(
-            msg.sender,
-            fundingManager,
-            initialCollateralSupply
+    function withdrawFee(IERC20 _token, address _to) external onlyOwner {
+        _token.transfer(
+            _to, _token.balanceOf(address(this))
+        );
+    }
+
+    function _manageInitialCollateral(
+        address _fundingManager,
+        address _collateralToken,
+        uint _initialCollateralSupply
+    ) internal {
+        IERC20(_collateralToken).transferFrom(
+            msg.sender, _fundingManager, _initialCollateralSupply
         );
 
         if (fee > 0) {
-            uint feeAmount = _calculateFee(initialCollateralSupply);
-            IERC20(collateralToken).transferFrom(
-                msg.sender,
-                address(this),
-                feeAmount
+            uint feeAmount = _calculateFee(_initialCollateralSupply);
+            IERC20(_collateralToken).transferFrom(
+                msg.sender, address(this), feeAmount
             );
         }
     }
@@ -151,7 +161,11 @@ contract BondingCurveFactory_v1 is Ownable {
         _orchestrator.authorizer().revokeRole(adminRole, address(this));
     }
 
-    function _calculateFee(uint _collateralAmount) internal view returns (uint) {
-        return _collateralAmount * fee / 10000;
+    function _calculateFee(uint _collateralAmount)
+        internal
+        view
+        returns (uint)
+    {
+        return _collateralAmount * fee / 10_000;
     }
 }
