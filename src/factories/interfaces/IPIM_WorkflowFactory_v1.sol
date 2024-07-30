@@ -22,6 +22,10 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IPIM_WorkflowFactory_v1 {
     //--------------------------------------------------------------------------
+    // Errors
+    error PIM_WorkflowFactory__OnlyPimFeeRecipient();
+
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a new PIM workflow is created.

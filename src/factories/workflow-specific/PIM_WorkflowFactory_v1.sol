@@ -36,8 +36,21 @@ contract PIM_WorkflowFactory_v1 is
     uint public creationFee;
 
     // mapping of orchestrator address to fee recipient address
-    mapping(address orchestrator => address feeRecipient) private _feeRecipients;
+    mapping(address fundingManager => address feeRecipient) private
+        _pimFeeRecipients;
 
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier onlyPimFeeRecipient() {
+        if (_msgSender() != _pimFeeRecipients[_msgSender()]) {
+            revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
+    // Constructor
 
     constructor(
         address _orchestratorFactory,
@@ -116,8 +129,11 @@ contract PIM_WorkflowFactory_v1 is
             );
         }
 
-        // if renounced workflow flag is set, renounce admin rights over workflow, else transfer admin rights to initial admin
-        if (!PIMConfig.isRenouncedWorkflow) {
+        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to initial admin
+        if (PIMConfig.isRenouncedWorkflow) {
+            // record the deployer as fee recipient eligible to claim buy/sell fees
+            _pimFeeRecipients[fundingManager] = _msgSender();
+        } else {
             _transferWorkflowAdminRights(
                 orchestrator, PIMConfig.issuanceTokenParams.initialAdmin
             );
@@ -142,7 +158,9 @@ contract PIM_WorkflowFactory_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // onlyOwner Functions
+    // Permissioned Functions
+
+    // onlyOwner
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
     function setCreationFee(uint newFee) external onlyOwner {
