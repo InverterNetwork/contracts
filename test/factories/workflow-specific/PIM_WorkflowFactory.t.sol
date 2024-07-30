@@ -36,9 +36,10 @@ contract PIM_WorkflowFactoryTest is E2ETest {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IPIM_WorkflowFactory.IssuanceTokenParams issuanceTokenParams;
 
-    address factoryDeployer = vm.addr(3);
-    address workflowDeployer = vm.addr(1);
-    address alice = vm.addr(2);
+    address factoryDeployer = vm.addr(1);
+    address workflowDeployer = vm.addr(2);
+    address mockTrustedForwarder = vm.addr(3);
+    address alice = vm.addr(4);
 
     uint initialCollateral = 300;
 
@@ -49,7 +50,7 @@ contract PIM_WorkflowFactoryTest is E2ETest {
 
         // deploy new factory
         factory = new PIM_WorkflowFactory(
-            address(orchestratorFactory), factoryDeployer
+            address(orchestratorFactory), factoryDeployer, mockTrustedForwarder
         );
         assert(factory.owner() == factoryDeployer);
 

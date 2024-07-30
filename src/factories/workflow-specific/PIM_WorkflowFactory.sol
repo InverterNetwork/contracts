@@ -18,15 +18,25 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 // External Dependencies
+import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
+import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
-contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
+contract PIM_WorkflowFactory is
+    Ownable2Step,
+    ERC2771Context,
+    IPIM_WorkflowFactory
+{
     // store address of orchestratorfactory
     address public orchestratorFactory;
     // relative fees on collateral token in basis points
     uint public fee;
 
-    constructor(address _orchestratorFactory, address _owner) Ownable(_owner) {
+    constructor(
+        address _orchestratorFactory,
+        address _owner,
+        address _trustedForwarder
+    ) Ownable(_owner) ERC2771Context(_trustedForwarder) {
         orchestratorFactory = _orchestratorFactory;
     }
 
@@ -112,7 +122,7 @@ contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
         emit IPIM_WorkflowFactory.PIMWorkflowCreated(
             fundingManager,
             address(issuanceToken),
-            msg.sender,
+            _msgSender(),
             PIMConfig.recipient,
             PIMConfig.isRenouncedIssuanceToken,
             PIMConfig.isRenouncedWorkflow
@@ -142,15 +152,15 @@ contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
         address fundingManager,
         address collateralToken,
         uint initialCollateralSupply
-    ) internal {
+    ) private {
         IERC20(collateralToken).transferFrom(
-            msg.sender, fundingManager, initialCollateralSupply
+            _msgSender(), fundingManager, initialCollateralSupply
         );
 
         if (fee > 0) {
             uint feeAmount = _calculateFee(initialCollateralSupply);
             IERC20(collateralToken).transferFrom(
-                msg.sender, address(this), feeAmount
+                _msgSender(), address(this), feeAmount
             );
         }
     }
@@ -177,11 +187,42 @@ contract PIM_WorkflowFactory is Ownable, IPIM_WorkflowFactory {
         orchestrator.authorizer().revokeRole(adminRole, address(this));
     }
 
-    function _calculateFee(uint collateralAmount)
+    function _calculateFee(uint collateralAmount) private view returns (uint) {
+        return collateralAmount * fee / 10_000;
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgSender()
         internal
         view
+        virtual
+        override(ERC2771Context, Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
         returns (uint)
     {
-        return collateralAmount * fee / 10_000;
+        return ERC2771Context._contextSuffixLength();
     }
 }

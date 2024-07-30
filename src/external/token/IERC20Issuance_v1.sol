@@ -38,6 +38,7 @@ interface IERC20Issuance_v1 is IERC20 {
 
     /// @notice Mapping of allowed minters
     /// @param _minter The address of the minter.
+    /// @return If the address is allowed to mint or not.
     function allowedMinters(address _minter) external view returns (bool);
 
     // /// @notice Returns contract owner
