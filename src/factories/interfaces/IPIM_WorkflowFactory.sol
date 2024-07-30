@@ -25,7 +25,12 @@ interface IPIM_WorkflowFactory {
     // Events
 
     /// @notice Event emitted when a new PIM workflow is created.
-    // TODO
+    /// @param bondingCurve The address of the bonding curve.
+    /// @param issuanceToken The address of the issuance token.
+    /// @param deployer The address of the deployer.
+    /// @param recipient The address of the recipient.
+    /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
+    /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
     event PIMWorkflowCreated(
         address indexed bondingCurve,
         address indexed issuanceToken,
