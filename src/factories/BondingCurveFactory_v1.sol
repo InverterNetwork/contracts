@@ -1,31 +1,32 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Interfaces
-import {
-    IOrchestratorFactory_v1,
-    IOrchestrator_v1,
-    IModule_v1
-} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBondingCurveFactory_v1} from
     "src/factories/interfaces/IBondingCurveFactory_v1.sol";
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// External Implementations
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
-contract BondingCurveFactory_v1 {
+// External Dependencies
+import {Ownable} from "@oz/access/Ownable.sol";
+
+contract BondingCurveFactory_v1 is Ownable {
     // store address of orchestratorfactory
     address public orchestratorFactory;
+    // relative fees on collateral token in basis points
+    uint public fee;
 
-    constructor(address _orchestratorFactory) {
+    constructor(address _orchestratorFactory, address _owner) Ownable(_owner) {
         orchestratorFactory = _orchestratorFactory;
     }
 
@@ -48,15 +49,15 @@ contract BondingCurveFactory_v1 {
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
 
-        // mint initial issuance supply to initial admin
+        // mint initial issuance supply to recipient
         issuanceToken.mint(
-            _launchConfig.issuanceTokenParams.initialAdmin,
+            _launchConfig.recipient,
             _launchConfig.bcProperties.initialIssuanceSupply
         );
 
         // assemble fundingManager config and deploy orchestrator
-        IOrchestratorFactory_v1.ModuleConfig memory f = IOrchestratorFactory_v1
-            .ModuleConfig(
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
             _launchConfig.metadata,
             abi.encode(
                 address(issuanceToken),
@@ -68,7 +69,7 @@ contract BondingCurveFactory_v1 {
             orchestratorFactory
         ).createOrchestrator(
             _workflowConfig,
-            f,
+            fundingManagerConfig,
             _authorizerConfig,
             _paymentProcessorConfig,
             _moduleConfigs
@@ -80,32 +81,55 @@ contract BondingCurveFactory_v1 {
 
         // revoke minter role from factory
         issuanceToken.setMinter(address(this), false);
-        emit IBondingCurveFactory_v1.BcPimCreated(address(issuanceToken));
 
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        // if renounced flag is set, renounce all control
-        if (_launchConfig.isRenounced) {
-            _transferControl(orchestrator, issuanceToken, address(0));
+        // if renounced token flag is set, renounce ownership over token, else transfer ownership to initial admin
+        if (_launchConfig.isRenouncedIssuanceToken) {
+            _transferTokenOwnership(issuanceToken, address(0));
         } else {
-            _transferControl(
-                orchestrator,
-                issuanceToken,
-                _launchConfig.issuanceTokenParams.initialAdmin
+            _transferTokenOwnership(
+                issuanceToken, _launchConfig.issuanceTokenParams.initialAdmin
             );
         }
 
-        // transfer initial collateral supply to funding manager
-        IERC20(_launchConfig.collateralToken).transferFrom(
-            msg.sender,
-            fundingManager,
-            _launchConfig.bcProperties.initialCollateralSupply
-        );
+        // if renounced workflow flag is set, renounce admin rights over workflow, else transfer admin rights to initial admin
+        if (_launchConfig.isRenouncedWorkflow) {
+            _transferWorkflowAdminRights(orchestrator, address(0));
+        } else {
+            _transferWorkflowAdminRights(
+                orchestrator, _launchConfig.issuanceTokenParams.initialAdmin
+            );
+        }
+
+        _manageInitialCollateral(fundingManager, _launchConfig.collateralToken, _launchConfig.bcProperties.initialCollateralSupply);
+
+        emit IBondingCurveFactory_v1.BcPimCreated(address(issuanceToken));
 
         return (orchestrator, issuanceToken);
     }
 
-    function _transferControl(
-        IOrchestrator_v1 _orchestrator,
+    function setFees(uint _fee) external onlyOwner {
+        fee = _fee;
+        emit IBondingCurveFactory_v1.FeeSet(_fee);
+    }
+
+    function _manageInitialCollateral(address fundingManager, address collateralToken, uint initialCollateralSupply) internal {
+        IERC20(collateralToken).transferFrom(
+            msg.sender,
+            fundingManager,
+            initialCollateralSupply
+        );
+
+        if (fee > 0) {
+            uint feeAmount = _calculateFee(initialCollateralSupply);
+            IERC20(collateralToken).transferFrom(
+                msg.sender,
+                address(this),
+                feeAmount
+            );
+        }
+    }
+
+    function _transferTokenOwnership(
         ERC20Issuance_v1 _issuanceToken,
         address _newAdmin
     ) private {
@@ -114,11 +138,20 @@ contract BondingCurveFactory_v1 {
         } else {
             _issuanceToken.transferOwnership(_newAdmin);
         }
+    }
 
+    function _transferWorkflowAdminRights(
+        IOrchestrator_v1 _orchestrator,
+        address _newAdmin
+    ) private {
         bytes32 adminRole = _orchestrator.authorizer().getAdminRole();
-        // set zero address as admin (because workflow must have at least one admin set)
+        // if renounced flag is set, add zero address as admin (because workflow must have at least one admin set)
         _orchestrator.authorizer().grantRole(adminRole, _newAdmin);
         // and revoke admin role from factory
         _orchestrator.authorizer().revokeRole(adminRole, address(this));
+    }
+
+    function _calculateFee(uint _collateralAmount) internal view returns (uint) {
+        return _collateralAmount * fee / 10000;
     }
 }

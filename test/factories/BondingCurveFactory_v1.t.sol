@@ -28,9 +28,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
     // SuT
     BondingCurveFactory_v1 factory;
 
-    // Helpers
-    EventHelpers eventHelpers;
-
+    // Deployment Parameters
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig;
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig;
@@ -38,17 +36,22 @@ contract BondingCurveFactoryV1Test is E2ETest {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveFactory_v1.IssuanceTokenParams issuanceTokenParams;
 
-    address mockDeployer = vm.addr(1);
-    uint initialCollateral = 3;
+    address factoryDeployer = vm.addr(3);
+    address workflowDeployer = vm.addr(1);
+    address alice = vm.addr(2);
+
+    uint initialCollateral = 300;
 
     event BcPimCreated(address indexed issuanceToken);
 
     function setUp() public override {
         super.setUp();
-        eventHelpers = new EventHelpers();
 
         // deploy new factory
-        factory = new BondingCurveFactory_v1(address(orchestratorFactory));
+        factory = new BondingCurveFactory_v1(
+            address(orchestratorFactory), factoryDeployer
+        );
+        assert(factory.owner() == factoryDeployer);
 
         // Orchestrator/Workflow config
         workflowConfig = IOrchestratorFactory_v1.WorkflowConfig({
@@ -97,7 +100,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
             symbol: "BCT",
             decimals: 18,
             maxSupply: type(uint).max - 1,
-            initialAdmin: mockDeployer
+            initialAdmin: workflowDeployer
         });
 
         // mint collateral token to deployer and approve to factory
@@ -105,9 +108,7 @@ contract BondingCurveFactoryV1Test is E2ETest {
         token.approve(address(factory), initialCollateral);
     }
 
-    function testCreateBondingCurve_Renounced() public {
-        vm.recordLogs();
-
+    function testCreateBondingCurve() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createBondingCurve(
             workflowConfig,
@@ -119,37 +120,36 @@ contract BondingCurveFactoryV1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
-                isRenounced: true
+                recipient: alice,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
             })
         );
 
-        // check that token is deployed and initial amount is minted
+        // CHECK: issuance token IS DEPLOYED and initial issuance supply IS MINTED to recipient
         assertEq(
-            issuanceToken.balanceOf(mockDeployer),
-            bcProperties.initialIssuanceSupply
+            issuanceToken.balanceOf(alice), bcProperties.initialIssuanceSupply
         );
-
-        // check that minting rights for factory have been revoked
+        // CHECK: initial collateral supply IS sent to bonding curve
+        assertEq(
+            token.balanceOf(address(orchestrator.fundingManager())), bcProperties.initialCollateralSupply
+        );
+        // CHECK: factory DOES NOT have minting rights on token anymore
         bool isFactoryStillMinter =
             issuanceToken.allowedMinters(address(factory));
         assertFalse(isFactoryStillMinter);
-
-        // check that minting rights for bonding curve module have been granted
-        bool isBcMinter = issuanceToken.allowedMinters(
-            address(orchestrator.fundingManager())
-        );
+        // CHECK: bonding curve module HAS minting rights on token
+        bool isBcMinter =
+            issuanceToken.allowedMinters(address(orchestrator.fundingManager()));
         assertTrue(isBcMinter);
-
-        // check that control over token and workflow have been renounced
-        address owner = issuanceToken.owner();
-        assertEq(owner, address(0));
+        // CHECK: the factory DOES NOT have admin rights over workflow anymore
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        bool isDeployerAdmin =
+        bool isFactoryStillAdmin =
             orchestrator.authorizer().hasRole(adminRole, address(factory));
-        assertFalse(isDeployerAdmin);
+        assertFalse(isFactoryStillAdmin);
     }
 
-    function testCreateBondingCurve_NotRenounced() public {
+    function testCreateBondingCurve_IfFullyRenounced() public {
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createBondingCurve(
             workflowConfig,
@@ -161,15 +161,145 @@ contract BondingCurveFactoryV1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
-                isRenounced: false
+                recipient: alice,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
             })
         );
 
-        assertEq(issuanceToken.owner(), mockDeployer);
+        // CHECK: the token DOES NOT have an owner anymore
+        address owner = issuanceToken.owner();
+        assertEq(owner, address(0));
+        // CHECK: the deployer DOES NOT get admin rights over workflow
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        bool isDeployerAdmin =
-            orchestrator.authorizer().hasRole(adminRole, address(mockDeployer));
+        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+            adminRole, address(workflowDeployer)
+        );
+        assertFalse(isDeployerAdmin);
+    }
+
+    function testCreateBondingCurve_IfNotRenounced() public {
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createBondingCurve(
+            workflowConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IBondingCurveFactory_v1.LaunchConfig({
+                metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: alice,
+                isRenouncedIssuanceToken: false,
+                isRenouncedWorkflow: false
+            })
+        );
+
+        // CHECK: the deployer IS owner of the token
+        assertEq(issuanceToken.owner(), workflowDeployer);
+        // CHECK: the deployer IS admin of the workflow
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+            adminRole, address(workflowDeployer)
+        );
         assertTrue(isDeployerAdmin);
+    }
+
+    function testCreateBondingCurve_IfTokenRenounced() public {
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createBondingCurve(
+            workflowConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IBondingCurveFactory_v1.LaunchConfig({
+                metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: alice,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: false
+            })
+        );
+
+        // CHECK: the token DOES NOT have an owner anymore
+        assertEq(issuanceToken.owner(), address(0));
+        // CHECK: the deployer IS admin of the workflow
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+            adminRole, address(workflowDeployer)
+        );
+        assertTrue(isDeployerAdmin);
+    }
+
+    function testCreateBondingCurve_IfWorkflowRenounced() public {
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createBondingCurve(
+            workflowConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IBondingCurveFactory_v1.LaunchConfig({
+                metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: alice,
+                isRenouncedIssuanceToken: false,
+                isRenouncedWorkflow: true
+            })
+        );
+
+        // CHECK: the deployer IS owner of the token
+        assertEq(issuanceToken.owner(), workflowDeployer);
+        // CHECK: the deployer DOES NOT have admin rights over workflow
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+            adminRole, address(workflowDeployer)
+        );
+        assertFalse(isDeployerAdmin);
+    }
+
+    function testCreateBondingCurve_WithFee() public {
+        // set fee on factory
+        uint feeInBasisPoints = 100;
+        vm.prank(factoryDeployer);
+        factory.setFees(feeInBasisPoints);
+
+        // make sure that deployer has enough collateral to pay fee and approve
+        uint expectedFeeAmount = initialCollateral * feeInBasisPoints / 10000;
+        token.mint(address(factory), expectedFeeAmount);
+        token.approve(address(factory), initialCollateral + expectedFeeAmount);
+
+        // create bonding curve
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createBondingCurve(
+            workflowConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IBondingCurveFactory_v1.LaunchConfig({
+                metadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: alice,
+                isRenouncedIssuanceToken: false,
+                isRenouncedWorkflow: false
+            })
+        );
+
+        // CHECK: bonding curve HAS received initial collateral supply
+        address bc = address(orchestrator.fundingManager());
+        assertEq(
+            token.balanceOf(bc), bcProperties.initialCollateralSupply
+        );
+        // CHECK: factory HAS received fee
+        assertEq(
+            token.balanceOf(address(factory)), expectedFeeAmount
+        );
     }
 
     function testCreateBondingCurve_FailsWithoutCollateralTokenApproval()
@@ -191,7 +321,9 @@ contract BondingCurveFactoryV1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
-                isRenounced: true
+                recipient: alice,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
             })
         );
     }
@@ -217,7 +349,9 @@ contract BondingCurveFactoryV1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
-                isRenounced: true
+                recipient: alice,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
             })
         );
     }

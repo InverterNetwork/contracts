@@ -37,9 +37,12 @@ interface IBondingCurveFactory_v1 {
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
             bcProperties;
         IssuanceTokenParams issuanceTokenParams;
+        address recipient;
         address collateralToken;
-        bool isRenounced;
+        bool isRenouncedIssuanceToken;
+        bool isRenouncedWorkflow;
     }
 
     event BcPimCreated(address indexed issuanceToken);
+    event FeeSet(uint fees);
 }
