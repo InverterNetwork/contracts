@@ -111,8 +111,11 @@ contract PIM_WorkflowFactory_v1 is
         address fundingManager = address(orchestrator.fundingManager());
 
         // make sure that curve configuration doesn't allow a negative static price since would break the math
-        if(IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying() < 0) {
-            revert IPIM_WorkflowFactory_v1.PIM_WorkflowFactory__InvalidConfiguration();
+        if (IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying() < 0)
+        {
+            revert
+                IPIM_WorkflowFactory_v1
+                .PIM_WorkflowFactory__InvalidConfiguration();
         }
 
         // transfer initial collateral supply from msg.sender to  bonding curve and mint issuance token to recipient
@@ -218,15 +221,11 @@ contract PIM_WorkflowFactory_v1 is
 
         if (creationFee > 0) {
             uint feeAmount = _calculateFee(initialCollateralSupply);
-            collateralToken.transferFrom(
-                _msgSender(), address(this), feeAmount
-            );
+            collateralToken.transferFrom(_msgSender(), address(this), feeAmount);
         }
 
         // issuance token is minted to the the specified recipient
-        issuanceToken.mint(
-            recipient, initialIssuanceSupply
-        );
+        issuanceToken.mint(recipient, initialIssuanceSupply);
     }
 
     function _transferTokenOwnership(
