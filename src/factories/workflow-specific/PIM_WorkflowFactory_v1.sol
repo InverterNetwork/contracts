@@ -177,6 +177,7 @@ contract PIM_WorkflowFactory_v1 is
 
     // onlyPimFeeRecipient
 
+    /// @inheritdoc IPIM_WorkflowFactory_v1
     function withdrawPimFee(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
@@ -191,6 +192,7 @@ contract PIM_WorkflowFactory_v1 is
         );
     }
 
+    /// @inheritdoc IPIM_WorkflowFactory_v1
     function transferPimFeeEligibility(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)

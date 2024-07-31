@@ -117,14 +117,29 @@ interface IPIM_WorkflowFactory_v1 {
         IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
-    /// @notice Ownable. Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
+    /// @notice Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
+    /// @dev Only callable by the owner.
     /// @param newFee Fee in basis points.
     function setCreationFee(uint newFee) external;
 
-    /// @notice Ownable. Withdraws the complete balance of the specified token to the specified address.
+    /// @notice  Withdraws the complete balance of the specified token to the specified address.
+    /// @dev Only callable by the owner.
     /// @param token The token to withdraw.
     /// @param to The recipient of the withdrawn tokens.
     function withdrawCreationFee(IERC20 token, address to) external;
+
+    /// @notice Updates who can claim the buy/sell fees of a given bonding curve.
+    /// @dev Only callable by the currently eligiblefee recipient.
+    /// @param fundingManager The address of the bonding curve from which to withdraw fees.
+    /// @param to The address that should be eligible to claim fees in the future.
+    function transferPimFeeEligibility(address fundingManager, address to)
+        external;
+
+    /// @notice Withdraws the buy/sell fees of a given bonding curve.
+    /// @dev Only callable by the currently eligiblefee recipient.
+    /// @param fundingManager The address of the bonding curve from which to withdraw fees.
+    /// @param to The address to which the fees are sent.
+    function withdrawPimFee(address fundingManager, address to) external;
 
     /// @notice Returns the address of the orchestrator factory.
     /// @return Address of the orchestrator factory.
