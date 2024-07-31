@@ -282,7 +282,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         token.approve(address(factory), initialCollateral + expectedFeeAmount);
 
         // create bonding curve
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        (IOrchestrator_v1 orchestrator, ) =
         factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
@@ -314,7 +314,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         vm.expectRevert();
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
@@ -342,7 +341,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         vm.expectRevert();
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             badAuthorizerConfig,

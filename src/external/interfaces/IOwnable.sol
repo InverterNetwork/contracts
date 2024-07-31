@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
+
 /**
  * @title Ownable
  * @dev The Ownable contract has an owner address, and provides basic authorization control

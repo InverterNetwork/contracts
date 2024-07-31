@@ -55,7 +55,7 @@ contract PIM_WorkflowFactory_v1 is
         returns (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken)
     {
         // deploy issuance token
-        ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
+        issuanceToken = new ERC20Issuance_v1(
             PIMConfig.issuanceTokenParams.name,
             PIMConfig.issuanceTokenParams.symbol,
             PIMConfig.issuanceTokenParams.decimals,
@@ -78,7 +78,7 @@ contract PIM_WorkflowFactory_v1 is
                 PIMConfig.collateralToken
             )
         );
-        IOrchestrator_v1 orchestrator = IOrchestratorFactory_v1(
+        orchestrator = IOrchestratorFactory_v1(
             orchestratorFactory
         ).createOrchestrator(
             workflowConfig,
