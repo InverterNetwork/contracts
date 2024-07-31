@@ -4,7 +4,10 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
-import {SingletonDeployer_v1} from "script/SingletonDeployer_v1.sol";
+import {SingletonDeployer_v1} from "script/SingletonDeployer_v1.s.sol";
+import {MetadataCollection_v1} from "script/MetadataCollection_v1.s.sol";
+
+import {ProxyAndBeaconDeployer_v1} from "script/ProxyAndBeaconDeployer_v1.s.sol";
 
 // Modules
 // =============================================================================
@@ -36,7 +39,10 @@ import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
-contract ModuleBeaconDeployer is SingletonDeployer {
+contract ModuleBeaconDeployer_v1 is
+    SingletonDeployer_v1,
+    MetadataCollection_v1
+{
     ProxyAndBeaconDeployer_v1 public proxyAndBeaconDeployer =
         new ProxyAndBeaconDeployer_v1();
 
@@ -44,157 +50,21 @@ contract ModuleBeaconDeployer is SingletonDeployer {
     IModule_v1.Metadata[] initialMetadataRegistration;
     IInverterBeacon_v1[] initialBeaconRegistration;
 
-    // ------------------------------------------------------------------------
-    // Module Metadata
-
-    // ------------------------------------------------------------------------
-    // Authorizer
-
-    //RoleAuthorizer
-    IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_Roles_v1"
-    );
-
-    //TokenGatedRoleAuthorizer
-    IModule_v1.Metadata tokenGatedRoleAuthorizerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_TokenGated_Roles_v1"
-    );
-
-    //VotingRoles
-    IModule_v1.Metadata votingRolesMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_EXT_VotingRoles_v1"
-    );
-
-    // ------------------------------------------------------------------------
-    // Funding Manager
-
-    //BancorRedeemingVirtualSupplyFundingManager
-    IModule_v1.Metadata bancorRedeemingVirtualSupplyFundingManagerMetadata =
-    IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
-    );
-
-    //RestrictedBancorRedeemingVirtualSupplyFundingManager
-    IModule_v1.Metadata
-        restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            "https://github.com/InverterNetwork/inverter-contracts",
-            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
-        );
-
-    //RebasingFundingManager
-    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata( //@note Do we add this?
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "FM_Rebasing_v1"
-    );
-
-    /* 
-    //DepositVaultFundingManager
-    IModule_v1.Metadata depositVaultFundingManagerMetadata =
-    IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "FM_DepositVault_v1"
-    ); */
-
-    // ------------------------------------------------------------------------
-    // Logic Module
-
-    //Bounties
-    IModule_v1.Metadata bountiesMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_Bounties_v1"
-    );
-
-    //KPIRewarder
-    IModule_v1.Metadata kpiRewarderMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_KPIRewarder_v1"
-    );
-
-    //PaymentRouter
-    IModule_v1.Metadata paymentRouterMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_PaymentRouter_v1"
-    );
-
-    //RecurringPayments
-    IModule_v1.Metadata recurringPaymentsMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_RecurringPayments_v1"
-    );
-
-    //Staking
-    IModule_v1.Metadata stakingMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "LM_PC_Staking_v1"
-    );
-
-    // ------------------------------------------------------------------------
-    // Payment Processor
-
-    //SimplePaymentProcessor
-    IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "PP_Simple_v1"
-    );
-
-    //StreamingPaymentProcessor
-    IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "PP_Streaming_v1"
-    );
+    //Orchestrator Beacon
+    IInverterBeacon_v1 orchestratorBeacon;
 
     function deployModuleBeaconsAndFillRegistrationData(
         address reverter,
         address governor
     ) public {
         //@todo add Logs
+
+        //Create Orchestrator Beacon
+        orchestratorBeacon = IInverterBeacon_v1(
+            proxyAndBeaconDeployer.deployInverterBeacon(
+                reverter, governor, orc_Orchestrator_v1, 1, 0, 0
+            )
+        );
 
         //--------------------------------------------------------------------------
         //Authorizer
@@ -204,6 +74,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    roleAuthorizerMetadata.title,
                     reverter,
                     governor,
                     mod_Aut_Roles_v1,
@@ -219,6 +90,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    tokenGatedRoleAuthorizerMetadata.title,
                     reverter,
                     governor,
                     mod_Aut_TokenGated_Roles_v1,
@@ -234,6 +106,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    votingRolesMetadata.title,
                     reverter,
                     governor,
                     mod_Aut_EXT_VotingRoles_v1,
@@ -254,6 +127,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    bancorRedeemingVirtualSupplyFundingManagerMetadata.title,
                     reverter,
                     governor,
                     mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1,
@@ -274,6 +148,8 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
+                        .title,
                     reverter,
                     governor,
                     mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1,
@@ -292,6 +168,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    rebasingFundingManagerMetadata.title,
                     reverter,
                     governor,
                     mod_FM_Rebasing_v1,
@@ -310,6 +187,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    depositVaultFundingManagerMetadata.title,
                     reverter,
                     governor,
                     mod_FM_DepositVault_v1,
@@ -328,6 +206,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    bountiesMetadata.title,
                     reverter,
                     governor,
                     mod_LM_PC_Bounties_v1,
@@ -343,6 +222,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    kpiRewarderMetadata.title,
                     reverter,
                     governor,
                     mod_LM_PC_KPIRewarder_v1,
@@ -358,6 +238,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    paymentRouterMetadata.title,
                     reverter,
                     governor,
                     mod_LM_PC_PaymentRouter_v1,
@@ -373,6 +254,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    recurringPaymentsMetadata.title,
                     reverter,
                     governor,
                     mod_LM_PC_RecurringPayments_v1,
@@ -388,6 +270,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    stakingMetadata.title,
                     reverter,
                     governor,
                     mod_LM_PC_Staking_v1,
@@ -406,6 +289,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    simplePaymentProcessorMetadata.title,
                     reverter,
                     governor,
                     mod_PP_Simple_v1,
@@ -421,6 +305,7 @@ contract ModuleBeaconDeployer is SingletonDeployer {
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
+                    streamingPaymentProcessorMetadata.title,
                     reverter,
                     governor,
                     mod_PP_Streaming_v1,
