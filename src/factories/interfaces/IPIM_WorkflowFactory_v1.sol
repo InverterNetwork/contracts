@@ -23,7 +23,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 interface IPIM_WorkflowFactory_v1 {
     //--------------------------------------------------------------------------
     // Errors
-    /// @notice Error thrown when an unpermissioned address tries to claim fees to to transfer role.
+    /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
     error PIM_WorkflowFactory__OnlyPimFeeRecipient();
 
     //--------------------------------------------------------------------------

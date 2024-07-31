@@ -121,14 +121,14 @@ contract PIM_WorkflowFactory_v1 is
         // revoke minter role from factory
         issuanceToken.setMinter(address(this), false);
 
-        // if renounced token flag is set, renounce ownership over token, else transfer ownership to initial admin
+        // if renounced token flag is set, renounce ownership over token, else transfer ownership to specified admin
         if (PIMConfig.isRenouncedIssuanceToken) {
             _transferTokenOwnership(issuanceToken, address(0));
         } else {
             _transferTokenOwnership(issuanceToken, PIMConfig.admin);
         }
 
-        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to deployer
+        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to specified admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the admin as fee recipient eligible to claim buy/sell fees
             _pimFeeRecipients[fundingManager] = PIMConfig.admin;
