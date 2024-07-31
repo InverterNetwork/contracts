@@ -47,6 +47,16 @@ contract MetadataCollection_v1 {
     );
 
     // ------------------------------------------------------------------------
+    //Orchestrator
+    IModule_v1.Metadata public orchestratorMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/inverter-contracts",
+        "Orchestrator_v1"
+    );
+
+    // ------------------------------------------------------------------------
     // Authorizer
 
     //RoleAuthorizer

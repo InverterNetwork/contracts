@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
-import {ProtocolConstants_v1} from "script/ProtocolConstants_v1.sol";
+import {ProtocolConstants_v1} from "script/ProtocolConstants_v1.s.sol";
 import {IDeterministicFactory_v1} from
-    "script/deterministicFactory/interfaces/IDeterministicFactory_v1.sol";
+    "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -70,7 +70,7 @@ import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 // It uses a deterministic factory to deploy all contracts needed for the inverter protocol to work.
 //--------------------------------------------------------------------------
 
-contract SingletonDeployer_v1 is ProtocolConstants {
+contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     using Strings for string;
 
     IDeterministicFactory_v1 public factory =
@@ -81,9 +81,9 @@ contract SingletonDeployer_v1 is ProtocolConstants {
     //External contracts
 
     address public ext_InverterReverter_v1;
-    address public ext_FeeManager_v1;
-    address public ext_TransactionForwarder_v1;
     address public ext_Governor_v1;
+    address public ext_TransactionForwarder_v1;
+    address public ext_FeeManager_v1;
 
     //@note Add Token here?
 
@@ -143,13 +143,15 @@ contract SingletonDeployer_v1 is ProtocolConstants {
         ext_InverterReverter_v1 = factory.deployWithCreate2( //@note no Beacon strcuture here right?
         factorySalt, vm.getCode("InverterReverte_v1.sol:InverterReverter_v1"));
 
+        ext_Governor_v1 = factory.deployWithCreate2(
+            factorySalt, vm.getCode("Governor_v1.sol:Governor_v1")
+        );
+
         ext_TransactionForwarder_v1 = factory.deployWithCreate2(
             factorySalt,
             vm.getCode("TransactionForwarder_v1.sol:TransactionForwarder_v1")
         );
-        ext_Governor_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("Governor_v1.sol:Governor_v1")
-        );
+
         ext_FeeManager_v1 = factory.deployWithCreate2(
             factorySalt, vm.getCode("FeeManager_v1.sol:FeeManager_v1")
         );

@@ -3,9 +3,14 @@ pragma solidity ^0.8.0;
 
 import {ModuleBeaconDeployer_v1} from "script/ModuleBeaconDeployer_v1.s.sol";
 
+import {Governor_v1} from "@ex/governance/Governor_v1.sol";
+import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+
 contract DeploymentScript is ModuleBeaconDeployer_v1 {
     //@note not upgradable right?
-    address public inverterReverter = ext_InnverterReverter_v1;
+    address public inverterReverter = ext_InverterReverter_v1;
     address public governor;
     address public forwarder;
     address public feeManager;
@@ -25,9 +30,9 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             inverterReverter,
             communityMultisig,
             ext_Governor_v1,
-            governanceMetadata.majorVersion,
-            governanceMetadata.minorVersion,
-            governanceMetadata.patchVersion
+            governorMetadata.majorVersion,
+            governorMetadata.minorVersion,
+            governorMetadata.patchVersion
         );
 
         forwarder = proxyAndBeaconDeployer.deployBeaconAndSetupProxy(
@@ -75,15 +80,21 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         );
 
         //Deploy Module Beacons
-        deployModuleBeaconsAndFillRegistrationData(reverter, forwarder);
+        deployModuleBeaconsAndFillRegistrationData(inverterReverter, forwarder);
 
         //Initialize Protocol Contracts
 
-        governor.init(communityMultisig, teamMultisig, 1 weeks, feeManager);
-        feeManager.init(governor, treasury, 100, 100);
-        moduleFactory.init(
+        Governor_v1(governor).init(
+            communityMultisig, teamMultisig, 1 weeks, feeManager
+        );
+
+        FeeManager_v1(feeManager).init(governor, treasury, 100, 100);
+
+        ModuleFactory_v1(moduleFactory).init(
             governor, initialMetadataRegistration, initialBeaconRegistration
         );
-        orchestratorFactory.init(governor, orchestratorBeacon, moduleFactory);
+        OrchestratorFactory_v1(orchestratorFactory).init(
+            governor, orchestratorBeacon, moduleFactory
+        );
     }
 }

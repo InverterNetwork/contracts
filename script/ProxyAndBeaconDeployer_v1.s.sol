@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {IDeterministicFactory_v1} from
-    "script/deterministicFactory/interfaces/IDeterministicFactory_v1.sol";
+    "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
 
-import {ProtocolConstants_v1} from "script/ProtocolConstants_v1.sol";
+import {ProtocolConstants_v1} from "script/ProtocolConstants_v1.s.sol";
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
@@ -19,7 +19,7 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
  *
  * @author Inverter Network
  */
-contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants {
+contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
 
@@ -33,9 +33,9 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants {
         uint majorVersion,
         uint minorVersion,
         uint patchVersion
-    ) external returns (address beaconAddress, address proxy) {
+    ) external returns (address proxy) {
         // Deploy the beacon.
-        beaconAddress = deployInverterBeacon(
+        address beaconAddress = deployInverterBeacon(
             implementationName,
             reverter,
             owner,

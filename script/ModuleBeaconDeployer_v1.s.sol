@@ -9,6 +9,8 @@ import {MetadataCollection_v1} from "script/MetadataCollection_v1.s.sol";
 
 import {ProxyAndBeaconDeployer_v1} from "script/ProxyAndBeaconDeployer_v1.s.sol";
 
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+
 // Modules
 // =============================================================================
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -62,7 +64,13 @@ contract ModuleBeaconDeployer_v1 is
         //Create Orchestrator Beacon
         orchestratorBeacon = IInverterBeacon_v1(
             proxyAndBeaconDeployer.deployInverterBeacon(
-                reverter, governor, orc_Orchestrator_v1, 1, 0, 0
+                orchestratorMetadata.title,
+                reverter,
+                governor,
+                orc_Orchestrator_v1,
+                orchestratorMetadata.majorVersion,
+                orchestratorMetadata.minorVersion,
+                orchestratorMetadata.patchVersion
             )
         );
 
