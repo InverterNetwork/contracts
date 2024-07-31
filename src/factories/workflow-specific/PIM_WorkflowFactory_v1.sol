@@ -110,6 +110,11 @@ contract PIM_WorkflowFactory_v1 is
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
 
+        // make sure that curve configuration doesn't allow a negative static price since would break the math
+        if(IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying() < 0) {
+            revert IPIM_WorkflowFactory_v1.PIM_WorkflowFactory__InvalidConfiguration();
+        }
+
         // transfer initial collateral supply from msg.sender to  bonding curve and mint issuance token to recipient
         _manageInitialSupplies(
             IBondingCurveBase_v1(fundingManager),

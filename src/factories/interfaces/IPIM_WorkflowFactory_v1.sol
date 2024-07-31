@@ -25,6 +25,8 @@ interface IPIM_WorkflowFactory_v1 {
     // Errors
     /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
     error PIM_WorkflowFactory__OnlyPimFeeRecipient();
+    /// @notice Error thrown when the curve is deployed with an invalid configuration.
+    error PIM_WorkflowFactory__InvalidConfiguration();
 
     //--------------------------------------------------------------------------
     // Events
