@@ -23,6 +23,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 interface IPIM_WorkflowFactory_v1 {
     //--------------------------------------------------------------------------
     // Errors
+    /// @notice Error thrown when an unpermissioned address tries to claim fees to to transfer role.
     error PIM_WorkflowFactory__OnlyPimFeeRecipient();
 
     //--------------------------------------------------------------------------
@@ -56,7 +57,7 @@ interface IPIM_WorkflowFactory_v1 {
         address indexed fundingManager, address indexed to, uint amount
     );
 
-    /// @notice Event emitted factory owner sets new fee..
+    /// @notice Event emitted when factory owner sets new fee.
     /// @param oldRecipient The previous pim fee recipient.
     /// @param newRecipient The new pim fee recipient.
     event PimFeeRecipientUpdated(
@@ -129,14 +130,14 @@ interface IPIM_WorkflowFactory_v1 {
     function withdrawCreationFee(IERC20 token, address to) external;
 
     /// @notice Updates who can claim the buy/sell fees of a given bonding curve.
-    /// @dev Only callable by the currently eligiblefee recipient.
+    /// @dev Only callable by the currently eligible fee recipient.
     /// @param fundingManager The address of the bonding curve from which to withdraw fees.
     /// @param to The address that should be eligible to claim fees in the future.
     function transferPimFeeEligibility(address fundingManager, address to)
         external;
 
     /// @notice Withdraws the buy/sell fees of a given bonding curve.
-    /// @dev Only callable by the currently eligiblefee recipient.
+    /// @dev Only callable by the currently eligible fee recipient.
     /// @param fundingManager The address of the bonding curve from which to withdraw fees.
     /// @param to The address to which the fees are sent.
     function withdrawPimFee(address fundingManager, address to) external;

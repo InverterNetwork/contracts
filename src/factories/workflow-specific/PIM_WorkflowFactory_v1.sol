@@ -37,7 +37,7 @@ contract PIM_WorkflowFactory_v1 is
     // relative fees on collateral token in basis points
     uint public creationFee;
 
-    // mapping of orchestrator address to fee recipient address
+    // mapping of bonding curve address to fee recipient address
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
