@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+import "forge-std/console.sol";
+
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -84,11 +86,6 @@ contract PIM_WorkflowFactory_v1 is
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
 
-        // mint initial issuance supply to recipient
-        issuanceToken.mint(
-            PIMConfig.recipient, PIMConfig.bcProperties.initialIssuanceSupply
-        );
-
         // assemble fundingManager config, authorizer config and deploy orchestrator
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig =
         IOrchestratorFactory_v1.ModuleConfig(
@@ -136,10 +133,12 @@ contract PIM_WorkflowFactory_v1 is
             _transferWorkflowAdminRights(orchestrator, PIMConfig.admin);
         }
 
-        _manageInitialCollateral(
-            fundingManager,
-            PIMConfig.collateralToken,
-            PIMConfig.bcProperties.initialCollateralSupply
+        _manageInitialSupplies(
+            IBondingCurveBase_v1(fundingManager),
+            IERC20(PIMConfig.collateralToken),
+            issuanceToken,
+            PIMConfig.bcProperties.initialCollateralSupply,
+            PIMConfig.bcProperties.initialIssuanceSupply
         );
 
         emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
@@ -199,21 +198,27 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function _manageInitialCollateral(
-        address fundingManager,
-        address collateralToken,
-        uint initialCollateralSupply
+    function _manageInitialSupplies(
+        IBondingCurveBase_v1 fundingManager,
+        IERC20 collateralToken,
+        ERC20Issuance_v1 issuanceToken,
+        uint initialCollateralSupply,
+        uint initialIssuanceSupply
     ) private {
-        IERC20(collateralToken).transferFrom(
+        collateralToken.transferFrom(
             _msgSender(), fundingManager, initialCollateralSupply
         );
 
         if (creationFee > 0) {
             uint feeAmount = _calculateFee(initialCollateralSupply);
-            IERC20(collateralToken).transferFrom(
+            collateralToken.transferFrom(
                 _msgSender(), address(this), feeAmount
             );
         }
+
+        issuanceToken.mint(
+            PIMConfig.recipient, PIMConfig.bcProperties.initialIssuanceSupply
+        );
     }
 
     function _transferTokenOwnership(
