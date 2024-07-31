@@ -125,20 +125,15 @@ contract PIM_WorkflowFactory_v1 is
         if (PIMConfig.isRenouncedIssuanceToken) {
             _transferTokenOwnership(issuanceToken, address(0));
         } else {
-            _transferTokenOwnership(
-                issuanceToken, PIMConfig.issuanceTokenParams.initialAdmin
-            );
+            _transferTokenOwnership(issuanceToken, PIMConfig.admin);
         }
 
-        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to initial admin
+        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to deployer
         if (PIMConfig.isRenouncedWorkflow) {
-            // record the deployer as fee recipient eligible to claim buy/sell fees
-            _pimFeeRecipients[fundingManager] = _msgSender();
+            // record the admin as fee recipient eligible to claim buy/sell fees
+            _pimFeeRecipients[fundingManager] = PIMConfig.admin;
         } else {
-            // TODO: check if initial admin is the right target
-            _transferWorkflowAdminRights(
-                orchestrator, PIMConfig.issuanceTokenParams.initialAdmin
-            );
+            _transferWorkflowAdminRights(orchestrator, PIMConfig.admin);
         }
 
         _manageInitialCollateral(

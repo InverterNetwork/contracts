@@ -72,13 +72,11 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param symbol The symbol of the issuance token.
     /// @param decimals The decimals of the issuance token.
     /// @param maxSupply The maximum supply of the issuance token.
-    /// @param initialAdmin The owner and initial minter of the issuance token.
     struct IssuanceTokenParams {
         string name;
         string symbol;
         uint8 decimals;
         uint maxSupply;
-        address initialAdmin;
     }
 
     /// @notice Struct for the issuance token parameters.
@@ -96,6 +94,7 @@ interface IPIM_WorkflowFactory_v1 {
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
             bcProperties;
         IssuanceTokenParams issuanceTokenParams;
+        address admin;
         address recipient;
         address collateralToken;
         bool isRenouncedIssuanceToken;

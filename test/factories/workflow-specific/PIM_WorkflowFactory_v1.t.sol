@@ -102,8 +102,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             name: "Bonding Curve Token",
             symbol: "BCT",
             decimals: 18,
-            maxSupply: type(uint).max - 1,
-            initialAdmin: workflowDeployer
+            maxSupply: type(uint).max - 1
         });
 
         // mint collateral token to deployer and approve to factory
@@ -129,6 +128,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
@@ -166,6 +166,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
@@ -199,6 +200,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: workflowDeployer,
                 recipient: alice,
                 isRenouncedIssuanceToken: false,
                 isRenouncedWorkflow: false
@@ -227,6 +229,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: workflowDeployer,
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: false
@@ -255,6 +258,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: false,
                 isRenouncedWorkflow: true
@@ -297,6 +301,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: false,
                 isRenouncedWorkflow: false
@@ -328,6 +333,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
@@ -389,6 +395,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
@@ -419,6 +426,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: workflowDeployer,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
@@ -449,6 +457,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: workflowDeployer,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
@@ -485,6 +494,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 bcProperties: bcProperties,
                 issuanceTokenParams: issuanceTokenParams,
                 collateralToken: address(token),
+                admin: address(this),
                 recipient: workflowDeployer,
                 isRenouncedIssuanceToken: true,
                 isRenouncedWorkflow: true
