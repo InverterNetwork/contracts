@@ -24,9 +24,7 @@ contract DeployTransactionForwarder_v1 is Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             // Deploy the transaction forwarder.
-            implementation = address(
-                new TransactionForwarder_v1("Inverter Transaction Forwarder")
-            );
+            implementation = address(new TransactionForwarder_v1());
         }
         vm.stopBroadcast();
 

@@ -77,7 +77,7 @@ contract OrchestratorV1Test is Test {
         paymentProcessor = new PaymentProcessorV1Mock();
         governor = new GovernorV1Mock();
         moduleFactory = new ModuleFactoryV1Mock();
-        forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
+        forwarder = new TransactionForwarder_v1();
         token = new ERC20Mock("TestToken", "TST");
 
         address impl = address(new Orchestrator_v1(address(forwarder)));

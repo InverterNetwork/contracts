@@ -65,7 +65,7 @@ abstract contract ElasticReceiptTokenBaseV1Test is Test {
 
     function setUp() public {
         underlier = new ERC20Mock("Test ERC20", "TEST");
-        _forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
+        _forwarder = new TransactionForwarder_v1();
 
         address impl = address(new OrchestratorV1Mock(address(_forwarder)));
         _erb_orchestrator = OrchestratorV1Mock(Clones.clone(impl));
