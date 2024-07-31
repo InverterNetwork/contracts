@@ -85,6 +85,7 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param bcProperties The bonding curve's properties.
     /// @param issuanceTokenParams The issuance token's parameters.
     /// @param recipient The recipient of the initial issuance token supply.
+    /// @param admin Is set as token owner and workflow admin unless renounced.
     /// @param collateralToken The collateral token.
     /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
     /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
