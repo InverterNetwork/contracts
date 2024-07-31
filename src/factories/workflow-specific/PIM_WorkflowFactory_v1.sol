@@ -10,6 +10,8 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IPIM_WorkflowFactory_v1} from
     "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -27,10 +29,30 @@ contract PIM_WorkflowFactory_v1 is
     ERC2771Context,
     IPIM_WorkflowFactory_v1
 {
+    //--------------------------------------------------------------------------
+    // State Variables
+
     // store address of orchestratorfactory
     address public orchestratorFactory;
     // relative fees on collateral token in basis points
-    uint public fee;
+    uint public creationFee;
+
+    // mapping of bonding curve address to fee recipient address
+    mapping(address fundingManager => address feeRecipient) private
+        _pimFeeRecipients;
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier onlyPimFeeRecipient(address fundingManager) {
+        if (_msgSender() != _pimFeeRecipients[fundingManager]) {
+            revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
+    // Constructor
 
     constructor(
         address _orchestratorFactory,
@@ -46,7 +68,6 @@ contract PIM_WorkflowFactory_v1 is
     /// @inheritdoc IPIM_WorkflowFactory_v1
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
-        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
@@ -68,16 +89,22 @@ contract PIM_WorkflowFactory_v1 is
             PIMConfig.recipient, PIMConfig.bcProperties.initialIssuanceSupply
         );
 
-        // assemble fundingManager config and deploy orchestrator
+        // assemble fundingManager config, authorizer config and deploy orchestrator
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            PIMConfig.metadata,
+            PIMConfig.fundingManagerMetadata,
             abi.encode(
                 address(issuanceToken),
                 PIMConfig.bcProperties,
                 PIMConfig.collateralToken
             )
         );
+
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
+            PIMConfig.authorizerMetadata, abi.encode(address(this))
+        );
+
         orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
             .createOrchestrator(
             workflowConfig,
@@ -94,22 +121,19 @@ contract PIM_WorkflowFactory_v1 is
         // revoke minter role from factory
         issuanceToken.setMinter(address(this), false);
 
-        // if renounced token flag is set, renounce ownership over token, else transfer ownership to initial admin
+        // if renounced token flag is set, renounce ownership over token, else transfer ownership to specified admin
         if (PIMConfig.isRenouncedIssuanceToken) {
             _transferTokenOwnership(issuanceToken, address(0));
         } else {
-            _transferTokenOwnership(
-                issuanceToken, PIMConfig.issuanceTokenParams.initialAdmin
-            );
+            _transferTokenOwnership(issuanceToken, PIMConfig.admin);
         }
 
-        // if renounced workflow flag is set, renounce admin rights over workflow, else transfer admin rights to initial admin
+        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to specified admin
         if (PIMConfig.isRenouncedWorkflow) {
-            _transferWorkflowAdminRights(orchestrator, address(0));
+            // record the admin as fee recipient eligible to claim buy/sell fees
+            _pimFeeRecipients[fundingManager] = PIMConfig.admin;
         } else {
-            _transferWorkflowAdminRights(
-                orchestrator, PIMConfig.issuanceTokenParams.initialAdmin
-            );
+            _transferWorkflowAdminRights(orchestrator, PIMConfig.admin);
         }
 
         _manageInitialCollateral(
@@ -131,17 +155,45 @@ contract PIM_WorkflowFactory_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // onlyOwner Functions
+    // Permissioned Functions
+
+    // onlyOwner
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
-    function setFee(uint newFee) external onlyOwner {
-        fee = newFee;
-        emit IPIM_WorkflowFactory_v1.FeeSet(newFee);
+    function setCreationFee(uint newFee) external onlyOwner {
+        creationFee = newFee;
+        emit IPIM_WorkflowFactory_v1.CreationFeeSet(newFee);
     }
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
-    function withdrawFee(IERC20 token, address to) external onlyOwner {
+    function withdrawCreationFee(IERC20 token, address to) external onlyOwner {
         token.transfer(to, token.balanceOf(address(this)));
+    }
+
+    // onlyPimFeeRecipient
+
+    /// @inheritdoc IPIM_WorkflowFactory_v1
+    function withdrawPimFee(address fundingManager, address to)
+        external
+        onlyPimFeeRecipient(fundingManager)
+    {
+        uint amount =
+            IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
+        IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
+            to, amount
+        );
+        emit IPIM_WorkflowFactory_v1.CreationFeeWithdrawn(
+            fundingManager, to, amount
+        );
+    }
+
+    /// @inheritdoc IPIM_WorkflowFactory_v1
+    function transferPimFeeEligibility(address fundingManager, address to)
+        external
+        onlyPimFeeRecipient(fundingManager)
+    {
+        _pimFeeRecipients[fundingManager] = to;
+        emit IPIM_WorkflowFactory_v1.PimFeeRecipientUpdated(_msgSender(), to);
     }
 
     //--------------------------------------------------------------------------
@@ -156,7 +208,7 @@ contract PIM_WorkflowFactory_v1 is
             _msgSender(), fundingManager, initialCollateralSupply
         );
 
-        if (fee > 0) {
+        if (creationFee > 0) {
             uint feeAmount = _calculateFee(initialCollateralSupply);
             IERC20(collateralToken).transferFrom(
                 _msgSender(), address(this), feeAmount
@@ -187,7 +239,7 @@ contract PIM_WorkflowFactory_v1 is
     }
 
     function _calculateFee(uint collateralAmount) private view returns (uint) {
-        return collateralAmount * fee / 10_000;
+        return collateralAmount * creationFee / 10_000;
     }
 
     //--------------------------------------------------------------------------
