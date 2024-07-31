@@ -395,46 +395,36 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             })
         );
 
-        // CHECK: event is emitted from the bonding curve for fee withdrawal
-        // TODO: why does this fail if the fourth boolean is set to true?
+        // CHECK: bonding curve EMITS event for fee withdrawal
         vm.expectEmit(true, true, true, false);
         emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(address(this), 0);
         factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
 
     }
 
-    // TODO: I dont understand why this test is failing. If I comment out the `vm.expectRevert` I can see that the `withdrawPimFee` function reverts
 
-    // function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
-    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-    //     factory.createPIMWorkflow(
-    //         workflowConfig,
-    //         paymentProcessorConfig,
-    //         logicModuleConfigs,
-    //         IPIM_WorkflowFactory_v1.PIMConfig({
-    //             fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-    //             authorizerMetadata: roleAuthorizerMetadata,
-    //             bcProperties: bcProperties,
-    //             issuanceTokenParams: issuanceTokenParams,
-    //             collateralToken: address(token),
-    //             recipient: workflowDeployer,
-    //             isRenouncedIssuanceToken: true,
-    //             isRenouncedWorkflow: true
-    //         })
-    //     );
-    //     // TODO: I also dont understand why using `vm.startPrank` behaves differently than using `vm.prank`
+    function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
+            workflowConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            IPIM_WorkflowFactory_v1.PIMConfig({
+                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+                authorizerMetadata: roleAuthorizerMetadata,
+                bcProperties: bcProperties,
+                issuanceTokenParams: issuanceTokenParams,
+                collateralToken: address(token),
+                recipient: workflowDeployer,
+                isRenouncedIssuanceToken: true,
+                isRenouncedWorkflow: true
+            })
+        );
 
-    //     // 1. VERSION USING STARTPRANK
-    //     //
-    //     vm.startPrank(alice);
-    //     // vm.expectRevert();
-    //     factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
-    //     vm.stopPrank();
-
-    //     // 2. VERSION USING PRANK
-    //     // 
-    //     // // vm.expectRevert();
-    //     // vm.prank(alice);
-    //     // factory.withdrawPimFee(address(orchestrator.fundingManager()), alice);
-    // }
+        address fundingManager = address(orchestrator.fundingManager());
+        // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
+        vm.expectRevert();
+        vm.prank(alice);
+        factory.withdrawPimFee(fundingManager, alice);
+    }
 }
