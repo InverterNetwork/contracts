@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -96,12 +94,10 @@ contract PIM_WorkflowFactory_v1 is
                 PIMConfig.collateralToken
             )
         );
-
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             PIMConfig.authorizerMetadata, abi.encode(address(this))
         );
-
         orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
             .createOrchestrator(
             workflowConfig,
@@ -111,35 +107,39 @@ contract PIM_WorkflowFactory_v1 is
             moduleConfigs
         );
 
-        // get bonding curve (= funding manager) address
+        // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
+
+        // transfer initial collateral supply from msg.sender to  bonding curve and mint issuance token to recipient
+        _manageInitialSupplies(
+            IBondingCurveBase_v1(fundingManager),
+            IERC20(PIMConfig.collateralToken),
+            issuanceToken,
+            PIMConfig.bcProperties.initialCollateralSupply,
+            PIMConfig.bcProperties.initialIssuanceSupply,
+            PIMConfig.recipient
+        );
+
+        // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
 
-        // revoke minter role from factory
+        // disable factory to mint issuance token
         issuanceToken.setMinter(address(this), false);
 
-        // if renounced token flag is set, renounce ownership over token, else transfer ownership to specified admin
+        // if isRenouncedToken flag is set burn owner role, else transfer ownership to specified admin
         if (PIMConfig.isRenouncedIssuanceToken) {
             _transferTokenOwnership(issuanceToken, address(0));
         } else {
             _transferTokenOwnership(issuanceToken, PIMConfig.admin);
         }
 
-        // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to specified admin
+        // if isRenouncedWorkflow flag is set factory keeps admin rights over workflow, else transfer admin rights to specified admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the admin as fee recipient eligible to claim buy/sell fees
             _pimFeeRecipients[fundingManager] = PIMConfig.admin;
         } else {
             _transferWorkflowAdminRights(orchestrator, PIMConfig.admin);
         }
-
-        _manageInitialSupplies(
-            IBondingCurveBase_v1(fundingManager),
-            IERC20(PIMConfig.collateralToken),
-            issuanceToken,
-            PIMConfig.bcProperties.initialCollateralSupply,
-            PIMConfig.bcProperties.initialIssuanceSupply
-        );
 
         emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
             fundingManager,
@@ -203,10 +203,12 @@ contract PIM_WorkflowFactory_v1 is
         IERC20 collateralToken,
         ERC20Issuance_v1 issuanceToken,
         uint initialCollateralSupply,
-        uint initialIssuanceSupply
+        uint initialIssuanceSupply,
+        address recipient
     ) private {
+        // collateral token is paid for by the msg.sender
         collateralToken.transferFrom(
-            _msgSender(), fundingManager, initialCollateralSupply
+            _msgSender(), address(fundingManager), initialCollateralSupply
         );
 
         if (creationFee > 0) {
@@ -216,8 +218,9 @@ contract PIM_WorkflowFactory_v1 is
             );
         }
 
+        // issuance token is minted to the the specified recipient
         issuanceToken.mint(
-            PIMConfig.recipient, PIMConfig.bcProperties.initialIssuanceSupply
+            recipient, initialIssuanceSupply
         );
     }
 
