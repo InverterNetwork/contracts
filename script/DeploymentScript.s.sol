@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "forge-std/Test.sol";
+
 import {ModuleBeaconDeployer_v1} from "script/ModuleBeaconDeployer_v1.s.sol";
 
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
