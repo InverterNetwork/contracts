@@ -282,8 +282,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         token.approve(address(factory), initialCollateral + expectedFeeAmount);
 
         // create bonding curve
-        (IOrchestrator_v1 orchestrator, ) =
-        factory.createPIMWorkflow(
+        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             authorizerConfig,
             paymentProcessorConfig,

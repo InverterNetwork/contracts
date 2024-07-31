@@ -78,9 +78,8 @@ contract PIM_WorkflowFactory_v1 is
                 PIMConfig.collateralToken
             )
         );
-        orchestrator = IOrchestratorFactory_v1(
-            orchestratorFactory
-        ).createOrchestrator(
+        orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
+            .createOrchestrator(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
