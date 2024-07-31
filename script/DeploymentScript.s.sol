@@ -18,12 +18,20 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
     address public moduleFactory;
     address public orchestratorFactory;
 
-    //@todo do logs
     function run() public {
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Start Deployment");
+
         //Create External Singletons
         createExternalSingletons();
 
         //Deploy External Contracts
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Deploy External Contracts");
 
         governor = proxyAndBeaconDeployer.deployBeaconAndSetupProxy(
             governorMetadata.title,
@@ -59,6 +67,11 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         createWorkflowAndFactorySingletons(forwarder);
 
         //Deploy Factory Contracts
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Deploy Factory Contracts");
+
         moduleFactory = proxyAndBeaconDeployer.deployBeaconAndSetupProxy(
             moduleFactoryMetadata.title,
             inverterReverter,
@@ -83,16 +96,29 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         deployModuleBeaconsAndFillRegistrationData(inverterReverter, forwarder);
 
         //Initialize Protocol Contracts
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Initialize Protocol Contracts");
 
+        //Governor
+        console2.log("-Governor");
         Governor_v1(governor).init(
             communityMultisig, teamMultisig, 1 weeks, feeManager
         );
 
+        //FeeManager
+        console2.log("-FeeManager");
         FeeManager_v1(feeManager).init(governor, treasury, 100, 100);
 
+        //ModuleFactory
+        console2.log("-ModuleFactory");
         ModuleFactory_v1(moduleFactory).init(
             governor, initialMetadataRegistration, initialBeaconRegistration
         );
+
+        //OrchestratorFactory
+        console2.log("-OrchestratorFactory");
         OrchestratorFactory_v1(orchestratorFactory).init(
             governor, orchestratorBeacon, moduleFactory
         );

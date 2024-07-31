@@ -6,6 +6,8 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // External Contracts
+
+    //Governor
     IModule_v1.Metadata public governorMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -13,6 +15,8 @@ contract MetadataCollection_v1 {
         "https://github.com/InverterNetwork/inverter-contracts",
         "Governor_v1"
     );
+
+    //TransactionForwarder
     IModule_v1.Metadata public forwarderMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -20,6 +24,8 @@ contract MetadataCollection_v1 {
         "https://github.com/InverterNetwork/inverter-contracts",
         "TransactionForwarder_v1"
     );
+
+    //FeeManager
     IModule_v1.Metadata public feeManagerMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -31,6 +37,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // Factories
 
+    //ModuleFactory
     IModule_v1.Metadata public moduleFactoryMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -38,6 +45,8 @@ contract MetadataCollection_v1 {
         "https://github.com/InverterNetwork/inverter-contracts",
         "ModuleFactory_v1"
     );
+
+    //OrchestratorFactory
     IModule_v1.Metadata public orchestratorFactoryMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -47,6 +56,8 @@ contract MetadataCollection_v1 {
     );
 
     // ------------------------------------------------------------------------
+    //Orchestrator
+
     //Orchestrator
     IModule_v1.Metadata public orchestratorMetadata = IModule_v1.Metadata(
         1,

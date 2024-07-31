@@ -59,10 +59,13 @@ contract ModuleBeaconDeployer_v1 is
         address reverter,
         address governor
     ) public {
-        //@todo add Logs
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Deploy Module Beacons and Fill Registration Data");
 
         //Create Orchestrator Beacon
-        orchestratorBeacon = IInverterBeacon_v1(
+        orchestratorBeacon = IInverterBeacon_v1( //@note seperate function as not directly module
             proxyAndBeaconDeployer.deployInverterBeacon(
                 orchestratorMetadata.title,
                 reverter,

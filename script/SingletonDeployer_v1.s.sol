@@ -85,7 +85,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public ext_TransactionForwarder_v1;
     address public ext_FeeManager_v1;
 
-    //@note Add Token here?
+    //@note Add IssuanceToken here?
 
     //Factories
     address public fac_ModuleFactory_v1;
@@ -138,10 +138,15 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     ); */
 
     function createExternalSingletons() public {
-        //@todo add Logs
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Create External Singletons");
+        console2.log("-External Contracts");
+
         //External contracts
-        ext_InverterReverter_v1 = factory.deployWithCreate2( //@note no Beacon strcuture here right?
-        factorySalt, vm.getCode("InverterReverte_v1.sol:InverterReverter_v1"));
+        ext_InverterReverter_v1 = factory.deployWithCreate2( //@note no Beacon structure here right?
+        factorySalt, vm.getCode("InverterReverte_v1.sol:InverterReverter_v1")); //@note can we add a string parameter for the factory? So we can log which contract is called here?
 
         ext_Governor_v1 = factory.deployWithCreate2(
             factorySalt, vm.getCode("Governor_v1.sol:Governor_v1")
@@ -160,9 +165,14 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     function createWorkflowAndFactorySingletons(address transactionForwarder)
         public
     {
-        //@todo add Logs
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("Create Workflow and Factory Singletons");
 
         //Factories
+        console2.log("-Factories");
+
         fac_ModuleFactory_v1 = factory.deployWithCreate2(
             factorySalt,
             abi.encodePacked(
@@ -180,8 +190,11 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         //Modules
+        console2.log("-Modules");
 
         //Authorizer
+        console2.log("--Authorizer");
+
         mod_Aut_Roles_v1 = factory.deployWithCreate2(
             factorySalt, vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
         );
@@ -195,6 +208,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         //Funding Managers
+        console2.log("--Funding Managers");
+
         mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 = factory.deployWithCreate2(
             factorySalt,
             vm.getCode(
@@ -217,6 +232,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         ); */
 
         //Logic Modules
+        console2.log("--Logic Modules");
+
         mod_LM_PC_Bounties_v1 = factory.deployWithCreate2(
             factorySalt, vm.getCode("LM_PC_Bounties_v1.sol:LM_PC_Bounties_v1")
         );
@@ -239,6 +256,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         //Payment Processors
+        console2.log("--Payment Processors");
+
         mod_PP_Simple_v1 = factory.deployWithCreate2(
             factorySalt, vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
         );
@@ -247,6 +266,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         //Orchestrator
+        console2.log("-Orchestrator");
+
         orc_Orchestrator_v1 = factory.deployWithCreate2(
             factorySalt, vm.getCode("Orchestrator_v1.sol:Orchestrator_v1")
         );
