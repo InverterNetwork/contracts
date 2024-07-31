@@ -44,9 +44,24 @@ interface IPIM_WorkflowFactory_v1 {
         bool isRenouncedWorkflow
     );
 
-    /// @notice Event emitted factory owner sets new fee..
+    /// @notice Event emitted when factory owner sets new fee..
     /// @param fee The fee in basis points.
-    event FeeSet(uint fee);
+    event CreationFeeSet(uint fee);
+
+    /// @notice Event emitted when factory owner withdraws accumulated creation fees.
+    /// @param fundingManager The address of the funding manager from which to withdraw fees.
+    /// @param to The address to which the fees are sent.
+    /// @param amount The amount of fees that were withdrawn.
+    event CreationFeeWithdrawn(
+        address indexed fundingManager, address indexed to, uint amount
+    );
+
+    /// @notice Event emitted factory owner sets new fee..
+    /// @param oldRecipient The previous pim fee recipient.
+    /// @param newRecipient The new pim fee recipient.
+    event PimFeeRecipientUpdated(
+        address indexed oldRecipient, address indexed newRecipient
+    );
 
     //--------------------------------------------------------------------------
     // Structs

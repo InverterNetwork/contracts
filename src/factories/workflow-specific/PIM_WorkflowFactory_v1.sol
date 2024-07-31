@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
-
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -48,9 +45,6 @@ contract PIM_WorkflowFactory_v1 is
     // Modifiers
 
     modifier onlyPimFeeRecipient(address fundingManager) {
-        console.log("MODIFIER");
-        console.log("FUNDING MANAGER: ", fundingManager);
-        console.log("RECIPIENT: ", _pimFeeRecipients[fundingManager]);
         if (_msgSender() != _pimFeeRecipients[fundingManager]) {
             revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
         }
@@ -110,10 +104,9 @@ contract PIM_WorkflowFactory_v1 is
         IOrchestratorFactory_v1.ModuleConfig(
             PIMConfig.authorizerMetadata, abi.encode(address(this))
         );
-        
-        orchestrator = IOrchestratorFactory_v1(
-            orchestratorFactory
-        ).createOrchestrator(
+
+        orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
+            .createOrchestrator(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
@@ -140,8 +133,6 @@ contract PIM_WorkflowFactory_v1 is
         // if renounced workflow flag is set factory keeps admin rights over workflow, else transfer admin rights to initial admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the deployer as fee recipient eligible to claim buy/sell fees
-            console.log("SETTING FEE RECIPIENT: ", _msgSender());
-            console.log("FOR FUNDING MANAGER: ", fundingManager);
             _pimFeeRecipients[fundingManager] = _msgSender();
         } else {
             // TODO: check if initial admin is the right target
@@ -176,7 +167,7 @@ contract PIM_WorkflowFactory_v1 is
     /// @inheritdoc IPIM_WorkflowFactory_v1
     function setCreationFee(uint newFee) external onlyOwner {
         creationFee = newFee;
-        emit IPIM_WorkflowFactory_v1.FeeSet(newFee);
+        emit IPIM_WorkflowFactory_v1.CreationFeeSet(newFee);
     }
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
@@ -190,9 +181,22 @@ contract PIM_WorkflowFactory_v1 is
         external
         onlyPimFeeRecipient(fundingManager)
     {
+        uint amount =
+            IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
         IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
-            to, IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected()
+            to, amount
         );
+        emit IPIM_WorkflowFactory_v1.CreationFeeWithdrawn(
+            fundingManager, to, amount
+        );
+    }
+
+    function transferPimFeeEligibility(address fundingManager, address to)
+        external
+        onlyPimFeeRecipient(fundingManager)
+    {
+        _pimFeeRecipients[fundingManager] = to;
+        emit IPIM_WorkflowFactory_v1.PimFeeRecipientUpdated(_msgSender(), to);
     }
 
     //--------------------------------------------------------------------------
