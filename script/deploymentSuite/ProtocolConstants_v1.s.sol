@@ -28,6 +28,9 @@ contract ProtocolConstants_v1 is Script {
     address deterministicFactory =
         vm.envAddress("DETERMINISTIC_FACTORY_ADDRESS");
 
+    bytes32 public factorySalt =
+        keccak256(abi.encodePacked("inverter-deployment"));
+
     // ------------------------------------------------------------------------
     // Important Configuration Data
     // ------------------------------------------------------------------------

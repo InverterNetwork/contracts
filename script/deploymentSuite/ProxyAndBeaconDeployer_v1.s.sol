@@ -24,7 +24,6 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
 
-    bytes32 factorySalt = keccak256(abi.encodePacked("inverter-deployment"));
 
     function deployBeaconAndSetupProxy(
         string memory implementationName,

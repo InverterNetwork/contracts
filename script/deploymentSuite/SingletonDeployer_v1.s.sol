@@ -77,8 +77,6 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
 
-    bytes32 factorySalt = keccak256(abi.encodePacked("inverter-deployment"));
-
     // External contracts
 
     address public impl_ext_InverterReverter_v1;
