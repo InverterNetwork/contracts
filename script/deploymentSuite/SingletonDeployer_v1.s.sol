@@ -4,7 +4,8 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
-import {ProtocolConstants_v1} from "script/ProtocolConstants_v1.s.sol";
+import {ProtocolConstants_v1} from
+    "script/deploymentSuite/ProtocolConstants_v1.s.sol";
 import {IDeterministicFactory_v1} from
     "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
 
@@ -78,41 +79,41 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
     bytes32 factorySalt = keccak256(abi.encodePacked("inverter-deployment"));
 
-    //External contracts
+    // External contracts
 
     address public impl_ext_InverterReverter_v1;
     address public impl_ext_Governor_v1;
     address public impl_ext_TransactionForwarder_v1;
     address public impl_ext_FeeManager_v1;
 
-    //Factories
+    // Factories
     address public impl_fac_ModuleFactory_v1;
     address public impl_fac_OrchestratorFactory_v1;
 
-    //Modules
+    // Modules
 
-    //Authorizer
+    // Authorizer
     address public impl_mod_Aut_Roles_v1;
     address public impl_mod_Aut_TokenGated_Roles_v1;
     address public impl_mod_Aut_Ext_VotingRoles_v1;
 
-    //Funding Managers
+    // Funding Managers
     address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
     address public impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1;
-    //address public impl_mod_FM_DepositVault_v1;
+    // address public impl_mod_FM_DepositVault_v1;
 
-    //Logic Modules
+    // Logic Modules
     address public impl_mod_LM_PC_Bounties_v1;
     address public impl_mod_LM_PC_KPIRewarder_v1;
     address public impl_mod_LM_PC_PaymentRouter_v1;
     address public impl_mod_LM_PC_RecurringPayments_v1;
     address public impl_mod_LM_PC_Staking_v1;
 
-    //Payment Processors
+    // Payment Processors
     address public impl_mod_PP_Simple_v1;
     address public impl_mod_PP_Streaming_v1;
 
-    //Orchestrator
+    // Orchestrator
     address public impl_orc_Orchestrator_v1;
 
     //--------------------------------------------------------------------------
@@ -141,7 +142,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         console2.log("Create External Implementation Singletons");
         console2.log("-External Contracts");
 
-        //External contracts
+        // External contracts
         impl_ext_InverterReverter_v1 = deployAndLogWithCreate2(
             "InverterReverter_v1",
             factorySalt,
@@ -175,7 +176,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
         console2.log("Create Workflow and Factory Implementation Singletons");
 
-        //Factories
+        // Factories
         console2.log("-Factories");
 
         impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
@@ -196,10 +197,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             )
         );
 
-        //Modules
+        // Modules
         console2.log("-Modules");
 
-        //Authorizer
+        // Authorizer
         console2.log("--Authorizer");
 
         impl_mod_Aut_Roles_v1 = deployAndLogWithCreate2(
@@ -220,7 +221,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             )
         );
 
-        //Funding Managers
+        // Funding Managers
         console2.log("--Funding Managers");
 
         impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 =
@@ -246,7 +247,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
         ); */
 
-        //Logic Modules
+        // Logic Modules
         console2.log("--Logic Modules");
 
         impl_mod_LM_PC_Bounties_v1 = deployAndLogWithCreate2(
@@ -277,7 +278,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             vm.getCode("LM_PC_Staking_v1.sol:LM_PC_Staking_v1")
         );
 
-        //Payment Processors
+        // Payment Processors
         console2.log("--Payment Processors");
 
         impl_mod_PP_Simple_v1 = deployAndLogWithCreate2(
@@ -291,7 +292,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             vm.getCode("PP_Streaming_v1.sol:PP_Streaming_v1")
         );
 
-        //Orchestrator
+        // Orchestrator
         console2.log("-Orchestrator");
 
         impl_orc_Orchestrator_v1 = deployAndLogWithCreate2(

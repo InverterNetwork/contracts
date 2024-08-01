@@ -7,7 +7,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // External Contracts
 
-    //Governor
+    // Governor
     IModule_v1.Metadata public governorMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -16,7 +16,7 @@ contract MetadataCollection_v1 {
         "Governor_v1"
     );
 
-    //TransactionForwarder
+    // TransactionForwarder
     IModule_v1.Metadata public forwarderMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -25,7 +25,7 @@ contract MetadataCollection_v1 {
         "TransactionForwarder_v1"
     );
 
-    //FeeManager
+    // FeeManager
     IModule_v1.Metadata public feeManagerMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -37,7 +37,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // Factories
 
-    //ModuleFactory
+    // ModuleFactory
     IModule_v1.Metadata public moduleFactoryMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -46,7 +46,7 @@ contract MetadataCollection_v1 {
         "ModuleFactory_v1"
     );
 
-    //OrchestratorFactory
+    // OrchestratorFactory
     IModule_v1.Metadata public orchestratorFactoryMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -56,9 +56,9 @@ contract MetadataCollection_v1 {
     );
 
     // ------------------------------------------------------------------------
-    //Orchestrator
+    // Orchestrator
 
-    //Orchestrator
+    // Orchestrator
     IModule_v1.Metadata public orchestratorMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -70,7 +70,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // Authorizer
 
-    //RoleAuthorizer
+    // RoleAuthorizer
     IModule_v1.Metadata public roleAuthorizerMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -79,7 +79,7 @@ contract MetadataCollection_v1 {
         "AUT_Roles_v1"
     );
 
-    //TokenGatedRoleAuthorizer
+    // TokenGatedRoleAuthorizer
     IModule_v1.Metadata public tokenGatedRoleAuthorizerMetadata = IModule_v1
         .Metadata(
         1,
@@ -89,7 +89,7 @@ contract MetadataCollection_v1 {
         "AUT_TokenGated_Roles_v1"
     );
 
-    //VotingRoles
+    // VotingRoles
     IModule_v1.Metadata public votingRolesMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -101,7 +101,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // Funding Manager
 
-    //BancorRedeemingVirtualSupplyFundingManager
+    // BancorRedeemingVirtualSupplyFundingManager
     IModule_v1.Metadata public
         bancorRedeemingVirtualSupplyFundingManagerMetadata = IModule_v1.Metadata(
             1,
@@ -111,7 +111,7 @@ contract MetadataCollection_v1 {
             "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
         );
 
-    //RestrictedBancorRedeemingVirtualSupplyFundingManager
+    // RestrictedBancorRedeemingVirtualSupplyFundingManager
     IModule_v1.Metadata public
         restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata =
         IModule_v1.Metadata(
@@ -123,7 +123,7 @@ contract MetadataCollection_v1 {
         );
 
     /* 
-    //DepositVaultFundingManager
+    // DepositVaultFundingManager
     IModule_v1.Metadata public depositVaultFundingManagerMetadata =
     IModule_v1.Metadata(
         1,
@@ -136,7 +136,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // Logic Module
 
-    //Bounties
+    // Bounties
     IModule_v1.Metadata public bountiesMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -145,7 +145,7 @@ contract MetadataCollection_v1 {
         "LM_PC_Bounties_v1"
     );
 
-    //KPIRewarder
+    // KPIRewarder
     IModule_v1.Metadata public kpiRewarderMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -154,7 +154,7 @@ contract MetadataCollection_v1 {
         "LM_PC_KPIRewarder_v1"
     );
 
-    //PaymentRouter
+    // PaymentRouter
     IModule_v1.Metadata public paymentRouterMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -163,7 +163,7 @@ contract MetadataCollection_v1 {
         "LM_PC_PaymentRouter_v1"
     );
 
-    //RecurringPayments
+    // RecurringPayments
     IModule_v1.Metadata public recurringPaymentsMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -172,7 +172,7 @@ contract MetadataCollection_v1 {
         "LM_PC_RecurringPayments_v1"
     );
 
-    //Staking
+    // Staking
     IModule_v1.Metadata public stakingMetadata = IModule_v1.Metadata(
         1,
         0,
@@ -184,7 +184,7 @@ contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // Payment Processor
 
-    //SimplePaymentProcessor
+    // SimplePaymentProcessor
     IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
         .Metadata(
         1,
@@ -194,7 +194,7 @@ contract MetadataCollection_v1 {
         "PP_Simple_v1"
     );
 
-    //StreamingPaymentProcessor
+    // StreamingPaymentProcessor
     IModule_v1.Metadata public streamingPaymentProcessorMetadata = IModule_v1
         .Metadata(
         1,

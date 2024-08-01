@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {ModuleBeaconDeployer_v1} from "script/ModuleBeaconDeployer_v1.s.sol";
+import {ModuleBeaconDeployer_v1} from
+    "script/deploymentSuite/ModuleBeaconDeployer_v1.s.sol";
 
 import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
@@ -19,16 +20,16 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
     address public moduleFactory;
     address public orchestratorFactory;
 
-    function run() public {
+    function run() public virtual {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
         console2.log("Start Deployment");
 
-        //Create External Singletons
+        // Create External Singletons
         createExternalSingletons();
 
-        //Deploy External Contracts
+        // Deploy External Contracts
         console2.log(
             "--------------------------------------------------------------------------------"
         );
@@ -64,10 +65,10 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             feeManagerMetadata.patchVersion
         );
 
-        //Deploy Module,Orchestrator and Factory Singletons
+        // Deploy Module,Orchestrator and Factory Singletons
         createWorkflowAndFactorySingletons(forwarder);
 
-        //Deploy Factory Contracts
+        // Deploy Factory Contracts
         console2.log(
             "--------------------------------------------------------------------------------"
         );
@@ -93,32 +94,32 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             orchestratorFactoryMetadata.patchVersion
         );
 
-        //Deploy Module Beacons
+        // Deploy Module Beacons
         deployModuleBeaconsAndFillRegistrationData(inverterReverter, forwarder);
 
-        //Initialize Protocol Contracts
+        // Initialize Protocol Contracts
         console2.log(
             "--------------------------------------------------------------------------------"
         );
         console2.log("Initialize Protocol Contracts");
 
-        //Governor
+        // Governor
         console2.log("-Governor");
         Governor_v1(governor).init(
             communityMultisig, teamMultisig, 1 weeks, feeManager
         );
 
-        //FeeManager
+        // FeeManager
         console2.log("-FeeManager");
         FeeManager_v1(feeManager).init(governor, treasury, 100, 100);
 
-        //ModuleFactory
+        // ModuleFactory
         console2.log("-ModuleFactory");
         ModuleFactory_v1(moduleFactory).init(
             governor, initialMetadataRegistration, initialBeaconRegistration
         );
 
-        //OrchestratorFactory
+        // OrchestratorFactory
         console2.log("-OrchestratorFactory");
         OrchestratorFactory_v1(orchestratorFactory).init(
             governor, orchestratorBeacon, moduleFactory

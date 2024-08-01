@@ -5,7 +5,8 @@ import "forge-std/Script.sol";
 import {IDeterministicFactory_v1} from
     "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
 
-import {ProtocolConstants_v1} from "script/ProtocolConstants_v1.s.sol";
+import {ProtocolConstants_v1} from
+    "script/deploymentSuite/ProtocolConstants_v1.s.sol";
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";

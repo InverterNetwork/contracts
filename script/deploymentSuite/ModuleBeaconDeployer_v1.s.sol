@@ -4,10 +4,13 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
-import {SingletonDeployer_v1} from "script/SingletonDeployer_v1.s.sol";
-import {MetadataCollection_v1} from "script/MetadataCollection_v1.s.sol";
+import {SingletonDeployer_v1} from
+    "script/deploymentSuite/SingletonDeployer_v1.s.sol";
+import {MetadataCollection_v1} from
+    "script/deploymentSuite/MetadataCollection_v1.s.sol";
 
-import {ProxyAndBeaconDeployer_v1} from "script/ProxyAndBeaconDeployer_v1.s.sol";
+import {ProxyAndBeaconDeployer_v1} from
+    "script/deploymentSuite/ProxyAndBeaconDeployer_v1.s.sol";
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
@@ -20,11 +23,11 @@ contract ModuleBeaconDeployer_v1 is
     ProxyAndBeaconDeployer_v1 public proxyAndBeaconDeployer =
         new ProxyAndBeaconDeployer_v1();
 
-    //ModuleFactory Registration Data
+    // ModuleFactory Registration Data
     IModule_v1.Metadata[] initialMetadataRegistration;
     IInverterBeacon_v1[] initialBeaconRegistration;
 
-    //Orchestrator Beacon
+    // Orchestrator Beacon
     IInverterBeacon_v1 orchestratorBeacon;
 
     function deployModuleBeaconsAndFillRegistrationData(
@@ -36,8 +39,8 @@ contract ModuleBeaconDeployer_v1 is
         );
         console2.log("Deploy Module Beacons and Fill Registration Data");
 
-        //Create Orchestrator Beacon
-        orchestratorBeacon = IInverterBeacon_v1( //@note seperate function as not directly module
+        // Create Orchestrator Beacon
+        orchestratorBeacon = IInverterBeacon_v1( // @note seperate function as not directly module
             proxyAndBeaconDeployer.deployInverterBeacon(
                 orchestratorMetadata.title,
                 reverter,
@@ -50,9 +53,9 @@ contract ModuleBeaconDeployer_v1 is
         );
 
         //--------------------------------------------------------------------------
-        //Authorizer
+        // Authorizer
 
-        //RoleAuthorizer
+        // RoleAuthorizer
         initialMetadataRegistration.push(roleAuthorizerMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -68,7 +71,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //TokenGatedRoleAuthorizer
+        // TokenGatedRoleAuthorizer
         initialMetadataRegistration.push(tokenGatedRoleAuthorizerMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -84,7 +87,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //VotingRoles
+        // VotingRoles
         initialMetadataRegistration.push(votingRolesMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -101,9 +104,9 @@ contract ModuleBeaconDeployer_v1 is
         );
 
         //--------------------------------------------------------------------------
-        //Funding Managers
+        // Funding Managers
 
-        //BancorRedeemingVirtualSupplyFundingManager
+        // BancorRedeemingVirtualSupplyFundingManager
         initialMetadataRegistration.push(
             bancorRedeemingVirtualSupplyFundingManagerMetadata
         );
@@ -124,7 +127,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //RestrictedBancorRedeemingVirtualSupplyFundingManager
+        // RestrictedBancorRedeemingVirtualSupplyFundingManager
         initialMetadataRegistration.push(
             restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
         );
@@ -147,7 +150,7 @@ contract ModuleBeaconDeployer_v1 is
         );
 
         /*  
-        //DepositVaultFundingManager
+        // DepositVaultFundingManager
         initialMetadataRegistration.push(
             depositVaultFundingManagerMetadata
         );
@@ -166,9 +169,9 @@ contract ModuleBeaconDeployer_v1 is
         ); */
 
         //--------------------------------------------------------------------------
-        //Logic Modules
+        // Logic Modules
 
-        //Bounties
+        // Bounties
         initialMetadataRegistration.push(bountiesMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -184,7 +187,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //KPIRewarder
+        // KPIRewarder
         initialMetadataRegistration.push(kpiRewarderMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -200,7 +203,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //PaymentRouter
+        // PaymentRouter
         initialMetadataRegistration.push(paymentRouterMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -216,7 +219,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //RecurringPayments
+        // RecurringPayments
         initialMetadataRegistration.push(recurringPaymentsMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -232,7 +235,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //Staking
+        // Staking
         initialMetadataRegistration.push(stakingMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -249,9 +252,9 @@ contract ModuleBeaconDeployer_v1 is
         );
 
         //--------------------------------------------------------------------------
-        //Payment Processors
+        // Payment Processors
 
-        //SimplePaymentProcessor
+        // SimplePaymentProcessor
         initialMetadataRegistration.push(simplePaymentProcessorMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
@@ -267,7 +270,7 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        //StreamingPaymentProcessor
+        // StreamingPaymentProcessor
         initialMetadataRegistration.push(streamingPaymentProcessorMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
