@@ -1,5 +1,6 @@
 @oz-up/=lib/openzeppelin-contracts-upgradeable/contracts/
 @oz/=lib/openzeppelin-contracts/contracts/
+@df/=lib/deterministic-factory/src/
 @uma/=lib/protocol/packages/core/contracts/
 @ex/=src/external/
 @fm/=src/modules/fundingManager/
