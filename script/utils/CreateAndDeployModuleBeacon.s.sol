@@ -21,12 +21,16 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
     ProxyAndBeaconDeployer_v1 public proxyAndBeaconDeployer =
         new ProxyAndBeaconDeployer_v1();
 
+    // @todo Run with forge script
+    // script/utils/CreateAndDeployModuleBeacon.s.sol
+    // "run(string,string,address,address,uint,uint,uint)"
+    // "ExampleModule" "src/module/ExampleModule.sol" "0x0000000000000000000000000000000000000001" "0x0000000000000000000000000000000000000002" 1 0 0
+
     function run(
         string memory moduleName,
         string memory modulePath,
         address reverter,
         address owner,
-        address implementation,
         uint majorVersion,
         uint minorVersion,
         uint patchVersion
@@ -54,5 +58,7 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
             patchVersion
         );
         console2_log("Deployed %s beacon at address %s", moduleName, beacon);
+
+        vm.endBroadcast();
     }
 }
