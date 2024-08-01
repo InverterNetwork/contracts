@@ -2,18 +2,20 @@
 pragma solidity ^0.8.0;
 
 import {Script} from "forge-std/Script.sol";
-import {Test} from "forge-std/Test.sol";
 
-import {ProtocolConstants} from
-    "scrript/deploymentSuite/ProtocolConstants_v1.s.sol";
+import "forge-std/Test.sol";
+
+import {ProtocolConstants_v1} from
+    "script/deploymentSuite/ProtocolConstants_v1.s.sol";
 
 import {ProxyAndBeaconDeployer_v1} from
     "script/deploymentSuite/ProxyAndBeaconDeployer_v1.s.sol";
 
-import {IDeterministicFactory} from "src/interfaces/IDeterministicFactory.sol";
+import {IDeterministicFactory_v1} from
+    "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
 
 contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
-    IDeterministicFactory public factory =
+    IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
 
     bytes32 factorySalt = keccak256(abi.encodePacked("inverter-deployment"));
@@ -41,7 +43,7 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
         address implementation = factory.deployWithCreate2(
             factorySalt, abi.encodePacked(vm.getCode(modulePath))
         );
-        console2_log(
+        console2.log(
             "Deployed %s implementation at address %s",
             moduleName,
             implementation
@@ -57,8 +59,8 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
             minorVersion,
             patchVersion
         );
-        console2_log("Deployed %s beacon at address %s", moduleName, beacon);
+        console2.log("Deployed %s beacon at address %s", moduleName, beacon);
 
-        vm.endBroadcast();
+        vm.stopBroadcast();
     }
 }
