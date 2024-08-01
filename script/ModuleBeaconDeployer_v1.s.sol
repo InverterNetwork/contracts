@@ -11,35 +11,7 @@ import {ProxyAndBeaconDeployer_v1} from "script/ProxyAndBeaconDeployer_v1.s.sol"
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
-// Modules
-// =============================================================================
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-
-// Funding Managers
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
-import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-
-// Authorization
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
-import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-import {AUT_EXT_VotingRoles_v1} from
-    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
-
-// Payment Processors
-import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
-import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
-
-// Logic Modules
-import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
-import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
-import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
-import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
-import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 contract ModuleBeaconDeployer_v1 is
     SingletonDeployer_v1,
@@ -70,7 +42,7 @@ contract ModuleBeaconDeployer_v1 is
                 orchestratorMetadata.title,
                 reverter,
                 governor,
-                orc_Orchestrator_v1,
+                impl_orc_Orchestrator_v1,
                 orchestratorMetadata.majorVersion,
                 orchestratorMetadata.minorVersion,
                 orchestratorMetadata.patchVersion
@@ -88,7 +60,7 @@ contract ModuleBeaconDeployer_v1 is
                     roleAuthorizerMetadata.title,
                     reverter,
                     governor,
-                    mod_Aut_Roles_v1,
+                    impl_mod_Aut_Roles_v1,
                     roleAuthorizerMetadata.majorVersion,
                     roleAuthorizerMetadata.minorVersion,
                     roleAuthorizerMetadata.patchVersion
@@ -104,7 +76,7 @@ contract ModuleBeaconDeployer_v1 is
                     tokenGatedRoleAuthorizerMetadata.title,
                     reverter,
                     governor,
-                    mod_Aut_TokenGated_Roles_v1,
+                    impl_mod_Aut_TokenGated_Roles_v1,
                     tokenGatedRoleAuthorizerMetadata.majorVersion,
                     tokenGatedRoleAuthorizerMetadata.minorVersion,
                     tokenGatedRoleAuthorizerMetadata.patchVersion
@@ -120,7 +92,7 @@ contract ModuleBeaconDeployer_v1 is
                     votingRolesMetadata.title,
                     reverter,
                     governor,
-                    mod_Aut_EXT_VotingRoles_v1,
+                    impl_mod_Aut_Ext_VotingRoles_v1,
                     votingRolesMetadata.majorVersion,
                     votingRolesMetadata.minorVersion,
                     votingRolesMetadata.patchVersion
@@ -141,7 +113,7 @@ contract ModuleBeaconDeployer_v1 is
                     bancorRedeemingVirtualSupplyFundingManagerMetadata.title,
                     reverter,
                     governor,
-                    mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1,
+                    impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1,
                     bancorRedeemingVirtualSupplyFundingManagerMetadata
                         .majorVersion,
                     bancorRedeemingVirtualSupplyFundingManagerMetadata
@@ -163,29 +135,13 @@ contract ModuleBeaconDeployer_v1 is
                         .title,
                     reverter,
                     governor,
-                    mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1,
+                    impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1,
                     restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
                         .majorVersion,
                     restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
                         .minorVersion,
                     restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata
                         .patchVersion
-                )
-            )
-        );
-
-        //RebasingFundingManager
-        initialMetadataRegistration.push(rebasingFundingManagerMetadata);
-        initialBeaconRegistration.push(
-            IInverterBeacon_v1(
-                proxyAndBeaconDeployer.deployInverterBeacon(
-                    rebasingFundingManagerMetadata.title,
-                    reverter,
-                    governor,
-                    mod_FM_Rebasing_v1,
-                    rebasingFundingManagerMetadata.majorVersion,
-                    rebasingFundingManagerMetadata.minorVersion,
-                    rebasingFundingManagerMetadata.patchVersion
                 )
             )
         );
@@ -201,7 +157,7 @@ contract ModuleBeaconDeployer_v1 is
                     depositVaultFundingManagerMetadata.title,
                     reverter,
                     governor,
-                    mod_FM_DepositVault_v1,
+                    impl_mod_FM_DepositVault_v1,
                     depositVaultFundingManagerMetadata.majorVersion,
                     depositVaultFundingManagerMetadata.minorVersion,
                     depositVaultFundingManagerMetadata.patchVersion
@@ -220,7 +176,7 @@ contract ModuleBeaconDeployer_v1 is
                     bountiesMetadata.title,
                     reverter,
                     governor,
-                    mod_LM_PC_Bounties_v1,
+                    impl_mod_LM_PC_Bounties_v1,
                     bountiesMetadata.majorVersion,
                     bountiesMetadata.minorVersion,
                     bountiesMetadata.patchVersion
@@ -236,7 +192,7 @@ contract ModuleBeaconDeployer_v1 is
                     kpiRewarderMetadata.title,
                     reverter,
                     governor,
-                    mod_LM_PC_KPIRewarder_v1,
+                    impl_mod_LM_PC_KPIRewarder_v1,
                     kpiRewarderMetadata.majorVersion,
                     kpiRewarderMetadata.minorVersion,
                     kpiRewarderMetadata.patchVersion
@@ -252,7 +208,7 @@ contract ModuleBeaconDeployer_v1 is
                     paymentRouterMetadata.title,
                     reverter,
                     governor,
-                    mod_LM_PC_PaymentRouter_v1,
+                    impl_mod_LM_PC_PaymentRouter_v1,
                     paymentRouterMetadata.majorVersion,
                     paymentRouterMetadata.minorVersion,
                     paymentRouterMetadata.patchVersion
@@ -268,7 +224,7 @@ contract ModuleBeaconDeployer_v1 is
                     recurringPaymentsMetadata.title,
                     reverter,
                     governor,
-                    mod_LM_PC_RecurringPayments_v1,
+                    impl_mod_LM_PC_RecurringPayments_v1,
                     recurringPaymentsMetadata.majorVersion,
                     recurringPaymentsMetadata.minorVersion,
                     recurringPaymentsMetadata.patchVersion
@@ -284,7 +240,7 @@ contract ModuleBeaconDeployer_v1 is
                     stakingMetadata.title,
                     reverter,
                     governor,
-                    mod_LM_PC_Staking_v1,
+                    impl_mod_LM_PC_Staking_v1,
                     stakingMetadata.majorVersion,
                     stakingMetadata.minorVersion,
                     stakingMetadata.patchVersion
@@ -303,7 +259,7 @@ contract ModuleBeaconDeployer_v1 is
                     simplePaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    mod_PP_Simple_v1,
+                    impl_mod_PP_Simple_v1,
                     simplePaymentProcessorMetadata.majorVersion,
                     simplePaymentProcessorMetadata.minorVersion,
                     simplePaymentProcessorMetadata.patchVersion
@@ -319,7 +275,7 @@ contract ModuleBeaconDeployer_v1 is
                     streamingPaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    mod_PP_Streaming_v1,
+                    impl_mod_PP_Streaming_v1,
                     streamingPaymentProcessorMetadata.majorVersion,
                     streamingPaymentProcessorMetadata.minorVersion,
                     streamingPaymentProcessorMetadata.patchVersion

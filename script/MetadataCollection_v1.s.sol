@@ -122,16 +122,6 @@ contract MetadataCollection_v1 {
             "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
         );
 
-    //RebasingFundingManager
-    IModule_v1.Metadata public rebasingFundingManagerMetadata = IModule_v1
-        .Metadata( //@note Do we add this?
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "FM_Rebasing_v1"
-    );
-
     /* 
     //DepositVaultFundingManager
     IModule_v1.Metadata public depositVaultFundingManagerMetadata =

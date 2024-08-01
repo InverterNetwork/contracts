@@ -11,8 +11,7 @@ import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 contract DeploymentScript is ModuleBeaconDeployer_v1 {
-    //@note not upgradable right?
-    address public inverterReverter = ext_InverterReverter_v1;
+    address public inverterReverter = impl_ext_InverterReverter_v1;
     address public governor;
     address public forwarder;
     address public feeManager;
@@ -39,7 +38,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             governorMetadata.title,
             inverterReverter,
             communityMultisig,
-            ext_Governor_v1,
+            impl_ext_Governor_v1,
             governorMetadata.majorVersion,
             governorMetadata.minorVersion,
             governorMetadata.patchVersion
@@ -49,7 +48,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             forwarderMetadata.title,
             inverterReverter,
             governor,
-            ext_TransactionForwarder_v1,
+            impl_ext_TransactionForwarder_v1,
             forwarderMetadata.majorVersion,
             forwarderMetadata.minorVersion,
             forwarderMetadata.patchVersion
@@ -59,7 +58,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             feeManagerMetadata.title,
             inverterReverter,
             governor,
-            ext_FeeManager_v1,
+            impl_ext_FeeManager_v1,
             feeManagerMetadata.majorVersion,
             feeManagerMetadata.minorVersion,
             feeManagerMetadata.patchVersion
@@ -78,7 +77,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             moduleFactoryMetadata.title,
             inverterReverter,
             governor,
-            fac_ModuleFactory_v1,
+            impl_fac_ModuleFactory_v1,
             moduleFactoryMetadata.majorVersion,
             moduleFactoryMetadata.minorVersion,
             moduleFactoryMetadata.patchVersion
@@ -88,7 +87,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             orchestratorFactoryMetadata.title,
             inverterReverter,
             governor,
-            fac_OrchestratorFactory_v1,
+            impl_fac_OrchestratorFactory_v1,
             orchestratorFactoryMetadata.majorVersion,
             orchestratorFactoryMetadata.minorVersion,
             orchestratorFactoryMetadata.patchVersion

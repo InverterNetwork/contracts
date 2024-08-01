@@ -80,43 +80,40 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
     //External contracts
 
-    address public ext_InverterReverter_v1;
-    address public ext_Governor_v1;
-    address public ext_TransactionForwarder_v1;
-    address public ext_FeeManager_v1;
-
-    //@note Add IssuanceToken here?
+    address public impl_ext_InverterReverter_v1;
+    address public impl_ext_Governor_v1;
+    address public impl_ext_TransactionForwarder_v1;
+    address public impl_ext_FeeManager_v1;
 
     //Factories
-    address public fac_ModuleFactory_v1;
-    address public fac_OrchestratorFactory_v1;
+    address public impl_fac_ModuleFactory_v1;
+    address public impl_fac_OrchestratorFactory_v1;
 
     //Modules
 
     //Authorizer
-    address public mod_Aut_Roles_v1;
-    address public mod_Aut_TokenGated_Roles_v1;
-    address public mod_Aut_EXT_VotingRoles_v1;
+    address public impl_mod_Aut_Roles_v1;
+    address public impl_mod_Aut_TokenGated_Roles_v1;
+    address public impl_mod_Aut_Ext_VotingRoles_v1;
 
     //Funding Managers
-    address public mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
-    address public mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1;
-    address public mod_FM_Rebasing_v1; //@note Do we add this?
-    //address public mod_FM_DepositVault_v1;
+    address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
+    address public impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1;
+    //address public impl_mod_FM_DepositVault_v1;
 
     //Logic Modules
-    address public mod_LM_PC_Bounties_v1;
-    address public mod_LM_PC_KPIRewarder_v1;
-    address public mod_LM_PC_PaymentRouter_v1;
-    address public mod_LM_PC_RecurringPayments_v1;
-    address public mod_LM_PC_Staking_v1;
+    address public impl_mod_LM_PC_Bounties_v1;
+    address public impl_mod_LM_PC_KPIRewarder_v1;
+    address public impl_mod_LM_PC_PaymentRouter_v1;
+    address public impl_mod_LM_PC_RecurringPayments_v1;
+    address public impl_mod_LM_PC_Staking_v1;
 
     //Payment Processors
-    address public mod_PP_Simple_v1;
-    address public mod_PP_Streaming_v1;
+    address public impl_mod_PP_Simple_v1;
+    address public impl_mod_PP_Streaming_v1;
 
     //Orchestrator
-    address public orc_Orchestrator_v1;
+    address public impl_orc_Orchestrator_v1;
 
     //--------------------------------------------------------------------------
     // Factory Usage
@@ -141,24 +138,32 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Create External Singletons");
+        console2.log("Create External Implementation Singletons");
         console2.log("-External Contracts");
 
         //External contracts
-        ext_InverterReverter_v1 = factory.deployWithCreate2( //@note no Beacon structure here right?
-        factorySalt, vm.getCode("InverterReverte_v1.sol:InverterReverter_v1")); //@note can we add a string parameter for the factory? So we can log which contract is called here?
-
-        ext_Governor_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("Governor_v1.sol:Governor_v1")
+        impl_ext_InverterReverter_v1 = deployAndLogWithCreate2(
+            "InverterReverter_v1",
+            factorySalt,
+            vm.getCode("InverterReverte_v1.sol:InverterReverter_v1")
         );
 
-        ext_TransactionForwarder_v1 = factory.deployWithCreate2(
+        impl_ext_Governor_v1 = deployAndLogWithCreate2(
+            "Governor_v1",
+            factorySalt,
+            vm.getCode("Governor_v1.sol:Governor_v1")
+        );
+
+        impl_ext_TransactionForwarder_v1 = deployAndLogWithCreate2(
+            "TransactionForwarder_v1",
             factorySalt,
             vm.getCode("TransactionForwarder_v1.sol:TransactionForwarder_v1")
         );
 
-        ext_FeeManager_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("FeeManager_v1.sol:FeeManager_v1")
+        impl_ext_FeeManager_v1 = deployAndLogWithCreate2(
+            "FeeManager_v1",
+            factorySalt,
+            vm.getCode("FeeManager_v1.sol:FeeManager_v1")
         );
     }
 
@@ -168,24 +173,26 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Create Workflow and Factory Singletons");
+        console2.log("Create Workflow and Factory Implementation Singletons");
 
         //Factories
         console2.log("-Factories");
 
-        fac_ModuleFactory_v1 = factory.deployWithCreate2(
+        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
+            "ModuleFactory_v1",
             factorySalt,
             abi.encodePacked(
                 vm.getCode("ModuleFactory_v1.sol:ModuleFactory_v1"),
-                abi.encode(ext_InverterReverter_v1, transactionForwarder)
+                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
             )
         );
 
-        fac_OrchestratorFactory_v1 = factory.deployWithCreate2(
+        impl_fac_OrchestratorFactory_v1 = deployAndLogWithCreate2(
+            "OrchestratorFactory_v1",
             factorySalt,
             abi.encodePacked(
                 vm.getCode("OrchestratorFactory_v1.sol:OrchestratorFactory_v1"),
-                abi.encode(ext_InverterReverter_v1, transactionForwarder)
+                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
             )
         );
 
@@ -195,38 +202,46 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         //Authorizer
         console2.log("--Authorizer");
 
-        mod_Aut_Roles_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
+        impl_mod_Aut_Roles_v1 = deployAndLogWithCreate2(
+            "AUT_Roles_v1",
+            factorySalt,
+            vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
         );
-        mod_Aut_TokenGated_Roles_v1 = factory.deployWithCreate2(
+        impl_mod_Aut_TokenGated_Roles_v1 = deployAndLogWithCreate2(
+            "AUT_TokenGated_Roles_v1",
             factorySalt,
             vm.getCode("AUT_TokenGated_Roles_v1.sol:AUT_TokenGated_Roles_v1")
         );
-        mod_Aut_EXT_VotingRoles_v1 = factory.deployWithCreate2(
+        impl_mod_Aut_Ext_VotingRoles_v1 = deployAndLogWithCreate2(
+            "AUT_impl_ext_VotingRoles_v1",
             factorySalt,
-            vm.getCode("AUT_EXT_VotingRoles_v1.sol:AUT_EXT_VotingRoles_v1")
+            vm.getCode(
+                "AUT_impl_ext_VotingRoles_v1.sol:AUT_impl_ext_VotingRoles_v1"
+            )
         );
 
         //Funding Managers
         console2.log("--Funding Managers");
 
-        mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 = factory.deployWithCreate2(
+        impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 =
+        deployAndLogWithCreate2(
+            "FM_BC_Bancor_Redeeming_VirtualSupply_v1",
             factorySalt,
             vm.getCode(
                 "FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Bancor_Redeeming_VirtualSupply_v1"
             )
         );
-        mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 = factory
-            .deployWithCreate2(
+        impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 =
+        deployAndLogWithCreate2(
+            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1",
             factorySalt,
             vm.getCode(
                 "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
             )
         );
-        mod_FM_Rebasing_v1 = factory.deployWithCreate2( //@note Do we add this?
-        factorySalt, vm.getCode("FM_Rebasing_v1.sol:FM_Rebasing_v1"));
 
-        /* mod_FM_DepositVault_v1 = factory.deployWithCreate2(
+        /* impl_mod_FM_DepositVault_v1 = deployAndLogWithCreate2(
+            "FM_DepositVault_v1",
             factorySalt,
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
         ); */
@@ -234,42 +249,70 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         //Logic Modules
         console2.log("--Logic Modules");
 
-        mod_LM_PC_Bounties_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("LM_PC_Bounties_v1.sol:LM_PC_Bounties_v1")
+        impl_mod_LM_PC_Bounties_v1 = deployAndLogWithCreate2(
+            "LM_PC_Bounties_v1",
+            factorySalt,
+            vm.getCode("LM_PC_Bounties_v1.sol:LM_PC_Bounties_v1")
         );
-        mod_LM_PC_KPIRewarder_v1 = factory.deployWithCreate2(
+        impl_mod_LM_PC_KPIRewarder_v1 = deployAndLogWithCreate2(
+            "LM_PC_KPIRewarder_v1",
             factorySalt,
             vm.getCode("LM_PC_KPIRewarder_v1.sol:LM_PC_KPIRewarder_v1")
         );
-        mod_LM_PC_PaymentRouter_v1 = factory.deployWithCreate2(
+        impl_mod_LM_PC_PaymentRouter_v1 = deployAndLogWithCreate2(
+            "LM_PC_PaymentRouter_v1",
             factorySalt,
             vm.getCode("LM_PC_PaymentRouter_v1.sol:LM_PC_PaymentRouter_v1")
         );
-        mod_LM_PC_RecurringPayments_v1 = factory.deployWithCreate2(
+        impl_mod_LM_PC_RecurringPayments_v1 = deployAndLogWithCreate2(
+            "LM_PC_RecurringPayments_v1",
             factorySalt,
             vm.getCode(
                 "LM_PC_RecurringPayments_v1.sol:LM_PC_RecurringPayments_v1"
             )
         );
-        mod_LM_PC_Staking_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("LM_PC_Staking_v1.sol:LM_PC_Staking_v1")
+        impl_mod_LM_PC_Staking_v1 = deployAndLogWithCreate2(
+            "LM_PC_Staking_v1",
+            factorySalt,
+            vm.getCode("LM_PC_Staking_v1.sol:LM_PC_Staking_v1")
         );
 
         //Payment Processors
         console2.log("--Payment Processors");
 
-        mod_PP_Simple_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
+        impl_mod_PP_Simple_v1 = deployAndLogWithCreate2(
+            "PP_Simple_v1",
+            factorySalt,
+            vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
         );
-        mod_PP_Streaming_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("PP_Streaming_v1.sol:PP_Streaming_v1")
+        impl_mod_PP_Streaming_v1 = deployAndLogWithCreate2(
+            "PP_Streaming_v1",
+            factorySalt,
+            vm.getCode("PP_Streaming_v1.sol:PP_Streaming_v1")
         );
 
         //Orchestrator
         console2.log("-Orchestrator");
 
-        orc_Orchestrator_v1 = factory.deployWithCreate2(
-            factorySalt, vm.getCode("Orchestrator_v1.sol:Orchestrator_v1")
+        impl_orc_Orchestrator_v1 = deployAndLogWithCreate2(
+            "Orchestrator_v1",
+            factorySalt,
+            vm.getCode("Orchestrator_v1.sol:Orchestrator_v1")
         );
+    }
+
+    function deployAndLogWithCreate2(
+        string memory implementationName,
+        bytes32 salt,
+        bytes memory creationCode
+    ) internal returns (address) {
+        address implementation = factory.deployWithCreate2(salt, creationCode);
+        console2.log(
+            "Deployment of %s Implementation at address %s",
+            implementationName,
+            implementation
+        );
+
+        return implementation;
     }
 }
