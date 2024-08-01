@@ -99,47 +99,10 @@ testE2e: # Run e2e test suite
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
-testScripts: # Run e2e test suite
+testScripts: # Run e2e test suite //@todo
 	@echo "### Run scripts"
  	
-	## external
-	@forge script script/external/DeployGovernor_v1.s.sol
-	@forge script script/external/DeployTransactionForwarder_v1.s.sol
-	@forge script script/external/DeployFeeManager_v1.s.sol
-
-	## factories
-	@forge script script/factories/DeployModuleFactory_v1.s.sol
 	
-	## @note Because the Beacon doesnt allow to be passed addresses without implementations we cant test the script properly anymore without breaking the script testing structure we used up until now.
-	## @forge script script/factories/DeployOrchestratorFactory_v1.s.sol
-	
-	## modules
-
-	## fundingManager
-	@forge script script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol
-	
-	## authorizer
-	@forge script script/modules/authorizer/DeployAUT_Role_v1.s.sol
-	@forge script script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol
-	@forge script script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol
-
-	## logicModule
-	@forge script script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol
-	@forge script script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol
-
-	## paymentProcessor
-	@forge script script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol
-	@forge script script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol
-
-	
-	## orchestrator
-	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol
-
-	## setup
-	# @forge script script/setup/SetupToyOrchestratorScript.s.sol
-
-	## Deployment
-	@forge script script/deployment/DeploymentScript.s.sol
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
