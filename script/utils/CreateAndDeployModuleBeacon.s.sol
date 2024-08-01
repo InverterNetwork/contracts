@@ -12,7 +12,7 @@ import {ProxyAndBeaconDeployer_v1} from
     "script/deploymentSuite/ProxyAndBeaconDeployer_v1.s.sol";
 
 import {IDeterministicFactory_v1} from
-    "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
+    "@df/interfaces/IDeterministicFactory_v1.sol";
 
 contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
@@ -24,11 +24,12 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
     // @todo Run with forge script
     // script/utils/CreateAndDeployModuleBeacon.s.sol
     // "run(string,string,address,address,uint,uint,uint)"
-    // "ExampleModule" "src/module/ExampleModule.sol" "0x0000000000000000000000000000000000000001" "0x0000000000000000000000000000000000000002" 1 0 0
+    // "ExampleModule" "src/module/ExampleModule.sol" ???@todo "0x0000000000000000000000000000000000000001" "0x0000000000000000000000000000000000000002" 1 0 0
 
     function run(
         string memory moduleName,
         string memory modulePath,
+        bytes memory optionalParams,
         address reverter,
         address owner,
         uint majorVersion,
@@ -39,7 +40,8 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
 
         // Deploy the implementation.
         address implementation = factory.deployWithCreate2(
-            factorySalt, abi.encodePacked(vm.getCode(modulePath))
+            factorySalt,
+            abi.encodePacked(vm.getCode(modulePath), optionalParams)
         );
         console2.log(
             "Deployed %s implementation at address %s",
