@@ -99,10 +99,11 @@ testE2e: # Run e2e test suite
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
-testScripts: # Run e2e test suite //@todo
+testScripts: # Run e2e test suite // @todo Switch Environment variable accordingly
 	@echo "### Run scripts"
- 	
-	
+
+	@echo "Run TestnetDeploymentScript"
+	@forge script script/deploymentScript/TestnetDeploymentScript.s.sol:TestnetDeploymentScript 
 
 # -----------------------------------------------------------------------------
 # Static Analyzers

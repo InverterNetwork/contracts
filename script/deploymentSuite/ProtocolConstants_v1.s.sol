@@ -14,18 +14,19 @@ contract ProtocolConstants_v1 is Script {
     // ------------------------------------------------------------------------
 
     // Fetch the deployer details
-    uint deployerPrivateKey = vm.envUint("ORCHESTRATOR_ADMIN_PRIVATE_KEY");
-    address deployer = vm.addr(deployerPrivateKey);
+    uint public deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    address public deployer = vm.addr(deployerPrivateKey);
 
     // Fetch the Multisig addresses
-    address communityMultisig = vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
-    address teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
+    address public communityMultisig =
+        vm.envAddress("COMMUNITY_MULTISIG_ADDRESS");
+    address public teamMultisig = vm.envAddress("TEAM_MULTISIG_ADDRESS");
 
     // Fetch the treasury address
-    address treasury = vm.envAddress("TREASURY_ADDRESS");
+    address public treasury = vm.envAddress("TREASURY_ADDRESS");
 
     // Fetch the deterministic factory address
-    address deterministicFactory =
+    address public deterministicFactory =
         vm.envAddress("DETERMINISTIC_FACTORY_ADDRESS");
 
     bytes32 public factorySalt =
@@ -36,9 +37,9 @@ contract ProtocolConstants_v1 is Script {
     // ------------------------------------------------------------------------
 
     // FeeManager
-    uint defaultCollateralFee;
-    uint defaultIssuanceFee;
+    uint public defaultCollateralFee;
+    uint public defaultIssuanceFee;
 
     // Governor
-    uint timelockPeriod;
+    uint public timelockPeriod;
 }

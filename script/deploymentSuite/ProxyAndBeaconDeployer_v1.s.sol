@@ -24,6 +24,9 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
 
+    function setFactory(address _factory) external {
+        factory = IDeterministicFactory_v1(_factory);
+    }
 
     function deployBeaconAndSetupProxy(
         string memory implementationName,

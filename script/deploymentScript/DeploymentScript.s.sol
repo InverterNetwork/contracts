@@ -12,7 +12,8 @@ import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 contract DeploymentScript is ModuleBeaconDeployer_v1 {
-    address public inverterReverter = impl_ext_InverterReverter_v1;
+    address public inverterReverter;
+
     address public governor;
     address public forwarder;
     address public feeManager;
@@ -24,10 +25,17 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Start Deployment");
+        console2.log("Start Deployment Script");
 
         // Create External Singletons
         createExternalSingletons();
+
+        console2.log(
+            "Set InverterReverter Implementation Address to general InverterReverter Address"
+        );
+
+        //Set InverterReverter Address
+        inverterReverter = impl_ext_InverterReverter_v1;
 
         // Deploy External Contracts
         console2.log(
@@ -95,7 +103,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         );
 
         // Deploy Module Beacons
-        deployModuleBeaconsAndFillRegistrationData(inverterReverter, forwarder);
+        deployModuleBeaconsAndFillRegistrationData(inverterReverter, governor);
 
         // Initialize Protocol Contracts
         console2.log(

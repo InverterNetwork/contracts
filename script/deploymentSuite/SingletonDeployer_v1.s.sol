@@ -77,6 +77,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
 
+    function setFactory(address _factory) internal {
+        factory = IDeterministicFactory_v1(_factory);
+    }
+
     // External contracts
 
     address public impl_ext_InverterReverter_v1;
@@ -143,26 +147,20 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // External contracts
         impl_ext_InverterReverter_v1 = deployAndLogWithCreate2(
             "InverterReverter_v1",
-            factorySalt,
-            vm.getCode("InverterReverte_v1.sol:InverterReverter_v1")
+            vm.getCode("InverterReverter_v1.sol:InverterReverter_v1")
         );
 
         impl_ext_Governor_v1 = deployAndLogWithCreate2(
-            "Governor_v1",
-            factorySalt,
-            vm.getCode("Governor_v1.sol:Governor_v1")
+            "Governor_v1", vm.getCode("Governor_v1.sol:Governor_v1")
         );
 
         impl_ext_TransactionForwarder_v1 = deployAndLogWithCreate2(
             "TransactionForwarder_v1",
-            factorySalt,
             vm.getCode("TransactionForwarder_v1.sol:TransactionForwarder_v1")
         );
 
         impl_ext_FeeManager_v1 = deployAndLogWithCreate2(
-            "FeeManager_v1",
-            factorySalt,
-            vm.getCode("FeeManager_v1.sol:FeeManager_v1")
+            "FeeManager_v1", vm.getCode("FeeManager_v1.sol:FeeManager_v1")
         );
     }
 
@@ -179,7 +177,6 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
             "ModuleFactory_v1",
-            factorySalt,
             abi.encodePacked(
                 vm.getCode("ModuleFactory_v1.sol:ModuleFactory_v1"),
                 abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
@@ -188,7 +185,6 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         impl_fac_OrchestratorFactory_v1 = deployAndLogWithCreate2(
             "OrchestratorFactory_v1",
-            factorySalt,
             abi.encodePacked(
                 vm.getCode("OrchestratorFactory_v1.sol:OrchestratorFactory_v1"),
                 abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
@@ -202,21 +198,15 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         console2.log("--Authorizer");
 
         impl_mod_Aut_Roles_v1 = deployAndLogWithCreate2(
-            "AUT_Roles_v1",
-            factorySalt,
-            vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
+            "AUT_Roles_v1", vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
         );
         impl_mod_Aut_TokenGated_Roles_v1 = deployAndLogWithCreate2(
             "AUT_TokenGated_Roles_v1",
-            factorySalt,
             vm.getCode("AUT_TokenGated_Roles_v1.sol:AUT_TokenGated_Roles_v1")
         );
         impl_mod_Aut_Ext_VotingRoles_v1 = deployAndLogWithCreate2(
-            "AUT_impl_ext_VotingRoles_v1",
-            factorySalt,
-            vm.getCode(
-                "AUT_impl_ext_VotingRoles_v1.sol:AUT_impl_ext_VotingRoles_v1"
-            )
+            "AUT_EXT_VotingRoles_v1",
+            vm.getCode("AUT_EXT_VotingRoles_v1.sol:AUT_EXT_VotingRoles_v1")
         );
 
         // Funding Managers
@@ -225,7 +215,6 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 =
         deployAndLogWithCreate2(
             "FM_BC_Bancor_Redeeming_VirtualSupply_v1",
-            factorySalt,
             vm.getCode(
                 "FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Bancor_Redeeming_VirtualSupply_v1"
             )
@@ -233,7 +222,6 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 =
         deployAndLogWithCreate2(
             "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1",
-            factorySalt,
             vm.getCode(
                 "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol:FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
             )
@@ -241,7 +229,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         /* impl_mod_FM_DepositVault_v1 = deployAndLogWithCreate2(
             "FM_DepositVault_v1",
-            factorySalt,
+            
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
         ); */
 
@@ -250,29 +238,24 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         impl_mod_LM_PC_Bounties_v1 = deployAndLogWithCreate2(
             "LM_PC_Bounties_v1",
-            factorySalt,
             vm.getCode("LM_PC_Bounties_v1.sol:LM_PC_Bounties_v1")
         );
         impl_mod_LM_PC_KPIRewarder_v1 = deployAndLogWithCreate2(
             "LM_PC_KPIRewarder_v1",
-            factorySalt,
             vm.getCode("LM_PC_KPIRewarder_v1.sol:LM_PC_KPIRewarder_v1")
         );
         impl_mod_LM_PC_PaymentRouter_v1 = deployAndLogWithCreate2(
             "LM_PC_PaymentRouter_v1",
-            factorySalt,
             vm.getCode("LM_PC_PaymentRouter_v1.sol:LM_PC_PaymentRouter_v1")
         );
         impl_mod_LM_PC_RecurringPayments_v1 = deployAndLogWithCreate2(
             "LM_PC_RecurringPayments_v1",
-            factorySalt,
             vm.getCode(
                 "LM_PC_RecurringPayments_v1.sol:LM_PC_RecurringPayments_v1"
             )
         );
         impl_mod_LM_PC_Staking_v1 = deployAndLogWithCreate2(
             "LM_PC_Staking_v1",
-            factorySalt,
             vm.getCode("LM_PC_Staking_v1.sol:LM_PC_Staking_v1")
         );
 
@@ -280,14 +263,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         console2.log("--Payment Processors");
 
         impl_mod_PP_Simple_v1 = deployAndLogWithCreate2(
-            "PP_Simple_v1",
-            factorySalt,
-            vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
+            "PP_Simple_v1", vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
         );
         impl_mod_PP_Streaming_v1 = deployAndLogWithCreate2(
-            "PP_Streaming_v1",
-            factorySalt,
-            vm.getCode("PP_Streaming_v1.sol:PP_Streaming_v1")
+            "PP_Streaming_v1", vm.getCode("PP_Streaming_v1.sol:PP_Streaming_v1")
         );
 
         // Orchestrator
@@ -295,17 +274,22 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         impl_orc_Orchestrator_v1 = deployAndLogWithCreate2(
             "Orchestrator_v1",
-            factorySalt,
-            vm.getCode("Orchestrator_v1.sol:Orchestrator_v1")
+            abi.encodePacked(
+                vm.getCode("Orchestrator_v1.sol:Orchestrator_v1"),
+                abi.encode(transactionForwarder)
+            )
         );
     }
 
     function deployAndLogWithCreate2(
         string memory implementationName,
-        bytes32 salt,
         bytes memory creationCode
     ) internal returns (address) {
-        address implementation = factory.deployWithCreate2(salt, creationCode);
+        vm.startBroadcast(deployerPrivateKey);
+        address implementation =
+            factory.deployWithCreate2(factorySalt, creationCode);
+        vm.stopBroadcast();
+
         console2.log(
             "Deployment of %s Implementation at address %s",
             implementationName,
