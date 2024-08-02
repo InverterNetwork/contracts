@@ -7,6 +7,14 @@ import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
 
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {
+    OptimisticOracleV3Mock,
+    OptimisticOracleV3Interface
+} from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
+
 /**
  * @title Inverter Testnet Deployment Script
  *
@@ -16,7 +24,13 @@ import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
  * @author Inverter Network
  */
 contract TestnetDeploymentScript is DeploymentScript {
-    function run() public override {
+    BancorFormula formula;
+    ERC20Issuance_v1 issuanceToken;
+    OptimisticOracleV3Mock ooV3;
+
+    uint64 immutable DEFAULT_LIVENESS = 25_000;
+
+    function run() public virtual override {
         // Deploy Deterministic Factory
 
         console2.log(
@@ -47,5 +61,15 @@ contract TestnetDeploymentScript is DeploymentScript {
         super.run();
 
         // BancorFormula, ERC20Mock and UMAoracleMock
+
+        formula = new BancorFormula();
+
+        issuanceToken = new ERC20Issuance_v1(
+            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
+        ); //@note Correct?
+
+        ooV3 = new OptimisticOracleV3Mock(
+            IERC20(address(issuanceToken)), DEFAULT_LIVENESS
+        ); //@note FeeToken?
     }
 }
