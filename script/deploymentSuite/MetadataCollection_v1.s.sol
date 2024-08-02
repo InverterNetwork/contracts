@@ -3,6 +3,14 @@ pragma solidity ^0.8.0;
 
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
+/**
+ * @title Inverter Metadata Collection
+ *
+ * @dev Contains metadata for all the modules and contracts in the Inverter
+ *      protocol.
+ *
+ * @author Inverter Network
+ */
 contract MetadataCollection_v1 {
     // ------------------------------------------------------------------------
     // External Contracts

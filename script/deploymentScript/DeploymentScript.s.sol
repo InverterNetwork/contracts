@@ -11,6 +11,16 @@ import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
+/**
+ * @title Inverter Deployment Script
+ *
+ * @dev Script to deploy the Inverter protocol. Relies on certain contracts
+ *      being deployed externally, like the DeterministicFactory - and the
+ *      multisigs and treasury being set as well. These need to be set in the
+ *      environment variables.
+ *
+ * @author Inverter Network
+ */
 contract DeploymentScript is ModuleBeaconDeployer_v1 {
     address public inverterReverter;
 

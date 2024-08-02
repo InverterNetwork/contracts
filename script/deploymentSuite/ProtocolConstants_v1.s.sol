@@ -3,11 +3,15 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-/*
-This file contains protocol-wide constants for critical information and addresses in deployments, like the deployer and multisigs. They are loaded from the environment variables.
-
-*/
-
+/**
+ * @title Inverter Protocol Deployment Constants
+ *
+ * @dev Contains protocol-wide constants for critical information and addresses in 
+ *      deployments, like the deployer and multisigs. They are loaded from the 
+ *      environment variables.
+ *
+ * @author Inverter Network
+ */
 contract ProtocolConstants_v1 is Script {
     // ------------------------------------------------------------------------
     // Important addresses

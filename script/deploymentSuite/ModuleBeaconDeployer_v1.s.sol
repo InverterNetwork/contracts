@@ -16,6 +16,13 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
+/**
+ * @title Inverter Module Beacon Deployer Script
+ *
+ * @dev Script to deploy and setup InverterBeacon_v1's for all modules.
+ *
+ * @author Inverter Network
+ */
 contract ModuleBeaconDeployer_v1 is
     SingletonDeployer_v1,
     MetadataCollection_v1
@@ -40,7 +47,7 @@ contract ModuleBeaconDeployer_v1 is
         console2.log("Deploy Module Beacons and Fill Registration Data");
 
         // Create Orchestrator Beacon
-        orchestratorBeacon = IInverterBeacon_v1( // @note seperate function as not directly module
+        orchestratorBeacon = IInverterBeacon_v1(
             proxyAndBeaconDeployer.deployInverterBeacon(
                 orchestratorMetadata.title,
                 reverter,
