@@ -10,3 +10,6 @@
 [submodule "lib/protocol"]
 	path = lib/protocol
 	url = https://github.com/UMAprotocol/protocol
+[submodule "lib/deterministic-factory"]
+	path = lib/deterministic-factory
+	url = https://github.com/InverterNetwork/deterministic-factory

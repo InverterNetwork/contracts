@@ -45,8 +45,7 @@ contract AUT_RolesV1Test is Test {
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
     GovernorV1Mock internal _governor = new GovernorV1Mock();
     ModuleFactoryV1Mock internal _moduleFactory = new ModuleFactoryV1Mock();
-    TransactionForwarder_v1 _forwarder =
-        new TransactionForwarder_v1("TransactionForwarder_v1");
+    TransactionForwarder_v1 _forwarder = new TransactionForwarder_v1();
     address ALBA = address(0xa1ba); // default authorized person
     address BOB = address(0xb0b); // example person to add
 

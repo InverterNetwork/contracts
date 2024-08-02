@@ -22,8 +22,7 @@ contract TransactionForwarderV1Test is Test {
     event CallReceived(address intercepterAddress, bytes data, address sender);
 
     function setUp() public {
-        forwarder =
-            new TransactionForwarderV1AccessMock("TransactionForwarder_v1");
+        forwarder = new TransactionForwarderV1AccessMock();
     }
 
     //--------------------------------------------------------------------------

@@ -116,7 +116,7 @@ contract E2ETest is E2EModuleRegistry {
         reverter = new InverterReverter_v1();
 
         // Deploy a forwarder used to enable metatransactions
-        forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
+        forwarder = new TransactionForwarder_v1();
 
         // Deploy Orchestrator_v1 implementation.
         orchestratorImpl = new Orchestrator_v1(address(forwarder));

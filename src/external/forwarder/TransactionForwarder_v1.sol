@@ -37,9 +37,8 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Constructor
 
-    /// @notice Initializes the contract
-    /// @param name The name of the contract
-    constructor(string memory name) ERC2771Forwarder(name) {}
+    /// @notice Initializes the contract with the name of the contract
+    constructor() ERC2771Forwarder("Inverter TransactionForwarder_v1") {}
 
     //--------------------------------------------------------------------------
     // Metatransaction Helper Functions
