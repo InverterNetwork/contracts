@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {IDeterministicFactory_v1} from
-    "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
+    "@df/interfaces/IDeterministicFactory_v1.sol";
 
 import {ProtocolConstants_v1} from
     "script/deploymentSuite/ProtocolConstants_v1.s.sol";
@@ -13,10 +13,9 @@ import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 /**
- * @title DeployAndSetupInverterBeacon_v1 Deployment Script
+ * @title Inverter Beacon Deployment & Setup Script
  *
- * @dev Script to deploy and setup new InverterBeacon_v1.
- *
+ * @dev Script to deploy and setup InverterBeacon_v1's.
  *
  * @author Inverter Network
  */

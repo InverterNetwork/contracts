@@ -6,8 +6,8 @@ import "forge-std/Script.sol";
 /**
  * @title Inverter Protocol Deployment Constants
  *
- * @dev Contains protocol-wide constants for critical information and addresses in 
- *      deployments, like the deployer and multisigs. They are loaded from the 
+ * @dev Contains protocol-wide constants for critical information and addresses in
+ *      deployments, like the deployer and multisigs. They are loaded from the
  *      environment variables.
  *
  * @author Inverter Network

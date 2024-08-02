@@ -7,7 +7,7 @@ import "forge-std/Script.sol";
 import {ProtocolConstants_v1} from
     "script/deploymentSuite/ProtocolConstants_v1.s.sol";
 import {IDeterministicFactory_v1} from
-    "script/deterministicFactory/interfaces/IDeterministicFactory.sol";
+    "@df/interfaces/IDeterministicFactory_v1.sol";
 
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
