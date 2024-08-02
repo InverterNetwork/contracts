@@ -34,7 +34,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
             "Set InverterReverter Implementation Address to general InverterReverter Address"
         );
 
-        //Set InverterReverter Address
+        // Set InverterReverter Address
         inverterReverter = impl_ext_InverterReverter_v1;
 
         // Deploy External Contracts
