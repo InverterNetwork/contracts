@@ -99,7 +99,7 @@ testE2e: # Run e2e test suite
 	@forge test -vvv --match-path "*/e2e/*"
 
 .PHONY: testScripts
-testScripts: # Run e2e test suite // @todo Switch Environment variable accordingly
+testScripts: # Run e2e test suite
 	@echo "### Run scripts"
 
 	@echo "Run TestnetDeploymentScript"
@@ -111,12 +111,13 @@ testScripts: # Run e2e test suite // @todo Switch Environment variable according
 .PHONY: analyze-slither
 analyze-slither: # Run slither analyzer against project (requires solc-select)
 	@forge build --extra-output abi --extra-output userdoc --extra-output devdoc --extra-output evm.methodIdentifiers
-	@solc-select use 0.8.19
-	@slither --ignore-compile src/common   || \
-	slither --ignore-compile src/factories || \
-	slither --ignore-compile src/generated || \
-	slither --ignore-compile src/modules   || \
-	slither --ignore-compile src/proposal
+	@solc-select use 0.8.23
+	@slither --ignore-compile src/common      || \
+	slither --ignore-compile src/external     || \
+	slither --ignore-compile src/factories    || \
+	slither --ignore-compile src/modules      || \
+	slither --ignore-compile src/orchestrator || \
+	slither --ignore-compile src/proxies
 
 .PHONY: analyze-c4udit
 analyze-c4udit: # Run c4udit analyzer against project
