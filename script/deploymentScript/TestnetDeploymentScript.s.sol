@@ -7,6 +7,14 @@ import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
 
+/**
+ * @title Inverter Testnet Deployment Script
+ *
+ * @dev Script to deploy the Inverter protocol in a testnet environment.
+ *      This means that the script deploys the DeterministicFactory as well.
+ *
+ * @author Inverter Network
+ */
 contract TestnetDeploymentScript is DeploymentScript {
     function run() public override {
         // Deploy Deterministic Factory
