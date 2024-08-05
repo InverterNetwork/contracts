@@ -108,14 +108,6 @@ contract PIM_WorkflowFactory_v1 is
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
 
-        // make sure that curve configuration doesn't allow a negative static price since would break the math
-        if (IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying() < 0)
-        {
-            revert
-                IPIM_WorkflowFactory_v1
-                .PIM_WorkflowFactory__InvalidConfiguration();
-        }
-
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
 
