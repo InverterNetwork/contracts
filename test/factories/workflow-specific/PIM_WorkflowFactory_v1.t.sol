@@ -111,6 +111,31 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         token.approve(address(factory), initialCollateral + firstCollateralIn);
     }
 
+    /* Test testCreatePIMWorkflow
+        ├── given the default config
+        │   └── when called
+        │       └── then it deploys, cleans up minting rights and makes first purchase
+        └── given withInitialLiquidity flag is set to true
+        |   └── when called
+        |   │   └── then the curve receives initial collateral supply and initial issuance supply is minted to recipient
+        └── given withInitialLiquidity flag is set to false
+        |   └── when called
+        |   │   └── then the curve doesn't receive initial collateral supply and burns initial issuance supply
+        └── given both renounce flags are set
+        |   └── when called
+        |       └── then the issuance token doesn't have owner and factory remains workflow admin
+        └── given only isRenouncedIssuanceToken flag is set
+        |   └── when called
+        |       └── then issuance token doesn't have owner and admin (from params) is workflow admin
+        └── given only isRenouncedWorkflow flag is set
+        |   └── when called
+        |       └── then admin (from params) is owner of issuance token and factory is workflow admin
+        └── given msg.sender hasn't approved collateral token for factory
+            └── when called
+                └── then it reverts   
+    */
+
+
     function testCreatePIMWorkflow() public {
         // CHECK: event is emitted
         vm.expectEmit(false, false, false, false);
@@ -138,6 +163,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             issuanceToken.allowedMinters(address(orchestrator.fundingManager()));
         assertTrue(isBcMinter);
         // CHECK: deployer uses firstCollateralIn (amount) to make first purchase
+        assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
     }
 
     function testCreatePIMWorkflow_WithInitialLiquidity() public {
@@ -325,6 +351,15 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
     }
 
+    /* Test testWithdrawPimFee
+        ├── given the msg.sender is the fee recipient
+        |   └── when called
+        |       └── then it emits fee claim events on bc and factory
+        └── given the msg.sender is NOT the fee recipient
+            └── when called
+                └── then it reverts   
+    */
+
     function testWithdrawPimFee() public {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
             getDefaultPIMConfig();
@@ -371,6 +406,15 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         vm.prank(alice);
         factory.withdrawPimFee(fundingManager, alice);
     }
+
+    /* Test testTransferPimFeeEligibility
+        ├── given the msg.sender is the fee recipient
+        |   └── when called
+        |       └── then it emits an event indicating role update and lets new recipient withdraw fee
+        └── given the msg.sender is NOT the fee recipient
+           └── when called
+                └── then it reverts   
+    */
 
     function testTransferPimFeeEligibility() public {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
