@@ -771,7 +771,6 @@ stakeTest
     ├── it should take the funds from the user
     └── it should stake the funds
 */
-//TODO
 contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
     function test_RevertWhen_TheStakedAmountIs0() external {
         // it should revert

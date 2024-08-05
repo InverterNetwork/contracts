@@ -54,8 +54,7 @@ abstract contract ModuleTest is Test {
     address treasury = makeAddr("treasury");
 
     // Deploy a forwarder used to enable metatransactions
-    TransactionForwarder_v1 _forwarder =
-        new TransactionForwarder_v1("TransactionForwarder_v1");
+    TransactionForwarder_v1 _forwarder = new TransactionForwarder_v1();
 
     // Orchestrator_v1 Constants
     uint constant _ORCHESTRATOR_ID = 1;

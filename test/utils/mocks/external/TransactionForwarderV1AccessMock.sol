@@ -5,7 +5,7 @@ import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
 contract TransactionForwarderV1AccessMock is TransactionForwarder_v1 {
-    constructor(string memory name) TransactionForwarder_v1(name) {}
+    constructor() TransactionForwarder_v1() {}
 
     function original_validate(ForwardRequestData calldata request)
         external
