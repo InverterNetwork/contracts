@@ -58,6 +58,7 @@ contract GovernorV1Test is Test {
     );
     event BeaconUpgradedCanceled(address beacon);
     event TimelockPeriodSet(uint newTimelockPeriod);
+    event ModuleFactoryUpdated(address moduleFactory);
     event BeaconShutdownInitiated(address beacon);
     event BeaconForcefullyUpgradedAndImplementationRestarted(
         address beacon,
@@ -294,7 +295,7 @@ contract GovernorV1Test is Test {
             teamMultisig,
             timelockPeriod,
             makeAddr("FeeManager"),
-            address(makeAddr("ModuleFactory"))
+            address(modFactory)
         );
 
         address impl = address(new Governor_v1());
@@ -310,7 +311,7 @@ contract GovernorV1Test is Test {
             teamMultisig,
             timelockPeriod,
             makeAddr("FeeManager"),
-            address(makeAddr("ModuleFactory"))
+            address(modFactory)
         );
 
         // validAddress(newTeamMultisig)
@@ -324,7 +325,7 @@ contract GovernorV1Test is Test {
             address(0),
             timelockPeriod,
             makeAddr("FeeManager"),
-            address(makeAddr("ModuleFactory"))
+            address(modFactory)
         );
 
         // validTimelockPeriod(newTimelockPeriod)
@@ -338,7 +339,7 @@ contract GovernorV1Test is Test {
             teamMultisig,
             0,
             makeAddr("FeeManager"),
-            address(makeAddr("ModuleFactory"))
+            address(modFactory)
         );
 
         // validAddress(newFeeManager)
@@ -353,7 +354,7 @@ contract GovernorV1Test is Test {
             teamMultisig,
             timelockPeriod,
             address(0),
-            address(makeAddr("ModuleFactory"))
+            address(modFactory)
         );
 
         // validAddress(initialFeeManager)

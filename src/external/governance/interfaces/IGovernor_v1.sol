@@ -31,7 +31,7 @@ interface IGovernor_v1 {
     /// @notice This function can only be accessed by the linked ModuleFactory
     error Governor__OnlyLinkedModuleFactory();
 
-    /// @notice This function can only be called when the Linked beacon Array is empty
+    /// @notice This function can only be called when the linked beacon array is empty
     error Governor__LinkedBeaconsNotEmpty();
 
     /// @notice The given address is invalid
@@ -92,6 +92,10 @@ interface IGovernor_v1 {
     /// @param feeManager The address of the fee manager
     event FeeManagerUpdated(address feeManager);
 
+    /// @notice Event emitted when the module factory is updated
+    /// @param moduleFactory The address of the module factory
+    event ModuleFactoryUpdated(address moduleFactory);
+
     /// @notice Event emitted when a timelock period is set
     /// @param newTimelockPeriod The new timelock period
     event TimelockPeriodSet(uint newTimelockPeriod);
@@ -123,6 +127,12 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Initialization
 
+    /// @notice The module's initializer function.
+    /// @param newCommunityMultisig The address of the community multisig
+    /// @param newTeamMultisig The address of the team multisig
+    /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
+    /// @param initialFeeManager The address of the initial fee manager
+    /// @param initialModuleFactory The address of the initial module factory
     function init(
         address newCommunityMultisig,
         address newTeamMultisig,

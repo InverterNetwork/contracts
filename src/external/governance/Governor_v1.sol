@@ -146,12 +146,7 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @notice The module's initializer function.
-    /// @param newCommunityMultisig The address of the community multisig
-    /// @param newTeamMultisig The address of the team multisig
-    /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
-    /// @param initialFeeManager The intially linked Fee Manager
-    /// @param initialModuleFactory The initially linked Module Factory
+    /// @inheritdoc IGovernor_v1
     function init(
         address newCommunityMultisig,
         address newTeamMultisig,
@@ -515,11 +510,12 @@ contract Governor_v1 is
         validAddress(newModuleFactory)
     {
         moduleFactory = IModuleFactory_v1(newModuleFactory);
+        emit ModuleFactoryUpdated(newModuleFactory);
     }
 
     /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it
     function isBeaconAccessible(address target) internal returns (bool) {
-        // check if target is a contract
+        // Check if target is a contract
         if (target.code.length == 0) {
             return false;
         }
