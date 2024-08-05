@@ -135,5 +135,4 @@ interface IPIM_WorkflowFactory_v1 {
     /// @notice Returns the address of the orchestrator factory.
     /// @return Address of the orchestrator factory.
     function orchestratorFactory() external view returns (address);
-
 }

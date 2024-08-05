@@ -135,7 +135,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 └── then it reverts   
     */
 
-
     function testCreatePIMWorkflow() public {
         // CHECK: event is emitted
         vm.expectEmit(false, false, false, false);
@@ -173,8 +172,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         uint preCollateralBalance = token.balanceOf(address(this));
 
-        (, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
+        (, ERC20Issuance_v1 issuanceToken) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
@@ -201,8 +199,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         uint preCollateralBalance = token.balanceOf(address(this));
 
-        (, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
+        (, ERC20Issuance_v1 issuanceToken) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
@@ -311,8 +308,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         pimConfig.isRenouncedIssuanceToken = false;
         pimConfig.isRenouncedWorkflow = true;
 
-        (IOrchestrator_v1 orchestrator,) =
-        factory.createPIMWorkflow(
+        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
@@ -364,8 +360,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
             getDefaultPIMConfig();
 
-        (IOrchestrator_v1 orchestrator,) =
-        factory.createPIMWorkflow(
+        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
