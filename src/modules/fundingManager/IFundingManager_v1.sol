@@ -6,9 +6,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IFundingManager_v1 {
     //--------------------------------------------------------------------------
-    // Errors
-
-    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a transferal of orchestrator tokens takes place.
