@@ -146,9 +146,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
 
         uint preCollateralBalance = token.balanceOf(address(this));
-        console.log(preCollateralBalance);
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        (, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
@@ -157,10 +156,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
 
         uint postCollateralBalance = token.balanceOf(address(this));
-        console.log(postCollateralBalance);
-        console.log(
-            "difference: ", preCollateralBalance - postCollateralBalance
-        );
         // CHECK: curve HAS received initial collateral supply (and firstCollateralIn)
         assertTrue(
             preCollateralBalance - postCollateralBalance
@@ -180,7 +175,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         uint preCollateralBalance = token.balanceOf(address(this));
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        (, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
@@ -290,7 +285,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         pimConfig.isRenouncedIssuanceToken = false;
         pimConfig.isRenouncedWorkflow = true;
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        (IOrchestrator_v1 orchestrator,) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
@@ -312,35 +307,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(isFactoryAdmin);
     }
 
-    function testCreatePIMWorkflow_WithFee() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-
-        // set fee on factory
-        uint feeInBasisPoints = 100;
-        vm.prank(factoryDeployer);
-        factory.setCreationFee(feeInBasisPoints);
-
-        // make sure that deployer has enough collateral to pay fee and approve
-        uint expectedFeeAmount = initialCollateral * feeInBasisPoints / 10_000;
-        token.mint(address(factory), expectedFeeAmount);
-        token.approve(address(factory), initialCollateral + expectedFeeAmount);
-
-        // create bonding curve
-        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
-
-        // CHECK: bonding curve HAS received initial collateral supply
-        address bc = address(orchestrator.fundingManager());
-        assertEq(token.balanceOf(bc), bcProperties.initialCollateralSupply);
-        // CHECK: factory HAS received fee
-        assertEq(token.balanceOf(address(factory)), expectedFeeAmount);
-    }
-
     function testCreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
         public
     {
@@ -359,53 +325,11 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
     }
 
-    function testSetCreationFee() public {
-        vm.prank(factoryDeployer);
-        // CHECK: event is emitted
-        vm.expectEmit(true, true, true, true);
-        emit IPIM_WorkflowFactory_v1.CreationFeeSet(100);
-        // CHEK: fee is set
-        factory.setCreationFee(100);
-        assertEq(factory.creationFee(), 100);
-    }
-
-    function testSetCreationFee_FailsIfCallerIsNotOwner() public {
-        vm.prank(alice);
-        // CHECK: tx reverts
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector, alice
-            )
-        );
-        factory.setCreationFee(100);
-    }
-
-    function testWithdrawCreationFee() public {
-        // send tokens to factory
-        token.mint(address(factory), 100);
-
-        vm.prank(factoryDeployer);
-        factory.withdrawCreationFee(token, alice);
-        // CHECK: tokens are sent to alice
-        assertEq(token.balanceOf(alice), 100);
-    }
-
-    function testWithdrawCreationFee_FailsIfCallerIsNotOwner() public {
-        vm.prank(alice);
-        // CHECK: tx reverts
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Ownable.OwnableUnauthorizedAccount.selector, alice
-            )
-        );
-        factory.withdrawCreationFee(token, alice);
-    }
-
     function testWithdrawPimFee() public {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
             getDefaultPIMConfig();
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        (IOrchestrator_v1 orchestrator,) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
@@ -420,9 +344,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             address(this), 0
         );
         vm.expectEmit(true, true, true, true);
-        emit IPIM_WorkflowFactory_v1.CreationFeeWithdrawn(
-            fundingManager, alice, 0
-        );
+        emit IPIM_WorkflowFactory_v1.PimFeeClaimed(address(this), 0);
         factory.withdrawPimFee(fundingManager, alice);
     }
 

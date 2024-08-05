@@ -47,24 +47,17 @@ interface IPIM_WorkflowFactory_v1 {
         bool isRenouncedWorkflow
     );
 
-    /// @notice Event emitted when factory owner sets new fee..
-    /// @param fee The fee in basis points.
-    event CreationFeeSet(uint fee);
-
-    /// @notice Event emitted when factory owner withdraws accumulated creation fees.
-    /// @param fundingManager The address of the funding manager from which to withdraw fees.
-    /// @param to The address to which the fees are sent.
-    /// @param amount The amount of fees that were withdrawn.
-    event CreationFeeWithdrawn(
-        address indexed fundingManager, address indexed to, uint amount
-    );
-
     /// @notice Event emitted when factory owner sets new fee.
     /// @param oldRecipient The previous pim fee recipient.
     /// @param newRecipient The new pim fee recipient.
     event PimFeeRecipientUpdated(
         address indexed oldRecipient, address indexed newRecipient
     );
+
+    /// @notice Event emitted when PIM fee (buy/sell fees) is claimed.
+    /// @param claimer The address of the claimer.
+    /// @param amount The amount claimed.
+    event PimFeeClaimed(address indexed claimer, uint amount);
 
     //--------------------------------------------------------------------------
     // Structs
@@ -126,17 +119,6 @@ interface IPIM_WorkflowFactory_v1 {
         IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
-    /// @notice Sets a fee in basis points that is added to the initial collateral supply and sent to the factory.
-    /// @dev Only callable by the owner.
-    /// @param newFee Fee in basis points.
-    function setCreationFee(uint newFee) external;
-
-    /// @notice  Withdraws the complete balance of the specified token to the specified address.
-    /// @dev Only callable by the owner.
-    /// @param token The token to withdraw.
-    /// @param to The recipient of the withdrawn tokens.
-    function withdrawCreationFee(IERC20 token, address to) external;
-
     /// @notice Updates who can claim the buy/sell fees of a given bonding curve.
     /// @dev Only callable by the currently eligible fee recipient.
     /// @param fundingManager The address of the bonding curve from which to withdraw fees.
@@ -154,7 +136,4 @@ interface IPIM_WorkflowFactory_v1 {
     /// @return Address of the orchestrator factory.
     function orchestratorFactory() external view returns (address);
 
-    /// @notice Returns the fee in basis points.
-    /// @return Fee in basis points.
-    function creationFee() external view returns (uint);
 }

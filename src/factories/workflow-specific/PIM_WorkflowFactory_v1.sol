@@ -34,8 +34,6 @@ contract PIM_WorkflowFactory_v1 is
 
     // store address of orchestratorfactory
     address public orchestratorFactory;
-    // relative fees on collateral token in basis points
-    uint public creationFee;
 
     // mapping of bonding curve address to fee recipient address
     mapping(address fundingManager => address feeRecipient) private
@@ -173,21 +171,6 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // Permissioned Functions
 
-    // onlyOwner
-
-    /// @inheritdoc IPIM_WorkflowFactory_v1
-    function setCreationFee(uint newFee) external onlyOwner {
-        creationFee = newFee;
-        emit IPIM_WorkflowFactory_v1.CreationFeeSet(newFee);
-    }
-
-    /// @inheritdoc IPIM_WorkflowFactory_v1
-    function withdrawCreationFee(IERC20 token, address to) external onlyOwner {
-        token.transfer(to, token.balanceOf(address(this)));
-    }
-
-    // onlyPimFeeRecipient
-
     /// @inheritdoc IPIM_WorkflowFactory_v1
     function withdrawPimFee(address fundingManager, address to)
         external
@@ -198,9 +181,7 @@ contract PIM_WorkflowFactory_v1 is
         IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
             to, amount
         );
-        emit IPIM_WorkflowFactory_v1.CreationFeeWithdrawn(
-            fundingManager, to, amount
-        );
+        emit IPIM_WorkflowFactory_v1.PimFeeClaimed(_msgSender(), amount);
     }
 
     /// @inheritdoc IPIM_WorkflowFactory_v1
@@ -229,25 +210,9 @@ contract PIM_WorkflowFactory_v1 is
             collateralToken.transferFrom(
                 _msgSender(), address(fundingManager), initialCollateralSupply
             );
-
-            if (creationFee > 0) {
-                uint feeAmount = _calculateFee(initialCollateralSupply);
-                collateralToken.transferFrom(
-                    _msgSender(), address(this), feeAmount
-                );
-            }
-
             // issuance token is minted to the the specified recipient
             issuanceToken.mint(recipient, initialIssuanceSupply);
         } else {
-            // TODO: move fee capture to first buy
-            if (creationFee > 0) {
-                uint feeAmount = _calculateFee(initialCollateralSupply);
-                collateralToken.transferFrom(
-                    _msgSender(), address(this), feeAmount
-                );
-            }
-
             // issuance token is minted to the the specified recipient
             issuanceToken.mint(address(0xDEAD), initialIssuanceSupply);
         }
@@ -293,10 +258,6 @@ contract PIM_WorkflowFactory_v1 is
         orchestrator.authorizer().grantRole(adminRole, newAdmin);
         // and revoke admin role from factory
         orchestrator.authorizer().revokeRole(adminRole, address(this));
-    }
-
-    function _calculateFee(uint collateralAmount) private view returns (uint) {
-        return collateralAmount * creationFee / 10_000;
     }
 
     //--------------------------------------------------------------------------
