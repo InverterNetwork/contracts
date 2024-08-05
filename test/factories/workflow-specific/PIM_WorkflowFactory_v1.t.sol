@@ -116,24 +116,15 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
             address(0), address(0), address(0), address(0), true, true
         );
+        // get default config
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: alice,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         // CHECK: issuance token IS DEPLOYED and initial issuance supply IS MINTED to recipient
@@ -155,24 +146,19 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(isBcMinter);
     }
 
+    function testCreatePIMWorkflow_WithInitialLiquidity() public {}
+
     function testCreatePIMWorkflow_IfFullyRenounced() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        pimConfig.isRenouncedIssuanceToken = true;
+        pimConfig.isRenouncedWorkflow = true;
+
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: alice,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         // CHECK: the token DOES NOT have an owner anymore
@@ -191,23 +177,17 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_IfNotRenounced() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        pimConfig.isRenouncedIssuanceToken = false;
+        pimConfig.isRenouncedWorkflow = false;
+        pimConfig.recipient = alice;
+
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: workflowDeployer,
-                recipient: alice,
-                isRenouncedIssuanceToken: false,
-                isRenouncedWorkflow: false,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         // CHECK: the deployer IS owner of the token
@@ -221,23 +201,17 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_IfTokenRenounced() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        pimConfig.isRenouncedIssuanceToken = true;
+        pimConfig.isRenouncedWorkflow = false;
+        pimConfig.recipient = alice;
+
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: workflowDeployer,
-                recipient: alice,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: false,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         // CHECK: the token DOES NOT have an owner anymore
@@ -251,23 +225,16 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_IfWorkflowRenounced() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        pimConfig.isRenouncedIssuanceToken = false;
+        pimConfig.isRenouncedWorkflow = true;
+
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: alice,
-                isRenouncedIssuanceToken: false,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         // CHECK: the deployer IS owner of the token
@@ -285,6 +252,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_WithFee() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+
         // set fee on factory
         uint feeInBasisPoints = 100;
         vm.prank(factoryDeployer);
@@ -300,18 +269,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: alice,
-                isRenouncedIssuanceToken: false,
-                isRenouncedWorkflow: false,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         // CHECK: bonding curve HAS received initial collateral supply
@@ -324,6 +282,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     function testCreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
         public
     {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
         address deployer = address(0xB0B);
         vm.prank(deployer);
 
@@ -333,18 +292,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: alice,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
     }
 
@@ -391,23 +339,14 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testWithdrawPimFee() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: alice,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
         address fundingManager = address(orchestrator.fundingManager());
 
@@ -424,22 +363,13 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+
         (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: workflowDeployer,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         address fundingManager = address(orchestrator.fundingManager());
@@ -456,22 +386,13 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testTransferPimFeeEligibility() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+
         (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: workflowDeployer,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         address fundingManager = address(orchestrator.fundingManager());
@@ -494,22 +415,13 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     function testTransferPimFeeEligibility_FailsIfCallerIsNotPimFeeRecipient()
         public
     {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        
         (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            IPIM_WorkflowFactory_v1.PIMConfig({
-                fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                authorizerMetadata: roleAuthorizerMetadata,
-                bcProperties: bcProperties,
-                issuanceTokenParams: issuanceTokenParams,
-                collateralToken: address(token),
-                admin: address(this),
-                recipient: workflowDeployer,
-                isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true,
-                withInitialLiquidity: true
-            })
+            pimConfig
         );
 
         address fundingManager = address(orchestrator.fundingManager());
@@ -523,5 +435,21 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
         vm.prank(alice);
         factory.transferPimFeeEligibility(fundingManager, address(0xB0B));
+    }
+
+    // UTILS
+    function getDefaultPIMConfig() internal view returns (IPIM_WorkflowFactory_v1.PIMConfig memory) {
+        return IPIM_WorkflowFactory_v1.PIMConfig({
+            fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            authorizerMetadata: roleAuthorizerMetadata,
+            bcProperties: bcProperties,
+            issuanceTokenParams: issuanceTokenParams,
+            collateralToken: address(token),
+            admin: address(this),
+            recipient: alice,
+            isRenouncedIssuanceToken: true,
+            isRenouncedWorkflow: true,
+            withInitialLiquidity: true
+        });
     }
 }
