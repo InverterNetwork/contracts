@@ -190,7 +190,7 @@ contract Governor_v1 is
     function moduleFactoryInitCallback(
         IInverterBeacon_v1[] calldata registeredBeacons
     ) external onlyLinkedModuleFactory linkedBeaconsEmpty {
-        //Make sure Beacons are accessible for Governor
+        // Make sure Beacons are accessible for Governor
         uint length = registeredBeacons.length;
         for (uint i = 0; i < length; i++) {
             if (!isBeaconAccessible(address(registeredBeacons[i]))) {

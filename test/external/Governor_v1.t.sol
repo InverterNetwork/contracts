@@ -599,10 +599,10 @@ contract GovernorV1Test is Test {
             modFactory, metadata, IInverterBeacon_v1(ownedBeaconMock)
         );
 
-        //Check if beacon is in linked beacon list
+        // Check if beacon is in linked beacon list
         assertEq(address(ownedBeaconMock), address(gov.getLinkedBeacons()[0]));
 
-        //expect that the target function is called
+        // expect that the target function is called
         assertEq(modFactory.howManyCalls(), 1);
     }
 
@@ -890,7 +890,7 @@ contract GovernorV1Test is Test {
     {
         vm.assume(beaconAmount < 1000);
 
-        //Create beacons
+        // Create beacons
         IInverterBeacon_v1[] memory newBeacons =
             new IInverterBeacon_v1[](beaconAmount);
 
@@ -900,7 +900,7 @@ contract GovernorV1Test is Test {
             );
         }
 
-        //Fill Governor with beacons
+        // Fill Governor with beacons
         vm.prank(address(modFactory));
         gov.moduleFactoryInitCallback(newBeacons);
 

@@ -265,9 +265,9 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    ///@dev Internal function to register metadata
-    ///@param metadata The metadata to register
-    ///@param beacon The beacon to register the metadata to
+    /// @dev Internal function to register metadata
+    /// @param metadata The metadata to register
+    /// @param beacon The beacon to register the metadata to
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
