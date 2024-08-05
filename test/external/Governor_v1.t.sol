@@ -70,7 +70,7 @@ contract GovernorV1Test is Test {
 
     function setUp() public {
         modFactory = new ModuleFactoryV1Mock();
-        
+
         address impl = address(new Governor_v1());
         gov = Governor_v1(Clones.clone(impl));
         gov.init(

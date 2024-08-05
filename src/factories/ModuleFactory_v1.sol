@@ -158,7 +158,7 @@ contract ModuleFactory_v1 is
         IGovernor_v1(_governor).moduleFactoryInitCallback(
             initialBeaconRegistration
         );
-        
+
         emit GovernorSet(_governor);
     }
 

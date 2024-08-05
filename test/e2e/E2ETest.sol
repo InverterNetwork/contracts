@@ -148,7 +148,7 @@ contract E2ETest is E2EModuleRegistry {
                 )
             )
         );
-        
+
         moduleFactory.init(
             address(gov),
             new IModule_v1.Metadata[](0),
