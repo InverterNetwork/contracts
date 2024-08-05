@@ -146,7 +146,24 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(isBcMinter);
     }
 
-    function testCreatePIMWorkflow_WithInitialLiquidity() public {}
+    function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
+        // IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        // pimConfig.withInitialLiquidity = false;
+        
+        // (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        // factory.createPIMWorkflow(
+        //     workflowConfig,
+        //     paymentProcessorConfig,
+        //     logicModuleConfigs,
+        //     pimConfig
+        // );
+
+        // // CHECK: initialIssuanceSupply is burnt (sent to 0xDEAD)
+        // assertEq(
+        //     issuanceToken.balanceOf(address(0xDEAD)),
+        //     bcProperties.initialIssuanceSupply
+        // );
+    }
 
     function testCreatePIMWorkflow_IfFullyRenounced() public {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
@@ -181,6 +198,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         pimConfig.isRenouncedIssuanceToken = false;
         pimConfig.isRenouncedWorkflow = false;
         pimConfig.recipient = alice;
+        pimConfig.admin = workflowDeployer;
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
@@ -205,6 +223,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         pimConfig.isRenouncedIssuanceToken = true;
         pimConfig.isRenouncedWorkflow = false;
         pimConfig.recipient = alice;
+        pimConfig.admin = workflowDeployer;
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
