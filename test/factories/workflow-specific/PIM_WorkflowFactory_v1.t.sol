@@ -43,7 +43,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     address mockTrustedForwarder = vm.addr(3);
     address alice = vm.addr(0xA11CE);
 
-    uint initialCollateral = 300;
+    uint initialCollateral = 3;
 
     event PIMWorkflowCreated(address indexed issuanceToken);
 
@@ -117,7 +117,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             address(0), address(0), address(0), address(0), true, true
         );
         // get default config
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
@@ -127,15 +128,6 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             pimConfig
         );
 
-        // CHECK: issuance token IS DEPLOYED and initial issuance supply IS MINTED to recipient
-        assertEq(
-            issuanceToken.balanceOf(alice), bcProperties.initialIssuanceSupply
-        );
-        // CHECK: initial collateral supply IS sent to bonding curve
-        assertEq(
-            token.balanceOf(address(orchestrator.fundingManager())),
-            bcProperties.initialCollateralSupply
-        );
         // CHECK: factory DOES NOT have minting rights on token anymore
         bool isFactoryStillMinter =
             issuanceToken.allowedMinters(address(factory));
@@ -146,27 +138,62 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(isBcMinter);
     }
 
-    function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
-        // IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
-        // pimConfig.withInitialLiquidity = false;
-        
-        // (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        // factory.createPIMWorkflow(
-        //     workflowConfig,
-        //     paymentProcessorConfig,
-        //     logicModuleConfigs,
-        //     pimConfig
-        // );
+    function testCreatePIMWorkflow_WithInitialLiquidity() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
+        pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
 
-        // // CHECK: initialIssuanceSupply is burnt (sent to 0xDEAD)
-        // assertEq(
-        //     issuanceToken.balanceOf(address(0xDEAD)),
-        //     bcProperties.initialIssuanceSupply
-        // );
+        uint preCollateralBalance = token.balanceOf(address(this));
+
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
+            workflowConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            pimConfig
+        );
+
+        uint postCollateralBalance = token.balanceOf(address(this));
+        // CHECK: curve HAS received initial collateral supply
+        assertTrue(
+            preCollateralBalance - postCollateralBalance == initialCollateral
+        );
+        // CHECK: initialIssuanceSupply is SENT to recipient
+        assertEq(
+            issuanceToken.balanceOf(pimConfig.recipient),
+            bcProperties.initialIssuanceSupply
+        );
+    }
+
+    function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
+        pimConfig.withInitialLiquidity = false;
+
+        uint preCollateralBalance = token.balanceOf(address(this));
+
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
+            workflowConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            pimConfig
+        );
+
+        uint postCollateralBalance = token.balanceOf(address(this));
+
+        // CHECK: deployer has still SAME balance of collateral token as before (= nothing sent to curve)
+        assertEq(preCollateralBalance, postCollateralBalance);
+        // CHECK: initialIssuanceSupply is BURNT (sent to 0xDEAD)
+        assertEq(
+            issuanceToken.balanceOf(address(0xDEAD)),
+            bcProperties.initialIssuanceSupply
+        );
     }
 
     function testCreatePIMWorkflow_IfFullyRenounced() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
         pimConfig.isRenouncedIssuanceToken = true;
         pimConfig.isRenouncedWorkflow = true;
 
@@ -194,7 +221,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_IfNotRenounced() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
         pimConfig.isRenouncedIssuanceToken = false;
         pimConfig.isRenouncedWorkflow = false;
         pimConfig.recipient = alice;
@@ -219,7 +247,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_IfTokenRenounced() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
         pimConfig.isRenouncedIssuanceToken = true;
         pimConfig.isRenouncedWorkflow = false;
         pimConfig.recipient = alice;
@@ -244,7 +273,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_IfWorkflowRenounced() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
         pimConfig.isRenouncedIssuanceToken = false;
         pimConfig.isRenouncedWorkflow = true;
 
@@ -271,7 +301,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testCreatePIMWorkflow_WithFee() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
 
         // set fee on factory
         uint feeInBasisPoints = 100;
@@ -301,7 +332,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     function testCreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
         public
     {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
         address deployer = address(0xB0B);
         vm.prank(deployer);
 
@@ -358,7 +390,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testWithdrawPimFee() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
@@ -382,7 +415,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
 
         (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
@@ -405,7 +439,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     function testTransferPimFeeEligibility() public {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
 
         (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
@@ -434,8 +469,9 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     function testTransferPimFeeEligibility_FailsIfCallerIsNotPimFeeRecipient()
         public
     {
-        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig = getDefaultPIMConfig();
-        
+        IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
+            getDefaultPIMConfig();
+
         (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
@@ -457,7 +493,11 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     }
 
     // UTILS
-    function getDefaultPIMConfig() internal view returns (IPIM_WorkflowFactory_v1.PIMConfig memory) {
+    function getDefaultPIMConfig()
+        internal
+        view
+        returns (IPIM_WorkflowFactory_v1.PIMConfig memory)
+    {
         return IPIM_WorkflowFactory_v1.PIMConfig({
             fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
             authorizerMetadata: roleAuthorizerMetadata,

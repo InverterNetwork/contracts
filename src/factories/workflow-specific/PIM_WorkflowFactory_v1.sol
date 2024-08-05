@@ -125,7 +125,8 @@ contract PIM_WorkflowFactory_v1 is
             issuanceToken,
             PIMConfig.bcProperties.initialCollateralSupply,
             PIMConfig.bcProperties.initialIssuanceSupply,
-            PIMConfig.recipient
+            PIMConfig.recipient,
+            PIMConfig.withInitialLiquidity
         );
 
         // enable bonding curve to mint issuance token
@@ -212,20 +213,36 @@ contract PIM_WorkflowFactory_v1 is
         ERC20Issuance_v1 issuanceToken,
         uint initialCollateralSupply,
         uint initialIssuanceSupply,
-        address recipient
+        address recipient,
+        bool withInitialLiquidity
     ) private {
-        // collateral token is paid for by the msg.sender
-        collateralToken.transferFrom(
-            _msgSender(), address(fundingManager), initialCollateralSupply
-        );
+        if (withInitialLiquidity) {
+            // collateral token is paid for by the msg.sender
+            collateralToken.transferFrom(
+                _msgSender(), address(fundingManager), initialCollateralSupply
+            );
 
-        if (creationFee > 0) {
-            uint feeAmount = _calculateFee(initialCollateralSupply);
-            collateralToken.transferFrom(_msgSender(), address(this), feeAmount);
+            if (creationFee > 0) {
+                uint feeAmount = _calculateFee(initialCollateralSupply);
+                collateralToken.transferFrom(
+                    _msgSender(), address(this), feeAmount
+                );
+            }
+
+            // issuance token is minted to the the specified recipient
+            issuanceToken.mint(recipient, initialIssuanceSupply);
+        } else {
+            // TODO: move fee capture to first buy
+            if (creationFee > 0) {
+                uint feeAmount = _calculateFee(initialCollateralSupply);
+                collateralToken.transferFrom(
+                    _msgSender(), address(this), feeAmount
+                );
+            }
+
+            // issuance token is minted to the the specified recipient
+            issuanceToken.mint(address(0xDEAD), initialIssuanceSupply);
         }
-
-        // issuance token is minted to the the specified recipient
-        issuanceToken.mint(recipient, initialIssuanceSupply);
     }
 
     function _transferTokenOwnership(
