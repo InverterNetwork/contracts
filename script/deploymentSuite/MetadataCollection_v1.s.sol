@@ -17,11 +17,7 @@ contract MetadataCollection_v1 {
 
     // Governor
     IModule_v1.Metadata public governorMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "Governor_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "Governor_v1"
     );
 
     // TransactionForwarder
@@ -29,17 +25,13 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "TransactionForwarder_v1"
     );
 
     // FeeManager
     IModule_v1.Metadata public feeManagerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "FeeManager_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "FeeManager_v1"
     );
 
     // ------------------------------------------------------------------------
@@ -50,7 +42,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "ModuleFactory_v1"
     );
 
@@ -59,7 +51,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "OrchestratorFactory_v1"
     );
 
@@ -71,7 +63,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "Orchestrator_v1"
     );
 
@@ -80,11 +72,7 @@ contract MetadataCollection_v1 {
 
     // RoleAuthorizer
     IModule_v1.Metadata public roleAuthorizerMetadata = IModule_v1.Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "AUT_Roles_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "AUT_Roles_v1"
     );
 
     // TokenGatedRoleAuthorizer
@@ -93,7 +81,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "AUT_TokenGated_Roles_v1"
     );
 
@@ -102,7 +90,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "AUT_EXT_VotingRoles_v1"
     );
 
@@ -115,7 +103,7 @@ contract MetadataCollection_v1 {
             1,
             0,
             0,
-            "https://github.com/InverterNetwork/inverter-contracts",
+            "https://github.com/InverterNetwork/contracts",
             "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
         );
 
@@ -126,7 +114,7 @@ contract MetadataCollection_v1 {
             1,
             0,
             0,
-            "https://github.com/InverterNetwork/inverter-contracts",
+            "https://github.com/InverterNetwork/contracts",
             "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
         );
 
@@ -137,7 +125,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "FM_DepositVault_v1"
     ); */
 
@@ -149,7 +137,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "LM_PC_Bounties_v1"
     );
 
@@ -158,7 +146,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "LM_PC_KPIRewarder_v1"
     );
 
@@ -167,7 +155,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "LM_PC_PaymentRouter_v1"
     );
 
@@ -176,7 +164,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "LM_PC_RecurringPayments_v1"
     );
 
@@ -185,7 +173,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "LM_PC_Staking_v1"
     );
 
@@ -195,11 +183,7 @@ contract MetadataCollection_v1 {
     // SimplePaymentProcessor
     IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
         .Metadata(
-        1,
-        0,
-        0,
-        "https://github.com/InverterNetwork/inverter-contracts",
-        "PP_Simple_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v1"
     );
 
     // StreamingPaymentProcessor
@@ -208,7 +192,7 @@ contract MetadataCollection_v1 {
         1,
         0,
         0,
-        "https://github.com/InverterNetwork/inverter-contracts",
+        "https://github.com/InverterNetwork/contracts",
         "PP_Streaming_v1"
     );
 }
