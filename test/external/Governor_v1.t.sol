@@ -142,6 +142,9 @@ contract GovernorV1Test is Test {
                 )
             );
         }
+
+        vm.prank(communityMultisig);
+        gov.setModuleFactory(adr);
     }
 
     function testValidTimelockPeriod(uint amt) public {
