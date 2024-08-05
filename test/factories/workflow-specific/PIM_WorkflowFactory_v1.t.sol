@@ -131,7 +131,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
 
@@ -169,7 +170,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
 
@@ -203,7 +205,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: workflowDeployer,
                 recipient: alice,
                 isRenouncedIssuanceToken: false,
-                isRenouncedWorkflow: false
+                isRenouncedWorkflow: false,
+                withInitialLiquidity: true
             })
         );
 
@@ -232,7 +235,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: workflowDeployer,
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: false
+                isRenouncedWorkflow: false,
+                withInitialLiquidity: true
             })
         );
 
@@ -261,7 +265,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: false,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
 
@@ -304,7 +309,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: false,
-                isRenouncedWorkflow: false
+                isRenouncedWorkflow: false,
+                withInitialLiquidity: true
             })
         );
 
@@ -336,7 +342,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
     }
@@ -398,7 +405,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: alice,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
         address fundingManager = address(orchestrator.fundingManager());
@@ -429,7 +437,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: workflowDeployer,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
 
@@ -460,7 +469,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: workflowDeployer,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
 
@@ -497,7 +507,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
                 admin: address(this),
                 recipient: workflowDeployer,
                 isRenouncedIssuanceToken: true,
-                isRenouncedWorkflow: true
+                isRenouncedWorkflow: true,
+                withInitialLiquidity: true
             })
         );
 

@@ -91,6 +91,9 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param collateralToken The collateral token.
     /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
     /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
+    /// @param withInitialLiquidity If true initial liquidity will be added to the bonding curve. 
+    /// In this case the recipient will receive the initial issuance token supply. 
+    /// If false initial liquidity will not be added to the bonding curve and initial token supply will be burned.
     struct PIMConfig {
         IModule_v1.Metadata fundingManagerMetadata;
         IModule_v1.Metadata authorizerMetadata;
@@ -102,6 +105,7 @@ interface IPIM_WorkflowFactory_v1 {
         address collateralToken;
         bool isRenouncedIssuanceToken;
         bool isRenouncedWorkflow;
+        bool withInitialLiquidity;
     }
 
     //--------------------------------------------------------------------------
