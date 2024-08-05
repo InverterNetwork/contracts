@@ -102,7 +102,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     // Funding Managers
     address public impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1;
     address public impl_mod_FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1;
-    // address public impl_mod_FM_DepositVault_v1;
+    address public impl_mod_FM_DepositVault_v1;
 
     // Logic Modules
     address public impl_mod_LM_PC_Bounties_v1;
@@ -227,11 +227,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             )
         );
 
-        /* impl_mod_FM_DepositVault_v1 = deployAndLogWithCreate2(
+        impl_mod_FM_DepositVault_v1 = deployAndLogWithCreate2(
             "FM_DepositVault_v1",
-            
             vm.getCode("FM_DepositVault_v1.sol:FM_DepositVault_v1")
-        ); */
+        );
 
         // Logic Modules
         console2.log("--Logic Modules");
