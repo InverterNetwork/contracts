@@ -93,7 +93,7 @@ contract ModuleFactoryV1Test is Test {
         address impl = address(new ModuleFactory_v1(reverter, address(0)));
         factory = ModuleFactory_v1(Clones.clone(impl));
         vm.expectEmit(true, false, false, false);
-        emit GovernorSet(governanceContract);
+        emit GovernorSet(address(governor));
         factory.init(
             address(governor),
             new IModule_v1.Metadata[](0),
@@ -346,7 +346,7 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(module));
 
         // Register ModuleV1Mock for given metadata.
-        vm.prank(governanceContract);
+        vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
         // Since we don't know the exact address the cloned module will have, we only check that an event of the right type is fired
@@ -402,7 +402,7 @@ contract ModuleFactoryV1Test is Test {
         beacon.overrideImplementation(address(module));
 
         // Register ModuleV1Mock for given metadata.
-        vm.prank(governanceContract);
+        vm.prank(address(governor));
         factory.registerMetadata(metadata, beacon);
 
         // Create a snapshot to revert to, to simulate a reorg later

@@ -124,7 +124,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         // Governor
         console2.log("-Governor");
         Governor_v1(governor).init(
-            communityMultisig, teamMultisig, 1 weeks, feeManager
+            communityMultisig, teamMultisig, 1 weeks, feeManager, moduleFactory
         );
 
         // FeeManager
