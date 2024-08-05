@@ -44,6 +44,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     address alice = vm.addr(0xA11CE);
 
     uint initialCollateral = 3;
+    uint firstCollateralIn = 100;
 
     event PIMWorkflowCreated(address indexed issuanceToken);
 
@@ -106,8 +107,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         });
 
         // mint collateral token to deployer and approve to factory
-        token.mint(address(this), initialCollateral);
-        token.approve(address(factory), initialCollateral);
+        token.mint(address(this), initialCollateral + firstCollateralIn);
+        token.approve(address(factory), initialCollateral + firstCollateralIn);
     }
 
     function testCreatePIMWorkflow() public {
@@ -136,6 +137,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         bool isBcMinter =
             issuanceToken.allowedMinters(address(orchestrator.fundingManager()));
         assertTrue(isBcMinter);
+        // CHECK: deployer uses firstCollateralIn (amount) to make first purchase
     }
 
     function testCreatePIMWorkflow_WithInitialLiquidity() public {
@@ -144,6 +146,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
 
         uint preCollateralBalance = token.balanceOf(address(this));
+        console.log(preCollateralBalance);
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
@@ -154,12 +157,17 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
 
         uint postCollateralBalance = token.balanceOf(address(this));
-        // CHECK: curve HAS received initial collateral supply
-        assertTrue(
-            preCollateralBalance - postCollateralBalance == initialCollateral
+        console.log(postCollateralBalance);
+        console.log(
+            "difference: ", preCollateralBalance - postCollateralBalance
         );
-        // CHECK: initialIssuanceSupply is SENT to recipient
-        assertEq(
+        // CHECK: curve HAS received initial collateral supply (and firstCollateralIn)
+        assertTrue(
+            preCollateralBalance - postCollateralBalance
+                == initialCollateral + firstCollateralIn
+        );
+        // CHECK: recipient receives initialIssuanceSupply plus first purchase amount
+        assertGt(
             issuanceToken.balanceOf(pimConfig.recipient),
             bcProperties.initialIssuanceSupply
         );
@@ -183,12 +191,16 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         uint postCollateralBalance = token.balanceOf(address(this));
 
         // CHECK: deployer has still SAME balance of collateral token as before (= nothing sent to curve)
-        assertEq(preCollateralBalance, postCollateralBalance);
+        assertEq(
+            preCollateralBalance - postCollateralBalance, firstCollateralIn
+        );
         // CHECK: initialIssuanceSupply is BURNT (sent to 0xDEAD)
         assertEq(
             issuanceToken.balanceOf(address(0xDEAD)),
             bcProperties.initialIssuanceSupply
         );
+        // CHECK: recipient receives some amount of issuanceToken (due to first purchase)
+        assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
     }
 
     function testCreatePIMWorkflow_IfFullyRenounced() public {
@@ -504,6 +516,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             bcProperties: bcProperties,
             issuanceTokenParams: issuanceTokenParams,
             collateralToken: address(token),
+            firstCollateralIn: firstCollateralIn,
             admin: address(this),
             recipient: alice,
             isRenouncedIssuanceToken: true,

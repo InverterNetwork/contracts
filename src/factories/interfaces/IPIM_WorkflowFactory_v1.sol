@@ -89,6 +89,7 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param recipient The recipient of the initial issuance token supply.
     /// @param admin Is set as token owner and workflow admin unless renounced.
     /// @param collateralToken The collateral token.
+    /// @param firstCollateralIn Amount of collateral that is used for the first purchase from the bonding curve.
     /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
     /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
     /// @param withInitialLiquidity If true initial liquidity will be added to the bonding curve.
@@ -103,6 +104,7 @@ interface IPIM_WorkflowFactory_v1 {
         address admin;
         address recipient;
         address collateralToken;
+        uint firstCollateralIn;
         bool isRenouncedIssuanceToken;
         bool isRenouncedWorkflow;
         bool withInitialLiquidity;

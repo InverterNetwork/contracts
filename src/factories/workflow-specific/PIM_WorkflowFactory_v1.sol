@@ -118,6 +118,9 @@ contract PIM_WorkflowFactory_v1 is
                 .PIM_WorkflowFactory__InvalidConfiguration();
         }
 
+        // enable bonding curve to mint issuance token
+        issuanceToken.setMinter(fundingManager, true);
+
         // transfer initial collateral supply from msg.sender to  bonding curve and mint issuance token to recipient
         _manageInitialSupplies(
             IBondingCurveBase_v1(fundingManager),
@@ -129,8 +132,13 @@ contract PIM_WorkflowFactory_v1 is
             PIMConfig.withInitialLiquidity
         );
 
-        // enable bonding curve to mint issuance token
-        issuanceToken.setMinter(fundingManager, true);
+        // if applicable make first purchase
+        _manageInitialPurchase(
+            IBondingCurveBase_v1(fundingManager),
+            IERC20(PIMConfig.collateralToken),
+            PIMConfig.firstCollateralIn,
+            PIMConfig.recipient
+        );
 
         // disable factory to mint issuance token
         issuanceToken.setMinter(address(this), false);
@@ -243,6 +251,26 @@ contract PIM_WorkflowFactory_v1 is
             // issuance token is minted to the the specified recipient
             issuanceToken.mint(address(0xDEAD), initialIssuanceSupply);
         }
+    }
+
+    function _manageInitialPurchase(
+        IBondingCurveBase_v1 fundingManager,
+        IERC20 collateralToken,
+        uint firstCollateralIn,
+        address recipient
+    ) private {
+        // transfer initial collateral amount from deployer to factory
+        collateralToken.transferFrom(
+            _msgSender(), address(this), firstCollateralIn
+        );
+
+        // set allowance for curve to spend factory's tokens
+        collateralToken.approve(address(fundingManager), firstCollateralIn);
+
+        // make first purchase
+        IBondingCurveBase_v1(fundingManager).buyFor(
+            recipient, firstCollateralIn, 1
+        );
     }
 
     function _transferTokenOwnership(
