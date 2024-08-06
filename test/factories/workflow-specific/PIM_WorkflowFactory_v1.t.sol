@@ -22,6 +22,8 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
@@ -43,8 +45,10 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
     address mockTrustedForwarder = vm.addr(3);
     address alice = vm.addr(0xA11CE);
 
-    uint initialCollateral = 3;
-    uint firstCollateralIn = 100;
+    uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
+    uint initialCollateralSupply = 3_163_408_614_166_851_161;
+    uint firstCollateralIn = 100_000_000;
+    uint32 reserveRatio = 160_000;
 
     event PIMWorkflowCreated(address indexed issuanceToken);
 
@@ -88,14 +92,14 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         bcProperties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
             .BondingCurveProperties({
             formula: address(formula),
-            reserveRatioForBuying: 333_333,
-            reserveRatioForSelling: 333_333,
+            reserveRatioForBuying: reserveRatio,
+            reserveRatioForSelling: reserveRatio,
             buyFee: 0,
             sellFee: 0,
             buyIsOpen: true,
             sellIsOpen: true,
-            initialIssuanceSupply: 1,
-            initialCollateralSupply: 3
+            initialIssuanceSupply: initialIssuuanceSupply,
+            initialCollateralSupply: initialCollateralSupply
         });
 
         // Deploy Issuance Token
@@ -107,8 +111,10 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         });
 
         // mint collateral token to deployer and approve to factory
-        token.mint(address(this), initialCollateral + firstCollateralIn);
-        token.approve(address(factory), initialCollateral + firstCollateralIn);
+        token.mint(address(this), initialCollateralSupply + firstCollateralIn);
+        token.approve(
+            address(factory), initialCollateralSupply + firstCollateralIn
+        );
     }
 
     /* Test testCreatePIMWorkflow
@@ -170,26 +176,61 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             getDefaultPIMConfig();
         pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
 
-        uint preCollateralBalance = token.balanceOf(address(this));
-
-        (, ERC20Issuance_v1 issuanceToken) = factory.createPIMWorkflow(
+        uint preDeploymentCollateralBalance = token.balanceOf(address(this));
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
             pimConfig
         );
+        address fundingManager = address(orchestrator.fundingManager());
+        uint postDeploymentCollateralBalance = token.balanceOf(address(this));
 
-        uint postCollateralBalance = token.balanceOf(address(this));
         // CHECK: curve HAS received initial collateral supply (and firstCollateralIn)
         assertTrue(
-            preCollateralBalance - postCollateralBalance
-                == initialCollateral + firstCollateralIn
+            preDeploymentCollateralBalance - postDeploymentCollateralBalance
+                == initialCollateralSupply + firstCollateralIn
         );
         // CHECK: recipient receives initialIssuanceSupply plus first purchase amount
         assertGt(
             issuanceToken.balanceOf(pimConfig.recipient),
             bcProperties.initialIssuanceSupply
         );
+        // CHECK: if recipient SELLS complete stack and BUYS BACK they get same amount of issuanceToken
+        vm.startPrank(pimConfig.recipient);
+        // get issuance balance before sale and rebuy
+        uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
+        // get static price before sale
+        uint staticPriceBefore = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        // get volume of first purchase in issuance token
+        uint firstPurchaseVolume = balanceBefore - pimConfig.bcProperties.initialIssuanceSupply;
+        issuanceToken.approve(fundingManager, firstPurchaseVolume);
+        uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
+            .calculateSaleReturn(firstPurchaseVolume);
+        // use volume of first purchase to sell for collateral
+        IRedeemingBondingCurveBase_v1(fundingManager).sell(
+            firstPurchaseVolume, collateralAmountOut
+        );
+        // alice only has initial issuance supply left
+        assert(issuanceToken.balanceOf(pimConfig.recipient) == pimConfig.bcProperties.initialIssuanceSupply);
+        token.approve(fundingManager, collateralAmountOut);
+        uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
+            .calculatePurchaseReturn(collateralAmountOut);
+        // now use the collateral from the sale to buy back
+        IBondingCurveBase_v1(fundingManager).buy(
+            collateralAmountOut, issuanceAmountOut
+        );
+        uint staticPriceAfter = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
+        assertEq(
+            balanceBefore, issuanceToken.balanceOf(pimConfig.recipient)
+        );
+        // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
+        assertEq(
+            staticPriceBefore, staticPriceAfter
+        );
+        vm.stopPrank();
     }
 
     function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
@@ -199,7 +240,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         uint preCollateralBalance = token.balanceOf(address(this));
 
-        (, ERC20Issuance_v1 issuanceToken) = factory.createPIMWorkflow(
+        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+        factory.createPIMWorkflow(
             workflowConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
@@ -207,6 +249,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
 
         uint postCollateralBalance = token.balanceOf(address(this));
+
+        address fundingManager = address(orchestrator.fundingManager());
 
         // CHECK: deployer has still SAME balance of collateral token as before (= nothing sent to curve)
         assertEq(
@@ -219,6 +263,39 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         );
         // CHECK: recipient receives some amount of issuanceToken (due to first purchase)
         assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
+
+
+        vm.startPrank(pimConfig.recipient);
+        // get issuance balance before sale and rebuy
+        uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
+        // get static price before sale
+        uint staticPriceBefore = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        issuanceToken.approve(fundingManager, balanceBefore);
+        uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
+            .calculateSaleReturn(balanceBefore);
+        // use complete issuance balance to sell for collateral
+        IRedeemingBondingCurveBase_v1(fundingManager).sell(
+            balanceBefore, collateralAmountOut
+        );
+        // alice doesn't have any issuance token left
+        assert(issuanceToken.balanceOf(pimConfig.recipient) == 0);
+        token.approve(fundingManager, collateralAmountOut);
+        uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
+            .calculatePurchaseReturn(collateralAmountOut);
+        // now use the collateral from the sale to buy back
+        IBondingCurveBase_v1(fundingManager).buy(
+            collateralAmountOut, issuanceAmountOut
+        );
+        uint staticPriceAfter = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
+        assertEq(
+            balanceBefore, issuanceToken.balanceOf(pimConfig.recipient)
+        );
+        // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
+        assertEq(
+            staticPriceBefore, staticPriceAfter
+        );
+        vm.stopPrank();
     }
 
     function testCreatePIMWorkflow_IfFullyRenounced() public {
