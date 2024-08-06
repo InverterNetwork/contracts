@@ -138,15 +138,13 @@ contract AUT_Roles_v1 is
     // Public functions
 
     /// @inheritdoc IAuthorizer_v1
-    function hasModuleRole(bytes32 role, address who)
+    function checkForRole(bytes32 role, address who)
         external
         view
         virtual
         returns (bool)
     {
-        // Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        return hasRole(roleId, who);
+        return hasRole(role, who);
     }
 
     /// @inheritdoc IAuthorizer_v1

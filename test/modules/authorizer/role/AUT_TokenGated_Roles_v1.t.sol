@@ -579,7 +579,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
         assertEq(
             false, _authorizer.hasTokenRole(moduleRoleId, address(roleToken))
         );
-        assertEq(false, _authorizer.hasModuleRole(role, address(roleToken)));
+        assertEq(
+            false, _authorizer.checkForRole(moduleRoleId, address(roleToken))
+        );
 
         _authorizer.revokeRoleFromModule(role, address(roleToken));
 
@@ -631,7 +633,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
             // we ensure both ways to check give the same result
             vm.prank(address(mockModule));
-            bool result = _authorizer.hasModuleRole(ROLE_TOKEN, callers[i]);
+            bool result = _authorizer.checkForRole(roleId, callers[i]);
             assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
 
             // we verify the result ir correct
@@ -676,7 +678,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
             // we ensure both ways to check give the same result
             vm.prank(address(mockModule));
-            bool result = _authorizer.hasModuleRole(ROLE_NFT, callers[i]);
+            bool result = _authorizer.checkForRole(roleId, callers[i]);
             assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
 
             // we verify the result ir correct
@@ -713,11 +715,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         assertEq(true, _authorizer.hasRole(roleId, address(roleToken))); // The token has been added to the core authorizer mapping
 
+        assertEq(false, _authorizer.checkForRole(roleId, address(roleToken))); // The token itself  does not have the role
         assertEq(
-            false, _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken))
-        ); // The token itself  does not have the role
-        assertEq(
-            _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken)),
+            _authorizer.checkForRole(roleId, address(roleToken)),
             _authorizer.hasTokenRole(roleId, address(roleToken))
         ); // We ensure both ways to check give the same result
 
@@ -731,7 +731,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
             // we ensure both ways to check give the same result
             vm.prank(address(mockModule));
-            bool result = _authorizer.hasModuleRole(ROLE_TOKEN, callers[i]);
+            bool result = _authorizer.checkForRole(roleId, callers[i]);
             assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
 
             // we verify the result is correct
@@ -756,11 +756,9 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
         assertEq(false, _authorizer.hasRole(roleId, address(roleToken))); // The token has been revoked from the core authorizer mapping
 
+        assertEq(false, _authorizer.checkForRole(roleId, address(roleToken))); // The token itsef still does not have the role
         assertEq(
-            false, _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken))
-        ); // The token itsef still does not have the role
-        assertEq(
-            _authorizer.hasModuleRole(ROLE_TOKEN, address(roleToken)),
+            _authorizer.checkForRole(roleId, address(roleToken)),
             _authorizer.hasTokenRole(roleId, address(roleToken))
         ); // We ensure both ways to check give the same result
 
@@ -774,7 +772,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
 
             // we ensure both ways to check give the same result
             vm.prank(address(mockModule));
-            bool result = _authorizer.hasModuleRole(ROLE_TOKEN, callers[i]);
+            bool result = _authorizer.checkForRole(ROLE_TOKEN, callers[i]);
             assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
 
             // we verify the user is not authorized
