@@ -202,9 +202,11 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         // get issuance balance before sale and rebuy
         uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
         // get static price before sale
-        uint staticPriceBefore = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        uint staticPriceBefore =
+            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
         // get volume of first purchase in issuance token
-        uint firstPurchaseVolume = balanceBefore - pimConfig.bcProperties.initialIssuanceSupply;
+        uint firstPurchaseVolume =
+            balanceBefore - pimConfig.bcProperties.initialIssuanceSupply;
         issuanceToken.approve(fundingManager, firstPurchaseVolume);
         uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
             .calculateSaleReturn(firstPurchaseVolume);
@@ -213,7 +215,10 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             firstPurchaseVolume, collateralAmountOut
         );
         // alice only has initial issuance supply left
-        assert(issuanceToken.balanceOf(pimConfig.recipient) == pimConfig.bcProperties.initialIssuanceSupply);
+        assert(
+            issuanceToken.balanceOf(pimConfig.recipient)
+                == pimConfig.bcProperties.initialIssuanceSupply
+        );
         token.approve(fundingManager, collateralAmountOut);
         uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
             .calculatePurchaseReturn(collateralAmountOut);
@@ -221,15 +226,12 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         IBondingCurveBase_v1(fundingManager).buy(
             collateralAmountOut, issuanceAmountOut
         );
-        uint staticPriceAfter = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        uint staticPriceAfter =
+            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
         // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
-        assertEq(
-            balanceBefore, issuanceToken.balanceOf(pimConfig.recipient)
-        );
+        assertEq(balanceBefore, issuanceToken.balanceOf(pimConfig.recipient));
         // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
-        assertEq(
-            staticPriceBefore, staticPriceAfter
-        );
+        assertEq(staticPriceBefore, staticPriceAfter);
         vm.stopPrank();
     }
 
@@ -264,12 +266,12 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         // CHECK: recipient receives some amount of issuanceToken (due to first purchase)
         assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
 
-
         vm.startPrank(pimConfig.recipient);
         // get issuance balance before sale and rebuy
         uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
         // get static price before sale
-        uint staticPriceBefore = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        uint staticPriceBefore =
+            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
         issuanceToken.approve(fundingManager, balanceBefore);
         uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
             .calculateSaleReturn(balanceBefore);
@@ -286,15 +288,12 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         IBondingCurveBase_v1(fundingManager).buy(
             collateralAmountOut, issuanceAmountOut
         );
-        uint staticPriceAfter = IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+        uint staticPriceAfter =
+            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
         // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
-        assertEq(
-            balanceBefore, issuanceToken.balanceOf(pimConfig.recipient)
-        );
+        assertEq(balanceBefore, issuanceToken.balanceOf(pimConfig.recipient));
         // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
-        assertEq(
-            staticPriceBefore, staticPriceAfter
-        );
+        assertEq(staticPriceBefore, staticPriceAfter);
         vm.stopPrank();
     }
 
