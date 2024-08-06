@@ -137,7 +137,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         external;
 
     /// @notice Executes replaces the current payment processor with `paymentProcessor_`
-    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payment orders are lost. Make sure to resolve those payments properly beforehand.
+    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payments are lost. Make sure all payment orders in the Logic Modules are resolved properly beforehand.
     /// @dev Only callable by authorized caller.
     /// @param paymentProcessor_ The address of the new payment processor module.
     function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
