@@ -135,6 +135,13 @@ abstract contract Module_v1 is
         _;
     }
 
+    /// @dev Checks if the given Address is valid.
+    /// @param to The address to check.
+    modifier validAddress(address to) {
+        _validAddressModifier(to);
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Initialization
 
@@ -298,6 +305,12 @@ abstract contract Module_v1 is
     function _onlyOrchestratorModifier() internal view {
         if (_msgSender() != address(__Module_orchestrator)) {
             revert Module__OnlyCallableByOrchestrator();
+        }
+    }
+
+    function _validAddressModifier(address to) internal view {
+        if (to == address(0) || to == address(this)) {
+            revert Module__InvalidAddress();
         }
     }
 

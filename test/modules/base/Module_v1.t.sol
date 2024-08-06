@@ -388,4 +388,11 @@ contract ModuleBaseV1Test is ModuleTest {
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
         module.modifierOnlyPaymentClientCheck();
     }
+
+    function testValidAddress(address adr) public {
+        if (adr == address(0) || adr == address(module)) {
+            vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        }
+        module.modifierOnlyValidAddressCheck(adr);
+    }
 }

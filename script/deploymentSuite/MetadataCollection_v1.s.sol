@@ -118,16 +118,15 @@ contract MetadataCollection_v1 {
             "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
         );
 
-    /* 
     // DepositVaultFundingManager
-    IModule_v1.Metadata public depositVaultFundingManagerMetadata =
-    IModule_v1.Metadata(
+    IModule_v1.Metadata public depositVaultFundingManagerMetadata = IModule_v1
+        .Metadata(
         1,
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
         "FM_DepositVault_v1"
-    ); */
+    );
 
     // ------------------------------------------------------------------------
     // Logic Module

@@ -19,6 +19,33 @@ import "@fm/rebasing/interfaces/IERC20Metadata.sol";
  * @author Buttonwood Foundation
  */
 interface IRebasingERC20 is IERC20Metadata {
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Self-deposits are not allowed.
+    error Module__RebasingERC20__CannotSelfDeposit();
+
+    /// @notice The balance would exceed the cap on deposits.
+    error Module__RebasingERC20__DepositCapReached();
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a deposit takes place.
+    /// @param _from The address depositing tokens.
+    /// @param _for The address that will receive the receipt tokens.
+    /// @param _amount The amount of tokens deposited.
+    event Deposit(address indexed _from, address indexed _for, uint _amount);
+
+    /// @notice Event emitted when a withdrawal takes place.
+    /// @param _from The address supplying the receipt tokens.
+    /// @param _for The address that will receive the underlying tokens.
+    /// @param _amount The amount of underlying tokens withdrawn.
+    event Withdrawal(address indexed _from, address indexed _for, uint _amount);
+
+    //--------------------------------------------------------------------------
+    // Functions
+
     /// @notice Returns the fixed balance of the specified address.
     /// @param who The address to query.
     function scaledBalanceOf(address who) external view returns (uint);

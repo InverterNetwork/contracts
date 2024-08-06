@@ -156,11 +156,8 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        /*  
         // DepositVaultFundingManager
-        initialMetadataRegistration.push(
-            depositVaultFundingManagerMetadata
-        );
+        initialMetadataRegistration.push(depositVaultFundingManagerMetadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
@@ -173,7 +170,7 @@ contract ModuleBeaconDeployer_v1 is
                     depositVaultFundingManagerMetadata.patchVersion
                 )
             )
-        ); */
+        );
 
         //--------------------------------------------------------------------------
         // Logic Modules
