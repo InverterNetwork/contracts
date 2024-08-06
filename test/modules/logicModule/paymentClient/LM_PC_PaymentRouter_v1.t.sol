@@ -97,12 +97,7 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         );
 
         vm.startPrank(address(paymentRouter));
-        assertEq(
-            _authorizer.hasModuleRole(
-                paymentRouter.PAYMENT_PUSHER_ROLE(), paymentPusher_user
-            ),
-            true
-        );
+        assertEq(_authorizer.checkForRole(roleId, paymentPusher_user), true);
         vm.stopPrank();
     }
 

@@ -138,15 +138,13 @@ contract AUT_Roles_v1 is
     // Public functions
 
     /// @inheritdoc IAuthorizer_v1
-    function hasModuleRole(bytes32 role, address who)
+    function checkForRole(bytes32 role, address who)
         external
         view
         virtual
         returns (bool)
     {
-        // Note: since it uses msgSenderto generate ID, this should only be used by modules. Users should call hasRole()
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        return hasRole(roleId, who);
+        return hasRole(role, who);
     }
 
     /// @inheritdoc IAuthorizer_v1
@@ -279,7 +277,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role
-    /// @param role The id number of the role
+    /// @param role The id of the role
     /// @param who The user we want to check on
     /// @return bool Returns if grant has been succesful
     function _grantRole(bytes32 role, address who)

@@ -112,14 +112,12 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
-    function hasModuleRole(bytes32 role, address who)
+    function checkForRole(bytes32 role, address who)
         external
         view
         returns (bool)
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        return
-            _authorized[who] || _roleAuthorized[roleId][who] || _allAuthorized;
+        return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
     function checkRoleMembership(bytes32 role, address who)
