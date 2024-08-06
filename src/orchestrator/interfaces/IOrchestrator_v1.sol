@@ -124,20 +124,24 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     ) external;
 
     /// @notice Executes replacing the current authorizer with `_authorizer`
-    /// @notice !!! IMPORTANT !!! When changing the Authorizer the current set of assigned addresses to Roles are lost. Make sure initial owners are set properly.
+    /// @notice !!! IMPORTANT !!! When changing the Authorizer the current set of assigned
+    ///         addresses to Roles are lost. Make sure initial owners are set properly.
     /// @dev Only callable by authorized caller.
     /// @param authorizer_ The address of the new authorizer module.
     function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
 
     /// @notice Executes replaces the current funding manager with `fundingManager_`
-    /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained in the module might not be retrievable. Make sure to clean the FundingManager properly beforehand.
+    /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained
+    ///         in the module might not be retrievable. Make sure to clean the FundingManager properly
+    ///         beforehand.
     /// @dev Only callable by authorized caller.
     /// @param fundingManager_ The address of the new funding manager module.
     function executeSetFundingManager(IFundingManager_v1 fundingManager_)
         external;
 
     /// @notice Executes replaces the current payment processor with `paymentProcessor_`
-    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payments are lost. Make sure all payment orders in the Logic Modules are resolved properly beforehand.
+    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payments are lost.
+    ///         Make sure all payment orders in the Logic Modules are resolved properly beforehand.
     /// @dev Only callable by authorized caller.
     /// @param paymentProcessor_ The address of the new payment processor module.
     function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
