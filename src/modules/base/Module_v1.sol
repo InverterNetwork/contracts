@@ -296,7 +296,7 @@ abstract contract Module_v1 is
     /// @param role The role to check.
     /// @param addr The address to check.
     function _checkRoleModifier(bytes32 role, address addr) internal view {
-        if (!__Module_orchestrator.authorizer().hasRole(role, addr)) {
+        if (!__Module_orchestrator.authorizer().checkForRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
         }
     }
