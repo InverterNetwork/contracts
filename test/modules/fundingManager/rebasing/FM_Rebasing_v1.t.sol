@@ -163,9 +163,7 @@ contract FM_RebasingV1Test is ModuleTest {
         amount = bound(amount, 2, DEPOSIT_CAP - 1);
 
         vm.expectRevert(
-            IFundingManager_v1
-                .Module__FundingManager__CannotSelfDeposit
-                .selector
+            IRebasingERC20.Module__RebasingERC20__CannotSelfDeposit.selector
         );
 
         // User deposits tokens.
@@ -185,9 +183,7 @@ contract FM_RebasingV1Test is ModuleTest {
 
         if (amount + 1 > DEPOSIT_CAP) {
             vm.expectRevert(
-                IFundingManager_v1
-                    .Module__FundingManager__CannotSelfDeposit
-                    .selector
+                IRebasingERC20.Module__RebasingERC20__CannotSelfDeposit.selector
             );
         }
         vm.startPrank(user);
