@@ -17,13 +17,12 @@ import {
  *          Aragon's Bancor Formula to manage the calculations for token issuance and redemption
  *          rates based on specified reserve ratios.
  *
- * @dev     It overrides several functions of its parent contract to deactivate or otherwise limit
- *          them:
- *              It defines a "Curve Interaction" role that is required to buy and sell on the curve.
- *              It deactivates the transferOrchestratorToken and mintIssuanceTokenTo functions from
- *                  the workflow.
+ * @dev     It overrides the buyFor() and sellTo() functions of its parent contract to limit
+ *          them to callers holding a "Curve Interaction" role. Since the upstream functions buy() and sell()
+ *          call these functions internally, they also become gated.
+ *
  *          PLEASE NOTE: This means that the workflow itself can only mint tokens through buying
- *          and selling, but NOT that there are no other ways to mint tokens. The Bonding Curve
+ *          and selling by somebody with the CURVE_INTERACTION_ROLE, but NOT that there are no other ways to mint tokens. The Bonding Curve
  *          uses an external token contract, and there is no guarantee that said contract won't
  *          have an additional way to mint tokens (and potentially sell them on the cruve to receive
  *          backing collateral)
@@ -74,17 +73,5 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
         onlyModuleRole(CURVE_INTERACTION_ROLE)
     {
         super.sellTo(_receiver, _depositAmount, _minAmountOut);
-    }
-
-    /// @notice Mints a specified amount of Issuance Tokens to a designated receiver address. Deactivated in this implementation..
-    function mintIssuanceTokenTo(address, uint)
-        external
-        view
-        override(FM_BC_Bancor_Redeeming_VirtualSupply_v1)
-        onlyOrchestratorAdmin
-    {
-        revert
-            Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
-        );
     }
 }
