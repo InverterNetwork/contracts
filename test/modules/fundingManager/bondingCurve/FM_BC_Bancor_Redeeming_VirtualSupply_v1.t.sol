@@ -1173,23 +1173,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
-    /*   
-        Test mintIssuanceTokenTo function
-    */
-    function testMintIssuanceTokenTo(uint amount)
-        public
-        virtual
-        callerIsOrchestratorAdmin
-    {
-        assertEq(issuanceToken.balanceOf(non_admin_address), 0);
-
-        bondingCurveFundingManager.mintIssuanceTokenTo(
-            non_admin_address, amount
-        );
-
-        assertEq(issuanceToken.balanceOf(non_admin_address), amount);
-    }
-
     /* Test setVirtualIssuanceSupply and _setVirtualIssuanceSupply function
         ├── given caller is not the Orchestrator_v1 admin
         │   └── when the function setVirtualIssuanceSupply() is called

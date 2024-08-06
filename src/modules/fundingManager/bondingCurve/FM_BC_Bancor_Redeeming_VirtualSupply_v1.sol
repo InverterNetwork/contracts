@@ -372,16 +372,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         emit TransferOrchestratorToken(to, amount);
     }
 
-    /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-    function mintIssuanceTokenTo(address _receiver, uint _amount)
-        external
-        virtual
-        onlyOrchestratorAdmin
-        validReceiver(_receiver)
-    {
-        _mint(_receiver, _amount);
-    }
-
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
     function setVirtualIssuanceSupply(uint _virtualSupply)
         external

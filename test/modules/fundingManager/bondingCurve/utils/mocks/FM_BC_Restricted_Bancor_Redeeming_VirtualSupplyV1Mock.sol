@@ -78,10 +78,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         );
     }
 
-    function call_mintIssuanceToken(uint _amount, address _receiver) external {
-        _mint(_receiver, _amount);
-    }
-
     // Note: this function returns the virtual token supply in the same format it will be fed to the Bancor formula
     function call_getFormulaVirtualIssuanceSupply()
         external
