@@ -205,7 +205,7 @@ contract PIM_WorkflowFactory_v1 is
             // issuance token is minted to the the specified recipient
             issuanceToken.mint(recipient, initialIssuanceSupply);
         } else {
-            // issuance token is minted to the the specified recipient
+            // issuance token is minted to the burn address
             issuanceToken.mint(address(0xDEAD), initialIssuanceSupply);
         }
     }
