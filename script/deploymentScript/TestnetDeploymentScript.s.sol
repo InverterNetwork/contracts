@@ -8,7 +8,6 @@ import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
 
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     OptimisticOracleV3Mock,
@@ -26,7 +25,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  */
 contract TestnetDeploymentScript is DeploymentScript {
     BancorFormula formula;
-    ERC20Issuance_v1 issuanceToken;
     OptimisticOracleV3Mock ooV3;
     ERC20Mock mockCollateralToken;
 
@@ -64,7 +62,7 @@ contract TestnetDeploymentScript is DeploymentScript {
         // BancorFormula, ERC20Mock and UMAoracleMock
 
         ooV3 = new OptimisticOracleV3Mock(
-            IERC20(address(issuanceToken)), DEFAULT_LIVENESS
+            IERC20(address(mockCollateralToken)), DEFAULT_LIVENESS
         ); //@note FeeToken?
         console2.log("\t\t-OptimisticOracleV3Mock: %s", address(ooV3));
 

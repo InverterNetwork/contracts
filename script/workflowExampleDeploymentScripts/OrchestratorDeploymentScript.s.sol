@@ -74,7 +74,7 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
             abi.encode(deployer) //@todo Admin address?
         );
 
-        // BountyManager: Metadata, salary precision, fee percentage, fee treasury address
+        // PaymentRouter: Metadata, salary precision, fee percentage, fee treasury address
         IOrchestratorFactory_v1.ModuleConfig memory paymentRouterFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             paymentRouterMetadata, abi.encode("")
@@ -101,8 +101,8 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
         }
         vm.stopBroadcast();
 
-        // Now we need to find the BountyManager. ModuleManager has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the BountyManager.
+        // Now we need to find the PaymentRouter. ModuleManager has a function called `listModules` that returns a list of
+        // active modules, let's use that to get the address of the PaymentRouter.
 
         ILM_PC_PaymentRouter_v1 paymentRouter;
 
@@ -144,7 +144,7 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
 
         console2.log(
             "\t-LM_PC_PaymentRouter_v1 deployed at address: %s ",
-            address(ILM_PC_PaymentRouter_v1)
+            address(paymentRouter)
         );
         console2.log(
             "=================================================================================="
