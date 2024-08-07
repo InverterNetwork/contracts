@@ -122,16 +122,25 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Role of the community multisig.
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
+    /// @dev Role of the team multisig.
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
+    /// @dev FeeManager contract.
     IFeeManager_v1 private feeManager;
+    /// @dev ModuleFactory contract.
     IModuleFactory_v1 private moduleFactory;
 
+    /// @dev Array of beacons that are linked to this Governor,
+    ///      populated via moduleFactoryInitCallback.
     IInverterBeacon_v1[] private linkedBeacons;
 
+    /// @dev Length of each timelock.
     uint public timelockPeriod;
-    mapping(address => IGovernor_v1.Timelock) private beaconTimelock;
+    /// @dev Struct to store timelock information for each beacon.
+    mapping(address beacon => IGovernor_v1.Timelock timelock) private
+        beaconTimelock;
 
     // Storage gap for future upgrades
     uint[50] private __gap;
