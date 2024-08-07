@@ -17,20 +17,20 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a particular payment client
     /// @dev for _streamId, valid values will start from 1. 0 is not a valid id.
+    /// @param _paymentToken The address of the token that is being used for the payment.
+    /// @param _streamId A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
+    /// @param _total The total amount that the paymentReceiver should eventually get.
+    /// @param _released The amount that has been claimed by the paymentReceiver till now.
+    /// @param _start The start date of the streaming period.
+    /// @param _cliff The duration of the cliff period.
+    /// @param _end The ending of the streaming period.
     struct Stream {
-        //@notice The address of the token that is being used for the payment
         address _paymentToken;
-        //@notice A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
         uint _streamId;
-        //@notice The total amount that the paymentReceiver should eventually get.
         uint _total;
-        //@notice The amount that has been claimed by the paymentReceiver till now.
         uint _released;
-        //@notice The start date of the streaming period.
         uint _start;
-        //@notice The duration of the cliff period.
         uint _cliff;
-        //@notice The ending of the streaming period.
         uint _end;
     }
 

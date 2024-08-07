@@ -347,7 +347,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
@@ -460,7 +460,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
@@ -522,7 +522,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
@@ -587,7 +587,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken)) - 1
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
@@ -700,7 +700,7 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         }
 
         // Guarantee wrong value in the last tranche.
-        valuesCapped[length - 1] = valuesCapped[length - 2] / 2; //
+        valuesCapped[length - 1] = valuesCapped[length - 2] / 2;
         vm.expectRevert(
             ILM_PC_KPIRewarder_v1
                 .Module__LM_PC_KPIRewarder_v1__InvalidKPITrancheValues
@@ -804,7 +804,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
