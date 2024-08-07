@@ -260,7 +260,7 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         address fundingManager = address(orchestrator.fundingManager());
 
-        // CHECK: deployer has still SAME balance of collateral token as before (= nothing sent to curve)
+        // CHECK: deployer DID NOT send initial collateral supply to curve, ONLY did first purchase
         assertEq(
             preCollateralBalance - postCollateralBalance, pimConfig.firstCollateralIn
         );
