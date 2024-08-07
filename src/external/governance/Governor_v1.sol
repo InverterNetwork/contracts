@@ -494,8 +494,8 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev sets the internal FeeManager address
-    /// @param newFeeManager the address of the new feeManager
+    /// @dev sets the internal FeeManager address.
+    /// @param newFeeManager the address of the new feeManager.
     function _setFeeManager(address newFeeManager)
         internal
         validAddress(newFeeManager)
@@ -504,6 +504,8 @@ contract Governor_v1 is
         emit FeeManagerUpdated(newFeeManager);
     }
 
+    /// @dev sets the internal timelock period.
+    /// @param newTimelockPeriod the new timelock period.
     function _setTimelockPeriod(uint newTimelockPeriod)
         internal
         validTimelockPeriod(newTimelockPeriod)
@@ -512,8 +514,8 @@ contract Governor_v1 is
         emit TimelockPeriodSet(newTimelockPeriod);
     }
 
-    /// @dev sets the internal ModuleFactory address
-    /// @param newModuleFactory the address of the new moduleFactory
+    /// @dev sets the internal ModuleFactory address.
+    /// @param newModuleFactory the address of the new moduleFactory.
     function _setModuleFactory(address newModuleFactory)
         internal
         validAddress(newModuleFactory)
@@ -522,7 +524,8 @@ contract Governor_v1 is
         emit ModuleFactoryUpdated(newModuleFactory);
     }
 
-    /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it
+    /// @dev internal function that checks if target address is a beacon
+    ///      and this contract has the ownership of it.
     function isBeaconAccessible(address target) internal returns (bool) {
         // Check if target is a contract
         if (target.code.length == 0) {
