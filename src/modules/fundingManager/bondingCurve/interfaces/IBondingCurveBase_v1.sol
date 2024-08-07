@@ -140,6 +140,11 @@ interface IBondingCurveBase_v1 {
         returns (uint mintAmount);
 
     /// @notice Withdraw project collateral fee to the receiver address
+    /// @param _receiver The address that will receive the fee
+    /// @param _amount The amount of fee to withdraw
     function withdrawProjectCollateralFee(address _receiver, uint _amount)
         external;
+
+    /// @notice Returns the amount of fee in collateral token collected by the project
+    function projectCollateralFeeCollected() external view returns (uint);
 }
