@@ -3,6 +3,7 @@
 At Inverter Network, we prioritize the security of our smart contracts and follow a rigorous process of security reviews and audits:
 
 * Per our development and security guidelines, we require an external review for each pull request (PR) that goes from the `dev` branch to the `main` branch in our repository. We have partnered with [Team Omega](https://teamomega.eth.limo) to conduct these security reviews directly in the PRs.
+  * 2024-07-29 - Team Omega - Issuance Token Audit - [Report](./2024-07-29-team-omega-issuance-token.pdf)
 
 * Additionally, prior to major releases, we perform a full audit of any changed contracts via an external auditing company before the deployment. This ensures that our contracts undergo thorough scrutiny by professional auditors.
 
