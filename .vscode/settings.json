@@ -7,8 +7,5 @@
     "search.exclude": {
         "lib": true
     },
-    "files.associations": {
-        ".gas-snapshot": "julia"
-    },
     "editor.formatOnSave": true
 }

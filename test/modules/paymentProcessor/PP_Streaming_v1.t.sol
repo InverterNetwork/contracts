@@ -1829,6 +1829,13 @@ contract PP_StreamingV1Test is ModuleTest {
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
         address sender
     ) public {
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback funciton to deploy contracts, it will
+        // pass the test here
+        vm.assume(
+            order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
+        );
+
         order.start = bound(order.start, 0, type(uint).max / 2);
         order.cliff = bound(order.cliff, 0, type(uint).max / 2);
 
@@ -1892,7 +1899,12 @@ contract PP_StreamingV1Test is ModuleTest {
         public
     {
         // Non-contract addresses or protected addresses should be invalid
-        vm.assume(address(randomToken) != address(_token));
+        vm.assume(randomToken != address(_token));
+
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback funciton to deploy contracts, it will
+        // pass the test here
+        vm.assume(randomToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C);
 
         vm.prank(sender);
 
