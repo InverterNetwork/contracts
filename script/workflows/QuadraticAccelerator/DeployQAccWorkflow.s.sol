@@ -37,6 +37,11 @@ import {ERC165Upgradeable} from
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
+import {
+    IPIM_WorkflowFactory_v1,
+    PIM_WorkflowFactory_v1
+} from "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
+
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
@@ -63,7 +68,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         orchestratorToken = ERC20Mock(chain_addresses.mockUSDToken);
 
-        setupOrchestrator();
+        setupOrchestrator_withPIMFactory();
     }
 
     function setupOrchestrator() public {
@@ -279,5 +284,125 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             "\t-Transferring ownership of the issuance token to the deployer"
         );
         issuanceToken.transferOwnership(deployer);
+    }
+
+    function setupOrchestrator_withPIMFactory() public {
+        // ------------------------------------------------------------------------
+        // Define Initial Configuration Data
+
+        console.log("\n\n");
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console.log("\tSTARTING Q/ACC WORKFLOW DEPLOYMENT - PIM FACTORY");
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+
+        // Deploy the PIM Factory
+        PIM_WorkflowFactory_v1 pimFactory;
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            pimFactory = new PIM_WorkflowFactory_v1(
+                chain_addresses.orchestratorFactory,
+                deployer,
+                chain_addresses.forwarder
+            );
+            console2.log(
+                "\t-Deployed PIM Factory at address: %s", address(pimFactory)
+            );
+        }
+        vm.stopBroadcast();
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            // mint collateral token to deployer
+            orchestratorToken.mint(deployer, 100e18);
+
+            //give allowance to the PIM factory to spend deployer funds
+            orchestratorToken.approve(address(pimFactory), 100e18);
+        }
+        vm.stopBroadcast();
+
+        // Configs
+        // Orchestrator_v1
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
+        IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
+        });
+
+        // Payment Processor: only Metadata
+        IOrchestratorFactory_v1.ModuleConfig memory
+            paymentProcessorFactoryConfig = IOrchestratorFactory_v1
+                .ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
+
+        // PaymentRouter: none
+        IOrchestratorFactory_v1.ModuleConfig memory paymentRouterFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
+            paymentRouterMetadata, abi.encode("")
+        );
+
+        // Add the configuration for all the non-mandatory modules. In this case only the PaymentRouter.
+        IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
+            new IOrchestratorFactory_v1.ModuleConfig[](1);
+        additionalModuleConfig[0] = paymentRouterFactoryConfig;
+
+        //Create PIMConfig
+        IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig =
+        IPIM_WorkflowFactory_v1.PIMConfig({
+            fundingManagerMetadata: restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata,
+            authorizerMetadata: roleAuthorizerMetadata,
+            issuanceTokenParams: IPIM_WorkflowFactory_v1.IssuanceTokenParams({
+                name: "QAcc Project Token",
+                symbol: "QACC",
+                decimals: 18,
+                maxSupply: 100e18
+            }),
+            bcProperties: IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .BondingCurveProperties({
+                formula: address(chain_addresses.formula),
+                reserveRatioForBuying: 200_000,
+                reserveRatioForSelling: 200_000,
+                buyFee: 0,
+                sellFee: 0,
+                buyIsOpen: true,
+                sellIsOpen: true,
+                initialIssuanceSupply: 100,
+                initialCollateralSupply: 100
+            }),
+            admin: deployer,
+            recipient: deployer,
+            collateralToken: address(orchestratorToken),
+            firstCollateralIn: 10e18,
+            isRenouncedIssuanceToken: false,
+            isRenouncedWorkflow: false,
+            withInitialLiquidity: true
+        });
+
+        IOrchestrator_v1 orchestrator;
+        ERC20Issuance_v1 issuanceToken;
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            (orchestrator, issuanceToken) = pimFactory.createPIMWorkflow(
+                workflowConfig,
+                paymentProcessorFactoryConfig,
+                additionalModuleConfig,
+                PIMConfig
+            );
+        }
+        vm.stopBroadcast();
+
+        //TODO: fix authorization issue for buying from the bonding curve
+
+        console.log(
+            "\t-Deployed orchestrator at address: %s", address(orchestrator)
+        );
+        console.log(
+            "\t-Deployed issuance token at address: %s", address(issuanceToken)
+        );
+        console.log("Deployment complete");
     }
 }
