@@ -36,14 +36,52 @@ contract ProtocolConstants_v1 is Script {
     bytes32 public factorySalt =
         keccak256(abi.encodePacked("inverter-deployment"));
 
+    // Function to log data in a readable format
+    function logProtocolMultisigsAndAddresses() public {
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console.log("\tProtocol-level Addresses Used for the Deployment");
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log("\tDeployer: %s", deployer);
+        console2.log("\tCommunity Multisig: %s", communityMultisig);
+        console2.log("\tTeam Multisig: %s", teamMultisig);
+        console2.log("\tTreasury: %s", treasury);
+        console2.log("\tDeterministicFactory: %s", deterministicFactory);
+    }
+
     // ------------------------------------------------------------------------
     // Important Configuration Data
     // ------------------------------------------------------------------------
 
     // FeeManager
-    uint public defaultCollateralFee;
-    uint public defaultIssuanceFee;
+    uint public feeManager_defaultCollateralFee = 100;
+    uint public feeManager_defaultIssuanceFee = 100;
 
     // Governor
-    uint public timelockPeriod;
+    uint public governor_timelockPeriod = 1 weeks;
+
+    //TODO: load from env?
+
+    // Function to log data in a readable format
+    function logProtocolConfigurationData() public {
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console.log("Protocol Configuration Data Used for Initialization:");
+        /*console.log(
+            "--------------------------------------------------------------------------------"
+        );*/
+        console.log("\tFeeManager:");
+        console2.log(
+            "\t\tDefault Collateral Fee: %s", feeManager_defaultCollateralFee
+        );
+        console2.log(
+            "\t\tDefault Issuance Fee: %s", feeManager_defaultIssuanceFee
+        );
+        console.log("\tGovernor:");
+        console2.log("\t\tTimelock Period: %s", governor_timelockPeriod);
+    }
 }

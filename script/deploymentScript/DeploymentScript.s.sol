@@ -32,24 +32,26 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
     address public orchestratorFactory;
 
     function run() public virtual {
+        console2.log("\n");
         console2.log(
-            "--------------------------------------------------------------------------------"
+            "================================================================================"
         );
-        console2.log("Start Deployment Script");
+        console2.log("Start Core Protocol Deployment Script");
+        console2.log(
+            "================================================================================"
+        );
+
+        logProtocolMultisigsAndAddresses();
 
         // Create External Singletons
         createExternalSingletons();
 
-        console2.log(
-            "Set InverterReverter Implementation Address to general InverterReverter Address"
-        );
-
-        // Set InverterReverter Address
+        // Set InverterReverter Implementation Address to general InverterReverter Address
         inverterReverter = impl_ext_InverterReverter_v1;
 
         // Deploy External Contracts
         console2.log(
-            "--------------------------------------------------------------------------------"
+            "--------------------------------------------------------------------------------\n"
         );
         console2.log("Deploy External Contracts");
 
@@ -117,30 +119,41 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
 
         // Initialize Protocol Contracts
         console2.log(
-            "--------------------------------------------------------------------------------"
+            "\n--------------------------------------------------------------------------------"
         );
         console2.log("Initialize Protocol Contracts");
 
-        // Governor
-        console2.log("-Governor");
-        Governor_v1(governor).init(
-            communityMultisig, teamMultisig, 1 weeks, feeManager
+        logProtocolConfigurationData();
+
+        console2.log(
+            "--------------------------------------------------------------------------------"
         );
+        console2.log("Initializing...");
+        // Governor
+        Governor_v1(governor).init(
+            communityMultisig, teamMultisig, governor_timelockPeriod, feeManager
+        );
+        console2.log("\t...Governor Initialized");
 
         // FeeManager
-        console2.log("-FeeManager");
-        FeeManager_v1(feeManager).init(governor, treasury, 100, 100);
+        FeeManager_v1(feeManager).init(
+            governor,
+            treasury,
+            feeManager_defaultCollateralFee,
+            feeManager_defaultIssuanceFee
+        );
+        console2.log("\t...FeeManager Initialized");
 
         // ModuleFactory
-        console2.log("-ModuleFactory");
         ModuleFactory_v1(moduleFactory).init(
             governor, initialMetadataRegistration, initialBeaconRegistration
         );
+        console2.log("\t...ModuleFactory Initialized");
 
         // OrchestratorFactory
-        console2.log("-OrchestratorFactory");
         OrchestratorFactory_v1(orchestratorFactory).init(
             governor, orchestratorBeacon, moduleFactory
         );
+        console2.log("\t...OrchestratorFactory Initialized");
     }
 }

@@ -61,7 +61,7 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
         vm.stopBroadcast();
 
         console2.log(
-            "Creation of InverterBeaconProxy_v1 for %s at address: %s",
+            "\t %s InverterBeaconProxy_v1: %s",
             implementationName,
             address(proxy)
         );
@@ -99,11 +99,7 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log(
-            "Deployment of Inverter Beacon for %s at address %s",
-            implementationName,
-            beacon
-        );
+        console2.log("\t %s Inverter Beacon: %s", implementationName, beacon);
 
         return beacon;
     }

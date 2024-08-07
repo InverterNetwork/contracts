@@ -290,9 +290,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         vm.stopBroadcast();
 
         console2.log(
-            "Deployment of %s Implementation at address %s",
-            implementationName,
-            implementation
+            "\t %s Implementation: %s", implementationName, implementation
         );
 
         return implementation;

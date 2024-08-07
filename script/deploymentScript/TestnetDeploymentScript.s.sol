@@ -14,6 +14,7 @@ import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
 } from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 /**
  * @title Inverter Testnet Deployment Script
@@ -27,6 +28,7 @@ contract TestnetDeploymentScript is DeploymentScript {
     BancorFormula formula;
     ERC20Issuance_v1 issuanceToken;
     OptimisticOracleV3Mock ooV3;
+    ERC20Mock mockCollateralToken;
 
     uint64 immutable DEFAULT_LIVENESS = 25_000;
 
@@ -41,17 +43,33 @@ contract TestnetDeploymentScript is DeploymentScript {
         vm.startBroadcast(deployerPrivateKey);
 
         console2.log(
-            "--------------------------------------------------------------------------------"
+            "--------------------------------------------------------------------------------\n"
         );
+        console2.log("Testnet Dependency Deployment: ");
+        console2.log(
+            "--------------------------------------------------------------------------------\n"
+        );
+        console2.log("\tSet up dependency contracts ");
 
         deterministicFactory = address(new DeterministicFactory_v1(deployer));
-        console2.log(
-            "Deploy Deterministic Factory with Deployer as owner at address %s",
-            deterministicFactory
-        );
+
         DeterministicFactory_v1(deterministicFactory).setAllowedDeployer(
             deployer
         );
+        console2.log("\t\t-Deterministic Factory: %s", deterministicFactory);
+        formula = new BancorFormula();
+        console2.log("\t\t-BancorFormula: %s", address(formula));
+
+        console.log("\tSet up mocks");
+        // BancorFormula, ERC20Mock and UMAoracleMock
+
+        ooV3 = new OptimisticOracleV3Mock(
+            IERC20(address(issuanceToken)), DEFAULT_LIVENESS
+        ); //@note FeeToken?
+        console2.log("\t\t-OptimisticOracleV3Mock: %s", address(ooV3));
+
+        mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD");
+        console2.log("\t\t-ERC20Mock iUSD: %s", address(mockCollateralToken));
 
         vm.stopBroadcast();
 
@@ -59,17 +77,5 @@ contract TestnetDeploymentScript is DeploymentScript {
         proxyAndBeaconDeployer.setFactory(deterministicFactory);
 
         super.run();
-
-        // BancorFormula, ERC20Mock and UMAoracleMock
-
-        formula = new BancorFormula();
-
-        issuanceToken = new ERC20Issuance_v1(
-            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
-        ); //@note Correct?
-
-        ooV3 = new OptimisticOracleV3Mock(
-            IERC20(address(issuanceToken)), DEFAULT_LIVENESS
-        ); //@note FeeToken?
     }
 }
