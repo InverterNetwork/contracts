@@ -27,13 +27,16 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Asks whether an address holds the required module role to execute
+    /// @notice Asks whether an address holds the required role to execute
     ///         the current transaction.
+    /// @dev The calling contract needs to generate the right role ID using its
+    ///      own address and the role identifier.
+    ///      In modules, this function should be used instead of hasRole, as
+    ///      there are Authorizer-specific checks that need to be performed.
     /// @param role The identifier of the role we want to check
     /// @param who  The address on which to perform the check.
     /// @return bool Returns if the address holds the role
-    /// @dev It will use the calling address to generate the role ID. Therefore, for checking on anything other than itself, hasRole() should be used
-    function hasModuleRole(bytes32 role, address who)
+    function checkForRole(bytes32 role, address who)
         external
         view
         returns (bool);
@@ -44,6 +47,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @return bytes32 Returns the generated role hash
     function generateRoleId(address module, bytes32 role)
         external
+        pure
         returns (bytes32);
 
     /// @notice Used by a Module to grant a role to a user.

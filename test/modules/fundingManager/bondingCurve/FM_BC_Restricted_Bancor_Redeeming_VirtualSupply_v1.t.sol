@@ -110,29 +110,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
         // Temp test override, as in dev branch we have already removed the restriction
         // to call the transferOrchestratorToken() function
     }
-
-    // Override to test deactivation
-    function testMintIssuanceTokenTo(uint amount) public override {
-        assertEq(issuanceToken.balanceOf(non_admin_address), 0);
-
-        vm.startPrank(address(admin_address));
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
-                        .Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated
-                        .selector
-                )
-            );
-
-            bondingCurveFundingManager.mintIssuanceTokenTo(
-                non_admin_address, amount
-            );
-        }
-        vm.stopPrank();
-
-        assertEq(_token.balanceOf(non_admin_address), 0);
-    }
 }
 
 contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
@@ -372,28 +349,6 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
                 )
             );
             bondingCurveFundingManager.sell(_sellAmount, _sellAmount);
-        }
-    }
-
-    function testMintIssuanceTokenTo_FailsIfCallerNotAuthorized() public {
-        address _minter = makeAddr("minter");
-        address _receiver = makeAddr("receiver");
-        uint _mintAmount = 1;
-
-        bytes32 _roleId = _authorizer.getAdminRole();
-
-        vm.startPrank(_minter);
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    _roleId,
-                    _minter
-                )
-            );
-            bondingCurveFundingManager.mintIssuanceTokenTo(
-                _receiver, _mintAmount
-            );
         }
     }
 }

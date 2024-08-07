@@ -71,6 +71,19 @@ contract FM_RebasingV1Test is ModuleTest {
     /// @param _amount The amount of underlying tokens transfered.
     event TransferOrchestratorToken(address indexed _to, uint _amount);
 
+    //--------------------------------------------------------------------------
+    // Errors
+
+    // From ElasticReceiptTokenBase_v1
+    /// @notice Invalid token recipient.
+    error InvalidRecipient();
+
+    /// @notice Invalid token amount.
+    error InvalidAmount();
+
+    /// @notice Maximum supply reached.
+    error MaxSupplyReached();
+
     function setUp() public {
         // because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
         vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
@@ -163,9 +176,7 @@ contract FM_RebasingV1Test is ModuleTest {
         amount = bound(amount, 2, DEPOSIT_CAP - 1);
 
         vm.expectRevert(
-            IFundingManager_v1
-                .Module__FundingManager__CannotSelfDeposit
-                .selector
+            IRebasingERC20.Module__RebasingERC20__CannotSelfDeposit.selector
         );
 
         // User deposits tokens.
@@ -185,9 +196,7 @@ contract FM_RebasingV1Test is ModuleTest {
 
         if (amount + 1 > DEPOSIT_CAP) {
             vm.expectRevert(
-                IFundingManager_v1
-                    .Module__FundingManager__CannotSelfDeposit
-                    .selector
+                IRebasingERC20.Module__RebasingERC20__CannotSelfDeposit.selector
             );
         }
         vm.startPrank(user);
@@ -403,15 +412,29 @@ contract FM_RebasingV1Test is ModuleTest {
                     assertApproxEqAbs(actualBalance, remainingFunds[i], 1);
                     remainingFunds[i] = actualBalance;
                 }
+
                 vm.prank(input.users[i]);
-                vm.expectEmit();
-                emit Deposit(input.users[i], input.users[i], remainingFunds[i]);
+
+                // We expect a deposit if the user has funds left
+                // otherwise we expect a revert as zero deposits are not allowed
+                if (remainingFunds[i] > 0) {
+                    vm.expectEmit();
+                    emit Deposit(
+                        input.users[i], input.users[i], remainingFunds[i]
+                    );
+                } else {
+                    vm.expectRevert(InvalidAmount.selector);
+                }
 
                 fundingManager.deposit(remainingFunds[i]);
 
-                assertEq(
-                    fundingManager.balanceOf(input.users[i]), remainingFunds[i]
-                );
+                // Verify the balance if the deposit was attempted
+                if (remainingFunds[i] > 0) {
+                    assertEq(
+                        fundingManager.balanceOf(input.users[i]),
+                        remainingFunds[i]
+                    );
+                }
             }
         }
     }
