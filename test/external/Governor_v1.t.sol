@@ -58,6 +58,7 @@ contract GovernorV1Test is Test {
     );
     event BeaconUpgradedCanceled(address beacon);
     event TimelockPeriodSet(uint newTimelockPeriod);
+    event FeeManagerUpdated(address feeManager);
     event ModuleFactoryUpdated(address moduleFactory);
     event BeaconShutdownInitiated(address beacon);
     event BeaconForcefullyUpgradedAndImplementationRestarted(
@@ -462,6 +463,13 @@ contract GovernorV1Test is Test {
         gov.getFeeManager();
     }
 
+    function testSetFeeManager() public {
+        vm.prank(address(communityMultisig));
+        vm.expectEmit(true, true, true, true);
+        emit FeeManagerUpdated(address(0x1));
+        gov.setFeeManager(address(0x1));
+    }
+
     function testSetFeeManagerModifierInPosition() public {
         // onlyRole(COMMUNITY_MULTISIG_ROLE)
         vm.expectRevert(
@@ -502,6 +510,13 @@ contract GovernorV1Test is Test {
         );
         vm.prank(address(communityMultisig));
         gov.setModuleFactory(address(0));
+    }
+
+    function testSetModuleFactory() public {
+        vm.prank(address(communityMultisig));
+        vm.expectEmit(true, true, true, true);
+        emit ModuleFactoryUpdated(address(0x1));
+        gov.setModuleFactory(address(0x1));
     }
 
     function testSetFeeManagerMaxFeeModifierInPosition() public {
@@ -832,6 +847,13 @@ contract GovernorV1Test is Test {
         );
         vm.prank(communityMultisig);
         gov.cancelUpgrade(address(ownedBeaconMock));
+    }
+
+    function testSetTimelockPeriod() public {
+        vm.prank(address(communityMultisig));
+        vm.expectEmit(true, true, true, true);
+        emit TimelockPeriodSet(2 days);
+        gov.setTimelockPeriod(2 days);
     }
 
     function testSetTimelockPeriodModifierInPosition() public {
