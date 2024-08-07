@@ -27,7 +27,7 @@ contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
         return _implementationAddress;
     }
 
-    //_setImplementation
+    // _setImplementation
 
     function flipUseOriginal_setImplementation() external {
         useOriginal_setImplementation = !useOriginal_setImplementation;

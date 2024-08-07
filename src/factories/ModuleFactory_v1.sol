@@ -10,6 +10,7 @@ import {
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 
 // Internal Dependencies
 
@@ -154,6 +155,10 @@ contract ModuleFactory_v1 is
             );
         }
 
+        IGovernor_v1(_governor).moduleFactoryInitCallback(
+            initialBeaconRegistration
+        );
+
         emit GovernorSet(_governor);
     }
 
@@ -260,9 +265,9 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    ///@dev Internal function to register metadata
-    ///@param metadata The metadata to register
-    ///@param beacon The beacon to register the metadata to
+    /// @dev Internal function to register metadata
+    /// @param metadata The metadata to register
+    /// @param beacon The beacon to register the metadata to
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon

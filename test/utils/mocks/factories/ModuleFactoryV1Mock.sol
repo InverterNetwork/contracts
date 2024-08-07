@@ -25,6 +25,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 contract ModuleFactoryV1Mock is IModuleFactory_v1 {
     IInverterBeacon_v1 private _beacon;
 
+    uint public howManyCalls;
+
     address public governor = address(0x999999);
     address public reverter = address(0x111111);
 
@@ -99,5 +101,7 @@ contract ModuleFactoryV1Mock is IModuleFactory_v1 {
 
     function registerMetadata(IModule_v1.Metadata memory, IInverterBeacon_v1)
         external
-    {}
+    {
+        howManyCalls++;
+    }
 }

@@ -57,6 +57,20 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Modifier
 
+    modifier onlyLinkedModuleFactory() {
+        if (_msgSender() != address(moduleFactory)) {
+            revert Governor__OnlyLinkedModuleFactory();
+        }
+        _;
+    }
+
+    modifier linkedBeaconsEmpty() {
+        if (linkedBeacons.length != 0) {
+            revert Governor__LinkedBeaconsNotEmpty();
+        }
+        _;
+    }
+
     modifier validAddress(address adr) {
         if (adr == address(0)) {
             revert Governor__InvalidAddress(adr);
@@ -108,14 +122,25 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev Role of the community multisig.
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
+    /// @dev Role of the team multisig.
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
+    /// @dev FeeManager contract.
     IFeeManager_v1 private feeManager;
+    /// @dev ModuleFactory contract.
+    IModuleFactory_v1 private moduleFactory;
 
+    /// @dev Array of beacons that are linked to this Governor,
+    ///      populated via moduleFactoryInitCallback.
+    IInverterBeacon_v1[] private linkedBeacons;
+
+    /// @dev Length of each timelock.
     uint public timelockPeriod;
-
-    mapping(address => IGovernor_v1.Timelock) private beaconTimelock;
+    /// @dev Struct to store timelock information for each beacon.
+    mapping(address beacon => IGovernor_v1.Timelock timelock) private
+        beaconTimelock;
 
     // Storage gap for future upgrades
     uint[50] private __gap;
@@ -130,21 +155,19 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @notice The module's initializer function.
-    /// @param newCommunityMultisig The address of the community multisig
-    /// @param newTeamMultisig The address of the team multisig
-    /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
+    /// @inheritdoc IGovernor_v1
     function init(
-        address newCommunityMultisig,
-        address newTeamMultisig,
-        uint newTimelockPeriod,
-        address initialFeeManager
+        address _communityMultisig,
+        address _teamMultisig,
+        uint _timelockPeriod,
+        address _feeManager,
+        address _moduleFactory
     )
         external
         initializer
-        validAddress(newCommunityMultisig)
-        validAddress(newTeamMultisig)
-        validTimelockPeriod(newTimelockPeriod)
+        validAddress(_communityMultisig)
+        validAddress(_teamMultisig)
+        validTimelockPeriod(_timelockPeriod)
     {
         __AccessControl_init();
 
@@ -158,13 +181,30 @@ contract Governor_v1 is
         _setRoleAdmin(TEAM_MULTISIG_ROLE, COMMUNITY_MULTISIG_ROLE);
 
         // grant COMMUNITY_MULTISIG_ROLE to specified address
-        _grantRole(COMMUNITY_MULTISIG_ROLE, newCommunityMultisig);
+        _grantRole(COMMUNITY_MULTISIG_ROLE, _communityMultisig);
         // grant COMMUNITY_MULTISIG_ROLE to specified address
-        _grantRole(TEAM_MULTISIG_ROLE, newTeamMultisig);
+        _grantRole(TEAM_MULTISIG_ROLE, _teamMultisig);
 
-        _setTimelockPeriod(newTimelockPeriod);
+        _setTimelockPeriod(_timelockPeriod);
 
-        _setFeeManager(initialFeeManager);
+        _setFeeManager(_feeManager);
+        _setModuleFactory(_moduleFactory);
+    }
+
+    function moduleFactoryInitCallback(
+        IInverterBeacon_v1[] calldata registeredBeacons
+    ) external onlyLinkedModuleFactory linkedBeaconsEmpty {
+        // Make sure Beacons are accessible for Governor
+        uint length = registeredBeacons.length;
+        for (uint i = 0; i < length; i++) {
+            if (!isBeaconAccessible(address(registeredBeacons[i]))) {
+                revert Governor__BeaconNotAccessible(
+                    address(registeredBeacons[i])
+                );
+            }
+        }
+
+        linkedBeacons = registeredBeacons;
     }
 
     //--------------------------------------------------------------------------
@@ -177,6 +217,15 @@ contract Governor_v1 is
         returns (Timelock memory)
     {
         return beaconTimelock[beacon];
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function getLinkedBeacons()
+        external
+        view
+        returns (IInverterBeacon_v1[] memory)
+    {
+        return linkedBeacons;
     }
 
     //--------------------------------------------------------------------------
@@ -193,6 +242,19 @@ contract Governor_v1 is
         onlyRole(COMMUNITY_MULTISIG_ROLE)
     {
         _setFeeManager(newFeeManager);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function getModuleFactory() external view returns (address) {
+        return address(moduleFactory);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setModuleFactory(address newModuleFactory)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        _setModuleFactory(newModuleFactory);
     }
 
     /// @inheritdoc IGovernor_v1
@@ -268,7 +330,8 @@ contract Governor_v1 is
         IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
-    ) external onlyCommunityOrTeamMultisig {
+    ) external onlyCommunityOrTeamMultisig accessibleBeacon(address(beacon)) {
+        linkedBeacons.push(beacon);
         moduleFactory.registerMetadata(metadata, beacon);
     }
 
@@ -365,6 +428,18 @@ contract Governor_v1 is
     }
 
     /// @inheritdoc IGovernor_v1
+    function initiateBeaconShutdownForAllLinkedBeacons()
+        external
+        onlyCommunityOrTeamMultisig
+    {
+        uint length = linkedBeacons.length;
+        for (uint i = 0; i < length; i++) {
+            linkedBeacons[i].shutDownImplementation();
+            emit BeaconShutdownInitiated(address(linkedBeacons[i]));
+        }
+    }
+
+    /// @inheritdoc IGovernor_v1
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
@@ -419,8 +494,8 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev sets the internal FeeManager address
-    /// @param newFeeManager the address of the new feeManager
+    /// @dev sets the internal FeeManager address.
+    /// @param newFeeManager the address of the new feeManager.
     function _setFeeManager(address newFeeManager)
         internal
         validAddress(newFeeManager)
@@ -429,6 +504,8 @@ contract Governor_v1 is
         emit FeeManagerUpdated(newFeeManager);
     }
 
+    /// @dev sets the internal timelock period.
+    /// @param newTimelockPeriod the new timelock period.
     function _setTimelockPeriod(uint newTimelockPeriod)
         internal
         validTimelockPeriod(newTimelockPeriod)
@@ -437,9 +514,20 @@ contract Governor_v1 is
         emit TimelockPeriodSet(newTimelockPeriod);
     }
 
-    /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it
+    /// @dev sets the internal ModuleFactory address.
+    /// @param newModuleFactory the address of the new moduleFactory.
+    function _setModuleFactory(address newModuleFactory)
+        internal
+        validAddress(newModuleFactory)
+    {
+        moduleFactory = IModuleFactory_v1(newModuleFactory);
+        emit ModuleFactoryUpdated(newModuleFactory);
+    }
+
+    /// @dev internal function that checks if target address is a beacon
+    ///      and this contract has the ownership of it.
     function isBeaconAccessible(address target) internal returns (bool) {
-        // check if target is a contract
+        // Check if target is a contract
         if (target.code.length == 0) {
             return false;
         }

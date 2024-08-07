@@ -114,9 +114,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint length = addrs.length;
         vm.assume(length <= amounts.length);
 
-        /// Restrict amounts to 20_000 to test properly(doesnt overflow)
+        // Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
-        //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
+        // => maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
         ILM_PC_Bounties_v1.Contributor[] memory contribs =
             createValidContributors(addrs, amounts);
@@ -484,9 +484,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         vm.assume(length <= amounts.length);
         times = bound(times, 1, 50);
 
-        /// Restrict amounts to 20_000 to test properly(doesnt overflow)
+        // Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
-        //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
+        // => maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
         ILM_PC_Bounties_v1.Contributor[] memory contribs =
             createValidContributors(addrs, amounts);
@@ -659,7 +659,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         // Restrict amounts to 20_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
-        //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
+        // => maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
 
         ILM_PC_Bounties_v1.Contributor[] memory contribs =
@@ -822,7 +822,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         // Restrict amounts to 20_000_000_000_000 to test properly(doesnt overflow)
         amounts = cutAmounts(20_000_000_000_000, amounts);
-        //=> maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
+        // => maxAmount = 20_000_000_000_000 * 50 = 1_000_000_000_000_000
         uint maxAmount = 1_000_000_000_000_000;
         _token.mint(address(_fundingManager), maxAmount);
 

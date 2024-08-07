@@ -77,8 +77,13 @@ contract E2ETest is E2EModuleRegistry {
     function setUp() public virtual {
         // Basic Setup function. This function es overriden and expanded by child E2E tests
 
-        // Deploy the Fee Manager
+        // Deploy a reverter used to enable proper pausing
+        reverter = new InverterReverter_v1();
 
+        // Deploy a forwarder used to enable metatransactions
+        forwarder = new TransactionForwarder_v1();
+
+        // Deploy the Fee Manager
         feeManager = FeeManager_v1(
             address(
                 new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
@@ -103,28 +108,6 @@ contract E2ETest is E2EModuleRegistry {
             )
         );
 
-        gov.init(communityMultisig, teamMultisig, 1 weeks, address(feeManager));
-
-        // Deploy a Mock funding token for testing.
-
-        // Set gov as the default beacon owner
-        DEFAULT_BEACON_OWNER = address(gov);
-
-        token = new ERC20Mock("Mock", "MOCK");
-
-        // Deploy a reverter used to enable proper pausing
-        reverter = new InverterReverter_v1();
-
-        // Deploy a forwarder used to enable metatransactions
-        forwarder = new TransactionForwarder_v1();
-
-        // Deploy Orchestrator_v1 implementation.
-        orchestratorImpl = new Orchestrator_v1(address(forwarder));
-
-        orchestratorBeacon = new InverterBeacon_v1(
-            address(reverter), address(gov), 1, address(orchestratorImpl), 0, 0
-        ); //@note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
-
         // Deploy ModuleFactory_v1 implementation.
         ModuleFactory_v1 moduleFactoryImpl =
             new ModuleFactory_v1(address(reverter), address(forwarder));
@@ -140,10 +123,38 @@ contract E2ETest is E2EModuleRegistry {
                 )
             )
         );
+
+        // Initialize the Governor first, as this
+        // needs to store the moduleFactory in order for the
+        // callback mechanism to work.
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            1 weeks,
+            address(feeManager),
+            address(moduleFactory)
+        );
+
+        // Now we can initialize the module factory,
+        // as the governor knows about it.
         moduleFactory.init(
             address(gov),
             new IModule_v1.Metadata[](0),
             new IInverterBeacon_v1[](0)
+        );
+
+        // Deploy a Mock funding token for testing.
+
+        // Set gov as the default beacon owner
+        DEFAULT_BEACON_OWNER = address(gov);
+
+        token = new ERC20Mock("Mock", "MOCK");
+
+        // Deploy Orchestrator_v1 implementation.
+        orchestratorImpl = new Orchestrator_v1(address(forwarder));
+
+        orchestratorBeacon = new InverterBeacon_v1(
+            address(reverter), address(gov), 1, address(orchestratorImpl), 0, 0
         );
 
         // Deploy OrchestratorFactory_v1 implementation.

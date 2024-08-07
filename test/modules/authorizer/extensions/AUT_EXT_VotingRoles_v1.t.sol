@@ -101,7 +101,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         // we give the votingRoles the ownwer role
         bytes32 adminRole = _authorizer.getAdminRole();
         _authorizer.grantRole(adminRole, address(_votingRoles));
-        //_authorizer.setIsAuthorized(address(_votingRoles), true);
+        // _authorizer.setIsAuthorized(address(_votingRoles), true);
 
         // Initialize the votingRoles with 3 users
 
