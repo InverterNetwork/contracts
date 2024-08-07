@@ -11,8 +11,6 @@ import {IFM_DepositVault_v1} from
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
