@@ -2,10 +2,17 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
+import "forge-std/Script.sol";
 
 // Script Dependencies
 import {TestnetDeploymentScript} from
     "script/deploymentScript/TestnetDeploymentScript.s.sol";
+import {
+    AccessDeploymentStateVariables,
+    DeploymentState
+} from "script/workflows/AccessDeploymentStateVariables.sol";
+import {MetadataCollection_v1} from
+    "script/deploymentSuite/MetadataCollection_v1.s.sol";
 
 // Internal InterfacesF
 import {IOrchestrator_v1} from
@@ -33,25 +40,28 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract DeployQAccWorkflow is
-    TestnetDeploymentScript //@todo: remove
-{
+contract DeployQAccWorkflow is MetadataCollection_v1, Script {
     //NOTE: This script assumes an exisiting orchestratorFactory. If there is none, it will create a testnetDeployment first
 
     //-------------------------------------------------------------------------
     // Storage
 
+    uint private deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
+    address public deployer = vm.addr(deployerPrivateKey);
+
+    DeploymentState chain_addresses;
+
     ERC20Mock public orchestratorToken;
     ERC20Issuance_v1 public issuanceToken;
     IOrchestrator_v1 public test_orchestrator;
 
-    address[] initialAuthorizedAddresses;
+    function run() public virtual {
+        AccessDeploymentStateVariables fetchState =
+            new AccessDeploymentStateVariables();
 
-    function run() public virtual override {
-        if (orchestratorFactory == address(0)) {
-            super.run();
-        }
-        //super.run();
+        chain_addresses = fetchState.createTestnetDeploymentAndReturnState();
+
+        orchestratorToken = ERC20Mock(chain_addresses.mockUSDToken);
 
         setupOrchestrator();
     }
@@ -74,14 +84,14 @@ contract DeployQAccWorkflow is
         vm.stopBroadcast();
 
         //mint deployer lots of tokens to test
-        mockCollateralToken.mint(deployer, 100e18);
+        orchestratorToken.mint(deployer, 100e18);
         uint initialBuyAmount = 10e18;
 
         // Define bondign curve properties:
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
-                formula: address(formula),
+                formula: address(chain_addresses.formula),
                 reserveRatioForBuying: 200_000,
                 reserveRatioForSelling: 200_000,
                 buyFee: 0,
@@ -93,7 +103,7 @@ contract DeployQAccWorkflow is
             });
 
         // define token to be used as collateral
-        orchestratorToken = mockCollateralToken;
+        orchestratorToken = ERC20Mock(chain_addresses.mockUSDToken);
 
         // Orchestrator_v1
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
@@ -105,7 +115,8 @@ contract DeployQAccWorkflow is
         // Funding Manager: Metadata, token address //@todo wait for DepositVault
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata,
+            MetadataCollection_v1
+                .restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata,
             abi.encode(address(issuanceToken), bc_properties, orchestratorToken)
         );
 
@@ -137,8 +148,9 @@ contract DeployQAccWorkflow is
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
-                .createOrchestrator(
+            test_orchestrator = IOrchestratorFactory_v1(
+                chain_addresses.orchestratorFactory
+            ).createOrchestrator(
                 workflowConfig,
                 fundingManagerFactoryConfig,
                 authorizerFactoryConfig,
@@ -197,24 +209,32 @@ contract DeployQAccWorkflow is
             "=================================================================================="
         );
 
+        console.log("\n\n");
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console.log("Perfoming setup steps for qAcc round initialization");
         // TODO: Sort out authorizations
 
         // get bonding curve / funding manager
         address fundingManager = address(test_orchestrator.fundingManager());
 
         // enable bonding curve to mint issuance token
-        issuanceToken.setMinter(fundingManager, true);
+        console.log("\t-Giving minting rights to the bonding curve");
 
+        issuanceToken.setMinter(fundingManager, true);
+        console.log("\t-Giving minting rights to the deployer");
         issuanceToken.setMinter(deployer, true);
 
         // we mint the initial supply as deployer
-
+        console.log("\t-Minting initial issuance supply to deployer");
         issuanceToken.mint(deployer, bc_properties.initialIssuanceSupply);
 
         // give allowance to the bonding curve to spend deployer funds
         vm.startBroadcast(deployerPrivateKey);
         {
             //Allow the deployer to buy tokens
+            console.log("\t-Granting CURVE_INTERACTION_ROLE to deployer");
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
                 .grantModuleRole(
                 FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
@@ -224,83 +244,31 @@ contract DeployQAccWorkflow is
             );
 
             // Set up initial supply and balance
-            mockCollateralToken.transfer(
+            console.log(
+                "\t-Transferring initial collateral supply to the bonding curve"
+            );
+            orchestratorToken.transfer(
                 fundingManager, bc_properties.initialCollateralSupply
             );
 
             // Performt the initial buy
-            mockCollateralToken.approve(
-                address(fundingManager), initialBuyAmount
-            );
+            console.log("\t-Performing initial buy");
+            orchestratorToken.approve(address(fundingManager), initialBuyAmount);
             IBondingCurveBase_v1(fundingManager).buyFor(
                 deployer, initialBuyAmount, 1
             );
         }
         vm.stopBroadcast();
 
+        console.log("\t-Revoking minting rights from the deployer");
         // From now on only the curve has minting rights
         issuanceToken.setMinter(deployer, false);
 
         // The deployer is the owner of the issuance token
+
+        console.log(
+            "\t-Transferring ownership of the issuance token to the deployer"
+        );
         issuanceToken.transferOwnership(deployer);
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    function _manageInitialSupplies(
-        IBondingCurveBase_v1 fundingManager,
-        IERC20 collateralToken,
-        ERC20Issuance_v1 issuanceToken,
-        uint initialCollateralSupply,
-        uint initialIssuanceSupply,
-        address recipient
-    ) private {
-        // collateral token is paid for by the msg.sender
-        collateralToken.transferFrom(
-            deployer, address(fundingManager), initialCollateralSupply
-        );
-        // issuance token is minted to the the specified recipient
-        issuanceToken.mint(recipient, initialIssuanceSupply);
-    }
-
-    function _manageInitialPurchase(
-        IBondingCurveBase_v1 fundingManager,
-        IERC20 collateralToken,
-        uint firstCollateralIn,
-        address recipient
-    ) private {
-        // transfer initial collateral amount from deployer to factory
-        collateralToken.transferFrom(deployer, address(this), firstCollateralIn);
-
-        // set allowance for curve to spend factory's tokens
-        collateralToken.approve(address(fundingManager), firstCollateralIn);
-
-        // make first purchase
-        IBondingCurveBase_v1(fundingManager).buyFor(
-            recipient, firstCollateralIn, 1
-        );
-    }
-
-    function _transferTokenOwnership(
-        ERC20Issuance_v1 issuanceToken,
-        address newAdmin
-    ) private {
-        if (newAdmin == address(0)) {
-            issuanceToken.renounceOwnership();
-        } else {
-            issuanceToken.transferOwnership(newAdmin);
-        }
-    }
-
-    function _transferWorkflowAdminRights(
-        IOrchestrator_v1 orchestrator,
-        address newAdmin
-    ) private {
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        // if renounced flag is set, add zero address as admin (because workflow must have at least one admin set)
-        orchestrator.authorizer().grantRole(adminRole, newAdmin);
-        // and revoke admin role from factory
-        orchestrator.authorizer().revokeRole(adminRole, address(this));
     }
 }
