@@ -169,13 +169,10 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
     }
 
-    function testCreatePIMWorkflow_WithInitialLiquidity(
-        uint initialPurchaseInCollateral
-    ) public {
+    function testCreatePIMWorkflow_WithInitialLiquidity() public {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
             getDefaultPIMConfig();
         pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
-        pimConfig.firstCollateralIn = initialPurchaseInCollateral; // use fuzzed param
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
@@ -240,11 +237,10 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         vm.stopPrank();
     }
 
-    function testCreatePIMWorkflow_WithoutInitialLiquidity(uint initialPurchaseInCollateral) public {
+    function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
         IPIM_WorkflowFactory_v1.PIMConfig memory pimConfig =
             getDefaultPIMConfig();
         pimConfig.withInitialLiquidity = false;
-        pimConfig.firstCollateralIn = initialPurchaseInCollateral; // use fuzzed param
 
         uint preCollateralBalance = token.balanceOf(address(this));
 
@@ -262,7 +258,8 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
 
         // CHECK: deployer DID NOT send initial collateral supply to curve, ONLY did first purchase
         assertEq(
-            preCollateralBalance - postCollateralBalance, pimConfig.firstCollateralIn
+            preCollateralBalance - postCollateralBalance,
+            pimConfig.firstCollateralIn
         );
         // CHECK: initialIssuanceSupply is BURNT (sent to 0xDEAD)
         assertEq(
