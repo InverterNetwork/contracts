@@ -70,6 +70,15 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
+        console.log("\n\n");
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console.log("\tSTARTING Q/ACC WORKFLOW DEPLOYMENT");
+        console.log(
+            "--------------------------------------------------------------------------------"
+        );
+
         // Deploy the issacne token  and set it up
         vm.startBroadcast(deployerPrivateKey);
         {

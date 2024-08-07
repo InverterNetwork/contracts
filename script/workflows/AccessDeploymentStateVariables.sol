@@ -45,15 +45,18 @@ struct DeploymentState {
 }
 
 contract AccessDeploymentStateVariables is TestnetDeploymentScript {
+    // Here we will store the addresses of the chain state
+    DeploymentState chain_state;
+
     function createTestnetDeploymentAndReturnState()
         public
         virtual
-        returns (DeploymentState memory state)
+        returns (DeploymentState memory)
     {
         // Call the run function from TestnetDeploymentScript and store it
         run();
 
-        DeploymentState memory state = DeploymentState({
+        chain_state = DeploymentState({
             orchestratorFactory: orchestratorFactory,
             moduleFactory: moduleFactory,
             communityMultisig: communityMultisig,
@@ -68,12 +71,14 @@ contract AccessDeploymentStateVariables is TestnetDeploymentScript {
             ooV3: address(ooV3),
             mockUSDToken: address(mockCollateralToken)
         });
+
+        return chain_state;
     }
 
     function getExistingDeploymentInfoFromEnv()
         public
         virtual
-        returns (DeploymentState memory state)
+        returns (DeploymentState memory)
     {
         address orchestratorFactory =
             vm.envAddress("ORCHESTRATOR_FACTORY_ADDRESS");
@@ -93,7 +98,7 @@ contract AccessDeploymentStateVariables is TestnetDeploymentScript {
         address ooV3 = vm.envAddress("OPTIMISTIC_ORACLE_V3_ADDRESS");
         address mockUSDToken = vm.envAddress("MOCK_USD_TOKEN_ADDRESS");
 
-        DeploymentState memory state = DeploymentState({
+        chain_state = DeploymentState({
             orchestratorFactory: orchestratorFactory,
             moduleFactory: moduleFactory,
             communityMultisig: communityMultisig,
@@ -108,5 +113,7 @@ contract AccessDeploymentStateVariables is TestnetDeploymentScript {
             ooV3: ooV3,
             mockUSDToken: mockUSDToken
         });
+
+        return chain_state;
     }
 }
