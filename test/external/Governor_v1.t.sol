@@ -360,7 +360,7 @@ contract GovernorV1Test is Test {
             address(modFactory)
         );
 
-        // validAddress(initialFeeManager)
+        // validAddress(_feeManager)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor_v1.Governor__InvalidAddress.selector, address(0)

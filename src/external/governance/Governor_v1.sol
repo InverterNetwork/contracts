@@ -157,17 +157,17 @@ contract Governor_v1 is
 
     /// @inheritdoc IGovernor_v1
     function init(
-        address newCommunityMultisig,
-        address newTeamMultisig,
-        uint newTimelockPeriod,
-        address initialFeeManager,
-        address initialModuleFactory
+        address _communityMultisig,
+        address _teamMultisig,
+        uint _timelockPeriod,
+        address _feeManager,
+        address _moduleFactory
     )
         external
         initializer
-        validAddress(newCommunityMultisig)
-        validAddress(newTeamMultisig)
-        validTimelockPeriod(newTimelockPeriod)
+        validAddress(_communityMultisig)
+        validAddress(_teamMultisig)
+        validTimelockPeriod(_timelockPeriod)
     {
         __AccessControl_init();
 
@@ -181,14 +181,14 @@ contract Governor_v1 is
         _setRoleAdmin(TEAM_MULTISIG_ROLE, COMMUNITY_MULTISIG_ROLE);
 
         // grant COMMUNITY_MULTISIG_ROLE to specified address
-        _grantRole(COMMUNITY_MULTISIG_ROLE, newCommunityMultisig);
+        _grantRole(COMMUNITY_MULTISIG_ROLE, _communityMultisig);
         // grant COMMUNITY_MULTISIG_ROLE to specified address
-        _grantRole(TEAM_MULTISIG_ROLE, newTeamMultisig);
+        _grantRole(TEAM_MULTISIG_ROLE, _teamMultisig);
 
-        _setTimelockPeriod(newTimelockPeriod);
+        _setTimelockPeriod(_timelockPeriod);
 
-        _setFeeManager(initialFeeManager);
-        _setModuleFactory(initialModuleFactory);
+        _setFeeManager(_feeManager);
+        _setModuleFactory(_moduleFactory);
     }
 
     function moduleFactoryInitCallback(

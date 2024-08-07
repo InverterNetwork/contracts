@@ -128,17 +128,17 @@ interface IGovernor_v1 {
     // Initialization
 
     /// @notice The module's initializer function.
-    /// @param newCommunityMultisig The address of the community multisig
-    /// @param newTeamMultisig The address of the team multisig
-    /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
-    /// @param initialFeeManager The address of the initial fee manager
-    /// @param initialModuleFactory The address of the initial module factory
+    /// @param _communityMultisig The address of the community multisig
+    /// @param _teamMultisig The address of the team multisig
+    /// @param _timelockPeriod The timelock period needed to upgrade a beacon
+    /// @param _feeManager The address of the initial fee manager
+    /// @param _moduleFactory The address of the initial module factory
     function init(
-        address newCommunityMultisig,
-        address newTeamMultisig,
-        uint newTimelockPeriod,
-        address initialFeeManager,
-        address initialModuleFactory
+        address _communityMultisig,
+        address _teamMultisig,
+        uint _timelockPeriod,
+        address _feeManager,
+        address _moduleFactory
     ) external;
 
     function moduleFactoryInitCallback(
