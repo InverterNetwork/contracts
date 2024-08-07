@@ -24,9 +24,11 @@ At Inverter Network, we prioritize the security of our smart contracts and follo
 
 * Additionally, prior to major releases, we perform a full audit of any changed contracts via an external auditing company before the deployment. This ensures that our contracts undergo thorough scrutiny by professional auditors.
 
-* Our version 1 has been audited by [0xMacro](https://0xmacro.com/). The audit report will be published here once it becomes public. Furthermore, our v1 is currently undergoing a public audit competition on [Hats Finance](https://hats.finance/), leveraging the expertise of the broader security community.
+* Our version 1 has been audited by [0xMacro](https://0xmacro.com/) and underwent a public audit competition on [Hats Finance](https://hats.finance/), leveraging the expertise of the broader security community.
 
 We are committed to transparency and will make the results of our security reviews and audits available to the public, fostering trust and confidence in the security of our platform.
+
+**You can find all of our audit reports [here](./audits/).**
 
 ## Security Guideline
 
