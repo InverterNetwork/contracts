@@ -1,4 +1,4 @@
-## Security Reviews and Audits
+## Audits and Security Reviews
 
 At Inverter Network, we prioritize the security of our smart contracts and follow a rigorous process of security reviews and audits:
 
