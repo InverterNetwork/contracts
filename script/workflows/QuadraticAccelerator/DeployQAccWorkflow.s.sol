@@ -39,8 +39,8 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 import {
     IPIM_WorkflowFactory_v1,
-    PIM_WorkflowFactory_v1
-} from "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
+    QACC_WorkflowFactory_v1
+} from "src/factories/workflow-specific/QACC_WorkflowFactory_v1.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -300,11 +300,11 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         );
 
         // Deploy the PIM Factory
-        PIM_WorkflowFactory_v1 pimFactory;
+        QACC_WorkflowFactory_v1 pimFactory;
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            pimFactory = new PIM_WorkflowFactory_v1(
+            pimFactory = new QACC_WorkflowFactory_v1(
                 chain_addresses.orchestratorFactory,
                 deployer,
                 chain_addresses.forwarder
@@ -317,6 +317,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         vm.startBroadcast(deployerPrivateKey);
         {
+            console.log("\t-Minting and approving initial collateralto deployer");
             // mint collateral token to deployer
             orchestratorToken.mint(deployer, 100e18);
 
@@ -386,6 +387,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         vm.startBroadcast(deployerPrivateKey);
         {
+            console.log("\t-Creating PIM workflow");
             (orchestrator, issuanceToken) = pimFactory.createPIMWorkflow(
                 workflowConfig,
                 paymentProcessorFactoryConfig,
