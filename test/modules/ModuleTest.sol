@@ -73,7 +73,7 @@ abstract contract ModuleTest is Test {
     //--------------------------------------------------------------------------
     // Setup
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
-        //Needs to be a proxy for the notInitialized Check
+        // Needs to be a proxy for the notInitialized Check
         feeManager = FeeManager_v1(
             address(
                 new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy

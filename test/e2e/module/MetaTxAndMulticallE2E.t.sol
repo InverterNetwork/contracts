@@ -298,7 +298,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         callCollection[1] = call2;
 
         // Do the multiCall
-        //!!! the user has to make the call
+        // !!! the user has to make the call
         vm.prank(user);
         forwarder.executeMulticall(callCollection);
 

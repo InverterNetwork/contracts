@@ -11,10 +11,18 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 
 contract GovernorV1Mock is IGovernor_v1 {
     address feeManager;
+
+    uint public howManyCalls;
     //--------------------------------------------------------------------------
     // Initialization
 
-    function init(address, address, uint, address) external {}
+    function init(address, address, uint, address, address) external {}
+
+    function moduleFactoryInitCallback(IInverterBeacon_v1[] calldata)
+        external
+    {
+        howManyCalls++;
+    }
 
     //--------------------------------------------------------------------------
     // Getter Functions
@@ -23,6 +31,12 @@ contract GovernorV1Mock is IGovernor_v1 {
         external
         view
         returns (Timelock memory)
+    {}
+
+    function getLinkedBeacons()
+        external
+        view
+        returns (IInverterBeacon_v1[] memory)
     {}
 
     //--------------------------------------------------------------------------
@@ -36,7 +50,13 @@ contract GovernorV1Mock is IGovernor_v1 {
         feeManager = newFeeManager;
     }
 
-    function setFeeManagerMaxFee(uint maxFee) external {}
+    function getModuleFactory() external pure returns (address) {
+        return address(0);
+    }
+
+    function setModuleFactory(address) external {}
+
+    function setFeeManagerMaxFee(uint) external {}
 
     function setFeeManagerDefaultProtocolTreasury(address) external {}
 
@@ -106,6 +126,7 @@ contract GovernorV1Mock is IGovernor_v1 {
     // Emergency Shutdown
 
     function initiateBeaconShutdown(address) external {}
+    function initiateBeaconShutdownForAllLinkedBeacons() external {}
 
     function forceUpgradeBeaconAndRestartImplementation(
         address,
