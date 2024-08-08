@@ -10,8 +10,8 @@ import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IPIM_WorkflowFactory_v1} from
-    "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
+import {IRestricted_PIM_Factory_v1} from
+    "src/factories/interfaces/IRestricted_PIM_Factory_v1.sol";
 import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 
 // Internal Dependencies
@@ -20,7 +20,7 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IPIM_WorkflowFactory_v1 {
+interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Errors
     /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
@@ -55,9 +55,16 @@ interface IPIM_WorkflowFactory_v1 {
     );
 
     /// @notice Event emitted when PIM fee (buy/sell fees) is claimed.
-    /// @param claimer The address of the claimer.
+    /// @param fundingManager The address of the bonding curve from which to withdraw fees.
+    /// @param claimant The address of the claimer.
+    /// @param recipient The address to which the fees are sent.
     /// @param amount The amount claimed.
-    event PimFeeClaimed(address indexed claimer, uint amount);
+    event PimFeeClaimed(
+        address indexed fundingManager,
+        address indexed claimant,
+        address indexed recipient,
+        uint amount
+    );
 
     //--------------------------------------------------------------------------
     // Structs
@@ -116,7 +123,7 @@ interface IPIM_WorkflowFactory_v1 {
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
+        IRestricted_PIM_Factory_v1.PIMConfig memory PIMConfig
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
     /// @notice Updates who can claim the buy/sell fees of a given bonding curve.

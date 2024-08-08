@@ -8,8 +8,8 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IPIM_WorkflowFactory_v1} from
-    "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
+import {IRestricted_PIM_Factory_v1} from
+    "src/factories/interfaces/IRestricted_PIM_Factory_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
@@ -25,10 +25,10 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
-contract PIM_WorkflowFactory_v1 is
+contract Restricted_PIM_Factory_v1 is
     Ownable2Step,
     ERC2771Context,
-    IPIM_WorkflowFactory_v1
+    IRestricted_PIM_Factory_v1
 {
     //--------------------------------------------------------------------------
     // State Variables
@@ -67,12 +67,12 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
-    /// @inheritdoc IPIM_WorkflowFactory_v1
+    /// @inheritdoc IRestricted_PIM_Factory_v1
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig
+        IRestricted_PIM_Factory_v1.PIMConfig memory PIMConfig
     )
         external
         returns (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken)
@@ -178,7 +178,7 @@ contract PIM_WorkflowFactory_v1 is
             _transferWorkflowAdminRights(orchestrator, PIMConfig.admin);
         }
 
-        emit IPIM_WorkflowFactory_v1.PIMWorkflowCreated(
+        emit IRestricted_PIM_Factory_v1.PIMWorkflowCreated(
             fundingManager,
             address(issuanceToken),
             _msgSender(),
@@ -193,7 +193,7 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // Permissioned Functions
 
-    /// @inheritdoc IPIM_WorkflowFactory_v1
+    /// @inheritdoc IRestricted_PIM_Factory_v1
     function withdrawPimFee(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
@@ -203,16 +203,16 @@ contract PIM_WorkflowFactory_v1 is
         IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
             to, amount
         );
-        emit IPIM_WorkflowFactory_v1.PimFeeClaimed(_msgSender(), amount);
+        emit IRestricted_PIM_Factory_v1.PimFeeClaimed(fundingManager, _msgSender(), to, amount);
     }
 
-    /// @inheritdoc IPIM_WorkflowFactory_v1
+    /// @inheritdoc IRestricted_PIM_Factory_v1
     function transferPimFeeEligibility(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
     {
         _pimFeeRecipients[fundingManager] = to;
-        emit IPIM_WorkflowFactory_v1.PimFeeRecipientUpdated(_msgSender(), to);
+        emit IRestricted_PIM_Factory_v1.PimFeeRecipientUpdated(_msgSender(), to);
     }
 
     //--------------------------------------------------------------------------
