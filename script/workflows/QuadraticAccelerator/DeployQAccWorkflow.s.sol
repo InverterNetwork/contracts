@@ -108,14 +108,14 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
                 formula: address(chain_addresses.formula),
-                reserveRatioForBuying: 200_000,
-                reserveRatioForSelling: 200_000,
+                reserveRatioForBuying: 160_000,
+                reserveRatioForSelling: 160_000,
                 buyFee: 0,
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialIssuanceSupply: 100,
-                initialCollateralSupply: 100
+                initialIssuanceSupply: 122_727_272_727_272_727_272_727,
+                initialCollateralSupply: 3_163_408_614_166_851_161
             });
 
         // define token to be used as collateral
@@ -363,19 +363,19 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
                 name: "QAcc Project Token",
                 symbol: "QACC",
                 decimals: 18,
-                maxSupply: 100e18
+                maxSupply: type(uint).max - 1
             }),
             bcProperties: IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
                 formula: address(chain_addresses.formula),
-                reserveRatioForBuying: 200_000,
-                reserveRatioForSelling: 200_000,
+                reserveRatioForBuying: 160_000,
+                reserveRatioForSelling: 160_000,
                 buyFee: 0,
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialIssuanceSupply: 100,
-                initialCollateralSupply: 100
+                initialIssuanceSupply: 122_727_272_727_272_727_272_727,
+                initialCollateralSupply: 3_163_408_614_166_851_161
             }),
             admin: deployer,
             recipient: deployer,
@@ -418,13 +418,13 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             //give allowance to the Bonding Curve to spend deployer funds
             orchestratorToken.approve(fundingManager, 100e18);
 
-            uint amountOut = IBondingCurveBase_v1(fundingManager)
+            uint estimatedAmountOut = IBondingCurveBase_v1(fundingManager)
                 .calculatePurchaseReturn(10e18);
 
             IBondingCurveBase_v1(fundingManager).buy(10e18, 1);
-            console.log("amountOut: %s", amountOut);
+            console.log("Amount to sell: %s", estimatedAmountOut);
 
-            IRedeemingBondingCurveBase_v1(fundingManager).sell(amountOut, 1);
+            IRedeemingBondingCurveBase_v1(fundingManager).sell(estimatedAmountOut, 1);
         }
         vm.stopBroadcast();
     }
