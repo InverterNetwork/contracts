@@ -13,6 +13,8 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {IRestricted_PIM_Factory_v1} from
     "src/factories/interfaces/IRestricted_PIM_Factory_v1.sol";
 import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
@@ -32,19 +34,13 @@ interface IRestricted_PIM_Factory_v1 {
     // Events
 
     /// @notice Event emitted when a new PIM workflow is created.
-    /// @param bondingCurve The address of the bonding curve.
+    /// @param orchestrator The address of the orchestrator.
     /// @param issuanceToken The address of the issuance token.
     /// @param deployer The address of the deployer.
-    /// @param recipient The address of the recipient.
-    /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
-    /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
     event PIMWorkflowCreated(
-        address indexed bondingCurve,
+        address indexed orchestrator,
         address indexed issuanceToken,
-        address indexed deployer,
-        address recipient,
-        bool isRenouncedIssuanceToken,
-        bool isRenouncedWorkflow
+        address indexed deployer
     );
 
     /// @notice Event emitted when factory owner sets new fee.
@@ -113,33 +109,24 @@ interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Deploys a workflow with a bonding curve and an issuance token
+    /// @notice Creates a new orchestrator_v1.
     /// @param workflowConfig The workflow's config data.
-    /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
-    /// @param moduleConfigs Variable length set of optional module's config data.
-    /// @param PIMConfig The configuration for the issuance token and the bonding curve.
-    /// @return Returns the address of orchestrator and the address of the issuance token.
+    /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1}
+    ///                         instance.
+    /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1}
+    ///                         instance.
+    /// @param paymentProcessorConfig The config data for the orchestrator's
+    ///                               {IPaymentProcessor_v1} instance.
+    /// @param moduleConfigs Variable length set of optional module's config
+    ///                      data.
+    /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
+    /// @return CreatedOrchestrator Returns the created orchestrator instance
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IRestricted_PIM_Factory_v1.PIMConfig memory PIMConfig
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
-
-    /// @notice Updates who can claim the buy/sell fees of a given bonding curve.
-    /// @dev Only callable by the currently eligible fee recipient.
-    /// @param fundingManager The address of the bonding curve from which to withdraw fees.
-    /// @param to The address that should be eligible to claim fees in the future.
-    function transferPimFeeEligibility(address fundingManager, address to)
-        external;
-
-    /// @notice Withdraws the buy/sell fees of a given bonding curve.
-    /// @dev Only callable by the currently eligible fee recipient.
-    /// @param fundingManager The address of the bonding curve from which to withdraw fees.
-    /// @param to The address to which the fees are sent.
-    function withdrawPimFee(address fundingManager, address to) external;
-
-    /// @notice Returns the address of the orchestrator factory.
-    /// @return Address of the orchestrator factory.
-    function orchestratorFactory() external view returns (address);
 }

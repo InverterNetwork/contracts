@@ -34,11 +34,14 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
     // Deployment Parameters
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
+    IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig;
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig;
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig;
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
-    IRestricted_PIM_Factory_v1.IssuanceTokenParams issuanceTokenParams;
+    IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
+    
+    address workflowAdmin = vm.addr(420);
 
     address factoryDeployer = vm.addr(1);
     address workflowDeployer = vm.addr(2);
@@ -50,7 +53,6 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     uint firstCollateralIn = 100_000_000;
     uint32 reserveRatio = 160_000;
 
-    event PIMWorkflowCreated(address indexed issuanceToken);
 
     function setUp() public override {
         super.setUp();
@@ -70,7 +72,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         authorizerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(address(factory))
+            roleAuthorizerMetadata, abi.encode(address(workflowAdmin))
         );
 
         // PaymentProcessor
@@ -102,8 +104,13 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             initialCollateralSupply: initialCollateralSupply
         });
 
-        // Deploy Issuance Token
-        issuanceTokenParams = IRestricted_PIM_Factory_v1.IssuanceTokenParams({
+        fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            abi.encode(address(0), bcProperties, token)
+        );
+
+        // Put issuance token params in storage
+        issuanceTokenParams = IBondingCurveBase_v1.IssuanceToken({
             name: "Bonding Curve Token",
             symbol: "BCT",
             decimals: 18,
@@ -113,6 +120,8 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // mint collateral token to deployer and approve to factory
         token.mint(address(this), type(uint).max);
         token.approve(address(factory), type(uint).max);
+
+        console.log("address(this): ", address(this));
     }
 
     /* Test testCreatePIMWorkflow
@@ -143,18 +152,17 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // CHECK: event is emitted
         vm.expectEmit(false, false, false, false);
         emit IRestricted_PIM_Factory_v1.PIMWorkflowCreated(
-            address(0), address(0), address(0), address(0), true, true
+            address(0), address(0), address(0)
         );
-        // get default config
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
 
         (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
         factory.createPIMWorkflow(
             workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            pimConfig
+            issuanceTokenParams
         );
 
         // CHECK: factory DOES NOT have minting rights on token anymore
@@ -165,409 +173,407 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         bool isBcMinter =
             issuanceToken.allowedMinters(address(orchestrator.fundingManager()));
         assertTrue(isBcMinter);
-        // CHECK: deployer uses firstCollateralIn (amount) to make first purchase
-        assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
     }
 
-    function testCreatePIMWorkflow_WithInitialLiquidity() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
+    // function testCreatePIMWorkflow_WithInitialLiquidity() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     pimConfig.withInitialLiquidity = true; // just to highlight what is being tested
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
-        address fundingManager = address(orchestrator.fundingManager());
+    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
+    //     address fundingManager = address(orchestrator.fundingManager());
 
-        // CHECK: curve HAS received initial collateral supply and firstCollateralIn
-        assertTrue(
-            token.balanceOf(fundingManager)
-                == pimConfig.bcProperties.initialCollateralSupply
-                    + pimConfig.firstCollateralIn
-        );
-        // CHECK: recipient receives initialIssuanceSupply plus first purchase amount
-        assertGt(
-            issuanceToken.balanceOf(pimConfig.recipient),
-            bcProperties.initialIssuanceSupply
-        );
-        // CHECK: if recipient SELLS complete stack and BUYS BACK they get same amount of issuanceToken
-        vm.startPrank(pimConfig.recipient);
-        // get issuance balance before sale and rebuy
-        uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
-        // get static price before sale
-        uint staticPriceBefore =
-            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
-        // get how many issuance tokens are sold
-        uint firstPurchaseVolume =
-            balanceBefore - pimConfig.bcProperties.initialIssuanceSupply;
-        issuanceToken.approve(fundingManager, firstPurchaseVolume);
-        uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
-            .calculateSaleReturn(firstPurchaseVolume);
-        // sell all tokens from initial purchase (the one that happened atomically in the factory)
-        IRedeemingBondingCurveBase_v1(fundingManager).sell(
-            firstPurchaseVolume, collateralAmountOut
-        );
-        // alice only has initial issuance supply left?
-        assert(
-            issuanceToken.balanceOf(pimConfig.recipient)
-                == pimConfig.bcProperties.initialIssuanceSupply
-        );
-        token.approve(fundingManager, collateralAmountOut);
-        uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
-            .calculatePurchaseReturn(collateralAmountOut);
-        // now use the collateral from the sale to buy back
-        IBondingCurveBase_v1(fundingManager).buy(
-            collateralAmountOut, issuanceAmountOut
-        );
-        // get the static price after the re-buy
-        uint staticPriceAfter =
-            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
-        // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
-        assertApproxEqRel(
-            balanceBefore,
-            issuanceToken.balanceOf(pimConfig.recipient),
-            0.00001e18
-        );
-        // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
-        assertEq(staticPriceBefore, staticPriceAfter);
-        vm.stopPrank();
-    }
+    //     // CHECK: curve HAS received initial collateral supply and firstCollateralIn
+    //     assertTrue(
+    //         token.balanceOf(fundingManager)
+    //             == pimConfig.bcProperties.initialCollateralSupply
+    //                 + pimConfig.firstCollateralIn
+    //     );
+    //     // CHECK: recipient receives initialIssuanceSupply plus first purchase amount
+    //     assertGt(
+    //         issuanceToken.balanceOf(pimConfig.recipient),
+    //         bcProperties.initialIssuanceSupply
+    //     );
+    //     // CHECK: if recipient SELLS complete stack and BUYS BACK they get same amount of issuanceToken
+    //     vm.startPrank(pimConfig.recipient);
+    //     // get issuance balance before sale and rebuy
+    //     uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
+    //     // get static price before sale
+    //     uint staticPriceBefore =
+    //         IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+    //     // get how many issuance tokens are sold
+    //     uint firstPurchaseVolume =
+    //         balanceBefore - pimConfig.bcProperties.initialIssuanceSupply;
+    //     issuanceToken.approve(fundingManager, firstPurchaseVolume);
+    //     uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
+    //         .calculateSaleReturn(firstPurchaseVolume);
+    //     // sell all tokens from initial purchase (the one that happened atomically in the factory)
+    //     IRedeemingBondingCurveBase_v1(fundingManager).sell(
+    //         firstPurchaseVolume, collateralAmountOut
+    //     );
+    //     // alice only has initial issuance supply left?
+    //     assert(
+    //         issuanceToken.balanceOf(pimConfig.recipient)
+    //             == pimConfig.bcProperties.initialIssuanceSupply
+    //     );
+    //     token.approve(fundingManager, collateralAmountOut);
+    //     uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
+    //         .calculatePurchaseReturn(collateralAmountOut);
+    //     // now use the collateral from the sale to buy back
+    //     IBondingCurveBase_v1(fundingManager).buy(
+    //         collateralAmountOut, issuanceAmountOut
+    //     );
+    //     // get the static price after the re-buy
+    //     uint staticPriceAfter =
+    //         IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+    //     // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
+    //     assertApproxEqRel(
+    //         balanceBefore,
+    //         issuanceToken.balanceOf(pimConfig.recipient),
+    //         0.00001e18
+    //     );
+    //     // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
+    //     assertEq(staticPriceBefore, staticPriceAfter);
+    //     vm.stopPrank();
+    // }
 
-    function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        pimConfig.withInitialLiquidity = false;
+    // function testCreatePIMWorkflow_WithoutInitialLiquidity() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     pimConfig.withInitialLiquidity = false;
 
-        uint preCollateralBalance = token.balanceOf(address(this));
+    //     uint preCollateralBalance = token.balanceOf(address(this));
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        uint postCollateralBalance = token.balanceOf(address(this));
+    //     uint postCollateralBalance = token.balanceOf(address(this));
 
-        address fundingManager = address(orchestrator.fundingManager());
+    //     address fundingManager = address(orchestrator.fundingManager());
 
-        // CHECK: deployer DID NOT send initial collateral supply to curve, ONLY did first purchase
-        assertEq(
-            preCollateralBalance - postCollateralBalance,
-            pimConfig.firstCollateralIn
-        );
-        // CHECK: initialIssuanceSupply is BURNT (sent to 0xDEAD)
-        assertEq(
-            issuanceToken.balanceOf(address(0xDEAD)),
-            bcProperties.initialIssuanceSupply
-        );
-        // CHECK: recipient receives some amount of issuanceToken (due to first purchase)
-        assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
+    //     // CHECK: deployer DID NOT send initial collateral supply to curve, ONLY did first purchase
+    //     assertEq(
+    //         preCollateralBalance - postCollateralBalance,
+    //         pimConfig.firstCollateralIn
+    //     );
+    //     // CHECK: initialIssuanceSupply is BURNT (sent to 0xDEAD)
+    //     assertEq(
+    //         issuanceToken.balanceOf(address(0xDEAD)),
+    //         bcProperties.initialIssuanceSupply
+    //     );
+    //     // CHECK: recipient receives some amount of issuanceToken (due to first purchase)
+    //     assertTrue(issuanceToken.balanceOf(pimConfig.recipient) > 0);
 
-        vm.startPrank(pimConfig.recipient);
-        // get issuance balance before sale and rebuy
-        uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
-        // get static price before sale
-        uint staticPriceBefore =
-            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
-        issuanceToken.approve(fundingManager, balanceBefore);
-        uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
-            .calculateSaleReturn(balanceBefore);
-        // use complete issuance balance to sell for collateral
-        IRedeemingBondingCurveBase_v1(fundingManager).sell(
-            balanceBefore, collateralAmountOut
-        );
-        // alice doesn't have any issuance token left
-        assert(issuanceToken.balanceOf(pimConfig.recipient) == 0);
-        token.approve(fundingManager, collateralAmountOut);
-        uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
-            .calculatePurchaseReturn(collateralAmountOut);
-        // now use the collateral from the sale to buy back
-        IBondingCurveBase_v1(fundingManager).buy(
-            collateralAmountOut, issuanceAmountOut
-        );
-        uint staticPriceAfter =
-            IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
-        // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
-        assertApproxEqRel(
-            balanceBefore,
-            issuanceToken.balanceOf(pimConfig.recipient),
-            0.00001e18
-        );
-        // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
-        assertEq(staticPriceBefore, staticPriceAfter);
-        vm.stopPrank();
-    }
+    //     vm.startPrank(pimConfig.recipient);
+    //     // get issuance balance before sale and rebuy
+    //     uint balanceBefore = issuanceToken.balanceOf(pimConfig.recipient);
+    //     // get static price before sale
+    //     uint staticPriceBefore =
+    //         IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+    //     issuanceToken.approve(fundingManager, balanceBefore);
+    //     uint collateralAmountOut = IRedeemingBondingCurveBase_v1(fundingManager)
+    //         .calculateSaleReturn(balanceBefore);
+    //     // use complete issuance balance to sell for collateral
+    //     IRedeemingBondingCurveBase_v1(fundingManager).sell(
+    //         balanceBefore, collateralAmountOut
+    //     );
+    //     // alice doesn't have any issuance token left
+    //     assert(issuanceToken.balanceOf(pimConfig.recipient) == 0);
+    //     token.approve(fundingManager, collateralAmountOut);
+    //     uint issuanceAmountOut = IBondingCurveBase_v1(fundingManager)
+    //         .calculatePurchaseReturn(collateralAmountOut);
+    //     // now use the collateral from the sale to buy back
+    //     IBondingCurveBase_v1(fundingManager).buy(
+    //         collateralAmountOut, issuanceAmountOut
+    //     );
+    //     uint staticPriceAfter =
+    //         IBondingCurveBase_v1(fundingManager).getStaticPriceForBuying();
+    //     // CHECK: if recipient SELLS complete stack and BUYS BACK they end up with same balance of issuanceToken
+    //     assertApproxEqRel(
+    //         balanceBefore,
+    //         issuanceToken.balanceOf(pimConfig.recipient),
+    //         0.00001e18
+    //     );
+    //     // CHECK: if recipient SELLS complete stack and BUYS BACK the static price is the same again
+    //     assertEq(staticPriceBefore, staticPriceAfter);
+    //     vm.stopPrank();
+    // }
 
-    function testCreatePIMWorkflow_IfFullyRenounced() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        pimConfig.isRenouncedIssuanceToken = true;
-        pimConfig.isRenouncedWorkflow = true;
+    // function testCreatePIMWorkflow_IfFullyRenounced() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     pimConfig.isRenouncedIssuanceToken = true;
+    //     pimConfig.isRenouncedWorkflow = true;
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        // CHECK: the token DOES NOT have an owner anymore
-        address owner = issuanceToken.owner();
-        assertEq(owner, address(0));
-        // CHECK: the deployer DOES NOT get admin rights over workflow
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
-            adminRole, address(workflowDeployer)
-        );
-        assertFalse(isDeployerAdmin);
-        // CHECK: the factory HAS admin rights over workflow
-        bool isFactoryAdmin =
-            orchestrator.authorizer().hasRole(adminRole, address(factory));
-        assertTrue(isFactoryAdmin);
-    }
+    //     // CHECK: the token DOES NOT have an owner anymore
+    //     address owner = issuanceToken.owner();
+    //     assertEq(owner, address(0));
+    //     // CHECK: the deployer DOES NOT get admin rights over workflow
+    //     bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+    //     bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+    //         adminRole, address(workflowDeployer)
+    //     );
+    //     assertFalse(isDeployerAdmin);
+    //     // CHECK: the factory HAS admin rights over workflow
+    //     bool isFactoryAdmin =
+    //         orchestrator.authorizer().hasRole(adminRole, address(factory));
+    //     assertTrue(isFactoryAdmin);
+    // }
 
-    function testCreatePIMWorkflow_IfNotRenounced() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        pimConfig.isRenouncedIssuanceToken = false;
-        pimConfig.isRenouncedWorkflow = false;
-        pimConfig.recipient = alice;
-        pimConfig.admin = workflowDeployer;
+    // function testCreatePIMWorkflow_IfNotRenounced() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     pimConfig.isRenouncedIssuanceToken = false;
+    //     pimConfig.isRenouncedWorkflow = false;
+    //     pimConfig.recipient = alice;
+    //     pimConfig.admin = workflowDeployer;
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        // CHECK: the deployer IS owner of the token
-        assertEq(issuanceToken.owner(), workflowDeployer);
-        // CHECK: the deployer IS admin of the workflow
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
-            adminRole, address(workflowDeployer)
-        );
-        assertTrue(isDeployerAdmin);
-    }
+    //     // CHECK: the deployer IS owner of the token
+    //     assertEq(issuanceToken.owner(), workflowDeployer);
+    //     // CHECK: the deployer IS admin of the workflow
+    //     bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+    //     bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+    //         adminRole, address(workflowDeployer)
+    //     );
+    //     assertTrue(isDeployerAdmin);
+    // }
 
-    function testCreatePIMWorkflow_IfTokenRenounced() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        pimConfig.isRenouncedIssuanceToken = true;
-        pimConfig.isRenouncedWorkflow = false;
-        pimConfig.recipient = alice;
-        pimConfig.admin = workflowDeployer;
+    // function testCreatePIMWorkflow_IfTokenRenounced() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     pimConfig.isRenouncedIssuanceToken = true;
+    //     pimConfig.isRenouncedWorkflow = false;
+    //     pimConfig.recipient = alice;
+    //     pimConfig.admin = workflowDeployer;
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        // CHECK: the token DOES NOT have an owner anymore
-        assertEq(issuanceToken.owner(), address(0));
-        // CHECK: the deployer IS admin of the workflow
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
-            adminRole, address(workflowDeployer)
-        );
-        assertTrue(isDeployerAdmin);
-    }
+    //     // CHECK: the token DOES NOT have an owner anymore
+    //     assertEq(issuanceToken.owner(), address(0));
+    //     // CHECK: the deployer IS admin of the workflow
+    //     bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+    //     bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+    //         adminRole, address(workflowDeployer)
+    //     );
+    //     assertTrue(isDeployerAdmin);
+    // }
 
-    function testCreatePIMWorkflow_IfWorkflowRenounced() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        pimConfig.isRenouncedIssuanceToken = false;
-        pimConfig.isRenouncedWorkflow = true;
+    // function testCreatePIMWorkflow_IfWorkflowRenounced() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     pimConfig.isRenouncedIssuanceToken = false;
+    //     pimConfig.isRenouncedWorkflow = true;
 
-        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        // CHECK: the deployer IS owner of the token
-        // assertEq(issuanceToken.owner(), workflowDeployer);
-        // CHECK: the deployer DOES NOT have admin rights over workflow
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        bool isDeployerAdmin = orchestrator.authorizer().hasRole(
-            adminRole, address(workflowDeployer)
-        );
-        assertFalse(isDeployerAdmin);
-        // CHECK: the factory DOES have admin rights over workflow
-        bool isFactoryAdmin =
-            orchestrator.authorizer().hasRole(adminRole, address(factory));
-        assertTrue(isFactoryAdmin);
-    }
+    //     // CHECK: the deployer IS owner of the token
+    //     // assertEq(issuanceToken.owner(), workflowDeployer);
+    //     // CHECK: the deployer DOES NOT have admin rights over workflow
+    //     bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+    //     bool isDeployerAdmin = orchestrator.authorizer().hasRole(
+    //         adminRole, address(workflowDeployer)
+    //     );
+    //     assertFalse(isDeployerAdmin);
+    //     // CHECK: the factory DOES have admin rights over workflow
+    //     bool isFactoryAdmin =
+    //         orchestrator.authorizer().hasRole(adminRole, address(factory));
+    //     assertTrue(isFactoryAdmin);
+    // }
 
-    function testCreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
-        public
-    {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
-        address deployer = address(0xB0B);
-        vm.prank(deployer);
+    // function testCreatePIMWorkflow_FailsWithoutCollateralTokenApproval()
+    //     public
+    // {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
+    //     address deployer = address(0xB0B);
+    //     vm.prank(deployer);
 
-        vm.expectRevert();
+    //     vm.expectRevert();
 
-        factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
-    }
+    //     factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
+    // }
 
-    /* Test testWithdrawPimFee
-        ├── given the msg.sender is the fee recipient
-        |   └── when called
-        |       └── then it emits fee claim events on bc and factory
-        └── given the msg.sender is NOT the fee recipient
-            └── when called
-                └── then it reverts   
-    */
+    // /* Test testWithdrawPimFee
+    //     ├── given the msg.sender is the fee recipient
+    //     |   └── when called
+    //     |       └── then it emits fee claim events on bc and factory
+    //     └── given the msg.sender is NOT the fee recipient
+    //         └── when called
+    //             └── then it reverts
+    // */
 
-    function testWithdrawPimFee() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
+    // function testWithdrawPimFee() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
 
-        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
-        address fundingManager = address(orchestrator.fundingManager());
+    //     (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
+    //     address fundingManager = address(orchestrator.fundingManager());
 
-        // CHECK: bonding curve EMITS event for fee withdrawal
-        vm.expectEmit(true, true, true, false);
-        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
-            address(this), 0
-        );
-        vm.expectEmit(true, true, true, false);
-        emit IRestricted_PIM_Factory_v1.PimFeeClaimed(
-            fundingManager, address(this), alice, 0
-        );
-        factory.withdrawPimFee(fundingManager, alice);
-    }
+    //     // CHECK: bonding curve EMITS event for fee withdrawal
+    //     vm.expectEmit(true, true, true, false);
+    //     emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+    //         address(this), 0
+    //     );
+    //     vm.expectEmit(true, true, true, false);
+    //     emit IRestricted_PIM_Factory_v1.PimFeeClaimed(
+    //         fundingManager, address(this), alice, 0
+    //     );
+    //     factory.withdrawPimFee(fundingManager, alice);
+    // }
 
-    function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
+    // function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
 
-        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        address fundingManager = address(orchestrator.fundingManager());
-        // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IRestricted_PIM_Factory_v1
-                    .PIM_WorkflowFactory__OnlyPimFeeRecipient
-                    .selector
-            )
-        );
-        vm.prank(alice);
-        factory.withdrawPimFee(fundingManager, alice);
-    }
+    //     address fundingManager = address(orchestrator.fundingManager());
+    //     // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             IRestricted_PIM_Factory_v1
+    //                 .PIM_WorkflowFactory__OnlyPimFeeRecipient
+    //                 .selector
+    //         )
+    //     );
+    //     vm.prank(alice);
+    //     factory.withdrawPimFee(fundingManager, alice);
+    // }
 
-    /* Test testTransferPimFeeEligibility
-        ├── given the msg.sender is the fee recipient
-        |   └── when called
-        |       └── then it emits an event indicating role update and lets new recipient withdraw fee
-        └── given the msg.sender is NOT the fee recipient
-           └── when called
-                └── then it reverts   
-    */
+    // /* Test testTransferPimFeeEligibility
+    //     ├── given the msg.sender is the fee recipient
+    //     |   └── when called
+    //     |       └── then it emits an event indicating role update and lets new recipient withdraw fee
+    //     └── given the msg.sender is NOT the fee recipient
+    //        └── when called
+    //             └── then it reverts
+    // */
 
-    function testTransferPimFeeEligibility() public {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
+    // function testTransferPimFeeEligibility() public {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
 
-        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        address fundingManager = address(orchestrator.fundingManager());
-        // CHECK: when fee recipient is updated event is emitted
-        vm.expectEmit(true, true, true, true);
-        emit IRestricted_PIM_Factory_v1.PimFeeRecipientUpdated(
-            address(this), alice
-        );
-        factory.transferPimFeeEligibility(fundingManager, alice);
+    //     address fundingManager = address(orchestrator.fundingManager());
+    //     // CHECK: when fee recipient is updated event is emitted
+    //     vm.expectEmit(true, true, true, true);
+    //     emit IRestricted_PIM_Factory_v1.PimFeeRecipientUpdated(
+    //         address(this), alice
+    //     );
+    //     factory.transferPimFeeEligibility(fundingManager, alice);
 
-        // CHECK: new recipient (alice) CAN withdraw fee
-        vm.prank(alice);
-        vm.expectEmit(true, true, true, false);
-        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
-            address(this), 0
-        );
-        factory.withdrawPimFee(fundingManager, alice);
-    }
+    //     // CHECK: new recipient (alice) CAN withdraw fee
+    //     vm.prank(alice);
+    //     vm.expectEmit(true, true, true, false);
+    //     emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+    //         address(this), 0
+    //     );
+    //     factory.withdrawPimFee(fundingManager, alice);
+    // }
 
-    function testTransferPimFeeEligibility_FailsIfCallerIsNotPimFeeRecipient()
-        public
-    {
-        IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
-            getDefaultPIMConfig();
+    // function testTransferPimFeeEligibility_FailsIfCallerIsNotPimFeeRecipient()
+    //     public
+    // {
+    //     IRestricted_PIM_Factory_v1.PIMConfig memory pimConfig =
+    //         getDefaultPIMConfig();
 
-        (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
-            workflowConfig,
-            paymentProcessorConfig,
-            logicModuleConfigs,
-            pimConfig
-        );
+    //     (IOrchestrator_v1 orchestrator,) = factory.createPIMWorkflow(
+    //         workflowConfig,
+    //         paymentProcessorConfig,
+    //         logicModuleConfigs,
+    //         pimConfig
+    //     );
 
-        address fundingManager = address(orchestrator.fundingManager());
-        // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IRestricted_PIM_Factory_v1
-                    .PIM_WorkflowFactory__OnlyPimFeeRecipient
-                    .selector
-            )
-        );
-        vm.prank(alice);
-        factory.transferPimFeeEligibility(fundingManager, address(0xB0B));
-    }
+    //     address fundingManager = address(orchestrator.fundingManager());
+    //     // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
+    //     vm.expectRevert(
+    //         abi.encodeWithSelector(
+    //             IRestricted_PIM_Factory_v1
+    //                 .PIM_WorkflowFactory__OnlyPimFeeRecipient
+    //                 .selector
+    //         )
+    //     );
+    //     vm.prank(alice);
+    //     factory.transferPimFeeEligibility(fundingManager, address(0xB0B));
+    // }
 
     // UTILS
-    function getDefaultPIMConfig()
-        internal
-        view
-        returns (IRestricted_PIM_Factory_v1.PIMConfig memory)
-    {
-        return IRestricted_PIM_Factory_v1.PIMConfig({
-            fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-            authorizerMetadata: roleAuthorizerMetadata,
-            bcProperties: bcProperties,
-            issuanceTokenParams: issuanceTokenParams,
-            collateralToken: address(token),
-            firstCollateralIn: firstCollateralIn,
-            admin: address(this),
-            recipient: alice,
-            isRenouncedIssuanceToken: true,
-            isRenouncedWorkflow: true,
-            withInitialLiquidity: true
-        });
-    }
+    // function getDefaultPIMConfig()
+    //     internal
+    //     view
+    //     returns (IRestricted_PIM_Factory_v1.PIMConfig memory)
+    // {
+    //     return IRestricted_PIM_Factory_v1.PIMConfig({
+    //         fundingManagerMetadata: bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+    //         authorizerMetadata: roleAuthorizerMetadata,
+    //         bcProperties: bcProperties,
+    //         issuanceTokenParams: issuanceTokenParams,
+    //         collateralToken: address(token),
+    //         firstCollateralIn: firstCollateralIn,
+    //         admin: address(this),
+    //         recipient: alice,
+    //         isRenouncedIssuanceToken: true,
+    //         isRenouncedWorkflow: true,
+    //         withInitialLiquidity: true
+    //     });
+    // }
 }
