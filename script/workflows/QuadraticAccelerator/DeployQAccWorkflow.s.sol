@@ -317,7 +317,9 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            console.log("\t-Minting and approving initial collateralto deployer");
+            console.log(
+                "\t-Minting and approving initial collateralto deployer"
+            );
             // mint collateral token to deployer
             orchestratorToken.mint(deployer, 100e18);
 

@@ -40,7 +40,6 @@ contract QACC_WorkflowFactory_v1 is
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
-
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     //--------------------------------------------------------------------------
@@ -146,7 +145,6 @@ contract QACC_WorkflowFactory_v1 is
         IModule_v1(fundingManager).grantModuleRole(
             CURVE_INTERACTION_ROLE, PIMConfig.admin
         );
-
 
         // disable factory to mint issuance token
         issuanceToken.setMinter(address(this), false);
