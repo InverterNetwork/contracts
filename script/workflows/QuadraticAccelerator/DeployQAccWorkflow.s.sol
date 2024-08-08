@@ -28,6 +28,8 @@ import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
@@ -408,5 +410,22 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             "\t-Deployed issuance token at address: %s", address(issuanceToken)
         );
         console.log("Deployment complete");
+
+        address fundingManager = address(orchestrator.fundingManager());
+
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            //give allowance to the Bonding Curve to spend deployer funds
+            orchestratorToken.approve(fundingManager, 100e18);
+
+            uint amountOut = IBondingCurveBase_v1(fundingManager)
+                .calculatePurchaseReturn(10e18);
+
+            IBondingCurveBase_v1(fundingManager).buy(10e18, 1);
+            console.log("amountOut: %s", amountOut);
+
+            IRedeemingBondingCurveBase_v1(fundingManager).sell(amountOut, 1);
+        }
+        vm.stopBroadcast();
     }
 }

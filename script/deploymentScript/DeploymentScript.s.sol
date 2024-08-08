@@ -131,7 +131,11 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         console2.log("Initializing...");
         // Governor
         Governor_v1(governor).init(
-            communityMultisig, teamMultisig, governor_timelockPeriod, feeManager
+            communityMultisig,
+            teamMultisig,
+            governor_timelockPeriod,
+            feeManager,
+            moduleFactory
         );
         console2.log("\t...Governor Initialized");
 
