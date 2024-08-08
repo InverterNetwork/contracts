@@ -41,8 +41,8 @@ import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 import {
     IPIM_WorkflowFactory_v1,
-    QACC_WorkflowFactory_v1
-} from "src/factories/workflow-specific/QACC_WorkflowFactory_v1.sol";
+    PIM_WorkflowFactory_v1
+} from "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -302,11 +302,11 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         );
 
         // Deploy the PIM Factory
-        QACC_WorkflowFactory_v1 pimFactory;
+        PIM_WorkflowFactory_v1 pimFactory;
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            pimFactory = new QACC_WorkflowFactory_v1(
+            pimFactory = new PIM_WorkflowFactory_v1(
                 chain_addresses.orchestratorFactory,
                 deployer,
                 chain_addresses.forwarder
@@ -424,7 +424,9 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             IBondingCurveBase_v1(fundingManager).buy(10e18, 1);
             console.log("Amount to sell: %s", estimatedAmountOut);
 
-            IRedeemingBondingCurveBase_v1(fundingManager).sell(estimatedAmountOut, 1);
+            IRedeemingBondingCurveBase_v1(fundingManager).sell(
+                estimatedAmountOut, 1
+            );
         }
         vm.stopBroadcast();
     }

@@ -12,6 +12,7 @@ import {IPIM_WorkflowFactory_v1} from
     "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -38,6 +39,9 @@ contract PIM_WorkflowFactory_v1 is
     // mapping of bonding curve address to fee recipient address
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
+
+    // For the Restricted Bonding Curve use case
+    bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -122,6 +126,22 @@ contract PIM_WorkflowFactory_v1 is
             PIMConfig.withInitialLiquidity
         );
 
+        bool isRestrictedBondingCurve = (
+            keccak256(abi.encodePacked(PIMConfig.fundingManagerMetadata.title))
+                == keccak256(
+                    abi.encodePacked(
+                        "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
+                    )
+                )
+        );
+
+        if (isRestrictedBondingCurve) {
+            // give the msgSender the right to do the initial buy
+            IModule_v1(fundingManager).grantModuleRole(
+                CURVE_INTERACTION_ROLE, address(this)
+            );
+        }
+
         // if applicable make first purchase
         _manageInitialPurchase(
             IBondingCurveBase_v1(fundingManager),
@@ -129,6 +149,16 @@ contract PIM_WorkflowFactory_v1 is
             PIMConfig.firstCollateralIn,
             PIMConfig.recipient
         );
+
+        if (isRestrictedBondingCurve) {
+            // revoke buy rights to this addresss and give to admin
+            IModule_v1(fundingManager).revokeModuleRole(
+                CURVE_INTERACTION_ROLE, address(this)
+            );
+            IModule_v1(fundingManager).grantModuleRole(
+                CURVE_INTERACTION_ROLE, PIMConfig.admin
+            );
+        }
 
         // disable factory to mint issuance token
         issuanceToken.setMinter(address(this), false);
