@@ -5,14 +5,12 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IRestricted_PIM_Factory_v1} from
     "src/factories/interfaces/IRestricted_PIM_Factory_v1.sol";
-import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
@@ -21,13 +19,9 @@ import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
 import {Restricted_PIM_Factory_v1} from
     "src/factories/workflow-specific/Restricted_PIM_Factory_v1.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 contract Restricted_PIM_Factory_v1Test is E2ETest {
@@ -60,9 +54,8 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         // deploy new factory
         factory = new Restricted_PIM_Factory_v1(
-            address(orchestratorFactory), factoryDeployer, mockTrustedForwarder
+            address(orchestratorFactory), mockTrustedForwarder
         );
-        assert(factory.owner() == factoryDeployer);
 
         // Orchestrator/Workflow config
         workflowConfig = IOrchestratorFactory_v1.WorkflowConfig({
@@ -106,7 +99,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata, // TODO: test with restricted version of bonding curve
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
             abi.encode(address(0), bcProperties, token)
         );
 
@@ -121,32 +114,19 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // mint collateral token to deployer and approve to factory
         token.mint(address(this), type(uint).max);
         token.approve(address(factory), type(uint).max);
-
-        console.log("address(this): ", address(this));
     }
 
     /* Test testCreatePIMWorkflow
-        ├── given the default config
-        │   └── when called
-        │       └── then it deploys, cleans up minting rights and makes first purchase
-        └── given withInitialLiquidity flag is set to true
-        |   └── when called
-        |   │   └── then the curve receives initial collateral supply and initial issuance supply is minted to recipient
-        └── given withInitialLiquidity flag is set to false
-        |   └── when called
-        |   │   └── then the curve doesn't receive initial collateral supply and burns initial issuance supply
-        └── given both renounce flags are set
-        |   └── when called
-        |       └── then the issuance token doesn't have owner and factory remains workflow admin
-        └── given only isRenouncedIssuanceToken flag is set
-        |   └── when called
-        |       └── then issuance token doesn't have owner and admin (from params) is workflow admin
-        └── given only isRenouncedWorkflow flag is set
-        |   └── when called
-        |       └── then admin (from params) is owner of issuance token and factory is workflow admin
-        └── given msg.sender hasn't approved collateral token for factory
+        └── given a resricted bonding curve
             └── when called
-                └── then it reverts   
+                └── then it mints initial issuance supply to admin
+                └── then it transfers initial collateral supply from msg.sender to bonding curve
+                └── then it revokes issuanceToken minting rights from factory
+                └── then it grants issuanceToken minting rights to bonding curve
+                └── then it grants curve interaction role to admin
+                └── then it transfers ownership of issuance token to admin
+                └── then it revokes orchestrator admin rights and transfers them to admin
+                └── then it emits a PIMWorkflowCreated event
     */
 
     function testCreatePIMWorkflow_WithRestrictedBondingCurve() public {
@@ -166,27 +146,34 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             issuanceTokenParams
         );
 
+        // CHECK: admin RECEIVES initial issuance supply
+        assertEq(
+            issuanceToken.balanceOf(workflowAdmin),
+            bcProperties.initialIssuanceSupply
+        );
+        // CHECK: bonding curve HOLDS initial collateral supply
+        assertEq(
+            token.balanceOf(address(orchestrator.fundingManager())),
+            bcProperties.initialCollateralSupply
+        );
         // CHECK: factory DOES NOT have minting rights on token anymore
-        bool isFactoryStillMinter =
-            issuanceToken.allowedMinters(address(factory));
-        assertFalse(isFactoryStillMinter);
+        assertFalse(issuanceToken.allowedMinters(address(factory)));
         // CHECK: bonding curve module HAS minting rights on token
-        bool isBcMinter =
-            issuanceToken.allowedMinters(address(orchestrator.fundingManager()));
-        assertTrue(isBcMinter);
+        assertTrue(issuanceToken.allowedMinters(address(orchestrator.fundingManager())));
         // CHECK: initialAdmin HAS curve interaction role
         bytes32 curveAccess =
         IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
             address(orchestrator.fundingManager())
         ).CURVE_INTERACTION_ROLE();
-        console.log(
-            orchestrator.authorizer().hasRole(curveAccess, workflowAdmin)
-        );
         assertTrue(
             orchestrator.authorizer().hasRole(curveAccess, workflowAdmin)
         );
+        // CHECK: initialAdmin IS owner of issuance token
+        assertEq(issuanceToken.owner(), workflowAdmin);
         // CHECK: initialAdmin IS orchestrator admin
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
         assertTrue(orchestrator.authorizer().hasRole(adminRole, workflowAdmin));
+        // CHECK: factory DOES NOT have admin rights over workflow
+        assertFalse(orchestrator.authorizer().hasRole(adminRole, address(factory)));
     }
 }
