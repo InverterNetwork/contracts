@@ -159,7 +159,9 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // CHECK: factory DOES NOT have minting rights on token anymore
         assertFalse(issuanceToken.allowedMinters(address(factory)));
         // CHECK: bonding curve module HAS minting rights on token
-        assertTrue(issuanceToken.allowedMinters(address(orchestrator.fundingManager())));
+        assertTrue(
+            issuanceToken.allowedMinters(address(orchestrator.fundingManager()))
+        );
         // CHECK: initialAdmin HAS curve interaction role
         bytes32 curveAccess =
         IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
@@ -174,6 +176,8 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
         assertTrue(orchestrator.authorizer().hasRole(adminRole, workflowAdmin));
         // CHECK: factory DOES NOT have admin rights over workflow
-        assertFalse(orchestrator.authorizer().hasRole(adminRole, address(factory)));
+        assertFalse(
+            orchestrator.authorizer().hasRole(adminRole, address(factory))
+        );
     }
 }
