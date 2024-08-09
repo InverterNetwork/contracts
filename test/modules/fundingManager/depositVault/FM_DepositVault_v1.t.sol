@@ -14,8 +14,7 @@ import {IFM_DepositVault_v1} from
 
 import {ERC20PaymentClientBaseV1Mock} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
-import {FM_DepositVaultMockV1} from
-    "test/modules/fundingManager/depositVault/utils/mocks/FM_DepositVaultMockV1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 // Internal Dependencies
 import {
@@ -32,7 +31,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 contract FM_DepositVaultV1Test is ModuleTest {
     // SuT
-    FM_DepositVaultMockV1 vault;
+    FM_DepositVault_v1 vault;
     ERC20PaymentClientBaseV1Mock client;
 
     //--------------------------------------------------------------------------
@@ -42,8 +41,8 @@ contract FM_DepositVaultV1Test is ModuleTest {
     event TransferOrchestratorToken(address indexed _to, uint _amount);
 
     function setUp() public {
-        address impl = address(new FM_DepositVaultMockV1());
-        vault = FM_DepositVaultMockV1(Clones.clone(impl));
+        address impl = address(new FM_DepositVault_v1());
+        vault = FM_DepositVault_v1(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
 
@@ -99,65 +98,13 @@ contract FM_DepositVaultV1Test is ModuleTest {
 
         // Deposit
         vm.prank(user);
+        vm.expectEmit(true, true, true, true);
+        emit Deposit(user, amount);
         vault.deposit(amount);
 
         // Assert balance
         assertEq(_token.balanceOf(address(vault)), amount);
         assertEq(_token.balanceOf(user), 0);
-    }
-
-    function testDepositFor_Works(address from, address caller, uint amount)
-        public
-    {
-        vm.assume(
-            from != address(0) && from != address(_token)
-                && from != address(vault) && from != vault.trustedForwarder()
-                && from != caller
-        );
-        vm.assume(
-            caller != address(0) && caller != address(_token)
-                && caller != address(vault) && caller != vault.trustedForwarder()
-                && from != caller
-        );
-
-        // Setup
-        _token.mint(from, amount);
-        assertEq(_token.balanceOf(from), amount);
-        vm.prank(from);
-        _token.approve(address(vault), amount);
-
-        // Deposit
-        vm.prank(caller);
-        vault.depositFor(from, amount);
-
-        // Assert balance
-        assertEq(_token.balanceOf(address(vault)), amount);
-        assertEq(_token.balanceOf(from), 0);
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    function testIntenalDeposit(address from, uint amount) public {
-        vm.assume(
-            from != address(0) && from != address(_token)
-                && from != address(vault) && from != vault.trustedForwarder()
-        );
-
-        // Setup
-        _token.mint(from, amount);
-        assertEq(_token.balanceOf(from), amount);
-        vm.prank(from);
-        _token.approve(address(vault), amount);
-
-        // Deposit and check for event
-        vm.expectEmit(true, true, true, true);
-        emit Deposit(from, amount);
-        vault.call_deposit(from, amount);
-
-        // Assert balance
-        assertEq(_token.balanceOf(address(vault)), amount);
-        assertEq(_token.balanceOf(from), 0);
     }
 
     //--------------------------------------------------------------------------
