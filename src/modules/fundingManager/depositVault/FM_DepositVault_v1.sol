@@ -11,8 +11,6 @@ import {IFM_DepositVault_v1} from
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
-
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -94,21 +92,6 @@ contract FM_DepositVault_v1 is
     /// @inheritdoc IFM_DepositVault_v1
     function deposit(uint amount) external {
         address from = _msgSender();
-        _deposit(from, amount);
-    }
-
-    /// @inheritdoc IFM_DepositVault_v1
-    function depositFor(address from, uint amount) external {
-        _deposit(from, amount);
-    }
-
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    /// @dev Internal function to deposit tokens.
-    /// @param from The address to deposit tokens for.
-    /// @param amount The number of tokens to deposit.
-    function _deposit(address from, uint amount) internal {
         token().safeTransferFrom(from, address(this), amount);
 
         emit Deposit(from, amount);
