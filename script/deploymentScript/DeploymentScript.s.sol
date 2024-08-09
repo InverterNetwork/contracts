@@ -128,36 +128,40 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Initializing...");
-        // Governor
-        Governor_v1(governor).init(
-            communityMultisig,
-            teamMultisig,
-            governor_timelockPeriod,
-            feeManager,
-            moduleFactory
-        );
-        console2.log("\t...Governor Initialized");
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            console2.log("Initializing...");
+            // Governor
+            Governor_v1(governor).init(
+                communityMultisig,
+                teamMultisig,
+                governor_timelockPeriod,
+                feeManager,
+                moduleFactory
+            );
+            console2.log("\t...Governor Initialized");
 
-        // FeeManager
-        FeeManager_v1(feeManager).init(
-            governor,
-            treasury,
-            feeManager_defaultCollateralFee,
-            feeManager_defaultIssuanceFee
-        );
-        console2.log("\t...FeeManager Initialized");
+            // FeeManager
+            FeeManager_v1(feeManager).init(
+                governor,
+                treasury,
+                feeManager_defaultCollateralFee,
+                feeManager_defaultIssuanceFee
+            );
+            console2.log("\t...FeeManager Initialized");
 
-        // ModuleFactory
-        ModuleFactory_v1(moduleFactory).init(
-            governor, initialMetadataRegistration, initialBeaconRegistration
-        );
-        console2.log("\t...ModuleFactory Initialized");
+            // ModuleFactory
+            ModuleFactory_v1(moduleFactory).init(
+                governor, initialMetadataRegistration, initialBeaconRegistration
+            );
+            console2.log("\t...ModuleFactory Initialized");
 
-        // OrchestratorFactory
-        OrchestratorFactory_v1(orchestratorFactory).init(
-            governor, orchestratorBeacon, moduleFactory
-        );
-        console2.log("\t...OrchestratorFactory Initialized");
+            // OrchestratorFactory
+            OrchestratorFactory_v1(orchestratorFactory).init(
+                governor, orchestratorBeacon, moduleFactory
+            );
+            console2.log("\t...OrchestratorFactory Initialized");
+        }
+        vm.stopBroadcast();
     }
 }
