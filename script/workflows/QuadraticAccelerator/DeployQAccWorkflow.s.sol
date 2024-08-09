@@ -39,9 +39,9 @@ import {ERC165Upgradeable} from
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 import {
-    IPIM_WorkflowFactory_v1,
-    PIM_WorkflowFactory_v1
-} from "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
+    IRestricted_PIM_Factory_v1,
+    Restricted_PIM_Factory_v1
+} from "src/factories/workflow-specific/Restricted_PIM_Factory_v1.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -300,11 +300,11 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         );
 
         // Deploy the PIM Factory
-        PIM_WorkflowFactory_v1 pimFactory;
+        Restricted_PIM_Factory_v1 pimFactory;
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            pimFactory = new PIM_WorkflowFactory_v1(
+            pimFactory = new Restricted_PIM_Factory_v1(
                 chain_addresses.orchestratorFactory,
                 deployer,
                 chain_addresses.forwarder
@@ -352,12 +352,13 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = paymentRouterFactoryConfig;
 
+
         //Create PIMConfig
-        IPIM_WorkflowFactory_v1.PIMConfig memory PIMConfig =
-        IPIM_WorkflowFactory_v1.PIMConfig({
+        IRestricted_PIM_Factory_v1.PIMConfig memory PIMConfig =
+        IRestricted_PIM_Factory_v1.PIMConfig({
             fundingManagerMetadata: restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata,
             authorizerMetadata: roleAuthorizerMetadata,
-            issuanceTokenParams: IPIM_WorkflowFactory_v1.IssuanceTokenParams({
+            issuanceTokenParams: IRestricted_PIM_Factory_v1.IssuanceTokenParams({
                 name: "QAcc Project Token",
                 symbol: "QACC",
                 decimals: 18,
