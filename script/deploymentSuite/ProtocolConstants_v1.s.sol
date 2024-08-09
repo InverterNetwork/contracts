@@ -36,6 +36,18 @@ contract ProtocolConstants_v1 is Script {
     bytes32 public factorySalt =
         keccak256(abi.encodePacked("inverter-deployment"));
 
+    // ------------------------------------------------------------------------
+    // Important Configuration Data
+    // ------------------------------------------------------------------------
+
+    //TODO: load from env?
+    // FeeManager
+    uint public feeManager_defaultCollateralFee = 100;
+    uint public feeManager_defaultIssuanceFee = 100;
+
+    // Governor
+    uint public governor_timelockPeriod = 1 weeks;
+
     // Function to log data in a readable format
     function logProtocolMultisigsAndAddresses() public {
         console.log(
@@ -51,19 +63,6 @@ contract ProtocolConstants_v1 is Script {
         console2.log("\tTreasury: %s", treasury);
         console2.log("\tDeterministicFactory: %s", deterministicFactory);
     }
-
-    // ------------------------------------------------------------------------
-    // Important Configuration Data
-    // ------------------------------------------------------------------------
-
-    // FeeManager
-    uint public feeManager_defaultCollateralFee = 100;
-    uint public feeManager_defaultIssuanceFee = 100;
-
-    // Governor
-    uint public governor_timelockPeriod = 1 weeks;
-
-    //TODO: load from env?
 
     // Function to log data in a readable format
     function logProtocolConfigurationData() public {
