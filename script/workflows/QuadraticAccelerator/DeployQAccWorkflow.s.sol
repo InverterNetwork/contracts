@@ -13,7 +13,7 @@ import {
 import {MetadataCollection_v1} from
     "script/deploymentSuite/MetadataCollection_v1.s.sol";
 
-// Internal InterfacesF
+// Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOrchestratorFactory_v1} from
@@ -69,7 +69,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         orchestratorToken = ERC20Mock(chain_addresses.mockUSDToken);
 
-        setupOrchestrator_withPIMFactory();
+        setupOrchestrator_withrestrictedPimFactory();
     }
 
     function setupOrchestrator() public {
@@ -286,7 +286,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         issuanceToken.transferOwnership(deployer);
     }
 
-    function setupOrchestrator_withPIMFactory() public {
+    function setupOrchestrator_withrestrictedPimFactory() public {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
@@ -300,17 +300,16 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         );
 
         // Deploy the PIM Factory
-        Restricted_PIM_Factory_v1 pimFactory;
+        Restricted_PIM_Factory_v1 restrictedPimFactory;
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            pimFactory = new Restricted_PIM_Factory_v1(
-                chain_addresses.orchestratorFactory,
-                deployer,
-                chain_addresses.forwarder
+            restrictedPimFactory = new Restricted_PIM_Factory_v1(
+                chain_addresses.orchestratorFactory, chain_addresses.forwarder
             );
             console2.log(
-                "\t-Deployed PIM Factory at address: %s", address(pimFactory)
+                "\t-Deployed PIM Factory at address: %s",
+                address(restrictedPimFactory)
             );
         }
         vm.stopBroadcast();
@@ -324,7 +323,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             orchestratorToken.mint(deployer, 100e18);
 
             //give allowance to the PIM factory to spend deployer funds
-            orchestratorToken.approve(address(pimFactory), 100e18);
+            orchestratorToken.approve(address(restrictedPimFactory), 100e18);
         }
         vm.stopBroadcast();
 
@@ -336,10 +335,40 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             independentUpdateAdmin: address(0)
         });
 
+        // Define bondign curve properties:
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                .BondingCurveProperties({
+                formula: address(chain_addresses.formula),
+                reserveRatioForBuying: 160_000,
+                reserveRatioForSelling: 160_000,
+                buyFee: 0,
+                sellFee: 0,
+                buyIsOpen: true,
+                sellIsOpen: true,
+                initialIssuanceSupply: 122_727_272_727_272_727_272_727,
+                initialCollateralSupply: 3_163_408_614_166_851_161
+            });
+
+        // Funding Manager: Metadata, token address
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
+            MetadataCollection_v1
+                .restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata,
+            abi.encode(address(issuanceToken), bc_properties, orchestratorToken)
+        );
+
         // Payment Processor: only Metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
                 .ModuleConfig(streamingPaymentProcessorMetadata, bytes(""));
+
+        // Authorizer: Metadata, initial authorized addresses
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
+            roleAuthorizerMetadata,
+            abi.encode(deployer) //@todo Admin address?
+        );
 
         // PaymentRouter: none
         IOrchestratorFactory_v1.ModuleConfig memory paymentRouterFactoryConfig =
@@ -352,37 +381,14 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = paymentRouterFactoryConfig;
 
+        // Issuance Token
 
-        //Create PIMConfig
-        IRestricted_PIM_Factory_v1.PIMConfig memory PIMConfig =
-        IRestricted_PIM_Factory_v1.PIMConfig({
-            fundingManagerMetadata: restrictedBancorRedeemingVirtualSupplyFundingManagerMetadata,
-            authorizerMetadata: roleAuthorizerMetadata,
-            issuanceTokenParams: IRestricted_PIM_Factory_v1.IssuanceTokenParams({
-                name: "QAcc Project Token",
-                symbol: "QACC",
-                decimals: 18,
-                maxSupply: type(uint).max - 1
-            }),
-            bcProperties: IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .BondingCurveProperties({
-                formula: address(chain_addresses.formula),
-                reserveRatioForBuying: 160_000,
-                reserveRatioForSelling: 160_000,
-                buyFee: 0,
-                sellFee: 0,
-                buyIsOpen: true,
-                sellIsOpen: true,
-                initialIssuanceSupply: 122_727_272_727_272_727_272_727,
-                initialCollateralSupply: 3_163_408_614_166_851_161
-            }),
-            admin: deployer,
-            recipient: deployer,
-            collateralToken: address(orchestratorToken),
-            firstCollateralIn: 10e18,
-            isRenouncedIssuanceToken: false,
-            isRenouncedWorkflow: false,
-            withInitialLiquidity: true
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams =
+        IBondingCurveBase_v1.IssuanceToken({
+            name: "Bonding Curve Token",
+            symbol: "BCT",
+            decimals: 18,
+            maxSupply: type(uint).max - 1
         });
 
         IOrchestrator_v1 orchestrator;
@@ -391,11 +397,14 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         vm.startBroadcast(deployerPrivateKey);
         {
             console.log("\t-Creating PIM workflow");
-            (orchestrator, issuanceToken) = pimFactory.createPIMWorkflow(
+            (orchestrator, issuanceToken) = restrictedPimFactory
+                .createPIMWorkflow(
                 workflowConfig,
+                fundingManagerFactoryConfig,
+                authorizerFactoryConfig,
                 paymentProcessorFactoryConfig,
                 additionalModuleConfig,
-                PIMConfig
+                issuanceTokenParams
             );
         }
         vm.stopBroadcast();
