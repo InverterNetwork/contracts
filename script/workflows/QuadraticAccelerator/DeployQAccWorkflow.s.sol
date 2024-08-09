@@ -128,7 +128,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             independentUpdateAdmin: address(0)
         });
 
-        // Funding Manager: Metadata, token address //@todo wait for DepositVault
+        // Funding Manager: Metadata, token address
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             MetadataCollection_v1
@@ -230,7 +230,6 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             "--------------------------------------------------------------------------------"
         );
         console.log("Perfoming setup steps for qAcc round initialization");
-        // TODO: Sort out authorizations
 
         // get bonding curve / funding manager
         address fundingManager = address(test_orchestrator.fundingManager());
@@ -401,10 +400,10 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         }
         vm.stopBroadcast();
 
-        //TODO: fix authorization issue for buying from the bonding curve
-
         console.log(
-            "\t-Deployed orchestrator at address: %s", address(orchestrator)
+            "\t-Deployed orchestrator with id %s at address: %s",
+            orchestrator.orchestratorId(),
+            address(orchestrator)
         );
         console.log(
             "\t-Deployed issuance token at address: %s", address(issuanceToken)

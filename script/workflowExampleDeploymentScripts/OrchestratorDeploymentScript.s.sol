@@ -55,7 +55,7 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
             independentUpdateAdmin: address(0)
         });
 
-        // Funding Manager: Metadata, token address //@todo wait for DepositVault
+        // Funding Manager: Metadata, token address
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             depositVaultFundingManagerMetadata,
