@@ -560,7 +560,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
             );
         }
-        
+
         super._setVirtualIssuanceSupply(_virtualSupply);
     }
 
