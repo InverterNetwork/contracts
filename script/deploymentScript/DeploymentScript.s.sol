@@ -12,6 +12,8 @@ import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
 import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+import {IDeterministicFactory_v1} from
+    "@df/interfaces/IDeterministicFactory_v1.sol";
 
 /**
  * @title Inverter Deployment Script
@@ -33,7 +35,12 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
     address public moduleFactory;
     address public orchestratorFactory;
 
-    function run() public virtual verifyRequiredParameters {
+    function run()
+        public
+        virtual
+        verifyRequiredParameters
+        verifyDeterministicFactory
+    {
         console2.log();
         console2.log(
             "================================================================================"
@@ -47,6 +54,9 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
 
         // Create External Singletons
         createExternalSingletons();
+
+        // Create Library Singletons
+        createLibrarySingletons();
 
         // Set InverterReverter Implementation Address to general InverterReverter Address
         inverterReverter = impl_ext_InverterReverter_v1;
@@ -232,7 +242,20 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         require(treasury != address(0), "Treasury address not set - aborting!");
         require(
             deterministicFactory != address(0),
-            "Deterministic Factory address not set - aborting!"
+            "Deterministic Factory address not set correctly - aborting!"
+        );
+        _;
+    }
+
+    modifier verifyDeterministicFactory() {
+        require(
+            deterministicFactory.code.length != 0,
+            "Deterministic Factory does not exist at given address - aborting!"
+        );
+        require(
+            IDeterministicFactory_v1(deterministicFactory).allowedDeployer()
+                == deployer,
+            "Deterministic Factory hasn't allowed the deployer - aborting!"
         );
         _;
     }
