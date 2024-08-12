@@ -9,7 +9,7 @@ import {TestnetDeploymentScript} from
 import {
     AccessDeploymentStateVariables,
     DeploymentState
-} from "script/workflows/AccessDeploymentStateVariables.sol";
+} from "script/workflows/AccessDeploymentStateVariables.s.sol";
 import {MetadataCollection_v1} from
     "script/deploymentSuite/MetadataCollection_v1.s.sol";
 
