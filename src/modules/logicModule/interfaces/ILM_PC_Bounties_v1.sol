@@ -6,37 +6,37 @@ import {IERC20PaymentClientBase_v1} from
 
 interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
-    // Types
+    // Structs
 
+    /// @notice Struct used to store information about a bounty.
+    /// @param minimumPayoutAmount Minimum amount of tokens that can be paid out upon fulfillment of the bounty.
+    /// @param maximumPayoutAmount Maximum amount of tokens that can be paid out upon fulfillment of the bounty.
+    /// @param details Arbitrary data to store Bounty details if necessary. CAN be empty.
+    /// @param locked If locked, the Bounty is no longer available for a claim.
     struct Bounty {
-        /// @dev Minimum amount of tokens that can be paid out upon fulfillment of the bounty
         uint minimumPayoutAmount;
-        /// @dev Maximum amount of tokens that can be paid out upon fulfillment of the bounty
         uint maximumPayoutAmount;
-        /// @dev Arbitrary data to store Bounty details if necessary.
-        ///      CAN be empty.
         bytes details;
-        /// @dev If locked the Bounty is no longer available for a claim
         bool locked;
     }
 
+    /// @notice Struct used to store information about a Bounty contributor.
+    /// @param addr The contributor's address.
+    /// @param claimAmount The amount of tokens the Contributor gets upon claiming the bounty.
     struct Contributor {
-        /// @dev The contributor's address.
         address addr;
-        /// @dev The amount of tokens the Contributor gets upon claimng the bounty
         uint claimAmount;
     }
 
+    /// @notice Struct used to store information about a Bounty Claim.
+    /// @param bountyId The id of the bounty this claim belongs to.
+    /// @param contributors The contributors of the claim. MUST not be empty.
+    /// @param details Arbitrary data to store Claim details if necessary. CAN be empty.
+    /// @param claimed Whether this Claim claimed its bounty already.
     struct Claim {
-        /// @dev The id of the bounty this claim belongs to
         uint bountyId;
-        /// @dev The contributors of the claim
-        ///      MUST not be empty
         Contributor[] contributors;
-        /// @dev Arbitrary data to store Claim details if necessary.
-        ///      CAN be empty.
         bytes details;
-        /// @dev Did this Claim claim its bounty already
         bool claimed;
     }
 

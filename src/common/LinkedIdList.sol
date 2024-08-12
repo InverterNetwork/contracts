@@ -9,13 +9,16 @@ Assumptions
 */
 
 library LinkedIdList {
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @param Size of the list.
+    /// @param Marks the last element of the list.
+    /// Always links back to the _SENTINEL.
+    /// @param List of Ids.
     struct List {
-        /// @dev Size of the list.
         uint size;
-        /// @dev Marks the last element of the list.
-        /// @dev Always links back to the _SENTINEL.
         uint last;
-        /// @dev List of Ids.
         mapping(uint => uint) list;
     }
 

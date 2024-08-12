@@ -8,11 +8,11 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     //--------------------------------------------------------------------------
     // Structs
 
-    /// @dev The timelock struct to keep track of updating the registerd modules.
+    /// @notice The timelock struct to keep track of updating the registered modules.
+    /// @param timelockActive Is the timelock currently active.
+    /// @param timelockUntil Timestamp that represents from when the update can be carried out.
     struct ModuleUpdateTimelock {
-        /// @dev Is the timelock currently active
         bool timelockActive;
-        /// @dev Timestamp that represents from when the update can be carried out
         uint timelockUntil;
     }
 

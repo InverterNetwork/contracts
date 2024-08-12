@@ -47,16 +47,18 @@ interface IOrchestratorFactory_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
+    /// @notice Struct used to store information about a workflow configuration.
+    /// @dev When the independentUpdates is true, the independentUpdateAdmin will be disregarded.
     /// @param independentUpdates bool wether the workflow should use the independent proxy structure.
     /// In case of true it will not use the standard beacon proxy structure.
     /// @param independentUpdateAdmin The address that will be assigned the admin role of the independent update proxy.
     /// Will be disregarded in case independentUpdates is false.
-    /// @dev When the independentUpdates is true, the independentUpdateAdmin will be disregarded.
     struct WorkflowConfig {
         bool independentUpdates;
         address independentUpdateAdmin;
     }
 
+    /// @notice Struct used to store information about a module configuration.
     /// @param metadata The module's metadata.
     /// @param configData Variable config data for specific module implementations.
     struct ModuleConfig {

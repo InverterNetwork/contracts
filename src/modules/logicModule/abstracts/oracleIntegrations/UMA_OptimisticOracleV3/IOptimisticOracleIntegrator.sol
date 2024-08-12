@@ -7,11 +7,19 @@ import {OptimisticOracleV3CallbackRecipientInterface} from
 interface IOptimisticOracleIntegrator is
     OptimisticOracleV3CallbackRecipientInterface
 {
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Struct used to store information about a data assertion.
+    /// @param dataId The dataId that was asserted.
+    /// @param data This could be an arbitrary data type.
+    /// @param asserter The address that made the assertion.
+    /// @param resolved Whether the assertion has been resolved.
     struct DataAssertion {
-        bytes32 dataId; // The dataId that was asserted.
-        bytes32 data; // This could be an arbitrary data type.
-        address asserter; // The address that made the assertion.
-        bool resolved; // Whether the assertion has been resolved.
+        bytes32 dataId;
+        bytes32 data;
+        address asserter;
+        bool resolved;
     }
 
     //==========================================================================

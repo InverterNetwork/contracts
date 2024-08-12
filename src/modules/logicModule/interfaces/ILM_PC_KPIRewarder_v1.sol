@@ -3,31 +3,31 @@ pragma solidity ^0.8.0;
 
 interface ILM_PC_KPIRewarder_v1 {
     //--------------------------------------------------------------------------
-    // Types
+    // Structs
 
     /// @notice A KPI to be used for reward distribution.
+    /// @param numOfTranches The number of tranches the KPI is divided into.
+    /// @param totalRewards The total rewards to be distributed.
+    /// @param continuous If the tranche rewards should be distributed continuously or in steps.
+    /// @param trancheValues The value at which each tranche ends.
+    /// @param trancheRewards The rewards to be distributed at completion of each tranche.
     struct KPI {
-        /// @dev The number of tranches the KPI is divided into
         uint numOfTranches; //
-        /// @dev  The total rewards to be distributed
         uint totalRewards;
-        /// @dev  If the tranche rewards should be distributed continuously or in steps
         bool continuous;
-        /// @dev The value at which each tranche ends
         uint[] trancheValues; //
-        /// @dev The rewards to be dsitributed at completion of each tranche
         uint[] trancheRewards;
     }
 
     /// @notice The configuration of the reward round tied.
+    /// @param creationTime The timestamp the assertion was posted.
+    /// @param assertedValue The value that was asserted.
+    /// @param KpiToUse The KPI to be used for distribution once the assertion confirms.
+    /// @param distributed If the rewards have been distributed or not.
     struct RewardRoundConfiguration {
-        /// @dev The timestamp the assertion was posted
         uint creationTime; // timestamp the assertion was created
-        /// @dev The value that was asserted
         uint assertedValue;
-        /// @dev The KPI to be used for distribution once the assertion confirms
         uint KpiToUse;
-        /// @dev if the rewards have been distributed or not
         bool distributed;
     }
 

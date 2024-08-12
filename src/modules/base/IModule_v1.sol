@@ -6,17 +6,20 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 interface IModule_v1 {
+    //--------------------------------------------------------------------------
+    // Structs
+
     /// @notice The module's metadata.
+    /// @param majorVersion The module's major version.
+    /// @param minorVersion The module's minor version.
+    /// @param patchVersion The module's patch version.
+    /// @param url The module's URL.
+    /// @param title The module's title.
     struct Metadata {
-        /// @notice The module's major version.
         uint majorVersion;
-        /// @notice The module's minor version.
         uint minorVersion;
-        /// @notice The module's patch version.
         uint patchVersion;
-        /// @notice The module's URL.
         string url;
-        /// @notice The module's title.
         string title;
     }
 

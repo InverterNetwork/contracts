@@ -8,19 +8,21 @@ interface ITransactionForwarder_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
+    /// @notice Struct used to store information about a single call.
+    /// @param target Target contract that will receive the call
+    /// @param allowFailure Is the call allowed to fail in the multicall execution
+    /// @param callData Data of the call
     struct SingleCall {
-        /// @notice Target contract that will receive the call
         address target;
-        /// @notice Is the call allowed to fail in the multicall execution
         bool allowFailure;
-        /// @notice Data of the call
         bytes callData;
     }
 
+    /// @notice Struct used to store information about a call result.
+    /// @param success Was the call a succes
+    /// @param returnData Return data of the call
     struct Result {
-        /// @notice Was the call a succes
         bool success;
-        /// @notice Return data of the call
         bytes returnData;
     }
 

@@ -86,11 +86,17 @@ interface IBondingCurveBase_v1 {
 
     //--------------------------------------------------------------------------
     // Structs
+
+    /// @notice Struct used to store information about the issuance token.
+    /// @param name The name of the issuance token.
+    /// @param symbol The symbol of the issuance token.
+    /// @param decimals The decimals used within the issuance token.
+    /// @param maxSupply The maximum supply of the issuance token.
     struct IssuanceToken {
-        string name; // The name of the issuance token
-        string symbol; // The symbol of the issuance token
-        uint8 decimals; // The decimals used within the issuance token
-        uint maxSupply; // The maximum supply of the issuance token
+        string name;
+        string symbol;
+        uint8 decimals;
+        uint maxSupply;
     }
 
     //--------------------------------------------------------------------------

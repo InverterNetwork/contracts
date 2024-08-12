@@ -43,24 +43,26 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
 
     //--------------------------------------------------------------------------
     // Structs
+
+    /// @notice Struct used to store information about the bonding curve properties.
+    /// @param formula The formula contract used to calculate the issuance and redemption rate.
+    /// @param reserveRatioForBuying The reserve ratio, expressed in PPM, used for issuance on the bonding curve.
+    /// @param reserveRatioForSelling The reserve ratio, expressed in PPM, used for redeeming on the bonding curve.
+    /// @param buyFee The buy fee expressed in base points.
+    /// @param sellFee The sell fee expressed in base points.
+    /// @param buyIsOpen The indicator used for enabling/disabling the buying functionalities on deployment.
+    /// @param sellIsOpen The indicator used for enabling/disabling the selling functionalities on deployment.
+    /// @param initialIssuanceSupply The initial virtual issuance token supply.
+    /// @param initialCollateralSupply The initial virtual collateral token supply.
     struct BondingCurveProperties {
-        /// @notice The formula contract used to calculate the issucance and redemption rate
         address formula;
-        /// @notice The reserve ratio, expressed in PPM, used for issuance on the bonding curve
         uint32 reserveRatioForBuying;
-        /// @notice The reserve ratio, expressed in PPM, used for redeeming on the bonding curve
         uint32 reserveRatioForSelling;
-        /// @notice The buy fee expressed in base points
         uint buyFee;
-        /// @notice The sell fee expressed in base points
         uint sellFee;
-        /// @notice The indicator used for enabling/disabling the buying functionalities on deployment
         bool buyIsOpen;
-        /// @notice The indicator used for enabling/disabling the selling functionalties on deployment
         bool sellIsOpen;
-        /// @notice The initial virtual issuance token supply
         uint initialIssuanceSupply;
-        /// @notice The initial virtual collateral token supply
         uint initialCollateralSupply;
     }
 

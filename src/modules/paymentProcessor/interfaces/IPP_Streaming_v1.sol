@@ -12,7 +12,6 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
-
     // Structs
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a particular payment client.

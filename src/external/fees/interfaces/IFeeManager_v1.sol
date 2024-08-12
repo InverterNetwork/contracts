@@ -5,10 +5,11 @@ interface IFeeManager_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
-    /// @dev When 'set' is true, the value is taken,.
+    /// @notice Struct used to store fee information.
+    /// @dev When 'set' is true, the value is taken,
     /// otherwise it reverts to the default value.
     /// We need some indication here on whether
-    /// the value is set or not, to differentiate.
+    /// the value is set or not, to differentiate
     /// between an uninitialized 0 and a real 0 fee.
     /// @param set Whether the fee is set or not.
     /// @param value The fee value.

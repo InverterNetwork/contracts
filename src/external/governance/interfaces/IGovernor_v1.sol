@@ -11,17 +11,18 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
+    /// @notice Struct used to store information about a timelock for a beacon upgrade.
     /// @dev The timelock is needed to upgrade a beacon to new implementation.
+    /// @param timelockActive Is the timelock currently active.
+    /// @param timelockUntil Timestamp that represents from when the upgrade can be carried out.
+    /// @param intendedImplementation The new inteded Implementation address of the beacon.
+    /// @param intendedMinorVersion The new intended minor Version of the beacon.
+    /// @param intendedPatchVersion The new intended patch Version of the beacon.
     struct Timelock {
-        /// @dev Is the timelock currently active.
         bool timelockActive;
-        /// @dev Timestamp that represents from when the upgrade can be carried out.
         uint timelockUntil;
-        /// @dev The new inteded Implementation address of the beacon.
         address intendedImplementation;
-        /// @dev The new intended minor Version of the beacon.
         uint intendedMinorVersion;
-        /// @dev The new intended patch Version of the beacon.
         uint intendedPatchVersion;
     }
 

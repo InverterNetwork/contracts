@@ -6,18 +6,22 @@ import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
 interface IERC20PaymentClientBase_v1 {
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Struct used to store information about a payment order.
+    /// @param recipient The recipient of the payment.
+    /// @param paymentToken The token in which to pay.
+    /// @param amount The amount of tokens to pay.
+    /// @param start Timestamp at which the payment should start.
+    /// @param cliff Duration of the payment cliff.
+    /// @param end Timestamp at which the payment should be fulfilled.
     struct PaymentOrder {
-        /// @dev The recipient of the payment.
         address recipient;
-        /// @dev The token in which to pay.
         address paymentToken;
-        /// @dev The amount of tokens to pay.
         uint amount;
-        /// @dev Timestamp at which the payment should start.
         uint start;
-        /// @dev Duration of the payment cliff.
         uint cliff;
-        /// @dev Timestamp at which the payment should be fulfilled.
         uint end;
     }
 

@@ -3,42 +3,42 @@ pragma solidity ^0.8.0;
 
 interface IAUT_EXT_VotingRoles_v1 {
     //--------------------------------------------------------------------------
-    // Types
+    // Structs
 
     /// @notice A motion is a proposal to execute an action on a target contract.
+    /// @param target The address of the contract to execute the action on.
+    /// @param action The action data to execute on the target contract.
+    /// @param startTimestamp The timestamp at which the motion starts.
+    /// @param endTimestamp The timestamp at which the motion ends.
+    /// @param requiredThreshold The required threshold of votes to pass the motion.
+    /// @param forVotes The number of votes in favor of the motion.
+    /// @param againstVotes The number of votes against the motion.
+    /// @param abstainVotes The number of votes abstaining from the motion.
+    /// @param receipts The receipts of votes for the motion
+    /// address => Receipt
+    /// @param executedAt The timestamp at which the motion was executed.
+    /// @param executionResult The result of the execution.
+    /// @param executionReturnData The return data of the execution.
     struct Motion {
-        /// @dev The address of the contract to execute the action on.
         address target;
-        /// @dev The action data to execute on the target contract.
         bytes action;
-        /// @dev The timestamp at which the motion starts.
         uint startTimestamp;
-        /// @dev The timestamp at which the motion ends.
         uint endTimestamp;
-        /// @dev The required threshold of votes to pass the motion.
         uint requiredThreshold;
-        /// @dev The number of votes in favor of the motion.
         uint forVotes;
-        /// @dev The number of votes against the motion.
         uint againstVotes;
-        /// @dev The number of votes abstaining from the motion.
         uint abstainVotes;
-        /// @dev The receipts of votes for the motion.
-        /// address => Receipt
         mapping(address => Receipt) receipts;
-        /// @dev The timestamp at which the motion was executed.
         uint executedAt;
-        /// @dev The result of the execution.
         bool executionResult;
-        /// @dev The return data of the execution.
         bytes executionReturnData;
     }
 
     /// @notice A receipt is a vote cast for a motion.
+    /// @param hasVoted Whether the voter has already voted.
+    /// @param support The value that indicates how the voter supports the motion.
     struct Receipt {
-        /// @dev Whether the voter has already voted.
         bool hasVoted;
-        /// @dev The value that indicates how the voter supports the motion.
         uint8 support;
     }
 

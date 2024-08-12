@@ -7,35 +7,57 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
  * @title Optimistic Oracle V3 Interface that callers must use to assert truths about the world.
  */
 interface OptimisticOracleV3Interface {
-    // Struct grouping together the settings related to the escalation manager stored in the assertion.
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Struct grouping together the settings related to the escalation manager stored in the assertion.
+    /// @param arbitrateViaEscalationManager False if the DVM is used as an oracle (EscalationManager on True).
+    /// @param discardOracle False if Oracle result is used for resolving assertion after dispute.
+    /// @param validateDisputers True if the EM isDisputeAllowed should be checked on disputes.
+    /// @param assertingCaller Stores msg.sender when assertion was made.
+    /// @param escalationManager Address of the escalation manager (zero address if not configured).
     struct EscalationManagerSettings {
-        bool arbitrateViaEscalationManager; // False if the DVM is used as an oracle (EscalationManager on True).
-        bool discardOracle; // False if Oracle result is used for resolving assertion after dispute.
-        bool validateDisputers; // True if the EM isDisputeAllowed should be checked on disputes.
-        address assertingCaller; // Stores msg.sender when assertion was made.
-        address escalationManager; // Address of the escalation manager (zero address if not configured).
+        bool arbitrateViaEscalationManager;
+        bool discardOracle;
+        bool validateDisputers;
+        address assertingCaller;
+        address escalationManager;
     }
 
-    // Struct for storing properties and lifecycle of an assertion.
+    /// @notice Struct for storing properties and lifecycle of an assertion.
+    /// @param escalationManagerSettings Settings related to the escalation manager.
+    /// @param asserter Address of the asserter.
+    /// @param assertionTime Time of the assertion.
+    /// @param settled True if the request is settled.
+    /// @param currency ERC20 token used to pay rewards and fees.
+    /// @param expirationTime Unix timestamp marking threshold when the assertion can no longer be disputed.
+    /// @param settlementResolution Resolution of the assertion (false till resolved).
+    /// @param domainId Optional domain that can be used to relate the assertion to others in the escalationManager.
+    /// @param identifier UMA DVM identifier to use for price requests in the event of a dispute.
+    /// @param bond Amount of currency that the asserter has bonded.
+    /// @param callbackRecipient Address that receives the callback.
+    /// @param disputer Address of the disputer.
     struct Assertion {
-        EscalationManagerSettings escalationManagerSettings; // Settings related to the escalation manager.
-        address asserter; // Address of the asserter.
-        uint64 assertionTime; // Time of the assertion.
-        bool settled; // True if the request is settled.
-        IERC20 currency; // ERC20 token used to pay rewards and fees.
-        uint64 expirationTime; // Unix timestamp marking threshold when the assertion can no longer be disputed.
-        bool settlementResolution; // Resolution of the assertion (false till resolved).
-        bytes32 domainId; // Optional domain that can be used to relate the assertion to others in the escalationManager.
-        bytes32 identifier; // UMA DVM identifier to use for price requests in the event of a dispute.
-        uint bond; // Amount of currency that the asserter has bonded.
-        address callbackRecipient; // Address that receives the callback.
-        address disputer; // Address of the disputer.
+        EscalationManagerSettings escalationManagerSettings;
+        address asserter;
+        uint64 assertionTime;
+        bool settled;
+        IERC20 currency;
+        uint64 expirationTime;
+        bool settlementResolution;
+        bytes32 domainId;
+        bytes32 identifier;
+        uint bond;
+        address callbackRecipient;
+        address disputer;
     }
 
-    // Struct for storing cached currency whitelist.
+    /// @notice Struct for storing cached currency whitelist.
+    /// @param isWhitelisted True if the currency is whitelisted.
+    /// @param finalFee Final fee of the currency.
     struct WhitelistedCurrency {
-        bool isWhitelisted; // True if the currency is whitelisted.
-        uint finalFee; // Final fee of the currency.
+        bool isWhitelisted;
+        uint finalFee;
     }
 
     /**

@@ -2,15 +2,18 @@
 pragma solidity ^0.8.0;
 
 interface ILM_PC_RecurringPayments_v1 {
+    //--------------------------------------------------------------------------
+    // Structs
+
     /// @notice Struct that holds the information of a RecurringPayment.
+    /// @param amount The amount of tokens that will be paid out upon triggering the RecurringPayment.
+    /// @param startEpoch The epoch in which the RecurringPayment should start.
+    /// @param lastTriggeredEpoch When was the last epoch this RecurringPayment was triggered.
+    /// @param recipient The recipient address that should receive tokens.
     struct RecurringPayment {
-        /// @dev The amount of tokens that will be paid out upon triggering the RecurringPayment
         uint amount;
-        /// @dev The epoch in which the RecurringPayment should start
         uint startEpoch;
-        /// @dev When was the last epoch this RecurringPayment was triggered
         uint lastTriggeredEpoch;
-        /// @dev The recipient address that should receive tokens
         address recipient;
     }
 
