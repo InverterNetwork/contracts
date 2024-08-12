@@ -343,7 +343,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         pure
         returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
     {
-        if ((_protocolFee + _workflowFee) > BPS) {
+        if ((_protocolFee + _workflowFee) >= BPS) {
             revert Module__BondingCurveBase__FeeAmountToHigh();
         }
         // Calculate protocol fee amount if applicable
