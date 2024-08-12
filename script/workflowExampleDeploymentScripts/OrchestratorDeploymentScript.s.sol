@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import "forge-std/Script.sol";
 
-// Script Dependencies
+// Scripts
 import {TestnetDeploymentScript} from
     "script/deploymentScript/TestnetDeploymentScript.s.sol";
 
-// Internal InterfacesF
+// Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOrchestratorFactory_v1} from
@@ -15,7 +15,7 @@ import {IOrchestratorFactory_v1} from
 import {ILM_PC_PaymentRouter_v1} from
     "@lm/interfaces/ILM_PC_PaymentRouter_v1.sol";
 
-// External Dependencies
+// Dependencies
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
@@ -23,17 +23,20 @@ import {ERC165Upgradeable} from
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract OrchestratorDeploymentScript is TestnetDeploymentScript {
-    //-------------------------------------------------------------------------
-    // Storage
-
+    IOrchestrator_v1 public orchestrator;
     ERC20Mock public orchestratorToken;
-    IOrchestrator_v1 public test_orchestrator;
 
-    address[] initialAuthorizedAddresses;
+    address public orchestratorAdmin;
 
     function run() public virtual override {
+        // Run the superseeding run function from the TestnetDeploymentScript.
         super.run();
 
+        // Set the orchestratorAdmin address, if env variable is set, otherwise we use
+        // the deployer address.
+        orchestratorAdmin = vm.envOr("ORCHESTRATOR_ADMIN_ADDRESS", deployer);
+
+        // Setup the orchestrator.
         setupOrchestrator();
     }
 
@@ -48,39 +51,39 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
         // ------------------------------------------------------------------------
         // Define Initial Configuration Data
 
-        // Orchestrator_v1
+        // General Workflow Configuration
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
             independentUpdateAdmin: address(0)
         });
 
-        // Funding Manager: Metadata, token address
+        // Funding Manager: metadata, token address
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             depositVaultFundingManagerMetadata,
             abi.encode(address(orchestratorToken))
         );
 
-        // Payment Processor: only Metadata
+        // Payment Processor: metadata
         IOrchestratorFactory_v1.ModuleConfig memory
             paymentProcessorFactoryConfig = IOrchestratorFactory_v1
                 .ModuleConfig(simplePaymentProcessorMetadata, bytes(""));
 
-        // Authorizer: Metadata, initial authorized addresses
+        // Authorizer: metadata, initial authorized addresses
         IOrchestratorFactory_v1.ModuleConfig memory authorizerFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata,
-            abi.encode(deployer) //@todo Admin address?
+            roleAuthorizerMetadata, abi.encode(orchestratorAdmin)
         );
 
-        // PaymentRouter: Metadata, salary precision, fee percentage, fee treasury address
+        // PaymentRouter: metadata
         IOrchestratorFactory_v1.ModuleConfig memory paymentRouterFactoryConfig =
         IOrchestratorFactory_v1.ModuleConfig(
             paymentRouterMetadata, abi.encode("")
         );
 
-        // Add the configuration for all the non-mandatory modules. In this case only the LM_PC_Bounties_v1.
+        // Add the configuration for all the non-mandatory modules.
+        // In this case only the LM_PC_PaymentRouter_v1 module.
         IOrchestratorFactory_v1.ModuleConfig[] memory additionalModuleConfig =
             new IOrchestratorFactory_v1.ModuleConfig[](1);
         additionalModuleConfig[0] = paymentRouterFactoryConfig;
@@ -90,7 +93,7 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            test_orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
+            orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
                 .createOrchestrator(
                 workflowConfig,
                 fundingManagerFactoryConfig,
@@ -102,17 +105,17 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
         vm.stopBroadcast();
 
         // Now we need to find the PaymentRouter. ModuleManager has a function called `listModules` that returns a list of
-        // active modules, let's use that to get the address of the PaymentRouter.
+        // active modules. Let's use that to get the address of the PaymentRouter.
 
         ILM_PC_PaymentRouter_v1 paymentRouter;
 
-        bytes4 ILM_PC_PaymentRouter_v1InterfaceId =
+        bytes4 ILM_PC_PaymentRouter_v1_InterfaceId =
             type(ILM_PC_PaymentRouter_v1).interfaceId;
-        address[] memory modulesList = test_orchestrator.listModules();
+        address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    ILM_PC_PaymentRouter_v1InterfaceId
+                    ILM_PC_PaymentRouter_v1_InterfaceId
                 )
             ) {
                 paymentRouter = ILM_PC_PaymentRouter_v1(modulesList[i]);
@@ -120,34 +123,47 @@ contract OrchestratorDeploymentScript is TestnetDeploymentScript {
             }
         }
 
-        console2.log("\n\n");
+        console2.log();
         console2.log(
-            "=================================================================================="
+            "================================================================================"
         );
+        console2.log("Start Orchestrator Deployment Script");
         console2.log(
-            "Orchestrator_v1 with Id %s created at address: %s ",
-            test_orchestrator.orchestratorId(),
-            address(test_orchestrator)
-        );
-        console2.log(
-            "\t-FundingManager deployed at address: %s ",
-            address(test_orchestrator.fundingManager())
-        );
-        console2.log(
-            "\t-Authorizer deployed at address: %s ",
-            address(test_orchestrator.authorizer())
-        );
-        console2.log(
-            "\t-PaymentProcessor deployed at address: %s ",
-            address(test_orchestrator.paymentProcessor())
+            "================================================================================"
         );
 
         console2.log(
-            "\t-LM_PC_PaymentRouter_v1 deployed at address: %s ",
-            address(paymentRouter)
+            "Orchestrator_v1 with id %s created at: %s ",
+            orchestrator.orchestratorId(),
+            address(orchestrator)
+        );
+
+        console2.log("  - Configuration");
+
+        console2.log("\tOrchestrator Admin: %s", orchestratorAdmin);
+        console2.log(
+            "\tIndependent Updates: %s", workflowConfig.independentUpdates
+        );
+
+        console2.log("  - Modules");
+
+        console2.log(
+            "\tFundingManager deployed at: %s ",
+            address(orchestrator.fundingManager())
         );
         console2.log(
-            "=================================================================================="
+            "\tAuthorizer deployed at: %s ", address(orchestrator.authorizer())
+        );
+        console2.log(
+            "\tPaymentProcessor deployed at: %s ",
+            address(orchestrator.paymentProcessor())
+        );
+
+        console2.log(
+            "\tLM_PC_PaymentRouter_v1 deployed at: %s ", address(paymentRouter)
+        );
+        console2.log(
+            "================================================================================"
         );
     }
 }
