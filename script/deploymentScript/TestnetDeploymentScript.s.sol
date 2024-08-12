@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
+import "forge-std/Script.sol";
 
+// Scripts
 import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 
+// Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
 
-import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+// Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Mocks
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
@@ -24,53 +28,62 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * @author Inverter Network
  */
 contract TestnetDeploymentScript is DeploymentScript {
-    BancorFormula formula;
     OptimisticOracleV3Mock ooV3;
     ERC20Mock mockCollateralToken;
 
     uint64 immutable DEFAULT_LIVENESS = 25_000;
 
     function run() public virtual override {
-        // Deploy Deterministic Factory
-
+        console2.log();
         console2.log(
-            "--------------------------------------------------------------------------------"
+            "================================================================================"
         );
         console2.log("Start Testnet Deployment Script");
+        console2.log(
+            "================================================================================"
+        );
+
+        // Set required parameters to testnet values
+        // For a testnet deployment, this means that if not set otherwise,
+        // the deployer will also act as both multisigs and the treasury.
+        if (communityMultisig == address(0)) {
+            communityMultisig = deployer;
+        }
+        if (teamMultisig == address(0)) {
+            teamMultisig = deployer;
+        }
+        if (treasury == address(0)) {
+            treasury = deployer;
+        }
 
         vm.startBroadcast(deployerPrivateKey);
+        {
+            console2.log(" Set up dependency contracts ");
 
-        console2.log(
-            "--------------------------------------------------------------------------------\n"
-        );
-        console2.log("Testnet Dependency Deployment: ");
-        console2.log(
-            "--------------------------------------------------------------------------------\n"
-        );
-        console2.log("\tSet up dependency contracts ");
+            // Deploy and setup DeterministicFactory
+            deterministicFactory =
+                address(new DeterministicFactory_v1(deployer));
+            DeterministicFactory_v1(deterministicFactory).setAllowedDeployer(
+                deployer
+            );
+            console2.log("\tDeterministic Factory: %s", deterministicFactory);
 
-        deterministicFactory = address(new DeterministicFactory_v1(deployer));
+            console2.log(" Set up mocks");
 
-        DeterministicFactory_v1(deterministicFactory).setAllowedDeployer(
-            deployer
-        );
-        console2.log("\t\t-Deterministic Factory: %s", deterministicFactory);
-        formula = new BancorFormula();
-        console2.log("\t\t-BancorFormula: %s", address(formula));
+            // Deploy and setup UMA's OptimisticOracleV3Mock
+            ooV3 = new OptimisticOracleV3Mock(
+                IERC20(address(mockCollateralToken)), DEFAULT_LIVENESS
+            ); // @note FeeToken?
+            console2.log("\tOptimisticOracleV3Mock: %s", address(ooV3));
 
-        console.log("\tSet up mocks");
-        // BancorFormula, ERC20Mock and UMAoracleMock
-
-        ooV3 = new OptimisticOracleV3Mock(
-            IERC20(address(mockCollateralToken)), DEFAULT_LIVENESS
-        ); //@note FeeToken?
-        console2.log("\t\t-OptimisticOracleV3Mock: %s", address(ooV3));
-
-        mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD");
-        console2.log("\t\t-ERC20Mock iUSD: %s", address(mockCollateralToken));
-
+            // Deploy and setup Mock Collateral Token
+            mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD");
+            console2.log("\tERC20Mock iUSD: %s", address(mockCollateralToken));
+        }
         vm.stopBroadcast();
 
+        // Set DeterministicFactory so it's used in the DeploymentScript
+        // downstream
         setFactory(deterministicFactory);
         proxyAndBeaconDeployer.setFactory(deterministicFactory);
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
@@ -33,14 +33,19 @@ contract ProtocolConstants_v1 is Script {
     address public deterministicFactory =
         vm.envAddress("DETERMINISTIC_FACTORY_ADDRESS");
 
-    bytes32 public factorySalt =
-        keccak256(abi.encodePacked("inverter-deployment"));
+    // ------------------------------------------------------------------------
+    // Deployment Salt
+    // ------------------------------------------------------------------------
+
+    string public constant factorySaltString = "inverter-deployment-1";
+
+    bytes32 public factorySalt = keccak256(abi.encodePacked(factorySaltString));
 
     // ------------------------------------------------------------------------
     // Important Configuration Data
     // ------------------------------------------------------------------------
 
-    //TODO: load from env?
+    // TODO: load from env?
     // FeeManager
     uint public feeManager_defaultCollateralFee = 100;
     uint public feeManager_defaultIssuanceFee = 100;
@@ -49,38 +54,35 @@ contract ProtocolConstants_v1 is Script {
     uint public governor_timelockPeriod = 1 weeks;
 
     // Function to log data in a readable format
-    function logProtocolMultisigsAndAddresses() public {
-        console.log(
+    function logProtocolMultisigsAndAddresses() public view {
+        console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console.log("\tProtocol-level Addresses Used for the Deployment");
-        console.log(
-            "--------------------------------------------------------------------------------"
-        );
+        console2.log(" Protocol-Level Addresses Used for the Deployment");
         console2.log("\tDeployer: %s", deployer);
         console2.log("\tCommunity Multisig: %s", communityMultisig);
         console2.log("\tTeam Multisig: %s", teamMultisig);
         console2.log("\tTreasury: %s", treasury);
         console2.log("\tDeterministicFactory: %s", deterministicFactory);
+        console2.log("\t -> Salt used: \"%s\"", factorySaltString);
     }
 
-    // Function to log data in a readable format
-    function logProtocolConfigurationData() public {
-        console.log(
+    // Function to log the protocol configuration in a readable format
+    function logProtocolConfigurationData() public view {
+        console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console.log("Protocol Configuration Data Used for Initialization:");
-        /*console.log(
-            "--------------------------------------------------------------------------------"
-        );*/
-        console.log("\tFeeManager:");
+        console2.log(" Protocol Configuration Data Used for Initialization:");
+
+        console2.log("\tFeeManager:");
         console2.log(
-            "\t\tDefault Collateral Fee: %s", feeManager_defaultCollateralFee
+            "\t\tDefault Collateral Fee: %s BPS",
+            feeManager_defaultCollateralFee
         );
         console2.log(
-            "\t\tDefault Issuance Fee: %s", feeManager_defaultIssuanceFee
+            "\t\tDefault Issuance Fee: %s BPS", feeManager_defaultIssuanceFee
         );
-        console.log("\tGovernor:");
-        console2.log("\t\tTimelock Period: %s", governor_timelockPeriod);
+        console2.log("\tGovernor:");
+        console2.log("\t\tTimelock Period: %s seconds", governor_timelockPeriod);
     }
 }

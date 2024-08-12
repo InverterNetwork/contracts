@@ -1,16 +1,16 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
-import {IDeterministicFactory_v1} from
-    "@df/interfaces/IDeterministicFactory_v1.sol";
-
+// Scripts
 import {ProtocolConstants_v1} from
     "script/deploymentSuite/ProtocolConstants_v1.s.sol";
 
+// Interfaces
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
-import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IDeterministicFactory_v1} from
+    "@df/interfaces/IDeterministicFactory_v1.sol";
 
 /**
  * @title Inverter Beacon Deployment & Setup Script
@@ -61,7 +61,7 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
         vm.stopBroadcast();
 
         console2.log(
-            "\t %s InverterBeaconProxy_v1: %s",
+            "\t%s InverterBeaconProxy_v1: %s",
             implementationName,
             address(proxy)
         );
@@ -78,8 +78,6 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
     ) public returns (address beacon) {
         vm.startBroadcast(deployerPrivateKey);
         {
-            // Deploy the beacon.
-
             beacon = factory.deployWithCreate2(
                 factorySalt,
                 abi.encodePacked(
@@ -99,8 +97,6 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
         vm.stopBroadcast();
 
         // Log the deployed Beacon contract address.
-        console2.log("\t %s Inverter Beacon: %s", implementationName, beacon);
-
-        return beacon;
+        console2.log("\t%s InverterBeacon_v1: %s", implementationName, beacon);
     }
 }
