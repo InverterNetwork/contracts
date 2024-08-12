@@ -59,7 +59,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
     ERC20Mock public orchestratorToken;
     ERC20Issuance_v1 public issuanceToken;
-    IOrchestrator_v1 public test_orchestrator;
+    IOrchestrator_v1 public orchestrator;
 
     function run() public virtual {
         AccessDeploymentStateVariables fetchState =
@@ -163,7 +163,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            test_orchestrator = IOrchestratorFactory_v1(
+            orchestrator = IOrchestratorFactory_v1(
                 chain_addresses.orchestratorFactory
             ).createOrchestrator(
                 workflowConfig,
@@ -182,7 +182,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
 
         bytes4 ILM_PC_PaymentRouter_v1InterfaceId =
             type(ILM_PC_PaymentRouter_v1).interfaceId;
-        address[] memory modulesList = test_orchestrator.listModules();
+        address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
@@ -200,20 +200,20 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         );
         console2.log(
             "Orchestrator_v1 with Id %s created at address: %s ",
-            test_orchestrator.orchestratorId(),
-            address(test_orchestrator)
+            orchestrator.orchestratorId(),
+            address(orchestrator)
         );
         console2.log(
             "\t-FundingManager deployed at address: %s ",
-            address(test_orchestrator.fundingManager())
+            address(orchestrator.fundingManager())
         );
         console2.log(
             "\t-Authorizer deployed at address: %s ",
-            address(test_orchestrator.authorizer())
+            address(orchestrator.authorizer())
         );
         console2.log(
             "\t-PaymentProcessor deployed at address: %s ",
-            address(test_orchestrator.paymentProcessor())
+            address(orchestrator.paymentProcessor())
         );
 
         console2.log(
@@ -231,7 +231,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         console.log("Perfoming setup steps for qAcc round initialization");
 
         // get bonding curve / funding manager
-        address fundingManager = address(test_orchestrator.fundingManager());
+        address fundingManager = address(orchestrator.fundingManager());
 
         // enable bonding curve to mint issuance token
         console.log("\t-Giving minting rights to the bonding curve");
