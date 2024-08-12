@@ -67,7 +67,7 @@ contract AccessDeploymentStateVariables is TestnetDeploymentScript {
             forwarder: forwarder,
             reverter: inverterReverter,
             governor: governor,
-            formula: address(formula),
+            formula: impl_lib_BancorFormula,
             ooV3: address(ooV3),
             mockUSDToken: address(mockCollateralToken)
         });
