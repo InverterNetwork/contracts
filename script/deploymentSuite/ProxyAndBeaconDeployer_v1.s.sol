@@ -16,6 +16,7 @@ import {IDeterministicFactory_v1} from
  * @title Inverter Beacon Deployment & Setup Script
  *
  * @dev Script to deploy and setup InverterBeacon_v1's.
+ *      It uses a deterministic factory to deploy all the contracts.
  *
  * @author Inverter Network
  */

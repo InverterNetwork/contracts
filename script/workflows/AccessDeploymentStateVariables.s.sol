@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "forge-std/Script.sol";
+
+// Scripts
 import {TestnetDeploymentScript} from
     "script/deploymentScript/TestnetDeploymentScript.s.sol";
 
+// Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
-
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+
+// Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Mocks
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface

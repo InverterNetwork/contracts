@@ -14,13 +14,14 @@ import {IDeterministicFactory_v1} from
 // Libraries
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 
-//--------------------------------------------------------------------------
-// General Singelton Deployer Information
-//--------------------------------------------------------------------------
-// This file acts as a general deployer for all singeltons in the inverter protocol.
-// It uses a deterministic factory to deploy all contracts needed for the inverter protocol to work.
-//--------------------------------------------------------------------------
-
+/**
+ * @title Inverter Singleton Deployer Script
+ *
+ * @dev Script to deploy all the singletons in the Inverter protocol.
+ *      It uses a deterministic factory to deploy all the contracts.
+ *
+ * @author Inverter Network
+ */
 contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     using Strings for string;
 

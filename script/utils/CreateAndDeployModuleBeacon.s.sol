@@ -3,15 +3,24 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
+// Scripts
 import {ProtocolConstants_v1} from
     "script/deploymentSuite/ProtocolConstants_v1.s.sol";
-
 import {ProxyAndBeaconDeployer_v1} from
     "script/deploymentSuite/ProxyAndBeaconDeployer_v1.s.sol";
 
+// Interfaces
 import {IDeterministicFactory_v1} from
     "@df/interfaces/IDeterministicFactory_v1.sol";
 
+/**
+ * @title Inverter Module Beacon Creation and Deloyment Script
+ *
+ * @dev Script to create and deploy Inverter module beacons.
+ *      It uses a deterministic factory to deploy all the contracts.
+ *
+ * @author Inverter Network
+ */
 contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
     IDeterministicFactory_v1 public factory =
         IDeterministicFactory_v1(deterministicFactory);
