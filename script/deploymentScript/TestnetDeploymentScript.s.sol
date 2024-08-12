@@ -8,7 +8,6 @@ import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 
 // Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
-import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -29,7 +28,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
  * @author Inverter Network
  */
 contract TestnetDeploymentScript is DeploymentScript {
-    BancorFormula formula;
     OptimisticOracleV3Mock ooV3;
     ERC20Mock mockCollateralToken;
 
@@ -69,10 +67,6 @@ contract TestnetDeploymentScript is DeploymentScript {
                 deployer
             );
             console2.log("\tDeterministic Factory: %s", deterministicFactory);
-
-            // Deploy BancorFormula
-            formula = new BancorFormula();
-            console2.log("\tBancorFormula: %s", address(formula));
 
             console2.log(" Set up mocks");
 

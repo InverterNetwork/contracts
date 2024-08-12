@@ -37,6 +37,9 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_ext_TransactionForwarder_v1;
     address public impl_ext_FeeManager_v1;
 
+    // Libraries
+    address public impl_lib_BancorFormula;
+
     // Factories
     address public impl_fac_ModuleFactory_v1;
     address public impl_fac_OrchestratorFactory_v1;
@@ -110,6 +113,17 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
         impl_ext_FeeManager_v1 = deployAndLogWithCreate2(
             "FeeManager_v1", vm.getCode("FeeManager_v1.sol:FeeManager_v1")
+        );
+    }
+
+    function createLibrarySingletons() public {
+        console2.log(
+            "--------------------------------------------------------------------------------"
+        );
+        console2.log(" Create Library Implementation Singletons");
+
+        impl_lib_BancorFormula = deployAndLogWithCreate2(
+            "BancorFormula", vm.getCode("BancorFormula.sol:BancorFormula")
         );
     }
 
