@@ -1,68 +1,18 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
+// Scripts
 import {ProtocolConstants_v1} from
     "script/deploymentSuite/ProtocolConstants_v1.s.sol";
+
+// Interfaces
 import {IDeterministicFactory_v1} from
     "@df/interfaces/IDeterministicFactory_v1.sol";
 
+// Libraries
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-
-// Factories
-import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-
-// Protocol Governance
-import {Governor_v1} from "@ex/governance/Governor_v1.sol";
-import {InverterReverter_v1} from
-    "src/external/reverter/InverterReverter_v1.sol";
-import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
-import {TransactionForwarder_v1} from
-    "@ex/forwarder/TransactionForwarder_v1.sol";
-
-// Beacon
-import {
-    InverterBeacon_v1,
-    IInverterBeacon_v1
-} from "src/proxies/InverterBeacon_v1.sol";
-
-// Modules
-// =============================================================================
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-
-// Funding Managers
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
-import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-
-// Authorization
-import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
-import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-import {AUT_EXT_VotingRoles_v1} from
-    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
-
-// Payment Processors
-import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
-import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
-
-// Logic Modules
-import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
-import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
-import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
-import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
-import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
-
-// Factories
-import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
-import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 
 //--------------------------------------------------------------------------
 // General Singelton Deployer Information
@@ -82,7 +32,6 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     }
 
     // External contracts
-
     address public impl_ext_InverterReverter_v1;
     address public impl_ext_Governor_v1;
     address public impl_ext_TransactionForwarder_v1;
@@ -121,28 +70,28 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     //--------------------------------------------------------------------------
     // Factory Usage
 
-    // Deploy the Governor_v1.
+    // Example of the Governor_v1 deployment.
     /*
-    // Deploy without Arguments
-    bytes memory implBytecode = vm.getCode("Governor_v1.sol:Governor_v1");
-    govImplementation = factory.deployWithCreate2(salt, implBytecode);
+        // Deploy without Arguments
+        bytes memory implBytecode = vm.getCode("Governor_v1.sol:Governor_v1");
+        govImplementation = factory.deployWithCreate2(salt, implBytecode);
 
-    // Deploy with Arguments
-    bytes memory proxyArgs = abi.encode(address(govImplementation), communityMultisig, bytes(""));
-    bytes memory proxyCode = vm.getCode("TransparentUpgradeableProxy.sol:TransparentUpgradeableProxy");
-    bytes memory proxyBytecode = abi.encodePacked(proxyCode, proxyArgs);
-    gov = Governor_v1(
-        address(
-                factory.deployWithCreate2(salt, proxyBytecode)
-        )
-    ); */
+        // Deploy with Arguments
+        bytes memory proxyArgs = abi.encode(address(govImplementation), communityMultisig, bytes(""));
+        bytes memory proxyCode = vm.getCode("TransparentUpgradeableProxy.sol:TransparentUpgradeableProxy");
+        bytes memory proxyBytecode = abi.encodePacked(proxyCode, proxyArgs);
+        gov = Governor_v1(
+            address(
+                    factory.deployWithCreate2(salt, proxyBytecode)
+            )
+        ); 
+    */
 
     function createExternalSingletons() public {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Create External Implementation Singletons");
-        console2.log("-External Contracts");
+        console2.log(" Create External Implementation Singletons");
 
         // External contracts
         impl_ext_InverterReverter_v1 = deployAndLogWithCreate2(
@@ -170,10 +119,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Create Workflow and Factory Implementation Singletons");
+        console2.log(" Create Factory and Workflow Implementation Singletons");
 
         // Factories
-        console2.log("-Factories");
+        console2.log("  - Factories");
 
         impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
             "ModuleFactory_v1",
@@ -192,10 +141,10 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         // Modules
-        console2.log("-Modules");
+        console2.log("  - Modules");
 
         // Authorizer
-        console2.log("--Authorizer");
+        console2.log("  -- Authorizer");
 
         impl_mod_Aut_Roles_v1 = deployAndLogWithCreate2(
             "AUT_Roles_v1", vm.getCode("AUT_Roles_v1.sol:AUT_Roles_v1")
@@ -210,7 +159,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         // Funding Managers
-        console2.log("--Funding Managers");
+        console2.log("  -- Funding Managers");
 
         impl_mod_FM_BC_Bancor_Redeeming_VirtualSupply_v1 =
         deployAndLogWithCreate2(
@@ -233,7 +182,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         // Logic Modules
-        console2.log("--Logic Modules");
+        console2.log("  -- Logic Modules");
 
         impl_mod_LM_PC_Bounties_v1 = deployAndLogWithCreate2(
             "LM_PC_Bounties_v1",
@@ -259,7 +208,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         // Payment Processors
-        console2.log("--Payment Processors");
+        console2.log("  -- Payment Processors");
 
         impl_mod_PP_Simple_v1 = deployAndLogWithCreate2(
             "PP_Simple_v1", vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
@@ -269,7 +218,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         );
 
         // Orchestrator
-        console2.log("-Orchestrator");
+        console2.log("  - Orchestrator");
 
         impl_orc_Orchestrator_v1 = deployAndLogWithCreate2(
             "Orchestrator_v1",
@@ -283,18 +232,16 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     function deployAndLogWithCreate2(
         string memory implementationName,
         bytes memory creationCode
-    ) internal returns (address) {
+    ) internal returns (address implementation) {
         vm.startBroadcast(deployerPrivateKey);
-        address implementation =
-            factory.deployWithCreate2(factorySalt, creationCode);
+        {
+            implementation =
+                factory.deployWithCreate2(factorySalt, creationCode);
+        }
         vm.stopBroadcast();
 
         console2.log(
-            "Deployment of %s Implementation at address %s",
-            implementationName,
-            implementation
+            "\t%s Implementation: %s", implementationName, implementation
         );
-
-        return implementation;
     }
 }

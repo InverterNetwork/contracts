@@ -1,19 +1,18 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
 import "forge-std/Script.sol";
 
+// Scripts
 import {SingletonDeployer_v1} from
     "script/deploymentSuite/SingletonDeployer_v1.s.sol";
 import {MetadataCollection_v1} from
     "script/deploymentSuite/MetadataCollection_v1.s.sol";
-
 import {ProxyAndBeaconDeployer_v1} from
     "script/deploymentSuite/ProxyAndBeaconDeployer_v1.s.sol";
 
+// Interfaces
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
-
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 /**
@@ -44,7 +43,7 @@ contract ModuleBeaconDeployer_v1 is
         console2.log(
             "--------------------------------------------------------------------------------"
         );
-        console2.log("Deploy Module Beacons and Fill Registration Data");
+        console2.log(" Deploy Module Beacons and Set Registration Data");
 
         // Create Orchestrator Beacon
         orchestratorBeacon = IInverterBeacon_v1(

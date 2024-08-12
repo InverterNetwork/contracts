@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+// Interfaces
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 /**
