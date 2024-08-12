@@ -1,9 +1,7 @@
-// SPDX-License-Identifier: LGPL-3.0-only
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import {Script} from "forge-std/Script.sol";
-
-import "forge-std/Test.sol";
+import "forge-std/Script.sol";
 
 import {ProtocolConstants_v1} from
     "script/deploymentSuite/ProtocolConstants_v1.s.sol";
@@ -21,10 +19,13 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
     ProxyAndBeaconDeployer_v1 public proxyAndBeaconDeployer =
         new ProxyAndBeaconDeployer_v1();
 
-    // @todo Run with forge script
+    // How to use:
+    // forge script
     // script/utils/CreateAndDeployModuleBeacon.s.sol
     // "run(string,string,address,address,uint,uint,uint)"
-    // "ExampleModule" "src/module/ExampleModule.sol" ???@todo "0x0000000000000000000000000000000000000001" "0x0000000000000000000000000000000000000002" 1 0 0
+    // "ExampleModule" "src/module/ExampleModule.sol" ??? "0x0000000000000000000000000000000000000001" "0x0000000000000000000000000000000000000002" 1 0 0
+
+    // @TODO Above explanation is lacking the bytes-encoded optionalParams
 
     function run(
         string memory moduleName,
@@ -35,32 +36,40 @@ contract CreateAndDeployModuleBeacon is Script, ProtocolConstants_v1 {
         uint majorVersion,
         uint minorVersion,
         uint patchVersion
-    ) external {
+    ) external verifyRequiredParameters {
         vm.startBroadcast(deployerPrivateKey);
+        {
+            // Deploy the implementation
+            address implementation = factory.deployWithCreate2(
+                factorySalt,
+                abi.encodePacked(vm.getCode(modulePath), optionalParams)
+            );
+            console2.log(
+                "Deployed %s implementation at address %s",
+                moduleName,
+                implementation
+            );
 
-        // Deploy the implementation.
-        address implementation = factory.deployWithCreate2(
-            factorySalt,
-            abi.encodePacked(vm.getCode(modulePath), optionalParams)
-        );
-        console2.log(
-            "Deployed %s implementation at address %s",
-            moduleName,
-            implementation
-        );
-
-        // Deploy the beacon.
-        address beacon = proxyAndBeaconDeployer.deployInverterBeacon(
-            moduleName,
-            reverter,
-            owner,
-            implementation,
-            majorVersion,
-            minorVersion,
-            patchVersion
-        );
-        console2.log("Deployed %s beacon at address %s", moduleName, beacon);
-
+            // Deploy the beacon
+            address beacon = proxyAndBeaconDeployer.deployInverterBeacon(
+                moduleName,
+                reverter,
+                owner,
+                implementation,
+                majorVersion,
+                minorVersion,
+                patchVersion
+            );
+            console2.log("Deployed %s beacon at address %s", moduleName, beacon);
+        }
         vm.stopBroadcast();
+    }
+
+    modifier verifyRequiredParameters() {
+        require(
+            deterministicFactory != address(0),
+            "Deterministic Factory address not set - aborting!"
+        );
+        _;
     }
 }
