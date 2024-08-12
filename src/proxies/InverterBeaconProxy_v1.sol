@@ -52,7 +52,7 @@ contract InverterBeaconProxy_v1 is Proxy {
     // Public View Functions
 
     /// @dev This overrides the possible use of a "version" function in the modules that are
-    ///      called via the Proxy Beacon structure
+    ///      called via the Proxy Beacon structure.
     /// @notice Returns the version of the linked implementation.
     /// @return Major version.
     /// @return Minor version.

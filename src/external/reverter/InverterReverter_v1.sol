@@ -15,7 +15,7 @@ pragma solidity 0.8.23;
  * @author  Inverter Network
  */
 contract InverterReverter_v1 {
-    /// @notice The contract that the transactions was meant to interact with is paused
+    /// @notice The contract that the transactions was meant to interact with is paused.
     error InverterReverter__ContractPaused();
 
     fallback() external {

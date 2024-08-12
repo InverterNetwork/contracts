@@ -75,7 +75,7 @@ contract E2ETest is E2EModuleRegistry {
     FeeManager_v1 feeManager;
 
     function setUp() public virtual {
-        // Basic Setup function. This function es overriden and expanded by child E2E tests
+        // Basic Setup function. This function es overridden and expanded by child E2E tests
 
         // Deploy a reverter used to enable proper pausing
         reverter = new InverterReverter_v1();
@@ -184,7 +184,7 @@ contract E2ETest is E2EModuleRegistry {
     }
 
     // Creates an orchestrator with the supplied config and the stored module config.
-    // Can be overriden, shouldn't need to
+    // Can be overridden, shouldn't need to
     // NOTE: It's important to send the module configurations in order, since it will copy from the array.
     // The order should be:
     //      moduleConfigurations[0]  => FundingManager

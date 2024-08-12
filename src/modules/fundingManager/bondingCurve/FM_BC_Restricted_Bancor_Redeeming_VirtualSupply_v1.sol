@@ -56,7 +56,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     // Public Functions
 
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
-    /// @dev added role check
+    /// @dev added role check.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         override
@@ -66,7 +66,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1
-    /// @dev added role check
+    /// @dev added role check.
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         override

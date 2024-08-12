@@ -68,7 +68,7 @@ contract FeeManager_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Base Points used for percentage calculation. This value represents 100%
+    /// @dev Base Points used for percentage calculation. This value represents 100%.
     uint public constant BPS = 10_000;
     /// @dev The maximum fee percentage amount that can be set. Based on the BPS.
     uint public maxFee;

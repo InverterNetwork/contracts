@@ -256,7 +256,7 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     //==========================================================================
-    // Virtual Futcions to be overriden by Downstream Contracts
+    // Virtual Futcions to be overridden by Downstream Contracts
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
     /// @dev This updates status on local storage (or deletes the assertion if it was deemed false). Any additional functionalities can be appended by the inheriting contract.

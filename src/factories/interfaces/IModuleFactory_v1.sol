@@ -35,16 +35,16 @@ interface IModuleFactory_v1 {
     // Events
 
     /// @notice Event emitted when new beacon registered for metadata.
-    /// @param metadata The registered Metadata
-    /// @param beacon The registered Beacon
+    /// @param metadata The registered Metadata.
+    /// @param beacon The registered Beacon.
     event MetadataRegistered(
         IModule_v1.Metadata metadata, IInverterBeacon_v1 indexed beacon
     );
 
-    /// @notice Event emitted when new module created for a orchestrator_v1.
+    /// @notice Event emitted when new module created for a {Orchestrator_v1}.
     /// @param orchestrator The corresponding orchestrator.
     /// @param module The created module instance.
-    /// @param metadata The registered Metadata
+    /// @param metadata The registered Metadata.
     event ModuleCreated(
         address indexed orchestrator,
         address indexed module,
@@ -58,20 +58,20 @@ interface IModuleFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Returns the address of the Reverter contract
-    /// @return ReverterAddress The address of the Reverter contract
+    /// @notice Returns the address of the {InverterReverter_v1} contract.
+    /// @return reverterAddress Returns the address of the Reverter contract.
     function reverter() external view returns (address);
 
-    /// @notice Returns the governor_v1 contract address
-    /// @return The address of the governor contract
+    /// @notice Returns the {Governor_v1} contract address.
+    /// @return govnernorAddress Returns the address of the Governor contract.
     function governor() external view returns (address);
 
     /// @notice Creates a module instance identified by given metadata and initiates it.
     /// @param metadata The module's metadata.
     /// @param orchestrator The orchestrator's instance of the module.
-    /// @param configData The configData of the module
-    /// @param workflowConfig The configData of the workflow
-    /// @return moduleProxyAddress Returns the address of the created module proxy
+    /// @param configData The configData of the module.
+    /// @param workflowConfig The configData of the workflow.
+    /// @return moduleProxyAddress Returns the address of the created module proxy.
     function createAndInitModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
@@ -82,8 +82,8 @@ interface IModuleFactory_v1 {
     /// @notice Creates a module proxy instance identified by given metadata.
     /// @param metadata The module's metadata.
     /// @param orchestrator The orchestrator's instance of the module.
-    /// @param workflowConfig The configData of the workflow
-    /// @return Returns the address of the created module proxy
+    /// @param workflowConfig The configData of the workflow.
+    /// @return Returns the address of the created module proxy.
     function createModuleProxy(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,

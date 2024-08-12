@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface ILM_PC_RecurringPayments_v1 {
-    /// @notice Struct that holds the information of a RecurringPayment
+    /// @notice Struct that holds the information of a RecurringPayment.
     struct RecurringPayment {
         /// @dev The amount of tokens that will be paid out upon triggering the RecurringPayment
         uint amount;
@@ -26,7 +26,7 @@ interface ILM_PC_RecurringPayments_v1 {
     /// @notice Given EpochLength is invalid.
     error Module__LM_PC_RecurringPayments__InvalidEpochLength();
 
-    /// @notice Given startId is not position before endId
+    /// @notice Given startId is not position before endId.
     error Module__LM_PC_RecurringPayments__StartIdNotBeforeEndId();
 
     //--------------------------------------------------------------------------
@@ -61,8 +61,8 @@ interface ILM_PC_RecurringPayments_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @notice Returns the length of an epoch
-    /// @return epochLength Length of an epoch in a uint timestamp
+    /// @notice Returns the length of an epoch.
+    /// @return epochLength Length of an epoch in a uint timestamp.
     function getEpochLength() external view returns (uint epochLength);
 
     /// @notice Returns the RecurringPayment instance with id `id`.
@@ -97,24 +97,24 @@ interface ILM_PC_RecurringPayments_v1 {
     //--------------------------------------------------------------------------
     // Epoch Functions
 
-    /// @notice Calculates the epoch from a given uint timestamp
-    /// @dev Calculation is: timestamp divided by epochLength
-    /// @param timestamp : a timestamp in a uint format
-    /// @return epoch : epoch in which timestamp belongs to
+    /// @notice Calculates the epoch from a given uint timestamp.
+    /// @dev Calculation is: timestamp divided by epochLength.
+    /// @param timestamp : a timestamp in a uint format.
+    /// @return epoch : epoch in which timestamp belongs to.
     function getEpochFromTimestamp(uint timestamp)
         external
         view
         returns (uint epoch);
 
-    /// @notice Calculates the current epoch
-    /// @dev Calculation is: block.timestamp divided by epochLength
-    /// @return epoch : epoch in which current timestamp (block.timestamp) belongs to
+    /// @notice Calculates the current epoch.
+    /// @dev Calculation is: block.timestamp divided by epochLength.
+    /// @return epoch : epoch in which current timestamp (block.timestamp) belongs to.
     function getCurrentEpoch() external view returns (uint epoch);
 
-    /// @notice Calculates a future epoch x epochs from now
-    /// @dev Calculation is: current epoch + X epochs in the future = futureEpoch
-    /// @param xEpochsInTheFuture : how many epochs from the current epoch
-    /// @return futureEpoch : epoch in the future
+    /// @notice Calculates a future epoch x epochs from now.
+    /// @dev Calculation is: current epoch + X epochs in the future = futureEpoch.
+    /// @param xEpochsInTheFuture : how many epochs from the current epoch.
+    /// @return futureEpoch : epoch in the future.
     function getFutureEpoch(uint xEpochsInTheFuture)
         external
         view
@@ -123,32 +123,32 @@ interface ILM_PC_RecurringPayments_v1 {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @notice Adds a recurring payment to the manager
-    /// @dev a new id is created for each Payment
-    /// @param amount : amount of tokens send to the recipient address
-    /// @param startEpoch : epoch in which the payment starts. Use getEpochFromTimestamp() or getCurrentEpoch() to get the appropriate epoch
-    /// @param recipient : recipient address that should receive tokens
-    /// @return id : id of the newly created recurring payment
+    /// @notice Adds a recurring payment to the manager.
+    /// @dev a new id is created for each Payment.
+    /// @param amount : amount of tokens send to the recipient address.
+    /// @param startEpoch : epoch in which the payment starts. Use getEpochFromTimestamp() or getCurrentEpoch() to get the appropriate epoch.
+    /// @param recipient : recipient address that should receive tokens.
+    /// @return id : id of the newly created recurring payment.
     function addRecurringPayment(
         uint amount,
         uint startEpoch,
         address recipient
     ) external returns (uint id);
 
-    /// @notice Removes a recurring Payment
-    /// @param prevId : id of the previous recurring payment in the payment list
-    /// @param id : id of the recurring payment that is to be removed
+    /// @notice Removes a recurring Payment.
+    /// @param prevId : id of the previous recurring payment in the payment list.
+    /// @param id : id of the recurring payment that is to be removed.
     function removeRecurringPayment(uint prevId, uint id) external;
 
     //--------------------------------------------------------------------------
     // Trigger
 
-    /// @notice Triggers the start of the due payments for all recurring payment orders
+    /// @notice Triggers the start of the due payments for all recurring payment orders.
     function trigger() external;
 
-    /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for
-    /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal trigger function
-    /// @param startId : id of start position of the recurring payments that should be triggered
-    /// @param endId : id of end position of the recurring payments that should be triggered
+    /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for.
+    /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal trigger function.
+    /// @param startId : id of start position of the recurring payments that should be triggered.
+    /// @param endId : id of end position of the recurring payments that should be triggered.
     function triggerFor(uint startId, uint endId) external;
 }

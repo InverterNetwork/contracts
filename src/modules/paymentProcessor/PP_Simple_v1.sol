@@ -52,7 +52,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice checks that the caller is an active module
+    /// @notice checks that the caller is an active module.
     modifier onlyModule() {
         if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentProcessor__OnlyCallableByModule();
@@ -60,7 +60,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         _;
     }
 
-    /// @notice checks that the client is calling for itself
+    /// @notice checks that the client is calling for itself.
     modifier validClient(IERC20PaymentClientBase_v1 client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
@@ -71,8 +71,8 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => token address => paymentReceiver => unclaimable Amount
+    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason.
+    /// @dev paymentClient => token address => paymentReceiver => unclaimable Amount.
     mapping(address => mapping(address => mapping(address => uint))) internal
         unclaimableAmountsForRecipient;
 
@@ -200,10 +200,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
-    /// @param client address of the payment client
-    /// @param token address of the payment token
-    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
+    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client.
+    /// @param client address of the payment client.
+    /// @param token address of the payment token.
+    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
     function _claimPreviouslyUnclaimable(
         address client,
         address token,

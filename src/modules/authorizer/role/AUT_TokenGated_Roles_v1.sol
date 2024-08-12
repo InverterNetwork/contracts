@@ -186,15 +186,15 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // Overloaded and overriden functions
+    // Overloaded and overridden functions
 
-    /// @notice Grants a role to an address
-    /// @param role The role to grant
-    /// @param who The address to grant the role to
-    /// @return bool Returns true if the role has been granted succesfully
-    /// @dev Overrides {_grantRole} from AUT_ROLES_v1 to enforce interface implementation and threshold existence when role is token-gated
+    /// @notice Grants a role to an address.
+    /// @param role The role to grant.
+    /// @param who The address to grant the role to.
+    /// @return bool Returns true if the role has been granted succesfully.
+    /// @dev Overrides {_grantRole} from AUT_ROLES_v1 to enforce interface implementation and threshold existence when role is token-gated.
     /// @dev Please note: current check for validating a valid token is not conclusive and could be
-    ///         circumvented through a callback() function
+    ///         circumvented through a callback() function.
     function _grantRole(bytes32 role, address who)
         internal
         virtual
@@ -234,10 +234,10 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         return super._grantRole(role, who);
     }
 
-    /// @param role The id number of the role
-    /// @param who The user we want to check on
-    /// @return bool Returns if revoke has been succesful
-    /// @dev Overrides {_revokeRole} to clean up threshold data on revoking
+    /// @param role The id number of the role.
+    /// @param who The user we want to check on.
+    /// @return bool Returns if revoke has been succesful.
+    /// @dev Overrides {_revokeRole} to clean up threshold data on revoking.
     function _revokeRole(bytes32 role, address who)
         internal
         virtual
@@ -257,7 +257,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     // Internal Functions
 
     /// @notice Sets the minimum threshold for a token-gated role.
-    /// @param roleId  The ID of the role to be modified
+    /// @param roleId  The ID of the role to be modified.
     /// @param token The token for which to the threshold.
     /// @param threshold The user will need to have at least this number to qualify for the role.
     /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
@@ -305,7 +305,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
 
     /// @inheritdoc IAuthorizer_v1
     /// @notice In case the role is token gated, it will check if {who} holds a balance
-    ///         above the threshold for at least one of the required tokens
+    ///         above the threshold for at least one of the required tokens.
     function checkForRole(bytes32 role, address who)
         external
         view

@@ -159,7 +159,7 @@ abstract contract Module_v1 is
     }
 
     /// @dev The initialization function MUST be called by the upstream
-    ///      contract in their overriden `init()` function.
+    ///      contract in their overridden `init()` function.
     /// @param orchestrator_ The module's orchestrator.
     function __Module_init(
         IOrchestrator_v1 orchestrator_,
@@ -254,11 +254,11 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury address of this workflow
-    /// @param functionSelector The function selector of the target function
-    /// @dev FunctionSelector is always passed as selector of this module / address
-    /// @return fee The collateral fee amount in relation to the BPS of the feeManager
-    /// @return treasury The address of the treasury
+    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury address of this workflow.
+    /// @param functionSelector The function selector of the target function.
+    /// @dev FunctionSelector is always passed as selector of this module / address.
+    /// @return fee The collateral fee amount in relation to the BPS of the feeManager.
+    /// @return treasury The address of the treasury.
     function _getFeeManagerCollateralFeeData(bytes4 functionSelector)
         internal
         view
@@ -273,11 +273,11 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address of this workflow
-    /// @param functionSelector The function selector of the target function
-    /// @dev FunctionSelector is always passed as selector of this module / address
-    /// @return fee The issuance fee amount in relation to the BPS of the feeManager
-    /// @return treasury The address of the treasury
+    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address of this workflow.
+    /// @param functionSelector The function selector of the target function.
+    /// @dev FunctionSelector is always passed as selector of this module / address.
+    /// @return fee The issuance fee amount in relation to the BPS of the feeManager.
+    /// @return treasury The address of the treasury.
     function _getFeeManagerIssuanceFeeData(bytes4 functionSelector)
         internal
         view
@@ -326,11 +326,11 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// @notice Checks if the provided address is the trusted forwarder
+    /// @notice Checks if the provided address is the trusted forwarder.
     /// @param forwarder The contract address to be verified.
-    /// @return bool Is the given address the trusted forwarder
+    /// @return bool Is the given address the trusted forwarder.
     /// @dev We imitate here the EIP2771 Standard to enable metatransactions
-    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator.
     function isTrustedForwarder(address forwarder)
         public
         view
@@ -341,9 +341,9 @@ abstract contract Module_v1 is
         return __Module_orchestrator.isTrustedForwarder(forwarder);
     }
 
-    /// @notice Returns the trusted forwarder
-    /// @return address The trusted forwarder
-    /// @dev We imitate here the EIP2771 Standard to enable metatransactions
+    /// @notice Returns the trusted forwarder.
+    /// @return address The trusted forwarder.
+    /// @dev We imitate here the EIP2771 Standard to enable metatransactions.
     /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
     function trustedForwarder()
         public

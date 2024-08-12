@@ -97,7 +97,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev The interface of the Bancor Formula used to calculate the issuance and redeeming amount.
     IBancorFormula public formula;
     /// @dev Value is used to convert deposit amount to 18 decimals,
-    /// which is required by the Bancor formula
+    /// which is required by the Bancor formula.
     uint8 private constant eighteenDecimals = 18;
     /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
     uint32 internal constant PPM = 1_000_000;
@@ -299,7 +299,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// The return value is formatted in PPM.
-    /// @return uint The static price for buying the issuance token
+    /// @return uint The static price for buying the issuance token.
     function getStaticPriceForBuying()
         external
         view
@@ -323,7 +323,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @notice Calculates and returns the static price for selling the issuance token.
     /// The return value is formatted in PPM.
-    /// @return uint The static price for selling the issuance token
+    /// @return uint The static price for selling the issuance token.
     function getStaticPriceForSelling()
         external
         view
@@ -454,7 +454,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
-    /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens
+    /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens.
     /// @param _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
@@ -526,7 +526,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @dev Internal function to directly set the virtual issuance supply to a new value.
     ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
-    ///         is done for use in the Bancor Formulat
+    ///         is done for use in the Bancor Formulat.
     /// @param _virtualSupply The new value to set for the virtual issuance supply.
     function _setVirtualIssuanceSupply(uint _virtualSupply)
         internal

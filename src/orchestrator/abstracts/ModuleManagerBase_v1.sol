@@ -128,18 +128,18 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Module Factory
+    /// @dev Module Factory.
     address public moduleFactory;
 
     /// @dev List of modules.
     address[] private _modules;
 
     /// @dev Mapping to keep track of whether a module is used in the orchestrator
-    /// address => isModule
+    /// address => isModule.
     mapping(address => bool) private _isModule;
 
     /// @dev Mapping to keep track of active timelocks for updating modules
-    /// module => timelock
+    /// module => timelock.
     mapping(address module => ModuleUpdateTimelock timelock) public
         moduleAddressToTimelock;
 
@@ -198,7 +198,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev Returns whether address `who` is authorized to mutate module
     ///      manager's state.
-    /// @dev MUST be overriden in downstream contract.#
+    /// @dev MUST be overridden in downstream contract.
     /// @param who The address to check.
     /// @return True if the address is authorized, false otherwise.
     function __ModuleManager_isAuthorized(address who)
@@ -233,9 +233,9 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // onlyOrchestratorAdmin Functions
 
-    /// @notice Cancels an initiated update for a module
+    /// @notice Cancels an initiated update for a module.
     /// @dev Only callable by authorized address.
-    /// @dev Fails if module update has not been initiated
+    /// @dev Fails if module update has not been initiated.
     /// @param module The module address to remove.
     function _cancelModuleUpdate(address module)
         internal
@@ -246,9 +246,9 @@ abstract contract ModuleManagerBase_v1 is
         emit ModuleUpdateCanceled(module);
     }
 
-    /// @notice Initiates adding of a module to the Orchestrator on a timelock
+    /// @notice Initiates adding of a module to the Orchestrator on a timelock.
     /// @dev Only callable by authorized address.
-    /// @dev Fails of adding module exeeds max modules limit
+    /// @dev Fails of adding module exeeds max modules limit.
     /// @dev Fails if address invalid or address already added as module.
     /// @param module The module address to add.
     function _initiateAddModuleWithTimelock(address module)
@@ -260,7 +260,7 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @notice Initiates removing of a module from the Orchestrator on a timelock
+    /// @notice Initiates removing of a module from the Orchestrator on a timelock.
     /// @dev Only callable by authorized address.
     /// @dev Fails if address not added as module.
     /// @param module The module address to remove.
@@ -272,7 +272,7 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @notice Executes adding of a module to the Orchestrator
+    /// @notice Executes adding of a module to the Orchestrator.
     /// @dev Only callable by authorized address.
     /// @dev Fails if adding of module has not been initiated.
     /// @dev Fails if timelock has not been expired yet.
@@ -289,7 +289,7 @@ abstract contract ModuleManagerBase_v1 is
         __ModuleManager_addModule(module);
     }
 
-    /// @notice Executes removing of a module from the Orchestrator
+    /// @notice Executes removing of a module from the Orchestrator.
     /// @dev Only callable by authorized address.
     /// @dev Fails if removing of module has not been initiated.
     /// @dev Fails if timelock has not been expired yet.

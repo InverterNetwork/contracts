@@ -51,7 +51,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice The provided beacon address doesnt support the interface {IInverterBeacon_v1}
+    /// @notice The provided beacon address doesnt support the interface {IInverterBeacon_v1}.
     error InverterTransparentUpgradeableProxy__InvalidBeacon();
 
     /// @dev If the proxy caller is the current admin then it can only call the admin functions.
@@ -60,19 +60,19 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     //--------------------------------------------------------------------------
     // State
 
-    /// @dev The address of the admin that can update the implementation address of this proxy
+    /// @dev The address of the admin that can update the implementation address of this proxy.
     address internal immutable _admin;
 
     /// @dev The address of the beacon that is used to fetch the implementation address.
     IInverterBeacon_v1 internal immutable _beacon;
 
-    /// @dev The major version of the implementation
+    /// @dev The major version of the implementation.
     uint internal majorVersion;
 
-    /// @dev The minor version of the implementation
+    /// @dev The minor version of the implementation.
     uint internal minorVersion;
 
-    /// @dev The patch version of the implementation
+    /// @dev The patch version of the implementation.
     uint internal patchVersion;
 
     //--------------------------------------------------------------------------
@@ -101,7 +101,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     //--------------------------------------------------------------------------
     // Public View Functions
 
-    /// @dev This overrides the possible use of a "version" function in the modules that are called via the Proxy Beacon structure
+    /// @dev This overrides the possible use of a "version" function in the modules that are called via the Proxy Beacon structure.
     /// @notice Returns the version of the linked implementation.
     /// @return The major version.
     /// @return The minor version.
@@ -113,7 +113,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Upgrades the implementation to the newest version listed in the beacon
+    /// @dev Upgrades the implementation to the newest version listed in the beacon.
     function upgradeToNewestVersion() internal virtual {
         // Override implementation
         ERC1967Utils.upgradeToAndCall(_beacon.implementation(), bytes(""));

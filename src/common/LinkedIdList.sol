@@ -10,12 +10,12 @@ Assumptions
 
 library LinkedIdList {
     struct List {
-        /// @dev Size of the list
+        /// @dev Size of the list.
         uint size;
         /// @dev Marks the last element of the list.
         /// @dev Always links back to the _SENTINEL.
         uint last;
-        /// @dev List of Ids
+        /// @dev List of Ids.
         mapping(uint => uint) list;
     }
 
@@ -127,9 +127,9 @@ library LinkedIdList {
         return self.last;
     }
 
-    /// @notice lists the ids contained in the linked list
-    /// @dev Returns an array
-    /// @param self : the linked List from where the ids should be listed
+    /// @notice lists the ids contained in the linked list.
+    /// @dev Returns an array.
+    /// @param self : the linked List from where the ids should be listed.
     /// @return array of ids that are contained in the list
     function listIds(List storage self) internal view returns (uint[] memory) {
         uint[] memory result = new uint[](self.size);

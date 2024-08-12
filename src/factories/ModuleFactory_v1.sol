@@ -81,7 +81,7 @@ contract ModuleFactory_v1 is
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         IInverterBeacon_v1 instance and if the owner of the beacon
+    ///         IInverterBeacon_v1 instance and if the owner of the beacon.
     ///         is same as the governor of this contract.
     modifier validBeacon(IInverterBeacon_v1 beacon) {
         // Revert if beacon's implementation is zero address.
@@ -105,15 +105,15 @@ contract ModuleFactory_v1 is
     address public governor;
 
     /// @dev Mapping of metadata identifier to {IInverterBeacon_v1} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}
+    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}.
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
     /// @dev Mapping of proxy address to orchestrator address.
-    /// @dev moduleProxy => {IOrchestrator_v1}
+    /// @dev moduleProxy => {IOrchestrator_v1}.
     mapping(address => address) private _orchestratorOfProxy;
 
     /// @dev Maps a users address to a nonce
-    ///      Used for the create2-based deployment
+    ///      Used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
     // Storage gap for future upgrades
@@ -123,7 +123,7 @@ contract ModuleFactory_v1 is
     // Constructor & Initializer
 
     /// @notice The factories initializer function.
-    /// @param _reverter The address of the Reverter contract.
+    /// @param _reverter The address of the {InverterReverter_v1} contract.
     /// @param _trustedForwarder The address of the trusted forwarder contract.
     constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
@@ -265,9 +265,9 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to register metadata
-    /// @param metadata The metadata to register
-    /// @param beacon The beacon to register the metadata to
+    /// @dev Internal function to register metadata.
+    /// @param metadata The metadata to register.
+    /// @param beacon The beacon to register the metadata to.
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
@@ -298,7 +298,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -309,7 +309,7 @@ contract ModuleFactory_v1 is
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

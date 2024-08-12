@@ -51,7 +51,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @notice The supplied voter address is invalid.
     error Module__VotingRoleManager__InvalidVoterAddress();
 
-    /// @notice The threshold cannot exceed the amount of voters
+    /// @notice The threshold cannot exceed the amount of voters.
     ///         or be too low to be considered safe.
     error Module__VotingRoleManager__InvalidThreshold();
 
@@ -106,14 +106,14 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param newVotingDuration The new voting duration.
     event VoteDurationUpdated(uint oldVotingDuration, uint newVotingDuration);
 
-    /// @notice Event emitted when a motion is created
+    /// @notice Event emitted when a motion is created.
     /// @param motionId The motion ID.
     event MotionCreated(bytes32 indexed motionId);
 
-    /// @notice Event emitted when a vote is cast for a motion
+    /// @notice Event emitted when a vote is cast for a motion.
     /// @param motionId The motion ID.
-    /// @param voter The address of a voter
-    /// @param motionId Value that indicates how the voter supports the motion
+    /// @param voter The address of a voter.
+    /// @param motionId Value that indicates how the voter supports the motion.
     event VoteCast(
         bytes32 indexed motionId, address indexed voter, uint8 indexed support
     );

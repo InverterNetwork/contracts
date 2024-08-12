@@ -74,16 +74,16 @@ contract LM_PC_KPIRewarder_v1 is
     //--------------------------------------------------------------------------
 
     // KPI and Configuration Storage
-    /// @notice The number of KPIs created
+    /// @notice The number of KPIs created.
     uint public KPICounter;
     /// @notice Registry of KPIs
-    /// id -> KPI
+    /// id -> KPI.
     mapping(uint => KPI) public registryOfKPIs;
     /// @notice Registry of Assertion Configurations
-    /// assertionId -> RewardRoundConfiguration
+    /// assertionId -> RewardRoundConfiguration.
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
-    /// @notice For locking certain utilities when there are assertions open
+    /// @notice For locking certain utilities when there are assertions open.
     bool public assertionPending;
 
     // Storage gap for future upgrades

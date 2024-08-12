@@ -28,16 +28,16 @@ interface ITransactionForwarder_v1 {
     // Errors
 
     /// @notice The request `from` doesn't match with the recovered `signer`.
-    /// @param call The call that failed
+    /// @param call The call that failed.
     error CallFailed(SingleCall call);
 
     //--------------------------------------------------------------------------
     // Metatransaction Helper Functions
 
-    /// @notice Creates a digest for the given ForwardRequestData
-    /// @dev The signature field of the given ForwardRequestData can be empty
-    /// @param req The ForwardRequest you want to get the digest from
-    /// @return digest The digest needed to create a signature for the request
+    /// @notice Creates a digest for the given ForwardRequestData.
+    /// @dev The signature field of the given ForwardRequestData can be empty.
+    /// @param req The ForwardRequest you want to get the digest from.
+    /// @return digest The digest needed to create a signature for the request.
     function createDigest(ERC2771Forwarder.ForwardRequestData memory req)
         external
         view
@@ -46,9 +46,9 @@ interface ITransactionForwarder_v1 {
     //--------------------------------------------------------------------------
     // Multicall Functions
 
-    /// @notice Enables the execution of multiple calls in a single transaction
-    /// @param calls Array of call structs that should be executed in the multicall
-    /// @return returnData The return data of the calls that were executed
+    /// @notice Enables the execution of multiple calls in a single transaction.
+    /// @param calls Array of call structs that should be executed in the multicall.
+    /// @return returnData The return data of the calls that were executed.
     function executeMulticall(SingleCall[] calldata calls)
         external
         returns (Result[] memory returnData);

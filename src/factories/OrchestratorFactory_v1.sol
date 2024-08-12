@@ -44,7 +44,7 @@ import {
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
- * @dev     Utilizes {ERC2771Context} for meta-transaction capabilities and {ERC165Upgradeable} for interface
+ * @dev     Utilizes {ERC2771ContextUpgradeable} for meta-transaction capabilities and {ERC165Upgradeable} for interface
  *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
@@ -82,7 +82,7 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     address public override moduleFactory;
 
-    /// @dev Maps the id to the orchestrators
+    /// @dev Maps the id to the orchestrators.
     mapping(uint => address) private _orchestrators;
 
     /// @dev The counter of the current orchestrator id.
@@ -90,16 +90,16 @@ contract OrchestratorFactory_v1 is
     uint private _orchestratorIdCounter;
 
     /// @dev Maps a users address to a nonce
-    ///      Used for the create2-based deployment
+    ///      Used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    /// Storage gap for future upgrades
+    /// Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------------
     // Modifier
 
-    /// @notice Modifier to guarantee that the given id is valid
+    /// @notice Modifier to guarantee that the given id is valid.
     modifier validOrchestratorId(uint id) {
         if (id > _orchestratorIdCounter) {
             revert OrchestratorFactory__InvalidId();
@@ -244,10 +244,10 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    /// @dev Creates the modules based on their module configs
-    /// @param moduleConfigs THe config data of the modules that will be created with this function call
-    /// @param orchestratorProxy The address of the orchestrator Proxy that will be linked to the modules
-    /// @param workflowConfig The workflow's config data
+    /// @dev Creates the modules based on their module configs.
+    /// @param moduleConfigs The config data of the modules that will be created with this function call.
+    /// @param orchestratorProxy The address of the orchestrator Proxy that will be linked to the modules.
+    /// @param workflowConfig The workflow's config data.
     function createModuleProxies(
         ModuleConfig[] memory moduleConfigs,
         address orchestratorProxy,
@@ -294,7 +294,7 @@ contract OrchestratorFactory_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -305,7 +305,7 @@ contract OrchestratorFactory_v1 is
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

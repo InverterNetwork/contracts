@@ -43,34 +43,34 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Access only to addresses that are listed as contributors in the according claim
+    /// @notice Access only to addresses that are listed as contributors in the according claim.
     error Module__LM_PC_Bounty__OnlyClaimContributor();
 
-    /// @notice Given payoutAmounts are either zero or maximumPayoutAmount is smaller than minimumPayoutAmount
+    /// @notice Given payoutAmounts are either zero or maximumPayoutAmount is smaller than minimumPayoutAmount.
     error Module__LM_PC_Bounty__InvalidPayoutAmounts();
 
-    /// @notice Given Bounty id is not existing
+    /// @notice Given Bounty id is not existing.
     error Module__LM_PC_Bounty__InvalidBountyId();
 
-    /// @notice Given Claim id is not existing
+    /// @notice Given Claim id is not existing.
     error Module__LM_PC_Bounty__InvalidClaimId();
 
-    /// @notice Given Contributors list is empty
+    /// @notice Given Contributors list is empty.
     error Module__LM_PC_Bounty__InvalidContributorsLength();
 
-    /// @notice Given claim Amount for contributor is zero
+    /// @notice Given claim Amount for contributor is zero.
     error Module__LM_PC_Bounty__InvalidContributorAmount();
 
-    /// @notice Given Contributor address is invalid
+    /// @notice Given Contributor address is invalid.
     error Module__LM_PC_Bounty__InvalidContributorAddress();
 
-    /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty
+    /// @notice Given total claims of contributors exceed or are below the given payout amounts of the bounty.
     error Module__LM_PC_Bounty__ClaimExceedsGivenPayoutAmounts();
 
-    /// @notice Given Bounty id is Locked
+    /// @notice Given Bounty id is Locked.
     error Module__LM_PC_Bounty__BountyLocked();
 
-    /// @notice Given Claim id got already claimed
+    /// @notice Given Claim id got already claimed.
     error Module__LM_PC_Bounty__AlreadyClaimed();
 
     /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
@@ -81,8 +81,8 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
 
     /// @notice Event emitted when a new Bounty is added.
     /// @param bountyId The id of the newly added Bounty.
-    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed
-    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed
+    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed.
+    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed.
     /// @param details The Bounty's details.
     event BountyAdded(
         uint indexed bountyId,
@@ -173,7 +173,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @notice Returns a list of Claim ids in which contributor Address is used.
     /// @dev List is in ascending order.
     /// @dev Returns an empty .
-    /// @param contributorAddrs claim ids are filtered by the contributor address
+    /// @param contributorAddrs claim ids are filtered by the contributor address.
     /// @return List of Claim ids.
     function listClaimIdsForContributorAddress(address contributorAddrs)
         external
@@ -185,8 +185,8 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
 
     /// @notice Adds a new Bounty.
     /// @dev Reverts if an argument invalid.
-    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed
-    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed
+    /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed.
+    /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed.
     /// @param details The Bounty's details.
     /// @return The newly added Bounty's id.
     function addBounty(
@@ -209,8 +209,8 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
 
     /// @notice Adds a new Claim.
     /// @dev Reverts if an argument invalid.
-    /// @param bountyId The id of the bounty this claim belongs to
-    /// @param contributors The contributor information for the Claim
+    /// @param bountyId The id of the bounty this claim belongs to.
+    /// @param contributors The contributor information for the Claim.
     /// @param details The Claim's details.
     /// @return The newly added Claim's id.
     function addClaim(

@@ -18,7 +18,7 @@ interface IInverterBeacon_v1 is IBeacon {
     // Events
 
     /// @notice The Beacon was constructed.
-    /// @param majorVersion The majorVersion of the implementation contract
+    /// @param majorVersion The majorVersion of the implementation contract.
     event Constructed(uint majorVersion);
 
     /// @notice The Beacon was upgraded to a new implementation address.
@@ -63,7 +63,7 @@ interface IInverterBeacon_v1 is IBeacon {
 
     /// @notice Upgrades the beacon to a new implementation address.
     /// @dev Only callable by owner.
-    /// @dev overrideShutdown Doesnt do anything if Beacon is not in emergency mode
+    /// @dev overrideShutdown Doesnt do anything if Beacon is not in emergency mode.
     /// @dev Revert if new implementation invalid.
     /// @param newImplementation The new implementation address.
     /// @param newMinorVersion The new minor version of the implementation contract.
@@ -79,13 +79,13 @@ interface IInverterBeacon_v1 is IBeacon {
     //--------------------------------------------------------------------------
     // onlyOwner Intervention Mechanism
 
-    /// @notice Shuts down the beacon and stops the system
+    /// @notice Shuts down the beacon and stops the system.
     /// @dev Only callable by owner.
-    /// @dev Changes the implementation address to address(0)
+    /// @dev Changes the implementation address to address(0).
     function shutDownImplementation() external;
 
-    /// @notice Restarts the beacon and the system
+    /// @notice Restarts the beacon and the system.
     /// @dev Only callable by owner.
-    /// @dev Changes the implementation address from address(0) to the original implementation
+    /// @dev Changes the implementation address from address(0) to the original implementation.
     function restartImplementation() external;
 }

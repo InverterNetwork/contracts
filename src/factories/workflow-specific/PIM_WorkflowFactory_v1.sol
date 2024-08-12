@@ -255,7 +255,7 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -266,7 +266,7 @@ contract PIM_WorkflowFactory_v1 is
         return ERC2771Context._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overriden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

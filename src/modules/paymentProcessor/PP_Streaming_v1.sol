@@ -73,32 +73,32 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @notice provides a unique id for new payment orders added for a specific client & paymentReceiver combo
-    /// @dev paymentClient => paymentReceiver => streamId(uint)
+    /// @notice provides a unique id for new payment orders added for a specific client & paymentReceiver combo.
+    /// @dev paymentClient => paymentReceiver => streamId(uint).
     mapping(address => mapping(address => uint)) public numStreams;
 
-    /// @notice tracks all stream details for all payment orders of a paymentReceiver for a specific paymentClient
-    /// @dev paymentClient => paymentReceiver => streamId => Wallet
+    /// @notice tracks all stream details for all payment orders of a paymentReceiver for a specific paymentClient.
+    /// @dev paymentClient => paymentReceiver => streamId => Wallet.
     mapping(address => mapping(address => mapping(uint => Stream))) private
         streams;
 
-    /// @notice tracks all streams for payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => token address => paymentReceiver => streamId array
+    /// @notice tracks all streams for payments that could not be made to the paymentReceiver due to any reason.
+    /// @dev paymentClient => token address => paymentReceiver => streamId array.
     mapping(address => mapping(address => mapping(address => uint[]))) internal
         unclaimableStreams;
 
-    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => token address =>  paymentReceiver => streamId => unclaimable Amount
+    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason.
+    /// @dev paymentClient => token address =>  paymentReceiver => streamId => unclaimable Amount.
     mapping(
         address => mapping(address => mapping(address => mapping(uint => uint)))
     ) internal unclaimableAmountsForStream;
 
-    /// @notice list of addresses with open payment Orders per paymentClient
+    /// @notice list of addresses with open payment Orders per paymentClient.
     /// @dev paymentClient => listOfPaymentReceivers(address[]). Duplicates are not allowed.
     mapping(address => address[]) private activePaymentReceivers;
 
-    /// @notice list of streamIds of all payment orders of a particular paymentReceiver for a particular paymentClient
-    /// @dev client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[])
+    /// @notice list of streamIds of all payment orders of a particular paymentReceiver for a particular paymentClient.
+    /// @dev client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[]).
     mapping(address => mapping(address => uint[])) private activeStreams;
 
     // Storage gap for future upgrades
@@ -107,7 +107,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice checks that the caller is an active module
+    /// @notice checks that the caller is an active module.
     modifier onlyModule() {
         if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentProcessor__OnlyCallableByModule();
@@ -115,7 +115,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _;
     }
 
-    /// @notice checks that the client is calling for itself
+    /// @notice checks that the client is calling for itself.
     modifier validClient(address client) {
         if (_msgSender() != client) {
             revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
@@ -123,7 +123,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _;
     }
 
-    /// @notice checks that the paymentReceiver is an active paymentReceiver
+    /// @notice checks that the paymentReceiver is an active paymentReceiver.
     modifier activePaymentReceiver(address client, address paymentReceiver) {
         if (activeStreams[client][paymentReceiver].length == 0) {
             revert Module__PP_Streaming__InvalidPaymentReceiver(
@@ -413,10 +413,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice common set of steps to be taken after everything has been claimed from a specific stream
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver
-    /// @param streamId ID of the stream that was fully claimed
+    /// @notice common set of steps to be taken after everything has been claimed from a specific stream.
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver.
+    /// @param streamId ID of the stream that was fully claimed.
     function _afterClaimCleanup(
         address client,
         address paymentReceiver,
@@ -443,11 +443,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         emit StreamingPaymentRemoved(client, paymentReceiver, streamId);
     }
 
-    /// @notice used to find whether a particular paymentReceiver has pending payments with a client
+    /// @notice used to find whether a particular paymentReceiver has pending payments with a client.
     /// @dev This function returns the first instance of the paymentReceiver address in the activePaymentReceivers[client] array, but that
     ///      is completely fine as the activePaymentReceivers[client] array does not allow duplicates.
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver.
     /// @return the index of the paymentReceiver in the activePaymentReceivers[client] array. Returns type(uint256).max otherwise.
     function _findAddressInActiveStreams(
         address client,
@@ -467,12 +467,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return type(uint).max;
     }
 
-    /// @notice used to find whether a particular payment order associated with a paymentReceiver and paymentClient with id = streamId is active or not
+    /// @notice used to find whether a particular payment order associated with a paymentReceiver and paymentClient with id = streamId is active or not.
     /// @dev active means that the particular payment order is still to be paid out/claimed. This function returns the first instance of the streamId
     ///      in the activeStreams[client][paymentReceiver] array, but that is fine as the array does not allow duplicates.
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver
-    /// @param streamId ID of the payment order that needs to be searched
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver.
+    /// @param streamId ID of the payment order that needs to be searched.
     /// @return the index of the paymentReceiver in the activeStreams[client][paymentReceiver] array. Returns type(uint256).max otherwise.
     function _findActiveStream(
         address client,
@@ -495,10 +495,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return type(uint).max;
     }
 
-    /// @notice used to cancel all unfinished payments from the client
+    /// @notice used to cancel all unfinished payments from the client.
     /// @dev all active payment orders of all active paymentReceivers associated with the client, are iterated through and
-    ///      their details are deleted
-    /// @param client address of the payment client
+    ///      their details are deleted.
+    /// @param client address of the payment client.
     function _cancelRunningOrders(address client) internal {
         address[] memory paymentReceivers = activePaymentReceivers[client];
         uint paymentReceiversLength = paymentReceivers.length;
@@ -517,8 +517,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver. For the payment orders
     ///      that are completely streamed, their details are deleted in the _claimForSpecificStream function and for others it is
     ///      deleted in the _removePayment function only, leaving the currently streaming tokens as balance of the paymentClient itself.
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver.
     function _removePayment(address client, address paymentReceiver) internal {
         uint[] memory streamIdsArray = activeStreams[client][paymentReceiver];
         uint streamIdsArrayLength = streamIdsArray.length;
@@ -547,9 +547,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice used to remove the payment order with id = streamId from the activeStreams[client][paymentReceiver] array.
     /// @dev This function simply removes a particular payment order from the earlier mentioned array. The implications of removing a payment order
     ///      from this array have to be handled outside of this function, such as checking whether the paymentReceiver is still active or not, etc.
-    /// @param client Address of the payment client
-    /// @param paymentReceiver Address of the paymentReceiver
-    /// @param streamId Id of the payment order that needs to be removed
+    /// @param client Address of the payment client.
+    /// @param paymentReceiver Address of the paymentReceiver.
+    /// @param streamId Id of the payment order that needs to be removed.
     function _removePaymentForSpecificStream(
         address client,
         address paymentReceiver,
@@ -590,9 +590,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @notice used to remove the stream info of the payment order with id = streamId.
     /// @dev This function simply removes the stream details of a particular payment order. The implications of removing the stream info of
     ///      payment order have to be handled outside of this function.
-    /// @param client Address of the payment client
-    /// @param paymentReceiver Address of the paymentReceiver
-    /// @param streamId Id of the payment order whose stream information needs to be removed
+    /// @param client Address of the payment client.
+    /// @param paymentReceiver Address of the paymentReceiver.
+    /// @param streamId Id of the payment order whose stream information needs to be removed.
     function _removeStreamInformationForSpecificStream(
         address client,
         address paymentReceiver,
@@ -603,9 +603,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice used to remove a paymentReceiver as one of the beneficiaries of the payment client
     /// @dev this function will be called when all the payment orders of a payment client associated with a particular paymentReceiver has been fulfilled.
-    ///      Also signals that the paymentReceiver is no longer an active paymentReceiver according to the payment client
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver
+    ///      Also signals that the paymentReceiver is no longer an active paymentReceiver according to the payment client.
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver.
     function _removePaymentReceiverFromActiveStreams(
         address client,
         address paymentReceiver
@@ -636,8 +636,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @dev This function can handle multiple payment orders associated with a particular paymentReceiver for the same payment client
     ///      without overriding the earlier ones. The maximum payment orders for a paymentReceiver MUST BE capped at (2**256-1).
     /// @param _client PaymentReceiver's address.
-    /// @param _order PaymentOrder that needs to be added
-    /// @param _streamId ID of the new stream of the a particular paymentReceiver being added
+    /// @param _order PaymentOrder that needs to be added.
+    /// @param _streamId ID of the new stream of the a particular paymentReceiver being added.
     function _addPayment(
         address _client,
         IERC20PaymentClientBase_v1.PaymentOrder memory _order,
@@ -678,13 +678,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         );
     }
 
-    /// @notice used to claim all the payment orders associated with a particular paymentReceiver for a given payment client
-    /// @dev Calls the _claimForSpecificStream function for all the active streams of a particular paymentReceiver for the
+    /// @notice used to claim all the payment orders associated with a particular paymentReceiver for a given payment client.
+    /// @dev Calls the _claimForSpecificStream function for all the active streams of a particular paymentReceiver for the.
     ///      given payment client. Depending on the time this function is called, the steamed payments are transferred to the
     ///      paymentReceiver.
     ///      For payment orders that are fully steamed, their details are deleted and changes are made to the state of the contract accordingly.
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed.
     function _claimAll(address client, address paymentReceiver) internal {
         uint[] memory streamIdsArray = activeStreams[client][paymentReceiver];
         uint streamIdsArrayLength = streamIdsArray.length;
@@ -701,12 +701,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @notice used to claim the payment order of a particular paymentReceiver for a given payment client with id = streamId
+    /// @notice used to claim the payment order of a particular paymentReceiver for a given payment client with id = streamId.
     /// @dev Depending on the time this function is called, the steamed payments are transferred to the paymentReceiver or accounted in unclaimableAmounts.
     ///      For payment orders that are fully steamed, their details are deleted and changes are made to the state of the contract accordingly.
-    /// @param client address of the payment client
-    /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed
-    /// @param streamId ID of the payment order that is to be claimed
+    /// @param client address of the payment client.
+    /// @param paymentReceiver address of the paymentReceiver for which every payment order will be claimed.
+    /// @param streamId ID of the payment order that is to be claimed.
     function _claimForSpecificStream(
         address client,
         address paymentReceiver,
@@ -775,11 +775,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
-    /// @dev assumes that the streamId array is not empty
-    /// @param client address of the payment client
-    /// @param client address of the payment token
-    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
+    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client.
+    /// @dev assumes that the streamId array is not empty.
+    /// @param client address of the payment client.
+    /// @param client address of the payment token.
+    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
     function _claimPreviouslyUnclaimable(
         address client,
         address token,
@@ -814,8 +814,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///         Returns the amount steamed, as a function of time,
     ///         for an asset given its total historical allocation.
     /// @param paymentReceiver The paymentReceiver to check on.
-    /// @param streamId ID of a particular paymentReceiver's stream whose stream schedule needs to be checked
-    /// @param timestamp the time upto which we want the steamed amount
+    /// @param streamId ID of a particular paymentReceiver's stream whose stream schedule needs to be checked.
+    /// @param timestamp the time upto which we want the steamed amount.
     function _streamAmountForSpecificStream(
         address client,
         address paymentReceiver,

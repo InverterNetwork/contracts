@@ -5,28 +5,28 @@ interface IRedeemingBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Selling functionalities are set to closed
+    /// @notice Selling functionalities are set to closed.
     error Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
 
-    /// @notice Not enough collateral in contract for redemption
+    /// @notice Not enough collateral in contract for redemption.
     error Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
     );
 
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when selling is opened
+    /// @notice Event emitted when selling is opened.
     event SellingEnabled();
 
-    /// @notice Event emitted when selling is closed
+    /// @notice Event emitted when selling is closed.
     event SellingDisabled();
 
-    /// @notice Event emitted when sell fee is updated
-    /// @param newSellFee The new sell fee
-    /// @param oldSellFee The old sell fee
+    /// @notice Event emitted when sell fee is updated.
+    /// @param newSellFee The new sell fee.
+    /// @param oldSellFee The old sell fee.
     event SellFeeUpdated(uint newSellFee, uint oldSellFee);
 
-    /// @notice Event emitted when tokens have been succesfully redeemed
+    /// @notice Event emitted when tokens have been succesfully redeemed.
     /// @param receiver The address that will receive the redeemed tokens.
     /// @param depositAmount The amount of issued token deposited.
     /// @param receivedAmount The amount of collateral token received.
@@ -67,7 +67,7 @@ interface IRedeemingBondingCurveBase_v1 {
     ///      Reverts if selling is already closed.
     function closeSell() external;
 
-    /// @notice Sets the fee percentage for selling collateral, payed in collateral
+    /// @notice Sets the fee percentage for selling collateral, payed in collateral.
     /// @dev Only callable by the Orchestrator_v1 admin.
     ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.

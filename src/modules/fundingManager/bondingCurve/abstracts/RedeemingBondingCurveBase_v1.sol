@@ -55,7 +55,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev Indicates whether the sell functionality is open or not.
     ///      Enabled = true || disabled = false.
     bool public sellIsOpen;
-    /// @dev Sell fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000
+    /// @dev Sell fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000.
     uint public sellFee;
 
     // Storage gap for future upgrades
@@ -158,8 +158,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev Function used for wrapping the call to the external contract responsible for
     /// calculating the redeeming amount. This function is an abstract function and must be
     /// implemented in the downstream contract.
-    /// @param _depositAmount The amount of issuing token that is deposited
-    /// @return uint Return the amount of collateral to be redeemed
+    /// @param _depositAmount The amount of issuing token that is deposited.
+    /// @return uint Return the amount of collateral to be redeemed.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         view
@@ -169,7 +169,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Executes a sell order by transferring tokens from the receiver to the contract,
+    /// @dev Executes a sell order by transferring tokens from the receiver to the contract,.
     /// calculating the redeem amount, and finally transferring the redeem amount back to the receiver.
     /// This function is internal and not intended for end-user interaction.
     /// PLEASE NOTE:
@@ -183,7 +183,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @param _depositAmount The amount of tokens being sold by the receiver.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from the collateral token amount of this contract.
-    /// @return issuanceFeeAmount The amount of issuance token subtracted as fee
+    /// @return issuanceFeeAmount The amount of issuance token subtracted as fee.
     function _sellOrder(
         address _receiver,
         uint _depositAmount,

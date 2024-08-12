@@ -87,7 +87,7 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
     /// @param withInitialLiquidity If true initial liquidity will be added to the bonding curve.
     /// In this case the recipient will receive the initial issuance token supply.
-    /// If false initial liquidity will not be added to the bonding curve and initial token
+    /// If false initial liquidity will not be added to the bonding curve and initial token.
     struct PIMConfig {
         IModule_v1.Metadata fundingManagerMetadata;
         IModule_v1.Metadata authorizerMetadata;
@@ -106,7 +106,7 @@ interface IPIM_WorkflowFactory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Deploys a workflow with a bonding curve and an issuance token
+    /// @notice Deploys a workflow with a bonding curve and an issuance token.
     /// @param workflowConfig The workflow's config data.
     /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config data.

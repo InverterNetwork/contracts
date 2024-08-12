@@ -77,27 +77,27 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     // State
 
     /// @dev The address of the contract that will revert all transactions.
-    /// Can only be set via the constructor() function
+    /// Can only be set via the constructor() function.
     address internal _reverterAddress;
 
     /// @dev The beacon's implementation address.
-    /// Can only be changed via the _setImplementation() function
+    /// Can only be changed via the _setImplementation() function.
     address internal _implementationAddress;
 
     /// @dev The beacon's current implementation pointer.
-    /// In case of emergency can be set to _reverterAddress to pause functionality
+    /// In case of emergency can be set to _reverterAddress to pause functionality.
     address internal _implementationPointer;
 
-    /// @dev Is the beacon shut down / in emergency mode
+    /// @dev Is the beacon shut down / in emergency mode.
     bool internal _emergencyMode;
 
-    /// @dev The major version of the implementation
+    /// @dev The major version of the implementation.
     uint internal majorVersion;
 
-    /// @dev The minor version of the implementation
+    /// @dev The minor version of the implementation.
     uint internal minorVersion;
 
-    /// @dev The patch version of the implementation
+    /// @dev The patch version of the implementation.
     uint internal patchVersion;
 
     //--------------------------------------------------------------------------

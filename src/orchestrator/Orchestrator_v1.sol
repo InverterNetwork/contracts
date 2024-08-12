@@ -362,7 +362,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Enforces that the address is in fact a Module of the required type
+    /// @notice Enforces that the address is in fact a Module of the required type.
     /// @dev The function reverts if the given address is not a module of the required type.
     /// @param _contractAddr The address to be checked.
     /// @param _privilegedInterfaceId The required interface id.

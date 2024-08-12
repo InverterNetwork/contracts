@@ -35,22 +35,22 @@ interface IOptimisticOracleIntegrator is
     //==========================================================================
     // Errors
 
-    /// @notice Invalid default currency
+    /// @notice Invalid default currency.
     error Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
 
-    /// @notice Invalid default liveness
+    /// @notice Invalid default liveness.
     error Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
 
-    /// @notice Invalid Optimistic Oracle instance
+    /// @notice Invalid Optimistic Oracle instance.
     error Module__OptimisticOracleIntegrator__InvalidOOInstance();
 
-    /// @notice Caller is not Optimistic Oracle instance
+    /// @notice Caller is not Optimistic Oracle instance.
     error Module__OptimisticOracleIntegrator__CallerNotOO();
 
-    /// @notice Bond given for the specified currency is below minimum
+    /// @notice Bond given for the specified currency is below minimum.
     error Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
 
-    /// @notice Asserter holds insufficient funds to pay for bond
+    /// @notice Asserter holds insufficient funds to pay for bond.
     error Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond();
 
     //==========================================================================

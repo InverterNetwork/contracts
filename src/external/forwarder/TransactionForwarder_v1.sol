@@ -37,7 +37,7 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Constructor
 
-    /// @notice Initializes the contract with the name of the contract
+    /// @notice Initializes the contract with the name of the contract.
     constructor() ERC2771Forwarder("Inverter TransactionForwarder_v1") {}
 
     //--------------------------------------------------------------------------
@@ -94,9 +94,9 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Internal
 
-    /// @notice Returns the digest for the given ForwardRequestData
-    /// @param req The ForwardRequest you want to get the digest from
-    /// @return digest The digest needed to create a signature for the request
+    /// @notice Returns the digest for the given ForwardRequestData.
+    /// @param req The ForwardRequest you want to get the digest from.
+    /// @return digest The digest needed to create a signature for the request.
     function _getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
         internal
         view

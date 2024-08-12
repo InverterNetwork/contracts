@@ -41,7 +41,7 @@ interface IModule_v1 {
     /// @notice Function is only callable by the orchestrator.
     error Module__OnlyCallableByOrchestrator();
 
-    /// @notice Function is only callable by a Payment Client
+    /// @notice Function is only callable by a Payment Client.
     error Module__OnlyCallableByPaymentClient();
 
     /// @notice Given orchestrator address invalid.
@@ -54,14 +54,14 @@ interface IModule_v1 {
     /// @param funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
-    /// @dev Invalid Address
+    /// @dev Invalid Address.
     error Module__InvalidAddress();
 
     //--------------------------------------------------------------------------
     // Functions
 
     /// @notice The module's initializer function.
-    /// @dev CAN be overriden by downstream contract.
+    /// @dev CAN be overridden by downstream contract.
     /// @dev MUST call `__Module_init()`.
     /// @param orchestrator The module's orchestrator instance.
     /// @param metadata The module's metadata.

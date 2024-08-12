@@ -8,7 +8,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     //--------------------------------------------------------------------------
     // Structs
 
-    /// @dev The timelock struct to keep track of updating the registerd modules
+    /// @dev The timelock struct to keep track of updating the registerd modules.
     struct ModuleUpdateTimelock {
         /// @dev Is the timelock currently active
         bool timelockActive;
@@ -64,12 +64,12 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @param module The module's address.
     event ModuleRemoved(address indexed module);
 
-    /// @notice Event emitted when updating a module is initiated, and the timelock starts;
+    /// @notice Event emitted when updating a module is initiated, and the timelock starts;.
     /// @param module The module's address.
     /// @param timelockUntil The unix timestamp until the timelock is active.
     event ModuleTimelockStarted(address module, uint timelockUntil);
 
-    /// @notice Event emitted when a module update is canceled
+    /// @notice Event emitted when a module update is canceled.
     /// @param module The module's address.
     event ModuleUpdateCanceled(address module);
 
@@ -93,8 +93,8 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     // ERC2771 Context Upgradeable
     // @dev We imitate here the EIP2771 Standard to enable metatransactions
 
-    /// @notice Returns wether the given address is the trusted forwarder or not
-    /// @dev Exposes the ERC2771 isTrusted Forwarder
+    /// @notice Returns wether the given address is the trusted forwarder or not.
+    /// @dev Exposes the ERC2771 isTrusted Forwarder.
     /// @param forwarder The address to check.
     /// @return True if the address is the trusted forwarder, false otherwise.
     function isTrustedForwarder(address forwarder)
@@ -102,8 +102,8 @@ interface IModuleManagerBase_v1 is IERC2771Context {
         view
         returns (bool);
 
-    /// @notice Returns the trusted forwarder for metatransactions
-    /// @dev Exposes the ERC2771 isTrusted Forwarder
+    /// @notice Returns the trusted forwarder for metatransactions.
+    /// @dev Exposes the ERC2771 isTrusted Forwarder.
     /// @return The trusted forwarder address.
     function trustedForwarder() external view returns (address);
 }

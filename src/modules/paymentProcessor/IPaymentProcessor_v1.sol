@@ -12,13 +12,13 @@ interface IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice invalid caller
+    /// @notice invalid caller.
     error Module__PaymentProcessor__OnlyCallableByModule();
 
-    /// @notice a client can only execute on its own orders
+    /// @notice a client can only execute on its own orders.
     error Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
 
-    /// @notice the paymentReceiver is not owed any money by the paymentClient
+    /// @notice the paymentReceiver is not owed any money by the paymentClient.
     error Module__PaymentProcessor__NothingToClaim(
         address paymentClient, address paymentReceiver
     );
@@ -29,7 +29,7 @@ interface IPaymentProcessor_v1 {
     /// @notice Emitted when a payment gets processed for execution.
     /// @param paymentClient The payment client that originated the order.
     /// @param recipient The address that will receive the payment.
-    /// @param paymentToken The address of the token that will be used for the payment
+    /// @param paymentToken The address of the token that will be used for the payment.
     /// @param amount The amount of tokens the payment consists of.
     /// @param start Timestamp at which the payment should start being paid out.
     /// @param cliff Duration of the cliff period.
@@ -85,29 +85,29 @@ interface IPaymentProcessor_v1 {
         external;
 
     /// @notice Getter for the amount of tokens that could not be claimed.
-    /// @param client address of the payment client
-    /// @param token address of the payment token
-    /// @param paymentReceiver PaymentReceiver's address
-    /// @return amount Amount of tokens that could not be claimed
+    /// @param client address of the payment client.
+    /// @param token address of the payment token.
+    /// @param paymentReceiver PaymentReceiver's address.
+    /// @return amount Amount of tokens that could not be claimed.
     function unclaimable(address client, address token, address paymentReceiver)
         external
         view
         returns (uint amount);
 
-    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver
-    /// @dev This function should be callable if the _msgSender has unclaimedAmounts
-    /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender
-    /// @param token address of the payment token
-    /// @param receiver The address that will receive the previously unclaimable amount
+    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver.
+    /// @dev This function should be callable if the _msgSender has unclaimedAmounts.
+    /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender.
+    /// @param token address of the payment token.
+    /// @param receiver The address that will receive the previously unclaimable amount.
     function claimPreviouslyUnclaimable(
         address client,
         address token,
         address receiver
     ) external;
 
-    /// @notice Function that checks if the given PaymentOrder was valid
-    /// @param order The IERC20PaymentClientBase_v1 Order that needs to be checked
-    /// @return valid Bool if the Payment Order is valid
+    /// @notice Function that checks if the given PaymentOrder was valid.
+    /// @param order The IERC20PaymentClientBase_v1 Order that needs to be checked.
+    /// @return valid Bool if the Payment Order is valid.
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool);
