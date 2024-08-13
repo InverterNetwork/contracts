@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IERC20Issuance_v1 is IERC20 {
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Emitted when the minter is set.
@@ -40,7 +41,4 @@ interface IERC20Issuance_v1 is IERC20 {
     /// @param _minter The address of the minter.
     /// @return If the address is allowed to mint or not.
     function allowedMinters(address _minter) external view returns (bool);
-
-    // /// @notice Returns contract owner
-    // function owner() external view returns (address);
 }

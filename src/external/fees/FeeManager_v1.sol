@@ -72,22 +72,21 @@ contract FeeManager_v1 is
     uint public constant BPS = 10_000;
     /// @dev The maximum fee percentage amount that can be set. Based on the BPS.
     uint public maxFee;
-
+    /// @dev The default protocol treasury address.
     address internal defaultProtocolTreasury;
-
-    // Orchestrator => treasury
+    /// @dev The workflow treasury addres. Orchestrator => treasury
     mapping(address => address) internal workflowTreasuries;
-
-    // default fees that apply unless workflow
-    // specific fees are set
+    /// @dev The default issuance fee percentage amount that apply unless workflow
+    ///         specific fees are set.
     uint internal defaultIssuanceFee;
+    /// @dev The default collateral fee percentage amount that apply unless workflow
+    ///         specific fees are set.
     uint internal defaultCollateralFee;
-
-    // orchestrator => hash(functionSelector + module address) => feeStruct
+    ///@dev The workflow issuance fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowIssuanceFees;
+    ///@dev The workflow collateral fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowCollateralFees;
-
-    // Storage gap for future upgrades
+    ///@dev Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------

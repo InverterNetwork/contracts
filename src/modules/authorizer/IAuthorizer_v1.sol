@@ -27,11 +27,11 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Asks whether an address holds the required role to execute
+    /// @notice Checks whether an address holds the required role to execute
     ///         the current transaction.
     /// @dev The calling contract needs to generate the right role ID using its
     ///      own address and the role identifier.
-    ///      In modules, this function should be used instead of hasRole, as
+    ///      In modules, this function should be used instead of `hasRole`, as
     ///      there are Authorizer-specific checks that need to be performed.
     /// @param role The identifier of the role we want to check
     /// @param who  The address on which to perform the check.

@@ -16,8 +16,8 @@ interface IGovernor_v1 {
     /// @param timelockActive Is the timelock currently active.
     /// @param timelockUntil Timestamp that represents from when the upgrade can be carried out.
     /// @param intendedImplementation The new inteded Implementation address of the beacon.
-    /// @param intendedMinorVersion The new intended minor Version of the beacon.
-    /// @param intendedPatchVersion The new intended patch Version of the beacon.
+    /// @param intendedMinorVersion The new intended minor version of the beacon.
+    /// @param intendedPatchVersion The new intended patch version of the beacon.
     struct Timelock {
         bool timelockActive;
         uint timelockUntil;
@@ -29,7 +29,7 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice This function can only be accessed by the linked ModuleFactory.
+    /// @notice This function can only be accessed by the linked {ModuleFactory_v1}.
     error Governor__OnlyLinkedModuleFactory();
 
     /// @notice This function can only be called when the linked beacon array is empty.
@@ -50,7 +50,7 @@ interface IGovernor_v1 {
     /// @notice The timelock period needed for the beacon to be upgraded has not been exceeded yet.
     error Governor__TimelockPeriodNotExceeded();
 
-    /// @notice This Upgrade process for this beacon has not yet been started.
+    /// @notice This upgrade process for this beacon has not yet been started.
     error Governor__UpgradeProcessNotStarted();
 
     /// @notice The call to the target contract has failed.
@@ -132,8 +132,8 @@ interface IGovernor_v1 {
     /// @param _communityMultisig The address of the community multisig.
     /// @param _teamMultisig The address of the team multisig.
     /// @param _timelockPeriod The timelock period needed to upgrade a beacon.
-    /// @param _feeManager The address of the initial fee manager.
-    /// @param _moduleFactory The address of the initial module factory.
+    /// @param _feeManager The address of the initial {FeeManager_v1}.
+    /// @param _moduleFactory The address of the initial {ModuleFactory_v1}.
     function init(
         address _communityMultisig,
         address _teamMultisig,
@@ -142,6 +142,8 @@ interface IGovernor_v1 {
         address _moduleFactory
     ) external;
 
+    /// @notice Callback function that is called by {ModuleFactory_v1} during initialization.
+    /// @param registeredBeacons The array of {InverterBeacon_v1}s that will be registered.
     function moduleFactoryInitCallback(
         IInverterBeacon_v1[] calldata registeredBeacons
     ) external;
@@ -158,7 +160,7 @@ interface IGovernor_v1 {
         returns (Timelock memory);
 
     /// @notice Returns the list of currently linked beacons.
-    /// @return LinkedBeacons The array of InverterBeacons that are currently linked to the governor.
+    /// @return LinkedBeacons The array of {InverterBeacon_v1}s that are currently linked to the {Governor_v1}.
     function getLinkedBeacons()
         external
         view
@@ -167,62 +169,62 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // FeeManager
 
-    /// @notice Returns the FeeManager address.
-    /// @return Address of the FeeManager.
+    /// @notice Returns the {FeeManager_v1} address.
+    /// @return Address of the {FeeManager_v1}.
     function getFeeManager() external view returns (address);
 
-    /// @notice Returns the ModuleFactory address.
-    /// @return Address of the ModuleFactory.
+    /// @notice Returns the {ModuleFactory_v1} address.
+    /// @return Address of the {ModuleFactory_v1}.
     function getModuleFactory() external view returns (address);
 
-    /// @notice Sets the address of the FeeManager.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
-    /// @param newFeeManager The address of the new FeeManager.
+    /// @notice Sets the address of the {FeeManager_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
+    /// @param newFeeManager The address of the new {FeeManager_v1}.
     function setFeeManager(address newFeeManager) external;
 
-    /// @notice Sets the address of the ModuleFactory.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
-    /// @param newModuleFactory The address of the new ModuleFactory.
+    /// @notice Sets the address of the {ModuleFactory_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
+    /// @param newModuleFactory The address of the new {ModuleFactory_v1}.
     function setModuleFactory(address newModuleFactory) external;
 
-    /// @notice Sets the maximum fee percentage that can be assigned in the linked FeeManager.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @notice Sets the maximum fee percentage that can be assigned in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @dev The given max fee can not be higher than the BPS.
     /// @param maxFee The max Fee in relation to the BPS.
     function setFeeManagerMaxFee(uint maxFee) external;
 
-    /// @notice Sets the default protocol treasury address in the linked FeeManager.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @notice Sets the default protocol treasury address in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @dev The given treasury address can not be address(0).
     /// @param _defaultProtocolTreasury The address of the default protocol treasury.
     function setFeeManagerDefaultProtocolTreasury(
         address _defaultProtocolTreasury
     ) external;
 
-    /// @notice Sets the protocol treasury address for a specific workflow in the linked FeeManager.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @notice Sets the protocol treasury address for a specific workflow in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @dev The given treasury address can not be address(0).
     /// @param workflow The address of the workflow.
     /// @param treasury The address of the protocol treasury for that specific workflow.
     function setFeeManagerWorkflowTreasuries(address workflow, address treasury)
         external;
 
-    /// @notice Sets the default collateral fee of the protocol in the linked FeeManager.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @notice Sets the default collateral fee of the protocol in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @dev The given fee needs to be less than the BPS.
     /// @param _defaultCollateralFee The default collateral fee of the protocol in relation to the BPS.
     function setFeeManagerDefaultCollateralFee(uint _defaultCollateralFee)
         external;
 
-    /// @notice Sets the default issuance fee of the protocol in the linked FeeManager.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @notice Sets the default issuance fee of the protocol in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @dev The given fee needs to be less than the BPS.
     /// @param _defaultIssuanceFee The default issuance fee of the protocol in relation to the BPS.
     function setFeeManagerDefaultIssuanceFee(uint _defaultIssuanceFee)
         external;
 
-    /// @notice Sets the collateral fee for a specific workflow module function in the linked FeeManager.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @notice Sets the collateral fee for a specific workflow module function in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @dev The given fee needs to be less than the BPS.
     /// @param workflow The address of the workflow that contains the module function.
     /// @param module The address of the module that contains the function.
@@ -237,8 +239,8 @@ interface IGovernor_v1 {
         uint fee
     ) external;
 
-    /// @notice Sets the issuance fee for a specific workflow module function in the linked FeeManager.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @notice Sets the issuance fee for a specific workflow module function in the linked {FeeManager_v1}.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @dev The given fee needs to be less than the BPS.
     /// @param workflow The address of the workflow that contains the module function.
     /// @param module The address of the module that contains the function.
@@ -256,8 +258,8 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Factory Functions
 
-    /// @notice Registers a beacon with the provided metadata in the target moduleFactory.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @notice Registers a beacon with the provided `metadata` in the target {ModuleFactory_v1}.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @param moduleFactory The module factory what will should register the new beacon and its metadata.
     /// @param metadata The metadata that will be registered.
     /// @param beacon The beacon that will be registered.
@@ -274,9 +276,9 @@ interface IGovernor_v1 {
     // Upgrade
 
     /// @notice Starts the upgrade process of a beacon by creating a timelock period after
-    ///         which the beacon can be upgraded via triggerUpgradeBeaconWithTimelock().
+    ///         which the beacon can be upgraded via `triggerUpgradeBeaconWithTimelock()`.
     /// @dev This function will override previous timelocks even if they are active.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @param beacon The address of the beacon that is intended to be upgraded.
     /// @param newImplementation The address of the intended new Implementation of the beacon.
     /// @param newMinorVersion The intended new minor version of the beacon.
@@ -289,17 +291,17 @@ interface IGovernor_v1 {
     ) external;
 
     /// @notice Upgrades a beacon with the data provided by the active timelock.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @param beacon The address of the beacon that is intended to be upgraded.
     function triggerUpgradeBeaconWithTimelock(address beacon) external;
 
-    /// @notice Cancels a Upgrade of beacon by setting the active timelock to inactive.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @notice Cancels an upgrade of beacon by setting the active timelock to inactive.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @param beacon The address of the beacon for which the timelock should be canceled.
     function cancelUpgrade(address beacon) external;
 
     /// @notice Sets the timelock period of a beacon upgrade process.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @param newtimelockPeriod The new timelock period.
     function setTimelockPeriod(uint newtimelockPeriod) external;
 
@@ -307,16 +309,16 @@ interface IGovernor_v1 {
     // Emergency Shutdown
 
     /// @notice Initiates the shutdown of a beacon.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @param beacon The address of the beacon that should be shut down.
     function initiateBeaconShutdown(address beacon) external;
 
     /// @notice Initiates the shutdown of all linked beacons.
-    /// @dev can only be accessed by either the COMMUNITY_MULTISIG_ROLE or the TEAM_MULTISIG_ROLE.
+    /// @dev can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     function initiateBeaconShutdownForAllLinkedBeacons() external;
 
     /// @notice This function forces the upgrade of a beacon and restarts the implementation afterwards.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @param beacon The address of the beacon that is intended to be upgraded and restarted.
     /// @param newImplementation The address of the intended new Implementation of the beacon.
     /// @param newMinorVersion The intended new minor version of the beacon.
@@ -329,7 +331,7 @@ interface IGovernor_v1 {
     ) external;
 
     /// @notice Restarts the beacon implementation.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @param beacon The address of the beacon that should restarted.
     function restartBeaconImplementation(address beacon) external;
 
@@ -337,7 +339,7 @@ interface IGovernor_v1 {
     // Ownable2Step
 
     /// @notice Accepts the ownership over the target address.
-    /// @dev can only be accessed by the COMMUNITY_MULTISIG_ROLE or TEAM_MULTISIG_ROLE.
+    /// @dev can only be accessed by the `COMMUNITY_MULTISIG_ROLE` or `TEAM_MULTISIG_ROLE`.
     /// @param adr The address of target that wants to hand over the ownership.
     function acceptOwnership(address adr) external;
 }

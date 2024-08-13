@@ -81,8 +81,8 @@ contract ModuleFactory_v1 is
     }
 
     /// @notice Modifier to guarantee function is only callable with valid
-    ///         IInverterBeacon_v1 instance and if the owner of the beacon.
-    ///         is same as the governor of this contract.
+    ///         {IInverterBeacon_v1} instance and if the owner of the beacon.
+    ///         is same as the {Governor_v1} of this contract.
     modifier validBeacon(IInverterBeacon_v1 beacon) {
         // Revert if beacon's implementation is zero address.
         if (
@@ -112,11 +112,10 @@ contract ModuleFactory_v1 is
     /// @dev moduleProxy => {IOrchestrator_v1}.
     mapping(address => address) private _orchestratorOfProxy;
 
-    /// @dev Maps a users address to a nonce
-    ///      Used for the create2-based deployment.
+    /// @dev Maps a users address to a nonce used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -133,7 +132,7 @@ contract ModuleFactory_v1 is
     }
 
     /// @notice The factories initializer function.
-    /// @param _governor The address of the governor contract.
+    /// @param _governor The address of the {Governor_v1} contract.
     /// @param initialMetadataRegistration List of metadata that will be registered during the initialization.
     /// @param initialMetadataRegistration List of beacon addresses that will be registered during the initialization.
     function init(
@@ -180,6 +179,7 @@ contract ModuleFactory_v1 is
         return proxy;
     }
 
+    /// @inheritdoc IModuleFactory_v1
     function createModuleProxy(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
@@ -209,7 +209,7 @@ contract ModuleFactory_v1 is
         if (workflowConfig.independentUpdates) {
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1{salt: createSalt()}(
+                new InverterTransparentUpgradeableProxy_v1{salt: _createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -218,7 +218,7 @@ contract ModuleFactory_v1 is
         else {
             // Instead use the Beacon Structure Proxy
             proxy =
-                address(new InverterBeaconProxy_v1{salt: createSalt()}(beacon));
+                address(new InverterBeaconProxy_v1{salt: _createSalt()}(beacon));
         }
 
         _orchestratorOfProxy[proxy] = address(orchestrator);
@@ -286,10 +286,10 @@ contract ModuleFactory_v1 is
         emit MetadataRegistered(metadata, beacon);
     }
 
-    // Generated a salt for the create2-based deployment flow.
-    // This salt is the hash of (msgSender, nonce), where the
-    // nonce is an increasing number for each user.
-    function createSalt() internal returns (bytes32) {
+    /// @dev Internal function to generated a salt for the create2-based deployment flow.
+    ///      This salt is the hash of (msgSender, nonce), where the
+    ///      nonce is an increasing number for each user.
+    function _createSalt() internal returns (bytes32) {
         return keccak256(
             abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
         );

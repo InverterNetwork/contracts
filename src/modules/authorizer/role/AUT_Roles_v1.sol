@@ -60,7 +60,7 @@ contract AUT_Roles_v1 is
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -87,7 +87,7 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    /// @notice Verifies that the admin being added is not the orchestrator.
+    /// @notice Verifies that the admin being added is not the {Orchestrator_v1}.
     /// @param role The id number of the role.
     /// @param who The user we want to check on.
     modifier noSelfAdmin(bytes32 role, address who) {
@@ -263,7 +263,7 @@ contract AUT_Roles_v1 is
     //--------------------------------------------------------------------------
     // Overloaded and overridden functions
 
-    /// @notice Overrides {_revokeRole} to prevent having an empty ADMIN role.
+    /// @notice Overrides {_revokeRole} to prevent having an empty `ADMIN` role.
     /// @param role The id number of the role.
     /// @param who The user we want to check on.
     /// @return bool Returns if revoke has been succesful.
@@ -277,7 +277,7 @@ contract AUT_Roles_v1 is
         return super._revokeRole(role, who);
     }
 
-    /// @notice Overrides {_grantRole} to prevent having the Orchestrator having the OWNER role.
+    /// @notice Overrides {_grantRole} to prevent having the {Orchestrator_v1} having the `OWNER` role.
     /// @param role The id of the role.
     /// @param who The user we want to check on.
     /// @return bool Returns if grant has been succesful.

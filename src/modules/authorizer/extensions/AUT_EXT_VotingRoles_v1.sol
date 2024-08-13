@@ -104,7 +104,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public voteDuration;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -134,7 +134,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         }
 
         // Revert if the threshold is set incorrectly
-        validateThreshold(votersLen, threshold_);
+        _validateThreshold(votersLen, threshold_);
 
         // Revert if votingDuration outside of bounds.
         if (
@@ -196,7 +196,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function setThreshold(uint newThreshold) public onlySelf {
         // Revert if the threshold is set incorrectly
-        validateThreshold(voterCount, newThreshold);
+        _validateThreshold(voterCount, newThreshold);
 
         emit ThresholdUpdated(threshold, newThreshold);
         threshold = newThreshold;
@@ -246,7 +246,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _removeVoter(who);
 
         // Revert if the threshold would be invalid after this
-        validateThreshold(voterCount, threshold);
+        _validateThreshold(voterCount, threshold);
     }
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
@@ -404,7 +404,10 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Internal
 
-    function validateThreshold(uint _voters, uint _threshold) internal pure {
+    /// @dev Internal function to validate the threshold.
+    /// @param _voters The number of voters.
+    /// @param _threshold The threshold.
+    function _validateThreshold(uint _voters, uint _threshold) internal pure {
         // Revert if one of these conditions is met
         // - Threshold is higher than the amount of voters
         // - There are less than 3 voters and the threshold is set to 0

@@ -14,8 +14,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param forVotes The number of votes in favor of the motion.
     /// @param againstVotes The number of votes against the motion.
     /// @param abstainVotes The number of votes abstaining from the motion.
-    /// @param receipts The receipts of votes for the motion
-    /// address => Receipt
+    /// @param receipts The receipts of votes for the motion address => Receipt
     /// @param executedAt The timestamp at which the motion was executed.
     /// @param executionResult The result of the execution.
     /// @param executionReturnData The return data of the execution.
@@ -36,7 +35,7 @@ interface IAUT_EXT_VotingRoles_v1 {
 
     /// @notice A receipt is a vote cast for a motion.
     /// @param hasVoted Whether the voter has already voted.
-    /// @param support The value that indicates how the voter supports the motion.
+    /// @param support The value that indicates wether the voter supports the motion.
     struct Receipt {
         bool hasVoted;
         uint8 support;
@@ -141,6 +140,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @notice Adds a voter.
     /// @param who The address to add.
     function addVoter(address who) external;
+
     /// @notice Adds a voter and updates the threshold.
     /// @param who The address to add.
     /// @param newThreshold The new threshold.
@@ -230,7 +230,7 @@ interface IAUT_EXT_VotingRoles_v1 {
 
     /// @notice Casts a vote for a motion.
     /// @param motionId The ID of the motion.
-    /// @param support The value that indicates how the voter supports the motion.
+    /// @param support The value that indicates wether the voter supports the motion.
     function castVote(bytes32 motionId, uint8 support) external;
 
     /// @notice Executes a motion.

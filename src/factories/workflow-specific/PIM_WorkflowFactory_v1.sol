@@ -35,7 +35,7 @@ import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
  *          - Deploying the bonding curve and issuance token.
  *          - Enable bonding curve to mint issuance token.
  *          - Transfer initial collateral supply from msg.sender to bonding curve and mint issuance token to recipient.
- *          - Ff applicable make first purchase.
+ *          - If applicable make first purchase.
  *          - If flag is set, renounce admin role by setting factory as admin.
  *
  * @custom:security-contact security@inverter.network
@@ -52,10 +52,10 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // State Variables
 
-    // store address of orchestratorfactory
+    /// @dev store address of {Orchestratorfactory_v1}
     address public orchestratorFactory;
 
-    // mapping of bonding curve address to fee recipient address
+    /// @dev mapping of Funding Manager address to `feeRecipient` address
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
@@ -276,7 +276,7 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well.
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -287,7 +287,7 @@ contract PIM_WorkflowFactory_v1 is
         return ERC2771Context._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well.
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

@@ -75,8 +75,8 @@ interface IPIM_WorkflowFactory_v1 {
     }
 
     /// @notice Struct for the issuance token parameters.
-    /// @param fundingManagerMetadata The funding manager's metadata.
-    /// @param authorizerMetadata The authorizer's metadata.
+    /// @param fundingManagerMetadata The {FundingManager_v1}'s metadata.
+    /// @param authorizerMetadata The {Authorizer_v1}'s metadata.
     /// @param bcProperties The bonding curve's properties.
     /// @param issuanceTokenParams The issuance token's parameters.
     /// @param recipient The recipient of the initial issuance token supply.
@@ -86,8 +86,8 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param isRenouncedIssuanceToken If ownership over the issuance token should be renounced.
     /// @param isRenouncedWorkflow If admin rights over the workflow should be renounced.
     /// @param withInitialLiquidity If true initial liquidity will be added to the bonding curve.
-    /// In this case the recipient will receive the initial issuance token supply.
-    /// If false initial liquidity will not be added to the bonding curve and initial token.
+    ///                             In this case the recipient will receive the initial issuance token supply.
+    ///                             If false initial liquidity will not be added to the bonding curve and initial token.
     struct PIMConfig {
         IModule_v1.Metadata fundingManagerMetadata;
         IModule_v1.Metadata authorizerMetadata;
@@ -108,10 +108,10 @@ interface IPIM_WorkflowFactory_v1 {
 
     /// @notice Deploys a workflow with a bonding curve and an issuance token.
     /// @param workflowConfig The workflow's config data.
-    /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
+    /// @param paymentProcessorConfig The config data for the {Orchestrator_v1}'s {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config data.
     /// @param PIMConfig The configuration for the issuance token and the bonding curve.
-    /// @return Returns the address of orchestrator and the address of the issuance token.
+    /// @return Returns the address of {Orchestrator_v1} and the address of the issuance token.
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
@@ -132,7 +132,7 @@ interface IPIM_WorkflowFactory_v1 {
     /// @param to The address to which the fees are sent.
     function withdrawPimFee(address fundingManager, address to) external;
 
-    /// @notice Returns the address of the orchestrator factory.
-    /// @return Address of the orchestrator factory.
+    /// @notice Returns the address of the {OrchestratorFractory_v1}.
+    /// @return Address of the {OrchestratorFractory_v1}.
     function orchestratorFactory() external view returns (address);
 }

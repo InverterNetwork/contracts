@@ -35,7 +35,7 @@ interface TokenInterface {
  *
  * @dev     Builds on {AUT_Roles_v1} by integrating token-based access checks before
  *          role assignment. Utilizes checks on token balances to gate access,
- *          supporting both ERC20 and ERC721 tokens as qualifiers for role eligibility.
+ *          supporting both {ERC20} and {ERC721} tokens as qualifiers for role eligibility.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
@@ -59,7 +59,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /*
     * This Module expands on the AUT_Roles_v1 by adding the possibility to set a role as "Token-Gated"
     * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on
-    * authotrization the contract will check on ownershipof one of the specifed tokens.
+    * authorization the contract will check on ownership of one of the specifed tokens.
     */
 
     //--------------------------------------------------------------------------
@@ -98,12 +98,12 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    // Stores if a role is token gated.
+    /// @dev Stores if a role is token gated.
     mapping(bytes32 => bool) public isTokenGated;
-    // Stores the threshold amount for each token in a role
+    /// @dev Stores the threshold amount for each token in a role.
     mapping(bytes32 => uint) public thresholdMap;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -192,10 +192,10 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param role The role to grant.
     /// @param who The address to grant the role to.
     /// @return bool Returns true if the role has been granted succesfully.
-    /// @dev Overrides {_grantRole} from AUT_ROLES_v1 to enforce interface implementation and threshold existence
+    /// @dev Overrides {_grantRole} from {AUT_ROLES_v1} to enforce interface implementation and threshold existence
     ///      when role is token-gated.
     /// @dev Please note: current check for validating a valid token is not conclusive and could be
-    ///         circumvented through a callback() function.
+    ///      circumvented through a `callback()` function.
     function _grantRole(bytes32 role, address who)
         internal
         virtual

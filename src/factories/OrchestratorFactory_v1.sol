@@ -40,12 +40,12 @@ import {
 /**
  * @title   Orchestrator Factory
  *
- * @notice  {OrchestratorFactory_v1} facilitates the deployment of orchestrators and their
+ * @notice  {OrchestratorFactory_v1} facilitates the deployment of {Orchestrator_v1}s and their
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
  * @dev     Utilizes {ERC2771ContextUpgradeable} for meta-transaction capabilities and {ERC165Upgradeable} for interface
- *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
+ *          detection. {Orchestrator_v1}s are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
  *
@@ -82,10 +82,10 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     address public override moduleFactory;
 
-    /// @dev Maps the id to the orchestrators.
+    /// @dev Maps the `id` to the {Orchestrator_v1}s.
     mapping(uint => address) private _orchestrators;
 
-    /// @dev The counter of the current orchestrator id.
+    /// @dev The counter of the current {Orchestrator_v1} `id`.
     /// @dev Starts counting from 1.
     uint private _orchestratorIdCounter;
 
@@ -117,9 +117,9 @@ contract OrchestratorFactory_v1 is
     }
 
     /// @notice The factories initializer function.
-    /// @param governor_ The address of the governor contract.
-    /// @param beacon_ The address of the beacon containing the orchestrator implementation.
-    /// @param moduleFactory_ The address of the module factory contract.
+    /// @param governor_ The address of the {Governor_v1} contract.
+    /// @param beacon_ The address of the beacon containing the {Orchestrator_v1} implementation.
+    /// @param moduleFactory_ The address of the {ModuleFactory_v1} contract.
     function init(
         address governor_,
         IInverterBeacon_v1 beacon_,
@@ -157,14 +157,14 @@ contract OrchestratorFactory_v1 is
             // Overwriting the independentUpdateAdmin as the ProxyAdmin will
             // be the actual admin of the proxy
             workflowConfig.independentUpdateAdmin = address(
-                new InverterProxyAdmin_v1{salt: createSalt()}(
+                new InverterProxyAdmin_v1{salt: _createSalt()}(
                     workflowConfig.independentUpdateAdmin
                 )
             );
 
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1{salt: createSalt()}(
+                new InverterTransparentUpgradeableProxy_v1{salt: _createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -173,7 +173,7 @@ contract OrchestratorFactory_v1 is
         else {
             // Instead use the Beacon Structure Proxy
             proxy =
-                address(new InverterBeaconProxy_v1{salt: createSalt()}(beacon));
+                address(new InverterBeaconProxy_v1{salt: _createSalt()}(beacon));
         }
 
         // Map orchestrator proxy
@@ -208,7 +208,7 @@ contract OrchestratorFactory_v1 is
 
         // Deploy and cache optional modules.
         address[] memory modules =
-            createModuleProxies(moduleConfigs, proxy, workflowConfig);
+            _createModuleProxies(moduleConfigs, proxy, workflowConfig);
 
         emit OrchestratorCreated(_orchestratorIdCounter, proxy);
 
@@ -224,7 +224,7 @@ contract OrchestratorFactory_v1 is
         );
 
         // Init the rest of the modules
-        initModules(modules, moduleConfigs, proxy);
+        _initModules(modules, moduleConfigs, proxy);
 
         return IOrchestrator_v1(proxy);
     }
@@ -244,11 +244,11 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    /// @dev Creates the modules based on their module configs.
+    /// @dev Creates the modules based on their `moduleConfigs.
     /// @param moduleConfigs The config data of the modules that will be created with this function call.
-    /// @param orchestratorProxy The address of the orchestrator Proxy that will be linked to the modules.
+    /// @param orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
     /// @param workflowConfig The workflow's config data.
-    function createModuleProxies(
+    function _createModuleProxies(
         ModuleConfig[] memory moduleConfigs,
         address orchestratorProxy,
         WorkflowConfig memory workflowConfig
@@ -266,7 +266,11 @@ contract OrchestratorFactory_v1 is
         return modules;
     }
 
-    function initModules(
+    /// @dev Internal function to initialize the modules.
+    /// @param modules The modules to initialize.
+    /// @param moduleConfigs The config data of the modules that will be initialized.
+    /// @param proxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    function _initModules(
         address[] memory modules,
         ModuleConfig[] memory moduleConfigs,
         address proxy
@@ -282,10 +286,10 @@ contract OrchestratorFactory_v1 is
         }
     }
 
-    // Generated a salt for the create2-based deployment flow.
-    // This salt is the hash of (msgSender, nonce), where the
-    // nonce is an increasing number for each user.
-    function createSalt() internal returns (bytes32) {
+    /// @dev Internal function to generated a salt for the create2-based deployment flow.
+    ///      This salt is the hash of (msgSender, nonce), where the
+    ///      nonce is an increasing number for each user.
+    function _createSalt() internal returns (bytes32) {
         return keccak256(
             abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
         );

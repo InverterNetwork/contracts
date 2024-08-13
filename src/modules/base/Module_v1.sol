@@ -31,9 +31,9 @@ import {ERC165Upgradeable} from
  *          metadata to identify the module type as well as utility functions for general
  *          module interactions.
  *
- *          This contract provides a framework for triggering and receiving orchestrator
+ *          This contract provides a framework for triggering and receiving {Orchestrator_v1}
  *          callbacks (via `call`) and a modifier to authenticate
- *          callers via the module's orchestrator.
+ *          callers via the module's {Orchestrator_v1}.
  *
  *          Each module is identified via a unique identifier based on its major
  *          version, title, and url given in the metadata.
@@ -88,7 +88,7 @@ abstract contract Module_v1 is
     // inlines argument validations not needed in downstream contracts.
 
     /// @notice Modifier to guarantee function is only callable by addresses
-    ///         authorized via Orchestrator_v1.
+    ///         authorized via {Orchestrator_v1}.
     modifier onlyOrchestratorAdmin() {
         _checkRoleModifier(
             __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
@@ -97,7 +97,7 @@ abstract contract Module_v1 is
     }
 
     /// @notice Modifier to guarantee function is only callable by a module registered within the
-    ///         workflows's Orchestrator and the module is implementing the PaymentClient interface.
+    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v1} interface.
     modifier onlyPaymentClient() {
         _onlyPaymentClientModifier();
         _;
@@ -126,7 +126,7 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by the orchestrator.
+    /// @notice Modifier to guarantee function is only callable by the {Orchestrator_v1}.
     /// @dev onlyOrchestrator functions MUST only access the module's storage, i.e.
     ///      `__Module_` variables.
     /// @dev Note to use function prefix `__Module_`.
@@ -160,7 +160,7 @@ abstract contract Module_v1 is
 
     /// @dev The initialization function MUST be called by the upstream
     ///      contract in their overridden `init()` function.
-    /// @param orchestrator_ The module's orchestrator.
+    /// @param orchestrator_ The module's {Orchestrator_v1}.
     function __Module_init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata
@@ -258,7 +258,7 @@ abstract contract Module_v1 is
     ///         address of this workflow.
     /// @param functionSelector The function selector of the target function.
     /// @dev FunctionSelector is always passed as selector of this module / address.
-    /// @return fee The collateral fee amount in relation to the BPS of the feeManager.
+    /// @return fee The collateral fee amount in relation to the BPS of the {FeeManager_v1}.
     /// @return treasury The address of the treasury.
     function _getFeeManagerCollateralFeeData(bytes4 functionSelector)
         internal
@@ -278,7 +278,7 @@ abstract contract Module_v1 is
     ///         of this workflow.
     /// @param functionSelector The function selector of the target function.
     /// @dev FunctionSelector is always passed as selector of this module / address.
-    /// @return fee The issuance fee amount in relation to the BPS of the feeManager.
+    /// @return fee The issuance fee amount in relation to the BPS of the {FeeManager_v1}.
     /// @return treasury The address of the treasury.
     function _getFeeManagerIssuanceFeeData(bytes4 functionSelector)
         internal
@@ -310,12 +310,15 @@ abstract contract Module_v1 is
         }
     }
 
+    /// @dev Checks if the given address is an valid address.
+    /// @param to The address to check.
     function _validAddressModifier(address to) internal view {
         if (to == address(0) || to == address(this)) {
             revert Module__InvalidAddress();
         }
     }
 
+    /// @dev Checks if the caller is an {ERC20PaymentClientBase_v1} module.
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())

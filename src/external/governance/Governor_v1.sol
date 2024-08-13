@@ -127,13 +127,13 @@ contract Governor_v1 is
     /// @dev Role of the team multisig.
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
-    /// @dev FeeManager contract.
+    /// @dev {FeeManager_v1} contract.
     IFeeManager_v1 private feeManager;
-    /// @dev ModuleFactory contract.
+    /// @dev {ModuleFactory_v1} contract.
     IModuleFactory_v1 private moduleFactory;
 
-    /// @dev Array of beacons that are linked to this Governor,
-    ///      populated via moduleFactoryInitCallback.
+    /// @dev Array of beacons that are linked to this {Governor_v1},
+    ///      populated via `moduleFactoryInitCallback`.
     IInverterBeacon_v1[] private linkedBeacons;
 
     /// @dev Length of each timelock.
@@ -142,7 +142,7 @@ contract Governor_v1 is
     mapping(address beacon => IGovernor_v1.Timelock timelock) private
         beaconTimelock;
 
-    // Storage gap for future upgrades
+    ///@dev Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -191,6 +191,7 @@ contract Governor_v1 is
         _setModuleFactory(_moduleFactory);
     }
 
+    /// @inheritdoc IGovernor_v1
     function moduleFactoryInitCallback(
         IInverterBeacon_v1[] calldata registeredBeacons
     ) external onlyLinkedModuleFactory linkedBeaconsEmpty {
@@ -494,8 +495,8 @@ contract Governor_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev sets the internal FeeManager address.
-    /// @param newFeeManager the address of the new feeManager.
+    /// @dev sets the internal {FeeManager_v1} address.
+    /// @param newFeeManager the address of the new {FeeManager_v1}.
     function _setFeeManager(address newFeeManager)
         internal
         validAddress(newFeeManager)
@@ -514,8 +515,8 @@ contract Governor_v1 is
         emit TimelockPeriodSet(newTimelockPeriod);
     }
 
-    /// @dev sets the internal ModuleFactory address.
-    /// @param newModuleFactory the address of the new moduleFactory.
+    /// @dev sets the internal {ModuleFactory_v1} address.
+    /// @param newModuleFactory the address of the new {ModuleFactory_v1}.
     function _setModuleFactory(address newModuleFactory)
         internal
         validAddress(newModuleFactory)
