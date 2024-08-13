@@ -22,7 +22,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Internal Libraries
-import {LinkedIdList} from "src/common/LinkedIdList.sol";
+import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 /**
  * @title   Recurring Payment Manager
