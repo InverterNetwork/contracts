@@ -327,12 +327,12 @@ contract Governor_v1 is
 
     /// @inheritdoc IGovernor_v1
     function registerMetadataInModuleFactory(
-        IModuleFactory_v1 moduleFactory,
+        IModuleFactory_v1 _moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external onlyCommunityOrTeamMultisig accessibleBeacon(address(beacon)) {
         linkedBeacons.push(beacon);
-        moduleFactory.registerMetadata(metadata, beacon);
+        _moduleFactory.registerMetadata(metadata, beacon);
     }
 
     //--------------------------------------------------------------------------

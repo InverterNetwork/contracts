@@ -68,4 +68,10 @@ contract InverterBeaconProxy_v1 is Proxy {
     function _implementation() internal view override returns (address) {
         return _beacon.implementation();
     }
+
+    //--------------------------------------------------------------------------
+    // Fallback Function
+
+    /// @notice Fallback function to receive ether.
+    receive() external payable {}
 }
