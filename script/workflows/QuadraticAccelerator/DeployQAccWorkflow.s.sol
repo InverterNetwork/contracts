@@ -102,7 +102,7 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         orchestratorToken.mint(deployer, 100e18);
         uint initialBuyAmount = 10e18;
 
-        // Define bondign curve properties:
+        // Define bonding curve properties:
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
                 .BondingCurveProperties({
