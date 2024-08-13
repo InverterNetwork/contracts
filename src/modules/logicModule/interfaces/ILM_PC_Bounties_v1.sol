@@ -49,6 +49,9 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @notice Given payoutAmounts are either zero or maximumPayoutAmount is smaller than minimumPayoutAmount
     error Module__LM_PC_Bounty__InvalidPayoutAmounts();
 
+    /// @notice Given array lengths are invalid
+    error Module__LM_PC_Bounty__InvalidArrayLengths();
+
     /// @notice Given Bounty id is not existing
     error Module__LM_PC_Bounty__InvalidBountyId();
 
@@ -188,12 +191,24 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed
     /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed
     /// @param details The Bounty's details.
-    /// @return The newly added Bounty's id.
+    /// @return The newly added Bounty id.
     function addBounty(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount,
         bytes calldata details
     ) external returns (uint);
+
+    /// @notice Adds a new array of Bounties.
+    /// @dev Reverts if an argument invalid.
+    /// @param minimumPayoutAmounts The array of minimum amount of tokens the Bounty will pay out upon being claimed
+    /// @param maximumPayoutAmounts The array of maximum amount of tokens the Bounty will pay out upon being claimed
+    /// @param detailArray The array of Bounty's details.
+    /// @return ids The newly added array of Bounty ids.
+    function addBountyBatch(
+        uint[] calldata minimumPayoutAmounts,
+        uint[] calldata maximumPayoutAmounts,
+        bytes[] calldata detailArray
+    ) external returns (uint[] memory ids);
 
     /// @notice Updates a Bounty's informations.
     /// @dev Reverts if an argument invalid.
