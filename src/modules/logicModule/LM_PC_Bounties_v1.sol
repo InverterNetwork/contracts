@@ -96,11 +96,25 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         uint minimumPayoutAmount,
         uint maximumPayoutAmount
     ) {
+        _validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount);
+        _;
+    }
+
+    /// @dev Checks if the array lengths are valid
+    /// @param minimumPayoutAmountLength The minimum payout amount length
+    /// @param maximumPayoutAmountLength The maximum payout amount length
+    /// @param detailArrayLength The detail array length
+    modifier validArrayLengths(
+        uint minimumPayoutAmountLength,
+        uint maximumPayoutAmountLength,
+        uint detailArrayLength
+    ) {
         if (
-            minimumPayoutAmount == 0
-                || maximumPayoutAmount < minimumPayoutAmount
+            minimumPayoutAmountLength == 0
+                || maximumPayoutAmountLength != minimumPayoutAmountLength
+                || detailArrayLength != minimumPayoutAmountLength
         ) {
-            revert Module__LM_PC_Bounty__InvalidPayoutAmounts();
+            revert Module__LM_PC_Bounty__InvalidArrayLengths();
         }
         _;
     }
@@ -335,23 +349,32 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
-        // Note ids start at 1.
-        uint bountyId = ++_nextId;
+        return _addBounty(minimumPayoutAmount, maximumPayoutAmount, details);
+    }
 
-        // Add Bounty id to the list.
-        _bountyList.addId(bountyId);
-
-        Bounty storage b = _bountyRegistry[bountyId];
-
-        b.minimumPayoutAmount = minimumPayoutAmount;
-        b.maximumPayoutAmount = maximumPayoutAmount;
-        b.details = details;
-
-        emit BountyAdded(
-            bountyId, minimumPayoutAmount, maximumPayoutAmount, details
-        );
-
-        return bountyId;
+    /// @inheritdoc ILM_PC_Bounties_v1
+    function addBountyBatch(
+        uint[] calldata minimumPayoutAmounts,
+        uint[] calldata maximumPayoutAmounts,
+        bytes[] calldata detailArray
+    )
+        external
+        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        validArrayLengths(
+            minimumPayoutAmounts.length,
+            maximumPayoutAmounts.length, //@todo test
+            detailArray.length
+        )
+        returns (uint[] memory ids)
+    {
+        uint arrayLength = minimumPayoutAmounts.length;
+        for (uint i = 0; i < arrayLength; i++) {
+            _validPayoutAmounts( //@note should I check first and then add in a different loop?
+            minimumPayoutAmounts[i], maximumPayoutAmounts[i]);
+            ids[i] = _addBounty(
+                minimumPayoutAmounts[i], maximumPayoutAmounts[i], detailArray[i]
+            );
+        }
     }
 
     /// @inheritdoc ILM_PC_Bounties_v1
@@ -518,5 +541,52 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         _claimRegistry[claimId].claimed = true;
 
         emit ClaimVerified(claimId);
+    }
+
+    // --------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev Internal function to check if the payout amounts are valid
+    /// @param minimumPayoutAmount The minimum payout amount
+    /// @param maximumPayoutAmount The maximum payout amount
+    function _validPayoutAmounts(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount
+    ) internal view {
+        if (
+            minimumPayoutAmount == 0
+                || maximumPayoutAmount < minimumPayoutAmount
+        ) {
+            revert Module__LM_PC_Bounty__InvalidPayoutAmounts();
+        }
+    }
+
+    /// @dev Internal function to add a bounty
+    /// @param minimumPayoutAmount The minimum payout amount
+    /// @param maximumPayoutAmount The maximum payout amount
+    /// @param details The details of the bounty
+    /// @return bountyId The id of the bounty
+    function _addBounty(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
+        bytes calldata details
+    ) internal returns (uint bountyId) {
+        // Note ids start at 1.
+        uint bountyId = ++_nextId;
+
+        // Add Bounty id to the list.
+        _bountyList.addId(bountyId);
+
+        Bounty storage b = _bountyRegistry[bountyId];
+
+        b.minimumPayoutAmount = minimumPayoutAmount;
+        b.maximumPayoutAmount = maximumPayoutAmount;
+        b.details = details;
+
+        emit BountyAdded(
+            bountyId, minimumPayoutAmount, maximumPayoutAmount, details
+        );
+
+        return bountyId;
     }
 }
