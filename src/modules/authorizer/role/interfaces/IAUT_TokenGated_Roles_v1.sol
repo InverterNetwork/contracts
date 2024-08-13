@@ -68,7 +68,8 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice Sets up a token-gated empty role.
     /// @param role The role to be made token-gated.
     /// @dev This function is only callable by an active Module for itself. Admin should use setTokenGated().
-    /// @dev Calling this function does not specify WHICH token to use for gating. That has to be done with 'grantTokenFromModule()'.
+    /// @dev Calling this function does not specify WHICH token to use for gating. That has to be done
+    ///      with 'grantTokenFromModule()'.
     function makeRoleTokenGatedFromModule(bytes32 role) external;
 
     /// @notice One-step setup for Modules to create a token-gated role and set its threshold.
@@ -101,7 +102,8 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @param roleId  The ID of the role to be modified.
     /// @param token The token for which to the threshold.
     /// @param threshold The user will need to have at least this number to qualify for the role.
-    /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
+    /// @dev This function does not validate the threshold. It is technically possible to set a threshold above
+    ///      the total supply of the token.
     function setThreshold(bytes32 roleId, address token, uint threshold)
         external;
 }

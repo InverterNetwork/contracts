@@ -248,7 +248,8 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     /// @param _token Address of the token to validate.
     /// @return True if address is valid.
     function validPaymentToken(address _token) internal returns (bool) {
-        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding module should ensure it's sending an ERC20.
+        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding
+        // module should ensure it's sending an ERC20.
 
         (bool success, bytes memory data) = _token.call(
             abi.encodeWithSelector(

@@ -170,7 +170,8 @@ abstract contract ModuleManagerBase_v1 is
         uint len = modules.length;
 
         // Check that the initial list of Modules doesn't exceed the max amount
-        // The subtraction by 3 is to ensure enough space for the compulsory modules: fundingManager, authorizer and paymentProcessor
+        // The subtraction by 3 is to ensure enough space for the compulsory modules: fundingManager,
+        // authorizer and paymentProcessor
         if (len > (MAX_MODULE_AMOUNT - 3)) {
             revert ModuleManagerBase__ModuleAmountOverLimits();
         }
@@ -393,8 +394,9 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     // IERC2771ContextUpgradeable
-    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771ContextUpgradeable Contract in the IOrchestrator_v1
-    // we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
+    // @dev Because we want to expose the isTrustedForwarder function from the ERC2771ContextUpgradeable
+    //      Contract in the IOrchestrator_v1 we have to override it here as the original openzeppelin version
+    //      doesnt contain a interface that we could use to expose it.
 
     /// @inheritdoc IModuleManagerBase_v1
     function isTrustedForwarder(address forwarder)

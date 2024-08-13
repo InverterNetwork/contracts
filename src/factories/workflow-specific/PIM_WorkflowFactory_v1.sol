@@ -24,6 +24,26 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
+/**
+ * @title   PIM Workflow Factory
+ *
+ * @notice  Facilitates the creation and configuration and setup of PIM workflows, including the deployment of
+ *          bonding curves and  issuance tokens. It also provides functionalities for updating fee recipients and
+ *          withdrawing fees from bonding  curves.
+ *
+ * @dev     An owned factory for deploying PIM workflows. Deploying the PIM workflow includes:
+ *          - Deploying the bonding curve and issuance token.
+ *          - Enable bonding curve to mint issuance token.
+ *          - Transfer initial collateral supply from msg.sender to bonding curve and mint issuance token to recipient.
+ *          - Ff applicable make first purchase.
+ *          - If flag is set, renounce admin role by setting factory as admin.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          For any security concerns or findings, please refer to our Security Policy at
+ *                          security.inverter.network or email us directly.
+ *
+ * @custom:author Inverter Network
+ */
 contract PIM_WorkflowFactory_v1 is
     Ownable2Step,
     ERC2771Context,
@@ -140,7 +160,8 @@ contract PIM_WorkflowFactory_v1 is
             _transferTokenOwnership(issuanceToken, PIMConfig.admin);
         }
 
-        // if isRenouncedWorkflow flag is set factory keeps admin rights over workflow, else transfer admin rights to specified admin
+        // if isRenouncedWorkflow flag is set factory keeps admin rights over workflow, else transfer admin rights to
+        //  specified admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the admin as fee recipient eligible to claim buy/sell fees
             _pimFeeRecipients[fundingManager] = PIMConfig.admin;

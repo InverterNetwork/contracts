@@ -58,8 +58,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
 
     /*
     * This Module expands on the AUT_Roles_v1 by adding the possibility to set a role as "Token-Gated"
-    * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on authotrization the contract will check on ownership
-    * of one of the specifed tokens.
+    * Instead of whitelisting a user address, the whitelisted addresses will correspond to a token address, and on
+    * authotrization the contract will check on ownershipof one of the specifed tokens.
     */
 
     //--------------------------------------------------------------------------
@@ -192,7 +192,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param role The role to grant.
     /// @param who The address to grant the role to.
     /// @return bool Returns true if the role has been granted succesfully.
-    /// @dev Overrides {_grantRole} from AUT_ROLES_v1 to enforce interface implementation and threshold existence when role is token-gated.
+    /// @dev Overrides {_grantRole} from AUT_ROLES_v1 to enforce interface implementation and threshold existence
+    ///      when role is token-gated.
     /// @dev Please note: current check for validating a valid token is not conclusive and could be
     ///         circumvented through a callback() function.
     function _grantRole(bytes32 role, address who)
@@ -260,7 +261,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param roleId  The ID of the role to be modified.
     /// @param token The token for which to the threshold.
     /// @param threshold The user will need to have at least this number to qualify for the role.
-    /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the total supply of the token.
+    /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the
+    ///      total supply of the token.
     function _setThreshold(bytes32 roleId, address token, uint threshold)
         internal
         onlyTokenGated(roleId)

@@ -101,7 +101,8 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     //--------------------------------------------------------------------------
     // Public View Functions
 
-    /// @dev This overrides the possible use of a "version" function in the modules that are called via the Proxy Beacon structure.
+    /// @dev This overrides the possible use of a "version" function in the modules that are called via the
+    ///      Proxy Beacon structure.
     /// @notice Returns the version of the linked implementation.
     /// @return The major version.
     /// @return The minor version.

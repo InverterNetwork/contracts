@@ -79,7 +79,8 @@ contract LM_PC_Staking_v1 is
     address public stakingToken;
     /// @dev total supply of the token that is staked here.
     uint public totalSupply;
-    /// @dev rate of how many reward tokens are distributed from the fundingmanager to the whole staking pool in seconds.
+    /// @dev rate of how many reward tokens are distributed from the fundingmanager to the whole staking
+    ///      pool in seconds.
     uint public rewardRate;
     /// @dev timestamp of when the reward period will end.
     uint public rewardsEnd;
@@ -275,8 +276,10 @@ contract LM_PC_Staking_v1 is
 
     /// @dev Calculates the reward value.
     /// @dev This is the heart of the algorithm.
-    /// The reward Value is the accumulation of all the rewards a user would get for a single token if they had staked at the beginning of the lifetime of this contract.
-    /// A "single" reward value or with the lack of a better word "reward period" is the rewardRate (so the rewards per second for the whole contract)
+    /// The reward Value is the accumulation of all the rewards a user would get for a single token if they had
+    /// staked at the beginning of the lifetime of this contract.
+    /// A "single" reward value or with the lack of a better word "reward period" is the rewardRate (so the rewards per
+    /// second for the whole contract) multiplied by the time period it was active and dividing that with the total
     /// multiplied by the time period it was active and dividing that with the total supply.
     /// This "single" value is essentially what a single token would have earned in that time period.
     /// @return The reward value.
@@ -294,7 +297,8 @@ contract LM_PC_Staking_v1 is
     }
 
     /// @dev Calculates the timestamp where rewards will be distributed.
-    /// @dev The function returns either the current timestamp or the last timestamp where rewards will be distributed, based on which one is earlier.
+    /// @dev The function returns either the current timestamp or the last timestamp where rewards will be distributed,
+    ///based on which one is earlier.
     /// Is necessary to calculate the exact rewardValue at the end of the reward lifespan.
     /// If not included rewards would be distributed forever.
     /// @return The timestamp where rewards will be distributed.
@@ -375,7 +379,8 @@ contract LM_PC_Staking_v1 is
 
         // Rewards end is now plus duration
         rewardsEnd = block.timestamp + duration;
-        // Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been distributed
+        // Update lastUpdate or calculation of rewards would include timeperiod where no rewards should have been
+        // distributed
         lastUpdate = block.timestamp;
 
         emit RewardSet(amount, duration, rewardRate, rewardsEnd);

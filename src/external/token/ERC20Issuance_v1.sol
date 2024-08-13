@@ -11,7 +11,8 @@ import {Ownable} from "@oz/access/Ownable.sol";
 /**
  * @title   ERC20 Issuance Token
  *
- * @notice  This contract creates an ERC20 token with a supply cap and a whitelist-gated functionality to mint and burn tokens.
+ * @notice  This contract creates an ERC20 token with a supply cap and a whitelist-gated functionality to mint and burn
+ *          tokens.
  *
  * @dev     The contract implements functionalities for:
  *          - Managing a whitelist of allowed minters.

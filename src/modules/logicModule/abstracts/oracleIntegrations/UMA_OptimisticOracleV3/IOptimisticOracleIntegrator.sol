@@ -66,7 +66,8 @@ interface IOptimisticOracleIntegrator is
 
     // Getter Functions
 
-    /// @notice For a given assertionId, returns a boolean indicating whether the data is accessible and the data itself.
+    /// @notice For a given assertionId, returns a boolean indicating whether the data is accessible
+    ///         and the data itself.
     /// @param assertionId The id of the Assertion to return.
     /// @return bool Wether the assertion is resolved.
     /// @return bytes32 The Assertion Data.

@@ -182,7 +182,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from the collateral token amount of this contract.
+    /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from
+    ///         the collateral token amount of this contract.
     /// @return issuanceFeeAmount The amount of issuance token subtracted as fee.
     function _sellOrder(
         address _receiver,
@@ -222,7 +223,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
-        // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out the backing collateral
+        // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out
+        // the backing collateral
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
         // Cache Collateral Token

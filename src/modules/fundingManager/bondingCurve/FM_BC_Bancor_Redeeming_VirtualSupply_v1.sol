@@ -454,7 +454,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
-    /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens.
+    /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula
+    /// assumes 18 decimals for all tokens.
     /// @param _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint _depositAmount)

@@ -94,7 +94,8 @@ interface IPaymentProcessor_v1 {
         view
         returns (uint amount);
 
-    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a specified receiver.
+    /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a
+    ///         specified receiver.
     /// @dev This function should be callable if the _msgSender has unclaimedAmounts.
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender.
     /// @param token address of the payment token.

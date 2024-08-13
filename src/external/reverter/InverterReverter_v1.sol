@@ -4,7 +4,8 @@ pragma solidity 0.8.23;
 /**
  * @title   Inverter Reverter
  *
- * @notice  Enables the Inverter beacon structure to return a predefined error message in case a paused contract is called.
+ * @notice  Enables the Inverter beacon structure to return a predefined error message in case a paused contract is
+ *          called.
  *
  * @dev     Reverts all transactions with a predefined error
  *

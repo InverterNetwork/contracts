@@ -254,7 +254,8 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury address of this workflow.
+    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury
+    ///         address of this workflow.
     /// @param functionSelector The function selector of the target function.
     /// @dev FunctionSelector is always passed as selector of this module / address.
     /// @return fee The collateral fee amount in relation to the BPS of the feeManager.
@@ -265,7 +266,7 @@ abstract contract Module_v1 is
         returns (uint fee, address treasury)
     {
         // Fetch fee manager address from orchestrator
-        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) // Fetch feeManager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager())
             .getCollateralWorkflowFeeAndTreasury(
             address(__Module_orchestrator), // Always take this modules orchestrator as the workflow address
             address(this), // always take this as the module address
@@ -273,7 +274,8 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address of this workflow.
+    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address
+    ///         of this workflow.
     /// @param functionSelector The function selector of the target function.
     /// @dev FunctionSelector is always passed as selector of this module / address.
     /// @return fee The issuance fee amount in relation to the BPS of the feeManager.
@@ -284,7 +286,7 @@ abstract contract Module_v1 is
         returns (uint fee, address treasury)
     {
         // Fetch fee manager address from orchestrator
-        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) // Fetch feeManager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager())
             .getIssuanceWorkflowFeeAndTreasury(
             address(__Module_orchestrator), // Always take this modules orchestrator as the workflow address
             address(this), // always take this as the module address
@@ -330,7 +332,8 @@ abstract contract Module_v1 is
     /// @param forwarder The contract address to be verified.
     /// @return bool Is the given address the trusted forwarder.
     /// @dev We imitate here the EIP2771 Standard to enable metatransactions
-    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator.
+    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
+    /// move this to the orchestrator.
     function isTrustedForwarder(address forwarder)
         public
         view
@@ -344,7 +347,8 @@ abstract contract Module_v1 is
     /// @notice Returns the trusted forwarder.
     /// @return address The trusted forwarder.
     /// @dev We imitate here the EIP2771 Standard to enable metatransactions.
-    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
+    /// move this to the orchestrator.
     function trustedForwarder()
         public
         view

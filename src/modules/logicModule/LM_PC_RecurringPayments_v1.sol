@@ -270,7 +270,8 @@ contract LM_PC_RecurringPayments_v1 is
         validId(endId)
         startIdBeforeEndId(startId, endId)
     {
-        // in the loop in _triggerFor it wouldnt run through endId itself, so we take the position afterwards in the list
+        // in the loop in _triggerFor it wouldnt run through endId itself, so we take the position
+        // afterwards in the list
         _triggerFor(startId, _paymentList.getNextId(endId));
     }
 
@@ -325,7 +326,8 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 start: block.timestamp,
                                 cliff: 0,
-                                // Payment was already due so end is start of this epoch which should already have passed
+                                // Payment was already due so end is start of this epoch which should
+                                // already have passed
                                 end: currentEpoch * epochLength
                             })
                         );

@@ -83,7 +83,8 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
 
     /// @notice Irreversibly burns the admin of a given role.
     /// @param role The role to remove admin access from.
-    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to the role.
+    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to
+    ///      the role.
     function burnAdminFromModuleRole(bytes32 role) external;
 
     /// @notice Grants a global role to a target.

@@ -22,7 +22,8 @@ import {
  *          call these functions internally, they also become gated.
  *
  *          PLEASE NOTE: This means that the workflow itself can only mint tokens through buying
- *          and selling by somebody with the CURVE_INTERACTION_ROLE, but NOT that there are no other ways to mint tokens. The Bonding Curve
+ *          and selling by somebody with the CURVE_INTERACTION_ROLE, but NOT that there are no other ways to
+ *          mint tokens. The Bonding Curve uses an external token contract, and there is no guarantee that said
  *          uses an external token contract, and there is no guarantee that said contract won't
  *          have an additional way to mint tokens (and potentially sell them on the cruve to receive
  *          backing collateral)

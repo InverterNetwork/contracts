@@ -406,8 +406,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // IERC2771Context
 
     /// @inheritdoc IModuleManagerBase_v1
-    /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the IOrchestrator_v1
-    /// we have to override it here as the original openzeppelin version doesnt contain a interface that we could use to expose it.
+    /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the
+    ///      IOrchestrator_v1 we have to override it here as the original openzeppelin version doesnt contain an
+    ///      interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)
         public
         view

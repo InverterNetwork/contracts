@@ -323,7 +323,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _getFeeManagerIssuanceFeeData(_selector);
     }
 
-    /// @dev    Calculates the proportion of the fees for the given amount and returns them plus the amount minus the fees.
+    /// @dev    Calculates the proportion of the fees for the given amount and returns them plus the amount
+    ///         minus the fees.
     ///         Reverts under the following two conditions:
     ///             - if (workflow fee + protocol fee) > BPS.
     ///             - if protocol fee amount or workflow fee amounts == 0 given the fee percentage is not zero. This

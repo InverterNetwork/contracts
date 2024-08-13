@@ -22,7 +22,8 @@ interface ILM_PC_PaymentRouter_v1 {
         uint end
     ) external;
 
-    /// @notice Adds multiple Payment Orders in one batch. These PaymentOrders will share start, cliff and end timestamps.
+    /// @notice Adds multiple Payment Orders in one batch. These PaymentOrders will share start,
+    ///         cliff and end timestamps.
     /// @dev Reverts if an argument invalid. The number of orders to be added in one batch is capped at 255.
     /// @param numOfOrders The number of orders to add.
     /// @param recipients The addresses that will receive the payments.

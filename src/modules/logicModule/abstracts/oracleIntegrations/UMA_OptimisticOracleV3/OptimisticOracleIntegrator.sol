@@ -61,6 +61,7 @@ abstract contract OptimisticOracleIntegrator is
     // Storage
 
     // General Parameters
+
     IERC20 public defaultCurrency; // The currency used for the bond.
     uint public defaultBond; // The bond used for the assertions. Must be higher or equal to the minimum bond of the currency used
     OptimisticOracleV3Interface public oo; // The OptimisticOracleV3 instance where assertions will be published to.
@@ -182,9 +183,9 @@ abstract contract OptimisticOracleIntegrator is
     // Mutating Functions
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    /// @dev Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds. This is
-    /// because the block.timestamp is included in the claim. The consumer contract must store the returned assertionId
-    /// identifiers to able to get the information using getData.
+    /// @dev Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds.
+    ///      This is because the block.timestamp is included in the claim. The consumer contract must
+    ///      store the returned assertionId identifiers to able to get the information using getData.
     function assertDataFor(bytes32 dataId, bytes32 data_, address asserter)
         public
         virtual
@@ -208,7 +209,8 @@ abstract contract OptimisticOracleIntegrator is
                     defaultBond
                 )
             );
-            // require(success && (data.length == 0 || abi.decode(data, (bool))) && token.code.length != 0); -> taken over from SafeERC20 since we want to override the revert messsage
+            // require(success && (data.length == 0 || abi.decode(data, (bool))) && token.code.length != 0); -> taken
+            //      over from SafeERC20 since we want to override the revert messsage
 
             if (
                 !success || (data.length > 0 && !abi.decode(data, (bool)))
@@ -259,7 +261,8 @@ abstract contract OptimisticOracleIntegrator is
     // Virtual Futcions to be overridden by Downstream Contracts
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    /// @dev This updates status on local storage (or deletes the assertion if it was deemed false). Any additional functionalities can be appended by the inheriting contract.
+    /// @dev This updates status on local storage (or deletes the assertion if it was deemed false).
+    ///      Any additional functionalities can be appended by the inheriting contract.
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully
@@ -287,6 +290,7 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
+    /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3
+    ///doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public virtual;
 }

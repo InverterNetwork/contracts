@@ -129,7 +129,8 @@ interface ILM_PC_RecurringPayments_v1 {
     /// @notice Adds a recurring payment to the manager.
     /// @dev a new id is created for each Payment.
     /// @param amount : amount of tokens send to the recipient address.
-    /// @param startEpoch : epoch in which the payment starts. Use getEpochFromTimestamp() or getCurrentEpoch() to get the appropriate epoch.
+    /// @param startEpoch : epoch in which the payment starts. Use getEpochFromTimestamp() or
+    ///                     getCurrentEpoch() to get the appropriate epoch.
     /// @param recipient : recipient address that should receive tokens.
     /// @return id : id of the newly created recurring payment.
     function addRecurringPayment(
@@ -150,7 +151,8 @@ interface ILM_PC_RecurringPayments_v1 {
     function trigger() external;
 
     /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for.
-    /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal trigger function.
+    /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal
+    ///      trigger function.
     /// @param startId : id of start position of the recurring payments that should be triggered.
     /// @param endId : id of end position of the recurring payments that should be triggered.
     function triggerFor(uint startId, uint endId) external;

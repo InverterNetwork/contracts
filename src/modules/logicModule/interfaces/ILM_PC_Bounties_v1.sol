@@ -73,7 +73,8 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     /// @notice Given Claim id got already claimed.
     error Module__LM_PC_Bounty__AlreadyClaimed();
 
-    /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front run of the given transaction.
+    /// @notice The given Contributors are not the same as in the claim. This might be connected to a tried front
+    ///         run of the given transaction.
     error Module__LM_PC_Bounty__ContributorsChanged();
 
     //--------------------------------------------------------------------------

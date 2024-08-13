@@ -189,7 +189,9 @@ abstract contract ERC20PaymentClientBase_v1 is
             _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
 
             // Ensure that the Client will have sufficient funds.
-            // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+            // Note that while we also control when adding a payment order, more complex payment systems with
+            // f.ex. deferred payments may not guarantee that having enough balance available when adding the order
+            // means it'll have enough balance when the order is processed.
             _ensureTokenBalance(tokens[i]);
         }
 
@@ -240,7 +242,8 @@ abstract contract ERC20PaymentClientBase_v1 is
     //--------------------------------------------------------------------------
     // {ERC20PaymentClientBase_v1} Function Implementations
 
-    /// @dev Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to address(this). If the token is not the FundingManager token, it will only check if the local balance is sufficient.
+    /// @dev Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the
+    ///      FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to
     function _ensureTokenBalance(address token) internal virtual {
         uint amount = _outstandingTokenAmounts[token];
         uint currentFunds = IERC20(token).balanceOf(address(this));
