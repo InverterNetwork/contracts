@@ -362,15 +362,20 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         onlyModuleRole(BOUNTY_ISSUER_ROLE)
         validArrayLengths(
             minimumPayoutAmounts.length,
-            maximumPayoutAmounts.length, //@todo test
+            maximumPayoutAmounts.length,
             detailArray.length
         )
         returns (uint[] memory ids)
     {
         uint arrayLength = minimumPayoutAmounts.length;
+        // create new array to return
+        ids = new uint[](arrayLength);
+
         for (uint i = 0; i < arrayLength; i++) {
+            // check payout amounts
             _validPayoutAmounts( //@note should I check first and then add in a different loop?
             minimumPayoutAmounts[i], maximumPayoutAmounts[i]);
+            // add bounty
             ids[i] = _addBounty(
                 minimumPayoutAmounts[i], maximumPayoutAmounts[i], detailArray[i]
             );
