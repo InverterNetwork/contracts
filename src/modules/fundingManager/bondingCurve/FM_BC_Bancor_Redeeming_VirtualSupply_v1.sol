@@ -537,8 +537,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
         if (decimals <= 18) {
             // If issuance token has 18 or fewer decimals. Ensure that decimal difference is at least 1
-            // to end up with minRequiredSupply of 10
-            decimalDifference = 18 - decimals == 0 ? 1 : 18 - decimals;
+            // i.e 10**0
+            decimalDifference = 0;
         } else {
             // If issuance token has more than 18 decimals
             decimalDifference = decimals - 18;
