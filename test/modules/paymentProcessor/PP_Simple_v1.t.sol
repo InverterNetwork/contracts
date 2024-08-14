@@ -394,9 +394,9 @@ contract PP_SimpleV1Test is ModuleTest {
 
         vm.startPrank(sender);
 
-        bool expectedValue = paymentProcessor.original__validPaymentReceiver(
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.original__validPaymentToken(order.paymentToken)
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
             && paymentProcessor.original__validTotal(order.amount);
 
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
@@ -418,7 +418,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original__validPaymentReceiver(addr), expectedValue
+            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
         );
     }
 
@@ -445,7 +445,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original__validPaymentToken(randomToken), false
+            paymentProcessor.original_validPaymentToken(randomToken), false
         );
 
         // ERC20 addresses are valid
@@ -453,13 +453,13 @@ contract PP_SimpleV1Test is ModuleTest {
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original__validPaymentToken(address(actualToken)),
+            paymentProcessor.original_validPaymentToken(address(actualToken)),
             true
         );
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original__validPaymentToken(address(_token)), true
+            paymentProcessor.original_validPaymentToken(address(_token)), true
         );
     }
 }

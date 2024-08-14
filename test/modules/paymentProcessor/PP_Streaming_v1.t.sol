@@ -1821,7 +1821,7 @@ contract PP_StreamingV1Test is ModuleTest {
             console.log("start + cliff > end");
         }
 
-        bool result = paymentProcessor.original__validTimes(start, cliff, end);
+        bool result = paymentProcessor.original_validTimes(start, cliff, end);
         assertEq(result, resultShouldBe);
     }
 
@@ -1841,10 +1841,10 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.startPrank(sender);
 
-        bool expectedValue = paymentProcessor.original__validPaymentReceiver(
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.original__validPaymentToken(order.paymentToken)
-            && paymentProcessor.original__validTimes(
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
+            && paymentProcessor.original_validTimes(
                 order.start, order.cliff, order.end
             ) && paymentProcessor.original__validTotal(order.amount);
 
@@ -1867,7 +1867,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original__validPaymentReceiver(addr), expectedValue
+            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
         );
     }
 
@@ -1890,7 +1890,7 @@ contract PP_StreamingV1Test is ModuleTest {
         }
 
         assertEq(
-            paymentProcessor.original__validTimes(_start, _cliff, _end),
+            paymentProcessor.original_validTimes(_start, _cliff, _end),
             expectedValue
         );
     }
@@ -1909,7 +1909,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original__validPaymentToken(randomToken), false
+            paymentProcessor.original_validPaymentToken(randomToken), false
         );
 
         // ERC20 addresses are valid
@@ -1917,13 +1917,13 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original__validPaymentToken(address(actualToken)),
+            paymentProcessor.original_validPaymentToken(address(actualToken)),
             true
         );
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original__validPaymentToken(address(_token)), true
+            paymentProcessor.original_validPaymentToken(address(_token)), true
         );
     }
 

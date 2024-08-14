@@ -28,7 +28,7 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         return unclaimableAmountsForStream[client][token][sender][id];
     }
 
-    function original__validPaymentReceiver(address addr)
+    function original_validPaymentReceiver(address addr)
         external
         view
         returns (bool)
@@ -40,7 +40,7 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         return _validTotal(_total);
     }
 
-    function original__validTimes(uint _start, uint _cliff, uint _end)
+    function original_validTimes(uint _start, uint _cliff, uint _end)
         external
         pure
         returns (bool)
@@ -48,7 +48,7 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         return _validTimes(_start, _cliff, _end);
     }
 
-    function original__validPaymentToken(address _token)
+    function original_validPaymentToken(address _token)
         external
         returns (bool)
     {
