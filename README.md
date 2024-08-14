@@ -45,7 +45,7 @@ The protocol is based on our [technical specification](https://docs.google.com/d
 ## Contributing
 You are considering to contribute to our protocol? Awesome - please refer to our [Contribution Guidelines](./CONTRIBUTING.md) to find our about the processes we established to ensure highest quality within our codebase.
 
-## Safety
+## Security
 Our [Security Policy](./SECURITY.md) provides details about our Security Guidelines, audits, and more. If you have discovered a potential security vulnerability within the Inverter Protocol, please report it to us by emailing [security@inverter.network](mailto:security@inverter.network).
 
 -----
