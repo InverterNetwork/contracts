@@ -10,13 +10,7 @@ If you discover a potential security vulnerability or issue within our smart con
 
 We appreciate your efforts to disclose any security findings responsibly, and we are committed to collaborating with you to address the issue. Rest assured that you will be given proper credit for your contribution.
 
-## Responsible Disclosure
-
-Please practice responsible disclosure when reporting security issues. We kindly request that you do not publicly disclose or discuss the vulnerability until we have had sufficient time to investigate and address it. Privately disclosing the issue to us via email allows us to work on a fix without putting our users' funds at risk.
-
-We understand the importance of acknowledging and rewarding security researchers for their efforts. Even though our bug bounty program is currently set up, we assure you that you will not be unpaid for your valuable contributions. We are committed to fairly compensating those who help us improve the security of our platform.
-
-## Security Reviews and Audits
+## Audits and Security Reviews
 
 At Inverter Network, we prioritize the security of our smart contracts and follow a rigorous process of security reviews and audits:
 
@@ -24,9 +18,17 @@ At Inverter Network, we prioritize the security of our smart contracts and follo
 
 * Additionally, prior to major releases, we perform a full audit of any changed contracts via an external auditing company before the deployment. This ensures that our contracts undergo thorough scrutiny by professional auditors.
 
-* Our version 1 has been audited by [0xMacro](https://0xmacro.com/). The audit report will be published here once it becomes public. Furthermore, our v1 is currently undergoing a public audit competition on [Hats Finance](https://hats.finance/), leveraging the expertise of the broader security community.
+* Our version 1 has been audited by [0xMacro](https://0xmacro.com/) and underwent a public audit competition on [Hats Finance](https://hats.finance/), leveraging the expertise of the broader security community.
 
 We are committed to transparency and will make the results of our security reviews and audits available to the public, fostering trust and confidence in the security of our platform.
+
+**You can find all of our audit reports [here](./audits/).**
+
+## Responsible Disclosure
+
+Please practice responsible disclosure when reporting security issues. We kindly request that you do not publicly disclose or discuss the vulnerability until we have had sufficient time to investigate and address it. Privately disclosing the issue to us via email allows us to work on a fix without putting our users' funds at risk.
+
+We understand the importance of acknowledging and rewarding security researchers for their efforts. Even though our bug bounty program is currently not set up, we assure you that you will not be unpaid for your valuable contributions. We are committed to fairly compensating those who help us improve the security of our platform.
 
 ## Security Guideline
 
