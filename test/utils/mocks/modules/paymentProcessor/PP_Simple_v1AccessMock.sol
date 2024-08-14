@@ -8,22 +8,22 @@ import {IERC20PaymentClientBase_v1} from
 import {PP_Simple_v1} from "@pp/PP_Simple_v1.sol";
 
 contract PP_Simple_v1AccessMock is PP_Simple_v1 {
-    function original_validPaymentReceiver(address addr)
+    function original__validPaymentReceiver(address addr)
         external
         view
         returns (bool)
     {
-        return validPaymentReceiver(addr);
+        return _validPaymentReceiver(addr);
     }
 
-    function original_validTotal(uint _total) external pure returns (bool) {
-        return validTotal(_total);
+    function original__validTotal(uint _total) external pure returns (bool) {
+        return _validTotal(_total);
     }
 
-    function original_validPaymentToken(address _token)
+    function original__validPaymentToken(address _token)
         external
         returns (bool)
     {
-        return validPaymentToken(_token);
+        return _validPaymentToken(_token);
     }
 }

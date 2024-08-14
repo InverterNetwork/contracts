@@ -244,6 +244,9 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
     /// @dev	Creates the modules based on their `moduleConfigs.
     /// @param moduleConfigs The config data of the modules that will be created with this function call.
     /// @param orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.

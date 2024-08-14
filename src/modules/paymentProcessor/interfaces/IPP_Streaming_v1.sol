@@ -148,7 +148,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @notice the paymentReceiver for the given paymentClient does not exist (anymore).
     /// @param paymentClient The payment client that originated the order.
     /// @param paymentReceiver The address that will receive the payment.
-    error Module__PP_Streaming__InvalidPaymentReceiver(
+    error Module__PP_Streaming__In_validPaymentReceiver(
         address paymentClient, address paymentReceiver
     );
 

@@ -193,8 +193,8 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
-        return validPaymentReceiver(order.recipient) && validTotal(order.amount)
-            && validPaymentToken(order.paymentToken);
+        return _validPaymentReceiver(order.recipient)
+            && _validTotal(order.amount) && _validPaymentToken(order.paymentToken);
     }
 
     //--------------------------------------------------------------------------
@@ -229,7 +229,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     /// @notice Validate address input.
     /// @param addr Address to validate.
     /// @return True if address is valid.
-    function validPaymentReceiver(address addr) internal view returns (bool) {
+    function _validPaymentReceiver(address addr) internal view returns (bool) {
         return !(
             addr == address(0) || addr == _msgSender() || addr == address(this)
                 || addr == address(orchestrator())
@@ -240,14 +240,14 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     /// @notice Validate uint total amount input.
     /// @param _total uint to validate.
     /// @return True if uint is valid.
-    function validTotal(uint _total) internal pure returns (bool) {
+    function _validTotal(uint _total) internal pure returns (bool) {
         return !(_total == 0);
     }
 
     /// @notice Validate payment token input.
     /// @param _token Address of the token to validate.
     /// @return True if address is valid.
-    function validPaymentToken(address _token) internal returns (bool) {
+    function _validPaymentToken(address _token) internal returns (bool) {
         // Only a basic sanity check that the address supports the balanceOf() function. The corresponding
         // module should ensure it's sending an ERC20.
 

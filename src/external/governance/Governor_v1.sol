@@ -91,7 +91,7 @@ contract Governor_v1 is
 
     /// @dev	Modifier to guarantee the given beacon is accessible.
     modifier accessibleBeacon(address target) {
-        if (!isBeaconAccessible(target)) {
+        if (!_isBeaconAccessible(target)) {
             revert Governor__BeaconNotAccessible(target);
         }
 
@@ -206,7 +206,7 @@ contract Governor_v1 is
         // Make sure Beacons are accessible for Governor
         uint length = registeredBeacons.length;
         for (uint i = 0; i < length; i++) {
-            if (!isBeaconAccessible(address(registeredBeacons[i]))) {
+            if (!_isBeaconAccessible(address(registeredBeacons[i]))) {
                 revert Governor__BeaconNotAccessible(
                     address(registeredBeacons[i])
                 );
@@ -534,8 +534,8 @@ contract Governor_v1 is
     }
 
     /// @dev	internal function that checks if target address is a beacon
-    ///      and this contract has the ownership of it.
-    function isBeaconAccessible(address target) internal returns (bool) {
+    ///         and this contract has the ownership of it.
+    function _isBeaconAccessible(address target) internal returns (bool) {
         // Check if target is a contract
         if (target.code.length == 0) {
             return false;

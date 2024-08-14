@@ -192,7 +192,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.getClaimInformation(id);
     }
 
-    function testValidContributorsForBounty(
+    function test_validContributorsForBounty(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount,
         address[] memory addrs,
@@ -320,7 +320,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 
-    function testContributorsNotChanged_FailsGivenBountyIsChanged(
+    function test_contributorsNotChanged_FailsGivenBountyIsChanged(
         address changeAddress,
         uint changeAmount
     ) public {
@@ -355,7 +355,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 
-    function testContributorsNotChanged_FailsGivenBountyArrayLengthHasChanged(
+    function test_contributorsNotChanged_FailsGivenBountyArrayLengthHasChanged(
         address changeAddress,
         uint changeAmount
     ) public {
@@ -519,7 +519,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        // validContributorsForBounty
+        // _validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidContributorAmount
@@ -707,7 +707,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.updateClaimContributors(0, DEFAULT_CONTRIBUTORS);
 
-        // validContributorsForBounty
+        // _validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidContributorAmount
@@ -894,7 +894,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
 
-        // contributorsNotChanged
+        // _contributorsNotChanged
 
         vm.expectRevert(
             ILM_PC_Bounties_v1

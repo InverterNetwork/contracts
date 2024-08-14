@@ -126,7 +126,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     /// @dev	Checks if the contributors are valid for the given bounty.
     /// @param contributors The contributors to check.
     /// @param bounty The bounty to check.
-    function validContributorsForBounty(
+    function _validContributorsForBounty(
         Contributor[] memory contributors,
         Bounty memory bounty
     ) internal view {
@@ -191,7 +191,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     /// @dev	Checks if the contributors have not changed.
     /// @param claimId The id of the claim to check.
     /// @param contributors The new contributors to check.
-    function contributorsNotChanged(
+    function _contributorsNotChanged(
         uint claimId,
         Contributor[] memory contributors
     ) internal view {
@@ -387,7 +387,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         notLocked(bountyId)
         returns (uint id)
     {
-        validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
+        _validContributorsForBounty(contributors, _bountyRegistry[bountyId]);
         // Count up shared nextId by one
         uint claimId = ++_nextId;
 
@@ -427,7 +427,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         notLocked(_claimRegistry[claimId].bountyId)
         onlyModuleRole(CLAIMANT_ROLE)
     {
-        validContributorsForBounty(
+        _validContributorsForBounty(
             contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
         );
         Claim storage c = _claimRegistry[claimId];
@@ -478,7 +478,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
     {
-        contributorsNotChanged(claimId, contributors);
+        _contributorsNotChanged(claimId, contributors);
 
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
 

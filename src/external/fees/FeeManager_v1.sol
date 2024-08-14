@@ -172,7 +172,7 @@ contract FeeManager_v1 is
         bytes4 functionSelector
     ) public view returns (uint fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         // In case workflow fee is set return it
         if (workflowCollateralFees[workflow][moduleFunctionHash].set) {
@@ -191,7 +191,7 @@ contract FeeManager_v1 is
         bytes4 functionSelector
     ) public view returns (uint fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         // In case workflow fee is set return it
         if (workflowIssuanceFees[workflow][moduleFunctionHash].set) {
@@ -289,7 +289,7 @@ contract FeeManager_v1 is
         uint fee
     ) external onlyOwner validFee(fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         Fee storage f = workflowCollateralFees[workflow][moduleFunctionHash];
         f.set = set;
@@ -314,7 +314,7 @@ contract FeeManager_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function getModuleFunctionHash(address module, bytes4 functionSelector)
+    function _getModuleFunctionHash(address module, bytes4 functionSelector)
         internal
         pure
         returns (bytes32)
@@ -362,7 +362,7 @@ contract FeeManager_v1 is
         uint fee
     ) internal validFee(fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         Fee storage f = workflowIssuanceFees[workflow][moduleFunctionHash];
         f.set = set;
