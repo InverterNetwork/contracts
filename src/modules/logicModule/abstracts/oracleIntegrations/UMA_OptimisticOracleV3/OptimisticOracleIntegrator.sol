@@ -203,7 +203,7 @@ abstract contract OptimisticOracleIntegrator is
             (bool success, bytes memory data) = address(defaultCurrency).call(
                 abi.encodeWithSelector(
                     defaultCurrency.transferFrom.selector,
-                    _msgSender(),
+                    asserter,
                     address(this),
                     defaultBond
                 )

@@ -49,7 +49,7 @@ contract InverterBeaconProxy_v1 is Proxy {
     }
 
     //--------------------------------------------------------------------------
-    // Public View Functions
+    // Public Functions
 
     /// @dev This overrides the possible use of a "version" function in the modules that are
     ///      called via the Proxy Beacon structure
@@ -59,6 +59,12 @@ contract InverterBeaconProxy_v1 is Proxy {
     /// @return Patch version.
     function version() external view returns (uint, uint, uint) {
         return _beacon.version();
+    }
+
+    /// @dev Fallback function to delegate calls to the implementation contract
+    ///      even if the call data is empty but msg.value > 0.
+    receive() external payable virtual {
+        _fallback();
     }
 
     //--------------------------------------------------------------------------
