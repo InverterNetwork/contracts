@@ -25,9 +25,12 @@ import {
     IERC20PaymentClientBase_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
 
+import {LM_PC_Bounties_v1AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_Bounties_v1AccessMock.sol";
+
 contract LM_PC_BountiesV1Test is ModuleTest {
     // SuT
-    LM_PC_Bounties_v1 bountyManager;
+    LM_PC_Bounties_v1AccessMock bountyManager;
 
     uint private constant _SENTINEL = type(uint).max;
 
@@ -68,8 +71,8 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
     function setUp() public {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_Bounties_v1());
-        bountyManager = LM_PC_Bounties_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_Bounties_v1AccessMock());
+        bountyManager = LM_PC_Bounties_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(bountyManager);
 
@@ -136,23 +139,39 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.updateClaimDetails(2, bytes("1"));
     }
 
-    function testValidPayoutAmounts(
-        uint minimumPayoutAmount,
-        uint maximumPayoutAmount
+    function testValidPayoutAmounts() public {
+        //Check that internal function is in position
+        vm.expectRevert(
+            ILM_PC_Bounties_v1
+                .Module__LM_PC_Bounty__InvalidPayoutAmounts
+                .selector
+        );
+
+        bountyManager.addBounty(1, 0, bytes(""));
+    }
+
+    function testValidArrayLengths(
+        uint minimumPayoutAmountLength,
+        uint maximumPayoutAmountLength,
+        uint detailArrayLength
     ) public {
         if (
-            minimumPayoutAmount == 0 || maximumPayoutAmount == 0
-                || maximumPayoutAmount < minimumPayoutAmount
+            minimumPayoutAmountLength == 0 || maximumPayoutAmountLength == 0
+                || detailArrayLength == 0
+                || maximumPayoutAmountLength != minimumPayoutAmountLength
+                || detailArrayLength != minimumPayoutAmountLength
         ) {
             vm.expectRevert(
                 ILM_PC_Bounties_v1
-                    .Module__LM_PC_Bounty__InvalidPayoutAmounts
+                    .Module__LM_PC_Bounty__InvalidArrayLengths
                     .selector
             );
         }
 
-        bountyManager.addBounty(
-            minimumPayoutAmount, maximumPayoutAmount, bytes("")
+        bountyManager.validArrayLengthsCheck(
+            minimumPayoutAmountLength,
+            maximumPayoutAmountLength,
+            detailArrayLength
         );
     }
 
@@ -418,31 +437,22 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     // AddBounty
 
     function testAddBounty(
-        uint testAmount,
         uint minimumPayoutAmount,
         uint maximumPayoutAmount,
         bytes calldata details
     ) public {
-        testAmount = bound(testAmount, 1, 30); // Reasonable Amount
         minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
         maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
         vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
 
-        uint id;
-        for (uint i; i < testAmount; i++) {
-            vm.expectEmit(true, true, true, true);
-            emit BountyAdded(
-                i + 1, minimumPayoutAmount, maximumPayoutAmount, details
-            );
+        //Check that internal function is in position
 
-            id = bountyManager.addBounty(
-                minimumPayoutAmount, maximumPayoutAmount, details
-            );
+        vm.expectEmit(true, true, true, true);
+        emit BountyAdded(1, minimumPayoutAmount, maximumPayoutAmount, details);
 
-            assertEqualBounty(
-                id, minimumPayoutAmount, maximumPayoutAmount, details, false
-            );
-        }
+        bountyManager.addBounty(
+            minimumPayoutAmount, maximumPayoutAmount, details
+        );
     }
 
     function testAddBountyModifierInPosition() public {
@@ -468,6 +478,97 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             )
         );
         bountyManager.addBounty(0, 0, bytes(""));
+    }
+
+    //-----------------------------------------
+    // AddBountyBatch
+
+    function testAddBountyBatch(uint batchSize) public {
+        // Reasonable batchSize
+        batchSize = bound(batchSize, 1, 1000);
+
+        uint minimumPayoutAmount = 1;
+        uint maximumPayoutAmount = 2;
+        bytes memory details = bytes("");
+
+        uint[] memory minimumPayoutAmounts = new uint[](batchSize);
+        uint[] memory maximumPayoutAmounts = new uint[](batchSize);
+        bytes[] memory detailsBatch = new bytes[](batchSize);
+
+        for (uint i; i < batchSize; i++) {
+            minimumPayoutAmounts[i] = minimumPayoutAmount;
+            maximumPayoutAmounts[i] = maximumPayoutAmount;
+            detailsBatch[i] = details;
+        }
+
+        //Check that internal function is in position
+
+        for (uint i = 0; i < batchSize; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit BountyAdded(
+                1 + i, minimumPayoutAmount, maximumPayoutAmount, details
+            );
+        }
+        console.log("HEre 1");
+        uint[] memory ids = bountyManager.addBountyBatch(
+            minimumPayoutAmounts, maximumPayoutAmounts, detailsBatch
+        );
+        console.log("HEre 2");
+        // Check if ids are correct
+        assertEq(ids.length, batchSize);
+        for (uint i; i < batchSize; i++) {
+            assertEq(ids[i], i + 1);
+        }
+    }
+
+    function testAddBountyBatchModifierInPosition() public {
+        //Setup faulty arrays
+        uint[] memory minimumPayoutAmounts = new uint[](1);
+        minimumPayoutAmounts[0] = 2;
+        uint[] memory maximumPayoutAmounts = new uint[](1);
+        maximumPayoutAmounts[0] = 1;
+        bytes[] memory details = new bytes[](1);
+        details[0] = bytes("");
+
+        // validArrayLengths
+        vm.expectRevert(
+            ILM_PC_Bounties_v1
+                .Module__LM_PC_Bounty__InvalidArrayLengths
+                .selector
+        );
+        bountyManager.addBountyBatch(
+            new uint[](0), maximumPayoutAmounts, details
+        );
+
+        // validPayoutAmounts
+        vm.expectRevert(
+            ILM_PC_Bounties_v1
+                .Module__LM_PC_Bounty__InvalidPayoutAmounts
+                .selector
+        );
+        bountyManager.addBountyBatch(
+            minimumPayoutAmounts, maximumPayoutAmounts, details
+        );
+
+        // Set this address to not authorized to test the roles correctly
+        _authorizer.setIsAuthorized(address(this), false);
+
+        // Set maximumPayoutAmounts[0] correctly
+        maximumPayoutAmounts[0] = 2;
+
+        // onlyBountyAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.generateRoleId(
+                    address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
+                ),
+                address(this)
+            )
+        );
+        bountyManager.addBountyBatch(
+            minimumPayoutAmounts, maximumPayoutAmounts, details
+        );
     }
 
     //-----------------------------------------
@@ -919,6 +1020,57 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             ILM_PC_Bounties_v1.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.verifyClaim(4, DEFAULT_CONTRIBUTORS);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function test_validPayoutAmounts(
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount
+    ) public {
+        if (
+            minimumPayoutAmount == 0 || maximumPayoutAmount == 0
+                || maximumPayoutAmount < minimumPayoutAmount
+        ) {
+            vm.expectRevert(
+                ILM_PC_Bounties_v1
+                    .Module__LM_PC_Bounty__InvalidPayoutAmounts
+                    .selector
+            );
+        }
+
+        bountyManager.direct__validPayoutAmounts(
+            minimumPayoutAmount, maximumPayoutAmount
+        );
+    }
+
+    function test_addBounty(
+        uint testAmount,
+        uint minimumPayoutAmount,
+        uint maximumPayoutAmount,
+        bytes calldata details
+    ) public {
+        testAmount = bound(testAmount, 1, 30); // Reasonable Amount
+        minimumPayoutAmount = bound(minimumPayoutAmount, 1, type(uint).max);
+        maximumPayoutAmount = bound(maximumPayoutAmount, 1, type(uint).max);
+        vm.assume(minimumPayoutAmount <= maximumPayoutAmount);
+
+        uint id;
+        for (uint i; i < testAmount; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit BountyAdded(
+                i + 1, minimumPayoutAmount, maximumPayoutAmount, details
+            );
+
+            id = bountyManager.direct__addBounty(
+                minimumPayoutAmount, maximumPayoutAmount, details
+            );
+
+            assertEqualBounty(
+                id, minimumPayoutAmount, maximumPayoutAmount, details, false
+            );
+        }
     }
 
     //--------------------------------------------------------------------------

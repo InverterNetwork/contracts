@@ -924,6 +924,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         ERC20Issuance_v1 issuanceTokenAfter =
             ERC20Issuance_v1(bondingCurveFundingManager.getIssuanceToken());
 
+        assertNotEq(tokenBefore, address(issuanceTokenAfter));
         assertEq(issuanceTokenAfter.name(), _name);
         assertEq(issuanceTokenAfter.symbol(), _symbol);
         assertEq(issuanceTokenAfter.decimals(), _newDecimals);
