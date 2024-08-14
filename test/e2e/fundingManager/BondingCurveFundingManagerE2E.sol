@@ -64,8 +64,8 @@ contract BondingCurveFundingManagerE2E is E2ETest {
                 sellFee: 0,
                 buyIsOpen: true,
                 sellIsOpen: true,
-                initialIssuanceSupply: 1,
-                initialCollateralSupply: 3
+                initialIssuanceSupply: 10,
+                initialCollateralSupply: 30
             });
 
         moduleConfigurations.push(

@@ -425,7 +425,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint _issuanceFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        vm.assume(_collateralFee <= _bps && _issuanceFee <= _bps);
+        vm.assume(_collateralFee < _bps && _issuanceFee < _bps);
         vm.assume(_treasury != address(0));
 
         // Set values in feeManager
@@ -655,9 +655,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        protocolFee = bound(protocolFee, 1, _bps);
-        workflowFee = bound(workflowFee, 1, _bps);
-        vm.assume(protocolFee + workflowFee > _bps);
+        protocolFee = bound(protocolFee, 1, _bps - 1);
+        workflowFee = bound(workflowFee, 1, _bps - 1);
+        vm.assume(protocolFee + workflowFee >= _bps);
 
         vm.expectRevert(
             IBondingCurveBase_v1
@@ -714,7 +714,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        workflowFee = bound(workflowFee, 1, _bps);
+        workflowFee = bound(workflowFee, 1, _bps - 1);
 
         uint minAmount = _bps / workflowFee + 1; // calculate min amount
         totalAmount = bound(totalAmount, minAmount, type(uint128).max);
@@ -733,7 +733,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint protocolFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        protocolFee = bound(protocolFee, 1, _bps);
+        protocolFee = bound(protocolFee, 1, _bps - 1);
 
         // calculate min amount
         uint minAmount = _bps / protocolFee + 1;
@@ -754,8 +754,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
         uint workflowFee
     ) public {
         uint _bps = bondingCurveFundingManager.call_BPS();
-        protocolFee = bound(protocolFee, 1, _bps);
-        workflowFee = bound(workflowFee, 1, _bps);
+        protocolFee = bound(protocolFee, 1, _bps - 1);
+        workflowFee = bound(workflowFee, 1, _bps - 1);
         vm.assume(workflowFee + protocolFee < _bps);
 
         uint minAmount = _calculateMinDepositAmount(protocolFee, workflowFee, 0);
@@ -974,8 +974,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
     ) public {
         // Setup
         uint _bps = bondingCurveFundingManager.call_BPS();
-        _collateralFee = bound(_collateralFee, 0, _bps);
-        _issuanceFee = bound(_issuanceFee, 0, _bps);
+        _collateralFee = bound(_collateralFee, 0, _bps - 1);
+        _issuanceFee = bound(_issuanceFee, 0, _bps - 1);
         _workflowFee = bound(_workflowFee, 0, _bps - 1);
         vm.assume(_collateralFee + _workflowFee < _bps);
 

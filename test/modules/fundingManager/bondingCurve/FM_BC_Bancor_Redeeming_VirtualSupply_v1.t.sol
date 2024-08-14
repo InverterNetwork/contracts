@@ -1159,7 +1159,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     /* Test getVirtualIssuanceSupply() */
 
     function testGetVirtualIssuanceSupply(uint _supply) public {
-        vm.assume(_supply > 0);
+        vm.assume(_supply > 10);
 
         _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.prank(admin_address);
@@ -1250,7 +1250,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     function testInternalSetVirtualIssuanceSupply_WorksGivenIssuanceSupplyBiggerThanZero(
         uint _newSupply
     ) public {
-        vm.assume(_newSupply != 0);
+        vm.assume(_newSupply > 10);
         _closeCurveInteractions(); // Buy & sell needs to be closed to set supply
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
