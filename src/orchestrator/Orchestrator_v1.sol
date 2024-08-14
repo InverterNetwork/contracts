@@ -28,7 +28,7 @@ import {ERC165Upgradeable} from
 import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
 
 /**
- * @title   Orchestrator
+ * @title   Inverter Orchestrator
  *
  * @dev     This Contract is the center and connecting block of all Modules in a
  *          Inverter Network Workflow. It contains references to the essential contracts

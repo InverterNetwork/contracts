@@ -22,7 +22,7 @@ import {AccessControlUpgradeable} from
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 /**
- * @title   Governor Contract
+ * @title   Inverter Governor Contract
  *
  * @notice  This contract manages various administrative functions that can be executed only by
  *          specified multisig addresses. It supports upgrades to {IInverterBeacon_v1} contracts through

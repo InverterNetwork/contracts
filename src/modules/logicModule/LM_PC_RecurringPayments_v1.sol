@@ -25,7 +25,7 @@ import {ERC165Upgradeable} from
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 /**
- * @title   Recurring Payment Manager
+ * @title   Inverter Recurring Payment Manager
  *
  * @notice  Facilitates the creation, management, and execution of scheduled recurring
  *          payments within the Inverter Network, allowing for systematic and timed

@@ -44,7 +44,7 @@ import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Bancor Virtual Supply Bonding Curve Funding Manager
+ * @title   Inverter Bancor Virtual Supply Bonding Curve Funding Manager
  *
  * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
  *          a virtual supply for both the issuance and the collateral as input. It integrates

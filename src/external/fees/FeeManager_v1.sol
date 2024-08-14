@@ -11,7 +11,7 @@ import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Fee Manager Contract
+ * @title   Inverter Fee Manager Contract
  *
  * @notice  This contract manages the different fees possible on a protocol level.
  *          The different fees can be fetched publicly and be set by the owner of the contract.

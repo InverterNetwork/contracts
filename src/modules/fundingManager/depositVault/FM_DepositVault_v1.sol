@@ -22,7 +22,7 @@ import {ERC165Upgradeable} from
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Deposit Vault Funding Manager
+ * @title   Inverter Deposit Vault Funding Manager
  *
  * @notice  This contract allows users to deposit tokens to fund the workflow.
  *

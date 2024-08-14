@@ -27,7 +27,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   KPI Rewarder Module
+ * @title   Inverter KPI Rewarder Module
  *
  * @notice  Provides a mechanism for distributing rewards to stakers based
  *          on Key Performance Indicators (KPIs).

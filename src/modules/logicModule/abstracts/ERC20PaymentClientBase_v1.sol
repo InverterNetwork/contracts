@@ -22,7 +22,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   ERC20 Payment Client Base
+ * @title   Inverter ERC20 Payment Client Base
  *
  * @notice  Enables modules within the Inverter Network to create and manage payment orders
  *          that can be processed by authorized payment processors, ensuring efficient

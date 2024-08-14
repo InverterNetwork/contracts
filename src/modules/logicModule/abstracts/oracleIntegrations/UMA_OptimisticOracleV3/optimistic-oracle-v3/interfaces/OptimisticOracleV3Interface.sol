@@ -4,7 +4,7 @@ pragma solidity ^0.8.16;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * @title Optimistic Oracle V3 Interface that callers must use to assert truths about the world.
+ * @title   Inverter Optimistic Oracle V3 Interface that callers must use to assert truths about the world.
  */
 interface OptimisticOracleV3Interface {
     //--------------------------------------------------------------------------

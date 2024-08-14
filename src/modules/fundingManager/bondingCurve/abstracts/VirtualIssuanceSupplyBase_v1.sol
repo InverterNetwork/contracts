@@ -10,7 +10,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Virtual Issuance Supply Base
+ * @title   Inverter Virtual Issuance Supply Base
  *
  * @notice  Manages a virtual issuance supply to facilitate interactions with Inverter's
  *          Funding Manager

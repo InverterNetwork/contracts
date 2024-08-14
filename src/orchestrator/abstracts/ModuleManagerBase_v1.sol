@@ -16,7 +16,7 @@ import {
 } from "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   ModuleManagerBase
+ * @title   Inverter ModuleManagerBase
  *
  * @dev     A contract to manage Inverter Network modules. It allows for adding and
  *          removing modules in a local registry for reference. Additional functionality

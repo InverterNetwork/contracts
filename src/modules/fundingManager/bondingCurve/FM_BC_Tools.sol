@@ -2,13 +2,13 @@
 pragma solidity 0.8.23;
 
 /**
- * @title Bonding Curve Tools Library
+ * @title   Inverter Inverter Bonding Curve Tools Library
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
- * @author Inverter Network
+ * @author  Inverter Network
  */
 library FM_BC_Tools {
     /// @dev    Error thrown when the fee amount is too high.

@@ -24,15 +24,15 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 /**
- * @title Optimistic Oracle Integrator
+ * @title   Inverter Optimistic Oracle Integrator
  *
- * @notice This module allows for the integration of the UMA OptimisticOracleV3 contract with our modules.
+ * @notice  This module allows for the integration of the UMA OptimisticOracleV3 contract with our modules.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
- * @author Inverter Network
+ * @author  Inverter Network
  */
 
 abstract contract OptimisticOracleIntegrator is

@@ -28,7 +28,7 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 /**
- * @title   Bounty Manager
+ * @title   Inverter Bounty Manager
  *
  * @notice  Provides functionality to manage bounties and process claims,
  *          allowing participants to propose, update, and claim bounties securely

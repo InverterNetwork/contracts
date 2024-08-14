@@ -38,7 +38,7 @@ import {
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Orchestrator Factory
+ * @title   Inverter Orchestrator Factory
  *
  * @notice  {OrchestratorFactory_v1} facilitates the deployment of {Orchestrator_v1}s and their
  *          associated modules for the Inverter Network, ensuring seamless creation and

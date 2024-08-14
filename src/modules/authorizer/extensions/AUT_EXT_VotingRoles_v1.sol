@@ -11,7 +11,7 @@ import {IAUT_EXT_VotingRoles_v1} from
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 /**
- * @title   Voting Role Manager
+ * @title   Inverter Voting Role Manager
  *
  * @notice  Facilitates voting and motion management within the Inverter Network,
  *          allowing designated voters to participate in governance through proposals,

@@ -10,7 +10,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Virtual Collateral Supply Base
+ * @title   Inverter Virtual Collateral Supply Base
  *
  * @notice  Manages a virtual collateral supply to facilitate interactions with Inverter's
  *          Funding Manager

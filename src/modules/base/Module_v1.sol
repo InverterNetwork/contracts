@@ -24,7 +24,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Module
+ * @title   Inverter Module
  *
  * @dev     This Contract is the basic building block for all Modules in the Inverter Network.
  *          It contains references to other contracts, modifier for access restriction,

@@ -20,7 +20,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Bonding Curve Funding Manager Base
+ * @title   Inverter Bonding Curve Funding Manager Base
  *
  * @notice  Manages the issuance of token for collateral along a bonding curve in the
  *          Inverter Network, including fee handling and sell functionality control.

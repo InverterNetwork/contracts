@@ -13,7 +13,7 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**
- * @title   Inverter Beacon
+ * @title   Inverter Inverter Beacon
  *
  * @notice  Manages upgrades and versioning for smart contract implementations, allowing
  *          contract administrators to dynamically change contract logic while maintaining

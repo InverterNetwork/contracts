@@ -9,7 +9,7 @@ import {ERC20, ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**
- * @title   ERC20 Issuance Token
+ * @title   Inverter ERC20 Issuance Token
  *
  * @notice  This contract creates an {ERC20} token with a supply cap and a whitelist-gated functionality
  *          to mint and burn tokens.

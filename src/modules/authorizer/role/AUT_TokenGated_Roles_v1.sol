@@ -26,7 +26,7 @@ interface TokenInterface {
 }
 
 /**
- * @title   Token-Gated Role Authorizer
+ * @title   Inverter Token-Gated Role Authorizer
  *
  * @notice  Extends the Inverter's role-based access control to include token gating,
  *          enabling roles to be conditionally assigned based on token ownership.

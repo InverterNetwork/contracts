@@ -25,7 +25,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
 /**
- * @title   PIM Workflow Factory
+ * @title   Inverter PIM Workflow Factory
  *
  * @notice  Facilitates the creation and configuration and setup of PIM workflows, including the deployment of
  *          bonding curves and  issuance tokens. It also provides functionalities for updating fee recipients and

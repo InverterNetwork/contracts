@@ -23,7 +23,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Payment Router
+ * @title   Inverter Payment Router
  *
  * @notice  This module enables pushing payments directly to the Payment Processor.
  *

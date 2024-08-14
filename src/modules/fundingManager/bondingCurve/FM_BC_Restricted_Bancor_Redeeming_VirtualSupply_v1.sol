@@ -10,7 +10,7 @@ import {
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 /**
- * @title   Restricted Bancor Virtual Supply Bonding Curve Funding Manager
+ * @title   Inverter Restricted Bancor Virtual Supply Bonding Curve Funding Manager
  *
  * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
  *          a virtual supply for both the issuance and the collateral as input. It integrates

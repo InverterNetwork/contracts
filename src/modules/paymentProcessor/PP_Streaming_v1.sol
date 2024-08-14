@@ -23,7 +23,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Linear Streaming Payment Processor
+ * @title   Inverter Linear Streaming Payment Processor
  *
  * @notice  Manages continuous and linear streaming payment streams within the Inverter
  *          Network, allowing multiple concurrent streams per recipient. Provides tools

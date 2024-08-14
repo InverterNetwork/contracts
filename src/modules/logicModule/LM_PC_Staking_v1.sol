@@ -29,7 +29,7 @@ import {ReentrancyGuardUpgradeable} from
     "@oz-up/utils/ReentrancyGuardUpgradeable.sol";
 
 /**
- * @title   Staking Module
+ * @title   Inverter Staking Module
  *
  * @notice  Provides a mechanism for users to stake tokens and earn rewards.
  *

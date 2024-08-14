@@ -34,7 +34,7 @@ import {
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Module Factory
+ * @title   Inverter Module Factory
  *
  * @notice  Enables the creation and registration of Inverter Modules,
  *          facilitating the deployment of module instances linked to specific beacons.
