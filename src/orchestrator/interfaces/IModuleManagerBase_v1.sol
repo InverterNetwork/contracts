@@ -34,7 +34,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Given address is not a module.
     error ModuleManagerBase__IsNotModule();
 
-    /// @notice The Manager has reached the maximum amount of modules.
+    /// @notice The {ModuleManagerBase_v1} has reached the maximum amount of modules.
     error ModuleManagerBase__ModuleAmountOverLimits();
 
     /// @notice Timelock still active for the given module address.
@@ -47,10 +47,10 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     /// @notice Module update is already in progress.
     error ModuleManagerBase__ModuleUpdateAlreadyStarted();
 
-    /// @notice Module has not bee registered in our factory.
+    /// @notice Module has not been registered in our factory.
     error ModuleManagerBase__ModuleNotRegistered();
 
-    /// @notice Referenced Module Factory is invalid.
+    /// @notice Referenced {ModuleFactory_v1} is invalid.
     error ModuleManagerBase__ModuleFactoryInvalid();
 
     //--------------------------------------------------------------------------

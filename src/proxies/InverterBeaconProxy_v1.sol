@@ -40,7 +40,7 @@ contract InverterBeaconProxy_v1 is Proxy {
     //--------------------------------------------------------------------------
     // Constructor
 
-    /// @notice Constructs the InverterBeaconProxy_v1.
+    /// @notice Constructs the {InverterBeaconProxy_v1}.
     /// @dev	Sets the {InverterBeacon_v1} instance that contains the implementation address.
     /// @param beacon The {InverterBeacon_v1} instance.
     constructor(IInverterBeacon_v1 beacon) {
@@ -52,7 +52,7 @@ contract InverterBeaconProxy_v1 is Proxy {
     // Public View Functions
 
     /// @dev	This overrides the possible use of a "version" function in the modules that are
-    ///      called via the Proxy Beacon structure.
+    ///         called via the Proxy Beacon structure.
     /// @notice Returns the version of the linked implementation.
     /// @return Major version.
     /// @return Minor version.

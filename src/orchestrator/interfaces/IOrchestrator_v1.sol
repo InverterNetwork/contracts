@@ -22,7 +22,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @param caller The caller address.
     error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
 
-    /// @notice The given module is not used in the orchestrator.
+    /// @notice The given module is not used in the {Orchestrator_v1}.
     /// @param module The module address.
     error Orchestrator__InvalidModuleType(address module);
 
@@ -33,7 +33,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         address currentToken, address newToken
     );
 
-    /// @notice The given module is not used in the orchestrator.
+    /// @notice The given module is not used in the {Orchestrator_v1}.
     error Orchestrator__DependencyInjection__ModuleNotUsedInOrchestrator();
 
     /// @notice The Authorizer can not be removed through this function.
@@ -60,13 +60,13 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @param _address The new address.
     event PaymentProcessorUpdated(address indexed _address);
 
-    /// @notice Orchestrator_v1 has been initialized with the corresponding modules.
-    /// @param orchestratorId_ The id of the orchestrator.
+    /// @notice {Orchestrator_v1} has been initialized with the corresponding modules.
+    /// @param orchestratorId_ The id of the {Orchestrator_v1}.
     /// @param fundingManager The address of the funding manager module.
     /// @param authorizer The address of the authorizer module.
     /// @param paymentProcessor The address of the payment processor module.
-    /// @param modules The addresses of the other modules used in the orchestrator.
-    /// @param governor The address of the governor contract used to reference protocol level interactions.
+    /// @param modules The addresses of the other modules used in the {Orchestrator_v1}.
+    /// @param governor The address of the {Governor_v1} contract used to reference protocol level interactions.
     event OrchestratorInitialized(
         uint indexed orchestratorId_,
         address fundingManager,
@@ -80,9 +80,9 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     // Functions
 
     /// @notice Initialization function.
-    /// @param orchestratorId The id of the orchestrator.
+    /// @param orchestratorId The id of the {Orchestrator_v1}.
     /// @param moduleFactory_ The address of the module factory.
-    /// @param modules The addresses of the modules used in the orchestrator.
+    /// @param modules The addresses of the modules used in the {Orchestrator_v1}.
     /// @param fundingManager The address of the funding manager module.
     /// @param authorizer The address of the authorizer module.
     /// @param paymentProcessor The address of the payment processor module.
@@ -137,14 +137,14 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
 
     /// @notice Executes replacing the current authorizer with `_authorizer`.
     /// @notice !!! IMPORTANT !!! When changing the Authorizer the current set of assigned addresses to Roles are lost.
-    ///                         Make sure initial owners are set properly.
+    ///         Make sure initial owners are set properly.
     /// @dev	Only callable by authorized caller.
     /// @param authorizer_ The address of the new authorizer module.
     function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
 
     /// @notice Executes replaces the current funding manager with `fundingManager_`.
     /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained in the module might
-    ///                           not be retrievable. Make sure to clean the FundingManager properly beforehand.
+    ///         not be retrievable. Make sure to clean the FundingManager properly beforehand.
     /// @dev	Only callable by authorized caller.
     /// @param fundingManager_ The address of the new funding manager module.
     function executeSetFundingManager(IFundingManager_v1 fundingManager_)
@@ -152,20 +152,20 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
 
     /// @notice Executes replaces the current payment processor with `paymentProcessor_`.
     /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payment orders are lost.
-    ///                           Make sure to resolve those payments properly beforehand.
+    ///         Make sure to resolve those payments properly beforehand.
     /// @dev	Only callable by authorized caller.
     /// @param paymentProcessor_ The address of the new payment processor module.
     function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
         external;
 
-    /// @notice Initiates the adding of a module to the Orchestrator on a timelock.
+    /// @notice Initiates the adding of a module to the {Orchestrator_v1} on a timelock.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails of adding module exeeds max modules limit.
     /// @dev	Fails if address invalid or address already added as module.
     /// @param module The module address to add.
     function initiateAddModuleWithTimelock(address module) external;
 
-    /// @notice Initiate the removal of a module from the Orchestrator on a timelock.
+    /// @notice Initiate the removal of a module from the {Orchestrator_v1} on a timelock.
     /// @dev	Reverts if module to be removed is the current authorizer/fundingManager/paymentProcessor.
     ///         The functions specific to updating these 3 module categories should be used instead.
     /// @dev	Only callable by authorized address.
@@ -188,15 +188,15 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     function executeRemoveModule(address module) external;
 
     /// @notice Cancels an initiated update for a module. Can be adding or removing a module
-    ///         from the Orchestrator.
+    ///         from the {Orchestrator_v1}.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if module update has not been initiated.
     /// @param module The module address to remove.
     function cancelModuleUpdate(address module) external;
 
-    /// @notice Returns the orchestrator's id.
+    /// @notice Returns the {Orchestrator_v1}'s id.
     /// @dev	Unique id set by the {OrchestratorFactory_v1} during initialization.
-    /// @return The orchestrator's id.
+    /// @return The {Orchestrator_v1}'s id.
     function orchestratorId() external view returns (uint);
 
     /// @notice The {IFundingManager_v1} implementation used to hold and distribute Funds.
@@ -212,7 +212,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @return The {IPaymentProcessor_v1} implementation.
     function paymentProcessor() external view returns (IPaymentProcessor_v1);
 
-    /// @notice The governor contract implementation used for protocol level interactions.
-    /// @return The governor contract implementation.
+    /// @notice The {IGovernor_v1} implementation used for protocol level interactions.
+    /// @return The {IGovernor_v1} implementation.
     function governor() external view returns (IGovernor_v1);
 }

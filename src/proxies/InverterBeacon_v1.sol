@@ -50,6 +50,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev Modifier to ensure the implementation is valid.
     modifier validImplementation(address newImplementation) {
         if (!(newImplementation.code.length > 0)) {
             revert InverterBeacon__InvalidImplementation();
@@ -57,6 +58,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _;
     }
 
+    /// @dev Modifier to ensure the new minor or patch version is valid.
     modifier validNewMinorOrPatchVersion(
         uint newMinorVersion,
         uint newPatchVersion
@@ -77,18 +79,18 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     // State
 
     /// @dev	The address of the contract that will revert all transactions.
-    /// Can only be set via the constructor() function.
+    ///         Can only be set via the `constructor()` function.
     address internal _reverterAddress;
 
-    /// @dev	The beacon's implementation address.
-    /// Can only be changed via the _setImplementation() function.
+    /// @dev	The {InverterBeacon_v1}'s implementation address.
+    ///         Can only be changed via the `_setImplementation()` function.
     address internal _implementationAddress;
 
-    /// @dev	The beacon's current implementation pointer.
-    /// In case of emergency can be set to _reverterAddress to pause functionality.
+    /// @dev	The {InverterBeacon_v1}'s current implementation pointer.
+    ///         In case of emergency can be set to `_reverterAddress` to pause functionality.
     address internal _implementationPointer;
 
-    /// @dev	Is the beacon shut down / in emergency mode.
+    /// @dev	Is the {InverterBeacon_v1} shut down / in emergency mode.
     bool internal _emergencyMode;
 
     /// @dev	The major version of the implementation.
@@ -198,6 +200,11 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    /// @dev Internal function to upgrade the implementation.
+    /// @param newImplementation The new implementation address.
+    /// @param newMinorVersion The new minor version.
+    /// @param newPatchVersion The new patch version.
+    /// @param overrideShutdown If the upgrade process should override the shutdown.
     function _upgradeTo(
         address newImplementation,
         uint newMinorVersion,
@@ -212,6 +219,9 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
     }
 
+    /// @dev Internal function to set the implementation.
+    /// @param newImplementation The new implementation address.
+    /// @param overrideShutdown If the upgrade process should override the shutdown.
     function _setImplementation(
         address newImplementation,
         bool overrideShutdown

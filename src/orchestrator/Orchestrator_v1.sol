@@ -67,7 +67,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by the admin of the workflow
+    /// @dev	Modifier to guarantee function is only callable by the admin of the workflow
     ///         address.
     modifier onlyOrchestratorAdmin() {
         bytes32 adminRole = authorizer.getAdminRole();
@@ -78,7 +78,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         _;
     }
 
-    /// @notice Modifier to guarantee that the given module is a logic module
+    /// @dev	Modifier to guarantee that the given module is a logic module
     ///         and not the authorizer or the fundingManager or the paymentProcessor.
     /// @param module_ The module to be checked.
     modifier onlyLogicModules(address module_) {
@@ -349,7 +349,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // Upstream Function Implementations
 
     /// @dev	Only addresses authorized via the {IAuthorizer_v1} instance can manage
-    ///      modules.
+    ///         modules.
     function __ModuleManager_isAuthorized(address who)
         internal
         view
@@ -381,6 +381,8 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         }
     }
 
+    /// @dev	Internal function to enforce that the given module is not a privileged module.
+    /// @param _contractAddr The address of the module to be checked.
     function _enforceNonPrivilegedModuleInterfaceCheck(address _contractAddr)
         internal
         view
@@ -406,9 +408,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // IERC2771Context
 
     /// @inheritdoc IModuleManagerBase_v1
-    /// @dev	Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the
-    ///      IOrchestrator_v1 we have to override it here as the original openzeppelin version doesnt contain an
-    ///      interface that we could use to expose it.
+    /// @dev	Because we want to expose the `isTrustedForwarder` function from the {ERC2771Context} Contract in the
+    ///         {IOrchestrator_v1} we have to override it here as the original openzeppelin version doesnt contain an
+    ///         interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)
         public
         view

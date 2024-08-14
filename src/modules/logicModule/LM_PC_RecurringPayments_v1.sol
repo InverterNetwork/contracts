@@ -106,14 +106,13 @@ contract LM_PC_RecurringPayments_v1 is
     /// @dev	length of an epoch.
     uint private epochLength;
 
-    /// @dev	Registry mapping ids to RecurringPayment structs
-    /// id => RecurringPayment.
+    /// @dev	Registry mapping ids to RecurringPayment structs id => RecurringPayment.
     mapping(uint => RecurringPayment) private _paymentRegistry;
 
     /// @dev	List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
 
-    /// @dev	Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------

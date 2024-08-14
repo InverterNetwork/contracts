@@ -14,13 +14,13 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 /**
  * @title   Inverter TransparentUpgradeableProxy
  *
- * @notice  An alternative variant of the TransparentUpgradeableProxy of OpenZeppelin that
+ * @notice  An alternative variant of the {TransparentUpgradeableProxy} of OpenZeppelin that
  *          allows for upgrading the linked implementation of the proxy to the implementation
  *          provided by a linked beacon.
  *
- * @dev     This contract is basically a copy of the TransparentUpgradeableProxy from openzeppelin.
+ * @dev     This contract is a fork of the {TransparentUpgradeableProxy} from openzeppelin.
  *          We adapted the callable functions of the admin account to only be able to upgrade the
- *          implementation to the newest implementation of the linked InverterBeacon.
+ *          implementation to the newest implementation of the linked {InverterBeacon_v1}.
  *
  *          !!! IMPORTANT !!!
  *
@@ -54,7 +54,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @notice The provided beacon address doesnt support the interface {IInverterBeacon_v1}.
     error InverterTransparentUpgradeableProxy__InvalidBeacon();
 
-    /// @dev	If the proxy caller is the current admin then it can only call the admin functions.
+    /// @notice	If the proxy caller is the current admin then it can only call the admin functions.
     error InverterTransparentUpgradeableProxy__ProxyDeniedAdminAccess();
 
     //--------------------------------------------------------------------------
@@ -102,7 +102,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     // Public View Functions
 
     /// @dev	This overrides the possible use of a "version" function in the modules that are called via the
-    ///      Proxy Beacon structure.
+    ///         Proxy Beacon structure.
     /// @notice Returns the version of the linked implementation.
     /// @return The major version.
     /// @return The minor version.

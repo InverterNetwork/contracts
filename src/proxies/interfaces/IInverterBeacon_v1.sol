@@ -17,11 +17,11 @@ interface IInverterBeacon_v1 is IBeacon {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice The Beacon was constructed.
+    /// @notice The {InverterBeacon_v1} was constructed.
     /// @param majorVersion The majorVersion of the implementation contract.
     event Constructed(uint majorVersion);
 
-    /// @notice The Beacon was upgraded to a new implementation address.
+    /// @notice The {InverterBeacon_v1} was upgraded to a new implementation address.
     /// @param implementation The new implementation address.
     /// @param newMinorVersion The new minor version of the implementation contract.
     /// @param newPatchVersion The new patch version of the implementation contract.
@@ -31,10 +31,10 @@ interface IInverterBeacon_v1 is IBeacon {
         uint newPatchVersion
     );
 
-    /// @notice The Beacon shutdown was initiated.
+    /// @notice The {InverterBeacon_v1} shutdown was initiated.
     event ShutdownInitiated();
 
-    /// @notice The Beacon shutdown was reversed.
+    /// @notice The {InverterBeacon_v1} shutdown was reversed.
     event ShutdownReversed();
 
     //--------------------------------------------------------------------------
@@ -46,24 +46,24 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @return Patch version.
     function version() external view returns (uint, uint, uint);
 
-    /// @notice Returns the reverter address of the beacon.
+    /// @notice Returns the {InverterReverter_v1} of the {InverterBeacon_v1}.
     /// @return ReverterAddress The address of the reverter contract.
     function getReverterAddress() external returns (address);
 
-    /// @notice Returns the implementation address of the beacon.
+    /// @notice Returns the implementation address of the {InverterBeacon_v1}.
     /// @return ImplementationAddress The address of the implementation.
     function getImplementationAddress() external returns (address);
 
-    /// @notice Returns wether the beacon is in emergency mode or not.
+    /// @notice Returns wether the {InverterBeacon_v1} is in emergency mode or not.
     /// @return emergencyModeActive Is the beacon in emergency mode.
     function emergencyModeActive() external view returns (bool);
 
     //--------------------------------------------------------------------------
     // onlyOwner Mutating Functions
 
-    /// @notice Upgrades the beacon to a new implementation address.
+    /// @notice Upgrades the {InverterBeacon_v1} to a new implementation address.
     /// @dev	Only callable by owner.
-    /// @dev	overrideShutdown Doesnt do anything if Beacon is not in emergency mode.
+    /// @dev	`overrideShutdown` Doesnt do anything if {InverterBeacon_v1} is not in emergency mode.
     /// @dev	Revert if new implementation invalid.
     /// @param newImplementation The new implementation address.
     /// @param newMinorVersion The new minor version of the implementation contract.
@@ -79,12 +79,12 @@ interface IInverterBeacon_v1 is IBeacon {
     //--------------------------------------------------------------------------
     // onlyOwner Intervention Mechanism
 
-    /// @notice Shuts down the beacon and stops the system.
+    /// @notice Shuts down the {InverterBeacon_v1} and stops the system.
     /// @dev	Only callable by owner.
     /// @dev	Changes the implementation address to address(0).
     function shutDownImplementation() external;
 
-    /// @notice Restarts the beacon and the system.
+    /// @notice Restarts the {InverterBeacon_v1} and the system.
     /// @dev	Only callable by owner.
     /// @dev	Changes the implementation address from address(0) to the original implementation.
     function restartImplementation() external;

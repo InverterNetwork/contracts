@@ -80,7 +80,7 @@ contract LM_PC_Staking_v1 is
     /// @dev	total supply of the token that is staked here.
     uint public totalSupply;
     /// @dev	rate of how many reward tokens are distributed from the fundingmanager to the whole staking
-    ///      pool in seconds.
+    ///         pool in seconds.
     uint public rewardRate;
     /// @dev	timestamp of when the reward period will end.
     uint public rewardsEnd;
@@ -89,18 +89,16 @@ contract LM_PC_Staking_v1 is
     /// @dev	timestamp of when the rewardValue was last updated.
     uint internal lastUpdate;
 
-    /// @dev	mapping of balances of each user in the staking token
-    /// address => balance.
+    /// @dev	mapping of balances of each user in the staking token address => balance.
     mapping(address => uint) internal _balances;
     /// @dev	mapping of reward Values that are needed to calculate the rewards that a user should receive.
     /// @dev	should change everytime the user stakes or unstakes funds
-    /// address => rewardValue.
+    ///         address => rewardValue.
     mapping(address => uint) internal userRewardValue;
-    /// @dev	mapping of how many reward tokens the user accumulated
-    /// address => earned.
+    /// @dev	mapping of how many reward tokens the user accumulated address => earned.
     mapping(address => uint) internal rewards;
 
-    /// @dev	Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -276,12 +274,13 @@ contract LM_PC_Staking_v1 is
 
     /// @dev	Calculates the reward value.
     /// @dev	This is the heart of the algorithm.
-    /// The reward Value is the accumulation of all the rewards a user would get for a single token if they had
-    /// staked at the beginning of the lifetime of this contract.
-    /// A "single" reward value or with the lack of a better word "reward period" is the rewardRate (so the rewards per
-    /// second for the whole contract) multiplied by the time period it was active and dividing that with the total
-    /// multiplied by the time period it was active and dividing that with the total supply.
-    /// This "single" value is essentially what a single token would have earned in that time period.
+    ///         The reward Value is the accumulation of all the rewards a user would get for a single token if they had
+    ///         staked at the beginning of the lifetime of this contract.
+    ///         A "single" reward value or with the lack of a better word "reward period" is the rewardRate
+    ///         (so the rewards per second for the whole contract) multiplied by the time period
+    ///         it was active and dividing that with the total multiplied by the time period it
+    ///         was active and dividing that with the total supply. This "single" value is
+    ///         essentially what a single token would have earned in that time period.
     /// @return The reward value.
     function _calculateRewardValue() internal view returns (uint) {
         // In case the totalSupply is 0 the rewardValue doesnt change
@@ -297,10 +296,10 @@ contract LM_PC_Staking_v1 is
     }
 
     /// @dev	Calculates the timestamp where rewards will be distributed.
-    /// @dev	The function returns either the current timestamp or the last timestamp where rewards will be distributed,
-    ///based on which one is earlier.
-    /// Is necessary to calculate the exact rewardValue at the end of the reward lifespan.
-    /// If not included rewards would be distributed forever.
+    /// @dev	The function returns either the current timestamp or the last timestamp where
+    ///         rewards will be distributed, based on which one is earlier.
+    ///         Is necessary to calculate the exact rewardValue at the end of the reward lifespan.
+    ///         If not included rewards would be distributed forever.
     /// @return The timestamp where rewards will be distributed.
     function _getRewardDistributionTimestamp() internal view returns (uint) {
         return rewardsEnd <= block.timestamp ? rewardsEnd : block.timestamp;
@@ -308,8 +307,8 @@ contract LM_PC_Staking_v1 is
 
     /// @dev	Calculates how much a user earned for their stake up to this point.
     /// @dev	internal function to calculate how much a user earned for their stake up to this point.
-    /// Uses the difference between the current Reward Value and the reward value when the user staked their tokens
-    /// in combination with their current balance to calculate their earnings.
+    ///         Uses the difference between the current Reward Value and the reward value when the user
+    ///         staked their tokens in combination with their current balance to calculate their earnings.
     /// @param user The address of the user.
     /// @param providedRewardValue The reward value.
     /// @return The amount of tokens the user earned.

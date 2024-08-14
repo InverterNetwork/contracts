@@ -53,7 +53,7 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable by authorized address.
+    /// @dev    Modifier to guarantee function is only callable by authorized address.
     modifier __ModuleManager_onlyAuthorized() {
         if (!__ModuleManager_isAuthorized(_msgSender())) {
             revert ModuleManagerBase__CallerNotAuthorized();
@@ -61,7 +61,7 @@ abstract contract ModuleManagerBase_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee that the caller is a module.
+    /// @dev    Modifier to guarantee that the caller is a module.
     modifier onlyModule() {
         if (!isModule(_msgSender())) {
             revert ModuleManagerBase__OnlyCallableByModule();
@@ -69,13 +69,13 @@ abstract contract ModuleManagerBase_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee that the given module is a valid module.
+    /// @dev    Modifier to guarantee that the given module is a valid module.
     modifier validModule(address module) {
         _ensureValidModule(module);
         _;
     }
 
-    /// @notice Modifier to guarantee that the given module is a registered module.
+    /// @dev    Modifier to guarantee that the given module is a registered module.
     modifier isModule_(address module) {
         if (!isModule(module)) {
             revert ModuleManagerBase__IsNotModule();
@@ -83,13 +83,13 @@ abstract contract ModuleManagerBase_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee that the given module is not a registered module.
+    /// @dev    Modifier to guarantee that the given module is not a registered module.
     modifier isNotModule(address module) {
         _ensureNotModule(module);
         _;
     }
 
-    /// @notice Modifier to guarantee that the number of modules is not exceeded.
+    /// @dev    Modifier to guarantee that the number of modules is not exceeded.
     modifier moduleLimitNotExceeded() {
         if (_modules.length >= MAX_MODULE_AMOUNT) {
             revert ModuleManagerBase__ModuleAmountOverLimits();
@@ -97,7 +97,7 @@ abstract contract ModuleManagerBase_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee that the given module is not already being updated.
+    /// @dev    Modifier to guarantee that the given module is not already being updated.
     modifier updatingModuleAlreadyStarted(address _module) {
         // if timelock not active
         if (!moduleAddressToTimelock[_module].timelockActive) {
@@ -106,7 +106,7 @@ abstract contract ModuleManagerBase_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee that the timelock for the given module is expired.
+    /// @dev    Modifier to guarantee that the timelock for the given module is expired.
     modifier timelockExpired(address _module) {
         uint timeUntil = moduleAddressToTimelock[_module].timelockUntil;
         if (block.timestamp < timeUntil) {
@@ -120,7 +120,7 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev	Marks the maximum amount of Modules a Orchestrator_v1 can have to avoid out-of-gas risk.
+    /// @dev	Marks the maximum amount of Modules a {Orchestrator_v1} can have to avoid out-of-gas risk.
     uint private constant MAX_MODULE_AMOUNT = 128;
     /// @dev	Timelock used between initiating adding or removing a module and executing it.
     uint public constant MODULE_UPDATE_TIMELOCK = 72 hours;
@@ -128,22 +128,22 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev	Module Factory.
+    /// @dev	{ModuleFactory_v1}.
     address public moduleFactory;
 
     /// @dev	List of modules.
     address[] private _modules;
 
-    /// @dev	Mapping to keep track of whether a module is used in the orchestrator
-    /// address => isModule.
+    /// @dev	Mapping to keep track of whether a module is used in the {Orchestrator_v1}
+    ///         address => isModule.
     mapping(address => bool) private _isModule;
 
     /// @dev	Mapping to keep track of active timelocks for updating modules
-    /// module => timelock.
+    ///         module => timelock.
     mapping(address module => ModuleUpdateTimelock timelock) public
         moduleAddressToTimelock;
 
-    /// @dev	Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -198,7 +198,7 @@ abstract contract ModuleManagerBase_v1 is
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev	Returns whether address `who` is authorized to mutate module
-    ///      manager's state.
+    ///         manager's state.
     /// @dev	MUST be overridden in downstream contract.
     /// @param who The address to check.
     /// @return True if the address is authorized, false otherwise.
@@ -247,7 +247,7 @@ abstract contract ModuleManagerBase_v1 is
         emit ModuleUpdateCanceled(module);
     }
 
-    /// @notice Initiates adding of a module to the Orchestrator on a timelock.
+    /// @notice Initiates adding of a module to the {Orchestrator_v1} on a timelock.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails of adding module exeeds max modules limit.
     /// @dev	Fails if address invalid or address already added as module.
@@ -261,7 +261,7 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @notice Initiates removing of a module from the Orchestrator on a timelock.
+    /// @notice Initiates removing of a module from the {Orchestrator_v1} on a timelock.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if address not added as module.
     /// @param module The module address to remove.
@@ -273,7 +273,7 @@ abstract contract ModuleManagerBase_v1 is
         _startModuleUpdateTimelock(module);
     }
 
-    /// @notice Executes adding of a module to the Orchestrator.
+    /// @notice Executes adding of a module to the {Orchestrator_v1}.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if adding of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
@@ -290,7 +290,7 @@ abstract contract ModuleManagerBase_v1 is
         __ModuleManager_addModule(module);
     }
 
-    /// @notice Executes removing of a module from the Orchestrator.
+    /// @notice Executes removing of a module from the {Orchestrator_v1}.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if removing of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
