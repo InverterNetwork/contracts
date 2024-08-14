@@ -10,11 +10,11 @@ interface IModule_v1 {
     // Structs
 
     /// @notice The module's metadata.
-    /// @param majorVersion The module's major version.
-    /// @param minorVersion The module's minor version.
-    /// @param patchVersion The module's patch version.
-    /// @param url The module's URL.
-    /// @param title The module's title.
+    /// @param  majorVersion The module's major version.
+    /// @param  minorVersion The module's minor version.
+    /// @param  patchVersion The module's patch version.
+    /// @param  url The module's URL.
+    /// @param  title The module's title.
     struct Metadata {
         uint majorVersion;
         uint minorVersion;
@@ -27,8 +27,8 @@ interface IModule_v1 {
     // Events
 
     /// @notice Module has been initialized.
-    /// @param parentOrchestrator The address of the {Orchestrator_v1} the module is linked to.
-    /// @param metadata The metadata of the module.
+    /// @param  parentOrchestrator The address of the {Orchestrator_v1} the module is linked to.
+    /// @param  metadata The metadata of the module.
     event ModuleInitialized(
         address indexed parentOrchestrator, Metadata metadata
     );
@@ -37,8 +37,8 @@ interface IModule_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    /// @param role The role that is required.
-    /// @param caller The address that is required to have the role.
+    /// @param  role The role that is required.
+    /// @param  caller The address that is required to have the role.
     error Module__CallerNotAuthorized(bytes32 role, address caller);
 
     /// @notice Function is only callable by the {Orchestrator_v1}.
@@ -54,7 +54,7 @@ interface IModule_v1 {
     error Module__InvalidMetadata();
 
     /// @notice {Orchestrator_v1} callback triggered failed.
-    /// @param funcSig The signature of the function called.
+    /// @param  funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
     /// @dev	Invalid Address.
@@ -66,9 +66,9 @@ interface IModule_v1 {
     /// @notice The module's initializer function.
     /// @dev	CAN be overridden by downstream contract.
     /// @dev	MUST call `__Module_init()`.
-    /// @param orchestrator The module's {Orchestrator_v1} instance.
-    /// @param metadata The module's metadata.
-    /// @param configData Variable config data for specific module
+    /// @param  orchestrator The module's {Orchestrator_v1} instance.
+    /// @param  metadata The module's metadata.
+    /// @param  configData Variable config data for specific module
     ///                   implementations.
     function init(
         IOrchestrator_v1 orchestrator,
@@ -101,24 +101,24 @@ interface IModule_v1 {
     function orchestrator() external view returns (IOrchestrator_v1);
 
     /// @notice Grants a module role to a target address.
-    /// @param role The role to grant.
-    /// @param target The target address to grant the role to.
+    /// @param  role The role to grant.
+    /// @param  target The target address to grant the role to.
     function grantModuleRole(bytes32 role, address target) external;
 
     /// @notice Grants a module role to multiple target addresses.
-    /// @param role The role to grant.
-    /// @param targets The target addresses to grant the role to.
+    /// @param  role The role to grant.
+    /// @param  targets The target addresses to grant the role to.
     function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
         external;
 
     /// @notice Revokes a module role from a target address.
-    /// @param role The role to revoke.
-    /// @param target The target address to revoke the role from.
+    /// @param  role The role to revoke.
+    /// @param  target The target address to revoke the role from.
     function revokeModuleRole(bytes32 role, address target) external;
 
     /// @notice Revokes a module role from multiple target addresses.
-    /// @param role The role to revoke.
-    /// @param targets The target addresses to revoke the role from.
+    /// @param  role The role to revoke.
+    /// @param  targets The target addresses to revoke the role from.
     function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
         external;
 }

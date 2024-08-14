@@ -353,8 +353,8 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, Module_v1 {
 
     /// @notice Increases the amount of tokens that _msgSender() has allowed
     ///         to spender.
-    /// @param spender The address of the spender.
-    /// @param tokens The amount of tokens to increase allowance by.
+    /// @param  spender The address of the spender.
+    /// @param  tokens The amount of tokens to increase allowance by.
     /// @return True if successful.
     function increaseAllowance(address spender, uint tokens)
         public
@@ -370,8 +370,8 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, Module_v1 {
 
     /// @notice Decreases the amount of tokens that _msgSender() has allowed
     ///         to spender.
-    /// @param spender The address of the spender.
-    /// @param tokens The amount of tokens to decrease allowance by.
+    /// @param  spender The address of the spender.
+    /// @param  tokens The amount of tokens to decrease allowance by.
     /// @return True if successful.
     function decreaseAllowance(address spender, uint tokens)
         public
@@ -475,7 +475,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, Module_v1 {
     }
 
     /// @notice Returns the number of successful permits for an address.
-    /// @param who The address to check the number of permits for.
+    /// @param  who The address to check the number of permits for.
     /// @return The number of successful permits.
     function nonces(address who) public view returns (uint) {
         return _nonces[who];

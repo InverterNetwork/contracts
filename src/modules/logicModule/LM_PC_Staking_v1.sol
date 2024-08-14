@@ -65,7 +65,7 @@ contract LM_PC_Staking_v1 is
     // Modifiers
 
     /// @dev	modifier to check if the duration is valid.
-    /// @param duration duration of the reward period.
+    /// @param  duration duration of the reward period.
     modifier validDuration(uint duration) {
         if (duration == 0) {
             revert Module__LM_PC_Staking_v1__InvalidDuration();
@@ -118,7 +118,7 @@ contract LM_PC_Staking_v1 is
     }
 
     /// @dev	Initializes the staking contract.
-    /// @param _stakingToken The address of the token that can be staked.
+    /// @param  _stakingToken The address of the token that can be staked.
     function __LM_PC_Staking_v1_init(address _stakingToken)
         internal
         onlyInitializing
@@ -231,8 +231,8 @@ contract LM_PC_Staking_v1 is
     // Private Functions
 
     /// @dev	Stakes tokens.
-    /// @param depositFor The address of the user.
-    /// @param amount The amount of tokens to stake.
+    /// @param  depositFor The address of the user.
+    /// @param  amount The amount of tokens to stake.
     function _stake(address depositFor, uint amount) internal virtual {
         _update(depositFor);
 
@@ -252,7 +252,7 @@ contract LM_PC_Staking_v1 is
 
     /// @dev	Updates the reward value and the timestamp of the last update.
     /// @dev	This has to trigger on every major change of the state of the contract.
-    /// @param triggerAddress The address of the user.
+    /// @param  triggerAddress The address of the user.
     function _update(address triggerAddress) internal {
         // Set a new reward value
         uint newRewardValue = _calculateRewardValue();
@@ -311,8 +311,8 @@ contract LM_PC_Staking_v1 is
     /// @dev	internal function to calculate how much a user earned for their stake up to this point.
     ///         Uses the difference between the current Reward Value and the reward value when the user
     ///         staked their tokens in combination with their current balance to calculate their earnings.
-    /// @param user The address of the user.
-    /// @param providedRewardValue The reward value.
+    /// @param  user The address of the user.
+    /// @param  providedRewardValue The reward value.
     /// @return The amount of tokens the user earned.
     function _earned(address user, uint providedRewardValue)
         internal
@@ -327,7 +327,7 @@ contract LM_PC_Staking_v1 is
 
     /// @dev	Distributes earned rewards via the payment processor.
     /// @dev	direct distribution of earned rewards via the payment processor.
-    /// @param recipient The address of the user.
+    /// @param  recipient The address of the user.
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
         uint amount = rewards[recipient];
@@ -354,8 +354,8 @@ contract LM_PC_Staking_v1 is
 
     /// @dev	Sets the rewards.
     /// @dev	for contracts that inherit.
-    /// @param amount The amount of tokens to distribute.
-    /// @param duration The duration of the reward period.
+    /// @param  amount The amount of tokens to distribute.
+    /// @param  duration The duration of the reward period.
     function _setRewards(uint amount, uint duration)
         internal
         validAmount(amount)
@@ -388,7 +388,7 @@ contract LM_PC_Staking_v1 is
     }
 
     /// @dev	Sets the staking token.
-    /// @param _token The address of the token that can be staked.
+    /// @param  _token The address of the token that can be staked.
     function _setStakingToken(address _token) internal {
         if (
             _token == address(0)

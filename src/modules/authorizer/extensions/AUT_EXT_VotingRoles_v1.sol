@@ -63,7 +63,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     }
 
     /// @dev	Reverts if voter address is invalid.
-    /// @param voter The address to check.
+    /// @param  voter The address to check.
     modifier isValidVoterAddress(address voter) {
         if (
             voter == address(0) || voter == address(this)
@@ -264,7 +264,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     // Internal Functions
 
     /// @dev	Removes a voter from the list of voters.
-    /// @param who The address of the voter to remove.
+    /// @param  who The address of the voter to remove.
     function _removeVoter(address who) internal {
         // Revert if trying to remove the last voter
         if (voterCount == 1) {
@@ -408,8 +408,8 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     // Internal
 
     /// @dev	Internal function to validate the threshold.
-    /// @param _voters The number of voters.
-    /// @param _threshold The threshold.
+    /// @param  _voters The number of voters.
+    /// @param  _threshold The threshold.
     function _validateThreshold(uint _voters, uint _threshold) internal pure {
         // Revert if one of these conditions is met
         // - Threshold is higher than the amount of voters

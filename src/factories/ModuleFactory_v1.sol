@@ -122,8 +122,8 @@ contract ModuleFactory_v1 is
     // Constructor & Initializer
 
     /// @notice The factories initializer function.
-    /// @param _reverter The address of the {InverterReverter_v1} contract.
-    /// @param _trustedForwarder The address of the trusted forwarder contract.
+    /// @param  _reverter The address of the {InverterReverter_v1} contract.
+    /// @param  _trustedForwarder The address of the trusted forwarder contract.
     constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
     {
@@ -132,9 +132,9 @@ contract ModuleFactory_v1 is
     }
 
     /// @notice The factories initializer function.
-    /// @param _governor The address of the {Governor_v1} contract.
-    /// @param initialMetadataRegistration List of metadata that will be registered during the initialization.
-    /// @param initialMetadataRegistration List of {IInverterBeacon_v1}s addresses that will be registered during the initialization.
+    /// @param  _governor The address of the {Governor_v1} contract.
+    /// @param  initialMetadataRegistration List of metadata that will be registered during the initialization.
+    /// @param  initialMetadataRegistration List of {IInverterBeacon_v1}s addresses that will be registered during the initialization.
     function init(
         address _governor,
         IModule_v1.Metadata[] memory initialMetadataRegistration,
@@ -266,8 +266,8 @@ contract ModuleFactory_v1 is
     // Internal Functions
 
     /// @dev	Internal function to register metadata.
-    /// @param metadata The metadata to register.
-    /// @param beacon The {IInverterBeacon_v1} to register the metadata to.
+    /// @param  metadata The metadata to register.
+    /// @param  beacon The {IInverterBeacon_v1} to register the metadata to.
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon

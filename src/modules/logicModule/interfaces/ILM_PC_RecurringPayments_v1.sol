@@ -6,10 +6,10 @@ interface ILM_PC_RecurringPayments_v1 {
     // Structs
 
     /// @notice Struct that holds the information of a RecurringPayment.
-    /// @param amount The amount of tokens that will be paid out upon triggering the RecurringPayment.
-    /// @param startEpoch The epoch in which the RecurringPayment should start.
-    /// @param lastTriggeredEpoch When was the last epoch this RecurringPayment was triggered.
-    /// @param recipient The recipient address that should receive tokens.
+    /// @param  amount The amount of tokens that will be paid out upon triggering the RecurringPayment.
+    /// @param  startEpoch The epoch in which the RecurringPayment should start.
+    /// @param  lastTriggeredEpoch When was the last epoch this RecurringPayment was triggered.
+    /// @param  recipient The recipient address that should receive tokens.
     struct RecurringPayment {
         uint amount;
         uint startEpoch;
@@ -36,11 +36,11 @@ interface ILM_PC_RecurringPayments_v1 {
     // Events
 
     /// @notice Event emitted when a new recurring payment added.
-    /// @param recurringPaymentId The id of the RecurringPayment.
-    /// @param amount The amount of tokens that should be sent to the recipient address.
-    /// @param startEpoch The epoch in which the payment starts.
-    /// @param lastTriggeredEpoch The epoch in which the payment was last triggered.
-    /// @param recipient The recipient address that should receive tokens.
+    /// @param  recurringPaymentId The id of the RecurringPayment.
+    /// @param  amount The amount of tokens that should be sent to the recipient address.
+    /// @param  startEpoch The epoch in which the payment starts.
+    /// @param  lastTriggeredEpoch The epoch in which the payment was last triggered.
+    /// @param  recipient The recipient address that should receive tokens.
     event RecurringPaymentAdded(
         uint indexed recurringPaymentId,
         uint amount,
@@ -50,15 +50,15 @@ interface ILM_PC_RecurringPayments_v1 {
     );
 
     /// @notice Event emitted when a recurring payment was removed.
-    /// @param recurringPaymentId The id of the RecurringPayment.
+    /// @param  recurringPaymentId The id of the RecurringPayment.
     event RecurringPaymentRemoved(uint indexed recurringPaymentId);
 
     /// @notice Event emitted when a recurring payment was triggered.
-    /// @param currentEpoch The current epoch.
+    /// @param  currentEpoch The current epoch.
     event RecurringPaymentsTriggered(uint indexed currentEpoch);
 
     /// @notice Event emitted when the epoch length is set.
-    /// @param epochLength The epoch length.
+    /// @param  epochLength The epoch length.
     event EpochLengthSet(uint epochLength);
 
     //--------------------------------------------------------------------------
@@ -69,7 +69,7 @@ interface ILM_PC_RecurringPayments_v1 {
     function getEpochLength() external view returns (uint epochLength);
 
     /// @notice Returns the RecurringPayment instance with id `id`.
-    /// @param id The id of the RecurringPayment to return.
+    /// @param  id The id of the RecurringPayment to return.
     /// @return RecurringPayment with id `id`.
     function getRecurringPaymentInformation(uint id)
         external
@@ -82,7 +82,7 @@ interface ILM_PC_RecurringPayments_v1 {
     function listRecurringPaymentIds() external view returns (uint[] memory);
 
     /// @notice Returns the id of previous RecurringPayment.
-    /// @param id The id of the RecurringPayment to return.
+    /// @param  id The id of the RecurringPayment to return.
     /// @return prevId The id of previous RecurringPayment.
     function getPreviousPaymentId(uint id)
         external
@@ -90,7 +90,7 @@ interface ILM_PC_RecurringPayments_v1 {
         returns (uint prevId);
 
     /// @notice Returns whether RecurringPayment with id `id` exists.
-    /// @param id The id of the RecurringPayment to test.
+    /// @param  id The id of the RecurringPayment to test.
     /// @return True if RecurringPayment with id `id` exists, false otherwise.
     function isExistingRecurringPaymentId(uint id)
         external
@@ -102,7 +102,7 @@ interface ILM_PC_RecurringPayments_v1 {
 
     /// @notice Calculates the epoch from a given uint timestamp.
     /// @dev	Calculation is: timestamp divided by epochLength.
-    /// @param timestamp A timestamp in a uint format.
+    /// @param  timestamp A timestamp in a uint format.
     /// @return epoch Epoch in which timestamp belongs to.
     function getEpochFromTimestamp(uint timestamp)
         external
@@ -116,7 +116,7 @@ interface ILM_PC_RecurringPayments_v1 {
 
     /// @notice Calculates a future epoch x epochs from now.
     /// @dev	Calculation is: current epoch + X epochs in the future = futureEpoch.
-    /// @param xEpochsInTheFuture How many epochs from the current epoch.
+    /// @param  xEpochsInTheFuture How many epochs from the current epoch.
     /// @return futureEpoch Epoch in the future.
     function getFutureEpoch(uint xEpochsInTheFuture)
         external
@@ -128,10 +128,10 @@ interface ILM_PC_RecurringPayments_v1 {
 
     /// @notice Adds a recurring payment to the manager.
     /// @dev	a new id is created for each Payment.
-    /// @param amount Amount of tokens send to the recipient address.
-    /// @param startEpoch Epoch in which the payment starts. Use getEpochFromTimestamp() or
+    /// @param  amount Amount of tokens send to the recipient address.
+    /// @param  startEpoch Epoch in which the payment starts. Use getEpochFromTimestamp() or
     ///                   getCurrentEpoch() to get the appropriate epoch.
-    /// @param recipient Recipient address that should receive tokens.
+    /// @param  recipient Recipient address that should receive tokens.
     /// @return id Id of the newly created recurring payment.
     function addRecurringPayment(
         uint amount,
@@ -140,8 +140,8 @@ interface ILM_PC_RecurringPayments_v1 {
     ) external returns (uint id);
 
     /// @notice Removes a recurring Payment.
-    /// @param prevId Id of the previous recurring payment in the payment list.
-    /// @param id Id of the recurring payment that is to be removed.
+    /// @param  prevId Id of the previous recurring payment in the payment list.
+    /// @param  id Id of the recurring payment that is to be removed.
     function removeRecurringPayment(uint prevId, uint id) external;
 
     //--------------------------------------------------------------------------
@@ -153,7 +153,7 @@ interface ILM_PC_RecurringPayments_v1 {
     /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for.
     /// @dev	this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal
     ///         trigger function.
-    /// @param startId : id of start position of the recurring payments that should be triggered.
-    /// @param endId : id of end position of the recurring payments that should be triggered.
+    /// @param  startId : id of start position of the recurring payments that should be triggered.
+    /// @param  endId : id of end position of the recurring payments that should be triggered.
     function triggerFor(uint startId, uint endId) external;
 }

@@ -8,14 +8,14 @@ import {IInverterTransparentUpgradeableProxy_v1} from
 interface IInverterProxyAdmin_v1 {
     /// @notice Upgrades the corresponding {InverterTransparentUpgradeableProxy_v1} to the newest version of the implementation.
     /// @dev	This contract must be othe admin/owner of the proxy.
-    /// @param proxy The proxy to upgrade.
+    /// @param  proxy The proxy to upgrade.
     function upgradeToNewestVersion(
         IInverterTransparentUpgradeableProxy_v1 proxy
     ) external;
 
     /// @notice Upgrades multiple {InverterTransparentUpgradeableProxy_v1}s to the newest version of the implementation.
     /// @dev	This contract must be othe admin/owner of the proxies.
-    /// @param proxies The proxies to upgrade.
+    /// @param  proxies The proxies to upgrade.
     function upgradeToNewestVersionBatched(
         IInverterTransparentUpgradeableProxy_v1[] calldata proxies
     ) external;

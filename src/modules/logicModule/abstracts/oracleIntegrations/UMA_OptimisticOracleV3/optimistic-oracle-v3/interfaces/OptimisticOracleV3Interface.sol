@@ -11,11 +11,11 @@ interface OptimisticOracleV3Interface {
     // Structs
 
     /// @notice Struct grouping together the settings related to the escalation manager stored in the assertion.
-    /// @param arbitrateViaEscalationManager False if the DVM is used as an oracle (EscalationManager on True).
-    /// @param discardOracle False if Oracle result is used for resolving assertion after dispute.
-    /// @param validateDisputers True if the EM isDisputeAllowed should be checked on disputes.
-    /// @param assertingCaller Stores msg.sender when assertion was made.
-    /// @param escalationManager Address of the escalation manager (zero address if not configured).
+    /// @param  arbitrateViaEscalationManager False if the DVM is used as an oracle (EscalationManager on True).
+    /// @param  discardOracle False if Oracle result is used for resolving assertion after dispute.
+    /// @param  validateDisputers True if the EM isDisputeAllowed should be checked on disputes.
+    /// @param  assertingCaller Stores msg.sender when assertion was made.
+    /// @param  escalationManager Address of the escalation manager (zero address if not configured).
     struct EscalationManagerSettings {
         bool arbitrateViaEscalationManager;
         bool discardOracle;
@@ -25,18 +25,18 @@ interface OptimisticOracleV3Interface {
     }
 
     /// @notice Struct for storing properties and lifecycle of an assertion.
-    /// @param escalationManagerSettings Settings related to the escalation manager.
-    /// @param asserter Address of the asserter.
-    /// @param assertionTime Time of the assertion.
-    /// @param settled True if the request is settled.
-    /// @param currency ERC20 token used to pay rewards and fees.
-    /// @param expirationTime Unix timestamp marking threshold when the assertion can no longer be disputed.
-    /// @param settlementResolution Resolution of the assertion (false till resolved).
-    /// @param domainId Optional domain that can be used to relate the assertion to others in the escalationManager.
-    /// @param identifier UMA DVM identifier to use for price requests in the event of a dispute.
-    /// @param bond Amount of currency that the asserter has bonded.
-    /// @param callbackRecipient Address that receives the callback.
-    /// @param disputer Address of the disputer.
+    /// @param  escalationManagerSettings Settings related to the escalation manager.
+    /// @param  asserter Address of the asserter.
+    /// @param  assertionTime Time of the assertion.
+    /// @param  settled True if the request is settled.
+    /// @param  currency ERC20 token used to pay rewards and fees.
+    /// @param  expirationTime Unix timestamp marking threshold when the assertion can no longer be disputed.
+    /// @param  settlementResolution Resolution of the assertion (false till resolved).
+    /// @param  domainId Optional domain that can be used to relate the assertion to others in the escalationManager.
+    /// @param  identifier UMA DVM identifier to use for price requests in the event of a dispute.
+    /// @param  bond Amount of currency that the asserter has bonded.
+    /// @param  callbackRecipient Address that receives the callback.
+    /// @param  disputer Address of the disputer.
     struct Assertion {
         EscalationManagerSettings escalationManagerSettings;
         address asserter;
@@ -53,8 +53,8 @@ interface OptimisticOracleV3Interface {
     }
 
     /// @notice Struct for storing cached currency whitelist.
-    /// @param isWhitelisted True if the currency is whitelisted.
-    /// @param finalFee Final fee of the currency.
+    /// @param  isWhitelisted True if the currency is whitelisted.
+    /// @param  finalFee Final fee of the currency.
     struct WhitelistedCurrency {
         bool isWhitelisted;
         uint finalFee;

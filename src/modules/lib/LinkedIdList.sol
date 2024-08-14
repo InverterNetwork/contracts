@@ -13,10 +13,10 @@ library LinkedIdList {
     // Structs
 
     /// @notice Struct used to store information about an element in the list.
-    /// @param Size of the list.
-    /// @param Marks    The last element of the list.
+    /// @param  Size of the list.
+    /// @param  Marks    The last element of the list.
     ///                 Always links back to the _SENTINEL.
-    /// @param List of Ids.
+    /// @param  List of Ids.
     struct List {
         uint size;
         uint last;
@@ -136,7 +136,7 @@ library LinkedIdList {
     }
 
     /// @notice lists the ids contained in the linked list.
-    /// @param self The linked List from where the ids should be listed.
+    /// @param  self The linked List from where the ids should be listed.
     /// @return array of ids that are contained in the list
     function listIds(List storage self) internal view returns (uint[] memory) {
         uint[] memory result = new uint[](self.size);
@@ -154,8 +154,8 @@ library LinkedIdList {
     }
 
     /// @dev Returns whether id is in list and not Sentinel
-    /// @param self The linked List from where the ids should be listed.
-    /// @param id The id to check.
+    /// @param  self The linked List from where the ids should be listed.
+    /// @param  id The id to check.
     function isExistingId(List storage self, uint id)
         internal
         view
@@ -166,8 +166,8 @@ library LinkedIdList {
     }
 
     /// @dev	Id and prevId can be _SENTINEL
-    /// @param self The linked List from where the ids should be listed.
-    /// @param id The id to check.
+    /// @param  self The linked List from where the ids should be listed.
+    /// @param  id The id to check.
     function getPreviousId(List storage self, uint id)
         internal
         view
@@ -188,8 +188,8 @@ library LinkedIdList {
     }
 
     /// @dev	Id and nextId can be _SENTINEL
-    /// @param self The linked List from which to get the next id.
-    /// @param id The id to check.
+    /// @param  self The linked List from which to get the next id.
+    /// @param  id The id to check.
     function getNextId(List storage self, uint id)
         internal
         view
@@ -203,8 +203,8 @@ library LinkedIdList {
     // Mutating Functions
 
     /// @dev	Add To list at last position
-    /// @param self The linked List to which to add the id.
-    /// @param id The id to add.
+    /// @param  self The linked List to which to add the id.
+    /// @param  id The id to add.
     function addId(List storage self, uint id) internal validNewId(self, id) {
         self.list[self.last] = id;
         self.list[id] = _SENTINEL;
@@ -213,9 +213,9 @@ library LinkedIdList {
     }
 
     /// @dev    Remove Id from list and decrease size.
-    /// @param self The linked List from which to remove the id.
-    /// @param prevId The id of the previous id.
-    /// @param id The id to remove.
+    /// @param  self The linked List from which to remove the id.
+    /// @param  prevId The id of the previous id.
+    /// @param  id The id to remove.
     function removeId(List storage self, uint prevId, uint id)
         internal
         validId(self, id)
@@ -234,10 +234,10 @@ library LinkedIdList {
     }
 
     /// @dev Move id in list
-    /// @param self The linked List in which to move the id.
-    /// @param id The id to move.
-    /// @param prevId The id of the previous id.
-    /// @param idToPositionAfter The id to position after.
+    /// @param  self The linked List in which to move the id.
+    /// @param  id The id to move.
+    /// @param  prevId The id of the previous id.
+    /// @param  idToPositionAfter The id to position after.
     function moveIdInList(
         List storage self,
         uint id,

@@ -13,8 +13,8 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
  */
 contract RebaseTest is ElasticReceiptTokenBaseV1Test {
     /// @notice Event emitted when the balance scalar is updated.
-    /// @param epoch The number of rebases since inception.
-    /// @param newScalar The new scalar.
+    /// @param  epoch The number of rebases since inception.
+    /// @param  newScalar The new scalar.
     event Rebase(uint indexed epoch, uint newScalar);
 
     struct TestCase {

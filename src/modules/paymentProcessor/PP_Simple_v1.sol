@@ -201,9 +201,9 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     // Internal Functions
 
     /// @notice used to claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
-    /// @param client address of the payment client.
-    /// @param token address of the payment token.
-    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
+    /// @param  client address of the payment client.
+    /// @param  token address of the payment token.
+    /// @param  paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
     function _claimPreviouslyUnclaimable(
         address client,
         address token,
@@ -227,7 +227,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     }
 
     /// @notice Validate address input.
-    /// @param addr Address to validate.
+    /// @param  addr Address to validate.
     /// @return True if address is valid.
     function _validPaymentReceiver(address addr) internal view returns (bool) {
         return !(
@@ -238,14 +238,14 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     }
 
     /// @notice Validate uint total amount input.
-    /// @param _total uint to validate.
+    /// @param  _total uint to validate.
     /// @return True if uint is valid.
     function _validTotal(uint _total) internal pure returns (bool) {
         return !(_total == 0);
     }
 
     /// @notice Validate payment token input.
-    /// @param _token Address of the token to validate.
+    /// @param  _token Address of the token to validate.
     /// @return True if address is valid.
     function _validPaymentToken(address _token) internal returns (bool) {
         // Only a basic sanity check that the address supports the balanceOf() function. The corresponding

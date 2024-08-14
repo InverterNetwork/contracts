@@ -158,8 +158,8 @@ abstract contract OptimisticOracleIntegrator is
     // Internal Functions
 
     /// @dev	Sets the default currency and bond.
-    /// @param _newCurrency Address of the new default currency.
-    /// @param _newBond The new default bond.
+    /// @param  _newCurrency Address of the new default currency.
+    /// @param  _newBond The new default bond.
     function _setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         internal
     {
@@ -175,7 +175,7 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     /// @dev	Sets the OptimisticOracleV3 instance where assertions will be published to.
-    /// @param _newOO The address of the new OptimisticOracleV3 instance.
+    /// @param  _newOO The address of the new OptimisticOracleV3 instance.
     function _setOptimisticOracle(address _newOO) internal {
         if (_newOO == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
@@ -185,7 +185,7 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     /// @dev	Sets the default assertion liveness.
-    /// @param _newLiveness The new default assertion liveness.
+    /// @param  _newLiveness The new default assertion liveness.
     function _setDefaultAssertionLiveness(uint64 _newLiveness) internal {
         if (_newLiveness < 21_600) {
             // 21600 seconds = 6 hours

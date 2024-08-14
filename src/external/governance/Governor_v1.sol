@@ -504,7 +504,7 @@ contract Governor_v1 is
     // Internal Functions
 
     /// @dev	sets the internal {FeeManager_v1} address.
-    /// @param newFeeManager the address of the new {FeeManager_v1}.
+    /// @param  newFeeManager the address of the new {FeeManager_v1}.
     function _setFeeManager(address newFeeManager)
         internal
         validAddress(newFeeManager)
@@ -514,7 +514,7 @@ contract Governor_v1 is
     }
 
     /// @dev	sets the internal timelock period.
-    /// @param newTimelockPeriod the new timelock period.
+    /// @param  newTimelockPeriod the new timelock period.
     function _setTimelockPeriod(uint newTimelockPeriod)
         internal
         validTimelockPeriod(newTimelockPeriod)
@@ -524,7 +524,7 @@ contract Governor_v1 is
     }
 
     /// @dev	sets the internal {ModuleFactory_v1} address.
-    /// @param newModuleFactory the address of the new {ModuleFactory_v1}.
+    /// @param  newModuleFactory the address of the new {ModuleFactory_v1}.
     function _setModuleFactory(address newModuleFactory)
         internal
         validAddress(newModuleFactory)

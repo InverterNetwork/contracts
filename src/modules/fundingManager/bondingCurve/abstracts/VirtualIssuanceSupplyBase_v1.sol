@@ -72,7 +72,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
 
     /// @dev    Adds a specified amount to the virtual issuance supply.
     ///         Checks for overflow and reverts if an overflow occurs.
-    /// @param _amount The amount to add to the virtual issuance supply.
+    /// @param  _amount The amount to add to the virtual issuance supply.
     function _addVirtualIssuanceAmount(uint _amount) internal virtual {
         if (_amount > (MAX_UINT - virtualIssuanceSupply)) {
             revert Module__VirtualIssuanceSupplyBase__AddResultsInOverflow();
@@ -86,7 +86,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
 
     /// @dev    Subtracts a specified amount from the virtual issuance supply.
     ///         Checks for underflow and reverts if an underflow occurs.
-    /// @param _amount The amount to subtract from the virtual issuance supply.
+    /// @param  _amount The amount to subtract from the virtual issuance supply.
     function _subVirtualIssuanceAmount(uint _amount) internal virtual {
         if (_amount > virtualIssuanceSupply) {
             revert Module__VirtualIssuanceSupplyBase__SubtractResultsInUnderflow(
@@ -104,7 +104,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
     }
 
     /// @dev	Internal function to directly set the virtual issuance supply to a new value.
-    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    /// @param  _virtualSupply The new value to set for the virtual issuance supply.
     function _setVirtualIssuanceSupply(uint _virtualSupply) internal virtual {
         if (_virtualSupply == 0) {
             revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(

@@ -6,11 +6,11 @@ interface ILM_PC_KPIRewarder_v1 {
     // Structs
 
     /// @notice A KPI to be used for reward distribution.
-    /// @param numOfTranches The number of tranches the KPI is divided into.
-    /// @param totalRewards The total rewards to be distributed.
-    /// @param continuous If the tranche rewards should be distributed continuously or in steps.
-    /// @param trancheValues The value at which each tranche ends.
-    /// @param trancheRewards The rewards to be distributed at completion of each tranche.
+    /// @param  numOfTranches The number of tranches the KPI is divided into.
+    /// @param  totalRewards The total rewards to be distributed.
+    /// @param  continuous If the tranche rewards should be distributed continuously or in steps.
+    /// @param  trancheValues The value at which each tranche ends.
+    /// @param  trancheRewards The rewards to be distributed at completion of each tranche.
     struct KPI {
         uint numOfTranches; //
         uint totalRewards;
@@ -20,10 +20,10 @@ interface ILM_PC_KPIRewarder_v1 {
     }
 
     /// @notice The configuration of the reward round tied.
-    /// @param creationTime The timestamp the assertion was posted.
-    /// @param assertedValue The value that was asserted.
-    /// @param KpiToUse The KPI to be used for distribution once the assertion confirms.
-    /// @param distributed If the rewards have been distributed or not.
+    /// @param  creationTime The timestamp the assertion was posted.
+    /// @param  assertedValue The value that was asserted.
+    /// @param  KpiToUse The KPI to be used for distribution once the assertion confirms.
+    /// @param  distributed If the rewards have been distributed or not.
     struct RewardRoundConfiguration {
         uint creationTime; // timestamp the assertion was created
         uint assertedValue;
@@ -67,12 +67,12 @@ interface ILM_PC_KPIRewarder_v1 {
     // Events
 
     /// @notice Event emitted when a KPI is created.
-    /// @param KPI_Id The id of the KPI.
-    /// @param numOfTranches The number of tranches in the KPI.
-    /// @param totalKPIRewards The total rewards for the KPI.
-    /// @param continuous Whether the KPI is continuous or not.
-    /// @param trancheValues The values at which each tranche ends.
-    /// @param trancheRewards The rewards to be distributed at completion of each tranche.
+    /// @param  KPI_Id The id of the KPI.
+    /// @param  numOfTranches The number of tranches in the KPI.
+    /// @param  totalKPIRewards The total rewards for the KPI.
+    /// @param  continuous Whether the KPI is continuous or not.
+    /// @param  trancheValues The values at which each tranche ends.
+    /// @param  trancheRewards The rewards to be distributed at completion of each tranche.
     event KPICreated(
         uint indexed KPI_Id,
         uint numOfTranches,
@@ -83,10 +83,10 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice Event emitted when a reward round is configured.
-    /// @param assertionId The id of the assertion.
-    /// @param creationTime The timestamp the assertion was created.
-    /// @param assertedValue The value that was asserted.
-    /// @param KpiToUse The KPI to be used for distribution once the assertion confirms.
+    /// @param  assertionId The id of the assertion.
+    /// @param  creationTime The timestamp the assertion was created.
+    /// @param  assertedValue The value that was asserted.
+    /// @param  KpiToUse The KPI to be used for distribution once the assertion confirms.
     event RewardRoundConfigured(
         bytes32 indexed assertionId,
         uint creationTime,
@@ -95,8 +95,8 @@ interface ILM_PC_KPIRewarder_v1 {
     );
 
     /// @notice Event emitted when funds for paying the bonding fee are deposited into the contract.
-    /// @param token The token used for the deposit.
-    /// @param amount The amount deposited.
+    /// @param  token The token used for the deposit.
+    /// @param  amount The amount deposited.
     event FeeFundsDeposited(address indexed token, uint amount);
 
     /// @notice Event emitted when a stuck assertion gets deleted.
@@ -106,10 +106,10 @@ interface ILM_PC_KPIRewarder_v1 {
     // Functions
 
     /// @notice Posts an assertion to the Optimistic Oracle, specifying the KPI to use and the asserted value.
-    /// @param dataId The dataId to be posted.
-    /// @param assertedValue The target value that will be asserted and posted as data to the oracle.
-    /// @param asserter The address of the asserter.
-    /// @param targetKPI The KPI to be used for distribution once the assertion confirms.
+    /// @param  dataId The dataId to be posted.
+    /// @param  assertedValue The target value that will be asserted and posted as data to the oracle.
+    /// @param  asserter The address of the asserter.
+    /// @param  targetKPI The KPI to be used for distribution once the assertion confirms.
     /// @return assertionId The assertionId received for the posted assertion.
     function postAssertion(
         bytes32 dataId,
@@ -119,9 +119,9 @@ interface ILM_PC_KPIRewarder_v1 {
     ) external returns (bytes32 assertionId);
 
     /// @notice Creates a KPI for the Rewarder.
-    /// @param _continuous Should the tranche rewards be distributed continuously or in steps.
-    /// @param _trancheValues The value at which the tranches end.
-    /// @param _trancheRewards The rewards to be distributed at completion of each tranche.
+    /// @param  _continuous Should the tranche rewards be distributed continuously or in steps.
+    /// @param  _trancheValues The value at which the tranches end.
+    /// @param  _trancheRewards The rewards to be distributed at completion of each tranche.
     /// @return The KPI id.
     function createKPI(
         bool _continuous,
@@ -130,16 +130,16 @@ interface ILM_PC_KPIRewarder_v1 {
     ) external returns (uint);
 
     /// @notice Deposits funds into the contract so it can pay for the oracle bond and fee itself.
-    /// @param amount The amount to deposit.
+    /// @param  amount The amount to deposit.
     function depositFeeFunds(uint amount) external;
 
     /// @notice Returns the KPI with the given number.
-    /// @param KPInum The number of the KPI to return.
+    /// @param  KPInum The number of the KPI to return.
     /// @return The KPI.
     function getKPI(uint KPInum) external view returns (KPI memory);
 
     /// @notice Returns the Assertion Configuration for a given assertionId.
-    /// @param assertionId The id of the Assertion to return.
+    /// @param  assertionId The id of the Assertion to return.
     /// @return The Assertion Configuration.
     function getAssertionConfig(bytes32 assertionId)
         external
@@ -148,6 +148,6 @@ interface ILM_PC_KPIRewarder_v1 {
 
     /// @notice Deletes a stuck assertion.
     /// @dev This function is only callable by the Orchestrator Admin.
-    /// @param assertionId The id of the assertion to delete.
+    /// @param  assertionId The id of the assertion to delete.
     function deleteStuckAssertion(bytes32 assertionId) external;
 }

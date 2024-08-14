@@ -164,7 +164,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev    Function used for wrapping the call to the external contract responsible for
     ///         calculating the redeeming amount. This function is an abstract function and must be
     ///         implemented in the downstream contract.
-    /// @param _depositAmount The amount of issuing token that is deposited.
+    /// @param  _depositAmount The amount of issuing token that is deposited.
     /// @return uint Return the amount of collateral to be redeemed.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
@@ -185,9 +185,9 @@ abstract contract RedeemingBondingCurveBase_v1 is
     ///         differes from the actual balance.
     ///         Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
     ///         contract for redemption.
-    /// @param _receiver The address receiving the redeem amount.
-    /// @param _depositAmount The amount of tokens being sold by the receiver.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _receiver The address receiving the redeem amount.
+    /// @param  _depositAmount The amount of tokens being sold by the receiver.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @return totalCollateralTokenMovedOut The total amount of collateral tokens that are transfered away from
     ///         the collateral token amount of this contract.
     /// @return issuanceFeeAmount The amount of issuance token subtracted as fee.
@@ -282,7 +282,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @dev	Sets the sell transaction fee, expressed in BPS.
-    /// @param _fee The fee percentage to set for sell transactions.
+    /// @param  _fee The fee percentage to set for sell transactions.
     function _setSellFee(uint _fee) internal virtual {
         _validateWorkflowFee(_fee);
         emit SellFeeUpdated(_fee, sellFee);

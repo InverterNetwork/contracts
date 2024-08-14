@@ -35,16 +35,16 @@ interface IModuleFactory_v1 {
     // Events
 
     /// @notice Event emitted when new beacon registered for metadata.
-    /// @param metadata The registered Metadata.
-    /// @param beacon The registered Beacon.
+    /// @param  metadata The registered Metadata.
+    /// @param  beacon The registered Beacon.
     event MetadataRegistered(
         IModule_v1.Metadata metadata, IInverterBeacon_v1 indexed beacon
     );
 
     /// @notice Event emitted when new module created for an {Orchestrator_v1}.
-    /// @param orchestrator The corresponding {Orchestrator_v1}.
-    /// @param module The created module instance.
-    /// @param metadata The registered metadata.
+    /// @param  orchestrator The corresponding {Orchestrator_v1}.
+    /// @param  module The created module instance.
+    /// @param  metadata The registered metadata.
     event ModuleCreated(
         address indexed orchestrator,
         address indexed module,
@@ -52,7 +52,7 @@ interface IModuleFactory_v1 {
     );
 
     /// @notice Event emitted when {Governor_v1} is set.
-    /// @param governor The address of the {Governor_v1}.
+    /// @param  governor The address of the {Governor_v1}.
     event GovernorSet(address indexed governor);
 
     //--------------------------------------------------------------------------
@@ -67,10 +67,10 @@ interface IModuleFactory_v1 {
     function governor() external view returns (address);
 
     /// @notice Creates a module instance identified by given `metadata` and initiates it.
-    /// @param metadata The module's `metadata`.
-    /// @param orchestrator The {Orchestrator_v1} instance of the module.
-    /// @param configData The configData of the module.
-    /// @param workflowConfig The configData of the workflow.
+    /// @param  metadata The module's `metadata`.
+    /// @param  orchestrator The {Orchestrator_v1} instance of the module.
+    /// @param  configData The configData of the module.
+    /// @param  workflowConfig The configData of the workflow.
     /// @return moduleProxyAddress Returns the address of the created module proxy.
     function createAndInitModule(
         IModule_v1.Metadata memory metadata,
@@ -80,9 +80,9 @@ interface IModuleFactory_v1 {
     ) external returns (address);
 
     /// @notice Creates a module proxy instance identified by given `metadata`.
-    /// @param metadata The module's metadata.
-    /// @param orchestrator The {Orchestrator_v1} instance of the module.
-    /// @param workflowConfig The configData of the workflow.
+    /// @param  metadata The module's metadata.
+    /// @param  orchestrator The {Orchestrator_v1} instance of the module.
+    /// @param  workflowConfig The configData of the workflow.
     /// @return Returns the address of the created module proxy.
     function createModuleProxy(
         IModule_v1.Metadata memory metadata,
@@ -92,7 +92,7 @@ interface IModuleFactory_v1 {
 
     /// @notice Returns the {IInverterBeacon_v1} instance registered and the `id` for given
     ///         `metadata`.
-    /// @param metadata The module's metadata.
+    /// @param  metadata The module's metadata.
     /// @return beacon The module's {IInverterBeacon_v1} instance registered.
     /// @return id The metadata's id.
     function getBeaconAndId(IModule_v1.Metadata memory metadata)
@@ -101,7 +101,7 @@ interface IModuleFactory_v1 {
         returns (IInverterBeacon_v1, bytes32);
 
     /// @notice Returns the {Orchestrator_v1} address of a beacon proxy.
-    /// @param proxy The beacon proxy address.
+    /// @param  proxy The beacon proxy address.
     /// @return orchestratorAddress The corresponding {Orchestrator_v1} address for the provided proxy.
     function getOrchestratorOfProxy(address proxy)
         external
@@ -111,8 +111,8 @@ interface IModuleFactory_v1 {
     /// @notice Registers metadata `metadata` with {IInverterBeacon_v1} implementation
     ///         `beacon`.
     /// @dev	Only callable by owner.
-    /// @param metadata The module's metadata.
-    /// @param beacon The module's {IInverterBeacon_v1} instance.
+    /// @param  metadata The module's metadata.
+    /// @param  beacon The module's {IInverterBeacon_v1} instance.
     function registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon

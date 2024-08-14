@@ -155,8 +155,8 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @notice Initialization function.
     /// @dev	Only callable during initialization.
-    /// @param _moduleFactory The address of the module factory.
-    /// @param modules The addresses of the modules used in the orchestrator.
+    /// @param  _moduleFactory The address of the module factory.
+    /// @param  modules The addresses of the modules used in the orchestrator.
     function __ModuleManager_init(
         address _moduleFactory,
         address[] calldata modules
@@ -184,7 +184,7 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     /// @notice Adds address `module` as module.
-    /// @param module The module address to add.
+    /// @param  module The module address to add.
     function __ModuleManager_addModule(address module)
         internal
         isNotModule(module)
@@ -200,7 +200,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev	Returns whether address `who` is authorized to mutate module
     ///         manager's state.
     /// @dev	MUST be overridden in downstream contract.
-    /// @param who The address to check.
+    /// @param  who The address to check.
     /// @return True if the address is authorized, false otherwise.
     function __ModuleManager_isAuthorized(address who)
         internal
@@ -237,7 +237,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @notice Cancels an initiated update for a module.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if module update has not been initiated.
-    /// @param module The module address to remove.
+    /// @param  module The module address to remove.
     function _cancelModuleUpdate(address module)
         internal
         __ModuleManager_onlyAuthorized
@@ -251,7 +251,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev	Only callable by authorized address.
     /// @dev	Fails of adding module exeeds max modules limit.
     /// @dev	Fails if address invalid or address already added as module.
-    /// @param module The module address to add.
+    /// @param  module The module address to add.
     function _initiateAddModuleWithTimelock(address module)
         internal
         __ModuleManager_onlyAuthorized
@@ -264,7 +264,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @notice Initiates removing of a module from the {Orchestrator_v1} on a timelock.
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if address not added as module.
-    /// @param module The module address to remove.
+    /// @param  module The module address to remove.
     function _initiateRemoveModuleWithTimelock(address module)
         internal
         __ModuleManager_onlyAuthorized
@@ -277,7 +277,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if adding of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
-    /// @param module The module address to add.
+    /// @param  module The module address to add.
     function _executeAddModule(address module)
         internal
         __ModuleManager_onlyAuthorized
@@ -294,7 +294,7 @@ abstract contract ModuleManagerBase_v1 is
     /// @dev	Only callable by authorized address.
     /// @dev	Fails if removing of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
-    /// @param module The module address to remove.
+    /// @param  module The module address to remove.
     function _executeRemoveModule(address module)
         internal
         __ModuleManager_onlyAuthorized
@@ -312,7 +312,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev	Expects `module` to be valid module address.
     /// @dev	Expects `module` to not be enabled module.
-    /// @param module The module address to add.
+    /// @param  module The module address to add.
     function _commitAddModule(address module) internal {
         // Add address to _modules list.
         _modules.push(module);
@@ -322,7 +322,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev	Expects address arguments to be consecutive in the modules list.
     /// @dev	Expects address `module` to be enabled module.
-    /// @param module The module address to remove.
+    /// @param  module The module address to remove.
     function _commitRemoveModule(address module) private {
         // Note that we cannot delete the module's roles configuration.
         // This means that in case a module is disabled and then re-enabled,
@@ -354,7 +354,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev	Ensures that the given module is a valid module.
     /// @dev	Reverts if the module is invalid.
-    /// @param module The module address to check.
+    /// @param  module The module address to check.
     function _ensureValidModule(address module) private view {
         if (
             module.code.length == 0 || module == address(0)
@@ -375,7 +375,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev	Ensures that the given module is not a registered module.
     /// @dev	Reverts if the module is registered.
-    /// @param module The module address to check.
+    /// @param  module The module address to check.
     function _ensureNotModule(address module) private view {
         if (isModule(module)) {
             revert ModuleManagerBase__IsModule();
@@ -383,7 +383,7 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     /// @dev	Starts the timelock for the given module.
-    /// @param _module The module address to start the timelock for.
+    /// @param  _module The module address to start the timelock for.
     function _startModuleUpdateTimelock(address _module) internal {
         moduleAddressToTimelock[_module] =
             ModuleUpdateTimelock(true, block.timestamp + MODULE_UPDATE_TIMELOCK);

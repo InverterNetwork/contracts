@@ -18,13 +18,13 @@ interface IInverterBeacon_v1 is IBeacon {
     // Events
 
     /// @notice The {InverterBeacon_v1} was constructed.
-    /// @param majorVersion The majorVersion of the implementation contract.
+    /// @param  majorVersion The majorVersion of the implementation contract.
     event Constructed(uint majorVersion);
 
     /// @notice The {InverterBeacon_v1} was upgraded to a new implementation address.
-    /// @param implementation The new implementation address.
-    /// @param newMinorVersion The new minor version of the implementation contract.
-    /// @param newPatchVersion The new patch version of the implementation contract.
+    /// @param  implementation The new implementation address.
+    /// @param  newMinorVersion The new minor version of the implementation contract.
+    /// @param  newPatchVersion The new patch version of the implementation contract.
     event Upgraded(
         address indexed implementation,
         uint newMinorVersion,
@@ -65,10 +65,10 @@ interface IInverterBeacon_v1 is IBeacon {
     /// @dev	Only callable by owner.
     /// @dev	`overrideShutdown` Doesnt do anything if {InverterBeacon_v1} is not in emergency mode.
     /// @dev	Revert if new implementation invalid.
-    /// @param newImplementation The new implementation address.
-    /// @param newMinorVersion The new minor version of the implementation contract.
-    /// @param newPatchVersion The new patch version of the implementation contract.
-    /// @param overrideShutdown Flag to enable upgradeTo function to override the shutdown.
+    /// @param  newImplementation The new implementation address.
+    /// @param  newMinorVersion The new minor version of the implementation contract.
+    /// @param  newPatchVersion The new patch version of the implementation contract.
+    /// @param  overrideShutdown Flag to enable upgradeTo function to override the shutdown.
     function upgradeTo(
         address newImplementation,
         uint newMinorVersion,

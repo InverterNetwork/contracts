@@ -64,7 +64,7 @@ contract LM_PC_RecurringPayments_v1 is
     // Modifiers
 
     /// @dev	Checks if the given id is valid.
-    /// @param recurringPaymentId The id of the RecurringPayment to check.
+    /// @param  recurringPaymentId The id of the RecurringPayment to check.
     modifier validId(uint recurringPaymentId) {
         if (!isExistingRecurringPaymentId(recurringPaymentId)) {
             revert Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId();
@@ -73,7 +73,7 @@ contract LM_PC_RecurringPayments_v1 is
     }
 
     /// @dev	Checks if the given startEpoch is valid.
-    /// @param startEpoch The startEpoch of the RecurringPayment to check.
+    /// @param  startEpoch The startEpoch of the RecurringPayment to check.
     modifier validStartEpoch(uint startEpoch) {
         if (getCurrentEpoch() > startEpoch) {
             revert Module__LM_PC_RecurringPayments__InvalidStartEpoch();
@@ -82,8 +82,8 @@ contract LM_PC_RecurringPayments_v1 is
     }
 
     /// @dev	Checks if the startId is before the endId.
-    /// @param startId The startId of the RecurringPayment to check.
-    /// @param endId The endId of the RecurringPayment to check.
+    /// @param  startId The startId of the RecurringPayment to check.
+    /// @param  endId The endId of the RecurringPayment to check.
     modifier startIdBeforeEndId(uint startId, uint endId) {
         if (startId > endId) {
             revert Module__LM_PC_RecurringPayments__StartIdNotBeforeEndId();
@@ -275,8 +275,8 @@ contract LM_PC_RecurringPayments_v1 is
     }
 
     /// @dev	Triggers the given RecurringPayment.
-    /// @param startId The id of the first RecurringPayment to trigger.
-    /// @param endId The id of the last RecurringPayment to trigger.
+    /// @param  startId The id of the first RecurringPayment to trigger.
+    /// @param  endId The id of the last RecurringPayment to trigger.
     function _triggerFor(uint startId, uint endId) private {
         // Set startId to be the current position in List
         uint currentId = startId;

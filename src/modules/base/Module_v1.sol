@@ -136,7 +136,7 @@ abstract contract Module_v1 is
     }
 
     /// @dev	Checks if the given Address is valid.
-    /// @param to The address to check.
+    /// @param  to The address to check.
     modifier validAddress(address to) {
         _validAddressModifier(to);
         _;
@@ -160,7 +160,7 @@ abstract contract Module_v1 is
 
     /// @dev	The initialization function MUST be called by the upstream
     ///      contract in their overridden `init()` function.
-    /// @param orchestrator_ The module's {Orchestrator_v1}.
+    /// @param  orchestrator_ The module's {Orchestrator_v1}.
     function __Module_init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata
@@ -256,7 +256,7 @@ abstract contract Module_v1 is
 
     /// @notice Returns the collateral fee for the specified workflow module function and the according treasury
     ///         address of this workflow.
-    /// @param functionSelector The function selector of the target function.
+    /// @param  functionSelector The function selector of the target function.
     /// @dev	FunctionSelector is always passed as selector of this module / address.
     /// @return fee The collateral fee amount in relation to the BPS of the {FeeManager_v1}.
     /// @return treasury The address of the treasury.
@@ -276,7 +276,7 @@ abstract contract Module_v1 is
 
     /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address
     ///         of this workflow.
-    /// @param functionSelector The function selector of the target function.
+    /// @param  functionSelector The function selector of the target function.
     /// @dev	FunctionSelector is always passed as selector of this module / address.
     /// @return fee The issuance fee amount in relation to the BPS of the {FeeManager_v1}.
     /// @return treasury The address of the treasury.
@@ -295,8 +295,8 @@ abstract contract Module_v1 is
     }
 
     /// @dev	Checks if the caller has the specified role.
-    /// @param role The role to check.
-    /// @param addr The address to check.
+    /// @param  role The role to check.
+    /// @param  addr The address to check.
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().checkForRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
@@ -311,7 +311,7 @@ abstract contract Module_v1 is
     }
 
     /// @dev	Checks if the given address is an valid address.
-    /// @param to The address to check.
+    /// @param  to The address to check.
     function _validAddressModifier(address to) internal view {
         if (to == address(0) || to == address(this)) {
             revert Module__InvalidAddress();
@@ -332,7 +332,7 @@ abstract contract Module_v1 is
     // ERC2771 Context Upgradeable
 
     /// @notice Checks if the provided address is the trusted forwarder.
-    /// @param forwarder The contract address to be verified.
+    /// @param  forwarder The contract address to be verified.
     /// @return bool Is the given address the trusted forwarder.
     /// @dev	We imitate here the EIP2771 Standard to enable metatransactions
     ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to

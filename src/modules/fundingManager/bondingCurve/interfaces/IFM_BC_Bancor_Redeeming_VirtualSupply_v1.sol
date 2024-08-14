@@ -28,15 +28,15 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     // Events
 
     /// @notice Event emitted when the reserve ratio for buying is updated.
-    /// @param newBuyReserveRatio The new reserve ratio for buying.
-    /// @param oldBuyReserveRatio The old reserve ratio for buying.
+    /// @param  newBuyReserveRatio The new reserve ratio for buying.
+    /// @param  oldBuyReserveRatio The old reserve ratio for buying.
     event BuyReserveRatioSet(
         uint32 newBuyReserveRatio, uint32 oldBuyReserveRatio
     );
 
     /// @notice Event emitted when the reserve ratio for selling is updated.
-    /// @param newSellReserveRatio The new reserve ratio for selling.
-    /// @param oldSellReserveRatio The old reserve ratio for selling.
+    /// @param  newSellReserveRatio The new reserve ratio for selling.
+    /// @param  oldSellReserveRatio The old reserve ratio for selling.
     event SellReserveRatioSet(
         uint32 newSellReserveRatio, uint32 oldSellReserveRatio
     );
@@ -45,15 +45,15 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     // Structs
 
     /// @notice Struct used to store information about the bonding curve properties.
-    /// @param formula The formula contract used to calculate the issuance and redemption rate.
-    /// @param reserveRatioForBuying The reserve ratio, expressed in PPM, used for issuance on the bonding curve.
-    /// @param reserveRatioForSelling The reserve ratio, expressed in PPM, used for redeeming on the bonding curve.
-    /// @param buyFee The buy fee expressed in base points.
-    /// @param sellFee The sell fee expressed in base points.
-    /// @param buyIsOpen The indicator used for enabling/disabling the buying functionalities on deployment.
-    /// @param sellIsOpen The indicator used for enabling/disabling the selling functionalities on deployment.
-    /// @param initialIssuanceSupply The initial virtual issuance token supply.
-    /// @param initialCollateralSupply The initial virtual collateral token supply.
+    /// @param  formula The formula contract used to calculate the issuance and redemption rate.
+    /// @param  reserveRatioForBuying The reserve ratio, expressed in PPM, used for issuance on the bonding curve.
+    /// @param  reserveRatioForSelling The reserve ratio, expressed in PPM, used for redeeming on the bonding curve.
+    /// @param  buyFee The buy fee expressed in base points.
+    /// @param  sellFee The sell fee expressed in base points.
+    /// @param  buyIsOpen The indicator used for enabling/disabling the buying functionalities on deployment.
+    /// @param  sellIsOpen The indicator used for enabling/disabling the selling functionalities on deployment.
+    /// @param  initialIssuanceSupply The initial virtual issuance token supply.
+    /// @param  initialCollateralSupply The initial virtual collateral token supply.
     struct BondingCurveProperties {
         address formula;
         uint32 reserveRatioForBuying;
@@ -71,12 +71,12 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
 
     /// @notice Set the reserve ratio used for issuing tokens on a bonding curve.
     /// @dev	This function can only be called by the {Orchestrator_v1} admin.
-    /// @param _reserveRatio The new reserve ratio for buying, expressed in PPM.
+    /// @param  _reserveRatio The new reserve ratio for buying, expressed in PPM.
     function setReserveRatioForBuying(uint32 _reserveRatio) external;
 
     /// @notice Set the reserve ratio used for redeeming tokens on a bonding curve.
     /// @dev	This function can only be called by the {Orchestrator_v1} admin.
-    /// @param _reserveRatio The new reserve ratio for selling, expressed in PPM.
+    /// @param  _reserveRatio The new reserve ratio for selling, expressed in PPM.
     function setReserveRatioForSelling(uint32 _reserveRatio) external;
 
     /// @notice Returns reserve ratio set for buying, used in the {BancorFormula} contract.

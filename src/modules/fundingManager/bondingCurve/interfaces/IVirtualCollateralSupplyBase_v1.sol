@@ -35,7 +35,7 @@ interface IVirtualCollateralSupplyBase_v1 {
     /// @dev    This function should call the internal function `_setVirtualCollateralSupply`.
     ///         The function must be implemented by the downstream contract. The downstream contract should
     ///         manage access control for setting the supply.
-    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    /// @param  _virtualSupply The new value to set for the virtual collateral supply.
     function setVirtualCollateralSupply(uint _virtualSupply) external;
 
     /// @notice Returns the current virtual collateral supply.

@@ -17,7 +17,7 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
  */
 library LibMetadata {
     /// @dev    Returns the identifier for given metadata.
-    /// @param metadata The metadata.
+    /// @param  metadata The metadata.
     /// @return The metadata's identifier.
     function identifier(IModule_v1.Metadata memory metadata)
         internal
@@ -30,7 +30,7 @@ library LibMetadata {
     }
 
     /// @dev	Returns whether the given metadata is valid.
-    /// @param metadata The metadata.
+    /// @param  metadata The metadata.
     /// @return True if metadata valid, false otherwise.
     function isValid(IModule_v1.Metadata memory metadata)
         internal

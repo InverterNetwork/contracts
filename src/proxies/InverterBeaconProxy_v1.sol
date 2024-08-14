@@ -28,7 +28,7 @@ contract InverterBeaconProxy_v1 is Proxy {
     // Events
 
     /// @notice Proxy upgraded to new {InverterBeacon_v1} instance.
-    /// @param beacon The new {InverterBeacon_v1} instance.
+    /// @param  beacon The new {InverterBeacon_v1} instance.
     event BeaconUpgraded(IInverterBeacon_v1 indexed beacon);
 
     //--------------------------------------------------------------------------
@@ -42,7 +42,7 @@ contract InverterBeaconProxy_v1 is Proxy {
 
     /// @notice Constructs the {InverterBeaconProxy_v1}.
     /// @dev	Sets the {InverterBeacon_v1} instance that contains the implementation address.
-    /// @param beacon The {InverterBeacon_v1} instance.
+    /// @param  beacon The {InverterBeacon_v1} instance.
     constructor(IInverterBeacon_v1 beacon) {
         _beacon = beacon;
         emit BeaconUpgraded(beacon);

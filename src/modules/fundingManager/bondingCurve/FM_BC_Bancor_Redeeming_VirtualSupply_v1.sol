@@ -204,9 +204,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
     ///         While this is substantially large, it is crucial to be aware of this constraint.
     ///         Transactions exceeding this limit will be reverted.
-    /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _receiver The address that will receive the bought tokens.
+    /// @param  _depositAmount The amount of collateral token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -227,8 +227,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         Important: The {BancorFormula} has an upper computational limit of (10^38).
     ///         While this is substantially large, it is crucial to be aware of this constraint.
     ///         Transactions exceeding this limit will be reverted.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _depositAmount The amount of collateral token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -245,9 +245,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         Important: The {BancorFormula} has an upper computational limit of (10^26). For tokens with
     ///         18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     ///         100,000,000. Transactions exceeding this limit will be reverted.
-    /// @param _receiver The address that will receive the redeemed tokens.
-    /// @param _depositAmount The amount of issued token to deposited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _receiver The address that will receive the redeemed tokens.
+    /// @param  _depositAmount The amount of issued token to deposited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -268,8 +268,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         Important: The {BancorFormula} has an upper computational limit of (10^26). For tokens with
     ///         18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
     ///         100,000,000. Transactions exceeding this limit will be reverted.
-    /// @param _depositAmount The amount of issued token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _depositAmount The amount of issued token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -421,7 +421,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev    Calculates the amount of tokens to mint for a given deposit amount using the {BancorFormula}.
     ///         This internal function is an override of {BondingCurveBase_v1}'s abstract function.
     ///         It handles decimal conversions and calculations through the bonding curve.
-    /// @param _depositAmount The amount of collateral deposited to purchase tokens.
+    /// @param  _depositAmount The amount of collateral deposited to purchase tokens.
     /// @return mintAmount The amount of tokens that will be minted.
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
@@ -457,7 +457,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         This internal function is an override of {RedeemingBondingCurveBase_v1}'s abstract function.
     ///         It handles decimal conversions and calculations through the bonding curve. Note the {BancorFormula}
     ///         assumes 18 decimals for all tokens.
-    /// @param _depositAmount The amount of tokens to be redeemed for collateral.
+    /// @param  _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
@@ -499,7 +499,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         This function overrides the internal function set in {BondingCurveBase_v1}, adding
     ///         an input validation specific for the {BancorFormula} utilizing implementation, after which
     ///         it updates the `issuanceToken` state variable and caches the decimals as `issuanceTokenDecimals`.
-    /// @param _issuanceToken The token which will be issued by the Bonding Curve.
+    /// @param  _issuanceToken The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address _issuanceToken)
         internal
         override(BondingCurveBase_v1)
@@ -518,7 +518,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @dev    Internal function to directly set the virtual collateral supply to a new value.
-    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    /// @param  _virtualSupply The new value to set for the virtual collateral supply.
     function _setVirtualCollateralSupply(uint _virtualSupply)
         internal
         override(VirtualCollateralSupplyBase_v1)
@@ -529,7 +529,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev    Internal function to directly set the virtual issuance supply to a new value.
     ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
     ///         is done for use in the Bancor Formulat.
-    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    /// @param  _virtualSupply The new value to set for the virtual issuance supply.
     function _setVirtualIssuanceSupply(uint _virtualSupply)
         internal
         override(VirtualIssuanceSupplyBase_v1)
@@ -557,7 +557,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @dev    Sets the reserve ratio for buying tokens.
     ///         The function will revert if the ratio is greater than the constant PPM.
-    /// @param _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
+    /// @param  _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
         _validateReserveRatio(_reserveRatio);
         emit BuyReserveRatioSet(_reserveRatio, reserveRatioForBuying);
@@ -567,7 +567,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev    Sets the reserve ratio for selling tokens.
     ///         Similar to its counterpart for buying, this function sets the reserve ratio for selling tokens.
     ///         The function will revert if the ratio is greater than the constant PPM.
-    /// @param _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
+    /// @param  _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
         _validateReserveRatio(_reserveRatio);
         emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
@@ -576,7 +576,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @dev    Validates the reserve ratio for buying and selling.
     ///         The function will revert if the ratio is greater than the constant PPM.
-    /// @param _reserveRatio The reserve ratio to be validated. Must be <= PPM.
+    /// @param  _reserveRatio The reserve ratio to be validated. Must be <= PPM.
     function _validateReserveRatio(uint32 _reserveRatio) internal pure {
         if (_reserveRatio == 0 || _reserveRatio > PPM) {
             revert

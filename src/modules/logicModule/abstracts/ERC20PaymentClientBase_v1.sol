@@ -93,7 +93,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     // Internal Mutating Functions
 
     /// @dev	Adds a new {PaymentOrder} to the list of outstanding orders.
-    /// @param order The new payment order.
+    /// @param  order The new payment order.
     function _addPaymentOrder(PaymentOrder memory order)
         internal
         virtual
@@ -112,7 +112,7 @@ abstract contract ERC20PaymentClientBase_v1 is
 
     /// @dev	Adds a set of new {PaymentOrder}s to the list of outstanding
     ///         orders.
-    /// @param orders The list of new Payment Orders.
+    /// @param  orders The list of new Payment Orders.
     function _addPaymentOrders(PaymentOrder[] memory orders) internal virtual {
         uint orderAmount = orders.length;
 
@@ -224,7 +224,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     // Private Functions
 
     /// @dev	Ensures the recipient is valid.
-    /// @param recipient The recipient to check.
+    /// @param  recipient The recipient to check.
     function _ensureValidRecipient(address recipient) private view {
         if (recipient == address(0) || recipient == address(this)) {
             revert Module__ERC20PaymentClientBase__InvalidRecipient();
@@ -232,7 +232,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @dev	Ensures the amount is valid.
-    /// @param amount The amount to check.
+    /// @param  amount The amount to check.
     function _ensureValidAmount(uint amount) private pure {
         if (amount == 0) {
             revert Module__ERC20PaymentClientBase__InvalidAmount();
@@ -240,7 +240,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @dev	Ensures the token is valid.
-    /// @param token The token to check.
+    /// @param  token The token to check.
     function _ensureValidToken(address token) private pure {
         if (token == address(0)) {
             revert Module__ERC20PaymentClientBase__InvalidToken();
@@ -248,7 +248,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @dev	Ensures the payment order is valid.
-    /// @param order The payment order to check.
+    /// @param  order The payment order to check.
     function _ensureValidPaymentOrder(PaymentOrder memory order) private {
         if (!(orchestrator().paymentProcessor().validPaymentOrder(order))) {
             revert Module__ERC20PaymentClientBase__InvalidPaymentOrder();

@@ -117,9 +117,9 @@ contract OrchestratorFactory_v1 is
     }
 
     /// @notice The factories initializer function.
-    /// @param governor_ The address of the {Governor_v1} contract.
-    /// @param beacon_ The address of the {IInverterBeacon_v1} containing the {Orchestrator_v1} implementation.
-    /// @param moduleFactory_ The address of the {ModuleFactory_v1} contract.
+    /// @param  governor_ The address of the {Governor_v1} contract.
+    /// @param  beacon_ The address of the {IInverterBeacon_v1} containing the {Orchestrator_v1} implementation.
+    /// @param  moduleFactory_ The address of the {ModuleFactory_v1} contract.
     function init(
         address governor_,
         IInverterBeacon_v1 beacon_,
@@ -248,9 +248,9 @@ contract OrchestratorFactory_v1 is
     // Internal Functions
 
     /// @dev	Creates the modules based on their `moduleConfigs.
-    /// @param moduleConfigs The config data of the modules that will be created with this function call.
-    /// @param orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
-    /// @param workflowConfig The workflow's config data.
+    /// @param  moduleConfigs The config data of the modules that will be created with this function call.
+    /// @param  orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    /// @param  workflowConfig The workflow's config data.
     function _createModuleProxies(
         ModuleConfig[] memory moduleConfigs,
         address orchestratorProxy,
@@ -270,9 +270,9 @@ contract OrchestratorFactory_v1 is
     }
 
     /// @dev	Internal function to initialize the modules.
-    /// @param modules The modules to initialize.
-    /// @param moduleConfigs The config data of the modules that will be initialized.
-    /// @param proxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    /// @param  modules The modules to initialize.
+    /// @param  moduleConfigs The config data of the modules that will be initialized.
+    /// @param  proxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
     function _initModules(
         address[] memory modules,
         ModuleConfig[] memory moduleConfigs,

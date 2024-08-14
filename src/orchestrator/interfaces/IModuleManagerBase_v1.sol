@@ -9,8 +9,8 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     // Structs
 
     /// @notice The timelock struct to keep track of updating the registered modules.
-    /// @param timelockActive Is the timelock currently active.
-    /// @param timelockUntil Timestamp that represents from when the update can be carried out.
+    /// @param  timelockActive Is the timelock currently active.
+    /// @param  timelockUntil Timestamp that represents from when the update can be carried out.
     struct ModuleUpdateTimelock {
         bool timelockActive;
         uint timelockUntil;
@@ -38,8 +38,8 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     error ModuleManagerBase__ModuleAmountOverLimits();
 
     /// @notice Timelock still active for the given module address.
-    /// @param _module The module address.
-    /// @param _timelockUntil The unix timestamp until the timelock is active.
+    /// @param  _module The module address.
+    /// @param  _timelockUntil The unix timestamp until the timelock is active.
     error ModuleManagerBase__ModuleUpdateTimelockStillActive(
         address _module, uint _timelockUntil
     );
@@ -57,27 +57,27 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     // Events
 
     /// @notice Event emitted when module added.
-    /// @param module The module's address.
+    /// @param  module The module's address.
     event ModuleAdded(address indexed module);
 
     /// @notice Event emitted when module removed.
-    /// @param module The module's address.
+    /// @param  module The module's address.
     event ModuleRemoved(address indexed module);
 
     /// @notice Event emitted when updating a module is initiated, and the timelock starts;.
-    /// @param module The module's address.
-    /// @param timelockUntil The unix timestamp until the timelock is active.
+    /// @param  module The module's address.
+    /// @param  timelockUntil The unix timestamp until the timelock is active.
     event ModuleTimelockStarted(address module, uint timelockUntil);
 
     /// @notice Event emitted when a module update is canceled.
-    /// @param module The module's address.
+    /// @param  module The module's address.
     event ModuleUpdateCanceled(address module);
 
     //--------------------------------------------------------------------------
     // Functions
 
     /// @notice Returns whether the address `module` is added as module.
-    /// @param module The module to check.
+    /// @param  module The module to check.
     /// @return True if module added, false otherwise.
     function isModule(address module) external view returns (bool);
 
@@ -95,7 +95,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
 
     /// @notice Returns wether the given address is the trusted forwarder or not.
     /// @dev	Exposes the ERC2771 isTrusted Forwarder.
-    /// @param forwarder The address to check.
+    /// @param  forwarder The address to check.
     /// @return True if the address is the trusted forwarder, false otherwise.
     function isTrustedForwarder(address forwarder)
         external

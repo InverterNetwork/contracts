@@ -22,15 +22,15 @@ interface IRedeemingBondingCurveBase_v1 {
     event SellingDisabled();
 
     /// @notice Event emitted when sell fee is updated.
-    /// @param newSellFee The new sell fee.
-    /// @param oldSellFee The old sell fee.
+    /// @param  newSellFee The new sell fee.
+    /// @param  oldSellFee The old sell fee.
     event SellFeeUpdated(uint newSellFee, uint oldSellFee);
 
     /// @notice Event emitted when tokens have been succesfully redeemed.
-    /// @param receiver The address that will receive the redeemed tokens.
-    /// @param depositAmount The amount of issued token deposited.
-    /// @param receivedAmount The amount of collateral token received.
-    /// @param seller The address that initiated the sell order.
+    /// @param  receiver The address that will receive the redeemed tokens.
+    /// @param  depositAmount The amount of issued token deposited.
+    /// @param  receivedAmount The amount of collateral token received.
+    /// @param  seller The address that initiated the sell order.
     event TokensSold(
         address indexed receiver,
         uint depositAmount,
@@ -45,16 +45,16 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @dev    Executes a sell order, with the proceeds being sent directly to the _receiver's address.
     ///         This function wraps the `_sellOrder` internal function with specified parameters to handle
     ///         the transaction and direct the proceeds.
-    /// @param _receiver The address that will receive the redeemed tokens.
-    /// @param _depositAmount The amount of tokens to be sold.
-    /// @param _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
+    /// @param  _receiver The address that will receive the redeemed tokens.
+    /// @param  _depositAmount The amount of tokens to be sold.
+    /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         external;
 
     /// @notice Redeem collateral for the sender's address.
     /// @dev	Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
-    /// @param _depositAmount The amount of issued token deposited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _depositAmount The amount of issued token deposited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the selling functionality for the collateral.
@@ -70,7 +70,7 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Sets the fee percentage for selling collateral, payed in collateral.
     /// @dev    Only callable by the {Orchestrator_v1} admin.
     ///         The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
-    /// @param _fee The fee in basis points.
+    /// @param  _fee The fee in basis points.
     function setSellFee(uint _fee) external;
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -80,7 +80,7 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Calculates the amount of tokens to be redeemed based on a given deposit amount.
     /// @dev    This function takes into account any applicable sell fees before computing the
     ///         collateral amount to be redeemed. Revert when `_depositAmount` is zero.
-    /// @param _depositAmount The amount of tokens deposited by the user.
+    /// @param  _depositAmount The amount of tokens deposited by the user.
     /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
     function calculateSaleReturn(uint _depositAmount)
         external

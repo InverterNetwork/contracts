@@ -80,7 +80,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
 
     /// @dev	Modifier to guarantee that the given module is a logic module
     ///         and not the authorizer or the fundingManager or the paymentProcessor.
-    /// @param module_ The module to be checked.
+    /// @param  module_ The module to be checked.
     modifier onlyLogicModules(address module_) {
         // Revert given module to be removed is equal to current authorizer
         if (module_ == address(authorizer)) {
@@ -364,8 +364,8 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
 
     /// @notice Enforces that the address is in fact a Module of the required type.
     /// @dev	The function reverts if the given address is not a module of the required type.
-    /// @param _contractAddr The address to be checked.
-    /// @param _privilegedInterfaceId The required interface id.
+    /// @param  _contractAddr The address to be checked.
+    /// @param  _privilegedInterfaceId The required interface id.
     function _enforcePrivilegedModuleInterfaceCheck(
         address _contractAddr,
         bytes4 _privilegedInterfaceId
@@ -382,7 +382,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     }
 
     /// @dev	Internal function to enforce that the given module is not a privileged module.
-    /// @param _contractAddr The address of the module to be checked.
+    /// @param  _contractAddr The address of the module to be checked.
     function _enforceNonPrivilegedModuleInterfaceCheck(address _contractAddr)
         internal
         view

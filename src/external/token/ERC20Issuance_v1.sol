@@ -83,8 +83,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     // Internal Functions
 
     /// @notice Sets the minting rights of an address.
-    /// @param _minter The address of the minter.
-    /// @param _allowed If the address is allowed to mint or not.
+    /// @param  _minter The address of the minter.
+    /// @param  _allowed If the address is allowed to mint or not.
     function _setMinter(address _minter, bool _allowed) internal {
         allowedMinters[_minter] = _allowed;
         emit MinterSet(_minter, _allowed);

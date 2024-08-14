@@ -65,7 +65,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     // Modifiers
 
     /// @dev	Checks if the sender is a contributor of the given claimId.
-    /// @param claimId The id of the claim to check.
+    /// @param  claimId The id of the claim to check.
     modifier onlyClaimContributor(uint claimId) {
         address sender = _msgSender();
         Contributor[] memory contribs = _claimRegistry[claimId].contributors;
@@ -90,8 +90,8 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the payout amounts are valid.
-    /// @param minimumPayoutAmount The minimum payout amount.
-    /// @param maximumPayoutAmount The maximum payout amount.
+    /// @param  minimumPayoutAmount The minimum payout amount.
+    /// @param  maximumPayoutAmount The maximum payout amount.
     modifier validPayoutAmounts(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount
@@ -101,9 +101,9 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev Checks if the array lengths are valid
-    /// @param minimumPayoutAmountLength The minimum payout amount length
-    /// @param maximumPayoutAmountLength The maximum payout amount length
-    /// @param detailArrayLength The detail array length
+    /// @param  minimumPayoutAmountLength The minimum payout amount length
+    /// @param  maximumPayoutAmountLength The maximum payout amount length
+    /// @param  detailArrayLength The detail array length
     modifier validArrayLengths(
         uint minimumPayoutAmountLength,
         uint maximumPayoutAmountLength,
@@ -120,7 +120,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the bountyId is valid.
-    /// @param bountyId The id of the bounty to check.
+    /// @param  bountyId The id of the bounty to check.
     modifier validBountyId(uint bountyId) {
         if (!isExistingBountyId(bountyId)) {
             revert Module__LM_PC_Bounty__InvalidBountyId();
@@ -129,7 +129,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the claimId is valid.
-    /// @param claimId The id of the claim to check.
+    /// @param  claimId The id of the claim to check.
     modifier validClaimId(uint claimId) {
         if (!isExistingClaimId(claimId)) {
             revert Module__LM_PC_Bounty__InvalidClaimId();
@@ -138,8 +138,8 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the contributors are valid for the given bounty.
-    /// @param contributors The contributors to check.
-    /// @param bounty The bounty to check.
+    /// @param  contributors The contributors to check.
+    /// @param  bounty The bounty to check.
     function _validContributorsForBounty(
         Contributor[] memory contributors,
         Bounty memory bounty
@@ -185,7 +185,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the bounty is not locked.
-    /// @param bountyId The id of the bounty to check.
+    /// @param  bountyId The id of the bounty to check.
     modifier notLocked(uint bountyId) {
         if (_bountyRegistry[bountyId].locked) {
             revert Module__LM_PC_Bounty__BountyLocked();
@@ -194,7 +194,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the claim is not claimed.
-    /// @param claimId The id of the claim to check.
+    /// @param  claimId The id of the claim to check.
     modifier notClaimed(uint claimId) {
         if (_claimRegistry[claimId].claimed) {
             revert Module__LM_PC_Bounty__AlreadyClaimed();
@@ -203,8 +203,8 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev	Checks if the contributors have not changed.
-    /// @param claimId The id of the claim to check.
-    /// @param contributors The new contributors to check.
+    /// @param  claimId The id of the claim to check.
+    /// @param  contributors The new contributors to check.
     function _contributorsNotChanged(
         uint claimId,
         Contributor[] memory contributors
@@ -549,8 +549,8 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     // Internal Functions
 
     /// @dev Internal function to check if the payout amounts are valid
-    /// @param minimumPayoutAmount The minimum payout amount
-    /// @param maximumPayoutAmount The maximum payout amount
+    /// @param  minimumPayoutAmount The minimum payout amount
+    /// @param  maximumPayoutAmount The maximum payout amount
     function _validPayoutAmounts(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount
@@ -564,9 +564,9 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     }
 
     /// @dev Internal function to add a bounty
-    /// @param minimumPayoutAmount The minimum payout amount
-    /// @param maximumPayoutAmount The maximum payout amount
-    /// @param details The details of the bounty
+    /// @param  minimumPayoutAmount The minimum payout amount
+    /// @param  maximumPayoutAmount The maximum payout amount
+    /// @param  details The details of the bounty
     /// @return bountyId The id of the bounty
     function _addBounty(
         uint minimumPayoutAmount,

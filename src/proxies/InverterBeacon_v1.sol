@@ -201,10 +201,10 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     // Internal Functions
 
     /// @dev Internal function to upgrade the implementation.
-    /// @param newImplementation The new implementation address.
-    /// @param newMinorVersion The new minor version.
-    /// @param newPatchVersion The new patch version.
-    /// @param overrideShutdown If the upgrade process should override the shutdown.
+    /// @param  newImplementation The new implementation address.
+    /// @param  newMinorVersion The new minor version.
+    /// @param  newPatchVersion The new patch version.
+    /// @param  overrideShutdown If the upgrade process should override the shutdown.
     function _upgradeTo(
         address newImplementation,
         uint newMinorVersion,
@@ -220,8 +220,8 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     }
 
     /// @dev Internal function to set the implementation.
-    /// @param newImplementation The new implementation address.
-    /// @param overrideShutdown If the upgrade process should override the shutdown.
+    /// @param  newImplementation The new implementation address.
+    /// @param  overrideShutdown If the upgrade process should override the shutdown.
     function _setImplementation(
         address newImplementation,
         bool overrideShutdown

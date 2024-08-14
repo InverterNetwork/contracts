@@ -118,7 +118,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     /// @dev    Reverts if attempting self-deposits or if the deposit exceeds the allowed cap,
     ///         ensuring compliance with token issuance rules. Please Note: when using the transactionForwarder,
     ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
-    /// @param amount The number of tokens to deposit.
+    /// @param  amount The number of tokens to deposit.
     function deposit(uint amount) external {
         _deposit(_msgSender(), _msgSender(), amount);
     }
@@ -127,8 +127,8 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     /// @dev    Reverts if attempting self-deposits or if the deposit exceeds the allowed cap,
     ///         ensuring compliance with token issuance rules. Please Note: when using the transactionForwarder,
     ///         validate transaction success to prevent nonce exploitation and ensure transaction integrity.
-    /// @param to The address to which the tokens are credited.
-    /// @param amount The number of tokens to deposit.
+    /// @param  to The address to which the tokens are credited.
+    /// @param  amount The number of tokens to deposit.
     function depositFor(address to, uint amount) external {
         _deposit(_msgSender(), to, amount);
     }
@@ -137,7 +137,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     /// @dev    Reverts if the withdrawal amount exceeds the available balance.
     ///         Please Note: when using the transactionForwarder, validate transaction success to
     ///         prevent nonce exploitation and ensure transaction integrity.
-    /// @param amount The number of tokens to withdraw.
+    /// @param  amount The number of tokens to withdraw.
     function withdraw(uint amount) external {
         _withdraw(_msgSender(), _msgSender(), amount);
     }
@@ -146,8 +146,8 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     /// @dev    Reverts if the withdrawal amount exceeds the available balance.
     ///         Please Note: when using the transactionForwarder, validate transaction success to
     ///         prevent nonce exploitation and ensure transaction integrity.
-    /// @param to The address to which the tokens are sent.
-    /// @param amount The number of tokens to withdraw.
+    /// @param  to The address to which the tokens are sent.
+    /// @param  amount The number of tokens to withdraw.
     function withdrawTo(address to, uint amount) external {
         _withdraw(_msgSender(), to, amount);
     }
@@ -179,9 +179,9 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     }
 
     /// @dev Deposits tokens into the contract.
-    /// @param from The address to deposit from.
-    /// @param to The address to deposit to.
-    /// @param amount The amount of tokens to deposit.
+    /// @param  from The address to deposit from.
+    /// @param  to The address to deposit to.
+    /// @param  amount The amount of tokens to deposit.
     function _deposit(address from, address to, uint amount) internal {
         // Depositing from itself with its own balance would mint tokens without increasing underlying balance.
         if (from == address(this)) {
@@ -200,9 +200,9 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     }
 
     /// @dev Withdraws `amount` of tokens from the funds of `from` to `to`.
-    /// @param from The address to withdraw from.
-    /// @param to The address to withdraw to.
-    /// @param amount The amount of tokens to withdraw.
+    /// @param  from The address to withdraw from.
+    /// @param  to The address to withdraw to.
+    /// @param  amount The amount of tokens to withdraw.
     function _withdraw(address from, address to, uint amount) internal {
         amount = _burn(from, amount);
 
@@ -215,8 +215,8 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     // IFundingManager_v1 Functions
 
     /// @notice Transfers `amount` of tokens from the orchestrator to `to`.
-    /// @param to The address to transfer to.
-    /// @param amount The amount of tokens to transfer.
+    /// @param  to The address to transfer to.
+    /// @param  amount The amount of tokens to transfer.
     function _transferOrchestratorToken(address to, uint amount) internal {
         token().safeTransfer(to, amount);
 

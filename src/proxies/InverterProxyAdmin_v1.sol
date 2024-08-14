@@ -27,7 +27,7 @@ contract InverterProxyAdmin_v1 is Ownable2Step, IInverterProxyAdmin_v1 {
     // Constructor
 
     /// @notice Constructs the {InverterProxyAdmin_v1}.
-    /// @param initialOwner The initial owner of the contract.
+    /// @param  initialOwner The initial owner of the contract.
     constructor(address initialOwner) Ownable(initialOwner) {}
 
     //--------------------------------------------------------------------------

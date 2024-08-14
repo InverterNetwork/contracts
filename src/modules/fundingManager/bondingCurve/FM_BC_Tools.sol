@@ -14,9 +14,9 @@ library FM_BC_Tools {
     /// @dev    Error thrown when the fee amount is too high.
     ///         This error is thrown when the fee amount is greater than the maximum fee percentage.
     ///         It takes care of both upscaling and downscaling the decimals based on the required decimals.
-    /// @param _amount The amount to be converted.
-    /// @param _tokenDecimals The current decimal places of the token.
-    /// @param _requiredDecimals The required decimal places for the token.
+    /// @param  _amount The amount to be converted.
+    /// @param  _tokenDecimals The current decimal places of the token.
+    /// @param  _requiredDecimals The required decimal places for the token.
     /// @return The converted amount with required decimal places.
     function _convertAmountToRequiredDecimal(
         uint _amount,

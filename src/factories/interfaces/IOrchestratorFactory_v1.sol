@@ -31,15 +31,15 @@ interface IOrchestratorFactory_v1 {
     // Events
 
     /// @notice Event emitted when a new {Orchestrator_v1} is created.
-    /// @param orchestratorId The id of the {Orchestrator_v1}.
-    /// @param orchestratorAddress The address of the {Orchestrator.
+    /// @param  orchestratorId The id of the {Orchestrator_v1}.
+    /// @param  orchestratorAddress The address of the {Orchestrator.
     event OrchestratorCreated(
         uint indexed orchestratorId, address indexed orchestratorAddress
     );
 
     /// @notice Event emitted when a new {OrchestratorFactory_v1} is initialized.
-    /// @param beacon The address of the {IInverterBeacon_v1} associated with the factory.
-    /// @param moduleFactory The address of the {ModuleFactory_v1}.
+    /// @param  beacon The address of the {IInverterBeacon_v1} associated with the factory.
+    /// @param  moduleFactory The address of the {ModuleFactory_v1}.
     event OrchestratorFactoryInitialized(
         address indexed beacon, address indexed moduleFactory
     );
@@ -49,9 +49,9 @@ interface IOrchestratorFactory_v1 {
 
     /// @notice Struct used to store information about a workflow configuration.
     /// @dev	When the `independentUpdates` is true, the `independentUpdateAdmin` will be disregarded.
-    /// @param independentUpdates bool wether the workflow should use the independent proxy structure.
+    /// @param  independentUpdates bool wether the workflow should use the independent proxy structure.
     ///                           In case of true it will not use the standard beacon proxy structure.
-    /// @param independentUpdateAdmin The address that will be assigned the admin role of the independent update proxy.
+    /// @param  independentUpdateAdmin The address that will be assigned the admin role of the independent update proxy.
     ///                               Will be disregarded in case `independentUpdates` is false.
     struct WorkflowConfig {
         bool independentUpdates;
@@ -59,8 +59,8 @@ interface IOrchestratorFactory_v1 {
     }
 
     /// @notice Struct used to store information about a module configuration.
-    /// @param metadata The module's metadata.
-    /// @param configData Variable config data for specific module implementations.
+    /// @param  metadata The module's metadata.
+    /// @param  configData Variable config data for specific module implementations.
     struct ModuleConfig {
         IModule_v1.Metadata metadata;
         bytes configData;
@@ -70,14 +70,14 @@ interface IOrchestratorFactory_v1 {
     // Functions
 
     /// @notice Creates a new {Orchestrator_v1}.
-    /// @param workflowConfig The workflow's config data.
-    /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1}
+    /// @param  workflowConfig The workflow's config data.
+    /// @param  fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1}
     ///                             instance.
-    /// @param authorizerConfig The config data for the {Orchestrator_v1}'s {IAuthorizer_v1}
+    /// @param  authorizerConfig The config data for the {Orchestrator_v1}'s {IAuthorizer_v1}
     ///                         instance.
-    /// @param paymentProcessorConfig The config data for the orchestrator's
+    /// @param  paymentProcessorConfig The config data for the orchestrator's
     ///                               {IPaymentProcessor_v1} instance.
-    /// @param moduleConfigs Variable length set of optional module's config
+    /// @param  moduleConfigs Variable length set of optional module's config
     ///                      data.
     /// @return CreatedOrchestrator Returns the created orchestrator instance
     function createOrchestrator(
@@ -97,7 +97,7 @@ interface IOrchestratorFactory_v1 {
     function moduleFactory() external view returns (address);
 
     /// @notice Returns the {IOrchestrator_v1} address that corresponds to the given id.
-    /// @param id The requested orchestrator's id.
+    /// @param  id The requested orchestrator's id.
     /// @return orchestratorAddress The address of the corresponding {Orchestrator_v1}.
     function getOrchestratorByID(uint id) external view returns (address);
 
