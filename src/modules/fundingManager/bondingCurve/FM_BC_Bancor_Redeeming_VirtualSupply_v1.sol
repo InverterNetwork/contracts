@@ -532,22 +532,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         internal
         override(VirtualIssuanceSupplyBase_v1)
     {
-        uint decimalDifference;
+        uint minSupplyScaleFactor;
         uint decimals = issuanceTokenDecimals;
 
-        if (decimals <= 18) {
-            // If issuance token has 18 or fewer decimals. Ensure that decimal difference is at least 1
-            // i.e 10**0
-            decimalDifference = 0;
-        } else {
-            // If issuance token has more than 18 decimals
-            decimalDifference = decimals - 18;
+        // If the issuance token has 18 or fewer decimals, we leave the minSupplyScaleFactor at 0,
+        // such that 10**0 equals 1.
+        // If the issuance token has more than 18 decimals, we calculate the difference and
+        // store it in minSupplyScaleFactor.
+        if (decimals > 18) {
+            minSupplyScaleFactor = decimals - 18;
         }
-
         // Check if virtual supply is big enough to ensure compatibility with relative issuance
         // token decimal and conversion to 18 decimals done in FM_BC_Tools._convertAmountToRequiredDecimal()
         // so it will not result in a round down 0 value
-        if (_virtualSupply < 10 ** decimalDifference) {
+        if (_virtualSupply < 10 ** minSupplyScaleFactor) {
             revert Module__VirtualIssuanceSupplyBase__VirtualSupplyCannotBeZero(
             );
         }
