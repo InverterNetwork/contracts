@@ -33,11 +33,11 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         view
         returns (bool)
     {
-        return validPaymentReceiver(addr);
+        return _validPaymentReceiver(addr);
     }
 
-    function original_validTotal(uint _total) external pure returns (bool) {
-        return validTotal(_total);
+    function original__validTotal(uint _total) external pure returns (bool) {
+        return _validTotal(_total);
     }
 
     function original_validTimes(uint _start, uint _cliff, uint _end)
@@ -45,13 +45,13 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         pure
         returns (bool)
     {
-        return validTimes(_start, _cliff, _end);
+        return _validTimes(_start, _cliff, _end);
     }
 
     function original_validPaymentToken(address _token)
         external
         returns (bool)
     {
-        return validPaymentToken(_token);
+        return _validPaymentToken(_token);
     }
 }

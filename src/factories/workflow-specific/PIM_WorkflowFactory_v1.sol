@@ -24,6 +24,26 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
+/**
+ * @title   Inverter PIM Workflow Factory
+ *
+ * @notice  Facilitates the creation and configuration and setup of PIM workflows, including the deployment of
+ *          bonding curves and  issuance tokens. It also provides functionalities for updating fee recipients and
+ *          withdrawing fees from bonding  curves.
+ *
+ * @dev     An owned factory for deploying PIM workflows. Deploying the PIM workflow includes:
+ *          - Deploying the bonding curve and issuance token.
+ *          - Enable bonding curve to mint issuance token.
+ *          - Transfer initial collateral supply from msg.sender to bonding curve and mint issuance token to recipient.
+ *          - If applicable make first purchase.
+ *          - If flag is set, renounce admin role by setting factory as admin.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          For any security concerns or findings, please refer to our Security Policy at
+ *                          security.inverter.network or email us directly.
+ *
+ * @custom:author Inverter Network
+ */
 contract PIM_WorkflowFactory_v1 is
     Ownable2Step,
     ERC2771Context,
@@ -32,16 +52,17 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // State Variables
 
-    // store address of orchestratorfactory
+    /// @dev	store address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
 
-    // mapping of bonding curve address to fee recipient address
+    /// @dev	mapping of Funding Manager address to `feeRecipient` address.
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Modifier to guarantee the caller is the fee recipient for the given funding manager.
     modifier onlyPimFeeRecipient(address fundingManager) {
         if (_msgSender() != _pimFeeRecipients[fundingManager]) {
             revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
@@ -140,7 +161,8 @@ contract PIM_WorkflowFactory_v1 is
             _transferTokenOwnership(issuanceToken, PIMConfig.admin);
         }
 
-        // if isRenouncedWorkflow flag is set factory keeps admin rights over workflow, else transfer admin rights to specified admin
+        // if isRenouncedWorkflow flag is set factory keeps admin rights over workflow, else transfer admin rights to
+        // specified admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the admin as fee recipient eligible to claim buy/sell fees
             _pimFeeRecipients[fundingManager] = PIMConfig.admin;
@@ -255,7 +277,7 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -266,7 +288,7 @@ contract PIM_WorkflowFactory_v1 is
         return ERC2771Context._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

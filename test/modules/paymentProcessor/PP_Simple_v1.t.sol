@@ -397,14 +397,14 @@ contract PP_SimpleV1Test is ModuleTest {
         bool expectedValue = paymentProcessor.original_validPaymentReceiver(
             order.recipient
         ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
-            && paymentProcessor.original_validTotal(order.amount);
+            && paymentProcessor.original__validTotal(order.amount);
 
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
         vm.stopPrank();
     }
 
-    function test_validPaymentReceiver(address addr, address sender) public {
+    function test__validPaymentReceiver(address addr, address sender) public {
         bool expectedValue = true;
         if (
             addr == address(0) || addr == sender
@@ -422,16 +422,16 @@ contract PP_SimpleV1Test is ModuleTest {
         );
     }
 
-    function test_validTotal(uint _total) public {
+    function test__validTotal(uint _total) public {
         bool expectedValue = true;
         if (_total == 0) {
             expectedValue = false;
         }
 
-        assertEq(paymentProcessor.original_validTotal(_total), expectedValue);
+        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
     }
 
-    function test_validPaymentToken(address randomToken, address sender)
+    function test__validPaymentToken(address randomToken, address sender)
         public
     {
         // Non-contract addresses or protected addresses should be invalid

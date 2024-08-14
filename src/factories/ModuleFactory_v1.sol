@@ -34,7 +34,7 @@ import {
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Module Factory
+ * @title   Inverter Module Factory
  *
  * @notice  Enables the creation and registration of Inverter Modules,
  *          facilitating the deployment of module instances linked to specific beacons.
@@ -71,7 +71,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable with valid
+    /// @dev    Modifier to guarantee function is only callable with valid
     ///         metadata.
     modifier validMetadata(IModule_v1.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
@@ -80,9 +80,9 @@ contract ModuleFactory_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable with valid
-    ///         IInverterBeacon_v1 instance and if the owner of the beacon
-    ///         is same as the governor of this contract.
+    /// @dev    Modifier to guarantee function is only callable with valid
+    ///         {IInverterBeacon_v1} instance and if the owner of the beacon.
+    ///         is same as the {Governor_v1} of this contract.
     modifier validBeacon(IInverterBeacon_v1 beacon) {
         // Revert if beacon's implementation is zero address.
         if (
@@ -104,27 +104,26 @@ contract ModuleFactory_v1 is
     /// @inheritdoc IModuleFactory_v1
     address public governor;
 
-    /// @dev Mapping of metadata identifier to {IInverterBeacon_v1} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}
+    /// @dev	Mapping of metadata identifier to {IInverterBeacon_v1} instance.
+    /// @dev	MetadataLib.identifier(metadata) => {IInverterBeacon_v1}.
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
-    /// @dev Mapping of proxy address to orchestrator address.
-    /// @dev moduleProxy => {IOrchestrator_v1}
+    /// @dev	Mapping of proxy address to orchestrator address.
+    /// @dev	moduleProxy => {IOrchestrator_v1}.
     mapping(address => address) private _orchestratorOfProxy;
 
-    /// @dev Maps a users address to a nonce
-    ///      Used for the create2-based deployment
+    /// @dev	Maps a users address to a nonce used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Constructor & Initializer
 
     /// @notice The factories initializer function.
-    /// @param _reverter The address of the Reverter contract.
-    /// @param _trustedForwarder The address of the trusted forwarder contract.
+    /// @param  _reverter The address of the {InverterReverter_v1} contract.
+    /// @param  _trustedForwarder The address of the trusted forwarder contract.
     constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
     {
@@ -133,9 +132,9 @@ contract ModuleFactory_v1 is
     }
 
     /// @notice The factories initializer function.
-    /// @param _governor The address of the governor contract.
-    /// @param initialMetadataRegistration List of metadata that will be registered during the initialization.
-    /// @param initialMetadataRegistration List of beacon addresses that will be registered during the initialization.
+    /// @param  _governor The address of the {Governor_v1} contract.
+    /// @param  initialMetadataRegistration List of metadata that will be registered during the initialization.
+    /// @param  initialMetadataRegistration List of {IInverterBeacon_v1}s addresses that will be registered during the initialization.
     function init(
         address _governor,
         IModule_v1.Metadata[] memory initialMetadataRegistration,
@@ -180,6 +179,7 @@ contract ModuleFactory_v1 is
         return proxy;
     }
 
+    /// @inheritdoc IModuleFactory_v1
     function createModuleProxy(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
@@ -209,7 +209,7 @@ contract ModuleFactory_v1 is
         if (workflowConfig.independentUpdates) {
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1{salt: createSalt()}(
+                new InverterTransparentUpgradeableProxy_v1{salt: _createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -218,7 +218,7 @@ contract ModuleFactory_v1 is
         else {
             // Instead use the Beacon Structure Proxy
             proxy =
-                address(new InverterBeaconProxy_v1{salt: createSalt()}(beacon));
+                address(new InverterBeaconProxy_v1{salt: _createSalt()}(beacon));
         }
 
         _orchestratorOfProxy[proxy] = address(orchestrator);
@@ -265,9 +265,9 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to register metadata
-    /// @param metadata The metadata to register
-    /// @param beacon The beacon to register the metadata to
+    /// @dev	Internal function to register metadata.
+    /// @param  metadata The metadata to register.
+    /// @param  beacon The {IInverterBeacon_v1} to register the metadata to.
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
@@ -286,10 +286,10 @@ contract ModuleFactory_v1 is
         emit MetadataRegistered(metadata, beacon);
     }
 
-    // Generated a salt for the create2-based deployment flow.
-    // This salt is the hash of (msgSender, nonce), where the
-    // nonce is an increasing number for each user.
-    function createSalt() internal returns (bytes32) {
+    /// @dev	Internal function to generate a salt for the create2-based deployment flow.
+    ///         This salt is the hash of (msgSender, nonce), where the
+    ///         nonce is an increasing number for each user.
+    function _createSalt() internal returns (bytes32) {
         return keccak256(
             abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
         );
@@ -298,7 +298,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -309,7 +309,7 @@ contract ModuleFactory_v1 is
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

@@ -19,7 +19,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Simple Payment Processor
+ * @title   Inverter Simple Payment Processor
  *
  * @notice  Manages ERC20 payment processing for modules within the Inverter Network
  *          that are compliant with the {IERC20PaymentClientBase_v1} interface.
@@ -52,7 +52,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice checks that the caller is an active module
+    /// @dev    Checks that the caller is an active module.
     modifier onlyModule() {
         if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentProcessor__OnlyCallableByModule();
@@ -60,7 +60,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         _;
     }
 
-    /// @notice checks that the client is calling for itself
+    /// @dev    Checks that the client is calling for itself.
     modifier validClient(IERC20PaymentClientBase_v1 client) {
         if (_msgSender() != address(client)) {
             revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
@@ -71,12 +71,12 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason
-    /// @dev paymentClient => token address => paymentReceiver => unclaimable Amount
+    /// @dev    Tracks all payments that could not be made to the paymentReceiver due to any reason.
+    /// @dev	paymentClient => token address => paymentReceiver => unclaimable Amount.
     mapping(address => mapping(address => mapping(address => uint))) internal
         unclaimableAmountsForRecipient;
 
-    // Gap for possible future upgrades
+    /// @dev    Gap for possible future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -193,17 +193,17 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
-        return validPaymentReceiver(order.recipient) && validTotal(order.amount)
-            && validPaymentToken(order.paymentToken);
+        return _validPaymentReceiver(order.recipient)
+            && _validTotal(order.amount) && _validPaymentToken(order.paymentToken);
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client
-    /// @param client address of the payment client
-    /// @param token address of the payment token
-    /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed
+    /// @notice used to claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
+    /// @param  client address of the payment client.
+    /// @param  token address of the payment token.
+    /// @param  paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
     function _claimPreviouslyUnclaimable(
         address client,
         address token,
@@ -226,10 +226,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         emit TokensReleased(paymentReceiver, address(token), amount);
     }
 
-    /// @notice validate address input.
-    /// @param addr Address to validate.
+    /// @notice Validate address input.
+    /// @param  addr Address to validate.
     /// @return True if address is valid.
-    function validPaymentReceiver(address addr) internal view returns (bool) {
+    function _validPaymentReceiver(address addr) internal view returns (bool) {
         return !(
             addr == address(0) || addr == _msgSender() || addr == address(this)
                 || addr == address(orchestrator())
@@ -237,18 +237,19 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         );
     }
 
-    /// @notice validate uint total amount input.
-    /// @param _total uint to validate.
+    /// @notice Validate uint total amount input.
+    /// @param  _total uint to validate.
     /// @return True if uint is valid.
-    function validTotal(uint _total) internal pure returns (bool) {
+    function _validTotal(uint _total) internal pure returns (bool) {
         return !(_total == 0);
     }
 
-    /// @notice validate payment token input.
-    /// @param _token Address of the token to validate.
+    /// @notice Validate payment token input.
+    /// @param  _token Address of the token to validate.
     /// @return True if address is valid.
-    function validPaymentToken(address _token) internal returns (bool) {
-        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding module should ensure it's sending an ERC20.
+    function _validPaymentToken(address _token) internal returns (bool) {
+        // Only a basic sanity check that the address supports the balanceOf() function. The corresponding
+        // module should ensure it's sending an ERC20.
 
         (bool success, bytes memory data) = _token.call(
             abi.encodeWithSelector(

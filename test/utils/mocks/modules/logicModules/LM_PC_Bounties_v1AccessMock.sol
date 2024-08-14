@@ -28,7 +28,7 @@ contract LM_PC_Bounties_v1AccessMock is LM_PC_Bounties_v1 {
     function direct__validPayoutAmounts(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount
-    ) external {
+    ) external pure {
         _validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount);
     }
 

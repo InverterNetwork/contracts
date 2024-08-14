@@ -114,20 +114,20 @@ contract TokenGatedAUT_RoleV1Test is Test {
     // Events
 
     /// @notice Event emitted when the token-gating of a role changes.
-    /// @param role The role that was modified.
-    /// @param newValue The new value of the role.
+    /// @param  role The role that was modified.
+    /// @param  newValue The new value of the role.
     event ChangedTokenGating(bytes32 role, bool newValue);
 
     /// @notice Event emitted when the threshold of a token-gated role changes.
-    /// @param role The role that was modified.
-    /// @param token The token for which the threshold was modified.
-    /// @param newValue The new value of the threshold.
+    /// @param  role The role that was modified.
+    /// @param  token The token for which the threshold was modified.
+    /// @param  newValue The new value of the threshold.
     event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
 
     /// @notice Event emitted when `account` is revoked of `role`.
-    /// @param role The role that was revoked.
-    /// @param account The account that has the role revoked.
-    /// @param sender The account that performed the revocation.
+    /// @param  role The role that was revoked.
+    /// @param  account The account that has the role revoked.
+    /// @param  sender The account that performed the revocation.
     event RoleRevoked(
         bytes32 indexed role, address indexed account, address indexed sender
     );

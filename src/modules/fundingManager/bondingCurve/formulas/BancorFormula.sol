@@ -15,6 +15,7 @@ import {Utils} from "@fm/bondingCurve/formulas/Utils.sol";
 contract BancorFormula is IBancorFormula, Utils, ERC165 {
     using SafeMath for uint;
 
+    /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId)
         public
         view

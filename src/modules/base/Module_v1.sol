@@ -24,16 +24,16 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Module
+ * @title   Inverter Module
  *
  * @dev     This Contract is the basic building block for all Modules in the Inverter Network.
  *          It contains references to other contracts, modifier for access restriction,
  *          metadata to identify the module type as well as utility functions for general
  *          module interactions.
  *
- *          This contract provides a framework for triggering and receiving orchestrator
+ *          This contract provides a framework for triggering and receiving {Orchestrator_v1}
  *          callbacks (via `call`) and a modifier to authenticate
- *          callers via the module's orchestrator.
+ *          callers via the module's {Orchestrator_v1}.
  *
  *          Each module is identified via a unique identifier based on its major
  *          version, title, and url given in the metadata.
@@ -67,17 +67,17 @@ abstract contract Module_v1 is
     //
     // Variables are prefixed with `__Module_`.
 
-    /// @dev The module's orchestrator instance.
+    /// @dev	The module's orchestrator instance.
     ///
     /// @custom:invariant Not mutated after initialization.
     IOrchestrator_v1 internal __Module_orchestrator;
 
-    /// @dev The module's metadata.
+    /// @dev	The module's metadata.
     ///
     /// @custom:invariant Not mutated after initialization.
     Metadata internal __Module_metadata;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -87,8 +87,8 @@ abstract contract Module_v1 is
     // contracts too. To not make unnecessary modifiers available, this contract
     // inlines argument validations not needed in downstream contracts.
 
-    /// @notice Modifier to guarantee function is only callable by addresses
-    ///         authorized via Orchestrator_v1.
+    /// @dev    Modifier to guarantee function is only callable by addresses
+    ///         authorized via {Orchestrator_v1}.
     modifier onlyOrchestratorAdmin() {
         _checkRoleModifier(
             __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
@@ -96,14 +96,14 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by a module registered within the
-    ///         workflows's Orchestrator and the module is implementing the PaymentClient interface.
+    /// @dev    Modifier to guarantee function is only callable by a module registered within the
+    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v1} interface.
     modifier onlyPaymentClient() {
         _onlyPaymentClientModifier();
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
+    /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
         _checkRoleModifier(
             __Module_orchestrator.authorizer().generateRoleId(
@@ -114,7 +114,7 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
+    /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRoleAdmin(bytes32 role) {
         bytes32 moduleRole = __Module_orchestrator.authorizer().generateRoleId(
             address(this), role
@@ -126,17 +126,17 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable by the orchestrator.
-    /// @dev onlyOrchestrator functions MUST only access the module's storage, i.e.
-    ///      `__Module_` variables.
-    /// @dev Note to use function prefix `__Module_`.
+    /// @dev    Modifier to guarantee function is only callable by the {Orchestrator_v1}.
+    /// @dev	onlyOrchestrator functions MUST only access the module's storage, i.e.
+    ///         `__Module_` variables.
+    /// @dev	Note to use function prefix `__Module_`.
     modifier onlyOrchestrator() {
         _onlyOrchestratorModifier();
         _;
     }
 
-    /// @dev Checks if the given Address is valid.
-    /// @param to The address to check.
+    /// @dev	Checks if the given Address is valid.
+    /// @param  to The address to check.
     modifier validAddress(address to) {
         _validAddressModifier(to);
         _;
@@ -158,9 +158,9 @@ abstract contract Module_v1 is
         __Module_init(orchestrator_, metadata);
     }
 
-    /// @dev The initialization function MUST be called by the upstream
-    ///      contract in their overriden `init()` function.
-    /// @param orchestrator_ The module's orchestrator.
+    /// @dev	The initialization function MUST be called by the upstream
+    ///      contract in their overridden `init()` function.
+    /// @param  orchestrator_ The module's {Orchestrator_v1}.
     function __Module_init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata
@@ -254,18 +254,19 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury address of this workflow
-    /// @param functionSelector The function selector of the target function
-    /// @dev FunctionSelector is always passed as selector of this module / address
-    /// @return fee The collateral fee amount in relation to the BPS of the feeManager
-    /// @return treasury The address of the treasury
+    /// @notice Returns the collateral fee for the specified workflow module function and the according treasury
+    ///         address of this workflow.
+    /// @param  functionSelector The function selector of the target function.
+    /// @dev	FunctionSelector is always passed as selector of this module / address.
+    /// @return fee The collateral fee amount in relation to the BPS of the {FeeManager_v1}.
+    /// @return treasury The address of the treasury.
     function _getFeeManagerCollateralFeeData(bytes4 functionSelector)
         internal
         view
         returns (uint fee, address treasury)
     {
         // Fetch fee manager address from orchestrator
-        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) // Fetch feeManager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager())
             .getCollateralWorkflowFeeAndTreasury(
             address(__Module_orchestrator), // Always take this modules orchestrator as the workflow address
             address(this), // always take this as the module address
@@ -273,18 +274,19 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address of this workflow
-    /// @param functionSelector The function selector of the target function
-    /// @dev FunctionSelector is always passed as selector of this module / address
-    /// @return fee The issuance fee amount in relation to the BPS of the feeManager
-    /// @return treasury The address of the treasury
+    /// @notice Returns the issuance fee for the specified workflow module function and the according treasury address
+    ///         of this workflow.
+    /// @param  functionSelector The function selector of the target function.
+    /// @dev	FunctionSelector is always passed as selector of this module / address.
+    /// @return fee The issuance fee amount in relation to the BPS of the {FeeManager_v1}.
+    /// @return treasury The address of the treasury.
     function _getFeeManagerIssuanceFeeData(bytes4 functionSelector)
         internal
         view
         returns (uint fee, address treasury)
     {
         // Fetch fee manager address from orchestrator
-        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager()) // Fetch feeManager address from orchestrator
+        return IFeeManager_v1(__Module_orchestrator.governor().getFeeManager())
             .getIssuanceWorkflowFeeAndTreasury(
             address(__Module_orchestrator), // Always take this modules orchestrator as the workflow address
             address(this), // always take this as the module address
@@ -292,28 +294,31 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @dev Checks if the caller has the specified role.
-    /// @param role The role to check.
-    /// @param addr The address to check.
+    /// @dev	Checks if the caller has the specified role.
+    /// @param  role The role to check.
+    /// @param  addr The address to check.
     function _checkRoleModifier(bytes32 role, address addr) internal view {
         if (!__Module_orchestrator.authorizer().checkForRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
         }
     }
 
-    /// @dev Checks if the caller is the orchestrator.
+    /// @dev	Checks if the caller is the orchestrator.
     function _onlyOrchestratorModifier() internal view {
         if (_msgSender() != address(__Module_orchestrator)) {
             revert Module__OnlyCallableByOrchestrator();
         }
     }
 
+    /// @dev	Checks if the given address is an valid address.
+    /// @param  to The address to check.
     function _validAddressModifier(address to) internal view {
         if (to == address(0) || to == address(this)) {
             revert Module__InvalidAddress();
         }
     }
 
+    /// @dev	Checks if the caller is an {ERC20PaymentClientBase_v1} module.
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())
@@ -326,11 +331,12 @@ abstract contract Module_v1 is
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// @notice Checks if the provided address is the trusted forwarder
-    /// @param forwarder The contract address to be verified.
-    /// @return bool Is the given address the trusted forwarder
-    /// @dev We imitate here the EIP2771 Standard to enable metatransactions
-    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    /// @notice Checks if the provided address is the trusted forwarder.
+    /// @param  forwarder The contract address to be verified.
+    /// @return bool Is the given address the trusted forwarder.
+    /// @dev	We imitate here the EIP2771 Standard to enable metatransactions
+    ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
+    ///         move this to the orchestrator.
     function isTrustedForwarder(address forwarder)
         public
         view
@@ -341,10 +347,11 @@ abstract contract Module_v1 is
         return __Module_orchestrator.isTrustedForwarder(forwarder);
     }
 
-    /// @notice Returns the trusted forwarder
-    /// @return address The trusted forwarder
-    /// @dev We imitate here the EIP2771 Standard to enable metatransactions
-    /// As it currently stands we dont want to feed the forwarder address to each module individually and we decided to move this to the orchestrator
+    /// @notice Returns the trusted forwarder.
+    /// @return address The trusted forwarder.
+    /// @dev	We imitate here the EIP2771 Standard to enable metatransactions.
+    ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
+    ///         move this to the orchestrator.
     function trustedForwarder()
         public
         view

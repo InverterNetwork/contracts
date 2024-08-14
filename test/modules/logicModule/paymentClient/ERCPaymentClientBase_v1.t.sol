@@ -47,8 +47,8 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     // Events
 
     /// @notice Added a payment order.
-    /// @param recipient The address that will receive the payment.
-    /// @param amount The amount of tokens the payment consists of.
+    /// @param  recipient The address that will receive the payment.
+    /// @param  amount The amount of tokens the payment consists of.
     event PaymentOrderAdded(
         address indexed recipient, address indexed token, uint amount
     );
@@ -463,7 +463,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Data Creation Helper Functions
 
-    /// @dev Returns all invalid recipients.
+    /// @dev    Returns all invalid recipients.
     function _createInvalidRecipients()
         internal
         view
@@ -480,7 +480,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         return invalids;
     }
 
-    /// @dev Returns all invalid amounts.
+    /// @dev    Returns all invalid amounts.
     function _createInvalidAmounts() internal pure returns (uint[] memory) {
         uint[] memory invalids = new uint[](2);
 

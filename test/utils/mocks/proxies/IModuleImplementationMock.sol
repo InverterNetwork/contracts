@@ -6,6 +6,6 @@ import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 interface IModuleImplementationMock {
-    /// @dev Returns the Version of the Implementation
+    /// @dev    Returns the Version of the Implementation
     function getMockVersion() external pure returns (uint);
 }
