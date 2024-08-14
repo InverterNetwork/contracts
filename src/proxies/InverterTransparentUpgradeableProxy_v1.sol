@@ -99,7 +99,7 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     }
 
     //--------------------------------------------------------------------------
-    // Public View Functions
+    // Public Functions
 
     /// @dev This overrides the possible use of a "version" function in the modules that are called via the Proxy Beacon structure
     /// @notice Returns the version of the linked implementation.
@@ -108,6 +108,12 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
     /// @return The patch version.
     function version() external view returns (uint, uint, uint) {
         return (majorVersion, minorVersion, patchVersion);
+    }
+
+    /// @dev Fallback function to delegate calls to the implementation contract
+    ///      even if the call data is empty but msg.value > 0.
+    receive() external payable virtual {
+        _fallback();
     }
 
     //--------------------------------------------------------------------------

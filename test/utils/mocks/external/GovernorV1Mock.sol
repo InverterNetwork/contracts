@@ -98,7 +98,6 @@ contract GovernorV1Mock is IGovernor_v1 {
     // Factory Functions
 
     function registerMetadataInModuleFactory(
-        IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external {}
