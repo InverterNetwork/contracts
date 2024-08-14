@@ -100,7 +100,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         _;
     }
 
-    /// @dev Checks if the array lengths are valid
+    /// @dev    Checks if the array lengths are valid
     /// @param  minimumPayoutAmountLength The minimum payout amount length
     /// @param  maximumPayoutAmountLength The maximum payout amount length
     /// @param  detailArrayLength The detail array length
@@ -548,7 +548,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     // --------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to check if the payout amounts are valid
+    /// @dev    Internal function to check if the payout amounts are valid
     /// @param  minimumPayoutAmount The minimum payout amount
     /// @param  maximumPayoutAmount The maximum payout amount
     function _validPayoutAmounts(
@@ -563,7 +563,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         }
     }
 
-    /// @dev Internal function to add a bounty
+    /// @dev    Internal function to add a bounty
     /// @param  minimumPayoutAmount The minimum payout amount
     /// @param  maximumPayoutAmount The maximum payout amount
     /// @param  details The details of the bounty

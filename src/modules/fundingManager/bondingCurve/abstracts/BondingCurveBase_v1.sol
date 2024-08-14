@@ -311,7 +311,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @return collateralFeePercentage The percentage fee to be collected from the collateral
     ///                                  token being deposited or redeemed, expressed in BPS.
     /// @return issuanceFeePercentage The percentage fee to be collected from the issuance token
-    ///     being deposited or minted, expressed in BPS.
+    ///         being deposited or minted, expressed in BPS.
     function _getFunctionFeesAndTreasuryAddresses(bytes4 _selector)
         internal
         view

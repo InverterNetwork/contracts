@@ -50,7 +50,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Modifier to ensure the implementation is valid.
+    /// @dev    Modifier to ensure the implementation is valid.
     modifier validImplementation(address newImplementation) {
         if (!(newImplementation.code.length > 0)) {
             revert InverterBeacon__InvalidImplementation();
@@ -58,7 +58,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         _;
     }
 
-    /// @dev Modifier to ensure the new minor or patch version is valid.
+    /// @dev    Modifier to ensure the new minor or patch version is valid.
     modifier validNewMinorOrPatchVersion(
         uint newMinorVersion,
         uint newPatchVersion
@@ -200,7 +200,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to upgrade the implementation.
+    /// @dev    Internal function to upgrade the implementation.
     /// @param  newImplementation The new implementation address.
     /// @param  newMinorVersion The new minor version.
     /// @param  newPatchVersion The new patch version.
@@ -219,7 +219,7 @@ contract InverterBeacon_v1 is IInverterBeacon_v1, ERC165, Ownable2Step {
         emit Upgraded(newImplementation, newMinorVersion, newPatchVersion);
     }
 
-    /// @dev Internal function to set the implementation.
+    /// @dev    Internal function to set the implementation.
     /// @param  newImplementation The new implementation address.
     /// @param  overrideShutdown If the upgrade process should override the shutdown.
     function _setImplementation(

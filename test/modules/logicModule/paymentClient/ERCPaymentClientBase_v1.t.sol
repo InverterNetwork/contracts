@@ -463,7 +463,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Data Creation Helper Functions
 
-    /// @dev Returns all invalid recipients.
+    /// @dev    Returns all invalid recipients.
     function _createInvalidRecipients()
         internal
         view
@@ -480,7 +480,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         return invalids;
     }
 
-    /// @dev Returns all invalid amounts.
+    /// @dev    Returns all invalid amounts.
     function _createInvalidAmounts() internal pure returns (uint[] memory) {
         uint[] memory invalids = new uint[](2);
 

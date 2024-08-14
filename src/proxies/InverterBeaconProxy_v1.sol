@@ -61,8 +61,8 @@ contract InverterBeaconProxy_v1 is Proxy {
         return _beacon.version();
     }
 
-    /// @dev Fallback function to delegate calls to the implementation contract
-    ///      even if the call data is empty but msg.value > 0.
+    /// @dev    Fallback function to delegate calls to the implementation contract
+    ///         even if the call data is empty but msg.value > 0.
     receive() external payable virtual {
         _fallback();
     }

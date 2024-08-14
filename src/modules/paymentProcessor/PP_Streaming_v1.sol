@@ -868,7 +868,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @dev Validate address input.
+    /// @dev    Validate address input.
     /// @param  addr Address to validate.
     /// @return True if address is valid.
     function _validPaymentReceiver(address addr) internal view returns (bool) {

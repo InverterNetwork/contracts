@@ -111,8 +111,8 @@ contract InverterTransparentUpgradeableProxy_v1 is ERC1967Proxy {
         return (majorVersion, minorVersion, patchVersion);
     }
 
-    /// @dev Fallback function to delegate calls to the implementation contract
-    ///      even if the call data is empty but msg.value > 0.
+    /// @dev    Fallback function to delegate calls to the implementation contract
+    ///         even if the call data is empty but msg.value > 0.
     receive() external payable virtual {
         _fallback();
     }

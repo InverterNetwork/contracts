@@ -200,7 +200,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     ) external returns (uint);
 
     /// @notice Adds a new array of Bounties.
-    /// @dev Reverts if an argument invalid.
+    /// @dev    Reverts if an argument invalid.
     /// @param  minimumPayoutAmounts The array of minimum amount of tokens the Bounty will pay out upon being claimed
     /// @param  maximumPayoutAmounts The array of maximum amount of tokens the Bounty will pay out upon being claimed
     /// @param  detailArray The array of Bounty's details.

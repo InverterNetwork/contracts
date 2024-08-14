@@ -162,7 +162,7 @@ contract PIM_WorkflowFactory_v1 is
         }
 
         // if isRenouncedWorkflow flag is set factory keeps admin rights over workflow, else transfer admin rights to
-        //  specified admin
+        // specified admin
         if (PIMConfig.isRenouncedWorkflow) {
             // record the admin as fee recipient eligible to claim buy/sell fees
             _pimFeeRecipients[fundingManager] = PIMConfig.admin;

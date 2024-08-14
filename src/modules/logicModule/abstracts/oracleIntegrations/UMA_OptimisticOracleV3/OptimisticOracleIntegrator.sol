@@ -76,7 +76,7 @@ abstract contract OptimisticOracleIntegrator is
     uint64 public assertionLiveness;
     /// @dev	The identifier used when creating the assertion. For most usecases, this will resolve to "ASSERT_TRUTH".
     bytes32 public defaultIdentifier;
-    /// @dev Assertion storage.
+    /// @dev    Assertion storage.
     mapping(bytes32 => DataAssertion) public assertionData;
 
     /// @dev	Storage gap for future upgrades

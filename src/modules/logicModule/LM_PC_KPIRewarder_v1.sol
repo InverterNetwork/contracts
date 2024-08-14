@@ -208,7 +208,7 @@ contract LM_PC_KPIRewarder_v1 is
     // Admin Configuration Functions:
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
-    /// @dev Top up funds to pay the optimistic oracle fee
+    /// @dev    Top up funds to pay the optimistic oracle fee
     function depositFeeFunds(uint amount)
         external
         onlyOrchestratorAdmin

@@ -27,15 +27,15 @@ import {Ownable} from "@oz/access/Ownable.sol";
  */
 contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     // State Variables
-    /// @dev The mapping of allowed minters.
+    /// @dev    The mapping of allowed minters.
     mapping(address => bool) public allowedMinters;
-    /// @dev The number of decimals of the token.
+    /// @dev    The number of decimals of the token.
     uint8 internal immutable _decimals;
 
     //------------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Modifier to guarantee the caller is a minter.
+    /// @dev    Modifier to guarantee the caller is a minter.
     modifier onlyMinter() {
         if (!allowedMinters[_msgSender()]) {
             revert IERC20Issuance__CallerIsNotMinter();

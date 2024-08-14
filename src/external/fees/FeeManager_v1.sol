@@ -86,11 +86,11 @@ contract FeeManager_v1 is
     /// @dev	The default collateral fee percentage amount that apply unless workflow
     ///         specific fees are set.
     uint internal defaultCollateralFee;
-    /// @dev     The workflow issuance fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
+    /// @dev    The workflow issuance fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowIssuanceFees;
-    /// @dev     The workflow collateral fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
+    /// @dev    The workflow collateral fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowCollateralFees;
-    /// @dev     Storage gap for future upgrades.
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------

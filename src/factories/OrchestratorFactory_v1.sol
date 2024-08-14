@@ -90,10 +90,10 @@ contract OrchestratorFactory_v1 is
     uint private _orchestratorIdCounter;
 
     /// @dev	Maps a users address to a nonce.
-    ///      Used for the create2-based deployment.
+    ///         Used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    /// @dev	Storage gap for future upgrades.
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------------

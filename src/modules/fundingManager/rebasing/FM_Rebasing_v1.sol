@@ -61,18 +61,18 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev The maximum amount of tokens that can be deposited.
-    // This cap is one power of ten lower than the MAX_SUPPLY of
-    // the underlying ElasticReceiptTokenBase, just to be safe.
+    ///@dev The maximum amount of tokens that can be deposited.
+    //      This cap is one power of ten lower than the MAX_SUPPLY of
+    //      the underlying ElasticReceiptTokenBase, just to be safe.
     uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The token that is used for the rebasing.
+    /// @dev    The token that is used for the rebasing.
     IERC20 private _token;
 
-    /// @dev Storage gap for future upgrades
+    /// @dev    Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -167,7 +167,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Returns the current token balance as supply target.
+    /// @dev    Returns the current token balance as supply target.
     /// @return The current token balance as supply target.
     function _supplyTarget()
         internal
@@ -178,7 +178,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
         return token().balanceOf(address(this));
     }
 
-    /// @dev Deposits tokens into the contract.
+    /// @dev    Deposits tokens into the contract.
     /// @param  from The address to deposit from.
     /// @param  to The address to deposit to.
     /// @param  amount The amount of tokens to deposit.
@@ -199,7 +199,7 @@ contract FM_Rebasing_v1 is IFundingManager_v1, ElasticReceiptTokenBase_v1 {
         emit Deposit(from, to, amount);
     }
 
-    /// @dev Withdraws `amount` of tokens from the funds of `from` to `to`.
+    /// @dev    Withdraws `amount` of tokens from the funds of `from` to `to`.
     /// @param  from The address to withdraw from.
     /// @param  to The address to withdraw to.
     /// @param  amount The amount of tokens to withdraw.

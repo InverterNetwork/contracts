@@ -142,16 +142,16 @@ contract Governor_v1 is
     IModuleFactory_v1 private moduleFactory;
 
     /// @dev	Array of {IInverterBeacon_v1}s that are linked to this {Governor_v1},
-    ///      populated via `moduleFactoryInitCallback`.
+    ///         populated via `moduleFactoryInitCallback`.
     IInverterBeacon_v1[] private linkedBeacons;
 
-    /// @dev	Length of each timelock.
+    /// @dev    Length of each timelock.
     uint public timelockPeriod;
-    /// @dev	Struct to store timelock information for each {IInverterBeacon_v1}.
+    /// @dev    Struct to store timelock information for each {IInverterBeacon_v1}.
     mapping(address beacon => IGovernor_v1.Timelock timelock) private
         beaconTimelock;
 
-    /// @dev     Storage gap for future upgrades.
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
