@@ -44,16 +44,16 @@ import {FM_BC_Tools} from "@fm/bondingCurve/FM_BC_Tools.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Bancor Virtual Supply Bonding Curve Funding Manager
+ * @title   Inverter Bancor Virtual Supply Bonding Curve Funding Manager
  *
  * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
  *          a virtual supply for both the issuance and the collateral as input. It integrates
- *          Aragon's Bancor Formula to manage the calculations for token issuance and redemption
+ *          Aragon's {BancorFormula} to manage the calculations for token issuance and redemption
  *          rates based on specified reserve ratios.
  *
  * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v1}, {VirtualIssuanceSupplyBase_v1},
  *          and {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper functions for bonding curve
- *          calculations using the Bancor formula. {Orchestrator_v1} Admin manages
+ *          calculations using the {BancorFormula}. {Orchestrator_v1} Admin manages
  *          configuration such as virtual supplies and reserve ratios. Ensure interaction adheres to
  *          defined transactional limits and decimal precision requirements to prevent computational
  *          overflows or underflows.
@@ -94,37 +94,38 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The interface of the Bancor Formula used to calculate the issuance and redeeming amount.
+    /// @dev    The interface of the Bancor Formula used to calculate the issuance and redeeming amount.
     IBancorFormula public formula;
-    /// @dev Value is used to convert deposit amount to 18 decimals,
-    /// which is required by the Bancor formula
+    /// @dev    Value is used to convert deposit amount to 18 decimals, which is required by the {BancorFormula}.
+    ///         which is required by the Bancor formula.
     uint8 private constant eighteenDecimals = 18;
-    /// @dev Parts per million used for calculation the reserve ratio for the Bancor formula.
+    /// @dev    Parts per million used for calculation the reserve ratio for the Bancor formula.
     uint32 internal constant PPM = 1_000_000;
-    /// @dev The reserve ratio for buying determines the rate of price growth. It is a measure of the fraction
-    /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
-    /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
-    /// for reference.
+    /// @dev    The reserve ratio for buying determines the rate of price growth. It is a measure of the fraction
+    ///         of the Token's value that is held in reserve. The value is a number between 0 and 100%,
+    ///         expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
+    ///         for reference.
     uint32 internal reserveRatioForBuying;
-    /// @dev The reserve ratio for selling determines the rate of price growth. It is a measure of the fraction
-    /// of the Token's value that is held in reserve. The value is a number between 0 and 100%,
-    /// expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
-    /// for reference.
+    /// @dev    The reserve ratio for selling determines the rate of price growth. It is a measure of the fraction
+    ///         of the Token's value that is held in reserve. The value is a number between 0 and 100%,
+    ///         expressed in PPM. A higher reserve ratio means slower price growth. See Bancor Formula contract
+    ///         for reference.
     uint32 internal reserveRatioForSelling;
-    /// @dev Token that is accepted by this funding manager for deposits.
+    /// @dev    Token that is accepted by this funding manager for deposits.
     IERC20 private _token;
-    /// @dev Token decimals of the Orchestrator token, which is used as collateral and stores within
-    /// implementation for gas saving.
+    /// @dev    Token decimals of the Orchestrator token, which is used as collateral and stores within
+    ///         implementation for gas saving.
     uint8 internal collateralTokenDecimals;
-    /// @dev Token decimals of the issuance token, which is stored within the implementation for gas saving.
+    /// @dev    Token decimals of the issuance token, which is stored within the implementation for gas saving.
     uint8 internal issuanceTokenDecimals;
 
-    // Storage gap for future upgrades
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev    Modifier to guarantee the buying and selling functionalities are closed.
     modifier onlyWhenCurveInteractionsAreClosed() {
         _checkCurveInteractionClosedModifier();
         _;
@@ -196,16 +197,16 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     // Public Mutating Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address. This function is subject
-    /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
-    /// bonding curve algorithm.
-    /// @dev Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
-    /// Important: The Bancor Formula has an upper computational limit of (10^38). For tokens with
-    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
-    /// While this is substantially large, it is crucial to be aware of this constraint.
-    /// Transactions exceeding this limit will be reverted.
-    /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    ///         to a transactional limit, determined by the deposit token's decimal precision and the underlying
+    ///         bonding curve algorithm.
+    /// @dev    Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
+    ///         Important: The {BancorFormula} has an upper computational limit of (10^38). For tokens with
+    ///         18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^20).
+    ///         While this is substantially large, it is crucial to be aware of this constraint.
+    ///         Transactions exceeding this limit will be reverted.
+    /// @param  _receiver The address that will receive the bought tokens.
+    /// @param  _depositAmount The amount of collateral token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -220,14 +221,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @notice Buy tokens for the sender's address. This function is subject
-    /// to a transactional limit, determined by the deposit token's decimal precision and the underlying
-    /// bonding curve algorithm.
-    /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
-    /// Important: The Bancor Formula has an upper computational limit of (10^38).
-    /// While this is substantially large, it is crucial to be aware of this constraint.
-    /// Transactions exceeding this limit will be reverted.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    ///         to a transactional limit, determined by the deposit token's decimal precision and the underlying
+    ///         bonding curve algorithm.
+    /// @dev    Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
+    ///         Important: The {BancorFormula} has an upper computational limit of (10^38).
+    ///         While this is substantially large, it is crucial to be aware of this constraint.
+    ///         Transactions exceeding this limit will be reverted.
+    /// @param  _depositAmount The amount of collateral token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -238,15 +239,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @notice Redeem tokens and direct the proceeds to a specified receiver address. This function is subject
-    /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
-    /// bonding curve algorithm.
-    /// @dev Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
-    /// Important: The Bancor Formula has an upper computational limit of (10^26). For tokens with
-    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
-    /// 100,000,000. Transactions exceeding this limit will be reverted.
-    /// @param _receiver The address that will receive the redeemed tokens.
-    /// @param _depositAmount The amount of issued token to deposited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    ///         to a transactional limit, determined by the issuing token's decimal precision and the underlying
+    ///         bonding curve algorithm.
+    /// @dev    Redirects to the internal function `_sellOrder` by passing the receiver address and deposit amount.
+    ///         Important: The {BancorFormula} has an upper computational limit of (10^26). For tokens with
+    ///         18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
+    ///         100,000,000. Transactions exceeding this limit will be reverted.
+    /// @param  _receiver The address that will receive the redeemed tokens.
+    /// @param  _depositAmount The amount of issued token to deposited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -261,14 +262,14 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @notice Redeem collateral for the sender's address. This function is subject
-    /// to a transactional limit, determined by the issuing token's decimal precision and the underlying
-    /// bonding curve algorithm.
-    /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
-    /// Important: The Bancor Formula has an upper computational limit of (10^26). For tokens with
-    /// 18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
-    /// 100,000,000. Transactions exceeding this limit will be reverted.
-    /// @param _depositAmount The amount of issued token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    ///         to a transactional limit, determined by the issuing token's decimal precision and the underlying
+    ///         bonding curve algorithm.
+    /// @dev    Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
+    ///         Important: The {BancorFormula} has an upper computational limit of (10^26). For tokens with
+    ///         18 decimal places, this effectively leaves a maximum allowable deposit amount of (10^8), or
+    ///         100,000,000. Transactions exceeding this limit will be reverted.
+    /// @param  _depositAmount The amount of issued token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -291,15 +292,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return reserveRatioForSelling;
     }
 
-    /// @dev Calculates the static price for either selling or buying the issuance token,
-    /// based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
-    /// Note: The reserve ratio specifies whether the sell or buy price is returned.
-    /// The formula used is: PPM * PPM * collateralSupply / (issuanceTokenSupply * reserveRatio).
-    /// The formula is based on Aragon's BatchedBancorMarketMaker, which can be found here:
-    /// https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
     /// @notice Calculates and returns the static price for buying the issuance token.
-    /// The return value is formatted in PPM.
-    /// @return uint The static price for buying the issuance token
+    ///         The return value is formatted in PPM.
+    /// @dev    Calculates the static price for either selling or buying the issuance token,
+    ///         based on the provided issuance token supply, collateral supply, and buy or sell reserve ratio.
+    ///         Note: The reserve ratio specifies whether the sell or buy price is returned.
+    ///         The formula used is: PPM * PPM * collateralSupply / (issuanceTokenSupply * reserveRatio).
+    ///         The formula is based on Aragon's BatchedBancorMarketMaker, which can be found here:
+    ///         https://github.com/AragonBlack/fundraising/blob/5ad1332955bab9d36cfad345ae92b7ad7dc0bdbe/apps/batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol#L415
+    /// @return uint The static price for buying the issuance token.
     function getStaticPriceForBuying()
         external
         view
@@ -322,8 +323,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
-    /// The return value is formatted in PPM.
-    /// @return uint The static price for selling the issuance token
+    ///         The return value is formatted in PPM.
+    /// @return uint The static price for selling the issuance token.
     function getStaticPriceForSelling()
         external
         view
@@ -417,10 +418,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
-    /// @dev Calculates the amount of tokens to mint for a given deposit amount using the Bancor formula.
-    /// This internal function is an override of BondingCurveBase_v1's abstract function.
-    /// It handles decimal conversions and calculations through the bonding curve.
-    /// @param _depositAmount The amount of collateral deposited to purchase tokens.
+    /// @dev    Calculates the amount of tokens to mint for a given deposit amount using the {BancorFormula}.
+    ///         This internal function is an override of {BondingCurveBase_v1}'s abstract function.
+    ///         It handles decimal conversions and calculations through the bonding curve.
+    /// @param  _depositAmount The amount of collateral deposited to purchase tokens.
     /// @return mintAmount The amount of tokens that will be minted.
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
@@ -452,10 +453,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         );
     }
 
-    /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
-    /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
-    /// It handles decimal conversions and calculations through the bonding curve. Note the Bancor formula assumes 18 decimals for all tokens
-    /// @param _depositAmount The amount of tokens to be redeemed for collateral.
+    /// @dev    Calculates the amount of collateral to be received when redeeming a given amount of tokens.
+    ///         This internal function is an override of {RedeemingBondingCurveBase_v1}'s abstract function.
+    ///         It handles decimal conversions and calculations through the bonding curve. Note the {BancorFormula}
+    ///         assumes 18 decimals for all tokens.
+    /// @param  _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
@@ -493,11 +495,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Sets the issuance token for the Bonding Curve Funding Manager.
-    /// This function overrides the internal function set in BondingCurveBase_v1, adding
-    /// an input validation specific for the Bancor Formula utilizing implementation, after which
-    /// it updates the `issuanceToken` state variable and caches the decimals as `issuanceTokenDecimals`.
-    /// @param _issuanceToken The token which will be issued by the Bonding Curve.
+    /// @dev    Sets the issuance token for the Bonding Curve Funding Manager.
+    ///         This function overrides the internal function set in {BondingCurveBase_v1}, adding
+    ///         an input validation specific for the {BancorFormula} utilizing implementation, after which
+    ///         it updates the `issuanceToken` state variable and caches the decimals as `issuanceTokenDecimals`.
+    /// @param  _issuanceToken The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address _issuanceToken)
         internal
         override(BondingCurveBase_v1)
@@ -515,8 +517,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         emit IssuanceTokenSet(_issuanceToken, _decimals);
     }
 
-    /// @dev Internal function to directly set the virtual collateral supply to a new value.
-    /// @param _virtualSupply The new value to set for the virtual collateral supply.
+    /// @dev    Internal function to directly set the virtual collateral supply to a new value.
+    /// @param  _virtualSupply The new value to set for the virtual collateral supply.
     function _setVirtualCollateralSupply(uint _virtualSupply)
         internal
         override(VirtualCollateralSupplyBase_v1)
@@ -524,10 +526,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         super._setVirtualCollateralSupply(_virtualSupply);
     }
 
-    /// @dev Internal function to directly set the virtual issuance supply to a new value.
+    /// @dev    Internal function to directly set the virtual issuance supply to a new value.
     ///         Virtual supply cannot be zero, or result in rounded down being zero when conversion
-    ///         is done for use in the Bancor Formulat
-    /// @param _virtualSupply The new value to set for the virtual issuance supply.
+    ///         is done for use in the Bancor Formulat.
+    /// @param  _virtualSupply The new value to set for the virtual issuance supply.
     function _setVirtualIssuanceSupply(uint _virtualSupply)
         internal
         override(VirtualIssuanceSupplyBase_v1)
@@ -553,31 +555,28 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         super._setVirtualIssuanceSupply(_virtualSupply);
     }
 
-    /// @dev Sets the reserve ratio for buying tokens.
-    /// The function will revert if the ratio is greater than the constant PPM.
-    ///
-    /// @param _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
+    /// @dev    Sets the reserve ratio for buying tokens.
+    ///         The function will revert if the ratio is greater than the constant PPM.
+    /// @param  _reserveRatio The reserve ratio to be set for buying tokens. Must be <= PPM.
     function _setReserveRatioForBuying(uint32 _reserveRatio) internal {
         _validateReserveRatio(_reserveRatio);
         emit BuyReserveRatioSet(_reserveRatio, reserveRatioForBuying);
         reserveRatioForBuying = _reserveRatio;
     }
 
-    /// @dev Sets the reserve ratio for selling tokens.
-    /// Similar to its counterpart for buying, this function sets the reserve ratio for selling tokens.
-    /// The function will revert if the ratio is greater than the constant PPM.
-    ///
-    /// @param _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
+    /// @dev    Sets the reserve ratio for selling tokens.
+    ///         Similar to its counterpart for buying, this function sets the reserve ratio for selling tokens.
+    ///         The function will revert if the ratio is greater than the constant PPM.
+    /// @param  _reserveRatio The reserve ratio to be set for selling tokens. Must be <= PPM.
     function _setReserveRatioForSelling(uint32 _reserveRatio) internal {
         _validateReserveRatio(_reserveRatio);
         emit SellReserveRatioSet(_reserveRatio, reserveRatioForSelling);
         reserveRatioForSelling = _reserveRatio;
     }
 
-    /// @dev Validates the reserve ratio for buying and selling.
-    /// The function will revert if the ratio is greater than the constant PPM.
-    ///
-    /// @param _reserveRatio The reserve ratio to be validated. Must be <= PPM.
+    /// @dev    Validates the reserve ratio for buying and selling.
+    ///         The function will revert if the ratio is greater than the constant PPM.
+    /// @param  _reserveRatio The reserve ratio to be validated. Must be <= PPM.
     function _validateReserveRatio(uint32 _reserveRatio) internal pure {
         if (_reserveRatio == 0 || _reserveRatio > PPM) {
             revert
@@ -585,6 +584,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         }
     }
 
+    /// @dev    Checks if the buy and sell functionality is closed.
     function _checkCurveInteractionClosedModifier() internal view {
         if (buyIsOpen == true || sellIsOpen == true) {
             revert

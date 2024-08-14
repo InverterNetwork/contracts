@@ -2,8 +2,8 @@
 pragma solidity ^0.8.16;
 
 /**
- * @title Optimistic Oracle V3 Callback Recipient Interface
- * @notice Interface for contracts implementing callbacks to be received from the Optimistic Oracle V3.
+ * @title   Inverter Optimistic Oracle V3 Callback Recipient Interface
+ * @notice  Interface for contracts implementing callbacks to be received from the Optimistic Oracle V3.
  */
 interface OptimisticOracleV3CallbackRecipientInterface {
     /**

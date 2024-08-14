@@ -23,7 +23,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Payment Router
+ * @title   Inverter Payment Router
  *
  * @notice  This module enables pushing payments directly to the Payment Processor.
  *
@@ -57,7 +57,7 @@ contract LM_PC_PaymentRouter_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The role that allows the pushing of payments.
+    /// @dev	The role that allows the pushing of payments.
     bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER";
 
     //--------------------------------------------------------------------------

@@ -211,7 +211,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.getClaimInformation(id);
     }
 
-    function testValidContributorsForBounty(
+    function test_validContributorsForBounty(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount,
         address[] memory addrs,
@@ -339,7 +339,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 
-    function testContributorsNotChanged_FailsGivenBountyIsChanged(
+    function test_contributorsNotChanged_FailsGivenBountyIsChanged(
         address changeAddress,
         uint changeAmount
     ) public {
@@ -374,7 +374,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.verifyClaim(claimId, DEFAULT_CONTRIBUTORS);
     }
 
-    function testContributorsNotChanged_FailsGivenBountyArrayLengthHasChanged(
+    function test_contributorsNotChanged_FailsGivenBountyArrayLengthHasChanged(
         address changeAddress,
         uint changeAmount
     ) public {
@@ -501,7 +501,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             detailsBatch[i] = details;
         }
 
-        //Check that internal function is in position
+        // Check that internal function is in position
 
         for (uint i = 0; i < batchSize; i++) {
             vm.expectEmit(true, true, true, true);
@@ -509,11 +509,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
                 1 + i, minimumPayoutAmount, maximumPayoutAmount, details
             );
         }
-        console.log("HEre 1");
         uint[] memory ids = bountyManager.addBountyBatch(
             minimumPayoutAmounts, maximumPayoutAmounts, detailsBatch
         );
-        console.log("HEre 2");
         // Check if ids are correct
         assertEq(ids.length, batchSize);
         for (uint i; i < batchSize; i++) {
@@ -522,7 +520,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     function testAddBountyBatchModifierInPosition() public {
-        //Setup faulty arrays
+        // Setup faulty arrays
         uint[] memory minimumPayoutAmounts = new uint[](1);
         minimumPayoutAmounts[0] = 2;
         uint[] memory maximumPayoutAmounts = new uint[](1);
@@ -620,7 +618,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
 
-        // validContributorsForBounty
+        // _validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidContributorAmount
@@ -808,7 +806,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.updateClaimContributors(0, DEFAULT_CONTRIBUTORS);
 
-        // validContributorsForBounty
+        // _validContributorsForBounty
         vm.expectRevert(
             ILM_PC_Bounties_v1
                 .Module__LM_PC_Bounty__InvalidContributorAmount
@@ -995,7 +993,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         );
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
 
-        // contributorsNotChanged
+        // _contributorsNotChanged
 
         vm.expectRevert(
             ILM_PC_Bounties_v1

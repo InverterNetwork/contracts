@@ -405,7 +405,7 @@ contract GovernorV1Test is Test {
         IInverterBeacon_v1[] memory newBeacons = new IInverterBeacon_v1[](1);
         newBeacons[0] = unownedBeaconMock;
 
-        // isBeaconAccessible
+        // _isBeaconAccessible
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor_v1.Governor__BeaconNotAccessible.selector,

@@ -49,8 +49,8 @@ contract OrchestratorFactoryV1Test is Test {
     // Events
 
     /// @notice Event emitted when a new orchestrator is created.
-    /// @param orchestratorId The id of the orchestrator.
-    /// @param orchestratorAddress The address of the orchestrator.
+    /// @param  orchestratorId The id of the orchestrator.
+    /// @param  orchestratorAddress The address of the orchestrator.
     event OrchestratorCreated(
         uint indexed orchestratorId, address indexed orchestratorAddress
     );

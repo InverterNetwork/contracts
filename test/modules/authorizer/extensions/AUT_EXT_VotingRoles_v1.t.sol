@@ -62,25 +62,25 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // Events
 
     /// @notice Event emitted when a new voter address gets added.
-    /// @param who The added address.
+    /// @param  who The added address.
     event VoterAdded(address indexed who);
 
     /// @notice Event emitted when a voter address gets removed.
-    /// @param who The removed address.
+    /// @param  who The removed address.
     event VoterRemoved(address indexed who);
 
     /// @notice Event emitted when the required threshold changes.
-    /// @param oldThreshold The old threshold.
-    /// @param newThreshold The new threshold.
+    /// @param  oldThreshold The old threshold.
+    /// @param  newThreshold The new threshold.
     event ThresholdUpdated(uint oldThreshold, uint newThreshold);
 
     /// @notice Event emitted when the voting duration changes.
-    /// @param oldVotingDuration The old voting duration.
-    /// @param newVotingDuration The new voting duration.
+    /// @param  oldVotingDuration The old voting duration.
+    /// @param  newVotingDuration The new voting duration.
     event VoteDurationUpdated(uint oldVotingDuration, uint newVotingDuration);
 
     /// @notice Event emitted when a motion is created
-    /// @param motionId The motion ID.
+    /// @param  motionId The motion ID.
     event MotionCreated(bytes32 indexed motionId);
 
     event VoteCast(
@@ -88,7 +88,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     );
 
     /// @notice Event emitted when a motion is executed.
-    /// @param motionId The motion ID.
+    /// @param  motionId The motion ID.
     event MotionExecuted(bytes32 indexed motionId);
 
     function setUp() public {

@@ -55,20 +55,20 @@ contract FM_RebasingV1Test is ModuleTest {
     // Events
 
     /// @notice Event emitted when a deposit takes place.
-    /// @param _from The address depositing tokens.
-    /// @param _for The address that will receive the receipt tokens.
-    /// @param _amount The amount of tokens deposited.
+    /// @param  _from The address depositing tokens.
+    /// @param  _for The address that will receive the receipt tokens.
+    /// @param  _amount The amount of tokens deposited.
     event Deposit(address indexed _from, address indexed _for, uint _amount);
 
     /// @notice Event emitted when a withdrawal takes place.
-    /// @param _from The address supplying the receipt tokens.
-    /// @param _for The address that will receive the underlying tokens.
-    /// @param _amount The amount of underlying tokens withdrawn.
+    /// @param  _from The address supplying the receipt tokens.
+    /// @param  _for The address that will receive the underlying tokens.
+    /// @param  _amount The amount of underlying tokens withdrawn.
     event Withdrawal(address indexed _from, address indexed _for, uint _amount);
 
     /// @notice Event emitted when a transferal of orchestrator tokens takes place.
-    /// @param _to The address that will receive the underlying tokens.
-    /// @param _amount The amount of underlying tokens transfered.
+    /// @param  _to The address that will receive the underlying tokens.
+    /// @param  _amount The amount of underlying tokens transfered.
     event TransferOrchestratorToken(address indexed _to, uint _amount);
 
     //--------------------------------------------------------------------------

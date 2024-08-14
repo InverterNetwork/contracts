@@ -49,8 +49,8 @@ contract ModuleBaseV1Test is ModuleTest {
     // Events
 
     /// @notice Module has been initialized.
-    /// @param parentOrchestrator The address of the orchestrator the module is linked to.
-    /// @param metadata The metadata of the module.
+    /// @param  parentOrchestrator The address of the orchestrator the module is linked to.
+    /// @param  metadata The metadata of the module.
     event ModuleInitialized(
         address indexed parentOrchestrator, IModule_v1.Metadata metadata
     );

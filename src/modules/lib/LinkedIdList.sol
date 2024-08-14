@@ -9,13 +9,17 @@ Assumptions
 */
 
 library LinkedIdList {
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Struct used to store information about an element in the list.
+    /// @param  Size of the list.
+    /// @param  Marks    The last element of the list.
+    ///                 Always links back to the _SENTINEL.
+    /// @param  List of Ids.
     struct List {
-        /// @dev Size of the list
         uint size;
-        /// @dev Marks the last element of the list.
-        /// @dev Always links back to the _SENTINEL.
         uint last;
-        /// @dev List of Ids
         mapping(uint => uint) list;
     }
 
@@ -40,6 +44,7 @@ library LinkedIdList {
     //--------------------------------------------------------------------------
     // Modifier
 
+    /// @dev	Modifier to guarantee the given new id is valid.
     modifier validNewId(List storage self, uint id) {
         if (isExistingId(self, id) || id == 0) {
             revert Library__LinkedIdList__InvalidNewId();
@@ -47,6 +52,7 @@ library LinkedIdList {
         _;
     }
 
+    /// @dev	Modifier to guarantee the given id is valid.
     modifier validId(List storage self, uint id) {
         if (!isExistingId(self, id)) {
             revert Library__LinkedIdList__InvalidId();
@@ -54,6 +60,7 @@ library LinkedIdList {
         _;
     }
 
+    /// @dev	Modifier to guarantee the given position is valid.
     modifier validPosition(List storage self, uint id) {
         if (self.list[id] == 0) {
             revert Library__LinkedIdList__InvalidPosition();
@@ -61,6 +68,7 @@ library LinkedIdList {
         _;
     }
 
+    /// @dev	Modifier to guarantee the given ids are consecutive.
     modifier onlyConsecutiveIds(List storage self, uint prevId, uint id) {
         if (self.list[prevId] != id) {
             revert Library__LinkedIdList__IdNotConsecutive();
@@ -68,7 +76,7 @@ library LinkedIdList {
         _;
     }
 
-    /// @dev prevId is checked by consecutiveId to be valid
+    /// @dev	`prevId` is checked by consecutiveId to be valid
     modifier validMoveParameter(
         List storage self,
         uint id,
@@ -101,14 +109,14 @@ library LinkedIdList {
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev Marks the beginning of the list.
-    /// @dev Unrealistic to have that many ids.
+    /// @dev	Marks the beginning of the list.
+    /// @dev	Unrealistic to have that many ids.
     uint internal constant _SENTINEL = type(uint).max;
 
     //--------------------------------------------------------------------------
     // Init Function
 
-    /// @dev should never be called more than once
+    /// @dev	should never be called more than once
     function init(List storage self) internal {
         // set Sentinel to link back to itself to initiate List
         self.list[_SENTINEL] = _SENTINEL;
@@ -122,14 +130,13 @@ library LinkedIdList {
         return self.size;
     }
 
-    /// @dev Returns the last id in
+    /// @dev	Returns the last id in
     function lastId(List storage self) internal view returns (uint) {
         return self.last;
     }
 
-    /// @notice lists the ids contained in the linked list
-    /// @dev Returns an array
-    /// @param self : the linked List from where the ids should be listed
+    /// @notice lists the ids contained in the linked list.
+    /// @param  self The linked List from where the ids should be listed.
     /// @return array of ids that are contained in the list
     function listIds(List storage self) internal view returns (uint[] memory) {
         uint[] memory result = new uint[](self.size);
@@ -146,6 +153,9 @@ library LinkedIdList {
         return result;
     }
 
+    /// @dev Returns whether id is in list and not Sentinel
+    /// @param  self The linked List from where the ids should be listed.
+    /// @param  id The id to check.
     function isExistingId(List storage self, uint id)
         internal
         view
@@ -155,7 +165,9 @@ library LinkedIdList {
         return self.list[id] != 0 && id != _SENTINEL;
     }
 
-    /// @dev id and prevId can be _SENTINEL
+    /// @dev	Id and prevId can be _SENTINEL
+    /// @param  self The linked List from where the ids should be listed.
+    /// @param  id The id to check.
     function getPreviousId(List storage self, uint id)
         internal
         view
@@ -175,7 +187,9 @@ library LinkedIdList {
         }
     }
 
-    /// @dev id and nextId can be _SENTINEL
+    /// @dev	Id and nextId can be _SENTINEL
+    /// @param  self The linked List from which to get the next id.
+    /// @param  id The id to check.
     function getNextId(List storage self, uint id)
         internal
         view
@@ -188,7 +202,9 @@ library LinkedIdList {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    // add To list at last position
+    /// @dev	Add To list at last position
+    /// @param  self The linked List to which to add the id.
+    /// @param  id The id to add.
     function addId(List storage self, uint id) internal validNewId(self, id) {
         self.list[self.last] = id;
         self.list[id] = _SENTINEL;
@@ -196,6 +212,10 @@ library LinkedIdList {
         self.size++;
     }
 
+    /// @dev    Remove Id from list and decrease size.
+    /// @param  self The linked List from which to remove the id.
+    /// @param  prevId The id of the previous id.
+    /// @param  id The id to remove.
     function removeId(List storage self, uint prevId, uint id)
         internal
         validId(self, id)
@@ -213,6 +233,11 @@ library LinkedIdList {
         }
     }
 
+    /// @dev Move id in list
+    /// @param  self The linked List in which to move the id.
+    /// @param  id The id to move.
+    /// @param  prevId The id of the previous id.
+    /// @param  idToPositionAfter The id to position after.
     function moveIdInList(
         List storage self,
         uint id,

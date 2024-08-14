@@ -22,7 +22,7 @@ import {ERC165Upgradeable} from
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title   Deposit Vault Funding Manager
+ * @title   Inverter Deposit Vault Funding Manager
  *
  * @notice  This contract allows users to deposit tokens to fund the workflow.
  *
@@ -57,10 +57,10 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The token that is deposited.
+    /// @dev    The token that is deposited.
     IERC20 private _token;
 
-    /// @dev Storage gap for future upgrades
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
