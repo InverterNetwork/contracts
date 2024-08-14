@@ -9,9 +9,10 @@ import {ERC20, ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**
- * @title   ERC20 Issuance Token
+ * @title   Inverter ERC20 Issuance Token
  *
- * @notice  This contract creates an ERC20 token with a supply cap and a whitelist-gated functionality to mint and burn tokens.
+ * @notice  This contract creates an {ERC20} token with a supply cap and a whitelist-gated functionality
+ *          to mint and burn tokens.
  *
  * @dev     The contract implements functionalities for:
  *          - Managing a whitelist of allowed minters.
@@ -26,11 +27,15 @@ import {Ownable} from "@oz/access/Ownable.sol";
  */
 contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     // State Variables
+    /// @dev    The mapping of allowed minters.
     mapping(address => bool) public allowedMinters;
+    /// @dev    The number of decimals of the token.
     uint8 internal immutable _decimals;
 
     //------------------------------------------------------------------------------
     // Modifiers
+
+    /// @dev    Modifier to guarantee the caller is a minter.
     modifier onlyMinter() {
         if (!allowedMinters[_msgSender()]) {
             revert IERC20Issuance__CallerIsNotMinter();
@@ -78,8 +83,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     // Internal Functions
 
     /// @notice Sets the minting rights of an address.
-    /// @param _minter The address of the minter.
-    /// @param _allowed If the address is allowed to mint or not
+    /// @param  _minter The address of the minter.
+    /// @param  _allowed If the address is allowed to mint or not.
     function _setMinter(address _minter, bool _allowed) internal {
         allowedMinters[_minter] = _allowed;
         emit MinterSet(_minter, _allowed);

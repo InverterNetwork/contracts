@@ -11,7 +11,7 @@ import {IAUT_EXT_VotingRoles_v1} from
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 /**
- * @title   Voting Role Manager
+ * @title   Inverter Voting Role Manager
  *
  * @notice  Facilitates voting and motion management within the Inverter Network,
  *          allowing designated voters to participate in governance through proposals,
@@ -44,7 +44,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Reverts if caller is not the module itself.
+    /// @dev	Reverts if caller is not the module itself.
     modifier onlySelf() {
         if (_msgSender() != address(this)) {
             revert Module__CallerNotAuthorized(
@@ -54,7 +54,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    /// @dev Reverts if caller is not a voter.
+    /// @dev	Reverts if caller is not a voter.
     modifier onlyVoter() {
         if (!isVoter[_msgSender()]) {
             revert Module__VotingRoleManager__CallerNotVoter();
@@ -62,8 +62,8 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    /// @dev Reverts if voter address is invalid.
-    /// @param voter The address to check.
+    /// @dev	Reverts if voter address is invalid.
+    /// @param  voter The address to check.
     modifier isValidVoterAddress(address voter) {
         if (
             voter == address(0) || voter == address(this)
@@ -104,7 +104,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public voteDuration;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -134,7 +134,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         }
 
         // Revert if the threshold is set incorrectly
-        validateThreshold(votersLen, threshold_);
+        _validateThreshold(votersLen, threshold_);
 
         // Revert if votingDuration outside of bounds.
         if (
@@ -196,7 +196,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function setThreshold(uint newThreshold) public onlySelf {
         // Revert if the threshold is set incorrectly
-        validateThreshold(voterCount, newThreshold);
+        _validateThreshold(voterCount, newThreshold);
 
         emit ThresholdUpdated(threshold, newThreshold);
         threshold = newThreshold;
@@ -246,7 +246,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _removeVoter(who);
 
         // Revert if the threshold would be invalid after this
-        validateThreshold(voterCount, threshold);
+        _validateThreshold(voterCount, threshold);
     }
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
@@ -260,8 +260,11 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         setThreshold(newThreshold);
     }
 
-    /// @dev Removes a voter from the list of voters.
-    /// @param who The address of the voter to remove.
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev	Removes a voter from the list of voters.
+    /// @param  who The address of the voter to remove.
     function _removeVoter(address who) internal {
         // Revert if trying to remove the last voter
         if (voterCount == 1) {
@@ -404,7 +407,10 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Internal
 
-    function validateThreshold(uint _voters, uint _threshold) internal pure {
+    /// @dev	Internal function to validate the threshold.
+    /// @param  _voters The number of voters.
+    /// @param  _threshold The threshold.
+    function _validateThreshold(uint _voters, uint _threshold) internal pure {
         // Revert if one of these conditions is met
         // - Threshold is higher than the amount of voters
         // - There are less than 3 voters and the threshold is set to 0

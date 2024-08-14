@@ -11,7 +11,7 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Context} from "@oz/utils/Context.sol";
 
 /**
- * @title   Meta-Transaction & Multicall Forwarder
+ * @title   Inverter Meta-Transaction & Multicall Forwarder
  *
  * @notice  This contract enables users to interact with smart contracts indirectly through
  *          a trusted forwarder. It supports meta transactions, allowing transactions to be
@@ -37,7 +37,7 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Constructor
 
-    /// @notice Initializes the contract with the name of the contract
+    /// @notice Initializes the contract with the name of the contract.
     constructor() ERC2771Forwarder("Inverter TransactionForwarder_v1") {}
 
     //--------------------------------------------------------------------------
@@ -75,7 +75,7 @@ contract TransactionForwarder_v1 is
             }
 
             // Add call target to the end of the calldata
-            // This will be read by the ERC2771Context of the target contract
+            // This will be read by the {ERC2771Context} of the target contract
             data = abi.encodePacked(calli.callData, _msgSender());
 
             // Do the call
@@ -94,9 +94,9 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Internal
 
-    /// @notice Returns the digest for the given ForwardRequestData
-    /// @param req The ForwardRequest you want to get the digest from
-    /// @return digest The digest needed to create a signature for the request
+    /// @notice Returns the digest for the given `ForwardRequestData`.
+    /// @param  req The ForwardRequest you want to get the digest from.
+    /// @return digest The digest needed to create a signature for the request.
     function _getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
         internal
         view
@@ -116,7 +116,7 @@ contract TransactionForwarder_v1 is
         );
     }
 
-    // Copied from the ERC2771Forwarder as it isnt declared internally
+    // Copied from the {ERC2771Forwarder} as it isnt declared internally
     // Added an underscore because it can not be overwritten
     function __isTrustedByTarget(address target) private view returns (bool) {
         bytes memory encodedParams =

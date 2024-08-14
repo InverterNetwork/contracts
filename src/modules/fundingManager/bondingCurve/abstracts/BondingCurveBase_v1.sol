@@ -15,8 +15,12 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 /**
- * @title   Bonding Curve Funding Manager Base
+ * @title   Inverter Bonding Curve Funding Manager Base
  *
  * @notice  Manages the issuance of token for collateral along a bonding curve in the
  *          Inverter Network, including fee handling and sell functionality control.
@@ -33,6 +37,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @author  Inverter Network
  */
 abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -50,34 +55,35 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Base Points used for percentage calculation. This value represents 100%
+    /// @dev	Base Points used for percentage calculation. This value represents 100%.
     uint internal constant BPS = 10_000;
 
-    /// @dev The token the Curve will mint and burn from
+    /// @dev	The token the curve will mint and burn from.
     IERC20Issuance_v1 internal issuanceToken;
 
-    /// @dev Indicates whether the buy functionality is open or not.
-    ///      Enabled = true || disabled = false.
+    /// @dev	Indicates whether the buy functionality is open or not.
+    ///         Enabled = true || disabled = false.
     bool public buyIsOpen;
-    /// @dev Buy fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000
+    /// @dev	Buy fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000.
     uint public buyFee;
 
     /// @notice Accumulated project trading fees collected from deposits made by users
-    /// when engaging with the bonding curve-based funding manager. Collected in collateral
+    ///         when engaging with the bonding curve-based funding manager. Collected in collateral.
     uint public projectCollateralFeeCollected;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Modifier to guarantee the buying functionality is enabled.
     modifier buyingIsEnabled() {
         _checkBuyIsEnabled();
         _;
     }
 
-    /// @dev Modifier to guarantee token recipient is valid.
+    /// @dev	Modifier to guarantee token recipient is valid.
     modifier validReceiver(address _receiver) {
         _validateRecipient(_receiver);
         _;
@@ -183,7 +189,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /// @notice Returns the address of the issuance token
+    /// @inheritdoc IBondingCurveBase_v1
     function getIssuanceToken() external view virtual returns (address) {
         return address(issuanceToken);
     }
@@ -197,11 +203,11 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
-    /// @dev Function used for wrapping the call to the external contract responsible for
-    /// calculating the issuing amount. This function is an abstract function and must be
-    /// implemented in the downstream contract.
-    /// @param _depositAmount The amount of collateral token that is deposited
-    /// @return uint Return the amount of tokens to be issued
+    /// @dev    Function used for wrapping the call to the external contract responsible for
+    ///         calculating the issuing amount. This function is an abstract function and must be
+    ///         implemented in the downstream contract.
+    /// @param  _depositAmount The amount of collateral token that is deposited.
+    /// @return uint Return the amount of tokens to be issued.
     function _issueTokensFormulaWrapper(uint _depositAmount)
         internal
         view
@@ -211,14 +217,14 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to handle the buying of tokens.
-    /// This function performs the core logic for buying tokens. It transfers the collateral,
-    /// deducts any applicable fees, and mints new tokens for the buyer.
-    /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral to deposit for buying tokens.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @return totalIssuanceTokenMinted The total amount of issuance token minted during this function call
-    /// @return collateralFeeAmount The amount of collateral token subtracted as fee
+    /// @dev    Internal function to handle the buying of tokens.
+    ///         This function performs the core logic for buying tokens. It transfers the collateral,
+    ///         deducts any applicable fees, and mints new tokens for the buyer.
+    /// @param  _receiver The address that will receive the bought tokens.
+    /// @param  _depositAmount The amount of collateral to deposit for buying tokens.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @return totalIssuanceTokenMinted The total amount of issuance token minted during this function call.
+    /// @return collateralFeeAmount The amount of collateral token subtracted as fee.
     function _buyOrder(
         address _receiver,
         uint _depositAmount,
@@ -290,22 +296,22 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
     }
 
-    /// @dev Sets the buy transaction fee, expressed in BPS.
-    /// @param _fee The fee percentage to set for buy transactions.
+    /// @dev	Sets the buy transaction fee, expressed in BPS.
+    /// @param  _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal virtual {
         _validateWorkflowFee(_fee);
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
     }
 
-    /// @dev Returns the collateral and issuance fee percentage retrieved from the fee manager for
-    ///     a specific operation
-    /// @return collateralTreasury The address the protocol fee in collateral should be sent to
-    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to
+    /// @dev    Returns the collateral and issuance fee percentage retrieved from the fee manager for
+    ///         a specific operation.
+    /// @return collateralTreasury The address the protocol fee in collateral should be sent to.
+    /// @return issuanceTreasury The address the protocol fee in issuance should be sent to.
     /// @return collateralFeePercentage The percentage fee to be collected from the collateral
-    ///     token being deposited or redeemed, expressed in BPS
+    ///                                  token being deposited or redeemed, expressed in BPS.
     /// @return issuanceFeePercentage The percentage fee to be collected from the issuance token
-    ///     being deposited or minted, expressed in BPS
+    ///         being deposited or minted, expressed in BPS.
     function _getFunctionFeesAndTreasuryAddresses(bytes4 _selector)
         internal
         view
@@ -323,17 +329,18 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             _getFeeManagerIssuanceFeeData(_selector);
     }
 
-    /// @dev    Calculates the proportion of the fees for the given amount and returns them plus the amount minus the fees
+    /// @dev    Calculates the proportion of the fees for the given amount and returns them plus the amount
+    ///         minus the fees.
     ///         Reverts under the following two conditions:
-    ///             - if (workflow fee + protocol fee) > BPS
-    ///             - if protocol fee amount or workflow fee amounts == 0 given the fee percentage is not zero. This
-    ///                 would indicate a rouding down to zero due to integer division
-    /// @param _totalAmount The amount from which the fees will be taken
-    /// @param _protocolFee The protocol fee percentage in relation to the BPS that will be applied to the totalAmount
-    /// @param _workflowFee The workflow fee percentage in relation to the BPS that will be applied to the totalAmount
-    /// @return netAmount   The total amount minus the combined fee amount
-    /// @return protocolFeeAmount   The fee amount of the protocol fee
-    /// @return workflowFeeAmount   The fee amount of the workflow fee
+    ///         - if (workflow fee + protocol fee) > BPS
+    ///         - if protocol fee amount or workflow fee amounts == 0 given the fee percentage is not zero. This
+    ///         would indicate a rouding down to zero due to integer division.
+    /// @param  _totalAmount The amount from which the fees will be taken.
+    /// @param  _protocolFee The protocol fee percentage in relation to the BPS that will be applied to the `totalAmount`.
+    /// @param  _workflowFee The workflow fee percentage in relation to the BPS that will be applied to the `totalAmount`.
+    /// @return netAmount   The total amount minus the combined fee amount.
+    /// @return protocolFeeAmount   The fee amount of the protocol fee.
+    /// @return workflowFeeAmount   The fee amount of the workflow fee.
     function _calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,
@@ -366,6 +373,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
     }
 
+    /// @dev	Internal function to transfer protocol fees to the treasury.
+    /// @param  _treasury The address of the protocol treasury.
+    /// @param  _token The token to transfer the fees from.
+    /// @param  _feeAmount The amount of fees to transfer.
     function _processProtocolFeeViaTransfer(
         address _treasury,
         IERC20 _token,
@@ -394,10 +405,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
-    /// @dev Sets the issuance token for the FundingManager.
-    /// This function updates the `issuanceToken` state variable and should be be overriden by
-    /// the implementation contract if extra validation around the token characteristics is needed.
-    /// @param _issuanceToken The token which will be issued by the Bonding Curve.
+    /// @dev    Sets the issuance token for the FundingManager.
+    ///         This function updates the `issuanceToken` state variable and should be be overridden by
+    ///         the implementation contract if extra validation around the token characteristics is needed.
+    /// @param  _issuanceToken The token which will be issued by the Bonding Curve.
     function _setIssuanceToken(address _issuanceToken) internal virtual {
         emit IssuanceTokenSet(
             _issuanceToken, IERC20Metadata(_issuanceToken).decimals()
@@ -405,24 +416,30 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         issuanceToken = IERC20Issuance_v1(_issuanceToken);
     }
 
+    /// @dev    Checks if the buy functionality is enabled.
     function _checkBuyIsEnabled() internal view {
         if (!buyIsOpen) {
             revert Module__BondingCurveBase__BuyingFunctionaltiesClosed();
         }
     }
 
+    /// @dev    Validates the recipient address.
     function _validateRecipient(address _receiver) internal view {
         if (_receiver == address(0) || _receiver == address(this)) {
             revert Module__BondingCurveBase__InvalidRecipient();
         }
     }
 
+    /// @dev    Validates the workflow fee.
     function _validateWorkflowFee(uint _workflowFee) internal pure {
         if (_workflowFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
     }
 
+    /// @dev    Ensures that the deposit amount and min amount out are not zero.
+    /// @param  _depositAmount Deposit amount.
+    /// @param  _minAmountOut Minimum amount out.`
     function _ensureNonZeroTradeParameters(
         uint _depositAmount,
         uint _minAmountOut
@@ -438,16 +455,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Calls to the external ERC20 contract
 
-    /// @dev Mints new tokens
-    /// @param _to The address of the recipient.
-    /// @param _amount The amount of tokens to mint.
+    /// @dev	Mints new tokens.
+    /// @param  _to The address of the recipient.
+    /// @param  _amount The amount of tokens to mint.
     function _mint(address _to, uint _amount) internal virtual {
         issuanceToken.mint(_to, _amount);
     }
 
-    /// @dev Burns tokens
-    /// @param _from The address of the owner.
-    /// @param _amount The amount of tokens to burn.
+    /// @dev	Burns tokens.
+    /// @param  _from The address of the owner.
+    /// @param  _amount The amount of tokens to burn.
     function _burn(address _from, uint _amount) internal virtual {
         issuanceToken.burn(_from, _amount);
     }
