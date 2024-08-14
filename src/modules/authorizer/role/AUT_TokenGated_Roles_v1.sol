@@ -65,7 +65,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable when the role is empty.
+    /// @dev     Modifier to guarantee function is only callable when the role is empty.
     /// @param roleId The ID of the role to be checked.
     modifier onlyEmptyRole(bytes32 roleId) {
         // Check that the role is empty
@@ -76,7 +76,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable when the role is token-gated.
+    /// @dev     Modifier to guarantee function is only callable when the role is token-gated.
     /// @param roleId The ID of the role to be checked.
     modifier onlyTokenGated(bytes32 roleId) {
         if (!isTokenGated[roleId]) {
@@ -85,7 +85,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable when the threshold is valid.
+    /// @dev     Modifier to guarantee function is only callable when the threshold is valid.
     /// @param threshold The threshold to be checked.
     modifier validThreshold(uint threshold) {
         // Since base ERC721 does not have a total/max supply, we can only enforce that the value should be non-zero
@@ -98,12 +98,12 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Stores if a role is token gated.
+    /// @dev	Stores if a role is token gated.
     mapping(bytes32 => bool) public isTokenGated;
-    /// @dev Stores the threshold amount for each token in a role.
+    /// @dev	Stores the threshold amount for each token in a role.
     mapping(bytes32 => uint) public thresholdMap;
 
-    /// @dev Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -192,10 +192,10 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param role The role to grant.
     /// @param who The address to grant the role to.
     /// @return bool Returns true if the role has been granted succesfully.
-    /// @dev Overrides {_grantRole} from {AUT_ROLES_v1} to enforce interface implementation and threshold existence
-    ///      when role is token-gated.
-    /// @dev Please note: current check for validating a valid token is not conclusive and could be
-    ///      circumvented through a `callback()` function.
+    /// @dev	Overrides {_grantRole} from {AUT_ROLES_v1} to enforce interface implementation and threshold existence
+    ///         when role is token-gated.
+    /// @dev	Please note: current check for validating a valid token is not conclusive and could be
+    ///         circumvented through a `callback()` function.
     function _grantRole(bytes32 role, address who)
         internal
         virtual
@@ -238,7 +238,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param role The id number of the role.
     /// @param who The user we want to check on.
     /// @return bool Returns if revoke has been succesful.
-    /// @dev Overrides {_revokeRole} to clean up threshold data on revoking.
+    /// @dev	Overrides {_revokeRole} to clean up threshold data on revoking.
     function _revokeRole(bytes32 role, address who)
         internal
         virtual
@@ -261,8 +261,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @param roleId  The ID of the role to be modified.
     /// @param token The token for which to the threshold.
     /// @param threshold The user will need to have at least this number to qualify for the role.
-    /// @dev This function does not validate the threshold. It is technically possible to set a threshold above the
-    ///      total supply of the token.
+    /// @dev	This function does not validate the threshold. It is technically possible to set a threshold above the
+    ///         total supply of the token.
     function _setThreshold(bytes32 roleId, address token, uint threshold)
         internal
         onlyTokenGated(roleId)

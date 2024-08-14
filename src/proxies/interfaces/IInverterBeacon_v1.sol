@@ -62,9 +62,9 @@ interface IInverterBeacon_v1 is IBeacon {
     // onlyOwner Mutating Functions
 
     /// @notice Upgrades the beacon to a new implementation address.
-    /// @dev Only callable by owner.
-    /// @dev overrideShutdown Doesnt do anything if Beacon is not in emergency mode.
-    /// @dev Revert if new implementation invalid.
+    /// @dev	Only callable by owner.
+    /// @dev	overrideShutdown Doesnt do anything if Beacon is not in emergency mode.
+    /// @dev	Revert if new implementation invalid.
     /// @param newImplementation The new implementation address.
     /// @param newMinorVersion The new minor version of the implementation contract.
     /// @param newPatchVersion The new patch version of the implementation contract.
@@ -80,12 +80,12 @@ interface IInverterBeacon_v1 is IBeacon {
     // onlyOwner Intervention Mechanism
 
     /// @notice Shuts down the beacon and stops the system.
-    /// @dev Only callable by owner.
-    /// @dev Changes the implementation address to address(0).
+    /// @dev	Only callable by owner.
+    /// @dev	Changes the implementation address to address(0).
     function shutDownImplementation() external;
 
     /// @notice Restarts the beacon and the system.
-    /// @dev Only callable by owner.
-    /// @dev Changes the implementation address from address(0) to the original implementation.
+    /// @dev	Only callable by owner.
+    /// @dev	Changes the implementation address from address(0) to the original implementation.
     function restartImplementation() external;
 }

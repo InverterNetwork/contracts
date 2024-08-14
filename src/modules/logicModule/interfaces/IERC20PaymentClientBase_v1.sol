@@ -83,7 +83,7 @@ interface IERC20PaymentClientBase_v1 {
         returns (uint);
 
     /// @notice Collects outstanding payment orders.
-    /// @dev Marks the orders as completed for the client.
+    /// @dev	Marks the orders as completed for the client.
     /// @return list of payment orders.
     /// @return list of token addresses.
     /// @return list of amounts.
@@ -92,8 +92,8 @@ interface IERC20PaymentClientBase_v1 {
         returns (PaymentOrder[] memory, address[] memory, uint[] memory);
 
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly.
-    /// @dev Payment Client will reduce the total amount of tokens it will stock up by the given amount.
-    /// @dev This has to be called by a paymentProcessor.
+    /// @dev	Payment Client will reduce the total amount of tokens it will stock up by the given amount.
+    /// @dev	This has to be called by a paymentProcessor.
     /// @param token The token in which the payment was made.
     /// @param amount amount of tokens that have been paid out.
     function amountPaid(address token, uint amount) external;

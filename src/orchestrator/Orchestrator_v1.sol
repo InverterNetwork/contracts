@@ -115,7 +115,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     IGovernor_v1 public override(IOrchestrator_v1) governor;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -348,7 +348,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
-    /// @dev Only addresses authorized via the {IAuthorizer_v1} instance can manage
+    /// @dev	Only addresses authorized via the {IAuthorizer_v1} instance can manage
     ///      modules.
     function __ModuleManager_isAuthorized(address who)
         internal
@@ -363,7 +363,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // Internal Functions
 
     /// @notice Enforces that the address is in fact a Module of the required type.
-    /// @dev The function reverts if the given address is not a module of the required type.
+    /// @dev	The function reverts if the given address is not a module of the required type.
     /// @param _contractAddr The address to be checked.
     /// @param _privilegedInterfaceId The required interface id.
     function _enforcePrivilegedModuleInterfaceCheck(
@@ -406,7 +406,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // IERC2771Context
 
     /// @inheritdoc IModuleManagerBase_v1
-    /// @dev Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the
+    /// @dev	Because we want to expose the isTrustedForwarder function from the ERC2771Context Contract in the
     ///      IOrchestrator_v1 we have to override it here as the original openzeppelin version doesnt contain an
     ///      interface that we could use to expose it.
     function isTrustedForwarder(address forwarder)

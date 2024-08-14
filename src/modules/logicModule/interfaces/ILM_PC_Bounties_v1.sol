@@ -144,7 +144,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
         returns (Bounty memory);
 
     /// @notice Returns total list of Bounty ids.
-    /// @dev List is in ascending order.
+    /// @dev	List is in ascending order.
     /// @return List of Bounty ids.
     function listBountyIds() external view returns (uint[] memory);
 
@@ -162,7 +162,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
         returns (Claim memory);
 
     /// @notice Returns total list of Claim ids.
-    /// @dev List is in ascending order.
+    /// @dev	List is in ascending order.
     /// @return List of Claim ids.
     function listClaimIds() external view returns (uint[] memory);
 
@@ -172,8 +172,8 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     function isExistingClaimId(uint claimId) external view returns (bool);
 
     /// @notice Returns a list of Claim ids in which contributor Address is used.
-    /// @dev List is in ascending order.
-    /// @dev Returns an empty .
+    /// @dev	List is in ascending order.
+    /// @dev	Returns an empty .
     /// @param contributorAddrs claim ids are filtered by the contributor address.
     /// @return List of Claim ids.
     function listClaimIdsForContributorAddress(address contributorAddrs)
@@ -185,7 +185,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     // Bounty Mutating Functions
 
     /// @notice Adds a new Bounty.
-    /// @dev Reverts if an argument invalid.
+    /// @dev	Reverts if an argument invalid.
     /// @param minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed.
     /// @param maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed.
     /// @param details The Bounty's details.
@@ -197,19 +197,19 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     ) external returns (uint);
 
     /// @notice Updates a Bounty's informations.
-    /// @dev Reverts if an argument invalid.
+    /// @dev	Reverts if an argument invalid.
     /// @param bountyId The id of the Bounty that will be updated.
     /// @param details The Bounty's details.
     function updateBounty(uint bountyId, bytes calldata details) external;
 
     /// @notice Locks the Bounty so it cant be claimed.
-    /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if id invalid.
+    /// @dev	Only callable by authorized addresses.
+    /// @dev	Reverts if id invalid.
     /// @param bountyId The id of the Bounty that will be locked.
     function lockBounty(uint bountyId) external;
 
     /// @notice Adds a new Claim.
-    /// @dev Reverts if an argument invalid.
+    /// @dev	Reverts if an argument invalid.
     /// @param bountyId The id of the bounty this claim belongs to.
     /// @param contributors The contributor information for the Claim.
     /// @param details The Claim's details.
@@ -221,7 +221,7 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
     ) external returns (uint);
 
     /// @notice Updates a Claim's contributor informations.
-    /// @dev Reverts if an argument invalid.
+    /// @dev	Reverts if an argument invalid.
     /// @param claimId The id of the Claim that will be updated.
     /// @param contributors The contributor information for the Claim.
     function updateClaimContributors(
@@ -236,9 +236,9 @@ interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
         external;
 
     /// @notice Completes a Bounty by verifying a claim.
-    /// @dev Only callable by authorized addresses.
-    /// @dev Reverts if id invalid.
-    /// @dev contributors should be copied out of the given Claim. The parameter is used to prevent front running.
+    /// @dev	Only callable by authorized addresses.
+    /// @dev	Reverts if id invalid.
+    /// @dev	contributors should be copied out of the given Claim. The parameter is used to prevent front running.
     /// @param claimId The id of the Claim that wants to claim the Bounty.
     /// @param contributors The contributor information for the Claim.
     function verifyClaim(uint claimId, Contributor[] calldata contributors)

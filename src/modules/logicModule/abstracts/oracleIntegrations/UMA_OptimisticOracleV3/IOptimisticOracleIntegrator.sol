@@ -25,6 +25,11 @@ interface IOptimisticOracleIntegrator is
     //==========================================================================
     // Events
 
+    /// @notice Event emitted when data is asserted.
+    /// @param dataId The dataId that was asserted.
+    /// @param data The data that was asserted.
+    /// @param asserter The address of the asserter.
+    /// @param assertionId The assertionId that was asserted.
     event DataAsserted(
         bytes32 indexed dataId,
         bytes32 data,
@@ -32,6 +37,12 @@ interface IOptimisticOracleIntegrator is
         bytes32 indexed assertionId
     );
 
+    /// @notice Event emitted when dataAssetiong is resolved.
+    /// @param assertedTruthfully Whether the assertion was resolved as true or false.
+    /// @param dataId The dataId that was asserted.
+    /// @param data The data that was asserted.
+    /// @param asserter The address of the asserter.
+    /// @param assertionId The assertionId that was asserted.
     event DataAssertionResolved(
         bool assertedTruthfully,
         bytes32 indexed dataId,

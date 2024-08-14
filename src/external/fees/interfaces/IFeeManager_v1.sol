@@ -6,7 +6,7 @@ interface IFeeManager_v1 {
     // Structs
 
     /// @notice Struct used to store fee information.
-    /// @dev When 'set' is true, the value is taken,
+    /// @dev	When 'set' is true, the value is taken,
     ///         otherwise it reverts to the default value.
     ///         We need some indication here on whether
     ///         the value is set or not, to differentiate
@@ -85,8 +85,8 @@ interface IFeeManager_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @dev This function returns the Base Points used for percentage calculation.
-    /// @dev returns The Base Points used for percentage calculation. This value represents 100%.
+    /// @dev	This function returns the Base Points used for percentage calculation.
+    /// @dev	returns The Base Points used for percentage calculation. This value represents 100%.
     function BPS() external returns (uint);
 
     //---------------------------
@@ -170,8 +170,8 @@ interface IFeeManager_v1 {
     // MaxFee
 
     /// @notice Sets the maximum fee percentage that can be assigned.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given max fee can not be higher than the BPS.
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given max fee can not be higher than the BPS.
     /// @param _maxFee The max Fee in relation to the BPS.
     function setMaxFee(uint _maxFee) external;
 
@@ -179,15 +179,15 @@ interface IFeeManager_v1 {
     // Treasuries
 
     /// @notice Sets the default protocol treasury address.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given treasury address can not be address(0).
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given treasury address can not be address(0).
     /// @param _defaultProtocolTreasury The address of the default protocol treasury.
     function setDefaultProtocolTreasury(address _defaultProtocolTreasury)
         external;
 
     /// @notice Sets the protocol treasury address for a specific workflow.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given treasury address can not be address(0).
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given treasury address can not be address(0).
     /// @param workflow The address of the workflow.
     /// @param treasury The address of the protocol treasury for that specific workflow.
     function setWorkflowTreasury(address workflow, address treasury) external;
@@ -196,20 +196,20 @@ interface IFeeManager_v1 {
     // Fees
 
     /// @notice Sets the default collateral fee of the protocol.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given fee needs to be less than the BPS.
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given fee needs to be less than the BPS.
     /// @param _defaultCollateralFee The default collateral fee of the protocol in relation to the BPS.
     function setDefaultCollateralFee(uint _defaultCollateralFee) external;
 
     /// @notice Sets the default issuance fee of the protocol.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given fee needs to be less than the BPS.
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given fee needs to be less than the BPS.
     /// @param _defaultIssuanceFee The default issuance fee of the protocol in relation to the BPS.
     function setDefaultIssuanceFee(uint _defaultIssuanceFee) external;
 
     /// @notice Sets the collateral fee for a specific workflow module function.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given fee needs to be less than the BPS.
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given fee needs to be less than the BPS.
     /// @param workflow The address of the workflow that contains the module function.
     /// @param module The address of the module that contains the function.
     /// @param functionSelector The function selector of the target function.
@@ -224,8 +224,8 @@ interface IFeeManager_v1 {
     ) external;
 
     /// @notice Sets the issuance fee for a specific workflow module function.
-    /// @dev This function can only be called by the owner.
-    /// @dev The given fee needs to be less than the BPS.
+    /// @dev	This function can only be called by the owner.
+    /// @dev	The given fee needs to be less than the BPS.
     /// @param workflow The address of the workflow that contains the module function.
     /// @param module The address of the module that contains the function.
     /// @param functionSelector The function selector of the target function.

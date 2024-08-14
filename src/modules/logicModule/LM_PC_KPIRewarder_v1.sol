@@ -67,30 +67,28 @@ contract LM_PC_KPIRewarder_v1 is
 
     // It works in the following way:
     // - The admin can create KPIs, which are a set of tranches with rewards assigned. These can be continuous
-    //   or not (see below)
+    //   or not (see below).
     // - An external actor with the ASSERTER role can trigger the posting of an assertion to the UMA Oracle, specifying
-    //      the value to be asserted and the KPI to use for the reward distrbution in case it resolves
+    //   the value to be asserted and the KPI to use for the reward distrbution in case it resolves
     // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved.
-    //      They will be added before posting the next assertion.
+    //   They will be added before posting the next assertion.
     // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function.
-    //      This will calculate the final reward value and distribute it to the stakers.
+    //   This will calculate the final reward value and distribute it to the stakers.
 
     //--------------------------------------------------------------------------
 
     // KPI and Configuration Storage
-    /// @notice The number of KPIs created.
+    /// @dev	The number of KPIs created.
     uint public KPICounter;
-    /// @notice Registry of KPIs
-    /// id -> KPI.
+    /// @dev	Registry of KPIsid -> KPI.
     mapping(uint => KPI) public registryOfKPIs;
-    /// @notice Registry of Assertion Configurations
-    /// assertionId -> RewardRoundConfiguration.
+    /// @dev	Registry of Assertion Configurations assertionId -> RewardRoundConfiguration.
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
-    /// @notice For locking certain utilities when there are assertions open.
+    /// @dev	 For locking certain utilities when there are assertions open.
     bool public assertionPending;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     /*
@@ -155,11 +153,11 @@ contract LM_PC_KPIRewarder_v1 is
     // Assertion Manager functions:
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
-    /// @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the
-    ///      bond on posting.
-    /// The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is
-    ///     different from the one being used for staking.
-    /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
+    /// @dev    about the asserter address: any address can be set as asserter, it will be expected to pay for the
+    ///         bond on posting.
+    ///         The bond tokens can also be deposited in the Module and used to pay for itself,
+    ///         but ONLY if the bond token is different from the one being used for staking.
+    ///         If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
     function postAssertion(
         bytes32 dataId,
         uint assertedValue,
@@ -209,8 +207,8 @@ contract LM_PC_KPIRewarder_v1 is
     //--------------------------------------------------------------------------
     // Admin Configuration Functions:
 
-    // Top up funds to pay the optimistic oracle fee
     /// @inheritdoc ILM_PC_KPIRewarder_v1
+    /// @dev Top up funds to pay the optimistic oracle fee
     function depositFeeFunds(uint amount)
         external
         onlyOrchestratorAdmin
@@ -299,6 +297,7 @@ contract LM_PC_KPIRewarder_v1 is
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
     function deleteStuckAssertion(bytes32 assertionId)
         public
         onlyOrchestratorAdmin
@@ -399,8 +398,8 @@ contract LM_PC_KPIRewarder_v1 is
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries
-    //      to call it.
+    /// @dev	This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries
+    //          to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         // Do nothing
     }

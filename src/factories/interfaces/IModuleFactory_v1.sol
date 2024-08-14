@@ -110,7 +110,7 @@ interface IModuleFactory_v1 {
 
     /// @notice Registers metadata `metadata` with {IInverterBeacon_v1} implementation
     ///         `beacon`.
-    /// @dev Only callable by owner.
+    /// @dev	Only callable by owner.
     /// @param metadata The module's metadata.
     /// @param beacon The module's {IInverterBeacon_v1} instance.
     function registerMetadata(

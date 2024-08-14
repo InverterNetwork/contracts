@@ -85,10 +85,10 @@ interface ILM_PC_Staking_v1 {
     function earned(address user) external view returns (uint);
 
     /// @notice Returns a estimation of how much rewards will be earned with the current state of the staking contract.
-    /// @dev this calculation uses the current reward rate and the current totalSupply to calculate the rewards.
-    /// @dev the estimated result could be 0 if the estimated rewards are not high enough.
-    /// @param amount : how much token are staked.
-    /// @param duration : how long the tokens will be staked.
+    /// @dev	this calculation uses the current reward rate and the current totalSupply to calculate the rewards.
+    /// @dev	the estimated result could be 0 if the estimated rewards are not high enough.
+    /// @param amount How much token are staked.
+    /// @param duration How long the tokens will be staked.
     /// @return The estimated amount of tokens earned.
     function estimateReward(uint amount, uint duration)
         external
@@ -99,24 +99,24 @@ interface ILM_PC_Staking_v1 {
     // Mutating Functions
 
     /// @notice Stake a specified amount of tokens to earn rewards.
-    /// @dev should tokens already be staked, then the sending address will collect the rewards up until this point.
-    /// @dev Fee on transfer tokens are currently not supported.
-    /// @param amount : how much token should be staked.
+    /// @dev	should tokens already be staked, then the sending address will collect the rewards up until this point.
+    /// @dev	Fee on transfer tokens are currently not supported.
+    /// @param amount How much token should be staked.
     function stake(uint amount) external;
 
     /// @notice Unstake a specified amount of tokens and collect rewards.
-    /// @dev Reaps the rewards collected up to this point for the msg.Sender().
-    /// @dev Fee on transfer tokens are currently not supported.
-    /// @param amount : how much token should be unstaked.
+    /// @dev	Reaps the rewards collected up to this point for the msg.Sender().
+    /// @dev	Fee on transfer tokens are currently not supported.
+    /// @param amount How much token should be unstaked.
     function unstake(uint amount) external;
 
     /// @notice Collects the rewards that are earned up until now.
-    /// @dev Reaps the rewards collected up to this point for the msg.Sender().
+    /// @dev	Reaps the rewards collected up to this point for the msg.Sender().
     function claimRewards() external;
 
     /// @notice Sets the rewards that are to be distributed.
-    /// @dev Equally distributes the reward amount over the given time period.
-    /// @param amount : how much token should be distributed.
-    /// @param duration : how much time it will take to distribute the token.
+    /// @dev	Equally distributes the reward amount over the given time period.
+    /// @param amount How much token should be distributed.
+    /// @param duration How much time it will take to distribute the token.
     function setRewards(uint amount, uint duration) external;
 }

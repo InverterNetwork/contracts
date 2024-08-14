@@ -57,10 +57,10 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The token that is deposited.
+    /// @dev    The token that is deposited.
     IERC20 private _token;
 
-    /// @dev Storage gap for future upgrades.
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------

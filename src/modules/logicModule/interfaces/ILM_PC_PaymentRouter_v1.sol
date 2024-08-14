@@ -6,7 +6,7 @@ interface ILM_PC_PaymentRouter_v1 {
     // Mutating Functions
 
     /// @notice Adds a new Payment Order.
-    /// @dev Reverts if an argument invalid.
+    /// @dev	Reverts if an argument invalid.
     /// @param recipient The address that will receive the payment.
     /// @param paymentToken The token in which to pay.
     /// @param amount The amount of tokens the payment consists of.
@@ -24,7 +24,7 @@ interface ILM_PC_PaymentRouter_v1 {
 
     /// @notice Adds multiple Payment Orders in one batch. These PaymentOrders will share start,
     ///         cliff and end timestamps.
-    /// @dev Reverts if an argument invalid. The number of orders to be added in one batch is capped at 255.
+    /// @dev	Reverts if an argument invalid. The number of orders to be added in one batch is capped at 255.
     /// @param numOfOrders The number of orders to add.
     /// @param recipients The addresses that will receive the payments.
     /// @param paymentTokens The tokens in which to pay.

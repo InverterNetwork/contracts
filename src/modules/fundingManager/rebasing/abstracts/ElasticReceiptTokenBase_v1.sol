@@ -212,7 +212,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, Module_v1 {
     /// @dev Number of EIP-2612 permits per address.
     mapping(address => uint) internal _nonces;
 
-    // Storage gap for future upgrades
+    /// @dev Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------

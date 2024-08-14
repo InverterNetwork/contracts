@@ -28,6 +28,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     IVirtualCollateralSupplyBase_v1,
     ERC165Upgradeable
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -44,12 +45,12 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The internal state variable to keep track of the virtual collateral supply.
+    /// @dev	The internal state variable to keep track of the virtual collateral supply.
     uint internal virtualCollateralSupply;
-    /// @dev Maximum unsigned integer value for overflow checks.
+    /// @dev	Maximum unsigned integer value for overflow checks.
     uint private constant MAX_UINT = type(uint).max;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -73,8 +74,8 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Adds a specified amount to the virtual collateral supply.
-    /// Checks for overflow and reverts if an overflow occurs.
+    /// @dev    Adds a specified amount to the virtual collateral supply.
+    ///         Checks for overflow and reverts if an overflow occurs.
     /// @param _amount The amount to add to the virtual collateral supply.
     function _addVirtualCollateralAmount(uint _amount) internal virtual {
         if (_amount > (MAX_UINT - virtualCollateralSupply)) {
@@ -87,8 +88,8 @@ abstract contract VirtualCollateralSupplyBase_v1 is
         emit VirtualCollateralAmountAdded(_amount, virtualCollateralSupply);
     }
 
-    /// @dev Subtracts a specified amount from the virtual collateral supply.
-    /// Checks for underflow and reverts if an underflow occurs.
+    /// @dev    Subtracts a specified amount from the virtual collateral supply.
+    ///         Checks for underflow and reverts if an underflow occurs.
     /// @param _amount The amount to subtract from the virtual collateral supply.
     function _subVirtualCollateralAmount(uint _amount) internal virtual {
         if (_amount > virtualCollateralSupply) {
@@ -107,7 +108,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
         emit VirtualCollateralAmountSubtracted(_amount, virtualCollateralSupply);
     }
 
-    /// @dev Internal function to directly set the virtual collateral supply to a new value.
+    /// @dev	Internal function to directly set the virtual collateral supply to a new value.
     /// @param _virtualSupply The new value to set for the virtual collateral supply.
     function _setVirtualCollateralSupply(uint _virtualSupply)
         internal

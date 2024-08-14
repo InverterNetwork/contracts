@@ -55,6 +55,7 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Constants
 
+    /// @dev	The role that is allowed to assert data.
     bytes32 public constant ASSERTER_ROLE = keccak256("DATA_ASSERTER");
 
     //==========================================================================
@@ -62,16 +63,20 @@ abstract contract OptimisticOracleIntegrator is
 
     // General Parameters
 
-    IERC20 public defaultCurrency; // The currency used for the bond.
-    uint public defaultBond; // The bond used for the assertions. Must be higher or equal to the minimum bond of the currency used
-    OptimisticOracleV3Interface public oo; // The OptimisticOracleV3 instance where assertions will be published to.
-    uint64 public assertionLiveness; // Time period an assertion is open for dispute (in seconds).
-    bytes32 public defaultIdentifier; // The identifier used when creating the assertion. For most usecases, this will resolve to "ASSERT_TRUTH".
-
-    // Assertion storage
+    /// @dev	The currency used for the bond.
+    IERC20 public defaultCurrency;
+    /// @dev	The bond used for the assertions. Must be higher or equal to the minimum bond of the currency used.
+    uint public defaultBond;
+    /// @dev	The OptimisticOracleV3 instance where assertions will be published to.
+    OptimisticOracleV3Interface public oo;
+    /// @dev	Time period an assertion is open for dispute (in seconds).
+    uint64 public assertionLiveness;
+    /// @dev	The identifier used when creating the assertion. For most usecases, this will resolve to "ASSERT_TRUTH".
+    bytes32 public defaultIdentifier;
+    /// @dev Assertion storage.
     mapping(bytes32 => DataAssertion) public assertionData;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades
     uint[50] private __gap;
 
     //==========================================================================
@@ -149,6 +154,9 @@ abstract contract OptimisticOracleIntegrator is
     //==========================================================================
     // Internal Functions
 
+    /// @dev	Sets the default currency and bond.
+    /// @param _newCurrency Address of the new default currency.
+    /// @param _newBond The new default bond.
     function _setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         internal
     {
@@ -163,6 +171,8 @@ abstract contract OptimisticOracleIntegrator is
         defaultBond = _newBond;
     }
 
+    /// @dev	Sets the OptimisticOracleV3 instance where assertions will be published to.
+    /// @param _newOO The address of the new OptimisticOracleV3 instance.
     function _setOptimisticOracle(address _newOO) internal {
         if (_newOO == address(0)) {
             revert Module__OptimisticOracleIntegrator__InvalidOOInstance();
@@ -171,6 +181,8 @@ abstract contract OptimisticOracleIntegrator is
         defaultIdentifier = oo.defaultIdentifier();
     }
 
+    /// @dev	Sets the default assertion liveness.
+    /// @param _newLiveness The new default assertion liveness.
     function _setDefaultAssertionLiveness(uint64 _newLiveness) internal {
         if (_newLiveness < 21_600) {
             // 21600 seconds = 6 hours
@@ -183,9 +195,9 @@ abstract contract OptimisticOracleIntegrator is
     // Mutating Functions
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    /// @dev Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds.
-    ///      This is because the block.timestamp is included in the claim. The consumer contract must
-    ///      store the returned assertionId identifiers to able to get the information using getData.
+    /// @dev	Data can be asserted many times with the same combination of arguments, resulting in unique assertionIds.
+    ///         This is because the block.timestamp is included in the claim. The consumer contract must
+    ///         store the returned assertionId identifiers to able to get the information using getData.
     function assertDataFor(bytes32 dataId, bytes32 data_, address asserter)
         public
         virtual
@@ -261,8 +273,8 @@ abstract contract OptimisticOracleIntegrator is
     // Virtual Futcions to be overridden by Downstream Contracts
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    /// @dev This updates status on local storage (or deletes the assertion if it was deemed false).
-    ///      Any additional functionalities can be appended by the inheriting contract.
+    /// @dev	This updates status on local storage (or deletes the assertion if it was deemed false).
+    ///         Any additional functionalities can be appended by the inheriting contract.
     function assertionResolvedCallback(
         bytes32 assertionId,
         bool assertedTruthfully
@@ -290,7 +302,7 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3
-    ///doesn't revert when it tries to call it.
+    /// @dev	This OptimisticOracleV3 callback function needs to be defined so the OOv3
+    ///         doesn't revert when it tries to call it.
     function assertionDisputedCallback(bytes32 assertionId) public virtual;
 }

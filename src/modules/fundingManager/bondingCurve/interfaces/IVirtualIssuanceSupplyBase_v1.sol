@@ -38,15 +38,15 @@ interface IVirtualIssuanceSupplyBase_v1 {
     // Functions
 
     /// @notice Sets the virtual issuance supply to a new value.
-    /// @dev This function calls the internal function `_setVirtualIssuanceSupply`.
-    /// The function must be implemented by the downstream contract. The downstream contract should
-    /// manage access control for setting the supply.
+    /// @dev    This function calls the internal function `_setVirtualIssuanceSupply`.
+    ///         The function must be implemented by the downstream contract. The downstream contract should
+    ///         manage access control for setting the supply.
     /// @param _virtualSupply The new value to set for the virtual issuance supply.
     function setVirtualIssuanceSupply(uint _virtualSupply) external;
 
     /// @notice Returns the current virtual issuance supply.
-    /// @dev This function returns the virtual supply by calling the
-    /// internal `_getVirtualIssuanceSupply` function.
+    /// @dev    This function returns the virtual supply by calling the
+    ///         internal `_getVirtualIssuanceSupply` function.
     /// @return The current virtual issuance supply as a uint.
     function getVirtualIssuanceSupply() external view returns (uint);
 }

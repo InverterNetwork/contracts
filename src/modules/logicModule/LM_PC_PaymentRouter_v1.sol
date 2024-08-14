@@ -57,7 +57,7 @@ contract LM_PC_PaymentRouter_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev The role that allows the pushing of payments.
+    /// @dev	The role that allows the pushing of payments.
     bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER";
 
     //--------------------------------------------------------------------------

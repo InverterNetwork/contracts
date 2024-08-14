@@ -44,6 +44,7 @@ contract FeeManager_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev Modififer to check if the given address is valid.
     modifier validAddress(address adr) {
         if (adr == address(0)) {
             revert FeeManager__InvalidAddress();
@@ -51,6 +52,7 @@ contract FeeManager_v1 is
         _;
     }
 
+    /// @dev Modififer to check if the given fee is valid.
     modifier validFee(uint fee) {
         if (fee > maxFee) {
             revert FeeManager__InvalidFee();
@@ -58,6 +60,7 @@ contract FeeManager_v1 is
         _;
     }
 
+    /// @dev Modififer to check if the given max fee is valid.
     modifier validMaxFee(uint max) {
         if (max > BPS) {
             revert FeeManager__InvalidMaxFee();
@@ -68,25 +71,25 @@ contract FeeManager_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Base Points used for percentage calculation. This value represents 100%.
+    /// @dev	Base Points used for percentage calculation. This value represents 100%.
     uint public constant BPS = 10_000;
-    /// @dev The maximum fee percentage amount that can be set. Based on the BPS.
+    /// @dev	The maximum fee percentage amount that can be set. Based on the BPS.
     uint public maxFee;
-    /// @dev The default protocol treasury address.
+    /// @dev	The default protocol treasury address.
     address internal defaultProtocolTreasury;
-    /// @dev The workflow treasury addres. Orchestrator => treasury
+    /// @dev	The workflow treasury addres. Orchestrator => treasury
     mapping(address => address) internal workflowTreasuries;
-    /// @dev The default issuance fee percentage amount that apply unless workflow
+    /// @dev	The default issuance fee percentage amount that apply unless workflow
     ///         specific fees are set.
     uint internal defaultIssuanceFee;
-    /// @dev The default collateral fee percentage amount that apply unless workflow
+    /// @dev	The default collateral fee percentage amount that apply unless workflow
     ///         specific fees are set.
     uint internal defaultCollateralFee;
-    ///@dev The workflow issuance fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
+    /// @dev     The workflow issuance fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowIssuanceFees;
-    ///@dev The workflow collateral fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
+    /// @dev     The workflow collateral fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowCollateralFees;
-    ///@dev Storage gap for future upgrades.
+    /// @dev     Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------

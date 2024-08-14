@@ -103,7 +103,7 @@ interface IBondingCurveBase_v1 {
     // Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address.
-    /// @dev Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
+    /// @dev	Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token deposited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
@@ -111,24 +111,24 @@ interface IBondingCurveBase_v1 {
         external;
 
     /// @notice Buy tokens for the sender's address.
-    /// @dev Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
+    /// @dev	Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the buying functionality for the token.
-    /// @dev Only callable by the Orchestrator_v1 admin.
-    ///      Reverts if buying is already open.
+    /// @dev    Only callable by the {Orchestrator_v1} admin.
+    ///         Reverts if buying is already open.
     function openBuy() external;
 
     /// @notice Closes the buying functionality for the token.
-    /// @dev Only callable by the Orchestrator_v1 admin.
-    ///      Reverts if buying is already closed.
+    /// @dev    Only callable by the {Orchestrator_v1} admin.
+    ///         Reverts if buying is already closed.
     function closeBuy() external;
 
     /// @notice Sets the fee percentage for buying tokens, payed in collateral.
-    /// @dev Only callable by the Orchestrator_v1 admin.
-    ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
+    /// @dev    Only callable by the {Orchestrator_v1} admin.
+    ///         The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setBuyFee(uint _fee) external;
 
@@ -137,8 +137,8 @@ interface IBondingCurveBase_v1 {
     function getStaticPriceForBuying() external view returns (uint);
 
     /// @notice Calculates the amount of tokens to be minted based on a given deposit amount.
-    /// @dev This function takes into account any applicable buy fees before computing the
-    /// token amount to be minted. Revert when depositAmount is zero.
+    /// @dev    This function takes into account any applicable buy fees before computing the
+    ///         token amount to be minted. Revert when `_depositAmount` is zero.
     /// @param _depositAmount The amount of tokens deposited by the user.
     /// @return mintAmount The amount of new tokens that will be minted as a result of the deposit.
     function calculatePurchaseReturn(uint _depositAmount)
@@ -153,4 +153,7 @@ interface IBondingCurveBase_v1 {
 
     /// @notice Returns the amount of fee in collateral token collected by the project.
     function projectCollateralFeeCollected() external view returns (uint);
+
+    /// @notice Returns the address of the issuance token.
+    function getIssuanceToken() external view returns (address);
 }

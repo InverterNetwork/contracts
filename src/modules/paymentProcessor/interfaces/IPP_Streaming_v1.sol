@@ -16,7 +16,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice This struct is used to store the payment order for a particular paymentReceiver by a
     ///         particular payment client.
-    /// @dev for _streamId, valid values will start from 1. 0 is not a valid id.
+    /// @dev	for _streamId, valid values will start from 1. 0 is not a valid id.
     /// @param _paymentToken The address of the token that is being used for the payment.
     /// @param _streamId A unique identifier of a stream for a specific paymentClient and paymentReceiver combination.
     /// @param _total The total amount that the paymentReceiver should eventually get.
@@ -155,13 +155,13 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Functions
     /// @notice claim everything that the paymentClient owes to the _msgSender till the current timestamp.
-    /// @dev This function should be callable if the _msgSender is an activePaymentReceiver.
+    /// @dev	This function should be callable if the _msgSender is an activePaymentReceiver.
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender.
     function claimAll(address client) external;
 
     /// @notice claim the total amount up til block.timestamp from the client for a payment order with id = streamId
     ///         by _msgSender.
-    /// @dev If for a specific streamId, the tokens could not be transferred for some reason, it will added
+    /// @dev	If for a specific streamId, the tokens could not be transferred for some reason, it will added
     ///       to the unclaimableAmounts of the paymentReceiver, and the amount would no longer hold any co-relation with
     ///       the specific streamId of the paymentReceiver.
     /// @param client The {IERC20PaymentClientBase_v1} instance address that processes the streamId claim
@@ -171,7 +171,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice Deletes all payments related to a paymentReceiver & leaves currently streaming tokens in the
     ///         ERC20PaymentClientBase_v1.
-    /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver.
+    /// @dev	this function calls _removePayment which goes through all the payment orders for a paymentReceiver.
     ///      For the payment orders that are completely streamed, their details are deleted in the
     ///       _claimForSpecificStream function and for others it is deleted in the _removePayment function only,
     ///      leaving the currently streaming tokens as balance of the paymentClient itself.
@@ -184,7 +184,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
 
     /// @notice Deletes a specific payment with id = streamId for a paymentReceiver & leaves currently streaming
     ///         tokens in the ERC20PaymentClientBase_v1.
-    /// @dev the detail of the wallet that is being removed is either deleted in the _claimForSpecificStream
+    /// @dev	the detail of the wallet that is being removed is either deleted in the _claimForSpecificStream
     ///       or later down in this function itself depending on the timestamp of when this function was called.
     /// @param client The {IERC20PaymentClientBase_v1} instance address from which we will remove the payment.
     /// @param paymentReceiver address of the paymentReceiver whose payment order is to be removed.
@@ -268,7 +268,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     ) external view returns (uint);
 
     /// @notice see all active payment orders for a paymentClient associated with a particular paymentReceiver.
-    /// @dev the paymentReceiver must be an active paymentReceiver for the particular payment client.
+    /// @dev	the paymentReceiver must be an active paymentReceiver for the particular payment client.
     /// @param client Address of the payment client.
     /// @param paymentReceiver Address of the paymentReceiver.
     /// @return all streams for a particular payment client and payment receiver.
@@ -278,7 +278,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         returns (Stream[] memory);
 
     /// @notice tells whether a paymentReceiver has any pending payments for a particular client.
-    /// @dev this function is for convenience and can be easily figured out by other means in the codebase.
+    /// @dev	this function is for convenience and can be easily figured out by other means in the codebase.
     /// @param client Address of the payment client.
     /// @param paymentReceiver Address of the paymentReceiver.
     /// @return true if the paymentReceiver is active for the payment client.

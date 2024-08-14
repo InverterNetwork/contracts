@@ -74,34 +74,34 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     // Storage
 
     /// @notice provides a unique id for new payment orders added for a specific client & paymentReceiver combo.
-    /// @dev paymentClient => paymentReceiver => streamId(uint).
+    /// @dev	paymentClient => paymentReceiver => streamId(uint).
     mapping(address => mapping(address => uint)) public numStreams;
 
     /// @notice tracks all stream details for all payment orders of a paymentReceiver for a specific paymentClient.
-    /// @dev paymentClient => paymentReceiver => streamId => Wallet.
+    /// @dev	paymentClient => paymentReceiver => streamId => Wallet.
     mapping(address => mapping(address => mapping(uint => Stream))) private
         streams;
 
     /// @notice tracks all streams for payments that could not be made to the paymentReceiver due to any reason.
-    /// @dev paymentClient => token address => paymentReceiver => streamId array.
+    /// @dev	paymentClient => token address => paymentReceiver => streamId array.
     mapping(address => mapping(address => mapping(address => uint[]))) internal
         unclaimableStreams;
 
     /// @notice tracks all payments that could not be made to the paymentReceiver due to any reason.
-    /// @dev paymentClient => token address =>  paymentReceiver => streamId => unclaimable Amount.
+    /// @dev	paymentClient => token address =>  paymentReceiver => streamId => unclaimable Amount.
     mapping(
         address => mapping(address => mapping(address => mapping(uint => uint)))
     ) internal unclaimableAmountsForStream;
 
     /// @notice list of addresses with open payment Orders per paymentClient.
-    /// @dev paymentClient => listOfPaymentReceivers(address[]). Duplicates are not allowed.
+    /// @dev	paymentClient => listOfPaymentReceivers(address[]). Duplicates are not allowed.
     mapping(address => address[]) private activePaymentReceivers;
 
     /// @notice list of streamIds of all payment orders of a particular paymentReceiver for a particular paymentClient.
-    /// @dev client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[]).
+    /// @dev	client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[]).
     mapping(address => mapping(address => uint[])) private activeStreams;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -449,7 +449,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice used to find whether a particular paymentReceiver has pending payments with a client.
-    /// @dev This function returns the first instance of the paymentReceiver address in the
+    /// @dev	This function returns the first instance of the paymentReceiver address in the
     ///      activePaymentReceivers[client] array, but that is completely fine as the
     ///      is completely fine as the activePaymentReceivers[client] array does not allow duplicates.
     /// @param client address of the payment client.
@@ -476,7 +476,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice used to find whether a particular payment order associated with a paymentReceiver and paymentClient
     ///             with id = streamId is active or not.
-    /// @dev Active means that the particular payment order is still to be paid out/claimed. This function returns
+    /// @dev	Active means that the particular payment order is still to be paid out/claimed. This function returns
     ///         the first instance of the streamId in the activeStreams[client][paymentReceiver] array, but that
     ///         is fine as the array does not allow duplicates.
     /// @param client address of the payment client.
@@ -506,7 +506,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice used to cancel all unfinished payments from the client.
-    /// @dev all active payment orders of all active paymentReceivers associated with the client, are iterated
+    /// @dev	all active payment orders of all active paymentReceivers associated with the client, are iterated
     ///       through and their details are deleted.
     /// @param client address of the payment client.
     function _cancelRunningOrders(address client) internal {
@@ -525,7 +525,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice Deletes all payments related to a paymentReceiver & leaves currently streaming tokens in the
     ///         ERC20PaymentClientBase_v1.
-    /// @dev this function calls _removePayment which goes through all the payment orders for a paymentReceiver.
+    /// @dev	this function calls _removePayment which goes through all the payment orders for a paymentReceiver.
     ///         For the payment ordersthat are completely streamed, their details are deleted in the
     ///         _claimForSpecificStream function and for others it is deleted in the _removePayment function only,
     ///         leaving the currently streaming tokens as balance of the paymentClient itself.
@@ -559,7 +559,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice used to remove the payment order with id = streamId from the
     ///         activeStreams[client][paymentReceiver] array.
-    /// @dev This function simply removes a particular payment order from the earlier mentioned array.
+    /// @dev	This function simply removes a particular payment order from the earlier mentioned array.
     ///      The implications of removing a payment order from this array have to be handled outside of this function,
     ///      such as checking whether the paymentReceiver is still active or not, etc.
     /// @param client Address of the payment client.
@@ -603,7 +603,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice used to remove the stream info of the payment order with id = streamId.
-    /// @dev This function simply removes the stream details of a particular payment order. The implications of
+    /// @dev	This function simply removes the stream details of a particular payment order. The implications of
     ///      removing the stream info of payment order have to be handled outside of this function.
     /// @param client Address of the payment client.
     /// @param paymentReceiver Address of the paymentReceiver.
@@ -617,7 +617,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice used to remove a paymentReceiver as one of the beneficiaries of the payment client
-    /// @dev this function will be called when all the payment orders of a payment client associated with
+    /// @dev	this function will be called when all the payment orders of a payment client associated with
     ///       a particular paymentReceiver has been fulfilled. Also signals that the paymentReceiver is no longer
     ///       an active paymentReceiver according to the payment client.
     /// @param client address of the payment client.
@@ -649,7 +649,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice Adds a new payment containing the details of the monetary flow
     ///         depending on the module.
-    /// @dev This function can handle multiple payment orders associated with a particular paymentReceiver
+    /// @dev	This function can handle multiple payment orders associated with a particular paymentReceiver
     ///      for the same payment client without overriding the earlier ones. The maximum payment orders for
     ///      a paymentReceiver MUST BE capped at (2**256-1).
     /// @param _client PaymentReceiver's address.
@@ -697,7 +697,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice used to claim all the payment orders associated with a particular paymentReceiver for
     ///         a given payment client.
-    /// @dev Calls the _claimForSpecificStream function for all the active streams of a particular
+    /// @dev	Calls the _claimForSpecificStream function for all the active streams of a particular
     ///      paymentReceiver for the given payment client. Depending on the time this function is called,
     ///      the steamed payments are transferred to the paymentReceiver.
     ///      For payment orders that are fully steamed, their details are deleted and changes are made to
@@ -722,7 +722,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice used to claim the payment order of a particular paymentReceiver for a
     ///         given payment client with id = streamId.
-    /// @dev Depending on the time this function is called, the steamed payments are transferred to the paymentReceiver
+    /// @dev	Depending on the time this function is called, the steamed payments are transferred to the paymentReceiver
     ///      or accounted in unclaimableAmounts.
     ///      For payment orders that are fully steamed, their details are deleted and changes are made to the state of
     ///      the contract accordingly.
@@ -798,7 +798,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice used to claim the unclaimable amount of a particular paymentReceiver for a given payment client.
-    /// @dev assumes that the streamId array is not empty.
+    /// @dev	assumes that the streamId array is not empty.
     /// @param client address of the payment client.
     /// @param client address of the payment token.
     /// @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.

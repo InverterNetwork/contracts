@@ -14,7 +14,7 @@ interface IFM_DepositVault_v1 {
     // Functions
 
     /// @notice Deposits a specified amount of tokens into the contract from the sender's account.
-    /// @dev    When using the transactionForwarder, validate transaction success to prevent nonce
+    /// @dev    When using the {TransactionForwarder_v1}, validate transaction success to prevent nonce
     ///         exploitation and ensure transaction integrity.
     /// @param amount The number of tokens to deposit.
     function deposit(uint amount) external;

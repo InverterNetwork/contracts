@@ -57,7 +57,7 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice Returns the threshold balance for a given token necessary to qualify for a
     ///         specific role. If the value is 0, the supplied token is not part of the.
     ///         role's token gating.
-    /// @dev In case the queried role is not token gated, all calls will return 0.
+    /// @dev	In case the queried role is not token gated, all calls will return 0.
     /// @param roleId The role to be checked on.
     /// @param token The token to check the threshold for.
     /// @return The threshold amount necessary to qualify for a given token role.
@@ -67,9 +67,9 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
 
     /// @notice Sets up a token-gated empty role.
     /// @param role The role to be made token-gated.
-    /// @dev This function is only callable by an active Module for itself. Admin should use `setTokenGated()`.
-    /// @dev Calling this function does not specify WHICH token to use for gating. That has to be done
-    ///      with 'grantTokenFromModule()'.
+    /// @dev	This function is only callable by an active Module for itself. Admin should use `setTokenGated()`.
+    /// @dev	Calling this function does not specify WHICH token to use for gating. That has to be done
+    ///         with 'grantTokenFromModule()'.
     function makeRoleTokenGatedFromModule(bytes32 role) external;
 
     /// @notice One-step setup for Modules to create a token-gated role and set its threshold.
@@ -95,15 +95,15 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice Sets if a role is token-gated or not.
     /// @param role The ID of the role to be modified.
     /// @param to The new value to be set.
-    /// @dev Admin access for rescue purposes. If the role has active members, they need to be reovked first.
+    /// @dev	Admin access for rescue purposes. If the role has active members, they need to be reovked first.
     function setTokenGated(bytes32 role, bool to) external;
 
     /// @notice Sets the minimum threshold for a token-gated role.
     /// @param roleId  The ID of the role to be modified.
     /// @param token The token for which to the threshold.
     /// @param threshold The user will need to have at least this number to qualify for the role.
-    /// @dev This function does not validate the threshold. It is technically possible to set a threshold above
-    ///      the total supply of the token.
+    /// @dev	This function does not validate the threshold. It is technically possible to set a threshold above
+    ///         the total supply of the token.
     function setThreshold(bytes32 roleId, address token, uint threshold)
         external;
 }

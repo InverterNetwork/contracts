@@ -32,6 +32,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
 
     //------------------------------------------------------------------------------
     // Modifiers
+
+    /// @dev Modifier to guarantee the caller is a minter.
     modifier onlyMinter() {
         if (!allowedMinters[_msgSender()]) {
             revert IERC20Issuance__CallerIsNotMinter();

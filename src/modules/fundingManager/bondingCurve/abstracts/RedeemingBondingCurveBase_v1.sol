@@ -15,6 +15,10 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 /**
  * @title   Redeeming Bonding Curve Funding Manager Base
  *
@@ -36,6 +40,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     IRedeemingBondingCurveBase_v1,
     BondingCurveBase_v1
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -52,18 +57,19 @@ abstract contract RedeemingBondingCurveBase_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Indicates whether the sell functionality is open or not.
-    ///      Enabled = true || disabled = false.
+    /// @dev	Indicates whether the sell functionality is open or not.
+    ///         Enabled = true || disabled = false.
     bool public sellIsOpen;
-    /// @dev Sell fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000.
+    /// @dev	Sell fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000.
     uint public sellFee;
 
-    // Storage gap for future upgrades
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Modifier to guarantee the selling functionality is enabled.
     modifier sellingIsEnabled() {
         _sellingIsEnabledModifier();
         _;
@@ -155,9 +161,9 @@ abstract contract RedeemingBondingCurveBase_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
-    /// @dev Function used for wrapping the call to the external contract responsible for
-    /// calculating the redeeming amount. This function is an abstract function and must be
-    /// implemented in the downstream contract.
+    /// @dev    Function used for wrapping the call to the external contract responsible for
+    ///         calculating the redeeming amount. This function is an abstract function and must be
+    ///         implemented in the downstream contract.
     /// @param _depositAmount The amount of issuing token that is deposited.
     /// @return uint Return the amount of collateral to be redeemed.
     function _redeemTokensFormulaWrapper(uint _depositAmount)
@@ -169,16 +175,16 @@ abstract contract RedeemingBondingCurveBase_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Executes a sell order by transferring tokens from the receiver to the contract,.
-    /// calculating the redeem amount, and finally transferring the redeem amount back to the receiver.
-    /// This function is internal and not intended for end-user interaction.
-    /// PLEASE NOTE:
-    /// The current implementation only requires that enough collateral token is held for redeeming
-    /// to be possible. No further functionality is implemented which would manages the outflow of
-    /// collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
-    /// differes from the actual balance.
-    /// Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
-    /// contract for redemption.
+    /// @dev    Executes a sell order by transferring tokens from the receiver to the contract,.
+    ///         calculating the redeem amount, and finally transferring the redeem amount back to the receiver.
+    ///         This function is internal and not intended for end-user interaction.
+    ///         PLEASE NOTE:
+    ///         The current implementation only requires that enough collateral token is held for redeeming
+    ///         to be possible. No further functionality is implemented which would manages the outflow of
+    ///         collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
+    ///         differes from the actual balance.
+    ///         Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
+    ///         contract for redemption.
     /// @param _receiver The address receiving the redeem amount.
     /// @param _depositAmount The amount of tokens being sold by the receiver.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
@@ -267,6 +273,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
     }
 
+    ///  @dev    Checks if the sell functionality is enabled.
     function _sellingIsEnabledModifier() internal view {
         if (!sellIsOpen) {
             revert
@@ -274,7 +281,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         }
     }
 
-    /// @dev Sets the sell transaction fee, expressed in BPS.
+    /// @dev	Sets the sell transaction fee, expressed in BPS.
     /// @param _fee The fee percentage to set for sell transactions.
     function _setSellFee(uint _fee) internal virtual {
         _validateWorkflowFee(_fee);

@@ -29,10 +29,10 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
 
     /// @notice Checks whether an address holds the required role to execute
     ///         the current transaction.
-    /// @dev The calling contract needs to generate the right role ID using its
-    ///      own address and the role identifier.
-    ///      In modules, this function should be used instead of `hasRole`, as
-    ///      there are Authorizer-specific checks that need to be performed.
+    /// @dev	The calling contract needs to generate the right role ID using its
+    ///         own address and the role identifier.
+    ///         In modules, this function should be used instead of `hasRole`, as
+    ///         there are Authorizer-specific checks that need to be performed.
     /// @param role The identifier of the role we want to check
     /// @param who  The address on which to perform the check.
     /// @return bool Returns if the address holds the role
@@ -83,33 +83,33 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
 
     /// @notice Irreversibly burns the admin of a given role.
     /// @param role The role to remove admin access from.
-    /// @dev The module itself can still grant and revoke it's own roles. This only burns third-party access to
-    ///      the role.
+    /// @dev	The module itself can still grant and revoke it's own roles. This only burns third-party access to
+    ///         the role.
     function burnAdminFromModuleRole(bytes32 role) external;
 
     /// @notice Grants a global role to a target.
     /// @param role The role to grant.
     /// @param target The address to grant the role to.
-    /// @dev Only the addresses with the Admin role should be able to call this function.
+    /// @dev	Only the addresses with the Admin role should be able to call this function.
     function grantGlobalRole(bytes32 role, address target) external;
 
     /// @notice Grants a global role to a set of targets.
     /// @param role The role to grant.
     /// @param targets The addresses to grant the role to.
-    /// @dev Only the addresses with the Admin role should be able to call this function.
+    /// @dev	Only the addresses with the Admin role should be able to call this function.
     function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
         external;
 
     /// @notice Revokes a global role from a target.
     /// @param role The role to grant.
     /// @param target The address to grant the role to.
-    /// @dev Only the addresses with the Admin role should be able to call this function.
+    /// @dev	Only the addresses with the Admin role should be able to call this function.
     function revokeGlobalRole(bytes32 role, address target) external;
 
     /// @notice Revokes a global role from a set of targets.
     /// @param role The role to grant.
     /// @param targets The addresses to grant the role to.
-    /// @dev Only the addresses with the Admin role should be able to call this function.
+    /// @dev	Only the addresses with the Admin role should be able to call this function.
     function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
         external;
 

@@ -120,14 +120,14 @@ interface IPIM_WorkflowFactory_v1 {
     ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
 
     /// @notice Updates who can claim the buy/sell fees of a given bonding curve.
-    /// @dev Only callable by the currently eligible fee recipient.
+    /// @dev	Only callable by the currently eligible fee recipient.
     /// @param fundingManager The address of the bonding curve from which to withdraw fees.
     /// @param to The address that should be eligible to claim fees in the future.
     function transferPimFeeEligibility(address fundingManager, address to)
         external;
 
     /// @notice Withdraws the buy/sell fees of a given bonding curve.
-    /// @dev Only callable by the currently eligible fee recipient.
+    /// @dev	Only callable by the currently eligible fee recipient.
     /// @param fundingManager The address of the bonding curve from which to withdraw fees.
     /// @param to The address to which the fees are sent.
     function withdrawPimFee(address fundingManager, address to) external;

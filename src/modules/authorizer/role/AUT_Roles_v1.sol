@@ -60,13 +60,13 @@ contract AUT_Roles_v1 is
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    /// @dev Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Verifies that the caller is an active module.
+    /// @dev	Verifies that the caller is an active module.
     /// @param module The address of the module.
     modifier onlyModule(address module) {
         if (!orchestrator().isModule(module)) {
@@ -75,7 +75,7 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    /// @notice Verifies that the admin being removed is not the last one.
+    /// @dev	Verifies that the admin being removed is not the last one.
     /// @param role The id number of the role.
     modifier notLastAdmin(bytes32 role) {
         if (
@@ -87,7 +87,7 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    /// @notice Verifies that the admin being added is not the {Orchestrator_v1}.
+    /// @dev     Verifies that the admin being added is not the {Orchestrator_v1}.
     /// @param role The id number of the role.
     /// @param who The user we want to check on.
     modifier noSelfAdmin(bytes32 role, address who) {

@@ -69,16 +69,16 @@ interface IPaymentProcessor_v1 {
 
     /// @notice Processes all payments from an {IERC20PaymentClientBase_v1} instance. Please note:
     ///         this function does not support callbacks on transfer of tokens.
-    /// @dev    It's up to the the implementation to keep up with what has been
+    /// @dev	   It's up to the the implementation to keep up with what has been
     ///         paid out or not.
-    /// @dev    Currently callback functions on token transfers are not supported and thus not checked.
+    /// @dev	   Currently callback functions on token transfers are not supported and thus not checked.
     ///         This could lead to a failed transaction which could influence the batched processing of
     ///         payments.
     /// @param client The {IERC20PaymentClientBase_v1} instance to process its to payments.
     function processPayments(IERC20PaymentClientBase_v1 client) external;
 
     /// @notice Cancels all unfinished payments from an {IERC20PaymentClientBase_v1} instance.
-    /// @dev It's up to the the implementation to keep up with what has been
+    /// @dev	It's up to the the implementation to keep up with what has been
     ///      paid out or not.
     /// @param client The {IERC20PaymentClientBase_v1} instance to process its to payments.
     function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
@@ -96,7 +96,7 @@ interface IPaymentProcessor_v1 {
 
     /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a
     ///         specified receiver.
-    /// @dev This function should be callable if the _msgSender has unclaimedAmounts.
+    /// @dev	This function should be callable if the _msgSender has unclaimedAmounts.
     /// @param client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender.
     /// @param token address of the payment token.
     /// @param receiver The address that will receive the previously unclaimable amount.

@@ -52,16 +52,17 @@ contract PIM_WorkflowFactory_v1 is
     //--------------------------------------------------------------------------
     // State Variables
 
-    /// @dev store address of {Orchestratorfactory_v1}
+    /// @dev	store address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
 
-    /// @dev mapping of Funding Manager address to `feeRecipient` address
+    /// @dev	mapping of Funding Manager address to `feeRecipient` address.
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Modifier to guarantee the caller is the fee recipient for the given funding manager.
     modifier onlyPimFeeRecipient(address fundingManager) {
         if (_msgSender() != _pimFeeRecipients[fundingManager]) {
             revert PIM_WorkflowFactory__OnlyPimFeeRecipient();

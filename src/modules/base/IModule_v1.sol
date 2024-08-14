@@ -57,15 +57,15 @@ interface IModule_v1 {
     /// @param funcSig The signature of the function called.
     error Module_OrchestratorCallbackFailed(string funcSig);
 
-    /// @dev Invalid Address.
+    /// @dev	Invalid Address.
     error Module__InvalidAddress();
 
     //--------------------------------------------------------------------------
     // Functions
 
     /// @notice The module's initializer function.
-    /// @dev CAN be overridden by downstream contract.
-    /// @dev MUST call `__Module_init()`.
+    /// @dev	CAN be overridden by downstream contract.
+    /// @dev	MUST call `__Module_init()`.
     /// @param orchestrator The module's {Orchestrator_v1} instance.
     /// @param metadata The module's metadata.
     /// @param configData Variable config data for specific module
@@ -77,8 +77,8 @@ interface IModule_v1 {
     ) external;
 
     /// @notice Returns the module's identifier.
-    /// @dev The identifier is defined as the keccak256 hash of the module's
-    ///      abi packed encoded major version, url and title.
+    /// @dev	The identifier is defined as the keccak256 hash of the module's
+    ///         abi packed encoded major version, url and title.
     /// @return The module's identifier.
     function identifier() external view returns (bytes32);
 

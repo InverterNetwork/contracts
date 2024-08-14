@@ -77,7 +77,7 @@ interface ILM_PC_RecurringPayments_v1 {
         returns (RecurringPayment memory);
 
     /// @notice Returns total list of RecurringPayment ids.
-    /// @dev List is in ascending order.
+    /// @dev	List is in ascending order.
     /// @return List of RecurringPayment ids.
     function listRecurringPaymentIds() external view returns (uint[] memory);
 
@@ -101,23 +101,23 @@ interface ILM_PC_RecurringPayments_v1 {
     // Epoch Functions
 
     /// @notice Calculates the epoch from a given uint timestamp.
-    /// @dev Calculation is: timestamp divided by epochLength.
-    /// @param timestamp : a timestamp in a uint format.
-    /// @return epoch : epoch in which timestamp belongs to.
+    /// @dev	Calculation is: timestamp divided by epochLength.
+    /// @param timestamp A timestamp in a uint format.
+    /// @return epoch Epoch in which timestamp belongs to.
     function getEpochFromTimestamp(uint timestamp)
         external
         view
         returns (uint epoch);
 
     /// @notice Calculates the current epoch.
-    /// @dev Calculation is: block.timestamp divided by epochLength.
-    /// @return epoch : epoch in which current timestamp (block.timestamp) belongs to.
+    /// @dev	Calculation is: block.timestamp divided by epochLength.
+    /// @return epoch Epoch in which current timestamp (block.timestamp) belongs to.
     function getCurrentEpoch() external view returns (uint epoch);
 
     /// @notice Calculates a future epoch x epochs from now.
-    /// @dev Calculation is: current epoch + X epochs in the future = futureEpoch.
-    /// @param xEpochsInTheFuture : how many epochs from the current epoch.
-    /// @return futureEpoch : epoch in the future.
+    /// @dev	Calculation is: current epoch + X epochs in the future = futureEpoch.
+    /// @param xEpochsInTheFuture How many epochs from the current epoch.
+    /// @return futureEpoch Epoch in the future.
     function getFutureEpoch(uint xEpochsInTheFuture)
         external
         view
@@ -127,12 +127,12 @@ interface ILM_PC_RecurringPayments_v1 {
     // Mutating Functions
 
     /// @notice Adds a recurring payment to the manager.
-    /// @dev a new id is created for each Payment.
-    /// @param amount : amount of tokens send to the recipient address.
-    /// @param startEpoch : epoch in which the payment starts. Use getEpochFromTimestamp() or
-    ///                     getCurrentEpoch() to get the appropriate epoch.
-    /// @param recipient : recipient address that should receive tokens.
-    /// @return id : id of the newly created recurring payment.
+    /// @dev	a new id is created for each Payment.
+    /// @param amount Amount of tokens send to the recipient address.
+    /// @param startEpoch Epoch in which the payment starts. Use getEpochFromTimestamp() or
+    ///                   getCurrentEpoch() to get the appropriate epoch.
+    /// @param recipient Recipient address that should receive tokens.
+    /// @return id Id of the newly created recurring payment.
     function addRecurringPayment(
         uint amount,
         uint startEpoch,
@@ -140,8 +140,8 @@ interface ILM_PC_RecurringPayments_v1 {
     ) external returns (uint id);
 
     /// @notice Removes a recurring Payment.
-    /// @param prevId : id of the previous recurring payment in the payment list.
-    /// @param id : id of the recurring payment that is to be removed.
+    /// @param prevId Id of the previous recurring payment in the payment list.
+    /// @param id Id of the recurring payment that is to be removed.
     function removeRecurringPayment(uint prevId, uint id) external;
 
     //--------------------------------------------------------------------------
@@ -151,8 +151,8 @@ interface ILM_PC_RecurringPayments_v1 {
     function trigger() external;
 
     /// @notice See trigger() but enables you to determine which ids you want to trigger payment ordes for.
-    /// @dev this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal
-    ///      trigger function.
+    /// @dev	this is to being able to bypass the unlikely event of having a runOutOfGas error for the normal
+    ///         trigger function.
     /// @param startId : id of start position of the recurring payments that should be triggered.
     /// @param endId : id of end position of the recurring payments that should be triggered.
     function triggerFor(uint startId, uint endId) external;

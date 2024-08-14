@@ -44,7 +44,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Reverts if caller is not the module itself.
+    /// @dev	Reverts if caller is not the module itself.
     modifier onlySelf() {
         if (_msgSender() != address(this)) {
             revert Module__CallerNotAuthorized(
@@ -54,7 +54,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    /// @dev Reverts if caller is not a voter.
+    /// @dev	Reverts if caller is not a voter.
     modifier onlyVoter() {
         if (!isVoter[_msgSender()]) {
             revert Module__VotingRoleManager__CallerNotVoter();
@@ -62,7 +62,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    /// @dev Reverts if voter address is invalid.
+    /// @dev	Reverts if voter address is invalid.
     /// @param voter The address to check.
     modifier isValidVoterAddress(address voter) {
         if (
@@ -104,7 +104,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public voteDuration;
 
-    /// @dev Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -260,7 +260,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         setThreshold(newThreshold);
     }
 
-    /// @dev Removes a voter from the list of voters.
+    /// @dev	Removes a voter from the list of voters.
     /// @param who The address of the voter to remove.
     function _removeVoter(address who) internal {
         // Revert if trying to remove the last voter
@@ -404,7 +404,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Internal
 
-    /// @dev Internal function to validate the threshold.
+    /// @dev	Internal function to validate the threshold.
     /// @param _voters The number of voters.
     /// @param _threshold The threshold.
     function _validateThreshold(uint _voters, uint _threshold) internal pure {

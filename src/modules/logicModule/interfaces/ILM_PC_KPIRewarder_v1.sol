@@ -145,4 +145,9 @@ interface ILM_PC_KPIRewarder_v1 {
         external
         view
         returns (RewardRoundConfiguration memory);
+
+    /// @notice Deletes a stuck assertion.
+    /// @dev This function is only callable by the Orchestrator Admin.
+    /// @param assertionId The id of the assertion to delete.
+    function deleteStuckAssertion(bytes32 assertionId) external;
 }

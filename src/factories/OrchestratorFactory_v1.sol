@@ -82,24 +82,24 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     address public override moduleFactory;
 
-    /// @dev Maps the `id` to the {Orchestrator_v1}s.
+    /// @dev	Maps the `id` to the {Orchestrator_v1}s.
     mapping(uint => address) private _orchestrators;
 
-    /// @dev The counter of the current {Orchestrator_v1} `id`.
-    /// @dev Starts counting from 1.
+    /// @dev	The counter of the current {Orchestrator_v1} `id`.
+    /// @dev	Starts counting from 1.
     uint private _orchestratorIdCounter;
 
-    /// @dev Maps a users address to a nonce
+    /// @dev	Maps a users address to a nonce
     ///      Used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    /// Storage gap for future upgrades.
+    //// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------------
     // Modifier
 
-    /// @notice Modifier to guarantee that the given id is valid.
+    /// @dev    Modifier to guarantee that the given id is valid.
     modifier validOrchestratorId(uint id) {
         if (id > _orchestratorIdCounter) {
             revert OrchestratorFactory__InvalidId();
@@ -244,7 +244,7 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    /// @dev Creates the modules based on their `moduleConfigs.
+    /// @dev	Creates the modules based on their `moduleConfigs.
     /// @param moduleConfigs The config data of the modules that will be created with this function call.
     /// @param orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
     /// @param workflowConfig The workflow's config data.
@@ -266,7 +266,7 @@ contract OrchestratorFactory_v1 is
         return modules;
     }
 
-    /// @dev Internal function to initialize the modules.
+    /// @dev	Internal function to initialize the modules.
     /// @param modules The modules to initialize.
     /// @param moduleConfigs The config data of the modules that will be initialized.
     /// @param proxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
@@ -286,9 +286,9 @@ contract OrchestratorFactory_v1 is
         }
     }
 
-    /// @dev Internal function to generated a salt for the create2-based deployment flow.
-    ///      This salt is the hash of (msgSender, nonce), where the
-    ///      nonce is an increasing number for each user.
+    /// @dev	Internal function to generated a salt for the create2-based deployment flow.
+    ///         This salt is the hash of (msgSender, nonce), where the
+    ///         nonce is an increasing number for each user.
     function _createSalt() internal returns (bytes32) {
         return keccak256(
             abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)

@@ -71,7 +71,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable with valid
+    /// @dev    Modifier to guarantee function is only callable with valid
     ///         metadata.
     modifier validMetadata(IModule_v1.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
@@ -80,7 +80,7 @@ contract ModuleFactory_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable with valid
+    /// @dev    Modifier to guarantee function is only callable with valid
     ///         {IInverterBeacon_v1} instance and if the owner of the beacon.
     ///         is same as the {Governor_v1} of this contract.
     modifier validBeacon(IInverterBeacon_v1 beacon) {
@@ -104,18 +104,18 @@ contract ModuleFactory_v1 is
     /// @inheritdoc IModuleFactory_v1
     address public governor;
 
-    /// @dev Mapping of metadata identifier to {IInverterBeacon_v1} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}.
+    /// @dev	Mapping of metadata identifier to {IInverterBeacon_v1} instance.
+    /// @dev	MetadataLib.identifier(metadata) => {IInverterBeacon_v1}.
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
-    /// @dev Mapping of proxy address to orchestrator address.
-    /// @dev moduleProxy => {IOrchestrator_v1}.
+    /// @dev	Mapping of proxy address to orchestrator address.
+    /// @dev	moduleProxy => {IOrchestrator_v1}.
     mapping(address => address) private _orchestratorOfProxy;
 
-    /// @dev Maps a users address to a nonce used for the create2-based deployment.
+    /// @dev	Maps a users address to a nonce used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    /// @dev Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -265,7 +265,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Internal function to register metadata.
+    /// @dev	Internal function to register metadata.
     /// @param metadata The metadata to register.
     /// @param beacon The beacon to register the metadata to.
     function _registerMetadata(
@@ -286,9 +286,9 @@ contract ModuleFactory_v1 is
         emit MetadataRegistered(metadata, beacon);
     }
 
-    /// @dev Internal function to generated a salt for the create2-based deployment flow.
-    ///      This salt is the hash of (msgSender, nonce), where the
-    ///      nonce is an increasing number for each user.
+    /// @dev	Internal function to generated a salt for the create2-based deployment flow.
+    ///         This salt is the hash of (msgSender, nonce), where the
+    ///         nonce is an increasing number for each user.
     function _createSalt() internal returns (bytes32) {
         return keccak256(
             abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)

@@ -94,7 +94,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
     // @dev We imitate here the EIP2771 Standard to enable metatransactions
 
     /// @notice Returns wether the given address is the trusted forwarder or not.
-    /// @dev Exposes the ERC2771 isTrusted Forwarder.
+    /// @dev	Exposes the ERC2771 isTrusted Forwarder.
     /// @param forwarder The address to check.
     /// @return True if the address is the trusted forwarder, false otherwise.
     function isTrustedForwarder(address forwarder)
@@ -103,7 +103,7 @@ interface IModuleManagerBase_v1 is IERC2771Context {
         returns (bool);
 
     /// @notice Returns the trusted forwarder for metatransactions.
-    /// @dev Exposes the ERC2771 isTrusted Forwarder.
+    /// @dev	Exposes the ERC2771 isTrusted Forwarder.
     /// @return The trusted forwarder address.
     function trustedForwarder() external view returns (address);
 }

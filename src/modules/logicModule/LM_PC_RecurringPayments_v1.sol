@@ -63,7 +63,7 @@ contract LM_PC_RecurringPayments_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Checks if the given id is valid.
+    /// @dev	Checks if the given id is valid.
     /// @param recurringPaymentId The id of the RecurringPayment to check.
     modifier validId(uint recurringPaymentId) {
         if (!isExistingRecurringPaymentId(recurringPaymentId)) {
@@ -72,7 +72,7 @@ contract LM_PC_RecurringPayments_v1 is
         _;
     }
 
-    /// @dev Checks if the given startEpoch is valid.
+    /// @dev	Checks if the given startEpoch is valid.
     /// @param startEpoch The startEpoch of the RecurringPayment to check.
     modifier validStartEpoch(uint startEpoch) {
         if (getCurrentEpoch() > startEpoch) {
@@ -81,7 +81,7 @@ contract LM_PC_RecurringPayments_v1 is
         _;
     }
 
-    /// @dev Checks if the startId is before the endId.
+    /// @dev	Checks if the startId is before the endId.
     /// @param startId The startId of the RecurringPayment to check.
     /// @param endId The endId of the RecurringPayment to check.
     modifier startIdBeforeEndId(uint startId, uint endId) {
@@ -94,26 +94,26 @@ contract LM_PC_RecurringPayments_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev Marks the beginning of the list.
+    /// @dev	Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Value for what the next id will be.
+    /// @dev	Value for what the next id will be.
     uint private _nextId;
 
-    /// @dev length of an epoch.
+    /// @dev	length of an epoch.
     uint private epochLength;
 
-    /// @dev Registry mapping ids to RecurringPayment structs
+    /// @dev	Registry mapping ids to RecurringPayment structs
     /// id => RecurringPayment.
     mapping(uint => RecurringPayment) private _paymentRegistry;
 
-    /// @dev List of RecurringPayment id's.
+    /// @dev	List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -275,7 +275,7 @@ contract LM_PC_RecurringPayments_v1 is
         _triggerFor(startId, _paymentList.getNextId(endId));
     }
 
-    /// @dev Triggers the given RecurringPayment.
+    /// @dev	Triggers the given RecurringPayment.
     /// @param startId The id of the first RecurringPayment to trigger.
     /// @param endId The id of the last RecurringPayment to trigger.
     function _triggerFor(uint startId, uint endId) private {

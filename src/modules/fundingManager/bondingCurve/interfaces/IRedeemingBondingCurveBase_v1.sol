@@ -52,24 +52,24 @@ interface IRedeemingBondingCurveBase_v1 {
         external;
 
     /// @notice Redeem collateral for the sender's address.
-    /// @dev Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
+    /// @dev	Redirects to the internal function `_sellOrder` by passing the sender's address and deposit amount.
     /// @param _depositAmount The amount of issued token deposited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the selling functionality for the collateral.
-    /// @dev Only callable by the Orchestrator_v1 admin.
-    ///      Reverts if selling is already open.
+    /// @dev    Only callable by the {Orchestrator_v1} admin.
+    ///         Reverts if selling is already open.
     function openSell() external;
 
     /// @notice Closes the selling functionality for the collateral.
-    /// @dev Only callable by the Orchestrator_v1 admin.
-    ///      Reverts if selling is already closed.
+    /// @dev    Only callable by the {Orchestrator_v1} admin.
+    ///         Reverts if selling is already closed.
     function closeSell() external;
 
     /// @notice Sets the fee percentage for selling collateral, payed in collateral.
-    /// @dev Only callable by the Orchestrator_v1 admin.
-    ///      The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
+    /// @dev    Only callable by the {Orchestrator_v1} admin.
+    ///         The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param _fee The fee in basis points.
     function setSellFee(uint _fee) external;
 
@@ -78,8 +78,8 @@ interface IRedeemingBondingCurveBase_v1 {
     function getStaticPriceForSelling() external view returns (uint);
 
     /// @notice Calculates the amount of tokens to be redeemed based on a given deposit amount.
-    /// @dev This function takes into account any applicable sell fees before computing the
-    /// collateral amount to be redeemed. Revert when depositAmount is zero.
+    /// @dev    This function takes into account any applicable sell fees before computing the
+    ///         collateral amount to be redeemed. Revert when `_depositAmount` is zero.
     /// @param _depositAmount The amount of tokens deposited by the user.
     /// @return redeemAmount The amount of collateral that will be redeemed as a result of the deposit.
     function calculateSaleReturn(uint _depositAmount)

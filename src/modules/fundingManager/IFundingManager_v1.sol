@@ -25,8 +25,8 @@ interface IFundingManager_v1 {
     function token() external view returns (IERC20);
 
     /// @notice Transfer a specified amount of Tokens to a designated receiver address.
-    /// @dev This function MUST be restricted to be called only by the Orchestrator.
-    /// @dev This function CAN update internal user balances to account for the new token balance.
+    /// @dev    This function MUST be restricted to be called only by the {Orchestrator_v1}.
+    /// @dev    This function CAN update internal user balances to account for the new token balance.
     /// @param to The address that will receive the tokens.
     /// @param amount The amount of tokens to be transfered.
     function transferOrchestratorToken(address to, uint amount) external;
