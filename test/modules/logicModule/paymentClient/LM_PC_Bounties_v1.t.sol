@@ -501,7 +501,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             detailsBatch[i] = details;
         }
 
-        //Check that internal function is in position
+        // Check that internal function is in position
 
         for (uint i = 0; i < batchSize; i++) {
             vm.expectEmit(true, true, true, true);
@@ -509,11 +509,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
                 1 + i, minimumPayoutAmount, maximumPayoutAmount, details
             );
         }
-        console.log("HEre 1");
         uint[] memory ids = bountyManager.addBountyBatch(
             minimumPayoutAmounts, maximumPayoutAmounts, detailsBatch
         );
-        console.log("HEre 2");
         // Check if ids are correct
         assertEq(ids.length, batchSize);
         for (uint i; i < batchSize; i++) {
@@ -522,7 +520,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     function testAddBountyBatchModifierInPosition() public {
-        //Setup faulty arrays
+        // Setup faulty arrays
         uint[] memory minimumPayoutAmounts = new uint[](1);
         minimumPayoutAmounts[0] = 2;
         uint[] memory maximumPayoutAmounts = new uint[](1);
