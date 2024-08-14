@@ -260,11 +260,9 @@ interface IGovernor_v1 {
 
     /// @notice Registers a {IInverterBeacon_v1} with the provided `metadata` in the target {ModuleFactory_v1}.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
-    /// @param moduleFactory The module factory what will should register the new {IInverterBeacon_v1} and its metadata.
     /// @param metadata The metadata that will be registered.
     /// @param beacon The {IInverterBeacon_v1} that will be registered.
     function registerMetadataInModuleFactory(
-        IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external;

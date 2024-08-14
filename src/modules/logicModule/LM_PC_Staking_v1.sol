@@ -263,13 +263,15 @@ contract LM_PC_Staking_v1 is
         lastUpdate = newLastUpdate;
 
         // If trigger address is 0 then its not a user
-        uint tempEarned;
+        uint earnedAmount;
         if (triggerAddress != address(0)) {
-            tempEarned = _earned(triggerAddress, rewardValue);
-            rewards[triggerAddress] = tempEarned;
+            earnedAmount = _earned(triggerAddress, rewardValue);
+            rewards[triggerAddress] = earnedAmount;
             userRewardValue[triggerAddress] = rewardValue;
         }
-        emit Updated(triggerAddress, newRewardValue, newLastUpdate, tempEarned);
+        emit Updated(
+            triggerAddress, newRewardValue, newLastUpdate, earnedAmount
+        );
     }
 
     /// @dev	Calculates the reward value.

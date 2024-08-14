@@ -109,7 +109,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             rebasingFundingManagerMetadata,
             IInverterBeacon_v1(rebasingFundingManagerBeacon)
         );
@@ -184,7 +183,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             bancorVirtualSupplyBondingCurveFundingManagerMetadata,
             IInverterBeacon_v1(
                 bancorVirtualSupplyBondingCurveFundingManagerBeacon
@@ -231,9 +229,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
-            roleAuthorizerMetadata,
-            IInverterBeacon_v1(roleAuthorizerBeacon)
+            roleAuthorizerMetadata, IInverterBeacon_v1(roleAuthorizerBeacon)
         );
     }
 
@@ -277,7 +273,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             tokenRoleAuthorizerMetadata,
             IInverterBeacon_v1(tokenRoleAuthorizerBeacon)
         );
@@ -321,7 +316,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             simplePaymentProcessorMetadata,
             IInverterBeacon_v1(simplePaymentProcessorBeacon)
         );
@@ -366,7 +360,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             streamingPaymentProcessorMetadata,
             IInverterBeacon_v1(streamingPaymentProcessorBeacon)
         );
@@ -413,7 +406,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             recurringPaymentManagerMetadata,
             IInverterBeacon_v1(recurringPaymentManagerBeacon)
         );
@@ -458,9 +450,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
-            bountyManagerMetadata,
-            IInverterBeacon_v1(bountyManagerBeacon)
+            bountyManagerMetadata, IInverterBeacon_v1(bountyManagerBeacon)
         );
     }
 
@@ -503,9 +493,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
-            LM_PC_Staking_v1Metadata,
-            IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
+            LM_PC_Staking_v1Metadata, IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
         );
     }
 
@@ -548,7 +536,6 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             LM_PC_KPIRewarder_v1Metadata,
             IInverterBeacon_v1(LM_PC_KPIRewarder_v1Beacon)
         );
@@ -599,9 +586,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
-            votingRolesMetadata,
-            IInverterBeacon_v1(votingRolesBeacon)
+            votingRolesMetadata, IInverterBeacon_v1(votingRolesBeacon)
         );
     }
 }

@@ -31,7 +31,7 @@ interface IERC20Issuance_v1 is IERC20 {
     function mint(address _to, uint _amount) external;
 
     /// @notice Burns tokens.
-    /// @param _from The address of the owner.
+    /// @param _from The address of the owner or approved address.
     /// @param _amount The amount of tokens to burn.
     function burn(address _from, uint _amount) external;
 
