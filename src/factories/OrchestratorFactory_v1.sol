@@ -89,11 +89,11 @@ contract OrchestratorFactory_v1 is
     /// @dev	Starts counting from 1.
     uint private _orchestratorIdCounter;
 
-    /// @dev	Maps a users address to a nonce
+    /// @dev	Maps a users address to a nonce.
     ///      Used for the create2-based deployment.
     mapping(address => uint) private _deploymentNonces;
 
-    //// @dev	Storage gap for future upgrades.
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ contract OrchestratorFactory_v1 is
 
     /// @notice The factories initializer function.
     /// @param governor_ The address of the {Governor_v1} contract.
-    /// @param beacon_ The address of the beacon containing the {Orchestrator_v1} implementation.
+    /// @param beacon_ The address of the {IInverterBeacon_v1} containing the {Orchestrator_v1} implementation.
     /// @param moduleFactory_ The address of the {ModuleFactory_v1} contract.
     function init(
         address governor_,
@@ -289,7 +289,7 @@ contract OrchestratorFactory_v1 is
         }
     }
 
-    /// @dev	Internal function to generated a salt for the create2-based deployment flow.
+    /// @dev	Internal function to generate salt for the create2-based deployment flow.
     ///         This salt is the hash of (msgSender, nonce), where the
     ///         nonce is an increasing number for each user.
     function _createSalt() internal returns (bytes32) {

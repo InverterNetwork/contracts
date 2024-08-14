@@ -38,7 +38,7 @@ interface IOrchestratorFactory_v1 {
     );
 
     /// @notice Event emitted when a new {OrchestratorFactory_v1} is initialized.
-    /// @param beacon The address of the beacon associated with the factory.
+    /// @param beacon The address of the {IInverterBeacon_v1} associated with the factory.
     /// @param moduleFactory The address of the {ModuleFactory_v1}.
     event OrchestratorFactoryInitialized(
         address indexed beacon, address indexed moduleFactory
@@ -88,8 +88,8 @@ interface IOrchestratorFactory_v1 {
         ModuleConfig[] memory moduleConfigs
     ) external returns (IOrchestrator_v1);
 
-    /// @notice Returns the {IOrchestrator_v1} beacon address.
-    /// @return OrchestratorImplementationBeacon The Beacon of the {Orchestrator_v1} Implementation.
+    /// @notice Returns the {IOrchestrator_v1} {IInverterBeacon_v1} address.
+    /// @return OrchestratorImplementationBeacon The {IInverterBeacon_v1} of the {Orchestrator_v1} Implementation.
     function beacon() external view returns (IInverterBeacon_v1);
 
     /// @notice Returns the {IModuleFactory_v1} implementation address.

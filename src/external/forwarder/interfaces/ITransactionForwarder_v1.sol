@@ -19,7 +19,7 @@ interface ITransactionForwarder_v1 {
     }
 
     /// @notice Struct used to store information about a call result.
-    /// @param success Was the call a succes.
+    /// @param success Was the call a success.
     /// @param returnData Return data of the call.
     struct Result {
         bool success;

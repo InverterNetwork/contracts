@@ -86,7 +86,7 @@ interface IFeeManager_v1 {
     // Getter Functions
 
     /// @dev	This function returns the Base Points used for percentage calculation.
-    /// @dev	returns The Base Points used for percentage calculation. This value represents 100%.
+    /// @return uint The Base Points used for percentage calculation. This value represents 100%.
     function BPS() external returns (uint);
 
     //---------------------------

@@ -85,7 +85,7 @@ interface ILM_PC_Staking_v1 {
     function earned(address user) external view returns (uint);
 
     /// @notice Returns a estimation of how much rewards will be earned with the current state of the staking contract.
-    /// @dev	this calculation uses the current reward rate and the current totalSupply to calculate the rewards.
+    /// @dev	This calculation uses the current reward rate and the current totalSupply to calculate the rewards.
     /// @dev	the estimated result could be 0 if the estimated rewards are not high enough.
     /// @param amount How much token are staked.
     /// @param duration How long the tokens will be staked.
@@ -99,7 +99,7 @@ interface ILM_PC_Staking_v1 {
     // Mutating Functions
 
     /// @notice Stake a specified amount of tokens to earn rewards.
-    /// @dev	should tokens already be staked, then the sending address will collect the rewards up until this point.
+    /// @dev	Should tokens already be staked, then the sending address will collect the rewards up until this point.
     /// @dev	Fee on transfer tokens are currently not supported.
     /// @param amount How much token should be staked.
     function stake(uint amount) external;

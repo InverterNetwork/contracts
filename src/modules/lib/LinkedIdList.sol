@@ -12,6 +12,7 @@ library LinkedIdList {
     //--------------------------------------------------------------------------
     // Structs
 
+    /// @notice Struct used to store information about an element in the list.
     /// @param Size of the list.
     /// @param Marks    The last element of the list.
     ///                 Always links back to the _SENTINEL.
@@ -211,7 +212,7 @@ library LinkedIdList {
         self.size++;
     }
 
-    /// @dev Remove Id from list and decrease size.
+    /// @dev    Remove Id from list and decrease size.
     /// @param self The linked List from which to remove the id.
     /// @param prevId The id of the previous id.
     /// @param id The id to remove.

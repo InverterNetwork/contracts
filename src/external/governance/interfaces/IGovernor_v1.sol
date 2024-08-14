@@ -11,13 +11,13 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
-    /// @notice Struct used to store information about a timelock for a beacon upgrade.
-    /// @dev	The timelock is needed to upgrade a beacon to new implementation.
+    /// @notice Struct used to store information about a timelock for a {IInverterBeacon_v1} upgrade.
+    /// @dev	The timelock is needed to upgrade a {IInverterBeacon_v1} to new implementation.
     /// @param timelockActive Is the timelock currently active.
-    /// @param timelockUntil Timestamp that represents from when the upgrade can be carried out.
-    /// @param intendedImplementation The new inteded Implementation address of the beacon.
-    /// @param intendedMinorVersion The new intended minor version of the beacon.
-    /// @param intendedPatchVersion The new intended patch version of the beacon.
+    /// @param timelockUntilTimestamp that represents from when the upgrade can be carried out.
+    /// @param intendedImplementation The new inteded Implementation address of the {IInverterBeacon_v1}.
+    /// @param intendedMinorVersion The new intended minor version of the {IInverterBeacon_v1}.
+    /// @param intendedPatchVersion The new intended patch version of the {IInverterBeacon_v1}.
     struct Timelock {
         bool timelockActive;
         uint timelockUntil;
@@ -32,7 +32,7 @@ interface IGovernor_v1 {
     /// @notice This function can only be accessed by the linked {ModuleFactory_v1}.
     error Governor__OnlyLinkedModuleFactory();
 
-    /// @notice This function can only be called when the linked beacon array is empty.
+    /// @notice This function can only be called when the linked {IInverterBeacon_v1} array is empty.
     error Governor__LinkedBeaconsNotEmpty();
 
     /// @notice The given address is invalid.
@@ -47,10 +47,10 @@ interface IGovernor_v1 {
     /// @notice This function can only be accessed by the CommunityMultisig or TeamMultisig.
     error Governor__OnlyCommunityOrTeamMultisig();
 
-    /// @notice The timelock period needed for the beacon to be upgraded has not been exceeded yet.
+    /// @notice The timelock period needed for the {IInverterBeacon_v1} to be upgraded has not been exceeded yet.
     error Governor__TimelockPeriodNotExceeded();
 
-    /// @notice This upgrade process for this beacon has not yet been started.
+    /// @notice This upgrade process for this {IInverterBeacon_v1} has not yet been started.
     error Governor__UpgradeProcessNotStarted();
 
     /// @notice The call to the target contract has failed.
@@ -59,8 +59,8 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when a new timelock period for a upgrade of a beacon is started.
-    /// @param beacon The address of the beacon.
+    /// @notice Event emitted when a new timelock period for a upgrade of a {IInverterBeacon_v1} is started.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
     /// @param newPatchVersion The new patch version.
@@ -73,8 +73,8 @@ interface IGovernor_v1 {
         uint timelockExceeded
     );
 
-    /// @notice Event emitted when a beacon is upgraded.
-    /// @param beacon The address of the beacon.
+    /// @notice Event emitted when a {IInverterBeacon_v1} is upgraded.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
     /// @param newPatchVersion The new patch version.
@@ -85,8 +85,8 @@ interface IGovernor_v1 {
         uint newPatchVersion
     );
 
-    /// @notice Event emitted when a beacon upgraded is canceled.
-    /// @param beacon The address of the beacon.
+    /// @notice Event emitted when a {IInverterBeacon_v1} upgraded is canceled.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
     event BeaconUpgradedCanceled(address beacon);
 
     /// @notice Event emitted when the fee manager is updated.
@@ -101,12 +101,12 @@ interface IGovernor_v1 {
     /// @param newTimelockPeriod The new timelock period.
     event TimelockPeriodSet(uint newTimelockPeriod);
 
-    /// @notice Event emitted when a beacon shutdown is initiated.
-    /// @param beacon The address of the beacon.
+    /// @notice Event emitted when a {IInverterBeacon_v1} shutdown is initiated.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
     event BeaconShutdownInitiated(address beacon);
 
-    /// @notice Event emitted when a beacon is forcefully upgraded and the implementation gets restarted immediatly.
-    /// @param beacon The address of the beacon.
+    /// @notice Event emitted when a {IInverterBeacon_v1} is forcefully upgraded and the implementation gets restarted immediatly.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
     /// @param newImplementation The address of the new Implementation.
     /// @param newMinorVersion The new minor version.
     /// @param newPatchVersion The new patch version.
@@ -117,8 +117,8 @@ interface IGovernor_v1 {
         uint newPatchVersion
     );
 
-    /// @notice Event emitted when a beacon implementation is restarted.
-    /// @param beacon The address of the beacon.
+    /// @notice Event emitted when a {IInverterBeacon_v1} implementation is restarted.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
     event BeaconImplementationRestarted(address beacon);
 
     /// @notice Event emitted when a the governor contract accepts the ownership over another contract.
@@ -131,7 +131,7 @@ interface IGovernor_v1 {
     /// @notice The module's initializer function.
     /// @param _communityMultisig The address of the community multisig.
     /// @param _teamMultisig The address of the team multisig.
-    /// @param _timelockPeriod The timelock period needed to upgrade a beacon.
+    /// @param _timelockPeriod The timelock period needed to upgrade a {IInverterBeacon_v1}.
     /// @param _feeManager The address of the initial {FeeManager_v1}.
     /// @param _moduleFactory The address of the initial {ModuleFactory_v1}.
     function init(
@@ -143,7 +143,7 @@ interface IGovernor_v1 {
     ) external;
 
     /// @notice Callback function that is called by {ModuleFactory_v1} during initialization.
-    /// @param registeredBeacons The array of {InverterBeacon_v1}s that will be registered.
+    /// @param registeredBeacons The array of {IInverterBeacon_v1}s that will be registered.
     function moduleFactoryInitCallback(
         IInverterBeacon_v1[] calldata registeredBeacons
     ) external;
@@ -151,16 +151,16 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @notice Returns the current timelock of a beacon address.
-    /// @param beacon The address of the beacon.
-    /// @return The timelock of the beacon address.
+    /// @notice Returns the current timelock of a {IInverterBeacon_v1} address.
+    /// @param beacon The address of the {IInverterBeacon_v1}.
+    /// @return The timelock of the {IInverterBeacon_v1} address.
     function getBeaconTimelock(address beacon)
         external
         view
         returns (Timelock memory);
 
-    /// @notice Returns the list of currently linked beacons.
-    /// @return LinkedBeacons The array of {InverterBeacon_v1}s that are currently linked to the {Governor_v1}.
+    /// @notice Returns the list of currently linked {IInverterBeacon_v1}s.
+    /// @return LinkedBeacons The array of {IInverterBeacon_v1}s that are currently linked to the {Governor_v1}.
     function getLinkedBeacons()
         external
         view
@@ -258,11 +258,11 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Factory Functions
 
-    /// @notice Registers a beacon with the provided `metadata` in the target {ModuleFactory_v1}.
+    /// @notice Registers a {IInverterBeacon_v1} with the provided `metadata` in the target {ModuleFactory_v1}.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
-    /// @param moduleFactory The module factory what will should register the new beacon and its metadata.
+    /// @param moduleFactory The module factory what will should register the new {IInverterBeacon_v1} and its metadata.
     /// @param metadata The metadata that will be registered.
-    /// @param beacon The beacon that will be registered.
+    /// @param beacon The {IInverterBeacon_v1} that will be registered.
     function registerMetadataInModuleFactory(
         IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
@@ -275,14 +275,14 @@ interface IGovernor_v1 {
     //---------------------------
     // Upgrade
 
-    /// @notice Starts the upgrade process of a beacon by creating a timelock period after
-    ///         which the beacon can be upgraded via `triggerUpgradeBeaconWithTimelock()`.
+    /// @notice Starts the upgrade process of a {IInverterBeacon_v1} by creating a timelock period after
+    ///         which the {IInverterBeacon_v1} can be upgraded via `triggerUpgradeBeaconWithTimelock()`.
     /// @dev	This function will override previous timelocks even if they are active.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
-    /// @param beacon The address of the beacon that is intended to be upgraded.
-    /// @param newImplementation The address of the intended new Implementation of the beacon.
-    /// @param newMinorVersion The intended new minor version of the beacon.
-    /// @param newPatchVersion The intended new patch version of the beacon.
+    /// @param beacon The address of the {IInverterBeacon_v1} that is intended to be upgraded.
+    /// @param newImplementation The address of the intended new Implementation of the {IInverterBeacon_v1}.
+    /// @param newMinorVersion The intended new minor version of the {IInverterBeacon_v1}.
+    /// @param newPatchVersion The intended new patch version of the {IInverterBeacon_v1}.
     function upgradeBeaconWithTimelock(
         address beacon,
         address newImplementation,
@@ -290,17 +290,17 @@ interface IGovernor_v1 {
         uint newPatchVersion
     ) external;
 
-    /// @notice Upgrades a beacon with the data provided by the active timelock.
+    /// @notice Upgrades a {IInverterBeacon_v1} with the data provided by the active timelock.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
-    /// @param beacon The address of the beacon that is intended to be upgraded.
+    /// @param beacon The address of the {IInverterBeacon_v1} that is intended to be upgraded.
     function triggerUpgradeBeaconWithTimelock(address beacon) external;
 
-    /// @notice Cancels an upgrade of beacon by setting the active timelock to inactive.
+    /// @notice Cancels an upgrade of {IInverterBeacon_v1} by setting the active timelock to inactive.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
-    /// @param beacon The address of the beacon for which the timelock should be canceled.
+    /// @param beacon The address of the {IInverterBeacon_v1} for which the timelock should be canceled.
     function cancelUpgrade(address beacon) external;
 
-    /// @notice Sets the timelock period of a beacon upgrade process.
+    /// @notice Sets the timelock period of a {IInverterBeacon_v1} upgrade process.
     /// @dev	can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
     /// @param newtimelockPeriod The new timelock period.
     function setTimelockPeriod(uint newtimelockPeriod) external;
@@ -308,21 +308,21 @@ interface IGovernor_v1 {
     //---------------------------
     // Emergency Shutdown
 
-    /// @notice Initiates the shutdown of a beacon.
+    /// @notice Initiates the shutdown of a {IInverterBeacon_v1}.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
-    /// @param beacon The address of the beacon that should be shut down.
+    /// @param beacon The address of the {IInverterBeacon_v1} that should be shut down.
     function initiateBeaconShutdown(address beacon) external;
 
-    /// @notice Initiates the shutdown of all linked beacons.
+    /// @notice Initiates the shutdown of all linked {IInverterBeacon_v1}s.
     /// @dev	can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     function initiateBeaconShutdownForAllLinkedBeacons() external;
 
     /// @notice This function forces the upgrade of a beacon and restarts the implementation afterwards.
     /// @dev	can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
-    /// @param beacon The address of the beacon that is intended to be upgraded and restarted.
-    /// @param newImplementation The address of the intended new Implementation of the beacon.
-    /// @param newMinorVersion The intended new minor version of the beacon.
-    /// @param newPatchVersion The intended new patch version of the beacon.
+    /// @param beacon The address of the {IInverterBeacon_v1} that is intended to be upgraded and restarted.
+    /// @param newImplementation The address of the intended new Implementation of the {IInverterBeacon_v1}.
+    /// @param newMinorVersion The intended new minor version of the {IInverterBeacon_v1}.
+    /// @param newPatchVersion The intended new patch version of the {IInverterBeacon_v1}.
     function forceUpgradeBeaconAndRestartImplementation(
         address beacon,
         address newImplementation,
@@ -330,9 +330,9 @@ interface IGovernor_v1 {
         uint newPatchVersion
     ) external;
 
-    /// @notice Restarts the beacon implementation.
+    /// @notice Restarts the {IInverterBeacon_v1} implementation.
     /// @dev	can only be accessed by the `COMMUNITY_MULTISIG_ROLE`.
-    /// @param beacon The address of the beacon that should restarted.
+    /// @param beacon The address of the {IInverterBeacon_v1} that should restarted.
     function restartBeaconImplementation(address beacon) external;
 
     //---------------------------

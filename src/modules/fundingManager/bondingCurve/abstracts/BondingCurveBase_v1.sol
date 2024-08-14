@@ -205,7 +205,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev    Function used for wrapping the call to the external contract responsible for
     ///         calculating the issuing amount. This function is an abstract function and must be
-    ///         mplemented in the downstream contract.
+    ///         implemented in the downstream contract.
     /// @param _depositAmount The amount of collateral token that is deposited.
     /// @return uint Return the amount of tokens to be issued.
     function _issueTokensFormulaWrapper(uint _depositAmount)

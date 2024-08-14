@@ -134,7 +134,7 @@ contract ModuleFactory_v1 is
     /// @notice The factories initializer function.
     /// @param _governor The address of the {Governor_v1} contract.
     /// @param initialMetadataRegistration List of metadata that will be registered during the initialization.
-    /// @param initialMetadataRegistration List of beacon addresses that will be registered during the initialization.
+    /// @param initialMetadataRegistration List of {IInverterBeacon_v1}s addresses that will be registered during the initialization.
     function init(
         address _governor,
         IModule_v1.Metadata[] memory initialMetadataRegistration,
@@ -267,7 +267,7 @@ contract ModuleFactory_v1 is
 
     /// @dev	Internal function to register metadata.
     /// @param metadata The metadata to register.
-    /// @param beacon The beacon to register the metadata to.
+    /// @param beacon The {IInverterBeacon_v1} to register the metadata to.
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
@@ -286,7 +286,7 @@ contract ModuleFactory_v1 is
         emit MetadataRegistered(metadata, beacon);
     }
 
-    /// @dev	Internal function to generated a salt for the create2-based deployment flow.
+    /// @dev	Internal function to generate a salt for the create2-based deployment flow.
     ///         This salt is the hash of (msgSender, nonce), where the
     ///         nonce is an increasing number for each user.
     function _createSalt() internal returns (bytes32) {

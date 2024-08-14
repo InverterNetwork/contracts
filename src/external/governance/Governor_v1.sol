@@ -25,7 +25,7 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  * @title   Governor Contract
  *
  * @notice  This contract manages various administrative functions that can be executed only by
- *          specified multisig addresses. It supports upgrades to beacon contracts through
+ *          specified multisig addresses. It supports upgrades to {IInverterBeacon_v1} contracts through
  *          role-based permissions, enabling a timelocked upgrade process and emergency procedures.
  *
  *  @dev    Inherits from {ERC165Upgradeable} for interface detection, {AccessControlUpgradeable} for role-based
@@ -44,6 +44,7 @@ contract Governor_v1 is
     IGovernor_v1,
     AccessControlUpgradeable
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -65,7 +66,7 @@ contract Governor_v1 is
         _;
     }
 
-    /// @dev	Modifier to guarantee linked beacons are not empty.
+    /// @dev	Modifier to guarantee linked {IInverterBeacon_v1}s are not empty.
     modifier linkedBeaconsEmpty() {
         if (linkedBeacons.length != 0) {
             revert Governor__LinkedBeaconsNotEmpty();
@@ -89,7 +90,7 @@ contract Governor_v1 is
         _;
     }
 
-    /// @dev	Modifier to guarantee the given beacon is accessible.
+    /// @dev	Modifier to guarantee the given {IInverterBeacon_v1} is accessible.
     modifier accessibleBeacon(address target) {
         if (!_isBeaconAccessible(target)) {
             revert Governor__BeaconNotAccessible(target);
@@ -110,7 +111,7 @@ contract Governor_v1 is
         _;
     }
 
-    /// @dev	Modifier to check if the upgrade process for the given beacon is already started.
+    /// @dev	Modifier to check if the upgrade process for the given {IInverterBeacon_v1} is already started.
     modifier upgradeProcessAlreadyStarted(address beacon) {
         // if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
@@ -119,7 +120,7 @@ contract Governor_v1 is
         _;
     }
 
-    /// @dev	Modifier to check if the timelock period for the given beacon is exceeded.
+    /// @dev	Modifier to check if the timelock period for the given {IInverterBeacon_v1} is exceeded.
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
             revert Governor__TimelockPeriodNotExceeded();
@@ -140,13 +141,13 @@ contract Governor_v1 is
     /// @dev	{ModuleFactory_v1} contract.
     IModuleFactory_v1 private moduleFactory;
 
-    /// @dev	Array of beacons that are linked to this {Governor_v1},
+    /// @dev	Array of {IInverterBeacon_v1}s that are linked to this {Governor_v1},
     ///      populated via `moduleFactoryInitCallback`.
     IInverterBeacon_v1[] private linkedBeacons;
 
     /// @dev	Length of each timelock.
     uint public timelockPeriod;
-    /// @dev	Struct to store timelock information for each beacon.
+    /// @dev	Struct to store timelock information for each {IInverterBeacon_v1}.
     mapping(address beacon => IGovernor_v1.Timelock timelock) private
         beaconTimelock;
 
@@ -533,7 +534,7 @@ contract Governor_v1 is
         emit ModuleFactoryUpdated(newModuleFactory);
     }
 
-    /// @dev	internal function that checks if target address is a beacon
+    /// @dev	Internal function that checks if target address is a {IInverterBeacon_v1}
     ///         and this contract has the ownership of it.
     function _isBeaconAccessible(address target) internal returns (bool) {
         // Check if target is a contract
@@ -541,7 +542,7 @@ contract Governor_v1 is
             return false;
         }
 
-        // Check if target address supports Inverter beacon interface
+        // Check if target address supports Inverter {IInverterBeacon_v1} interface
         (bool success, bytes memory result) = target.call(
             abi.encodeCall(
                 InverterBeacon_v1.supportsInterface,

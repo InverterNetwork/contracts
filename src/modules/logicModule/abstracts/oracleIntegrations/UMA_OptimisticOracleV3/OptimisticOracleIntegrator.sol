@@ -21,7 +21,8 @@ import {OptimisticOracleV3Interface} from
 import {ClaimData} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 /**
  * @title Optimistic Oracle Integrator
  *
@@ -33,12 +34,14 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author Inverter Network
  */
+
 abstract contract OptimisticOracleIntegrator is
     IOptimisticOracleIntegrator,
     Module_v1
 {
     using SafeERC20 for IERC20;
 
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -222,7 +225,7 @@ abstract contract OptimisticOracleIntegrator is
                 )
             );
             // require(success && (data.length == 0 || abi.decode(data, (bool))) && token.code.length != 0); -> taken
-            //      over from SafeERC20 since we want to override the revert messsage
+            // over from SafeERC20 since we want to override the revert messsage
 
             if (
                 !success || (data.length > 0 && !abi.decode(data, (bool)))

@@ -435,15 +435,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // 3. activePaymentReceivers and isActive would be updated if this was the last stream that was associated with
         //    the paymentReceiver was claimed.
         //    This would also mean that, it is possible for a paymentReceiver to be inactive and still have money owed
-        //  to them (unclaimableAmounts)
+        //    to them (unclaimableAmounts)
         if (activeStreams[client][paymentReceiver].length == 0) {
             _removePaymentReceiverFromActiveStreams(client, paymentReceiver);
         }
 
         // Note We do not need to update unclaimableAmounts, as it is already done earlier depending on the
-        //  `transferFrom` call.
+        // `transferFrom` call.
         // Note Also, we do not need to update numStreams, as claiming completely from a stream does not affect
-        //  this mapping.
+        // this mapping.
 
         // 4. emit an event broadcasting that a particular payment has been removed
         emit StreamingPaymentRemoved(client, paymentReceiver, streamId);
@@ -526,7 +526,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @notice Deletes all payments related to a `paymentReceiver` & leaves currently streaming tokens in the
     ///         {IERC20PaymentClientBase_v1}.
-    /// @dev	this function calls `_removePayment` which goes through all the payment orders for a `paymentReceiver`.
+    /// @dev	This function calls `_removePayment` which goes through all the payment orders for a `paymentReceiver`.
     ///         For the payment orders that are completely streamed, their details are deleted in the
     ///         `_claimForSpecificStream` function and for others it is deleted in the `_removePayment` function only,
     ///         leaving the currently streaming tokens as balance of the paymentClient itself.

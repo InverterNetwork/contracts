@@ -30,6 +30,7 @@ contract FeeManager_v1 is
     IFeeManager_v1,
     Ownable2StepUpgradeable
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -44,7 +45,7 @@ contract FeeManager_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Modififer to check if the given address is valid.
+    /// @dev	Modififer to check if the given address is valid.
     modifier validAddress(address adr) {
         if (adr == address(0)) {
             revert FeeManager__InvalidAddress();
@@ -52,7 +53,7 @@ contract FeeManager_v1 is
         _;
     }
 
-    /// @dev Modififer to check if the given fee is valid.
+    /// @dev	Modififer to check if the given fee is valid.
     modifier validFee(uint fee) {
         if (fee > maxFee) {
             revert FeeManager__InvalidFee();
@@ -60,7 +61,7 @@ contract FeeManager_v1 is
         _;
     }
 
-    /// @dev Modififer to check if the given max fee is valid.
+    /// @dev	Modififer to check if the given max fee is valid.
     modifier validMaxFee(uint max) {
         if (max > BPS) {
             revert FeeManager__InvalidMaxFee();
