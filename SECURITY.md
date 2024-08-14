@@ -28,7 +28,7 @@ We are committed to transparency and will make the results of our security revie
 
 Please practice responsible disclosure when reporting security issues. We kindly request that you do not publicly disclose or discuss the vulnerability until we have had sufficient time to investigate and address it. Privately disclosing the issue to us via email allows us to work on a fix without putting our users' funds at risk.
 
-We understand the importance of acknowledging and rewarding security researchers for their efforts. Even though our bug bounty program is currently set up, we assure you that you will not be unpaid for your valuable contributions. We are committed to fairly compensating those who help us improve the security of our platform.
+We understand the importance of acknowledging and rewarding security researchers for their efforts. Even though our bug bounty program is currently not set up, we assure you that you will not be unpaid for your valuable contributions. We are committed to fairly compensating those who help us improve the security of our platform.
 
 ## Security Guideline
 
