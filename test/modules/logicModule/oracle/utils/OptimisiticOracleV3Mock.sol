@@ -355,7 +355,7 @@ contract OptimisticOracleV3Mock is OptimisticOracleV3Interface {
 
     // Validates if the identifier is whitelisted by first checking the cache. If not whitelisted in the cache then
     // checks it from the identifier whitelist contract and caches result.
-    function _validateAndCacheIdentifier(bytes32 identifier)
+    function _validateAndCacheIdentifier(bytes32)
         internal
         pure
         returns (bool)

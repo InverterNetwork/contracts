@@ -118,20 +118,22 @@ contract InverterTransparentUpgradeableProxyV1Test is Test {
         );
 
         vm.prank(admin);
-        address(proxy).call(abi.encode(sig));
+        (bool success,) = address(proxy).call(abi.encode(sig));
+        assertEq(success, true);
     }
 
     function test_fallbackWorksIfAdminCallsUpgradeToNewestVersion() public {
         proxyMock.flipUpgradeToNewestVersionActive();
 
         vm.prank(admin);
-        address(proxyMock).call(
+        (bool success,) = address(proxyMock).call(
             abi.encode(
                 IInverterTransparentUpgradeableProxy_v1
                     .upgradeToNewestVersion
                     .selector
             )
         );
+        assertEq(success, true);
         assertEq(proxyMock.upgradeToNewestVersionCalledCounter(), 1);
     }
 

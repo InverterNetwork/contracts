@@ -227,7 +227,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         kpiManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
-    function test_InterfaceInheritanceTree() public {
+    function test_InterfaceInheritanceTree() public view {
         kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v1).interfaceId);
         kpiManager.supportsInterface(type(ILM_PC_Staking_v1).interfaceId);
         kpiManager.supportsInterface(
@@ -597,7 +597,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         // SuT
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         vm.expectRevert(); // ERC20 insufficient balance revert
-        bytes32 assertionId = kpiManager.postAssertion(
+        kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
         );
 
@@ -820,7 +820,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
             0x0
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
-        bytes32 assertionId = kpiManager.postAssertion(
+        kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID,
             MOCK_ASSERTED_VALUE,
             MOCK_ASSERTER_ADDRESS,

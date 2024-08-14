@@ -119,9 +119,7 @@ contract GovernorV1Test is Test {
         IModule_v1.Metadata memory metadata;
         if (!empty) {
             vm.prank(communityMultisig);
-            gov.registerMetadataInModuleFactory(
-                modFactory, metadata, ownedBeaconMock
-            );
+            gov.registerMetadataInModuleFactory(metadata, ownedBeaconMock);
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IGovernor_v1.Governor__LinkedBeaconsNotEmpty.selector
@@ -434,9 +432,7 @@ contract GovernorV1Test is Test {
         // linkedBeaconsEmpty
         IModule_v1.Metadata memory metadata;
         vm.prank(communityMultisig);
-        gov.registerMetadataInModuleFactory(
-            modFactory, metadata, ownedBeaconMock
-        );
+        gov.registerMetadataInModuleFactory(metadata, ownedBeaconMock);
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor_v1.Governor__LinkedBeaconsNotEmpty.selector
@@ -615,7 +611,7 @@ contract GovernorV1Test is Test {
 
         vm.prank(communityMultisig);
         gov.registerMetadataInModuleFactory(
-            modFactory, metadata, IInverterBeacon_v1(ownedBeaconMock)
+            metadata, IInverterBeacon_v1(ownedBeaconMock)
         );
 
         // Check if beacon is in linked beacon list
@@ -635,9 +631,7 @@ contract GovernorV1Test is Test {
 
         IModule_v1.Metadata memory metadata;
         gov.registerMetadataInModuleFactory(
-            IModuleFactory_v1(address(0)),
-            metadata,
-            IInverterBeacon_v1(ownedBeaconMock)
+            metadata, IInverterBeacon_v1(ownedBeaconMock)
         );
 
         // accessibleBeacon(beacon)
@@ -648,9 +642,7 @@ contract GovernorV1Test is Test {
         );
         vm.prank(communityMultisig);
         gov.registerMetadataInModuleFactory(
-            IModuleFactory_v1(address(0)),
-            metadata,
-            IInverterBeacon_v1(address(0))
+            metadata, IInverterBeacon_v1(address(0))
         );
     }
 
@@ -1056,7 +1048,7 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: Ownable2Step Functions
 
-    function testAcceptOwnership(bytes32 _salt) public {
+    function testAcceptOwnership() public {
         // onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(

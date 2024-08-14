@@ -1108,8 +1108,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             bondingCurveFundingManager.getVirtualIssuanceSupply();
         uint _virtualCollateralSupplyBeforeSell =
             bondingCurveFundingManager.getVirtualCollateralSupply();
-        uint32 _reserveRatioSelling =
-            bondingCurveFundingManager.call_reserveRatioForSelling();
+        bondingCurveFundingManager.call_reserveRatioForSelling();
 
         // Calculate static price before selling
         uint staticPriceBeforeSell =

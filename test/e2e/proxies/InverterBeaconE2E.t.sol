@@ -110,9 +110,7 @@ contract InverterBeaconE2E is E2ETest {
 
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
-        gov.registerMetadataInModuleFactory(
-            moduleFactory, DATA, InverterBeacon_v1(beacon)
-        );
+        gov.registerMetadataInModuleFactory(DATA, InverterBeacon_v1(beacon));
 
         // Add new Beacon to this moduleConfiguration
         moduleConfigurations.push(

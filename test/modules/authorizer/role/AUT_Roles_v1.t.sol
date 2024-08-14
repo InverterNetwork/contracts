@@ -824,7 +824,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testGrantGlobalRoleBatchedIdempotenceOnEmptyList() public {
-        address newModule = _setupMockSelfManagedModule();
+        _setupMockSelfManagedModule();
 
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
@@ -896,7 +896,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testRevokeGlobalRoleBatchedFailsIfNotAdmin() public {
-        address newModule = _setupMockSelfManagedModule();
+        _setupMockSelfManagedModule();
 
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));
@@ -920,7 +920,7 @@ contract AUT_RolesV1Test is Test {
     }
 
     function testRevokeGlobalRoleBatchedIdempotenceOnEmptyList() public {
-        address newModule = _setupMockSelfManagedModule();
+        _setupMockSelfManagedModule();
 
         bytes32 globalRole =
             _authorizer.generateRoleId(address(_orchestrator), bytes32("0x03"));

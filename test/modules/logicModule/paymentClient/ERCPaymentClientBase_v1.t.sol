@@ -315,8 +315,9 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     function testAmountPaidModifierInPosition(address caller) public {
-        address token = address(_orchestrator.fundingManager().token());
-        paymentClient.set_outstandingTokenAmount(token, 1);
+        address fundingManagerToken =
+            address(_orchestrator.fundingManager().token());
+        paymentClient.set_outstandingTokenAmount(fundingManagerToken, 1);
 
         if (caller != address(_paymentProcessor)) {
             vm.expectRevert(
@@ -327,7 +328,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         }
 
         vm.prank(address(caller));
-        paymentClient.amountPaid(token, 1);
+        paymentClient.amountPaid(fundingManagerToken, 1);
     }
 
     //--------------------------------------------------------------------------
