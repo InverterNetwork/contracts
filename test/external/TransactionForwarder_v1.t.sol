@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,
-    ERC2771Forwarder
+    ERC2771ForwarderUpgradeable
 } from "src/external/forwarder/TransactionForwarder_v1.sol";
 
 import {TransactionForwarderV1AccessMock} from
@@ -29,7 +29,7 @@ contract TransactionForwarderV1Test is Test {
     // Test: createDigest
 
     function testCreateDigest(
-        ERC2771Forwarder.ForwardRequestData memory req,
+        ERC2771ForwarderUpgradeable.ForwardRequestData memory req,
         uint signerPrivateKey
     ) public {
         // Restrict the signerKey to a space where it still should work
@@ -82,7 +82,7 @@ contract TransactionForwarderV1Test is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC2771Forwarder.ERC2771UntrustfulTarget.selector,
+                ERC2771ForwarderUpgradeable.ERC2771UntrustfulTarget.selector,
                 address(intercepter),
                 address(forwarder)
             )
