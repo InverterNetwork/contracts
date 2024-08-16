@@ -31,10 +31,13 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
-
+// External Dependencies
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
 /**
  * @dev Base class for module implementation test contracts.
  */
+
 abstract contract ModuleTest is Test {
     OrchestratorV1Mock _orchestrator;
 
@@ -51,8 +54,7 @@ abstract contract ModuleTest is Test {
     address treasury = makeAddr("treasury");
 
     // Deploy a forwarder used to enable metatransactions
-    TransactionForwarder_v1 _forwarder =
-        new TransactionForwarder_v1("TransactionForwarder_v1");
+    TransactionForwarder_v1 _forwarder = new TransactionForwarder_v1();
 
     // Orchestrator_v1 Constants
     uint constant _ORCHESTRATOR_ID = 1;
@@ -71,7 +73,16 @@ abstract contract ModuleTest is Test {
     //--------------------------------------------------------------------------
     // Setup
     function _setUpOrchestrator(IModule_v1 module) internal virtual {
-        feeManager = new FeeManager_v1();
+        // Needs to be a proxy for the notInitialized Check
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    address(this), // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
         feeManager.init(address(this), treasury, 0, 0);
         governor.setFeeManager(address(feeManager));
 
@@ -126,11 +137,11 @@ abstract contract ModuleTest is Test {
     // Helpers
 
     /// This function is intended to help in the case the number is intended to be converted into a token with a different decimal value.
-    /// @param number The number to be bounded
-    /// @param tokenDecimals The number of decimals the token which will be converted has
-    /// @param min The minimum value the number can be
-    /// @param max The maximum value the number can be, including the referenceDecimals
-    /// @param referenceDecimals The number of decimals the reference token has, which the token will be converted into
+    /// @param  number The number to be bounded
+    /// @param  tokenDecimals The number of decimals the token which will be converted has
+    /// @param  min The minimum value the number can be
+    /// @param  max The maximum value the number can be, including the referenceDecimals
+    /// @param  referenceDecimals The number of decimals the reference token has, which the token will be converted into
     /// @return amount The bounded number
     function _bound_for_decimal_conversion(
         uint number,
@@ -235,5 +246,11 @@ abstract contract ModuleTest is Test {
         invalids[invalids.length - 1] = address(_token);
 
         return invalids;
+    }
+
+    function _addLogicModuleToOrchestrator(address _logicModule) internal {
+        _orchestrator.initiateAddModuleWithTimelock(_logicModule);
+        vm.warp(block.timestamp + 73 hours);
+        _orchestrator.executeAddModule(_logicModule);
     }
 }

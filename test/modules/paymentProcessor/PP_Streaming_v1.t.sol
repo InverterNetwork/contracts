@@ -29,7 +29,8 @@ import {PP_Streaming_v1AccessMock} from
 
 import {
     IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock
+    ERC20PaymentClientBaseV1Mock,
+    ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 // Errors
@@ -88,6 +89,10 @@ contract PP_StreamingV1Test is ModuleTest {
 
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
+    );
+
+    event PaymentReceiverRemoved(
+        address indexed paymentClient, address indexed paymentReceiver
     );
 
     function setUp() public {
@@ -541,7 +546,7 @@ contract PP_StreamingV1Test is ModuleTest {
     }
 
     // @dev Assume recipient can withdraw full amount immediately if end is less than or equal to block.timestamp.
-    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeStartTime(
+    function testProcessPaymentsWorksForEndTimeThatIsPlacedBeforeNow(
         address[] memory recipients,
         uint[] memory endTimes
     ) public {
@@ -551,8 +556,16 @@ contract PP_StreamingV1Test is ModuleTest {
 
         assumeValidRecipients(recipients);
 
-        // Warp to reasonable time to test wether orders before timestamp are retrievable
-        vm.warp(1_680_220_800); // March 31, 2023 at 00:00 GMT
+        // Find the greatest timestamp in the array
+        uint greatestEnd = 0;
+        for (uint i; i < endTimes.length; i++) {
+            if (endTimes[i] > greatestEnd) {
+                greatestEnd = endTimes[i];
+            }
+        }
+
+        // Warp to the greatest end value, so even that one is <= block.timestamp
+        vm.warp(greatestEnd);
 
         // Amount of tokens for user that should be payed out
         uint payoutAmount = 100;
@@ -564,7 +577,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: payoutAmount,
-                    start: block.timestamp,
+                    start: 0,
                     cliff: 0,
                     end: endTimes[i]
                 })
@@ -604,94 +617,6 @@ contract PP_StreamingV1Test is ModuleTest {
                 );
             }
         }
-    }
-
-    function test_processPayments_discardsInvalidPaymentOrders() public {
-        address[] memory recipients = createInvalidRecipients();
-
-        uint invalidAmt = 0;
-
-        vm.warp(1000);
-        vm.startPrank(address(paymentClient));
-
-        // Check addinng invalid recipients
-
-        // we don't mind about adding address(this)in this case
-        for (uint i = 0; i < recipients.length - 1; ++i) {
-            paymentClient.addPaymentOrderUnchecked(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: 100,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + 100
-                })
-            );
-        }
-        // Expect the correct number and sequence of emits
-        for (uint i = 0; i < recipients.length - 1; ++i) {
-            vm.expectEmit(true, true, true, true);
-            emit InvalidStreamingOrderDiscarded(
-                recipients[i],
-                address(_token),
-                100,
-                block.timestamp,
-                0,
-                block.timestamp + 100
-            );
-        }
-
-        // Call processPayments and expect emits
-        paymentProcessor.processPayments(paymentClient);
-
-        // Check adding an invalid amount
-
-        paymentClient.addPaymentOrderUnchecked(
-            IERC20PaymentClientBase_v1.PaymentOrder({
-                recipient: address(0xB0B),
-                paymentToken: address(_token),
-                amount: invalidAmt,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp + 100
-            })
-        );
-        vm.expectEmit(true, true, true, true);
-        emit InvalidStreamingOrderDiscarded(
-            address(0xB0B),
-            address(_token),
-            invalidAmt,
-            block.timestamp,
-            0,
-            block.timestamp + 100
-        );
-        paymentProcessor.processPayments(paymentClient);
-
-        // Check adding an invalid end time
-
-        paymentClient.addPaymentOrderUnchecked(
-            IERC20PaymentClientBase_v1.PaymentOrder({
-                recipient: address(0xB0B),
-                paymentToken: address(_token),
-                amount: invalidAmt,
-                start: block.timestamp,
-                cliff: 500,
-                end: block.timestamp + 100
-            })
-        );
-        vm.expectEmit(true, true, true, true);
-        emit InvalidStreamingOrderDiscarded(
-            address(0xB0B),
-            address(_token),
-            invalidAmt,
-            block.timestamp,
-            500,
-            block.timestamp + 100
-        );
-        paymentProcessor.processPayments(paymentClient);
-
-        vm.stopPrank();
     }
 
     function test_processPayments_streamInfoGetsDeletedPostFullPayment(
@@ -1393,6 +1318,8 @@ contract PP_StreamingV1Test is ModuleTest {
 
         // calling cancelRunningPayments also calls claim() so no need to repeat?
         vm.prank(address(paymentClient));
+        vm.expectEmit(true, true, true, true);
+        emit PaymentReceiverRemoved(address(paymentClient), recipients[0]);
         paymentProcessor.cancelRunningPayments(paymentClient);
 
         // measure recipients balances before attempting second claim.
@@ -1859,6 +1786,145 @@ contract PP_StreamingV1Test is ModuleTest {
                 amount
             );
         }
+    }
+
+    function testTimeVerificationIsCorrectlyImplemented(
+        uint start,
+        uint cliff,
+        uint end
+    ) public {
+        // check if an overflow will happen via unchecked
+        bool willRevert = false;
+        unchecked {
+            if (start + cliff < start) {
+                willRevert = true;
+            }
+        }
+        vm.assume(!willRevert);
+
+        // Specifically test each aspect of the time verification here as well
+        // to find out whether it should revert or not
+        bool resultShouldBe = true;
+
+        // Check whether the start is greater than the end time
+        // Them being equal is fine if no streaming is desired (instant payout)
+        if (start > end) {
+            resultShouldBe = false;
+            console.log("start > end");
+        }
+
+        // Check whether the start with cliff added is greater than the end time
+        // Them being equal is fine again, as that would just be a delayed full payout
+        // (if cliff > 0)
+        if (start + cliff > end) {
+            resultShouldBe = false;
+            console.log("start + cliff > end");
+        }
+
+        bool result = paymentProcessor.original_validTimes(start, cliff, end);
+        assertEq(result, resultShouldBe);
+    }
+
+    function test_ValidPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        address sender
+    ) public {
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback funciton to deploy contracts, it will
+        // pass the test here
+        vm.assume(
+            order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
+        );
+
+        order.start = bound(order.start, 0, type(uint).max / 2);
+        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+
+        vm.startPrank(sender);
+
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+            order.recipient
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
+            && paymentProcessor.original_validTimes(
+                order.start, order.cliff, order.end
+            ) && paymentProcessor.original__validTotal(order.amount);
+
+        assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+
+        vm.stopPrank();
+    }
+
+    function test__validPaymentReceiver(address addr, address sender) public {
+        bool expectedValue = true;
+        if (
+            addr == address(0) || addr == sender
+                || addr == address(paymentProcessor)
+                || addr == address(_orchestrator)
+                || addr == address(_orchestrator.fundingManager().token())
+        ) {
+            expectedValue = false;
+        }
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+        );
+    }
+
+    function test__validTotal(uint _total) public {
+        bool expectedValue = true;
+        if (_total == 0) {
+            expectedValue = false;
+        }
+
+        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
+    }
+
+    function test__validTimes(uint _start, uint _cliff, uint _end) public {
+        _start = bound(_start, 0, type(uint).max / 2);
+        _cliff = bound(_cliff, 0, type(uint).max / 2);
+
+        bool expectedValue = true;
+        if (_start + _cliff > _end) {
+            expectedValue = false;
+        }
+
+        assertEq(
+            paymentProcessor.original_validTimes(_start, _cliff, _end),
+            expectedValue
+        );
+    }
+
+    function test__validPaymentToken(address randomToken, address sender)
+        public
+    {
+        // Non-contract addresses or protected addresses should be invalid
+        vm.assume(randomToken != address(_token));
+
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback funciton to deploy contracts, it will
+        // pass the test here
+        vm.assume(randomToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C);
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentToken(randomToken), false
+        );
+
+        // ERC20 addresses are valid
+        ERC20Mock actualToken = new ERC20Mock("Test", "TST");
+
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            true
+        );
+
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(_token)), true
+        );
     }
 
     //--------------------------------------------------------------------------

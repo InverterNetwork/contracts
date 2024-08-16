@@ -5,6 +5,9 @@ import "forge-std/console.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+import {ClaimData} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/ClaimData.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {
@@ -24,7 +27,8 @@ import {
     LM_PC_KPIRewarder_v1,
     ILM_PC_KPIRewarder_v1,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v1
+    ILM_PC_Staking_v1,
+    OptimisticOracleV3CallbackRecipientInterface
 } from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
 
 import {
@@ -51,6 +55,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     uint constant MOCK_ASSERTED_VALUE = 100;
     address constant MOCK_ASSERTER_ADDRESS = address(0x1);
     address USER_1 = address(0xA1BA);
+
+    uint MAX_USER_AMOUNT = 10_000; // for testing purposes
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
     // the reward token is _token from ModuleTest
@@ -97,6 +103,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     event PaymentOrderAdded(
         address indexed recipient, address indexed token, uint amount
     );
+
+    event DeletedStuckAssertion(bytes32 indexed assertionId);
 
     //=========================================================================================
     // Setup
@@ -219,18 +227,30 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         kpiManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
+    function test_InterfaceInheritanceTree() public view {
+        kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v1).interfaceId);
+        kpiManager.supportsInterface(type(ILM_PC_Staking_v1).interfaceId);
+        kpiManager.supportsInterface(
+            type(IOptimisticOracleIntegrator).interfaceId
+        );
+        kpiManager.supportsInterface(
+            type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+        );
+        kpiManager.supportsInterface(type(IModule_v1).interfaceId);
+    }
+
     // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards
     function createDummyIncontinuousKPI() public {
         uint[] memory trancheValues = new uint[](3);
         uint[] memory trancheRewards = new uint[](3);
 
-        trancheValues[0] = 100;
-        trancheValues[1] = 200;
-        trancheValues[2] = 300;
+        trancheValues[0] = 100e18;
+        trancheValues[1] = 200e18;
+        trancheValues[2] = 300e18;
 
-        trancheRewards[0] = 100e18;
-        trancheRewards[1] = 100e18;
-        trancheRewards[2] = 100e18;
+        trancheRewards[0] = 100e32;
+        trancheRewards[1] = 100e32;
+        trancheRewards[2] = 100e32;
 
         kpiManager.createKPI(false, trancheValues, trancheRewards);
     }
@@ -240,13 +260,13 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         uint[] memory trancheValues = new uint[](3);
         uint[] memory trancheRewards = new uint[](3);
 
-        trancheValues[0] = 100;
-        trancheValues[1] = 200;
-        trancheValues[2] = 300;
+        trancheValues[0] = 100e18;
+        trancheValues[1] = 200e18;
+        trancheValues[2] = 300e18;
 
-        trancheRewards[0] = 100e18;
-        trancheRewards[1] = 100e18;
-        trancheRewards[2] = 100e18;
+        trancheRewards[0] = 100e32;
+        trancheRewards[1] = 100e32;
+        trancheRewards[2] = 100e32;
 
         kpiManager.createKPI(true, trancheValues, trancheRewards);
     }
@@ -262,7 +282,7 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     {
         vm.assume(amounts.length >= users.length);
 
-        uint maxLength = kpiManager.MAX_QUEUE_LENGTH();
+        uint maxLength = MAX_USER_AMOUNT;
 
         if (users.length > maxLength) {
             cappedUsers = new address[](maxLength);
@@ -288,12 +308,69 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
             stakingToken.mint(cappedUsers[i], cappedAmounts[i]);
             vm.startPrank(cappedUsers[i]);
             stakingToken.approve(address(kpiManager), cappedAmounts[i]);
+            vm.expectEmit(true, true, true, true, address(kpiManager));
+            emit Staked(cappedUsers[i], cappedAmounts[i]);
             kpiManager.stake(cappedAmounts[i]);
             totalUserFunds += cappedAmounts[i];
             vm.stopPrank();
         }
 
         // (returns cappedUsers, cappedAmounts, totalUserFunds)
+    }
+
+    function setUpStateForAssertionResolution(
+        address[] memory users,
+        uint[] memory amounts,
+        uint valueToAssert,
+        bool continuous
+    )
+        public
+        returns (
+            bytes32 assertionId,
+            address[] memory cappedUsers,
+            uint[] memory cappedAmounts,
+            uint totalUserFunds
+        )
+    {
+        // it should stake all orders in the stakingQueue
+        (users, amounts, totalUserFunds) = setUpStakers(users, amounts);
+
+        // prepare conditions
+        if (continuous) createDummyContinuousKPI();
+        else createDummyIncontinuousKPI();
+
+        // prepare  bond and asserter authorization
+        kpiManager.grantModuleRole(
+            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
+        );
+
+        feeToken.mint(
+            address(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken))
+        );
+        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
+        feeToken.approve(
+            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
+        );
+
+        vm.warp(block.timestamp + 3);
+
+        // SuT
+
+        vm.expectEmit(true, false, false, false, address(kpiManager));
+        emit DataAsserted(
+            MOCK_ASSERTION_DATA_ID,
+            bytes32(valueToAssert),
+            MOCK_ASSERTER_ADDRESS,
+            0x0
+        ); // we don't know the last one
+
+        assertionId = kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID, valueToAssert, MOCK_ASSERTER_ADDRESS, 0
+        );
+        vm.stopPrank();
+
+        return (assertionId, users, amounts, totalUserFunds);
     }
 }
 
@@ -302,16 +379,12 @@ postAssertionTest
 ├── when the Asserter is the Module itself
 │   └── when the default currency is the same as the staking token
 │        └── it should revert  
+├── when there is an unresolved assertion live
+│   └── it should revert
 ├── when there are no stored KPIs
 │   └── it should revert 
 ├── when the specified KPI does not exist
 │   └── it should revert 
-├── when there is an unresolved assertion live
-│   └── it should revert 
-├── when stakingQueue length is bigger than 0
-│   ├── it should stake all orders in the stakingQueue
-│   └── it should remove the amount form the queued funds
-├── it should delete the stakingQueue
 ├── when there aren't enough funds to pay the assertion fee
 │   └── it should revert
 └── when there are enough funds to pay the assertion fee
@@ -319,6 +392,7 @@ postAssertionTest
     ├── it should store the RewardRound configuration
     └── it should return a correct assertionId
 */
+
 contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
     function test_RevertWhen_TheBondConfigurationIsInvalid() external {
         // Since the setup has a correct KPI MAnager, we create a new one with stakingToken == FeeToken
@@ -386,7 +460,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
@@ -430,7 +504,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         assertEq(kpiManager.assertionPending(), true);
     }
 
-    function test_WhenStakingQueueLengthIsBiggerThan0(
+    function test_SuccessfulAssertion(
         address[] memory users,
         uint[] memory amounts
     ) external {
@@ -448,19 +522,13 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
         );
-        vm.stopPrank();
 
         // SuT
-        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
-        for (uint i = 0; i < users.length; i++) {
-            vm.expectEmit(true, true, true, true, address(kpiManager));
-            emit Staked(users[i], amounts[i]);
-        }
         vm.expectEmit(true, false, false, false, address(kpiManager));
         emit DataAsserted(
             MOCK_ASSERTION_DATA_ID,
@@ -478,9 +546,6 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         vm.stopPrank();
 
         // state after
-        assertEq(kpiManager.getStakingQueue().length, 0);
-        assertEq(kpiManager.totalQueuedFunds(), 0);
-
         for (uint i = 0; i < users.length; i++) {
             assertEq(stakingToken.balanceOf(users[i]), 0);
         }
@@ -488,63 +553,6 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
 
         // check mock for stored data
-        IOptimisticOracleIntegrator.DataAssertion memory assertion =
-            kpiManager.getAssertion(assertionId);
-        ILM_PC_KPIRewarder_v1.RewardRoundConfiguration memory rewardRoundConfig =
-            kpiManager.getAssertionConfig(assertionId);
-
-        assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
-        assertEq(assertion.data, bytes32(MOCK_ASSERTED_VALUE));
-        assertEq(assertion.asserter, MOCK_ASSERTER_ADDRESS);
-
-        assertEq(rewardRoundConfig.creationTime, block.timestamp);
-        assertEq(rewardRoundConfig.assertedValue, 100);
-        assertEq(rewardRoundConfig.KpiToUse, 0);
-        assertEq(rewardRoundConfig.distributed, false);
-    }
-
-    function test_WhenStakingQueueLengthIsEmpty() external {
-        // prepare conditions
-        createDummyIncontinuousKPI();
-
-        // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
-        feeToken.mint(
-            address(MOCK_ASSERTER_ADDRESS),
-            ooV3.getMinimumBond(address(feeToken))
-        ); //
-        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
-        feeToken.approve(
-            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
-        );
-        vm.stopPrank();
-
-        // SuT
-        vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit DataAsserted(
-            MOCK_ASSERTION_DATA_ID,
-            bytes32(MOCK_ASSERTED_VALUE),
-            MOCK_ASSERTER_ADDRESS,
-            0x0
-        );
-
-        vm.expectEmit(false, true, true, true, address(kpiManager));
-        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); // we don't know the generated ID
-
-        vm.prank(address(MOCK_ASSERTER_ADDRESS));
-        bytes32 assertionId = kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
-        );
-
-        // state after
-        assertEq(kpiManager.getStakingQueue().length, 0);
-        assertEq(kpiManager.totalQueuedFunds(), 0);
-
-        assertEq(feeToken.balanceOf(MOCK_ASSERTER_ADDRESS), 0);
-
-        // check mock for posted data
         IOptimisticOracleIntegrator.DataAssertion memory assertion =
             kpiManager.getAssertion(assertionId);
         ILM_PC_KPIRewarder_v1.RewardRoundConfiguration memory rewardRoundConfig =
@@ -579,7 +587,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken)) - 1
-        ); //
+        );
         vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
         feeToken.approve(
             address(kpiManager), ooV3.getMinimumBond(address(feeToken))
@@ -589,24 +597,18 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         // SuT
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
         vm.expectRevert(); // ERC20 insufficient balance revert
-        bytes32 assertionId = kpiManager.postAssertion(
+        kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
         );
 
         // state after
-        assertEq(kpiManager.getStakingQueue().length, users.length);
-        assertEq(kpiManager.totalQueuedFunds(), totalUserFunds);
-
-        for (uint i = 0; i < users.length; i++) {
-            assertEq(kpiManager.stakingQueueAmounts(users[i]), amounts[i]);
-        }
-
         assertEq(
             feeToken.balanceOf(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken)) - 1
         );
     }
 }
+
 /*
 createKPITest
 ├── when the number of tranches is 0
@@ -698,7 +700,7 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         }
 
         // Guarantee wrong value in the last tranche.
-        valuesCapped[length - 1] = valuesCapped[length - 2] / 2; //
+        valuesCapped[length - 1] = valuesCapped[length - 2] / 2;
         vm.expectRevert(
             ILM_PC_KPIRewarder_v1
                 .Module__LM_PC_KPIRewarder_v1__InvalidKPITrancheValues
@@ -761,14 +763,13 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
 stakeTest
 ├── when the staked amount is 0
 │   └── it should revert
-├── when the staked amount is below the minimum stake
-│   └── it should revert
-├── when the length of the staking Queue is already at MAX_QUEUE_LENGTH
+├── when there is an unresolved assertion live
 │   └── it should revert
 ├── when the caller does not have sufficient funds
 │   └── it should revert
 └── when the caller has sufficient funds
-    └── it should store the amount + caller in the staking Queue and increase the value of totalQueuedFunds by the staked amount
+    ├── it should take the funds from the user
+    └── it should stake the funds
 */
 contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
     function test_RevertWhen_TheStakedAmountIs0() external {
@@ -785,55 +786,59 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
         kpiManager.stake(0);
     }
 
-    function test_RevertWhen_TheStakedAmountIsBelowMinimum(
-        uint minAmount,
-        uint stakeAmount
-    ) external {
+    function test_RevertWhen_ThereIsAPendingAssertion(uint stakeAmount)
+        external
+    {
         // it should revert
-        vm.assume(minAmount > 1);
-        stakeAmount = bound(stakeAmount, 1, minAmount - 1);
 
-        kpiManager.setMinimumStake(minAmount);
+        vm.assume(stakeAmount > 0);
+
+        // Create an assertion
+        // prepare conditions
+        createDummyIncontinuousKPI();
+
+        // prepare  bond and asserter authorization
+        kpiManager.grantModuleRole(
+            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
+        );
+        feeToken.mint(
+            address(MOCK_ASSERTER_ADDRESS),
+            ooV3.getMinimumBond(address(feeToken))
+        );
+        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
+        feeToken.approve(
+            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
+        );
+        vm.stopPrank();
+
+        // SuT
+        vm.expectEmit(true, false, false, false, address(kpiManager));
+        emit DataAsserted(
+            MOCK_ASSERTION_DATA_ID,
+            bytes32(MOCK_ASSERTED_VALUE),
+            MOCK_ASSERTER_ADDRESS,
+            0x0
+        );
+        vm.prank(address(MOCK_ASSERTER_ADDRESS));
+        kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID,
+            MOCK_ASSERTED_VALUE,
+            MOCK_ASSERTER_ADDRESS,
+            0
+        );
+        assertEq(kpiManager.assertionPending(), true);
+
+        // Staking should now fail
 
         stakingToken.mint(USER_1, stakeAmount);
         vm.startPrank(USER_1);
         stakingToken.approve(address(kpiManager), stakeAmount);
         vm.expectRevert(
             ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount
+                .Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending
                 .selector
         );
         kpiManager.stake(stakeAmount);
-    }
-
-    function test_RevertWhen_TheLengthOfTheStakingQueueIsAlreadyAtMAX_QUEUE_LENGTH(
-        uint[] calldata amounts
-    ) external {
-        // it should revert
-        address USER;
-        vm.assume(amounts.length > kpiManager.MAX_QUEUE_LENGTH());
-        for (uint i = 0; i < kpiManager.MAX_QUEUE_LENGTH(); i++) {
-            USER = address(uint160(i + 1));
-            uint amount = bound(amounts[i], 1, 1_000_000e18);
-            stakingToken.mint(USER, amount);
-            vm.startPrank(USER);
-            stakingToken.approve(address(kpiManager), amount);
-
-            kpiManager.stake(amount);
-            vm.stopPrank();
-        }
-
-        USER = address(0x1337);
-        stakingToken.mint(USER, 1000e18);
-        vm.startPrank(USER);
-        stakingToken.approve(address(kpiManager), 1000e18);
-        vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull
-                .selector
-        );
-        kpiManager.stake(1000e18);
-        vm.stopPrank();
     }
 
     function test_RevertWhen_TheCallerDoesNotHaveSufficientFunds() external {
@@ -849,37 +854,34 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
     }
 
     function test_WhenTheCallerHasSufficientFunds(uint amount) external {
-        // it should store the amount + caller in the staking Queue and increase the value of totalQueuedFunds by the staked amount
+        // it should stake the funds normally
 
-        amount = bound(amount, 1, 100_000e18);
-        address USER = address(0x1337);
+        vm.assume(amount > 0);
 
-        // state before
-        uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
-        uint userStakeBalanceBefore = kpiManager.stakingQueueAmounts(USER);
-        uint totalQueuedFundsBefore = kpiManager.totalQueuedFunds();
+        uint userBalanceBefore = stakingToken.balanceOf(USER_1);
+        uint contractBalanceBefore = stakingToken.balanceOf(address(kpiManager));
 
-        stakingToken.mint(USER, amount);
-        vm.startPrank(USER);
+        stakingToken.mint(USER_1, amount);
+        vm.startPrank(USER_1);
         stakingToken.approve(address(kpiManager), amount);
         kpiManager.stake(amount);
         vm.stopPrank();
 
-        // state after
+        assertEq(stakingToken.balanceOf(USER_1), userBalanceBefore);
         assertEq(
-            kpiManager.getStakingQueue().length, stakingQueueLengthBefore + 1
+            stakingToken.balanceOf(address(kpiManager)),
+            contractBalanceBefore + amount
         );
-        assertEq(
-            kpiManager.stakingQueueAmounts(USER),
-            userStakeBalanceBefore + amount
-        );
-        assertEq(kpiManager.totalQueuedFunds(), totalQueuedFundsBefore + amount);
+        assertEq(kpiManager.balanceOf(USER_1), amount);
+        assertEq(kpiManager.totalSupply(), contractBalanceBefore + amount);
     }
 }
 
 /*
 assertionresolvedCallbackTest
 ├── when the caller is not the Optimistic Oracle
+│   └── it should revert
+├── when the assertionId does not exist
 │   └── it should revert
 ├── when the assertion resolved to false
 │   └── it should emit an event
@@ -896,67 +898,6 @@ assertionresolvedCallbackTest
 contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
     LM_PC_KPIRewarder_v1Test
 {
-    function setUpStateForAssertionResolution(
-        address[] memory users,
-        uint[] memory amounts,
-        uint valueToAssert,
-        bool continuous
-    )
-        public
-        returns (
-            bytes32 assertionId,
-            address[] memory cappedUsers,
-            uint[] memory cappedAmounts,
-            uint totalUserFunds
-        )
-    {
-        // it should stake all orders in the stakingQueue
-        (users, amounts, totalUserFunds) = setUpStakers(users, amounts);
-
-        // prepare conditions
-        if (continuous) createDummyContinuousKPI();
-        else createDummyIncontinuousKPI();
-
-        // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
-
-        feeToken.mint(
-            address(MOCK_ASSERTER_ADDRESS),
-            ooV3.getMinimumBond(address(feeToken))
-        ); //
-        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
-        feeToken.approve(
-            address(kpiManager), ooV3.getMinimumBond(address(feeToken))
-        );
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 3);
-
-        // SuT
-        vm.startPrank(address(MOCK_ASSERTER_ADDRESS));
-        for (uint i = 0; i < users.length; i++) {
-            vm.expectEmit(true, true, true, true, address(kpiManager));
-            emit Staked(users[i], amounts[i]);
-        }
-
-        vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit DataAsserted(
-            MOCK_ASSERTION_DATA_ID,
-            bytes32(valueToAssert),
-            MOCK_ASSERTER_ADDRESS,
-            0x0
-        ); // we don't know the last one
-
-        assertionId = kpiManager.postAssertion(
-            MOCK_ASSERTION_DATA_ID, valueToAssert, MOCK_ASSERTER_ADDRESS, 0
-        );
-        vm.stopPrank();
-
-        return (assertionId, users, amounts, totalUserFunds);
-    }
-
     function test_WhenTheAssertionResolvedToFalse(
         address[] memory users,
         uint[] memory amounts
@@ -1007,7 +948,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         vm.assume(users.length > 1);
 
-        uint assertedIntermediateValue = 250;
+        uint assertedIntermediateValue = 250e18;
 
         bytes32 createdID;
         uint totalStakedFunds;
@@ -1028,7 +969,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(250e18, 1, 250e18, block.timestamp + 1);
+        emit RewardSet(250e32, 1, 250e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
@@ -1040,8 +981,8 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.warp(block.timestamp + 3);
 
         uint length = users.length;
-        if (length > kpiManager.MAX_QUEUE_LENGTH()) {
-            length = kpiManager.MAX_QUEUE_LENGTH();
+        if (length > MAX_USER_AMOUNT) {
+            length = MAX_USER_AMOUNT;
         }
 
         // check earned rewards are correct
@@ -1089,7 +1030,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
     ) external whenTheAssertionResolvedToTrue {
         // it should not pay out any amount from the uncompleted tranche at all
 
-        uint assertedIntermediateValue = 250;
+        uint assertedIntermediateValue = 250e18;
 
         bytes32 createdID;
         uint totalStakedFunds;
@@ -1112,7 +1053,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(200e18, 1, 200e18, block.timestamp + 1);
+        emit RewardSet(200e32, 1, 200e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
@@ -1123,8 +1064,8 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.warp(block.timestamp + 3);
 
         uint length = users.length;
-        if (length > kpiManager.MAX_QUEUE_LENGTH()) {
-            length = kpiManager.MAX_QUEUE_LENGTH();
+        if (length > MAX_USER_AMOUNT) {
+            length = MAX_USER_AMOUNT;
         }
 
         // check earned rewards are correct
@@ -1184,86 +1125,194 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         );
         kpiManager.assertionResolvedCallback(createdID, true);
     }
-}
 
-/*
-testDequeue
-├── When the user has no funds in queue
-│   └── It should do nothing
-└── When the user has funds in queue
-    ├── It should set the queued amount to zero
-    ├── It should reduce the total queued amount
-    ├── It should remove the user from the queue
-    ├── It should emit an event
-    └── It should transfer the funds back
-*/
-contract LM_PC_KPIRewarder_v1_dequeueTest is LM_PC_KPIRewarder_v1Test {
-    function test_WhenTheUserHasNoFundsInQueue() external {
-        address[] memory users = new address[](3);
-        uint[] memory amounts = new uint[](3);
-
-        users[0] = address(0x1);
-        amounts[0] = 1000e18;
-
-        users[1] = address(0x2);
-        amounts[1] = 1000e18;
-
-        users[2] = address(0x3);
-        amounts[2] = 1000e18;
-
-        setUpStakers(users, amounts);
-
-        // It should do nothing
-
-        address USER = address(0x1337);
-
-        // state before
-        uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
-        uint userStakeBalanceBefore = kpiManager.stakingQueueAmounts(USER);
-        uint totalQueuedFundsBefore = kpiManager.totalQueuedFunds();
-
-        // SuT
-        vm.prank(USER);
-        kpiManager.dequeueStake();
-
-        // state after
-        assertEq(kpiManager.getStakingQueue().length, stakingQueueLengthBefore);
-        assertEq(kpiManager.stakingQueueAmounts(USER), userStakeBalanceBefore);
-        assertEq(kpiManager.totalQueuedFunds(), totalQueuedFundsBefore);
-    }
-
-    function test_WhenTheUserHasFundsInQueue(
+    function test_RevertWhen_TheAssertionIdDoesNotExist(
         address[] memory users,
         uint[] memory amounts
     ) external {
-        (users, amounts, /* totalQueuedFunds*/ ) = setUpStakers(users, amounts);
+        // it should revert
 
-        for (uint i; i < users.length; i++) {
-            // state before
-            uint totalQueuedFundsBefore = kpiManager.totalQueuedFunds();
-            uint userStakeBalanceBefore =
-                kpiManager.stakingQueueAmounts(users[i]);
-            uint userTokenBalanceBefore = stakingToken.balanceOf(users[i]);
-            uint stakingQueueLengthBefore = kpiManager.getStakingQueue().length;
+        // Create different assertion in OOV3 with callback to SuT
+        address ALBA = address(0xA1BA);
+        vm.startPrank(ALBA);
+        feeToken.mint(ALBA, 1e22);
+        feeToken.approve(address(ooV3), 1e22);
+        bytes32 fake_ID = ooV3.assertTruth(
+            abi.encodePacked(
+                "Data asserted: 0x", // in the example data is type bytes32 so we add the hex prefix 0x.
+                ClaimData.toUtf8Bytes(bytes32(MOCK_ASSERTED_VALUE)),
+                " for dataId: 0x",
+                ClaimData.toUtf8Bytes(MOCK_ASSERTION_DATA_ID),
+                " and asserter: 0x",
+                ClaimData.toUtf8BytesAddress(ALBA),
+                " at timestamp: ",
+                ClaimData.toUtf8BytesUint(block.timestamp),
+                " in the DataAsserter contract at 0x",
+                ClaimData.toUtf8BytesAddress(address(0)),
+                " is valid."
+            ),
+            ALBA,
+            address(kpiManager),
+            address(0),
+            DEFAULT_LIVENESS,
+            IERC20(feeToken),
+            kpiManager.defaultBond(),
+            kpiManager.defaultIdentifier(),
+            bytes32(0)
+        );
+        vm.stopPrank();
 
-            vm.startPrank(users[i]);
-            kpiManager.dequeueStake();
-            vm.stopPrank();
+        // We now create a legitimate assertion so the callback is "listening"
 
-            // state after
-            assertEq(
-                kpiManager.totalQueuedFunds(),
-                totalQueuedFundsBefore - userStakeBalanceBefore
-            );
-            assertEq(kpiManager.stakingQueueAmounts(users[i]), 0);
-            assertEq(
-                stakingToken.balanceOf(users[i]),
-                userTokenBalanceBefore + userStakeBalanceBefore
-            );
-            assertEq(
-                kpiManager.getStakingQueue().length,
-                stakingQueueLengthBefore - 1
-            );
-        }
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+            setUpStateForAssertionResolution(users, amounts, 250, false);
+
+        vm.prank(address(ooV3));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_KPIRewarder_v1
+                    .Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId
+                    .selector,
+                fake_ID
+            )
+        );
+        kpiManager.assertionResolvedCallback(fake_ID, true);
+
+        // the other assertion is still open
+        (bool assertionResolved, bytes32 data) = kpiManager.getData(createdID);
+
+        assertEq(assertionResolved, false);
+        assertEq(data, 0);
+    }
+}
+
+/*
+    testDeleteStuckAssertion
+    ├── When the assertion isn't stored locally
+    │    └── It should revert
+    |── When the assertion hasn't expired yet
+    │    └── It should revert
+    ├── When the assertion CAN be resolved
+    │    └── It should revert
+    └── When the assertion CAN NOT be resolved
+        ├── It should delete the assertion config
+        ├── It should delete the assertion data
+        ├── IT should set assertionPending to false
+        └── It should emit an event
+    */
+
+contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
+    LM_PC_KPIRewarder_v1Test
+{
+    function test_RevertWhen_TheAssertionIsntStoredLocally(bytes32 assertionId)
+        external
+    {
+        // it should revert
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_KPIRewarder_v1
+                    .Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId
+                    .selector,
+                assertionId
+            )
+        );
+        kpiManager.deleteStuckAssertion(assertionId);
+    }
+
+    function test_RevertWhen_TheAssertionHasNotExpired(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        // it should revert
+
+        vm.assume(users.length > 1);
+
+        uint assertedIntermediateValue = 250;
+
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
+
+        // Assertion hasn't expired yet
+        vm.warp(block.timestamp + 1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_KPIRewarder_v1
+                    .Module__LM_PC_KPIRewarder_v1__AssertionNotStuck
+                    .selector,
+                createdID
+            )
+        );
+        kpiManager.deleteStuckAssertion(createdID);
+    }
+
+    function test_RevertWhen_TheAssertionCanBeResolved(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        // it should revert
+
+        vm.assume(users.length > 1);
+
+        uint assertedIntermediateValue = 250;
+
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
+
+        // Assertion could now be resolved
+        vm.warp(block.timestamp + DEFAULT_LIVENESS + 1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_KPIRewarder_v1
+                    .Module__LM_PC_KPIRewarder_v1__AssertionNotStuck
+                    .selector,
+                createdID
+            )
+        );
+        kpiManager.deleteStuckAssertion(createdID);
+    }
+
+    function test_deleteStuckAssertion_WhenTheAssertionCannotBeResolved(
+        address[] memory users,
+        uint[] memory amounts
+    ) external {
+        // it should revert
+
+        vm.assume(users.length > 1);
+
+        uint assertedIntermediateValue = 250;
+
+        bytes32 createdID;
+        uint totalStakedFunds;
+        (createdID, users, amounts, totalStakedFunds) =
+        setUpStateForAssertionResolution(
+            users, amounts, assertedIntermediateValue, true
+        );
+
+        // Assertion could now be resolved
+        vm.warp(block.timestamp + DEFAULT_LIVENESS + 1);
+
+        // BUT: we burn the asserter's bond in the oov3, so the transfer will revert.
+        feeToken.burn(address(ooV3), ooV3.getMinimumBond(address(feeToken)));
+
+        vm.expectEmit(true, true, true, true, address(kpiManager));
+        emit DeletedStuckAssertion(createdID);
+        kpiManager.deleteStuckAssertion(createdID);
+
+        // Check assertion data is deleted
+        assertEq(kpiManager.getAssertion(createdID).asserter, address(0)); // address(0) asserters are not possible in the system
+        assertEq(kpiManager.getAssertionConfig(createdID).creationTime, 0);
     }
 }

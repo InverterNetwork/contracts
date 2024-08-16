@@ -22,8 +22,12 @@ import {
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 /**
- * @title   KPI Rewarder Module
+ * @title   Inverter KPI Rewarder Module
  *
  * @notice  Provides a mechanism for distributing rewards to stakers based
  *          on Key Performance Indicators (KPIs).
@@ -44,14 +48,16 @@ contract LM_PC_KPIRewarder_v1 is
 {
     using SafeERC20 for IERC20;
 
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(LM_PC_Staking_v1, Module_v1)
+        override(OptimisticOracleIntegrator, LM_PC_Staking_v1)
         returns (bool)
     {
         return interfaceId == type(ILM_PC_KPIRewarder_v1).interfaceId
+            || interfaceId == type(ILM_PC_Staking_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -60,27 +66,29 @@ contract LM_PC_KPIRewarder_v1 is
     // This module enable KPI based reward distribution into the staking manager by using UMAs Optimistic Oracle.
 
     // It works in the following way:
-    // - The admin can create KPIs, which are a set of tranches with rewards assigned. These can be continuous or not (see below)
-    // - An external actor with the ASSERTER role can trigger the posting of an assertion to the UMA Oracle, specifying the value to be asserted and the KPI to use for the reward distrbution in case it resolves
-    // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved. They will be added before posting the next assertion.
-    // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function. This will calculate the final reward value and distribute it to the stakers.
+    // - The admin can create KPIs, which are a set of tranches with rewards assigned. These can be continuous
+    //   or not (see below).
+    // - An external actor with the ASSERTER role can trigger the posting of an assertion to the UMA Oracle, specifying
+    //   the value to be asserted and the KPI to use for the reward distrbution in case it resolves
+    // - To ensure fairness, all new staking requests are queued until the next KPI assertion is resolved.
+    //   They will be added before posting the next assertion.
+    // - Once the assertion resolves, the UMA oracle triggers the assertionResolvedCallback() function.
+    //   This will calculate the final reward value and distribute it to the stakers.
 
     //--------------------------------------------------------------------------
 
     // KPI and Configuration Storage
+    /// @dev	The number of KPIs created.
     uint public KPICounter;
+    /// @dev	Registry of KPIsid -> KPI.
     mapping(uint => KPI) public registryOfKPIs;
+    /// @dev	Registry of Assertion Configurations assertionId -> RewardRoundConfiguration.
     mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
 
-    // Deposit Queue
+    /// @dev	 For locking certain utilities when there are assertions open.
     bool public assertionPending;
-    uint minimumStake; // The workflow owner can set a minimum stake amount to mitigate griefing attacks where sybils spam the queue with multiple small stakes.
-    address[] public stakingQueue;
-    mapping(address => uint) public stakingQueueAmounts;
-    uint public totalQueuedFunds;
-    uint public constant MAX_QUEUE_LENGTH = 50;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     /*
@@ -141,24 +149,24 @@ contract LM_PC_KPIRewarder_v1 is
         return assertionConfig[assertionId];
     }
 
-    /// @inheritdoc ILM_PC_KPIRewarder_v1
-    function getStakingQueue() public view returns (address[] memory) {
-        return stakingQueue;
-    }
-
-    //--------------------------------------------------------------------------
-    // Assertion Manager Functions
+    // ========================================================================
+    // Assertion Manager functions:
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
-    /// @dev about the asserter address: any address can be set as asserter, it will be expected to pay for the bond on posting.
-    /// The bond tokens can also be deposited in the Module and used to pay for itself, but ONLY if the bond token is different from the one being used for staking.
-    /// If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
+    /// @dev    about the asserter address: any address can be set as asserter, it will be expected to pay for the
+    ///         bond on posting.
+    ///         The bond tokens can also be deposited in the Module and used to pay for itself,
+    ///         but ONLY if the bond token is different from the one being used for staking.
+    ///         If the asserter is set to 0, whomever calls postAssertion will be paying the bond.
     function postAssertion(
         bytes32 dataId,
         uint assertedValue,
         address asserter,
         uint targetKPI
     ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
+        // ==================================================================
+        // Pre-check
+
         if (assertionPending) {
             revert Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
         }
@@ -166,7 +174,8 @@ contract LM_PC_KPIRewarder_v1 is
         //--------------------------------------------------------------------------
         // Input Validation
 
-        //  If the asserter is the Module itself, we need to ensure the token paid for bond is different than the one used for staking, since it could mess with the balances
+        //  If the asserter is the Module itself, we need to ensure the token paid for bond is different than the one
+        //  used for staking, since it could mess with the balances
         if (
             asserter == address(this)
                 && address(defaultCurrency) == stakingToken
@@ -180,19 +189,7 @@ contract LM_PC_KPIRewarder_v1 is
             revert Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
         }
 
-        //--------------------------------------------------------------------------
-        // Staking Queue Management
-
-        for (uint i = 0; i < stakingQueue.length; i++) {
-            address user = stakingQueue[i];
-            _stake(user, stakingQueueAmounts[user]);
-            totalQueuedFunds -= stakingQueueAmounts[user];
-            stakingQueueAmounts[user] = 0;
-        }
-
-        delete stakingQueue; // reset the queue
-
-        //--------------------------------------------------------------------------
+        // =====================================================================
         // Assertion Posting
 
         assertionId = assertDataFor(dataId, bytes32(assertedValue), asserter);
@@ -205,15 +202,13 @@ contract LM_PC_KPIRewarder_v1 is
         );
 
         assertionPending = true;
-
-        // (return assertionId)
     }
 
     //--------------------------------------------------------------------------
     // Admin Configuration Functions:
 
-    // Top up funds to pay the optimistic oracle fee
     /// @inheritdoc ILM_PC_KPIRewarder_v1
+    /// @dev    Top up funds to pay the optimistic oracle fee
     function depositFeeFunds(uint amount)
         external
         onlyOrchestratorAdmin
@@ -276,13 +271,6 @@ contract LM_PC_KPIRewarder_v1 is
         return (KpiNum);
     }
 
-    function setMinimumStake(uint _minimumStake)
-        external
-        onlyOrchestratorAdmin
-    {
-        minimumStake = _minimumStake;
-    }
-
     //--------------------------------------------------------------------------
     // New user facing functions (stake() is a LM_PC_Staking_v1 override) :
 
@@ -293,52 +281,49 @@ contract LM_PC_KPIRewarder_v1 is
         nonReentrant
         validAmount(amount)
     {
-        if (stakingQueue.length >= MAX_QUEUE_LENGTH) {
-            revert Module__LM_PC_KPIRewarder_v1__StakingQueueIsFull();
-        }
+        // ==================================================================
+        // Pre-check
 
-        if (amount < minimumStake) {
-            revert Module__LM_PC_KPIRewarder_v1__InvalidStakeAmount();
+        if (assertionPending) {
+            revert Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending(
+            );
         }
 
         address sender = _msgSender();
 
-        if (stakingQueueAmounts[sender] == 0) {
-            // new stake for queue
-            stakingQueue.push(sender);
-        }
-        stakingQueueAmounts[sender] += amount;
-        totalQueuedFunds += amount;
+        _stake(sender, amount);
 
         // transfer funds to LM_PC_Staking_v1
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
-
-        emit StakeEnqueued(sender, amount);
     }
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
-    function dequeueStake() public nonReentrant {
-        address user = _msgSender();
+    function deleteStuckAssertion(bytes32 assertionId)
+        public
+        onlyOrchestratorAdmin
+    {
+        // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
+        if (assertionData[assertionId].dataId == bytes32(0x0)) {
+            revert Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+                assertionId
+            );
+        }
 
-        // keep it idempotent
-        if (stakingQueueAmounts[user] != 0) {
-            uint amount = stakingQueueAmounts[user];
+        uint assertionExpirationTime =
+            oo.getAssertion(assertionId).expirationTime;
 
-            stakingQueueAmounts[user] = 0;
-            totalQueuedFunds -= amount;
+        if (block.timestamp <= assertionExpirationTime) {
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
+        }
 
-            for (uint i; i < stakingQueue.length; i++) {
-                if (stakingQueue[i] == user) {
-                    stakingQueue[i] = stakingQueue[stakingQueue.length - 1];
-                    stakingQueue.pop();
-                    break;
-                }
-            }
-
-            emit StakeDequeued(user, amount);
-
-            // return funds to user
-            IERC20(stakingToken).safeTransfer(user, amount);
+        try oo.settleAssertion(assertionId) {
+            // If the assertion can be settled, it doesn't qualify as stuck and we revert
+            revert Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(assertionId);
+        } catch {
+            delete assertionConfig[assertionId];
+            delete assertionData[assertionId];
+            assertionPending = false;
+            emit DeletedStuckAssertion(assertionId);
         }
     }
 
@@ -350,12 +335,20 @@ contract LM_PC_KPIRewarder_v1 is
         bytes32 assertionId,
         bool assertedTruthfully
     ) public override {
+        // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
+        if (assertionData[assertionId].dataId == bytes32(0x0)) {
+            revert Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+                assertionId
+            );
+        }
+
         // First, we perform checks and state management on the parent function.
         super.assertionResolvedCallback(assertionId, assertedTruthfully);
 
         // If the assertion was true, we calculate the rewards and distribute them.
         if (assertedTruthfully) {
-            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually holds those funds.
+            // SECURITY NOTE: this will add the value, but provides no guarantee that the fundingmanager actually
+            // holds those funds.
 
             // Calculate rewardamount from assertionId value
             KPI memory resolvedKPI =
@@ -383,7 +376,7 @@ contract LM_PC_KPIRewarder_v1 is
                             resolvedKPI.trancheValues[i] - trancheStart;
 
                         rewardAmount +=
-                            achievedReward * (trancheRewardValue / trancheEnd); // since the trancheRewardValue will be a very big number.
+                            (achievedReward * trancheRewardValue) / trancheEnd;
                     }
                     // else -> no reward
 
@@ -395,7 +388,8 @@ contract LM_PC_KPIRewarder_v1 is
             _setRewards(rewardAmount, 1);
             assertionConfig[assertionId].distributed = true;
         } else {
-            // To keep in line with the upstream contract. If the assertion was false, we delete the corresponding assertionConfig from storage.
+            // To keep in line with the upstream contract. If the assertion was false, we delete the corresponding
+            // assertionConfig from storage.
             delete assertionConfig[assertionId];
         }
 
@@ -404,7 +398,8 @@ contract LM_PC_KPIRewarder_v1 is
     }
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    /// @dev This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries to call it.
+    /// @dev	This OptimisticOracleV3 callback function needs to be defined so the OOv3 doesn't revert when it tries
+    //          to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         // Do nothing
     }

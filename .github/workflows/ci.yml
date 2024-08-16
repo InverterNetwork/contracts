@@ -1,34 +1,148 @@
 name: CI
+
 on:
-  push:
-    branches:
-      - main
-      - dev
-  pull_request:
-    branches:
-      - '*'
+    push:
+        branches:
+            - main
+            - dev
+    pull_request:
+        branches:
+            - "*"
 
 env:
-  FOUNDRY_PROFILE: ci
-  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
+    FOUNDRY_PROFILE: ci
+    SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC }}
 
 jobs:
-  run-ci:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+    compile:
+        runs-on: ubuntu-latest
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
 
-      - name: Install dependencies
-        run: make install
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
 
-      - name: Verify contract sizes
-        run: make check-size
+            - name: Compile contracts
+              run: forge build
 
-      - name: Run scripts
-        run: make testScripts
+            - name: Save compiled artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
 
-      - name: Run tests
-        run: make test
+    check-size:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Check contract sizes
+              run: make check-size
+
+    verify-formatting:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Verify formatting
+              run: forge fmt --check
+
+    verify-scripts:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Run scripts
+              run: make testScripts
+
+    verify-tests:
+        runs-on: ubuntu-latest
+        needs: compile
+        if: always()
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+
+            - name: Install Foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+
+            - name: Download compiled artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: compiled-artifacts
+                  path: |
+                      out/
+                      cache/
+
+            - name: Run tests
+              run: forge test -vvv

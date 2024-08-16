@@ -27,6 +27,9 @@ import {
     FM_Rebasing_v1, IFundingManager_v1
 } from "@fm/rebasing/FM_Rebasing_v1.sol";
 
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+
 contract FM_RebasingV1Test is ModuleTest {
     struct UserDeposits {
         address[] users;
@@ -35,14 +38,15 @@ contract FM_RebasingV1Test is ModuleTest {
 
     // SuT
     FM_Rebasing_v1 fundingManager;
+    ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
 
     mapping(address => bool) _usersCache;
 
     UserDeposits userDeposits;
 
-    /// The deposit cap of underlying tokens. We keep it one factor below the MAX_SUPPLY of the rebasing token.
-    /// Note that this sets the deposit limit for the fundign manager.
-    uint internal constant DEPOSIT_CAP = 100_000_000e18;
+    // This cap is one power of ten lower than the MAX_SUPPLY of
+    // the underlying ElasticReceiptTokenBase, just to be safe.
+    uint internal constant DEPOSIT_CAP = 100_000_000_000_000_000e18;
 
     // Other constants.
     uint private constant ORCHESTRATOR_ID = 1;
@@ -51,21 +55,34 @@ contract FM_RebasingV1Test is ModuleTest {
     // Events
 
     /// @notice Event emitted when a deposit takes place.
-    /// @param _from The address depositing tokens.
-    /// @param _for The address that will receive the receipt tokens.
-    /// @param _amount The amount of tokens deposited.
+    /// @param  _from The address depositing tokens.
+    /// @param  _for The address that will receive the receipt tokens.
+    /// @param  _amount The amount of tokens deposited.
     event Deposit(address indexed _from, address indexed _for, uint _amount);
 
     /// @notice Event emitted when a withdrawal takes place.
-    /// @param _from The address supplying the receipt tokens.
-    /// @param _for The address that will receive the underlying tokens.
-    /// @param _amount The amount of underlying tokens withdrawn.
+    /// @param  _from The address supplying the receipt tokens.
+    /// @param  _for The address that will receive the underlying tokens.
+    /// @param  _amount The amount of underlying tokens withdrawn.
     event Withdrawal(address indexed _from, address indexed _for, uint _amount);
 
     /// @notice Event emitted when a transferal of orchestrator tokens takes place.
-    /// @param _to The address that will receive the underlying tokens.
-    /// @param _amount The amount of underlying tokens transfered.
+    /// @param  _to The address that will receive the underlying tokens.
+    /// @param  _amount The amount of underlying tokens transfered.
     event TransferOrchestratorToken(address indexed _to, uint _amount);
+
+    //--------------------------------------------------------------------------
+    // Errors
+
+    // From ElasticReceiptTokenBase_v1
+    /// @notice Invalid token recipient.
+    error InvalidRecipient();
+
+    /// @notice Invalid token amount.
+    error InvalidAmount();
+
+    /// @notice Maximum supply reached.
+    error MaxSupplyReached();
 
     function setUp() public {
         // because generateValidUserDeposits uses a mechanism to generate random numbers based on blocktimestamp we warp it
@@ -159,9 +176,7 @@ contract FM_RebasingV1Test is ModuleTest {
         amount = bound(amount, 2, DEPOSIT_CAP - 1);
 
         vm.expectRevert(
-            IFundingManager_v1
-                .Module__FundingManager__CannotSelfDeposit
-                .selector
+            IRebasingERC20.Module__RebasingERC20__CannotSelfDeposit.selector
         );
 
         // User deposits tokens.
@@ -181,9 +196,7 @@ contract FM_RebasingV1Test is ModuleTest {
 
         if (amount + 1 > DEPOSIT_CAP) {
             vm.expectRevert(
-                IFundingManager_v1
-                    .Module__FundingManager__CannotSelfDeposit
-                    .selector
+                IRebasingERC20.Module__RebasingERC20__CannotSelfDeposit.selector
             );
         }
         vm.startPrank(user);
@@ -393,15 +406,35 @@ contract FM_RebasingV1Test is ModuleTest {
         // Some time passes, and now half the users deposit their underliers again to continue funding (if they had any funds left).
         for (uint i; i < input.users.length / 2; ++i) {
             if (remainingFunds[i] != 0) {
+                uint actualBalance = _token.balanceOf(input.users[i]);
+                if (actualBalance < remainingFunds[i]) {
+                    // If it's not equal, it can be off by one due to rounding
+                    assertApproxEqAbs(actualBalance, remainingFunds[i], 1);
+                    remainingFunds[i] = actualBalance;
+                }
+
                 vm.prank(input.users[i]);
-                vm.expectEmit();
-                emit Deposit(input.users[i], input.users[i], remainingFunds[i]);
+
+                // We expect a deposit if the user has funds left
+                // otherwise we expect a revert as zero deposits are not allowed
+                if (remainingFunds[i] > 0) {
+                    vm.expectEmit();
+                    emit Deposit(
+                        input.users[i], input.users[i], remainingFunds[i]
+                    );
+                } else {
+                    vm.expectRevert(InvalidAmount.selector);
+                }
 
                 fundingManager.deposit(remainingFunds[i]);
 
-                assertEq(
-                    fundingManager.balanceOf(input.users[i]), remainingFunds[i]
-                );
+                // Verify the balance if the deposit was attempted
+                if (remainingFunds[i] > 0) {
+                    assertEq(
+                        fundingManager.balanceOf(input.users[i]),
+                        remainingFunds[i]
+                    );
+                }
             }
         }
     }
@@ -409,37 +442,42 @@ contract FM_RebasingV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Tests: OnlyOrchestrator Mutating Functions
 
-    function testTransferOrchestratorToken(address to, uint amount) public {}
+    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
+        address to,
+        uint amount
+    ) public {
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
 
-    function testTransferOrchestratorTokenFails(address caller, address to)
-        public
-    {
+        vm.prank(address(_erc20PaymentClientMock));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        fundingManager.transferOrchestratorToken(to, amount);
+    }
+
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
+        address to,
+        uint amount
+    ) public virtual {
         vm.assume(to != address(0) && to != address(fundingManager));
 
-        _token.mint(address(fundingManager), 2);
+        _token.mint(address(fundingManager), amount);
 
-        if (caller != address(_orchestrator)) {
-            vm.expectRevert(
-                IModule_v1.Module__OnlyCallableByOrchestrator.selector
-            );
+        assertEq(_token.balanceOf(to), 0);
+        assertEq(_token.balanceOf(address(fundingManager)), amount);
+
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
+        {
+            vm.expectEmit(true, true, true, true);
+            emit TransferOrchestratorToken(to, amount);
+
+            fundingManager.transferOrchestratorToken(to, amount);
         }
-        vm.prank(caller);
-        fundingManager.transferOrchestratorToken(address(0xBEEF), 1);
+        vm.stopPrank();
 
-        if (to == address(0) || to == address(fundingManager)) {
-            vm.expectRevert(
-                IFundingManager_v1
-                    .Module__FundingManager__InvalidAddress
-                    .selector
-            );
-        }
-
-        vm.prank(address(_orchestrator));
-
-        vm.expectEmit();
-        emit TransferOrchestratorToken(to, 1);
-
-        fundingManager.transferOrchestratorToken(to, 1);
+        assertEq(_token.balanceOf(to), amount);
+        assertEq(_token.balanceOf(address(fundingManager)), 0);
     }
 
     //--------------------------------------------------------------------------

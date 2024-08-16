@@ -18,8 +18,12 @@ import {
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 /**
- * @title   Payment Router
+ * @title   Inverter Payment Router
  *
  * @notice  This module enables pushing payments directly to the Payment Processor.
  *
@@ -38,6 +42,7 @@ contract LM_PC_PaymentRouter_v1 is
     ILM_PC_PaymentRouter_v1,
     ERC20PaymentClientBase_v1
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -52,8 +57,11 @@ contract LM_PC_PaymentRouter_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    // Payment Pusher Role
+    /// @dev	The role that allows the pushing of payments.
     bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER";
+
+    //--------------------------------------------------------------------------
+    // Mutating Functions
 
     /// @inheritdoc ILM_PC_PaymentRouter_v1
     function pushPayment(

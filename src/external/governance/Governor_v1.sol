@@ -14,20 +14,21 @@ import {
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {Initializable} from "@oz-up/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from
     "@oz-up/access/AccessControlUpgradeable.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 /**
- * @title   Governor Contract
+ * @title   Inverter Governor Contract
  *
  * @notice  This contract manages various administrative functions that can be executed only by
- *          specified multisig addresses. It supports upgrades to beacon contracts through
+ *          specified multisig addresses. It supports upgrades to {IInverterBeacon_v1} contracts through
  *          role-based permissions, enabling a timelocked upgrade process and emergency procedures.
  *
- *  @dev    Inherits from {ERC165} for interface detection, {AccessControlUpgradeable} for role-based
+ *  @dev    Inherits from {ERC165Upgradeable} for interface detection, {AccessControlUpgradeable} for role-based
  *          access control, and implements the {IGovernor_v1} interface for governance
  *          functionalities, i.e. setting the fee manager, setting the timelock, upgrading the
  *          beacons and exposing the emergency shutdown.
@@ -38,12 +39,17 @@ import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
  *
  * @author  Inverter Network
  */
-contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
+contract Governor_v1 is
+    ERC165Upgradeable,
+    IGovernor_v1,
+    AccessControlUpgradeable
+{
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(AccessControlUpgradeable, ERC165)
+        override(AccessControlUpgradeable, ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IGovernor_v1).interfaceId
@@ -52,6 +58,23 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     //--------------------------------------------------------------------------
     // Modifier
 
+    /// @dev	Modifier to guarantee function is only callable by the linked {ModuleFactory_v1}.
+    modifier onlyLinkedModuleFactory() {
+        if (_msgSender() != address(moduleFactory)) {
+            revert Governor__OnlyLinkedModuleFactory();
+        }
+        _;
+    }
+
+    /// @dev	Modifier to guarantee linked {IInverterBeacon_v1}s are not empty.
+    modifier linkedBeaconsEmpty() {
+        if (linkedBeacons.length != 0) {
+            revert Governor__LinkedBeaconsNotEmpty();
+        }
+        _;
+    }
+
+    /// @dev	Modifier to guarantee the given address is valid.
     modifier validAddress(address adr) {
         if (adr == address(0)) {
             revert Governor__InvalidAddress(adr);
@@ -59,6 +82,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         _;
     }
 
+    /// @dev	Modifier to guarantee the given timelock period is valid.
     modifier validTimelockPeriod(uint amt) {
         if (amt < 48 hours) {
             revert Governor__InvalidTimelockPeriod(amt);
@@ -66,14 +90,16 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         _;
     }
 
+    /// @dev	Modifier to guarantee the given {IInverterBeacon_v1} is accessible.
     modifier accessibleBeacon(address target) {
-        if (!isBeaconAccessible(target)) {
+        if (!_isBeaconAccessible(target)) {
             revert Governor__BeaconNotAccessible(target);
         }
 
         _;
     }
 
+    /// @dev	Modifier to guarantee only the community or team multisig can call the function.
     modifier onlyCommunityOrTeamMultisig() {
         address sender = _msgSender();
         if (
@@ -85,6 +111,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         _;
     }
 
+    /// @dev	Modifier to check if the upgrade process for the given {IInverterBeacon_v1} is already started.
     modifier upgradeProcessAlreadyStarted(address beacon) {
         // if timelock not active
         if (!beaconTimelock[beacon].timelockActive) {
@@ -93,6 +120,7 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         _;
     }
 
+    /// @dev	Modifier to check if the timelock period for the given {IInverterBeacon_v1} is exceeded.
     modifier timelockPeriodExceeded(address beacon) {
         if (block.timestamp < beaconTimelock[beacon].timelockUntil) {
             revert Governor__TimelockPeriodNotExceeded();
@@ -103,36 +131,52 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev	Role of the community multisig.
     bytes32 public constant COMMUNITY_MULTISIG_ROLE = "0x01";
+    /// @dev	Role of the team multisig.
     bytes32 public constant TEAM_MULTISIG_ROLE = "0x02";
 
+    /// @dev	{FeeManager_v1} contract.
     IFeeManager_v1 private feeManager;
+    /// @dev	{ModuleFactory_v1} contract.
+    IModuleFactory_v1 private moduleFactory;
 
+    /// @dev	Array of {IInverterBeacon_v1}s that are linked to this {Governor_v1},
+    ///         populated via `moduleFactoryInitCallback`.
+    IInverterBeacon_v1[] private linkedBeacons;
+
+    /// @dev    Length of each timelock.
     uint public timelockPeriod;
+    /// @dev    Struct to store timelock information for each {IInverterBeacon_v1}.
+    mapping(address beacon => IGovernor_v1.Timelock timelock) private
+        beaconTimelock;
 
-    mapping(address => IGovernor_v1.Timelock) private beaconTimelock;
-
-    // Storage gap for future upgrades
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Constructor
+
+    constructor() {
+        _disableInitializers();
+    }
 
     //--------------------------------------------------------------------------
     // Initialization
 
-    /// @notice The module's initializer function.
-    /// @param newCommunityMultisig The address of the community multisig
-    /// @param newTeamMultisig The address of the team multisig
-    /// @param newTimelockPeriod The timelock period needed to upgrade a beacon
+    /// @inheritdoc IGovernor_v1
     function init(
-        address newCommunityMultisig,
-        address newTeamMultisig,
-        uint newTimelockPeriod,
-        address initialFeeManager
+        address _communityMultisig,
+        address _teamMultisig,
+        uint _timelockPeriod,
+        address _feeManager,
+        address _moduleFactory
     )
         external
         initializer
-        validAddress(newCommunityMultisig)
-        validAddress(newTeamMultisig)
-        validTimelockPeriod(newTimelockPeriod)
+        validAddress(_communityMultisig)
+        validAddress(_teamMultisig)
+        validTimelockPeriod(_timelockPeriod)
     {
         __AccessControl_init();
 
@@ -146,13 +190,31 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         _setRoleAdmin(TEAM_MULTISIG_ROLE, COMMUNITY_MULTISIG_ROLE);
 
         // grant COMMUNITY_MULTISIG_ROLE to specified address
-        _grantRole(COMMUNITY_MULTISIG_ROLE, newCommunityMultisig);
+        _grantRole(COMMUNITY_MULTISIG_ROLE, _communityMultisig);
         // grant COMMUNITY_MULTISIG_ROLE to specified address
-        _grantRole(TEAM_MULTISIG_ROLE, newTeamMultisig);
+        _grantRole(TEAM_MULTISIG_ROLE, _teamMultisig);
 
-        timelockPeriod = newTimelockPeriod;
+        _setTimelockPeriod(_timelockPeriod);
 
-        _setFeeManager(initialFeeManager);
+        _setFeeManager(_feeManager);
+        _setModuleFactory(_moduleFactory);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function moduleFactoryInitCallback(
+        IInverterBeacon_v1[] calldata registeredBeacons
+    ) external onlyLinkedModuleFactory linkedBeaconsEmpty {
+        // Make sure Beacons are accessible for Governor
+        uint length = registeredBeacons.length;
+        for (uint i = 0; i < length; i++) {
+            if (!_isBeaconAccessible(address(registeredBeacons[i]))) {
+                revert Governor__BeaconNotAccessible(
+                    address(registeredBeacons[i])
+                );
+            }
+        }
+
+        linkedBeacons = registeredBeacons;
     }
 
     //--------------------------------------------------------------------------
@@ -165,6 +227,15 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         returns (Timelock memory)
     {
         return beaconTimelock[beacon];
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function getLinkedBeacons()
+        external
+        view
+        returns (IInverterBeacon_v1[] memory)
+    {
+        return linkedBeacons;
     }
 
     //--------------------------------------------------------------------------
@@ -181,6 +252,19 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
         onlyRole(COMMUNITY_MULTISIG_ROLE)
     {
         _setFeeManager(newFeeManager);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function getModuleFactory() external view returns (address) {
+        return address(moduleFactory);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function setModuleFactory(address newModuleFactory)
+        external
+        onlyRole(COMMUNITY_MULTISIG_ROLE)
+    {
+        _setModuleFactory(newModuleFactory);
     }
 
     /// @inheritdoc IGovernor_v1
@@ -253,10 +337,10 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
 
     /// @inheritdoc IGovernor_v1
     function registerMetadataInModuleFactory(
-        IModuleFactory_v1 moduleFactory,
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
-    ) external onlyCommunityOrTeamMultisig {
+    ) external onlyCommunityOrTeamMultisig accessibleBeacon(address(beacon)) {
+        linkedBeacons.push(beacon);
         moduleFactory.registerMetadata(metadata, beacon);
     }
 
@@ -335,10 +419,8 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     function setTimelockPeriod(uint newTimelockPeriod)
         external
         onlyRole(COMMUNITY_MULTISIG_ROLE)
-        validTimelockPeriod(newTimelockPeriod)
     {
-        timelockPeriod = newTimelockPeriod;
-        emit TimelockPeriodSet(newTimelockPeriod);
+        _setTimelockPeriod(newTimelockPeriod);
     }
 
     //---------------------------
@@ -352,6 +434,18 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     {
         IInverterBeacon_v1(beacon).shutDownImplementation();
         emit BeaconShutdownInitiated(beacon);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function initiateBeaconShutdownForAllLinkedBeacons()
+        external
+        onlyCommunityOrTeamMultisig
+    {
+        uint length = linkedBeacons.length;
+        for (uint i = 0; i < length; i++) {
+            linkedBeacons[i].shutDownImplementation();
+            emit BeaconShutdownInitiated(address(linkedBeacons[i]));
+        }
     }
 
     /// @inheritdoc IGovernor_v1
@@ -409,23 +503,45 @@ contract Governor_v1 is ERC165, IGovernor_v1, AccessControlUpgradeable {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev sets the internal FeeManager address
-    /// @param newFeeManager the address of the new feeManager
+    /// @dev	sets the internal {FeeManager_v1} address.
+    /// @param  newFeeManager the address of the new {FeeManager_v1}.
     function _setFeeManager(address newFeeManager)
         internal
         validAddress(newFeeManager)
     {
         feeManager = IFeeManager_v1(newFeeManager);
+        emit FeeManagerUpdated(newFeeManager);
     }
 
-    /// @dev internal function that checks if target address is a beacon and this contract has the ownership of it
-    function isBeaconAccessible(address target) internal returns (bool) {
-        // check if target is a contract
+    /// @dev	sets the internal timelock period.
+    /// @param  newTimelockPeriod the new timelock period.
+    function _setTimelockPeriod(uint newTimelockPeriod)
+        internal
+        validTimelockPeriod(newTimelockPeriod)
+    {
+        timelockPeriod = newTimelockPeriod;
+        emit TimelockPeriodSet(newTimelockPeriod);
+    }
+
+    /// @dev	sets the internal {ModuleFactory_v1} address.
+    /// @param  newModuleFactory the address of the new {ModuleFactory_v1}.
+    function _setModuleFactory(address newModuleFactory)
+        internal
+        validAddress(newModuleFactory)
+    {
+        moduleFactory = IModuleFactory_v1(newModuleFactory);
+        emit ModuleFactoryUpdated(newModuleFactory);
+    }
+
+    /// @dev	Internal function that checks if target address is a {IInverterBeacon_v1}
+    ///         and this contract has the ownership of it.
+    function _isBeaconAccessible(address target) internal returns (bool) {
+        // Check if target is a contract
         if (target.code.length == 0) {
             return false;
         }
 
-        // Check if target address supports Inverter beacon interface
+        // Check if target address supports Inverter {IInverterBeacon_v1} interface
         (bool success, bytes memory result) = target.call(
             abi.encodeCall(
                 InverterBeacon_v1.supportsInterface,

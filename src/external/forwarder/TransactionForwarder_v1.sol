@@ -11,7 +11,7 @@ import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 import {Context} from "@oz/utils/Context.sol";
 
 /**
- * @title   Meta-Transaction & Multicall Forwarder
+ * @title   Inverter Meta-Transaction & Multicall Forwarder
  *
  * @notice  This contract enables users to interact with smart contracts indirectly through
  *          a trusted forwarder. It supports meta transactions, allowing transactions to be
@@ -19,7 +19,7 @@ import {Context} from "@oz/utils/Context.sol";
  *          transactions (multi-call), facilitating complex, multi-step interactions within a single
  *          transaction.
  *
- * @dev     Integrates {ERC2771Forwarder} and Context to manage and relay meta transactions.
+ * @dev     Integrates {ERC2771Forwarder} and {Context} to manage and relay meta transactions.
  *          It handles nonce management, signature verification, and ensures only trusted calls
  *          are forwarded.
  *
@@ -34,22 +34,16 @@ contract TransactionForwarder_v1 is
     ERC2771Forwarder,
     Context
 {
-    // Storage gap for future upgrades
-    uint[50] private __gap;
-
     //--------------------------------------------------------------------------
-    // Initialization
-
     // Constructor
-    constructor(string memory name) ERC2771Forwarder(name) {}
+
+    /// @notice Initializes the contract with the name of the contract.
+    constructor() ERC2771Forwarder("Inverter TransactionForwarder_v1") {}
 
     //--------------------------------------------------------------------------
     // Metatransaction Helper Functions
 
-    /// @notice Creates a digest for the given ForwardRequestData
-    /// @dev The signature field of the given ForwardRequestData can be empty
-    /// @param req The ForwardRequest you want to get the digest from
-    /// @return digest The digest needed to create a signature for the request
+    /// @inheritdoc ITransactionForwarder_v1
     function createDigest(ForwardRequestData memory req)
         external
         view
@@ -81,7 +75,7 @@ contract TransactionForwarder_v1 is
             }
 
             // Add call target to the end of the calldata
-            // This will be read by the ERC2771Context of the target contract
+            // This will be read by the {ERC2771Context} of the target contract
             data = abi.encodePacked(calli.callData, _msgSender());
 
             // Do the call
@@ -100,6 +94,9 @@ contract TransactionForwarder_v1 is
     //--------------------------------------------------------------------------
     // Internal
 
+    /// @notice Returns the digest for the given `ForwardRequestData`.
+    /// @param  req The ForwardRequest you want to get the digest from.
+    /// @return digest The digest needed to create a signature for the request.
     function _getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
         internal
         view
@@ -119,7 +116,7 @@ contract TransactionForwarder_v1 is
         );
     }
 
-    // Copied from the ERC2771Forwarder as it isnt declared internally
+    // Copied from the {ERC2771Forwarder} as it isnt declared internally
     // Added an underscore because it can not be overwritten
     function __isTrustedByTarget(address target) private view returns (bool) {
         bytes memory encodedParams =

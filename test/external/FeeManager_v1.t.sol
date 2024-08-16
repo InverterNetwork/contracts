@@ -9,6 +9,9 @@ import {FeeManager_v1, IFeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
+// External Dependencies
+import {Clones} from "@oz/proxy/Clones.sol";
+
 contract FeeManagerTest is Test {
     // SuT
     FeeManager_v1 feeMan;
@@ -47,7 +50,9 @@ contract FeeManagerTest is Test {
     );
 
     function setUp() public {
-        feeMan = new FeeManager_v1();
+        address impl = address(new FeeManager_v1());
+        feeMan = FeeManager_v1(Clones.clone(impl));
+
         feeMan.init(
             address(this),
             defaultProtocolTreasury,
@@ -125,7 +130,8 @@ contract FeeManagerTest is Test {
             defaultIssuanceFee
         );
 
-        feeMan = new FeeManager_v1();
+        address impl = address(new FeeManager_v1());
+        feeMan = FeeManager_v1(Clones.clone(impl));
         // validAddress(owner)
         vm.expectRevert(
             abi.encodeWithSelector(

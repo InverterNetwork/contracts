@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // SuT
-import {LinkedIdList} from "src/common/LinkedIdList.sol";
+import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 contract LinkedIdListTest is Test {
     using LinkedIdList for LinkedIdList.List;

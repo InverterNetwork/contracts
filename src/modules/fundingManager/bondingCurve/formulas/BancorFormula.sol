@@ -15,6 +15,18 @@ import {Utils} from "@fm/bondingCurve/formulas/Utils.sol";
 contract BancorFormula is IBancorFormula, Utils, ERC165 {
     using SafeMath for uint;
 
+    /// @inheritdoc ERC165
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
+        return interfaceId == type(IBancorFormula).interfaceId
+            || super.supportsInterface(interfaceId);
+    }
+
     string public version = "0.3";
 
     uint private constant ONE = 1;

@@ -9,11 +9,7 @@ import {
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
-import {
-    Module_v1,
-    ERC165,
-    ContextUpgradeable
-} from "src/modules/base/Module_v1.sol";
+import {Module_v1, ContextUpgradeable} from "src/modules/base/Module_v1.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -21,8 +17,12 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 /**
- * @title   ERC20 Payment Client Base
+ * @title   Inverter ERC20 Payment Client Base
  *
  * @notice  Enables modules within the Inverter Network to create and manage payment orders
  *          that can be processed by authorized payment processors, ensuring efficient
@@ -30,7 +30,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *
  * @dev     Utilizes {SafeERC20} for token operations and integrates with {IPaymentProcessor_v1}
  *          to handle token payments. This abstract contract must be extended by modules
- *          that manage ERC20 payment orders, supporting complex payment scenarios.
+ *          that manage {ERC20} payment orders, supporting complex payment scenarios.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
@@ -42,6 +42,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     IERC20PaymentClientBase_v1,
     Module_v1
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -57,16 +58,19 @@ abstract contract ERC20PaymentClientBase_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Modifier to guarantee the recipient is valid.
     modifier validRecipient(address recipient) {
         _ensureValidRecipient(recipient);
         _;
     }
 
+    /// @dev	Modifier to guarantee the amount is valid.
     modifier validAmount(uint amount) {
         _ensureValidAmount(amount);
         _;
     }
 
+    /// @dev	Modifier to guarantee the payment order is valid.
     modifier validPaymentOrder(PaymentOrder memory order) {
         _ensureValidPaymentOrder(order);
         _;
@@ -75,21 +79,21 @@ abstract contract ERC20PaymentClientBase_v1 is
     //--------------------------------------------------------------------------
     // State
 
-    /// @dev The list of oustanding orders.
-    /// @dev Emptied whenever orders are collected.
+    /// @dev	The list of oustanding orders.
+    /// @dev	Emptied whenever orders are collected.
     PaymentOrder[] internal _orders;
 
-    /// @dev The current cumulative amount of tokens outstanding.
+    /// @dev	The current cumulative amount of tokens outstanding.
     mapping(address => uint) internal _outstandingTokenAmounts;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
 
-    /// @dev Adds a new {PaymentOrder} to the list of outstanding orders.
-    /// @param order The new payment order.
+    /// @dev	Adds a new {PaymentOrder} to the list of outstanding orders.
+    /// @param  order The new payment order.
     function _addPaymentOrder(PaymentOrder memory order)
         internal
         virtual
@@ -106,9 +110,9 @@ abstract contract ERC20PaymentClientBase_v1 is
         );
     }
 
-    /// @dev Adds a set of new {PaymentOrder}s to the list of outstanding
-    ///      orders.
-    /// @param orders The list of new Payment Orders.
+    /// @dev	Adds a set of new {PaymentOrder}s to the list of outstanding
+    ///         orders.
+    /// @param  orders The list of new Payment Orders.
     function _addPaymentOrders(PaymentOrder[] memory orders) internal virtual {
         uint orderAmount = orders.length;
 
@@ -193,7 +197,9 @@ abstract contract ERC20PaymentClientBase_v1 is
             _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
 
             // Ensure that the Client will have sufficient funds.
-            // Note that while we also control when adding a payment order, more complex payment systems with f.ex. deferred payments may not guarantee that having enough balance available when adding the order means it'll have enough balance when the order is processed.
+            // Note that while we also control when adding a payment order, more complex payment systems with
+            // f.ex. deferred payments may not guarantee that having enough balance available when adding the order
+            // means it'll have enough balance when the order is processed.
             _ensureTokenBalance(tokens[i]);
         }
 
@@ -217,34 +223,43 @@ abstract contract ERC20PaymentClientBase_v1 is
     //--------------------------------------------------------------------------
     // Private Functions
 
+    /// @dev	Ensures the recipient is valid.
+    /// @param  recipient The recipient to check.
     function _ensureValidRecipient(address recipient) private view {
         if (recipient == address(0) || recipient == address(this)) {
             revert Module__ERC20PaymentClientBase__InvalidRecipient();
         }
     }
 
+    /// @dev	Ensures the amount is valid.
+    /// @param  amount The amount to check.
     function _ensureValidAmount(uint amount) private pure {
         if (amount == 0) {
             revert Module__ERC20PaymentClientBase__InvalidAmount();
         }
     }
 
+    /// @dev	Ensures the token is valid.
+    /// @param  token The token to check.
     function _ensureValidToken(address token) private pure {
         if (token == address(0)) {
             revert Module__ERC20PaymentClientBase__InvalidToken();
         }
     }
 
-    function _ensureValidPaymentOrder(PaymentOrder memory order) private view {
-        _ensureValidRecipient(order.recipient);
-        _ensureValidToken(order.paymentToken);
-        _ensureValidAmount(order.amount);
+    /// @dev	Ensures the payment order is valid.
+    /// @param  order The payment order to check.
+    function _ensureValidPaymentOrder(PaymentOrder memory order) private {
+        if (!(orchestrator().paymentProcessor().validPaymentOrder(order))) {
+            revert Module__ERC20PaymentClientBase__InvalidPaymentOrder();
+        }
     }
 
     //--------------------------------------------------------------------------
     // {ERC20PaymentClientBase_v1} Function Implementations
 
-    /// @dev Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to address(this). If the token is not the FundingManager token, it will only check if the local balance is sufficient.
+    /// @dev	Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the
+    ///         FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to
     function _ensureTokenBalance(address token) internal virtual {
         uint amount = _outstandingTokenAmounts[token];
         uint currentFunds = IERC20(token).balanceOf(address(this));
@@ -255,28 +270,19 @@ abstract contract ERC20PaymentClientBase_v1 is
             if (
                 token == address(__Module_orchestrator.fundingManager().token())
             ) {
-                // Trigger callback from orchestrator to transfer tokens
-                // to address(this).
-                bool ok;
-                (ok, /*returnData*/ ) = __Module_orchestrator
-                    .executeTxFromModule(
-                    address(__Module_orchestrator.fundingManager()),
-                    abi.encodeCall(
-                        IFundingManager_v1.transferOrchestratorToken,
-                        (address(this), amount - currentFunds)
-                    )
-                );
+                // Get FundingManager address from orchestrator to transfer tokens
+                // to address(this). Fails on ERC20 level if insufficient balance
 
-                if (!ok) {
-                    revert Module__ERC20PaymentClientBase__TokenTransferFailed();
-                }
+                __Module_orchestrator.fundingManager().transferOrchestratorToken(
+                    address(this), (amount - currentFunds)
+                );
             } else {
                 revert Module__ERC20PaymentClientBase__InsufficientFunds(token);
             }
         }
     }
 
-    /// @dev Ensures `amount` of token allowance for payment processor(s).
+    /// @dev	Ensures `amount` of token allowance for payment processor(s).
     function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address token)
         internal
         virtual
@@ -286,7 +292,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         );
     }
 
-    /// @dev Returns whether address `who` is an authorized payment processor.
+    /// @dev	Returns whether address `who` is an authorized payment processor.
     function _isAuthorizedPaymentProcessor(IPaymentProcessor_v1 who)
         internal
         view

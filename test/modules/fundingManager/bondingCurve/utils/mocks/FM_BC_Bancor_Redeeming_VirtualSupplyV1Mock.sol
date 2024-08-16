@@ -55,6 +55,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         _setIssuanceToken(_newIssuanceToken);
     }
 
+    function call_setVirtualIssuanceSupply(uint _newSupply) external {
+        _setVirtualIssuanceSupply(_newSupply);
+    }
+
     function call_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
@@ -63,10 +67,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
         return FM_BC_Tools._convertAmountToRequiredDecimal(
             _amount, _tokenDecimals, _requiredDecimals
         );
-    }
-
-    function call_mintIssuanceToken(uint _amount, address _receiver) external {
-        _mint(_receiver, _amount);
     }
 
     // Note: this function returns the virtual issuance supply in the same format it will be fed to the Bancor formula
@@ -102,5 +102,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     {
         return
             _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
+    }
+
+    function setProjectCollateralFeeCollectedHelper(uint _amount) external {
+        projectCollateralFeeCollected = _amount;
     }
 }

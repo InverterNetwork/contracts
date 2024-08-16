@@ -75,12 +75,29 @@ contract E2ETest is E2EModuleRegistry {
     FeeManager_v1 feeManager;
 
     function setUp() public virtual {
-        // Basic Setup function. This function es overriden and expanded by child E2E tests
+        // Basic Setup function. This function es overridden and expanded by child E2E tests
 
-        feeManager = new FeeManager_v1();
+        // Deploy a reverter used to enable proper pausing
+        reverter = new InverterReverter_v1();
+
+        // Deploy a forwarder used to enable metatransactions
+        forwarder = new TransactionForwarder_v1();
+
+        // Deploy the Fee Manager
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    communityMultisig, // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
+
         feeManager.init(address(this), treasury, 0, 0);
 
         // Deploy Governance Contract
+
         gov = Governor_v1(
             address(
                 new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
@@ -91,10 +108,40 @@ contract E2ETest is E2EModuleRegistry {
             )
         );
 
-        gov.init(communityMultisig, teamMultisig, 1 weeks, address(feeManager));
+        // Deploy ModuleFactory_v1 implementation.
+        ModuleFactory_v1 moduleFactoryImpl =
+            new ModuleFactory_v1(address(reverter), address(forwarder));
 
-        vm.prank(communityMultisig);
-        gov.setFeeManager(address(feeManager));
+        InverterBeacon_v1 moduleFactoryBeacon = new InverterBeacon_v1(
+            address(reverter), address(gov), 1, address(moduleFactoryImpl), 0, 0
+        );
+
+        moduleFactory = ModuleFactory_v1(
+            address(
+                new InverterBeaconProxy_v1(
+                    InverterBeacon_v1(moduleFactoryBeacon)
+                )
+            )
+        );
+
+        // Initialize the Governor first, as this
+        // needs to store the moduleFactory in order for the
+        // callback mechanism to work.
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            1 weeks,
+            address(feeManager),
+            address(moduleFactory)
+        );
+
+        // Now we can initialize the module factory,
+        // as the governor knows about it.
+        moduleFactory.init(
+            address(gov),
+            new IModule_v1.Metadata[](0),
+            new IInverterBeacon_v1[](0)
+        );
 
         // Deploy a Mock funding token for testing.
 
@@ -103,26 +150,11 @@ contract E2ETest is E2EModuleRegistry {
 
         token = new ERC20Mock("Mock", "MOCK");
 
-        // Deploy a reverter used to enable proper pausing
-        reverter = new InverterReverter_v1();
-
-        // Deploy a forwarder used to enable metatransactions
-        forwarder = new TransactionForwarder_v1("TransactionForwarder_v1");
-
         // Deploy Orchestrator_v1 implementation.
         orchestratorImpl = new Orchestrator_v1(address(forwarder));
 
         orchestratorBeacon = new InverterBeacon_v1(
             address(reverter), address(gov), 1, address(orchestratorImpl), 0, 0
-        ); //@note This needs to be updated to contain the correct versions / Think of concept for the Orchestrator Version
-
-        // Deploy Factories.
-        moduleFactory =
-            new ModuleFactory_v1(address(reverter), address(forwarder));
-        moduleFactory.init(
-            address(gov),
-            new IModule_v1.Metadata[](0),
-            new IInverterBeacon_v1[](0)
         );
 
         // Deploy OrchestratorFactory_v1 implementation.
@@ -152,7 +184,7 @@ contract E2ETest is E2EModuleRegistry {
     }
 
     // Creates an orchestrator with the supplied config and the stored module config.
-    // Can be overriden, shouldn't need to
+    // Can be overridden, shouldn't need to
     // NOTE: It's important to send the module configurations in order, since it will copy from the array.
     // The order should be:
     //      moduleConfigurations[0]  => FundingManager
@@ -174,7 +206,6 @@ contract E2ETest is E2EModuleRegistry {
         }
 
         // Create orchestrator
-
         return orchestratorFactory.createOrchestrator(
             _config,
             _moduleConfigurations[0],

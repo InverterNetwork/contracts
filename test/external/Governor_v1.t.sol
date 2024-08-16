@@ -12,15 +12,27 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Internal Dependencies
+import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {
+    IModuleFactory_v1,
+    IModule_v1
+} from "src/factories/interfaces/IModuleFactory_v1.sol";
+
 import {InverterBeaconV1OwnableMock} from
     "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
+import {ModuleFactoryV1Mock} from
+    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 
 // External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
+import {Clones} from "@oz/proxy/Clones.sol";
+
 contract GovernorV1Test is Test {
     // SuT
     Governor_v1 gov;
+
+    ModuleFactoryV1Mock modFactory;
 
     InverterBeaconV1OwnableMock ownedBeaconMock;
     InverterBeaconV1OwnableMock unownedBeaconMock;
@@ -46,6 +58,8 @@ contract GovernorV1Test is Test {
     );
     event BeaconUpgradedCanceled(address beacon);
     event TimelockPeriodSet(uint newTimelockPeriod);
+    event FeeManagerUpdated(address feeManager);
+    event ModuleFactoryUpdated(address moduleFactory);
     event BeaconShutdownInitiated(address beacon);
     event BeaconForcefullyUpgradedAndImplementationRestarted(
         address beacon,
@@ -57,12 +71,16 @@ contract GovernorV1Test is Test {
     event OwnershipAccepted(address adr);
 
     function setUp() public {
-        gov = new Governor_v1();
+        modFactory = new ModuleFactoryV1Mock();
+
+        address impl = address(new Governor_v1());
+        gov = Governor_v1(Clones.clone(impl));
         gov.init(
             communityMultisig,
             teamMultisig,
             timelockPeriod,
-            address(makeAddr("FeeManager"))
+            address(makeAddr("FeeManager")),
+            address(address(modFactory))
         );
 
         // Create beacon owned by governor
@@ -82,6 +100,39 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: Modifier
 
+    function testOnlyLinkedModuleFactory(address adr) public {
+        if (adr != address(modFactory)) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IGovernor_v1.Governor__OnlyLinkedModuleFactory.selector
+                )
+            );
+        }
+
+        IInverterBeacon_v1[] memory beacons = new IInverterBeacon_v1[](0);
+
+        vm.prank(adr);
+        gov.moduleFactoryInitCallback(beacons);
+    }
+
+    function testLinkedBeaconsEmpty(bool empty) public {
+        IModule_v1.Metadata memory metadata;
+        if (!empty) {
+            vm.prank(communityMultisig);
+            gov.registerMetadataInModuleFactory(metadata, ownedBeaconMock);
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IGovernor_v1.Governor__LinkedBeaconsNotEmpty.selector
+                )
+            );
+        }
+
+        IInverterBeacon_v1[] memory beacons = new IInverterBeacon_v1[](0);
+
+        vm.prank(address(modFactory));
+        gov.moduleFactoryInitCallback(beacons);
+    }
+
     function testValidAddress(address adr) public {
         if (adr == address(0)) {
             vm.expectRevert(
@@ -92,7 +143,7 @@ contract GovernorV1Test is Test {
         }
 
         vm.prank(communityMultisig);
-        gov.setFeeManager(adr);
+        gov.setModuleFactory(adr);
     }
 
     function testValidTimelockPeriod(uint amt) public {
@@ -245,10 +296,12 @@ contract GovernorV1Test is Test {
             communityMultisig,
             teamMultisig,
             timelockPeriod,
-            makeAddr("FeeManager")
+            makeAddr("FeeManager"),
+            address(modFactory)
         );
 
-        gov = new Governor_v1();
+        address impl = address(new Governor_v1());
+        gov = Governor_v1(Clones.clone(impl));
         // validAddress(newCommunityMultisig)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -256,7 +309,11 @@ contract GovernorV1Test is Test {
             )
         );
         gov.init(
-            address(0), teamMultisig, timelockPeriod, makeAddr("FeeManager")
+            address(0),
+            teamMultisig,
+            timelockPeriod,
+            makeAddr("FeeManager"),
+            address(modFactory)
         );
 
         // validAddress(newTeamMultisig)
@@ -269,7 +326,8 @@ contract GovernorV1Test is Test {
             communityMultisig,
             address(0),
             timelockPeriod,
-            makeAddr("FeeManager")
+            makeAddr("FeeManager"),
+            address(modFactory)
         );
 
         // validTimelockPeriod(newTimelockPeriod)
@@ -278,7 +336,13 @@ contract GovernorV1Test is Test {
                 IGovernor_v1.Governor__InvalidTimelockPeriod.selector, 0
             )
         );
-        gov.init(communityMultisig, teamMultisig, 0, makeAddr("FeeManager"));
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            0,
+            makeAddr("FeeManager"),
+            address(modFactory)
+        );
 
         // validAddress(newFeeManager)
         vm.expectRevert(
@@ -287,7 +351,95 @@ contract GovernorV1Test is Test {
             )
         );
 
-        gov.init(communityMultisig, teamMultisig, timelockPeriod, address(0));
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            address(0),
+            address(modFactory)
+        );
+
+        // validAddress(_feeManager)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__InvalidAddress.selector, address(0)
+            )
+        );
+
+        gov.init(
+            communityMultisig,
+            teamMultisig,
+            timelockPeriod,
+            makeAddr("FeeManager"),
+            address(0)
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: moduleFactoryInitCallback
+
+    function testModuleFactoryInitCallback(uint beaconAmount) public {
+        vm.assume(beaconAmount < 1000);
+
+        IInverterBeacon_v1[] memory newBeacons =
+            new IInverterBeacon_v1[](beaconAmount);
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            newBeacons[i] = IInverterBeacon_v1(
+                address(new InverterBeaconV1OwnableMock(address(gov)))
+            );
+        }
+
+        vm.prank(address(modFactory));
+        gov.moduleFactoryInitCallback(newBeacons);
+
+        IInverterBeacon_v1[] memory linkedBeacons = gov.getLinkedBeacons();
+        assertEq(newBeacons.length, linkedBeacons.length);
+
+        for (uint i = 0; i < linkedBeacons.length; i++) {
+            assertEq(address(newBeacons[i]), address(linkedBeacons[i]));
+        }
+    }
+
+    function testModuleFactoryInitCallbackFailsForIncorrectBeacon() public {
+        IInverterBeacon_v1[] memory newBeacons = new IInverterBeacon_v1[](1);
+        newBeacons[0] = unownedBeaconMock;
+
+        // _isBeaconAccessible
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__BeaconNotAccessible.selector,
+                address(unownedBeaconMock)
+            )
+        );
+
+        vm.prank(address(modFactory));
+        gov.moduleFactoryInitCallback(newBeacons);
+    }
+
+    function testModuleFactoryInitCallbackModifierInPosition() public {
+        IInverterBeacon_v1[] memory newBeacons = new IInverterBeacon_v1[](0);
+
+        // onlyLinkedModuleFactory
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__OnlyLinkedModuleFactory.selector
+            )
+        );
+
+        gov.moduleFactoryInitCallback(newBeacons);
+
+        // linkedBeaconsEmpty
+        IModule_v1.Metadata memory metadata;
+        vm.prank(communityMultisig);
+        gov.registerMetadataInModuleFactory(metadata, ownedBeaconMock);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__LinkedBeaconsNotEmpty.selector
+            )
+        );
+        vm.prank(address(modFactory));
+        gov.moduleFactoryInitCallback(newBeacons);
     }
 
     //--------------------------------------------------------------------------
@@ -305,6 +457,13 @@ contract GovernorV1Test is Test {
     function testGetFeeManager() public view {
         // Tivial Test
         gov.getFeeManager();
+    }
+
+    function testSetFeeManager() public {
+        vm.prank(address(communityMultisig));
+        vm.expectEmit(true, true, true, true);
+        emit FeeManagerUpdated(address(0x1));
+        gov.setFeeManager(address(0x1));
     }
 
     function testSetFeeManagerModifierInPosition() public {
@@ -326,6 +485,34 @@ contract GovernorV1Test is Test {
         );
         vm.prank(address(communityMultisig));
         gov.setFeeManager(address(0));
+    }
+
+    function testSetModuleFactoryModifierInPosition() public {
+        // onlyRole(COMMUNITY_MULTISIG_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                gov.COMMUNITY_MULTISIG_ROLE()
+            )
+        );
+        gov.setModuleFactory(address(0x1));
+
+        // validAddress(newModuleFactory)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__InvalidAddress.selector, address(0)
+            )
+        );
+        vm.prank(address(communityMultisig));
+        gov.setModuleFactory(address(0));
+    }
+
+    function testSetModuleFactory() public {
+        vm.prank(address(communityMultisig));
+        vm.expectEmit(true, true, true, true);
+        emit ModuleFactoryUpdated(address(0x1));
+        gov.setModuleFactory(address(0x1));
     }
 
     function testSetFeeManagerMaxFeeModifierInPosition() public {
@@ -413,6 +600,49 @@ contract GovernorV1Test is Test {
         );
         gov.setFeeManagerIssuanceWorkflowFee(
             address(0x1), address(0x1), bytes4(""), true, 1
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // Test: Factory Functions
+
+    function testRegisterMetadataInModuleFactory() public {
+        IModule_v1.Metadata memory metadata;
+
+        vm.prank(communityMultisig);
+        gov.registerMetadataInModuleFactory(
+            metadata, IInverterBeacon_v1(ownedBeaconMock)
+        );
+
+        // Check if beacon is in linked beacon list
+        assertEq(address(ownedBeaconMock), address(gov.getLinkedBeacons()[0]));
+
+        // expect that the target function is called
+        assertEq(modFactory.howManyCalls(), 1);
+    }
+
+    function testRegisterMetadataInModuleFactoryModifierInPosition() public {
+        // onlyCommunityOrTeamMultisig
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__OnlyCommunityOrTeamMultisig.selector
+            )
+        );
+
+        IModule_v1.Metadata memory metadata;
+        gov.registerMetadataInModuleFactory(
+            metadata, IInverterBeacon_v1(ownedBeaconMock)
+        );
+
+        // accessibleBeacon(beacon)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__BeaconNotAccessible.selector, address(0)
+            )
+        );
+        vm.prank(communityMultisig);
+        gov.registerMetadataInModuleFactory(
+            metadata, IInverterBeacon_v1(address(0))
         );
     }
 
@@ -611,6 +841,13 @@ contract GovernorV1Test is Test {
         gov.cancelUpgrade(address(ownedBeaconMock));
     }
 
+    function testSetTimelockPeriod() public {
+        vm.prank(address(communityMultisig));
+        vm.expectEmit(true, true, true, true);
+        emit TimelockPeriodSet(2 days);
+        gov.setTimelockPeriod(2 days);
+    }
+
     function testSetTimelockPeriodModifierInPosition() public {
         // onlyRole(COMMUNITY_MULTISIG_ROLE)
         vm.expectRevert(
@@ -664,6 +901,55 @@ contract GovernorV1Test is Test {
         );
         vm.prank(communityMultisig);
         gov.initiateBeaconShutdown(address(unownedBeaconMock));
+    }
+
+    function testInitiateBeaconShutdownForAllLinkedBeacons(uint beaconAmount)
+        public
+    {
+        vm.assume(beaconAmount < 1000);
+
+        // Create beacons
+        IInverterBeacon_v1[] memory newBeacons =
+            new IInverterBeacon_v1[](beaconAmount);
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            newBeacons[i] = IInverterBeacon_v1(
+                address(new InverterBeaconV1OwnableMock(address(gov)))
+            );
+        }
+
+        // Fill Governor with beacons
+        vm.prank(address(modFactory));
+        gov.moduleFactoryInitCallback(newBeacons);
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            vm.expectEmit(true, true, true, true);
+            emit BeaconShutdownInitiated(address(newBeacons[i]));
+        }
+
+        vm.prank(address(communityMultisig));
+        gov.initiateBeaconShutdownForAllLinkedBeacons();
+
+        for (uint i = 0; i < beaconAmount; i++) {
+            // Make sure ownedBeaconMock got called
+            assertEq(
+                InverterBeaconV1OwnableMock(address(newBeacons[i]))
+                    .functionCalled(),
+                1
+            );
+        }
+    }
+
+    function testInitiateBeaconShutdownForAllLinkedBeaconsModifierInPosition()
+        public
+    {
+        // onlyCommunityOrTeamMultisig
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__OnlyCommunityOrTeamMultisig.selector
+            )
+        );
+        gov.initiateBeaconShutdownForAllLinkedBeacons();
     }
 
     function testForceUpgradeBeaconAndRestartImplementation() public {
@@ -762,7 +1048,7 @@ contract GovernorV1Test is Test {
     //--------------------------------------------------------------------------
     // Test: Ownable2Step Functions
 
-    function testAcceptOwnership(bytes32 _salt) public {
+    function testAcceptOwnership() public {
         // onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(

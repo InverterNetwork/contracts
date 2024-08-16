@@ -101,46 +101,9 @@ testE2e: # Run e2e test suite
 .PHONY: testScripts
 testScripts: # Run e2e test suite
 	@echo "### Run scripts"
- 	
-	## external
-	@forge script script/external/DeployGovernor_v1.s.sol
-	@forge script script/external/DeployTransactionForwarder_v1.s.sol
-	@forge script script/external/DeployFeeManager_v1.s.sol
 
-	## factories
-	@forge script script/factories/DeployModuleFactory_v1.s.sol
-	
-	## @note Because the Beacon doesnt allow to be passed addresses without implementations we cant test the script properly anymore without breaking the script testing structure we used up until now.
-	## @forge script script/factories/DeployOrchestratorFactory_v1.s.sol
-	
-	## modules
-
-	## fundingManager
-	@forge script script/modules/fundingManager/DeployFM_BC_Bancor_Redeeming_VirtualSupply_v1.s.sol
-	@forge script script/modules/fundingManager/DeployFM_Rebasing_v1.s.sol
-	
-	## authorizer
-	@forge script script/modules/authorizer/DeployAUT_Role_v1.s.sol
-	@forge script script/modules/authorizer/DeployAUT_TokenGated_Role_v1.s.sol
-	@forge script script/modules/authorizer/extensions/DeployAUT_EXT_VotingRoles_v1.s.sol
-
-	## logicModule
-	@forge script script/modules/logicModule/DeployLM_PC_Bounties_v1.s.sol
-	@forge script script/modules/logicModule/DeployLM_PC_RecurringPayments_v1.s.sol
-
-	## paymentProcessor
-	@forge script script/modules/paymentProcessor/DeployPP_Simple_v1.s.sol
-	@forge script script/modules/paymentProcessor/DeployPP_Streaming_v1.s.sol
-
-	
-	## orchestrator
-	@forge script script/orchestrator/DeployOrchestrator_v1.s.sol
-
-	## setup
-	@forge script script/setup/SetupToyOrchestratorScript.s.sol
-
-	## Deployment
-	@forge script script/deployment/DeploymentScript.s.sol
+	@echo "Run TestnetDeploymentScript"
+	@forge script script/deploymentScript/TestnetDeploymentScript.s.sol:TestnetDeploymentScript 
 
 # -----------------------------------------------------------------------------
 # Static Analyzers
@@ -148,12 +111,13 @@ testScripts: # Run e2e test suite
 .PHONY: analyze-slither
 analyze-slither: # Run slither analyzer against project (requires solc-select)
 	@forge build --extra-output abi --extra-output userdoc --extra-output devdoc --extra-output evm.methodIdentifiers
-	@solc-select use 0.8.19
-	@slither --ignore-compile src/common   || \
-	slither --ignore-compile src/factories || \
-	slither --ignore-compile src/generated || \
-	slither --ignore-compile src/modules   || \
-	slither --ignore-compile src/proposal
+	@solc-select use 0.8.23
+	@slither --ignore-compile src/common      || \
+	slither --ignore-compile src/external     || \
+	slither --ignore-compile src/factories    || \
+	slither --ignore-compile src/modules      || \
+	slither --ignore-compile src/orchestrator || \
+	slither --ignore-compile src/proxies
 
 .PHONY: analyze-c4udit
 analyze-c4udit: # Run c4udit analyzer against project

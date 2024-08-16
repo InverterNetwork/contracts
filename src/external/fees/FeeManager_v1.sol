@@ -5,17 +5,18 @@ pragma solidity 0.8.23;
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {Ownable2StepUpgradeable} from
     "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Fee Manager Contract
+ * @title   Inverter Fee Manager Contract
  *
  * @notice  This contract manages the different fees possible on a protocol level.
  *          The different fees can be fetched publicly and be set by the owner of the contract.
  *
- *  @dev    Inherits from {ERC165} for interface detection, {Ownable2StepUpgradeable} for owner-based
+ *  @dev    Inherits from {ERC165Upgradeable} for interface detection, {Ownable2StepUpgradeable} for owner-based
  *          access control, and implements the {IFeeManager_v1} interface.
  *
  * @custom:security-contact security@inverter.network
@@ -24,21 +25,27 @@ import {Ownable2StepUpgradeable} from
  *
  * @author  Inverter Network
  */
-contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
+contract FeeManager_v1 is
+    ERC165Upgradeable,
+    IFeeManager_v1,
+    Ownable2StepUpgradeable
+{
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IFeeManager_v1).interfaceId
-            || ERC165.supportsInterface(interfaceId);
+            || ERC165Upgradeable.supportsInterface(interfaceId);
     }
 
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Modififer to check if the given address is valid.
     modifier validAddress(address adr) {
         if (adr == address(0)) {
             revert FeeManager__InvalidAddress();
@@ -46,6 +53,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         _;
     }
 
+    /// @dev	Modififer to check if the given fee is valid.
     modifier validFee(uint fee) {
         if (fee > maxFee) {
             revert FeeManager__InvalidFee();
@@ -53,6 +61,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         _;
     }
 
+    /// @dev	Modififer to check if the given max fee is valid.
     modifier validMaxFee(uint max) {
         if (max > BPS) {
             revert FeeManager__InvalidMaxFee();
@@ -63,27 +72,33 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Base Points used for percentage calculation. This value represents 100%
+    /// @dev	Base Points used for percentage calculation. This value represents 100%.
     uint public constant BPS = 10_000;
-    /// @dev The maximum fee percentage amount that can be set. Based on the BPS.
+    /// @dev	The maximum fee percentage amount that can be set. Based on the BPS.
     uint public maxFee;
-
+    /// @dev	The default protocol treasury address.
     address internal defaultProtocolTreasury;
-
-    // Orchestrator => treasury
+    /// @dev	The workflow treasury addres. Orchestrator => treasury
     mapping(address => address) internal workflowTreasuries;
-
-    // default fees that apply unless workflow
-    // specific fees are set
+    /// @dev	The default issuance fee percentage amount that apply unless workflow
+    ///         specific fees are set.
     uint internal defaultIssuanceFee;
+    /// @dev	The default collateral fee percentage amount that apply unless workflow
+    ///         specific fees are set.
     uint internal defaultCollateralFee;
-
-    // orchestrator => hash(functionSelector + module address) => feeStruct
+    /// @dev    The workflow issuance fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowIssuanceFees;
+    /// @dev    The workflow collateral fee. Orchestrator => hash(functionSelector + module address) => feeStruct.
     mapping(address => mapping(bytes32 => Fee)) internal workflowCollateralFees;
-
-    // Storage gap for future upgrades
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Constructor
+
+    constructor() {
+        _disableInitializers();
+    }
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -102,15 +117,15 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         __Ownable_init(owner);
 
         // initial max fee is 10%
-        maxFee = 1000;
+        _setMaxFee(1000);
 
         if (_defaultCollateralFee > maxFee || _defaultIssuanceFee > maxFee) {
             revert FeeManager__InvalidFee();
         }
 
-        defaultProtocolTreasury = _defaultProtocolTreasury;
-        defaultCollateralFee = _defaultCollateralFee;
-        defaultIssuanceFee = _defaultIssuanceFee;
+        _setDefaultProtocolTreasury(_defaultProtocolTreasury);
+        _setDefaultCollateralFee(_defaultCollateralFee);
+        _setDefaultIssuanceFee(_defaultIssuanceFee);
     }
 
     //--------------------------------------------------------------------------
@@ -158,12 +173,13 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         bytes4 functionSelector
     ) public view returns (uint fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         // In case workflow fee is set return it
         if (workflowCollateralFees[workflow][moduleFunctionHash].set) {
             return workflowCollateralFees[workflow][moduleFunctionHash].value;
-        } // otherwise return default fee
+        }
+        // otherwise return default fee
         else {
             return defaultCollateralFee;
         }
@@ -176,12 +192,13 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         bytes4 functionSelector
     ) public view returns (uint fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         // In case workflow fee is set return it
         if (workflowIssuanceFees[workflow][moduleFunctionHash].set) {
             return workflowIssuanceFees[workflow][moduleFunctionHash].value;
-        } // otherwise return default fee
+        }
+        // otherwise return default fee
         else {
             return defaultIssuanceFee;
         }
@@ -219,8 +236,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
 
     /// @inheritdoc IFeeManager_v1
     function setMaxFee(uint _maxFee) external onlyOwner validMaxFee(_maxFee) {
-        maxFee = _maxFee;
-        emit MaxFeeSet(_maxFee);
+        _setMaxFee(_maxFee);
     }
 
     //---------------------------
@@ -253,20 +269,16 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
     function setDefaultCollateralFee(uint _defaultCollateralFee)
         external
         onlyOwner
-        validFee(_defaultCollateralFee)
     {
-        defaultCollateralFee = _defaultCollateralFee;
-        emit DefaultCollateralFeeSet(_defaultCollateralFee);
+        _setDefaultCollateralFee(_defaultCollateralFee);
     }
 
     /// @inheritdoc IFeeManager_v1
     function setDefaultIssuanceFee(uint _defaultIssuanceFee)
         external
         onlyOwner
-        validFee(_defaultIssuanceFee)
     {
-        defaultIssuanceFee = _defaultIssuanceFee;
-        emit DefaultIssuanceFeeSet(_defaultIssuanceFee);
+        _setDefaultIssuanceFee(_defaultIssuanceFee);
     }
 
     /// @inheritdoc IFeeManager_v1
@@ -278,7 +290,7 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         uint fee
     ) external onlyOwner validFee(fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         Fee storage f = workflowCollateralFees[workflow][moduleFunctionHash];
         f.set = set;
@@ -296,9 +308,62 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         bytes4 functionSelector,
         bool set,
         uint fee
-    ) external onlyOwner validFee(fee) {
+    ) external onlyOwner {
+        _setIssuanceWorkflowFee(workflow, module, functionSelector, set, fee);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function _getModuleFunctionHash(address module, bytes4 functionSelector)
+        internal
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(module, functionSelector));
+    }
+
+    function _setDefaultProtocolTreasury(address _defaultProtocolTreasury)
+        internal
+        validAddress(_defaultProtocolTreasury)
+    {
+        defaultProtocolTreasury = _defaultProtocolTreasury;
+        emit DefaultProtocolTreasurySet(_defaultProtocolTreasury);
+    }
+
+    function _setWorkflowTreasury(address workflow, address treasury)
+        internal
+        validAddress(treasury)
+    {
+        workflowTreasuries[workflow] = treasury;
+        emit WorkflowTreasurySet(workflow, treasury);
+    }
+
+    function _setDefaultCollateralFee(uint _defaultCollateralFee)
+        internal
+        validFee(_defaultCollateralFee)
+    {
+        defaultCollateralFee = _defaultCollateralFee;
+        emit DefaultCollateralFeeSet(_defaultCollateralFee);
+    }
+
+    function _setDefaultIssuanceFee(uint _defaultIssuanceFee)
+        internal
+        validFee(_defaultIssuanceFee)
+    {
+        defaultIssuanceFee = _defaultIssuanceFee;
+        emit DefaultIssuanceFeeSet(_defaultIssuanceFee);
+    }
+
+    function _setIssuanceWorkflowFee(
+        address workflow,
+        address module,
+        bytes4 functionSelector,
+        bool set,
+        uint fee
+    ) internal validFee(fee) {
         bytes32 moduleFunctionHash =
-            getModuleFunctionHash(module, functionSelector);
+            _getModuleFunctionHash(module, functionSelector);
 
         Fee storage f = workflowIssuanceFees[workflow][moduleFunctionHash];
         f.set = set;
@@ -309,14 +374,8 @@ contract FeeManager_v1 is ERC165, IFeeManager_v1, Ownable2StepUpgradeable {
         );
     }
 
-    //--------------------------------------------------------------------------
-    // Internal Functions
-
-    function getModuleFunctionHash(address module, bytes4 functionSelector)
-        internal
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encodePacked(module, functionSelector));
+    function _setMaxFee(uint _maxFee) internal validMaxFee(_maxFee) {
+        maxFee = _maxFee;
+        emit MaxFeeSet(_maxFee);
     }
 }

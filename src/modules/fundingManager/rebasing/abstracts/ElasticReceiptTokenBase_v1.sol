@@ -8,8 +8,15 @@ import {
     IERC20Metadata
 } from "@fm/rebasing/interfaces/IRebasingERC20.sol";
 
+// Internal Dependencies
+import {Module_v1, IOrchestrator_v1} from "src/modules/base/Module_v1.sol";
+
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {
+    ERC165Upgradeable,
+    Initializable
+} from "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {ECDSA} from "@oz/utils/cryptography/ECDSA.sol";
 
 /**
  * @title Elastic Receipt Token Base
@@ -61,13 +68,14 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
  *
  * @author Buttonwood Foundation
  * @author merkleplant
+ * @author Inverter Network
  */
-abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
+abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(Module_v1)
         returns (bool)
     {
         return interfaceId == type(IRebasingERC20).interfaceId
@@ -107,7 +115,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev Modifier to guarantee token recipient is valid.
+    /// @dev    Modifier to guarantee token recipient is valid.
     modifier validRecipient(address to) {
         if (to == address(0) || to == address(this)) {
             revert InvalidRecipient();
@@ -115,7 +123,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         _;
     }
 
-    /// @dev Modifier to guarantee token amount is valid.
+    /// @dev    Modifier to guarantee token amount is valid.
     modifier validAmount(uint amount) {
         if (amount == 0) {
             revert InvalidAmount();
@@ -123,8 +131,8 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         _;
     }
 
-    /// @dev Modifier to guarantee a rebase operation is executed before any
-    ///      state is mutated.
+    /// @dev    Modifier to guarantee a rebase operation is executed before any
+    ///         state is mutated.
     modifier onAfterRebase() {
         _rebase();
         _;
@@ -133,42 +141,44 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev Math constant.
+    /// @dev    Math constant.
     uint private constant MAX_UINT = type(uint).max;
 
-    /// @dev The max supply target allowed.
-    /// @dev Note that this constant is internal in order for downstream
-    ////     contracts to enforce this constraint directly.
-    uint internal constant MAX_SUPPLY = 1_000_000_000e18;
+    /// @dev    The max supply target allowed.
+    ///         Note that this constant is internal in order for downstream
+    ///         contracts to enforce this constraint directly.
+    ///         This limit was chosen as a balance between rebasing accuracy
+    ///         and supporting low-value tokens or high decimal tokens properly.
+    uint internal constant MAX_SUPPLY = 1_000_000_000_000_000_000e18;
 
-    /// @dev The total amount of bits is a multiple of MAX_SUPPLY so that
-    ///      BITS_PER_UNDERLYING is an integer.
-    ///      Use the highest value that fits in a uint for max granularity.
+    /// @dev    The total amount of bits is a multiple of MAX_SUPPLY so that
+    ///         BITS_PER_UNDERLYING is an integer.
+    ///         Use the highest value that fits in a uint for max granularity.
     uint internal constant TOTAL_BITS = MAX_UINT - (MAX_UINT % MAX_SUPPLY);
 
-    /// @dev Initial conversion rate of bits per unit of denomination.
+    /// @dev    Initial conversion rate of bits per unit of denomination.
     uint internal constant BITS_PER_UNDERLYING = TOTAL_BITS / MAX_SUPPLY;
 
     //--------------------------------------------------------------------------
     // Internal Storage
 
-    /// @dev The rebase counter, i.e. the number of rebases executed since
-    ///      inception.
+    /// @dev    The rebase counter, i.e. the number of rebases executed since
+    ///         inception.
     uint internal _epoch;
 
-    /// @dev The amount of bits one token is composed of, i.e. the bits-token
-    ///      conversion rate.
+    /// @dev    The amount of bits one token is composed of, i.e. the bits-token
+    ///         conversion rate.
     uint internal _bitsPerToken;
 
-    /// @dev The total supply of tokens. In each token balance mutating
-    ///      function the token supply is synced with the supply target
-    ///      given by the downstream implemented _supplyTarget function.
+    /// @dev    The total supply of tokens. In each token balance mutating
+    ///         function the token supply is synced with the supply target
+    ///         given by the downstream implemented _supplyTarget function.
     uint internal _totalTokenSupply;
 
-    /// @dev The user balances, denominated in bits.
+    /// @dev    The user balances, denominated in bits.
     mapping(address => uint) internal _accountBits;
 
-    /// @dev The user allowances, denominated in tokens.
+    /// @dev    The user allowances, denominated in tokens.
     mapping(address => mapping(address => uint)) internal _tokenAllowances;
 
     //--------------------------------------------------------------------------
@@ -199,17 +209,53 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
     );
 
-    /// @dev Number of EIP-2612 permits per address.
+    /// @dev    Number of EIP-2612 permits per address.
     mapping(address => uint) internal _nonces;
+
+    /// @dev    Storage gap for future upgrades
+    uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    function init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
+    ) external virtual override(Module_v1) initializer {
+        __ElasticReceiptTokenBase_init(orchestrator_, metadata, configData);
+    }
+
+    /// @dev    Initializes the contract.
+    /// @dev    Reinitialization possible as long as no tokens minted.
+    function __ElasticReceiptTokenBase_init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
+    ) internal onlyInitializing {
+        __Module_init(orchestrator_, metadata);
+
+        require(_totalTokenSupply == 0);
+
+        // Set IERC20Metadata.
+        (name, symbol, decimals) =
+            abi.decode(configData, (string, string, uint8));
+
+        // Total supply of bits are 'pre-mined' to zero address.
+        //
+        // During mint, bits are transferred from the zero address and
+        // during burn, bits are transferred to the zero address.
+        _accountBits[address(0)] = TOTAL_BITS;
+    }
 
     //--------------------------------------------------------------------------
     // Abstract Functions
 
-    /// @dev Returns the current supply target with number of decimals precision
-    ///      being equal to the number of decimals given in the constructor.
-    /// @dev The supply target MUST never be zero or higher than MAX_SUPPLY,
-    ///      otherwise no supply adjustment can be executed.
-    /// @dev Has to be implemented in downstream contract.
+    /// @dev    Returns the current supply target with number of decimals precision
+    ///         being equal to the number of decimals given in the constructor.
+    /// @dev    The supply target MUST never be zero or higher than MAX_SUPPLY,
+    ///         otherwise no supply adjustment can be executed.
+    /// @dev    Has to be implemented in downstream contract.
     function _supplyTarget() internal virtual returns (uint);
 
     //--------------------------------------------------------------------------
@@ -226,7 +272,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     {
         uint bits = _tokensToBits(tokens);
 
-        _transfer(msg.sender, to, tokens, bits);
+        _transfer(_msgSender(), to, tokens, bits);
 
         return true;
     }
@@ -243,7 +289,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     {
         uint bits = _tokensToBits(tokens);
 
-        _useAllowance(from, msg.sender, tokens);
+        _useAllowance(from, _msgSender(), tokens);
         _transfer(from, to, tokens, bits);
 
         return true;
@@ -257,10 +303,10 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         onAfterRebase
         returns (bool)
     {
-        uint bits = _accountBits[msg.sender];
+        uint bits = _accountBits[_msgSender()];
         uint tokens = _bitsToTokens(bits);
 
-        _transfer(msg.sender, to, tokens, bits);
+        _transfer(_msgSender(), to, tokens, bits);
 
         return true;
     }
@@ -282,9 +328,9 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
             // Decrease allowance by one. This is a conservative security
             // compromise as the dust could otherwise be stolen.
             // Note that allowances could be off by one because of this.
-            _useAllowance(from, msg.sender, 1);
+            _useAllowance(from, _msgSender(), 1);
         } else {
-            _useAllowance(from, msg.sender, tokens);
+            _useAllowance(from, _msgSender(), tokens);
         }
 
         _transfer(from, to, tokens, bits);
@@ -299,46 +345,46 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         validRecipient(spender)
         returns (bool)
     {
-        _tokenAllowances[msg.sender][spender] = tokens;
+        _tokenAllowances[_msgSender()][spender] = tokens;
 
-        emit Approval(msg.sender, spender, tokens);
+        emit Approval(_msgSender(), spender, tokens);
         return true;
     }
 
-    /// @notice Increases the amount of tokens that msg.sender has allowed
+    /// @notice Increases the amount of tokens that _msgSender() has allowed
     ///         to spender.
-    /// @param spender The address of the spender.
-    /// @param tokens The amount of tokens to increase allowance by.
+    /// @param  spender The address of the spender.
+    /// @param  tokens The amount of tokens to increase allowance by.
     /// @return True if successful.
     function increaseAllowance(address spender, uint tokens)
         public
         returns (bool)
     {
-        _tokenAllowances[msg.sender][spender] += tokens;
+        _tokenAllowances[_msgSender()][spender] += tokens;
 
         emit Approval(
-            msg.sender, spender, _tokenAllowances[msg.sender][spender]
+            _msgSender(), spender, _tokenAllowances[_msgSender()][spender]
         );
         return true;
     }
 
-    /// @notice Decreases the amount of tokens that msg.sender has allowed
+    /// @notice Decreases the amount of tokens that _msgSender() has allowed
     ///         to spender.
-    /// @param spender The address of the spender.
-    /// @param tokens The amount of tokens to decrease allowance by.
+    /// @param  spender The address of the spender.
+    /// @param  tokens The amount of tokens to decrease allowance by.
     /// @return True if successful.
     function decreaseAllowance(address spender, uint tokens)
         public
         returns (bool)
     {
-        if (tokens >= _tokenAllowances[msg.sender][spender]) {
-            delete _tokenAllowances[msg.sender][spender];
+        if (tokens >= _tokenAllowances[_msgSender()][spender]) {
+            delete _tokenAllowances[_msgSender()][spender];
         } else {
-            _tokenAllowances[msg.sender][spender] -= tokens;
+            _tokenAllowances[_msgSender()][spender] -= tokens;
         }
 
         emit Approval(
-            msg.sender, spender, _tokenAllowances[msg.sender][spender]
+            _msgSender(), spender, _tokenAllowances[_msgSender()][spender]
         );
         return true;
     }
@@ -369,33 +415,29 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
 
         // Unchecked because the only math done is incrementing
         // the owner's nonce which cannot realistically overflow.
+        bytes32 permitHash;
         unchecked {
-            address recoveredAddress = ecrecover(
-                keccak256(
-                    abi.encodePacked(
-                        "\x19\x01",
-                        DOMAIN_SEPARATOR(),
-                        keccak256(
-                            abi.encode(
-                                PERMIT_TYPEHASH,
-                                owner,
-                                spender,
-                                value,
-                                _nonces[owner]++,
-                                deadline
-                            )
+            permitHash = keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR(),
+                    keccak256(
+                        abi.encode(
+                            PERMIT_TYPEHASH,
+                            owner,
+                            spender,
+                            value,
+                            _nonces[owner]++,
+                            deadline
                         )
                     )
-                ),
-                v,
-                r,
-                s
+                )
             );
-
-            require(recoveredAddress != address(0) && recoveredAddress == owner);
-
-            _tokenAllowances[owner][spender] = value;
         }
+
+        require(ECDSA.recover(permitHash, v, r, s) == owner);
+
+        _tokenAllowances[owner][spender] = value;
 
         emit Approval(owner, spender, value);
     }
@@ -433,7 +475,7 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     }
 
     /// @notice Returns the number of successful permits for an address.
-    /// @param who The address to check the number of permits for.
+    /// @param  who The address to check the number of permits for.
     /// @return The number of successful permits.
     function nonces(address who) public view returns (uint) {
         return _nonces[who];
@@ -456,14 +498,14 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     //--------------------------------------------------------------------------
     // Internal View Functions
 
-    /// @dev Convert tokens (elastic amount) to bits (fixed amount).
+    /// @dev    Convert tokens (elastic amount) to bits (fixed amount).
     function _tokensToBits(uint tokens) internal view returns (uint) {
         return _bitsPerToken == 0
             ? tokens * BITS_PER_UNDERLYING
             : tokens * _bitsPerToken;
     }
 
-    /// @dev Convert bits (fixed amount) to tokens (elastic amount).
+    /// @dev    Convert bits (fixed amount) to tokens (elastic amount).
     function _bitsToTokens(uint bits) internal view returns (uint) {
         return bits / _bitsPerToken;
     }
@@ -471,9 +513,9 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
 
-    /// @dev Mints an amount of tokens to some address.
-    /// @dev It's assumed that the downstream contract increases its supply
-    ///      target by precisely the token amount minted!
+    /// @dev    Mints an amount of tokens to some address.
+    /// @dev    It's assumed that the downstream contract increases its supply
+    ///         target by precisely the token amount minted!
     function _mint(address to, uint tokens)
         internal
         validRecipient(to)
@@ -506,13 +548,13 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         _transfer(address(0), to, tokens, bitsNeeded);
     }
 
-    /// @dev Burns an amount of tokens from some address and returns the
-    ///      amount of tokens burned.
-    ///      Note that due to rebasing the requested token amount to burn and
-    ///      the actual amount burned may differ.
-    /// @dev It's assumed that the downstream contract decreases its supply
-    ///      target by precisely the token amount burned!
-    /// @dev It's not possible to burn all tokens.
+    /// @dev    Burns an amount of tokens from some address and returns the
+    ///         amount of tokens burned.
+    ///         Note that due to rebasing the requested token amount to burn and
+    ///         the actual amount burned may differ.
+    /// @dev    It's assumed that the downstream contract decreases its supply
+    ///         target by precisely the token amount burned!
+    /// @dev    It's not possible to burn all tokens.
     function _burn(address from, uint tokens)
         internal
         validRecipient(from)
@@ -545,9 +587,9 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
     //--------------------------------------------------------------------------
     // Private Functions
 
-    /// @dev Internal function to execute a rebase operation.
-    ///      Fetches the current supply target from the downstream contract and
-    ///      updates the bit-tokens conversion rate and the total token supply.
+    /// @dev    Internal function to execute a rebase operation.
+    ///         Fetches the current supply target from the downstream contract and
+    ///         updates the bit-tokens conversion rate and the total token supply.
     function _rebase() private {
         uint supplyTarget = _supplyTarget();
 
@@ -566,14 +608,14 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         emit Rebase(_epoch, supplyTarget);
     }
 
-    /// @dev Internal function returning the total amount of active bits,
-    ///      i.e. all bits not held by zero address.
+    /// @dev    Internal function returning the total amount of active bits,
+    ///         i.e. all bits not held by zero address.
     function _activeBits() private view returns (uint) {
         return TOTAL_BITS - _accountBits[address(0)];
     }
 
-    /// @dev Internal function to transfer bits.
-    ///      Note that the bits and tokens are expected to be pre-calculated.
+    /// @dev    Internal function to transfer bits.
+    ///         Note that the bits and tokens are expected to be pre-calculated.
     function _transfer(address from, address to, uint tokens, uint bits)
         private
     {
@@ -587,8 +629,8 @@ abstract contract ElasticReceiptTokenBase_v1 is IRebasingERC20, ERC165 {
         emit Transfer(from, to, tokens);
     }
 
-    /// @dev Internal function to decrease ERC20 allowance.
-    ///      Note that the allowance denomination is in tokens.
+    /// @dev    Internal function to decrease ERC20 allowance.
+    ///         Note that the allowance denomination is in tokens.
     function _useAllowance(address owner_, address spender, uint tokens)
         private
     {

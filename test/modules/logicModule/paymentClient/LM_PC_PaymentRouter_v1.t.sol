@@ -97,12 +97,7 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         );
 
         vm.startPrank(address(paymentRouter));
-        assertEq(
-            _authorizer.hasModuleRole(
-                paymentRouter.PAYMENT_PUSHER_ROLE(), paymentPusher_user
-            ),
-            true
-        );
+        assertEq(_authorizer.checkForRole(roleId, paymentPusher_user), true);
         vm.stopPrank();
     }
 
@@ -133,11 +128,6 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
 contract LM_PC_PaymentRouter_v1_Test_pushPayment is
     LM_PC_PaymentRouter_v1_Test
 {
-    modifier whenTheCallerHasThePAYMENT_PUSHER_ROLE() {
-        vm.startPrank(paymentPusher_user);
-        _;
-    }
-
     function test_WhenTheCallerDoesntHaveThePAYMENT_PUSHER_ROLE(address caller)
         external
     {
@@ -156,86 +146,6 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
         );
         paymentRouter.pushPayment(address(0), address(0), 0, 0, 0, 0);
         vm.stopPrank();
-    }
-
-    function test_WhenTheRecipientIsIncorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should revert with the corresponding error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidRecipient
-                    .selector
-            )
-        );
-        paymentRouter.pushPayment(
-            address(0), po_paymentToken, po_amount, po_start, po_cliff, po_end
-        );
-    }
-
-    function test_WhenThePaymentTokenIsIncorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should revert with the corresponding error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidToken
-                    .selector
-            )
-        );
-        paymentRouter.pushPayment(
-            po_recipient, address(0), po_amount, po_start, po_cliff, po_end
-        );
-    }
-
-    function test_WhenTheAmountIsIncorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should revert with the corresponding error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__InvalidAmount
-                    .selector
-            )
-        );
-        paymentRouter.pushPayment(
-            po_recipient, po_paymentToken, 0, po_start, po_cliff, po_end
-        );
-    }
-
-    function test_WhenThePaymentOrderIsCorrect()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
-        // It should add the Payment Order to the array of Payment Orders
-        // It should emit an event
-        // It should call processPayments
-        // It should emit an event
-
-        uint paymentsTriggeredBefore =
-            _paymentProcessor.processPaymentsTriggered();
-
-        vm.expectEmit(true, true, true, true);
-        emit PaymentOrderAdded(po_recipient, po_paymentToken, po_amount);
-        vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(
-            address(0), address(0), address(0), 0, 0, 0, 0
-        ); // since we are using a mock.
-
-        paymentRouter.pushPayment(
-            po_recipient, po_paymentToken, po_amount, po_start, po_cliff, po_end
-        );
-
-        assertEq(
-            _paymentProcessor.processPaymentsTriggered(),
-            paymentsTriggeredBefore + 1
-        );
     }
 }
 
@@ -379,7 +289,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         // It was tested upstream
     }
 
-    function test_WhenThePaymentOrdersAreCorrect(uint8 numOfOrders)
+    function test_WhenThePaymentOrdersAreCorrect(uint8 _numOfOrders)
         external
         whenTheCallerHasThePAYMENT_PUSHER_ROLE
     {
@@ -388,22 +298,24 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         // It should call processPayments
         // It should emit an event for each Payment Order
 
-        address[] memory recipients;
-        address[] memory paymentTokens;
-        uint[] memory amounts;
-        uint start;
-        uint cliff;
-        uint end;
+        address[] memory _recipients;
+        address[] memory _paymentTokens;
+        uint[] memory _amounts;
+        uint _start;
+        uint _cliff;
+        uint _end;
 
-        (recipients, paymentTokens, amounts, start, cliff, end) =
-            _generateRandomValidOrders(numOfOrders);
+        (_recipients, _paymentTokens, _amounts, _start, _cliff, _end) =
+            _generateRandomValidOrders(_numOfOrders);
 
         uint paymentsTriggeredBefore =
             _paymentProcessor.processPaymentsTriggered();
 
-        for (uint i = 0; i < numOfOrders; i++) {
+        for (uint i = 0; i < _numOfOrders; i++) {
             vm.expectEmit(true, true, true, true);
-            emit PaymentOrderAdded(recipients[i], paymentTokens[i], amounts[i]);
+            emit PaymentOrderAdded(
+                _recipients[i], _paymentTokens[i], _amounts[i]
+            );
         }
         vm.expectEmit(true, false, false, false);
         emit PaymentOrderProcessed(
@@ -411,7 +323,13 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         ); // since we are using a mock.
 
         paymentRouter.pushPaymentBatched(
-            numOfOrders, recipients, paymentTokens, amounts, start, cliff, end
+            _numOfOrders,
+            _recipients,
+            _paymentTokens,
+            _amounts,
+            _start,
+            _cliff,
+            _end
         );
 
         assertEq(
@@ -420,32 +338,32 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         );
     }
 
-    function _generateRandomValidOrders(uint8 numOfOrders)
+    function _generateRandomValidOrders(uint8 _numOfOrders)
         internal
         returns (
-            address[] memory recipients,
-            address[] memory paymentTokens,
-            uint[] memory amounts,
-            uint start,
-            uint cliff,
-            uint end
+            address[] memory _recipients,
+            address[] memory _paymentTokens,
+            uint[] memory _amounts,
+            uint _start,
+            uint _cliff,
+            uint _end
         )
     {
-        recipients = new address[](numOfOrders);
-        paymentTokens = new address[](numOfOrders);
-        amounts = new uint[](numOfOrders);
-        starts = new uint[](numOfOrders);
-        cliffs = new uint[](numOfOrders);
-        ends = new uint[](numOfOrders);
+        _recipients = new address[](_numOfOrders);
+        _paymentTokens = new address[](_numOfOrders);
+        _amounts = new uint[](_numOfOrders);
+        starts = new uint[](_numOfOrders);
+        cliffs = new uint[](_numOfOrders);
+        ends = new uint[](_numOfOrders);
 
-        for (uint i = 0; i < numOfOrders; i++) {
-            recipients[i] = makeAddr(Strings.toString(i));
-            paymentTokens[i] = makeAddr(Strings.toString(i + numOfOrders));
-            amounts[i] = i * 100 + 1;
+        for (uint i = 0; i < _numOfOrders; i++) {
+            _recipients[i] = makeAddr(Strings.toString(i));
+            _paymentTokens[i] = makeAddr(Strings.toString(i + _numOfOrders));
+            _amounts[i] = i * 100 + 1;
         }
 
-        start = block.timestamp;
-        cliff = 100;
-        end = block.timestamp + 1000;
+        _start = block.timestamp;
+        _cliff = 100;
+        _end = block.timestamp + 1000;
     }
 }

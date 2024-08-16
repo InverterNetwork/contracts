@@ -7,16 +7,29 @@ import {OptimisticOracleV3CallbackRecipientInterface} from
 interface IOptimisticOracleIntegrator is
     OptimisticOracleV3CallbackRecipientInterface
 {
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Struct used to store information about a data assertion.
+    /// @param  dataId The dataId that was asserted.
+    /// @param  data This could be an arbitrary data type.
+    /// @param  asserter The address that made the assertion.
+    /// @param  resolved Whether the assertion has been resolved.
     struct DataAssertion {
-        bytes32 dataId; // The dataId that was asserted.
-        bytes32 data; // This could be an arbitrary data type.
-        address asserter; // The address that made the assertion.
-        bool resolved; // Whether the assertion has been resolved.
+        bytes32 dataId;
+        bytes32 data;
+        address asserter;
+        bool resolved;
     }
 
     //==========================================================================
     // Events
 
+    /// @notice Event emitted when data is asserted.
+    /// @param  dataId The dataId that was asserted.
+    /// @param  data The data that was asserted.
+    /// @param  asserter The address of the asserter.
+    /// @param  assertionId The assertionId that was asserted.
     event DataAsserted(
         bytes32 indexed dataId,
         bytes32 data,
@@ -24,6 +37,12 @@ interface IOptimisticOracleIntegrator is
         bytes32 indexed assertionId
     );
 
+    /// @notice Event emitted when dataAssetiong is resolved.
+    /// @param  assertedTruthfully Whether the assertion was resolved as true or false.
+    /// @param  dataId The dataId that was asserted.
+    /// @param  data The data that was asserted.
+    /// @param  asserter The address of the asserter.
+    /// @param  assertionId The assertionId that was asserted.
     event DataAssertionResolved(
         bool assertedTruthfully,
         bytes32 indexed dataId,
@@ -35,28 +54,32 @@ interface IOptimisticOracleIntegrator is
     //==========================================================================
     // Errors
 
-    /// @notice Invalid default currency
+    /// @notice Invalid default currency.
     error Module__OptimisticOracleIntegrator__InvalidDefaultCurrency();
 
-    /// @notice Invalid default liveness
+    /// @notice Invalid default liveness.
     error Module__OptimisticOracleIntegrator__InvalidDefaultLiveness();
 
-    /// @notice Invalid Optimistic Oracle instance
+    /// @notice Invalid Optimistic Oracle instance.
     error Module__OptimisticOracleIntegrator__InvalidOOInstance();
 
-    /// @notice Caller is not Optimistic Oracle instance
+    /// @notice Caller is not Optimistic Oracle instance.
     error Module__OptimisticOracleIntegrator__CallerNotOO();
 
-    /// @notice Bond given for the specified currency is below minimum
+    /// @notice Bond given for the specified currency is below minimum.
     error Module__OptimisticOracleIntegrator__CurrencyBondTooLow();
+
+    /// @notice Asserter holds insufficient funds to pay for bond.
+    error Module__OptimisticOracleIntegrator_InsufficientFundsToPayForBond();
 
     //==========================================================================
     // Functions
 
     // Getter Functions
 
-    /// @notice For a given assertionId, returns a boolean indicating whether the data is accessible and the data itself.
-    /// @param assertionId The id of the Assertion to return.
+    /// @notice For a given assertionId, returns a boolean indicating whether the data is accessible
+    ///         and the data itself.
+    /// @param  assertionId The id of the Assertion to return.
     /// @return bool Wether the assertion is resolved.
     /// @return bytes32 The Assertion Data.
     function getData(bytes32 assertionId)
@@ -65,7 +88,7 @@ interface IOptimisticOracleIntegrator is
         returns (bool, bytes32);
 
     /// @notice For a given assertionId, returns the assserion itself.
-    /// @param assertionId The id of the Assertion to return.
+    /// @param  assertionId The id of the Assertion to return.
     /// @return DataAssertion The Assertion.
     function getAssertion(bytes32 assertionId)
         external
@@ -75,25 +98,25 @@ interface IOptimisticOracleIntegrator is
     // Setter Functions
 
     /// @notice Sets the default currency and amount for the bond.
-    /// @param _newCurrency The address of the new default currency.
-    /// @param _newBond The new bond amount.
+    /// @param  _newCurrency The address of the new default currency.
+    /// @param  _newBond The new bond amount.
     function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         external;
 
     /// @notice Sets the OptimisticOracleV3 instance where assertions will be published to.
-    /// @param _newOO The address of the new OptimisticOracleV3 instance.
+    /// @param  _newOO The address of the new OptimisticOracleV3 instance.
     function setOptimisticOracle(address _newOO) external;
 
     /// @notice Sets the default time assertions will be open for dispute.
-    /// @param _newLiveness The new liveness in seconds.
+    /// @param  _newLiveness The new liveness in seconds.
     function setDefaultAssertionLiveness(uint64 _newLiveness) external;
 
     // State mutating functions
 
     /// @notice Asserts data for a specific dataId on behalf of an asserter address.
-    /// @param dataId The id of the data to assert.
-    /// @param data The data to assert.
-    /// @param asserter The address doing the asserter. If zero defaults to _msgSender().
+    /// @param  dataId The id of the data to assert.
+    /// @param  data The data to assert.
+    /// @param  asserter The address doing the asserter. If zero defaults to _msgSender().
     /// @return assertionId The id of the generated Assertion.
     function assertDataFor(bytes32 dataId, bytes32 data, address asserter)
         external

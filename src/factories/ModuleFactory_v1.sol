@@ -10,6 +10,7 @@ import {
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
+import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 
 // Internal Dependencies
 
@@ -19,7 +20,8 @@ import {InverterTransparentUpgradeableProxy_v1} from
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 
 // External Interfaces
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // External Dependencies
 import {
@@ -32,7 +34,7 @@ import {
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Module Factory
+ * @title   Inverter Module Factory
  *
  * @notice  Enables the creation and registration of Inverter Modules,
  *          facilitating the deployment of module instances linked to specific beacons.
@@ -53,13 +55,14 @@ contract ModuleFactory_v1 is
     IModuleFactory_v1,
     ERC2771ContextUpgradeable,
     Ownable2StepUpgradeable,
-    ERC165
+    ERC165Upgradeable
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IModuleFactory_v1).interfaceId
@@ -68,7 +71,7 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to guarantee function is only callable with valid
+    /// @dev    Modifier to guarantee function is only callable with valid
     ///         metadata.
     modifier validMetadata(IModule_v1.Metadata memory data) {
         if (!LibMetadata.isValid(data)) {
@@ -77,9 +80,9 @@ contract ModuleFactory_v1 is
         _;
     }
 
-    /// @notice Modifier to guarantee function is only callable with valid
-    ///         IInverterBeacon_v1 instance and if the owner of the beacon
-    ///         is same as the governor of this contract.
+    /// @dev    Modifier to guarantee function is only callable with valid
+    ///         {IInverterBeacon_v1} instance and if the owner of the beacon.
+    ///         is same as the {Governor_v1} of this contract.
     modifier validBeacon(IInverterBeacon_v1 beacon) {
         // Revert if beacon's implementation is zero address.
         if (
@@ -95,34 +98,43 @@ contract ModuleFactory_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @inheritdoc IModuleFactory_v1
     address public immutable reverter;
 
     /// @inheritdoc IModuleFactory_v1
     address public governor;
 
-    /// @dev Mapping of metadata identifier to {IInverterBeacon_v1} instance.
-    /// @dev MetadataLib.identifier(metadata) => {IInverterBeacon_v1}
+    /// @dev	Mapping of metadata identifier to {IInverterBeacon_v1} instance.
+    /// @dev	MetadataLib.identifier(metadata) => {IInverterBeacon_v1}.
     mapping(bytes32 => IInverterBeacon_v1) private _beacons;
 
-    /// @dev Mapping of proxy address to orchestrator address.
+    /// @dev	Mapping of proxy address to orchestrator address.
+    /// @dev	moduleProxy => {IOrchestrator_v1}.
     mapping(address => address) private _orchestratorOfProxy;
 
-    // Storage gap for future upgrades
+    /// @dev	Maps a users address to a nonce used for the create2-based deployment.
+    mapping(address => uint) private _deploymentNonces;
+
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Constructor & Initializer
 
+    /// @notice The factories initializer function.
+    /// @param  _reverter The address of the {InverterReverter_v1} contract.
+    /// @param  _trustedForwarder The address of the trusted forwarder contract.
     constructor(address _reverter, address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
     {
+        _disableInitializers();
         reverter = _reverter;
     }
 
     /// @notice The factories initializer function.
-    /// @param _governor The address of the governor contract.
-    /// @param initialMetadataRegistration List of metadata that will be registered during the initialization.
-    /// @param initialMetadataRegistration List of beacon addresses that will be registered during the initialization.
+    /// @param  _governor The address of the {Governor_v1} contract.
+    /// @param  initialMetadataRegistration List of metadata that will be registered during the initialization.
+    /// @param  initialMetadataRegistration List of {IInverterBeacon_v1}s addresses that will be registered during the initialization.
     function init(
         address _governor,
         IModule_v1.Metadata[] memory initialMetadataRegistration,
@@ -141,18 +153,38 @@ contract ModuleFactory_v1 is
                 initialMetadataRegistration[i], initialBeaconRegistration[i]
             );
         }
+
+        IGovernor_v1(_governor).moduleFactoryInitCallback(
+            initialBeaconRegistration
+        );
+
+        emit GovernorSet(_governor);
     }
 
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
     /// @inheritdoc IModuleFactory_v1
-    function createModule(
+    function createAndInitModule(
         IModule_v1.Metadata memory metadata,
         IOrchestrator_v1 orchestrator,
         bytes memory configData,
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
     ) external returns (address) {
+        address proxy =
+            createModuleProxy(metadata, orchestrator, workflowConfig);
+
+        IModule_v1(proxy).init(orchestrator, metadata, configData);
+
+        return proxy;
+    }
+
+    /// @inheritdoc IModuleFactory_v1
+    function createModuleProxy(
+        IModule_v1.Metadata memory metadata,
+        IOrchestrator_v1 orchestrator,
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig
+    ) public returns (address) {
         // Note that the metadata's validity is not checked because the
         // module's `init()` function does it anyway.
 
@@ -163,12 +195,21 @@ contract ModuleFactory_v1 is
             revert ModuleFactory__UnregisteredMetadata();
         }
 
+        // Retrieve the currrent minor version of the beacon.
+        (, uint minorVersion,) = beacon.version();
+
+        // If the minor version is uint max, this module has been
+        // sunset and can not be used for new workflows anymore.
+        if (minorVersion == type(uint).max) {
+            revert ModuleFactory__ModuleIsSunset();
+        }
+
         address proxy;
         // If the workflow should fetch their updates themselves
         if (workflowConfig.independentUpdates) {
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1(
+                new InverterTransparentUpgradeableProxy_v1{salt: _createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -176,10 +217,9 @@ contract ModuleFactory_v1 is
         // If not then
         else {
             // Instead use the Beacon Structure Proxy
-            proxy = address(new InverterBeaconProxy_v1(beacon));
+            proxy =
+                address(new InverterBeaconProxy_v1{salt: _createSalt()}(beacon));
         }
-
-        IModule_v1(proxy).init(orchestrator, metadata, configData);
 
         _orchestratorOfProxy[proxy] = address(orchestrator);
 
@@ -222,6 +262,12 @@ contract ModuleFactory_v1 is
         _registerMetadata(metadata, beacon);
     }
 
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev	Internal function to register metadata.
+    /// @param  metadata The metadata to register.
+    /// @param  beacon The {IInverterBeacon_v1} to register the metadata to.
     function _registerMetadata(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
@@ -240,10 +286,19 @@ contract ModuleFactory_v1 is
         emit MetadataRegistered(metadata, beacon);
     }
 
+    /// @dev	Internal function to generate a salt for the create2-based deployment flow.
+    ///         This salt is the hash of (msgSender, nonce), where the
+    ///         nonce is an increasing number for each user.
+    function _createSalt() internal returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
+        );
+    }
+
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -254,7 +309,7 @@ contract ModuleFactory_v1 is
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view

@@ -14,15 +14,18 @@ import {
 // Internal Dependencies
 import {
     ERC20PaymentClientBase_v1,
-    Module_v1,
-    ERC165
+    Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
 
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
 // Internal Libraries
-import {LinkedIdList} from "src/common/LinkedIdList.sol";
+import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 /**
- * @title   Recurring Payment Manager
+ * @title   Inverter Recurring Payment Manager
  *
  * @notice  Facilitates the creation, management, and execution of scheduled recurring
  *          payments within the Inverter Network, allowing for systematic and timed
@@ -43,6 +46,7 @@ contract LM_PC_RecurringPayments_v1 is
     ILM_PC_RecurringPayments_v1,
     ERC20PaymentClientBase_v1
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -59,6 +63,8 @@ contract LM_PC_RecurringPayments_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @dev	Checks if the given id is valid.
+    /// @param  recurringPaymentId The id of the RecurringPayment to check.
     modifier validId(uint recurringPaymentId) {
         if (!isExistingRecurringPaymentId(recurringPaymentId)) {
             revert Module__LM_PC_RecurringPayments__InvalidRecurringPaymentId();
@@ -66,6 +72,8 @@ contract LM_PC_RecurringPayments_v1 is
         _;
     }
 
+    /// @dev	Checks if the given startEpoch is valid.
+    /// @param  startEpoch The startEpoch of the RecurringPayment to check.
     modifier validStartEpoch(uint startEpoch) {
         if (getCurrentEpoch() > startEpoch) {
             revert Module__LM_PC_RecurringPayments__InvalidStartEpoch();
@@ -73,6 +81,9 @@ contract LM_PC_RecurringPayments_v1 is
         _;
     }
 
+    /// @dev	Checks if the startId is before the endId.
+    /// @param  startId The startId of the RecurringPayment to check.
+    /// @param  endId The endId of the RecurringPayment to check.
     modifier startIdBeforeEndId(uint startId, uint endId) {
         if (startId > endId) {
             revert Module__LM_PC_RecurringPayments__StartIdNotBeforeEndId();
@@ -83,25 +94,25 @@ contract LM_PC_RecurringPayments_v1 is
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @dev Marks the beginning of the list.
+    /// @dev	Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
 
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev Value for what the next id will be.
+    /// @dev	Value for what the next id will be.
     uint private _nextId;
 
-    /// @dev length of an epoch
+    /// @dev	length of an epoch.
     uint private epochLength;
 
-    /// @dev Registry mapping ids to RecurringPayment structs.
+    /// @dev	Registry mapping ids to RecurringPayment structs id => RecurringPayment.
     mapping(uint => RecurringPayment) private _paymentRegistry;
 
-    /// @dev List of RecurringPayment id's.
+    /// @dev	List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
 
-    // Storage gap for future upgrades
+    /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -117,12 +128,15 @@ contract LM_PC_RecurringPayments_v1 is
         // Set empty list of RecurringPayment
         _paymentList.init();
 
-        epochLength = abi.decode(configData, (uint));
+        uint newEpochLength = abi.decode(configData, (uint));
+        epochLength = newEpochLength;
 
         // revert if not at least 1 week and at most a year
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
+
+        emit EpochLengthSet(newEpochLength);
     }
 
     //--------------------------------------------------------------------------
@@ -255,10 +269,14 @@ contract LM_PC_RecurringPayments_v1 is
         validId(endId)
         startIdBeforeEndId(startId, endId)
     {
-        // in the loop in _triggerFor it wouldnt run through endId itself, so we take the position afterwards in the list
+        // in the loop in _triggerFor it wouldnt run through endId itself, so we take the position
+        // afterwards in the list
         _triggerFor(startId, _paymentList.getNextId(endId));
     }
 
+    /// @dev	Triggers the given RecurringPayment.
+    /// @param  startId The id of the first RecurringPayment to trigger.
+    /// @param  endId The id of the last RecurringPayment to trigger.
     function _triggerFor(uint startId, uint endId) private {
         // Set startId to be the current position in List
         uint currentId = startId;
@@ -307,7 +325,8 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 start: block.timestamp,
                                 cliff: 0,
-                                // Payment was already due so end is start of this epoch which should already have passed
+                                // Payment was already due so end is start of this epoch which should
+                                // already have passed
                                 end: currentEpoch * epochLength
                             })
                         );

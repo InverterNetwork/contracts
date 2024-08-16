@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 /**
- * @title Library for encoding and decoding ancillary data for DVM price requests.
+ * @title   Inverter Library for encoding and decoding ancillary data for DVM price requests.
  * @notice  We assume that on-chain ancillary data can be formatted directly from bytes to utf8 encoding via
- * web3.utils.hexToUtf8, and that clients will parse the utf8-encoded ancillary data as a comma-delimitted key-value
- * dictionary. Therefore, this library provides internal methods that aid appending to ancillary data from Solidity
- * smart contracts. More details on UMA's ancillary data guidelines below:
- * https://docs.google.com/document/d/1zhKKjgY1BupBGPPrY_WOJvui0B6DMcd-xDR8-9-SPDw/edit
+ *          web3.utils.hexToUtf8, and that clients will parse the utf8-encoded ancillary data as a comma-delimitted key-value
+ *          dictionary. Therefore, this library provides internal methods that aid appending to ancillary data from Solidity
+ *          smart contracts. More details on UMA's ancillary data guidelines below:
+ *          https://docs.google.com/document/d/1zhKKjgY1BupBGPPrY_WOJvui0B6DMcd-xDR8-9-SPDw/edit
  */
 library AncillaryData {
     // This converts the bottom half of a bytes32 input to hex in a highly gas-optimized way.

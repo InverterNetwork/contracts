@@ -13,6 +13,10 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
+
+import {PP_Simple_v1AccessMock} from
+    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v1AccessMock.sol";
+
 import {
     PP_Simple_v1,
     IPaymentProcessor_v1
@@ -21,7 +25,8 @@ import {
 // Mocks
 import {
     IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock
+    ERC20PaymentClientBaseV1Mock,
+    ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 // Errors
@@ -29,7 +34,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_SimpleV1Test is ModuleTest {
     // SuT
-    PP_Simple_v1 paymentProcessor;
+    PP_Simple_v1AccessMock paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV1Mock paymentClient;
@@ -57,8 +62,8 @@ contract PP_SimpleV1Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Simple_v1());
-        paymentProcessor = PP_Simple_v1(Clones.clone(impl));
+        address impl = address(new PP_Simple_v1AccessMock());
+        paymentProcessor = PP_Simple_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 
@@ -370,6 +375,91 @@ contract PP_SimpleV1Test is ModuleTest {
         );
         paymentProcessor.claimPreviouslyUnclaimable(
             address(paymentClient), address(0), address(0x1)
+        );
+    }
+
+    function test_ValidPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        address sender
+    ) public {
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback funciton to deploy contracts, it will
+        // pass the test here
+        vm.assume(
+            order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
+        );
+
+        order.start = bound(order.start, 0, type(uint).max / 2);
+        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+
+        vm.startPrank(sender);
+
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+            order.recipient
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
+            && paymentProcessor.original__validTotal(order.amount);
+
+        assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+
+        vm.stopPrank();
+    }
+
+    function test__validPaymentReceiver(address addr, address sender) public {
+        bool expectedValue = true;
+        if (
+            addr == address(0) || addr == sender
+                || addr == address(paymentProcessor)
+                || addr == address(_orchestrator)
+                || addr == address(_orchestrator.fundingManager().token())
+        ) {
+            expectedValue = false;
+        }
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+        );
+    }
+
+    function test__validTotal(uint _total) public {
+        bool expectedValue = true;
+        if (_total == 0) {
+            expectedValue = false;
+        }
+
+        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
+    }
+
+    function test__validPaymentToken(address randomToken, address sender)
+        public
+    {
+        // Non-contract addresses or protected addresses should be invalid
+        vm.assume(randomToken != address(_token));
+
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback funciton to deploy contracts, it will
+        // pass the test here
+        vm.assume(randomToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C);
+
+        vm.prank(sender);
+
+        assertEq(
+            paymentProcessor.original_validPaymentToken(randomToken), false
+        );
+
+        // ERC20 addresses are valid
+        ERC20Mock actualToken = new ERC20Mock("Test", "TST");
+
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            true
+        );
+
+        vm.prank(sender);
+        assertEq(
+            paymentProcessor.original_validPaymentToken(address(_token)), true
         );
     }
 }

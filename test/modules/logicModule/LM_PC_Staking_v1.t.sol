@@ -20,7 +20,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {
     LM_PC_Staking_v1,
     ILM_PC_Staking_v1,
-    ReentrancyGuard,
+    ReentrancyGuardUpgradeable,
     IERC20PaymentClientBase_v1
 } from "@lm/LM_PC_Staking_v1.sol";
 
@@ -48,6 +48,13 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     event Staked(address indexed user, uint amount);
     event Unstaked(address indexed user, uint amount);
     event RewardsDistributed(address indexed user, uint amount);
+    event Updated(
+        address indexed triggerAddress,
+        uint rewardValue,
+        uint lastUpdate,
+        uint earnedRewards
+    );
+    event StakingTokenSet(address indexed token);
 
     function setUp() public {
         // Add Module to Mock Orchestrator
@@ -56,7 +63,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
-
+        vm.expectEmit(true, true, true, true);
+        emit StakingTokenSet(address(stakingToken));
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
@@ -74,6 +82,20 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
+        );
+
+        address impl = address(new LM_PC_Staking_v1AccessMock());
+        stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
+        _setUpOrchestrator(stakingManager);
+        _authorizer.setIsAuthorized(address(this), true);
+
+        vm.expectRevert(
+            ILM_PC_Staking_v1
+                .Module__LM_PC_Staking_v1__InvalidStakingToken
+                .selector
+        );
+        stakingManager.init(
+            _orchestrator, _METADATA, abi.encode(address(_token))
         );
     }
 
@@ -274,7 +296,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
+                ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );
@@ -388,7 +410,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Check if return error was correct
         assertEq(
             abi.encodeWithSelector(
-                ReentrancyGuard.ReentrancyGuardReentrantCall.selector
+                ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector
             ),
             stakingToken.callData()
         );
@@ -516,6 +538,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             expectedUserRewardValue =
                 stakingManager.direct_calculateRewardValue();
         }
+        vm.expectEmit(true, true, true, false);
+        emit Updated(
+            trigger, expectedRewards, stakingManager.getLastUpdate(), 0
+        );
 
         stakingManager.direct_update(trigger);
 

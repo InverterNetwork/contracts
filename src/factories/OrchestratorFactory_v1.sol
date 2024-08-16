@@ -26,7 +26,8 @@ import {InverterProxyAdmin_v1} from "src/proxies/InverterProxyAdmin_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Dependencies
-import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {
     ERC2771ContextUpgradeable,
     ContextUpgradeable
@@ -37,14 +38,14 @@ import {
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
 /**
- * @title   Orchestrator Factory
+ * @title   Inverter Orchestrator Factory
  *
- * @notice  {OrchestratorFactory_v1} facilitates the deployment of orchestrators and their
+ * @notice  {OrchestratorFactory_v1} facilitates the deployment of {Orchestrator_v1}s and their
  *          associated modules for the Inverter Network, ensuring seamless creation and
  *          configuration of various components in a single transaction.
  *
- * @dev     Utilizes {ERC2771Context} for meta-transaction capabilities and {ERC165} for interface
- *          detection. Orchestrators are deployed through EIP-1167 minimal proxies for efficiency.
+ * @dev     Utilizes {ERC2771ContextUpgradeable} for meta-transaction capabilities and {ERC165Upgradeable} for interface
+ *          detection. {Orchestrator_v1}s are deployed through EIP-1167 minimal proxies for efficiency.
  *          Integrates with the module factory to instantiate necessary modules with custom
  *          configurations, supporting complex setup with interdependencies among modules.
  *
@@ -58,13 +59,14 @@ contract OrchestratorFactory_v1 is
     IOrchestratorFactory_v1,
     ERC2771ContextUpgradeable,
     Ownable2StepUpgradeable,
-    ERC165
+    ERC165Upgradeable
 {
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC165)
+        override(ERC165Upgradeable)
         returns (bool)
     {
         return interfaceId == type(IOrchestratorFactory_v1).interfaceId
@@ -80,20 +82,24 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     address public override moduleFactory;
 
-    /// @dev Maps the id to the orchestrators
+    /// @dev	Maps the `id` to the {Orchestrator_v1}s.
     mapping(uint => address) private _orchestrators;
 
-    /// @dev The counter of the current orchestrator id.
-    /// @dev Starts counting from 1.
+    /// @dev	The counter of the current {Orchestrator_v1} `id`.
+    /// @dev	Starts counting from 1.
     uint private _orchestratorIdCounter;
 
-    // Storage gap for future upgrades
+    /// @dev	Maps a users address to a nonce.
+    ///         Used for the create2-based deployment.
+    mapping(address => uint) private _deploymentNonces;
+
+    /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------------
     // Modifier
 
-    /// @notice Modifier to guarantee that the given id is valid
+    /// @dev    Modifier to guarantee that the given id is valid.
     modifier validOrchestratorId(uint id) {
         if (id > _orchestratorIdCounter) {
             revert OrchestratorFactory__InvalidId();
@@ -106,12 +112,14 @@ contract OrchestratorFactory_v1 is
 
     constructor(address _trustedForwarder)
         ERC2771ContextUpgradeable(_trustedForwarder)
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice The factories initializer function.
-    /// @param governor_ The address of the governor contract.
-    /// @param beacon_ The address of the beacon containing the orchestrator implementation.
-    /// @param moduleFactory_ The address of the module factory contract.
+    /// @param  governor_ The address of the {Governor_v1} contract.
+    /// @param  beacon_ The address of the {IInverterBeacon_v1} containing the {Orchestrator_v1} implementation.
+    /// @param  moduleFactory_ The address of the {ModuleFactory_v1} contract.
     function init(
         address governor_,
         IInverterBeacon_v1 beacon_,
@@ -120,15 +128,15 @@ contract OrchestratorFactory_v1 is
         __Ownable_init(governor_);
 
         if (
-            !ERC165(address(beacon_)).supportsInterface(
+            !ERC165Upgradeable(address(beacon_)).supportsInterface(
                 type(IInverterBeacon_v1).interfaceId
             )
         ) {
             revert OrchestratorFactory__InvalidBeacon();
         }
-
         beacon = beacon_;
         moduleFactory = moduleFactory_;
+        emit OrchestratorFactoryInitialized(address(beacon_), moduleFactory_);
     }
 
     //--------------------------------------------------------------------------
@@ -149,12 +157,14 @@ contract OrchestratorFactory_v1 is
             // Overwriting the independentUpdateAdmin as the ProxyAdmin will
             // be the actual admin of the proxy
             workflowConfig.independentUpdateAdmin = address(
-                new InverterProxyAdmin_v1(workflowConfig.independentUpdateAdmin)
+                new InverterProxyAdmin_v1{salt: _createSalt()}(
+                    workflowConfig.independentUpdateAdmin
+                )
             );
 
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1(
+                new InverterTransparentUpgradeableProxy_v1{salt: _createSalt()}(
                     beacon, workflowConfig.independentUpdateAdmin, bytes("")
                 )
             );
@@ -162,14 +172,16 @@ contract OrchestratorFactory_v1 is
         // If not then
         else {
             // Instead use the Beacon Structure Proxy
-            proxy = address(new InverterBeaconProxy_v1(beacon));
+            proxy =
+                address(new InverterBeaconProxy_v1{salt: _createSalt()}(beacon));
         }
 
         // Map orchestrator proxy
         _orchestrators[++_orchestratorIdCounter] = proxy;
 
         // Deploy and cache {IFundingManager_v1} module.
-        address fundingManager = IModuleFactory_v1(moduleFactory).createModule(
+        address fundingManager = IModuleFactory_v1(moduleFactory)
+            .createAndInitModule(
             fundingManagerConfig.metadata,
             IOrchestrator_v1(proxy),
             fundingManagerConfig.configData,
@@ -177,7 +189,8 @@ contract OrchestratorFactory_v1 is
         );
 
         // Deploy and cache {IAuthorizer_v1} module.
-        address authorizer = IModuleFactory_v1(moduleFactory).createModule(
+        address authorizer = IModuleFactory_v1(moduleFactory)
+            .createAndInitModule(
             authorizerConfig.metadata,
             IOrchestrator_v1(proxy),
             authorizerConfig.configData,
@@ -185,7 +198,8 @@ contract OrchestratorFactory_v1 is
         );
 
         // Deploy and cache {IPaymentProcessor_v1} module.
-        address paymentProcessor = IModuleFactory_v1(moduleFactory).createModule(
+        address paymentProcessor = IModuleFactory_v1(moduleFactory)
+            .createAndInitModule(
             paymentProcessorConfig.metadata,
             IOrchestrator_v1(proxy),
             paymentProcessorConfig.configData,
@@ -194,7 +208,7 @@ contract OrchestratorFactory_v1 is
 
         // Deploy and cache optional modules.
         address[] memory modules =
-            createModules(moduleConfigs, proxy, workflowConfig);
+            _createModuleProxies(moduleConfigs, proxy, workflowConfig);
 
         emit OrchestratorCreated(_orchestratorIdCounter, proxy);
 
@@ -209,6 +223,9 @@ contract OrchestratorFactory_v1 is
             IGovernor_v1(IModuleFactory_v1(moduleFactory).governor())
         );
 
+        // Init the rest of the modules
+        _initModules(modules, moduleConfigs, proxy);
+
         return IOrchestrator_v1(proxy);
     }
 
@@ -222,33 +239,69 @@ contract OrchestratorFactory_v1 is
         return _orchestrators[id];
     }
 
+    /// @inheritdoc IOrchestratorFactory_v1
     function getOrchestratorIDCounter() external view returns (uint) {
         return _orchestratorIdCounter;
     }
 
-    function createModules(
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev	Creates the modules based on their `moduleConfigs.
+    /// @param  moduleConfigs The config data of the modules that will be created with this function call.
+    /// @param  orchestratorProxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    /// @param  workflowConfig The workflow's config data.
+    function _createModuleProxies(
         ModuleConfig[] memory moduleConfigs,
-        address proxy,
+        address orchestratorProxy,
         WorkflowConfig memory workflowConfig
     ) internal returns (address[] memory) {
         // Deploy and cache optional modules.
 
         address[] memory modules = new address[](moduleConfigs.length);
         for (uint i; i < moduleConfigs.length; ++i) {
-            modules[i] = IModuleFactory_v1(moduleFactory).createModule(
+            modules[i] = IModuleFactory_v1(moduleFactory).createModuleProxy(
                 moduleConfigs[i].metadata,
-                IOrchestrator_v1(proxy),
-                moduleConfigs[i].configData,
+                IOrchestrator_v1(orchestratorProxy),
                 workflowConfig
             );
         }
         return modules;
     }
 
+    /// @dev	Internal function to initialize the modules.
+    /// @param  modules The modules to initialize.
+    /// @param  moduleConfigs The config data of the modules that will be initialized.
+    /// @param  proxy The address of the {Orchestrator_v1} Proxy that will be linked to the modules.
+    function _initModules(
+        address[] memory modules,
+        ModuleConfig[] memory moduleConfigs,
+        address proxy
+    ) internal {
+        // Deploy and cache optional modules.
+
+        for (uint i; i < modules.length; ++i) {
+            IModule_v1(modules[i]).init(
+                IOrchestrator_v1(proxy),
+                moduleConfigs[i].metadata,
+                moduleConfigs[i].configData
+            );
+        }
+    }
+
+    /// @dev	Internal function to generate salt for the create2-based deployment flow.
+    ///         This salt is the hash of (msgSender, nonce), where the
+    ///         nonce is an increasing number for each user.
+    function _createSalt() internal returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
+        );
+    }
+
     //--------------------------------------------------------------------------
     // ERC2771 Context Upgradeable
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgSender()
         internal
         view
@@ -259,7 +312,7 @@ contract OrchestratorFactory_v1 is
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// Needs to be overriden, because they are imported via the Ownable2Step as well
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
     function _msgData()
         internal
         view
