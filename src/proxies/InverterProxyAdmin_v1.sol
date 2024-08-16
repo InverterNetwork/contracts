@@ -12,7 +12,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 
 /**
- * @title   Inverter Inverter Proxy Admin
+ * @title   Inverter Proxy Admin
  *
  * @notice  Acts as the admin of the {InverterTransparentUpgradeableProxy_v1}s
  *          and is responsible for upgrading the proxies to the newest version.
