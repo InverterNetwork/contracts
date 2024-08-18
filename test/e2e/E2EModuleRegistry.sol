@@ -223,7 +223,6 @@ contract E2EModuleRegistry is Test {
         );
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            moduleFactory,
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
             IInverterBeacon_v1(
                 restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon
