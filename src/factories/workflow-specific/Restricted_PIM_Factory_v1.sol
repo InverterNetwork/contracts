@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+import "forge-std/console.sol";
+
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -15,6 +17,10 @@ import {IRestricted_PIM_Factory_v1} from
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+
+// Internal Implementations
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -123,11 +129,11 @@ contract Restricted_PIM_Factory_v1 is
         );
 
         // assign permissions to buy/sell from curve to admin
-        bytes32 curveAccess =
-        IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-            .CURVE_INTERACTION_ROLE();
-        orchestrator.authorizer().grantRole(curveAccess, realAdmin);
-
+        bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            fundingManager
+        ).CURVE_INTERACTION_ROLE();
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
+            .grantModuleRole(curveAccess, realAdmin);
         // revoke minting rights from factory
         issuanceToken.setMinter(address(this), false);
 
