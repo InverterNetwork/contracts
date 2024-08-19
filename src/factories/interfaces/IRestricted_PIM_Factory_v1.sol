@@ -44,5 +44,5 @@ interface IRestricted_PIM_Factory_v1 {
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
-    ) external returns (IOrchestrator_v1, ERC20Issuance_v1);
+    ) external returns (IOrchestrator_v1);
 }

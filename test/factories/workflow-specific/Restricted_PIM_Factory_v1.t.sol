@@ -21,12 +21,16 @@ import {Restricted_PIM_Factory_v1} from
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 contract Restricted_PIM_Factory_v1Test is E2ETest {
     // SuT
     Restricted_PIM_Factory_v1 factory;
+
+    // helpers
+    EventHelpers eventHelpers;
 
     // Deployment Parameters
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
@@ -37,16 +41,16 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
 
+    // addresses
     address workflowAdmin = vm.addr(420);
-
     address factoryDeployer = vm.addr(1);
     address workflowDeployer = vm.addr(2);
     address mockTrustedForwarder = vm.addr(3);
     address alice = vm.addr(0xA11CE);
 
+    // bc params
     uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
     uint initialCollateralSupply = 3_163_408_614_166_851_161;
-    uint firstCollateralIn = 100_000_000;
     uint32 reserveRatio = 160_000;
 
     function setUp() public override {
@@ -56,6 +60,8 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         factory = new Restricted_PIM_Factory_v1(
             address(orchestratorFactory), mockTrustedForwarder
         );
+
+        eventHelpers = new EventHelpers();
 
         // Orchestrator/Workflow config
         workflowConfig = IOrchestratorFactory_v1.WorkflowConfig({
@@ -130,14 +136,10 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     */
 
     function testCreatePIMWorkflow_WithRestrictedBondingCurve() public {
-        // CHECK: event is emitted
-        // vm.expectEmit(false, false, false, false);
-        // emit IRestricted_PIM_Factory_v1.PIMWorkflowCreated(
-        //     address(0), address(0), address(this)
-        // );
+        // start recording logs
+        vm.recordLogs();
 
-        (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken) =
-        factory.createPIMWorkflow(
+        IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
@@ -145,6 +147,19 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             logicModuleConfigs,
             issuanceTokenParams
         );
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        // get issuance token address from event
+        (bool emitted, bytes32 eventTopic) = eventHelpers.getEventTopic(
+            IRestricted_PIM_Factory_v1.PIMWorkflowCreated.selector, logs, 2
+        );
+        address issuanceTokenAddress =
+            eventHelpers.getAddressFromTopic(eventTopic);
+
+        // CHECK: PIMWorkflowCreated event is emitted
+        assertTrue(emitted);
+
+        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
         address fundingManager = address(orchestrator.fundingManager());
 
         // CHECK: admin RECEIVES initial issuance supply

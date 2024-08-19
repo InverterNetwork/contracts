@@ -392,13 +392,11 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
         });
 
         IOrchestrator_v1 orchestrator;
-        ERC20Issuance_v1 issuanceToken;
 
         vm.startBroadcast(deployerPrivateKey);
         {
             console.log("\t-Creating PIM workflow");
-            (orchestrator, issuanceToken) = restrictedPimFactory
-                .createPIMWorkflow(
+            orchestrator = restrictedPimFactory.createPIMWorkflow(
                 workflowConfig,
                 fundingManagerFactoryConfig,
                 authorizerFactoryConfig,
@@ -414,6 +412,10 @@ contract DeployQAccWorkflow is MetadataCollection_v1, Script {
             orchestrator.orchestratorId(),
             address(orchestrator)
         );
+        address issuanceTokenAddress =
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            address(orchestrator.fundingManager())
+        ).getIssuanceToken();
         console.log(
             "\t-Deployed issuance token at address: %s", address(issuanceToken)
         );

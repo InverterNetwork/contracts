@@ -61,12 +61,9 @@ contract Restricted_PIM_Factory_v1 is
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
-    )
-        external
-        returns (IOrchestrator_v1 orchestrator, ERC20Issuance_v1 issuanceToken)
-    {
+    ) external returns (IOrchestrator_v1 orchestrator) {
         // deploy issuance token
-        issuanceToken = new ERC20Issuance_v1(
+        ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
             issuanceTokenParams.name,
             issuanceTokenParams.symbol,
             issuanceTokenParams.decimals,
@@ -144,8 +141,6 @@ contract Restricted_PIM_Factory_v1 is
         emit IRestricted_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator), address(issuanceToken), _msgSender()
         );
-
-        return (orchestrator, issuanceToken);
     }
 
     //--------------------------------------------------------------------------
