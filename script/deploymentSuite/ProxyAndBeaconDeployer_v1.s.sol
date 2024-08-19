@@ -35,9 +35,9 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
         uint majorVersion,
         uint minorVersion,
         uint patchVersion
-    ) external returns (address proxy) {
+    ) external returns (address beacon, address proxy) {
         // Deploy the beacon.
-        address beaconAddress = deployInverterBeacon(
+        beacon = deployInverterBeacon(
             implementationName,
             reverter,
             owner,
@@ -54,7 +54,7 @@ contract ProxyAndBeaconDeployer_v1 is Script, ProtocolConstants_v1 {
                     vm.getCode(
                         "InverterBeaconProxy_v1.sol:InverterBeaconProxy_v1"
                     ),
-                    abi.encode(InverterBeacon_v1(beaconAddress))
+                    abi.encode(InverterBeacon_v1(beacon))
                 )
             );
         }

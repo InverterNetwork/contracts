@@ -6,9 +6,12 @@ import {ITransactionForwarder_v1} from
     "src/external/forwarder/interfaces/ITransactionForwarder_v1.sol";
 
 // External Dependencies
-import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
-import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
-import {Context} from "@oz/utils/Context.sol";
+import {ERC2771ForwarderUpgradeable} from
+    "@oz-up/metatx/ERC2771ForwarderUpgradeable.sol";
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 
 /**
  * @title   Inverter Meta-Transaction & Multicall Forwarder
@@ -31,14 +34,27 @@ import {Context} from "@oz/utils/Context.sol";
  */
 contract TransactionForwarder_v1 is
     ITransactionForwarder_v1,
-    ERC2771Forwarder,
-    Context
+    ERC2771ForwarderUpgradeable,
+    ContextUpgradeable
 {
     //--------------------------------------------------------------------------
-    // Constructor
+    // Storage
 
-    /// @notice Initializes the contract with the name of the contract.
-    constructor() ERC2771Forwarder("Inverter TransactionForwarder_v1") {}
+    /// @dev	Storage gap for future upgrades.
+    uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    function init() external initializer {
+        __ERC2771Forwarder_init("Inverter TransactionForwarder_v1");
+    }
 
     //--------------------------------------------------------------------------
     // Metatransaction Helper Functions
@@ -97,11 +113,9 @@ contract TransactionForwarder_v1 is
     /// @notice Returns the digest for the given `ForwardRequestData`.
     /// @param  req The ForwardRequest you want to get the digest from.
     /// @return digest The digest needed to create a signature for the request.
-    function _getStructHash(ERC2771Forwarder.ForwardRequestData memory req)
-        internal
-        view
-        returns (bytes32)
-    {
+    function _getStructHash(
+        ERC2771ForwarderUpgradeable.ForwardRequestData memory req
+    ) internal view returns (bytes32) {
         return keccak256(
             abi.encode(
                 _FORWARD_REQUEST_TYPEHASH,
@@ -119,8 +133,9 @@ contract TransactionForwarder_v1 is
     // Copied from the {ERC2771Forwarder} as it isnt declared internally
     // Added an underscore because it can not be overwritten
     function __isTrustedByTarget(address target) private view returns (bool) {
-        bytes memory encodedParams =
-            abi.encodeCall(ERC2771Context.isTrustedForwarder, (address(this)));
+        bytes memory encodedParams = abi.encodeCall(
+            ERC2771ContextUpgradeable.isTrustedForwarder, (address(this))
+        );
 
         bool success;
         uint returnSize;

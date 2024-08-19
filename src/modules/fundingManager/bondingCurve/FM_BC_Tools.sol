@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 /**
- * @title   Inverter Inverter Bonding Curve Tools Library
+ * @title   Inverter Bonding Curve Tools Library
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy

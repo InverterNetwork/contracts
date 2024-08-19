@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 // External Dependencies
-import {ERC2771Forwarder} from "@oz/metatx/ERC2771Forwarder.sol";
+import {ERC2771ForwarderUpgradeable} from
+    "@oz-up/metatx/ERC2771ForwarderUpgradeable.sol";
 
 interface ITransactionForwarder_v1 {
     //--------------------------------------------------------------------------
@@ -40,10 +41,9 @@ interface ITransactionForwarder_v1 {
     /// @dev	The signature field of the given `ForwardRequestData` can be empty.
     /// @param  req The ForwardRequest you want to get the digest from.
     /// @return digest The digest needed to create a signature for the request.
-    function createDigest(ERC2771Forwarder.ForwardRequestData memory req)
-        external
-        view
-        returns (bytes32 digest);
+    function createDigest(
+        ERC2771ForwarderUpgradeable.ForwardRequestData memory req
+    ) external view returns (bytes32 digest);
 
     //--------------------------------------------------------------------------
     // Multicall Functions
