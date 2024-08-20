@@ -10,8 +10,9 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {ERC20Issuance_v1} from "@fm/bondingCurve/tokens/ERC20Issuance_v1.sol";
-
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
+import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // SuT
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
@@ -26,6 +27,9 @@ contract BondingCurveTokenRescueE2E is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     ERC20Issuance_v1 issuanceToken;
+
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+        bc_properties;
 
     address alice = address(0xA11CE);
     uint aliceBuyAmount = 200_000e18;
@@ -55,31 +59,27 @@ contract BondingCurveTokenRescueE2E is E2ETest {
             maxSupply: type(uint).max - 1
         });
 
-        address issuanceTokenAdmin = address(this);
+        issuanceToken = new ERC20Issuance_v1(
+            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
+        );
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .BondingCurveProperties({
-                formula: address(formula),
-                reserveRatioForBuying: 333_333,
-                reserveRatioForSelling: 333_333,
-                buyFee: 0,
-                sellFee: 0,
-                buyIsOpen: true,
-                sellIsOpen: true,
-                initialIssuanceSupply: 1,
-                initialCollateralSupply: 3
-            });
+        bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            .BondingCurveProperties({
+            formula: address(formula),
+            reserveRatioForBuying: 333_333,
+            reserveRatioForSelling: 333_333,
+            buyFee: 0,
+            sellFee: 0,
+            buyIsOpen: true,
+            sellIsOpen: true,
+            initialIssuanceSupply: 10,
+            initialCollateralSupply: 30
+        });
 
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(
-                    issuanceToken_properties,
-                    issuanceTokenAdmin,
-                    bc_properties,
-                    token
-                )
+                abi.encode(address(issuanceToken), bc_properties, token)
             )
         );
 
@@ -116,7 +116,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
             address(orchestrator.fundingManager())
         );
 
-        issuanceToken = ERC20Issuance_v1(fundingManager.getIssuanceToken());
+        issuanceToken.setMinter(address(fundingManager), true);
 
         // IMPORTANT
         // =========
@@ -128,7 +128,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         // token.approve(address(fundingManager), initialDeposit);
         // fundingManager.deposit(initialDeposit);
 
-        // Mint some tokens to alice and bob in order to fund the fundingmanager.
+        // Mint some tokens to alice in order to fund the fundingmanager.
 
         // Alice will perform a very big initial buy.
         token.mint(alice, aliceBuyAmount);
@@ -149,16 +149,109 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         }
         vm.stopPrank();
 
-        // Get BC Parameters
+        // --------------------------------------------------------------------------------
+        // Start Token Rescue
 
-        // Put in initial Collateral Supply correctly
+        // Stop minting of new tokens
 
-        // Deploy new FM_BC with old Parameters
+        issuanceToken.setMinter(address(fundingManager), false);
+
+        // Get the old BC Parameters and put in initial Collateral Supply correctly
+
+        uint oldIssuanceSupply = fundingManager.getVirtualIssuanceSupply();
+        uint oldCollateralSupply = fundingManager.getVirtualCollateralSupply();
+
+        bc_properties.initialIssuanceSupply = oldIssuanceSupply;
+        bc_properties.initialCollateralSupply = oldCollateralSupply;
+
+        // Deploy new FM_BC with old Parameters, but dont link it to workflow yet
+
+        address newBondingCurve = moduleFactory.createAndInitModule(
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            orchestrator,
+            abi.encode(address(issuanceToken), bc_properties, address(token)),
+            workflowConfig
+        );
+
+        // Create PaymentRouter
+        setUpPaymentRouter();
+
+        address paymentRouter = moduleFactory.createAndInitModule(
+            paymentRouterMetadata, orchestrator, bytes(""), workflowConfig
+        );
 
         // Add PaymentRouter to Orchestrator
 
-        // Transfer collateral
+        orchestrator.initiateAddModuleWithTimelock(paymentRouter);
+        // wait for timelock to expire
+        vm.warp(block.timestamp + 1 weeks);
+
+        orchestrator.executeAddModule(paymentRouter);
+
+        // Transfer all collateral to the new BC
+
+        LM_PC_PaymentRouter_v1(paymentRouter).grantModuleRole(
+            LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE(),
+            address(this)
+        );
+
+        LM_PC_PaymentRouter_v1(paymentRouter).pushPayment(
+            newBondingCurve, // recipient
+            address(token), // token
+            // This represented the allowed amount of collateral token to be transferred
+            token.balanceOf(address(fundingManager))
+                - fundingManager.projectCollateralFeeCollected(), // amount
+            block.timestamp, // startTime
+            0, // cliff
+            block.timestamp // endTime
+        );
 
         // Set Minter for Issuance to new BC
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            IFundingManager_v1(newBondingCurve)
+        );
+
+        // wait for timelock to expire
+        vm.warp(block.timestamp + 1 weeks);
+
+        orchestrator.executeSetFundingManager(
+            IFundingManager_v1(newBondingCurve)
+        );
+
+        // Enable Minting again for new BC
+
+        issuanceToken.setMinter(newBondingCurve, true);
+
+        // Check if everything is setup correctly
+
+        assertEq(address(orchestrator.fundingManager()), newBondingCurve);
+
+        fundingManager =
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1(newBondingCurve);
+
+        assertEq(oldIssuanceSupply, fundingManager.getVirtualIssuanceSupply());
+        assertEq(
+            oldCollateralSupply, fundingManager.getVirtualCollateralSupply()
+        );
+
+        // Bob performs a buy
+        address bob = address(0x606);
+        uint bobBuyAmount = 5000e18;
+        token.mint(bob, bobBuyAmount);
+        buf_minAmountOut = fundingManager.calculatePurchaseReturn(bobBuyAmount);
+
+        vm.startPrank(bob);
+        {
+            // Approve tokens to fundingmanager.
+            token.approve(address(fundingManager), bobBuyAmount);
+
+            // Deposit tokens, i.e. fund the fundingmanager.
+            fundingManager.buy(bobBuyAmount, buf_minAmountOut);
+
+            // After the deposit, bob received some amount of receipt tokens
+            // from the fundingmanager.
+            assertTrue(issuanceToken.balanceOf(bob) > 0);
+        }
+        vm.stopPrank();
     }
 }
