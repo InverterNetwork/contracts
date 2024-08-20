@@ -150,7 +150,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             "OrchestratorFactory_v1",
             abi.encodePacked(
                 vm.getCode("OrchestratorFactory_v1.sol:OrchestratorFactory_v1"),
-                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
+                abi.encode(transactionForwarder)
             )
         );
 

@@ -21,7 +21,7 @@ import {
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,
-    ERC2771Forwarder
+    ERC2771ForwarderUpgradeable
 } from "src/external/forwarder/TransactionForwarder_v1.sol";
 
 contract MetaTxAndMulticallE2E is E2ETest {
@@ -114,8 +114,8 @@ contract MetaTxAndMulticallE2E is E2ETest {
         token.approve(fundingManager, depositAmount);
 
         // We create a simplyfied ForwardRequest without the signature
-        ERC2771Forwarder.ForwardRequestData memory req = ERC2771Forwarder
-            .ForwardRequestData({
+        ERC2771ForwarderUpgradeable.ForwardRequestData memory req =
+        ERC2771ForwarderUpgradeable.ForwardRequestData({
             from: signer,
             to: fundingManager,
             value: 0,
@@ -171,7 +171,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         );
 
         // Then we need to create the ForwardRequest
-        req = ERC2771Forwarder.ForwardRequestData({
+        req = ERC2771ForwarderUpgradeable.ForwardRequestData({
             from: signer,
             to: address(bountyManager),
             value: 0,

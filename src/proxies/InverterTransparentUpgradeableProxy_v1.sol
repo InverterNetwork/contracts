@@ -12,7 +12,7 @@ import {ERC1967Utils} from "@oz/proxy/ERC1967/ERC1967Utils.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 /**
- * @title   Inverter Inverter TransparentUpgradeableProxy
+ * @title   Inverter TransparentUpgradeableProxy
  *
  * @notice  An alternative variant of the {TransparentUpgradeableProxy} of OpenZeppelin that
  *          allows for upgrading the linked implementation of the proxy to the implementation
