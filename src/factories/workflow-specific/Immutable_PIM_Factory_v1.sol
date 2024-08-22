@@ -38,8 +38,23 @@ contract Immutable_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // State Variables
 
-    // store address of orchestratorfactory
+    /// @dev	store address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
+
+    /// @dev	mapping of Funding Manager address to `feeRecipient` address.
+    mapping(address fundingManager => address feeRecipient) private
+        _pimFeeRecipients;
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev	Modifier to guarantee the caller is the fee recipient for the given funding manager.
+    modifier onlyPimFeeRecipient(address fundingManager) {
+        if (_msgSender() != _pimFeeRecipients[fundingManager]) {
+            revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -111,12 +126,22 @@ contract Immutable_PIM_Factory_v1 is
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
         issuanceToken.setMinter(address(this), false);
-        if(initialPurchaseAmount > 0) {
-            IERC20(collateralToken).transferFrom(_msgSender(), address(this), initialPurchaseAmount);
-            IERC20(collateralToken).approve(fundingManager, initialPurchaseAmount);
-            IBondingCurveBase_v1(fundingManager).buyFor(initiator, initialPurchaseAmount, 1);
+
+        // if initial purchase amount set execute first purchase from curve
+        if (initialPurchaseAmount > 0) {
+            IERC20(collateralToken).transferFrom(
+                _msgSender(), address(this), initialPurchaseAmount
+            );
+            IERC20(collateralToken).approve(
+                fundingManager, initialPurchaseAmount
+            );
+            IBondingCurveBase_v1(fundingManager).buyFor(
+                initiator, initialPurchaseAmount, 1
+            );
         }
 
+        // set fee recipient
+        _pimFeeRecipients[fundingManager] = initiator;
 
         // renounce token ownership
         issuanceToken.renounceOwnership();
@@ -127,6 +152,29 @@ contract Immutable_PIM_Factory_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Internal Functions
+    // Permissioned Functions
 
+    function withdrawPimFee(address fundingManager, address to)
+        external
+        onlyPimFeeRecipient(fundingManager)
+    {
+        uint amount =
+            IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
+        IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
+            to, amount
+        );
+        emit IImmutable_PIM_Factory_v1.PimFeeClaimed(
+            fundingManager, _msgSender(), to, amount
+        );
+    }
+
+    function transferPimFeeEligibility(address fundingManager, address to)
+        external
+        onlyPimFeeRecipient(fundingManager)
+    {
+        _pimFeeRecipients[fundingManager] = to;
+        emit IImmutable_PIM_Factory_v1.PimFeeRecipientUpdated(
+            fundingManager, _msgSender(), to
+        );
+    }
 }

@@ -14,16 +14,44 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 interface IImmutable_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
+    error PIM_WorkflowFactory__OnlyPimFeeRecipient();
+
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a new PIM workflow is created.
-    /// @param orchestrator The address of the orchestrator.
+    /// @param fundingManager The address of the funding manager.
     /// @param issuanceToken The address of the issuance token.
     /// @param deployer The address of the deployer.
     event PIMWorkflowCreated(
-        address indexed orchestrator,
+        address indexed fundingManager,
         address indexed issuanceToken,
         address indexed deployer
+    );
+
+    /// @notice Event emitted when factory owner sets new fee.
+    /// @param fundingManager The address of the funding manager.
+    /// @param oldRecipient The previous pim fee recipient.
+    /// @param  newRecipient The new pim fee recipient.
+    event PimFeeRecipientUpdated(
+        address indexed fundingManager,
+        address indexed oldRecipient,
+        address indexed newRecipient
+    );
+
+    /// @notice Event emitted when PIM fee (buy/sell fees) is claimed.
+    /// @param fundingManager The address of the funding manager.
+    /// @param  claimer The address of the one that is claiming.
+    /// @param  to The address of that is receiving the fee.
+    /// @param  amount The amount claimed.
+    event PimFeeClaimed(
+        address indexed fundingManager,
+        address indexed claimer,
+        address indexed to,
+        uint amount
     );
 
     //--------------------------------------------------------------------------

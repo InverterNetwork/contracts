@@ -177,4 +177,63 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         assertGt(issuanceToken.balanceOf(workflowAdmin), 0);
         assertEq(token.balanceOf(fundingManager), initialPurchaseAmount);
     }
+
+    /* Test testWithdrawPimFee
+        ├── given the msg.sender is the fee recipient
+        |   └── when called
+        |       └── then it emits fee claim events on bc and factory
+        └── given the msg.sender is NOT the fee recipient
+            └── when called
+                └── then it reverts   
+    */
+
+    function testWithdrawPimFee() public {
+        IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
+        address fundingManager = address(orchestrator.fundingManager());
+        vm.startPrank(workflowAdmin);
+        // CHECK: bonding curve EMITS event for fee withdrawal
+        vm.expectEmit(true, true, true, false);
+        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+            address(this), 0
+        );
+        uint claimableFees = IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
+        vm.expectEmit(true, false, false, false);
+        emit IImmutable_PIM_Factory_v1.PimFeeClaimed(
+            fundingManager, address(this), alice, claimableFees
+        );
+        factory.withdrawPimFee(fundingManager, alice);
+        vm.stopPrank();
+    }
+
+    function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
+        IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
+        address fundingManager = address(orchestrator.fundingManager());
+
+        // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IImmutable_PIM_Factory_v1
+                    .PIM_WorkflowFactory__OnlyPimFeeRecipient
+                    .selector
+            )
+        );
+        vm.prank(alice);
+        factory.withdrawPimFee(fundingManager, alice);
+    }
 }
