@@ -40,6 +40,7 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
+    uint initialPurchaseAmount = 100 ether;
 
     // addresses
     address workflowAdmin = vm.addr(420);
@@ -105,7 +106,7 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
             abi.encode(address(0), bcProperties, token)
         );
 
@@ -122,20 +123,18 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         token.approve(address(factory), type(uint).max);
     }
 
-    /* Test testCreatePIMWorkflow
-        └── given a resricted bonding curve
+    /* Test createPIMWorkflow
+        └── given an unrestricted bonding curve
             └── when called
-                └── then it mints initial issuance supply to admin
-                └── then it transfers initial collateral supply from msg.sender to bonding curve
-                └── then it revokes issuanceToken minting rights from factory
+                └── then it deploys an issuance token and a workflow
+                └── then it executes initial purchase
                 └── then it grants issuanceToken minting rights to bonding curve
-                └── then it grants curve interaction role to admin
-                └── then it transfers ownership of issuance token to admin
-                └── then it revokes orchestrator admin rights and transfers them to admin
-                └── then it emits a PIMWorkflowCreated event
+                └── then it renounces ownership over issuance token
+                └── then it revokes orchestrator admin rights and transfers them to factory
+                └── then it emits a PIMWorkflowCreated event YES
     */
 
-    function testCreatePIMWorkflow_WithRestrictedBondingCurve() public {
+    function testCreatePIMWorkflow() public {
         // start recording logs
         vm.recordLogs();
 
@@ -145,7 +144,8 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            issuanceTokenParams
+            issuanceTokenParams,
+            initialPurchaseAmount
         );
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -162,39 +162,19 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
         address fundingManager = address(orchestrator.fundingManager());
 
-        // CHECK: admin RECEIVES initial issuance supply
-        assertEq(
-            issuanceToken.balanceOf(workflowAdmin),
-            bcProperties.initialIssuanceSupply
-        );
-        // CHECK: bonding curve HOLDS initial collateral supply
-        assertEq(
-            token.balanceOf(fundingManager),
-            bcProperties.initialCollateralSupply
-        );
         // CHECK: factory DOES NOT have minting rights on token anymore
         assertFalse(issuanceToken.allowedMinters(address(factory)));
         // CHECK: bonding curve module HAS minting rights on token
         assertTrue(issuanceToken.allowedMinters(fundingManager));
-        // CHECK: initialAdmin HAS curve interaction role
-        bytes32 curveInteractionRole =
-        IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-            .CURVE_INTERACTION_ROLE();
-        bytes32 curveInteractionRoleId = orchestrator.authorizer()
-            .generateRoleId(fundingManager, curveInteractionRole);
-        assertTrue(
-            orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, workflowAdmin
-            )
-        );
-        // CHECK: initialAdmin IS owner of issuance token
-        assertEq(issuanceToken.owner(), workflowAdmin);
-        // CHECK: initialAdmin IS orchestrator admin
+        // CHECK: issuance token is renounced
+        assertEq(issuanceToken.owner(), address(0));
+        // CHECK: factory HAS admin rights over workflow
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        assertTrue(orchestrator.authorizer().hasRole(adminRole, workflowAdmin));
-        // CHECK: factory DOES NOT have admin rights over workflow
-        assertFalse(
+        assertTrue(
             orchestrator.authorizer().hasRole(adminRole, address(factory))
         );
+        // CHECK: initial purchase was executed
+        assertGt(issuanceToken.balanceOf(workflowAdmin), 0);
+        assertEq(token.balanceOf(fundingManager), initialPurchaseAmount);
     }
 }

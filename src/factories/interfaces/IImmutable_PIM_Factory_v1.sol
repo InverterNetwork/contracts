@@ -36,6 +36,7 @@ interface IImmutable_PIM_Factory_v1 {
     /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config data.
     /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
+    /// @param initialPurchaseAmount The volume of the first purchase in terms of collateral token.
     /// @return CreatedOrchestrator Returns the created orchestrator instance.
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
@@ -43,6 +44,7 @@ interface IImmutable_PIM_Factory_v1 {
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        uint initialPurchaseAmount
     ) external returns (IOrchestrator_v1);
 }

@@ -60,7 +60,8 @@ contract Immutable_PIM_Factory_v1 is
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        uint initialPurchaseAmount
     ) external returns (IOrchestrator_v1 orchestrator) {
         // deploy issuance token
         ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
@@ -70,16 +71,13 @@ contract Immutable_PIM_Factory_v1 is
             issuanceTokenParams.maxSupply,
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
-
         // MODIFY AUTHORIZER CONFIG
         // decode configData of authorizer
         // set (own) factory as orchestrator admin
-        bytes memory auhorizerConfigData = authorizerConfig.configData;
-        (address realAdmin) = abi.decode(auhorizerConfigData, (address));
-        address temporaryAdmin = address(this);
-        auhorizerConfigData = abi.encode(temporaryAdmin);
-        authorizerConfig.configData = auhorizerConfigData;
-
+        bytes memory authorizerConfigData = authorizerConfig.configData;
+        (address initiator) = abi.decode(authorizerConfigData, (address));
+        authorizerConfigData = abi.encode(address(this));
+        authorizerConfig.configData = authorizerConfigData;
         // MODIFY FUNDING MANAGER CONFIG
         // decode configData of fundingManager
         // set newly deployed token as issuance token
@@ -108,35 +106,20 @@ contract Immutable_PIM_Factory_v1 is
             paymentProcessorConfig,
             moduleConfigs
         );
-
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
-
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
-
-        // transfer initial collateral supply from msg.sender to  bonding curve and mint issuance token to recipient
-        _manageInitialSupplies(
-            IBondingCurveBase_v1(fundingManager),
-            IERC20(collateralToken),
-            issuanceToken,
-            bcProperties.initialCollateralSupply,
-            bcProperties.initialIssuanceSupply,
-            realAdmin
-        );
-
-        // assign permissions to buy/sell from curve to admin
-        bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            fundingManager
-        ).CURVE_INTERACTION_ROLE();
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-            .grantModuleRole(curveAccess, realAdmin);
-        // revoke minting rights from factory
         issuanceToken.setMinter(address(this), false);
+        if(initialPurchaseAmount > 0) {
+            IERC20(collateralToken).transferFrom(_msgSender(), address(this), initialPurchaseAmount);
+            IERC20(collateralToken).approve(fundingManager, initialPurchaseAmount);
+            IBondingCurveBase_v1(fundingManager).buyFor(initiator, initialPurchaseAmount, 1);
+        }
 
-        // revoke privileges from factory
-        _transferTokenOwnership(issuanceToken, realAdmin);
-        _transferWorkflowAdminRights(orchestrator, realAdmin);
+
+        // renounce token ownership
+        issuanceToken.renounceOwnership();
 
         emit IImmutable_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator), address(issuanceToken), _msgSender()
@@ -146,41 +129,4 @@ contract Immutable_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function _manageInitialSupplies(
-        IBondingCurveBase_v1 fundingManager,
-        IERC20 collateralToken,
-        ERC20Issuance_v1 issuanceToken,
-        uint initialCollateralSupply,
-        uint initialIssuanceSupply,
-        address recipient
-    ) private {
-        // collateral token is paid for by the msg.sender
-        collateralToken.transferFrom(
-            _msgSender(), address(fundingManager), initialCollateralSupply
-        );
-        // issuance token is minted to the the specified recipient
-        issuanceToken.mint(recipient, initialIssuanceSupply);
-    }
-
-    function _transferTokenOwnership(
-        ERC20Issuance_v1 issuanceToken,
-        address newAdmin
-    ) private {
-        if (newAdmin == address(0)) {
-            issuanceToken.renounceOwnership();
-        } else {
-            issuanceToken.transferOwnership(newAdmin);
-        }
-    }
-
-    function _transferWorkflowAdminRights(
-        IOrchestrator_v1 orchestrator,
-        address newAdmin
-    ) private {
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        // if renounced flag is set, add zero address as admin (because workflow must have at least one admin set)
-        orchestrator.authorizer().grantRole(adminRole, newAdmin);
-        // and revoke admin role from factory
-        orchestrator.authorizer().revokeRole(adminRole, address(this));
-    }
 }
