@@ -204,7 +204,8 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
             address(this), 0
         );
-        uint claimableFees = IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
+        uint claimableFees =
+            IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
         vm.expectEmit(true, false, false, false);
         emit IImmutable_PIM_Factory_v1.PimFeeClaimed(
             fundingManager, address(this), alice, claimableFees
