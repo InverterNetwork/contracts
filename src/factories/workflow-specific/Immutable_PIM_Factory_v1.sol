@@ -175,7 +175,7 @@ contract Immutable_PIM_Factory_v1 is
     function transferPimFeeEligibility(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
-    {   
+    {
         _pimFeeRecipients[fundingManager] = to;
         emit IImmutable_PIM_Factory_v1.PimFeeRecipientUpdated(
             fundingManager, _msgSender(), to
