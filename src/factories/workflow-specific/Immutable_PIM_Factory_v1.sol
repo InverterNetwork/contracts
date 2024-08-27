@@ -87,6 +87,7 @@ contract Immutable_PIM_Factory_v1 is
         // MODIFY AUTHORIZER CONFIG
         // decode configData of authorizer
         // set (own) factory as orchestrator admin
+        // reinterpret the `initialAdmin` field as the `initiator` address
         bytes memory authorizerConfigData = authorizerConfig.configData;
         (address initiator) = abi.decode(authorizerConfigData, (address));
         authorizerConfigData = abi.encode(address(this));
@@ -121,11 +122,12 @@ contract Immutable_PIM_Factory_v1 is
         );
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
-        // enable bonding curve to mint issuance token
+        // enable bonding curve to mint issuance token and disable minting from factory
         issuanceToken.setMinter(fundingManager, true);
         issuanceToken.setMinter(address(this), false);
 
-        // if initial purchase amount set execute first purchase from curve
+        // if initial purchase amount is set (> 0) execute first purchase from curve
+        // recipient: initiator
         if (initialPurchaseAmount > 0) {
             IERC20(collateralToken).transferFrom(
                 _msgSender(), address(this), initialPurchaseAmount
@@ -138,7 +140,7 @@ contract Immutable_PIM_Factory_v1 is
             );
         }
 
-        // set fee recipient
+        // set fee recipient (initiator)
         _pimFeeRecipients[fundingManager] = initiator;
 
         // renounce token ownership
@@ -157,8 +159,10 @@ contract Immutable_PIM_Factory_v1 is
         external
         onlyPimFeeRecipient(fundingManager)
     {
+        // get accumulated fee amount from bonding curve
         uint amount =
             IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
+        // withdraw fee from bonding curve and send to `to`
         IBondingCurveBase_v1(fundingManager).withdrawProjectCollateralFee(
             to, amount
         );
@@ -171,7 +175,7 @@ contract Immutable_PIM_Factory_v1 is
     function transferPimFeeEligibility(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
-    {
+    {   
         _pimFeeRecipients[fundingManager] = to;
         emit IImmutable_PIM_Factory_v1.PimFeeRecipientUpdated(
             fundingManager, _msgSender(), to
