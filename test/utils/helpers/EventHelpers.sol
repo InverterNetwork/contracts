@@ -12,8 +12,7 @@ contract EventHelpers {
         bytes32 selector,
         Vm.Log[] memory logs,
         uint topicIndex
-    ) external view returns (bool, bytes32) {
-        bytes32 topic;
+    ) external pure returns (bool, bytes32) {
         uint logIndex;
         uint counter;
         for (uint i = 0; i < logs.length; i++) {
