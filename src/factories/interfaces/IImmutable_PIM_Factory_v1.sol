@@ -57,7 +57,7 @@ interface IImmutable_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
+    /// @notice Deploys a new issuance token and uses that to deploy a workflow with an open yet immutable bonding curve.
     /// @param workflowConfig The workflow's config data.
     /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1} instance.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
@@ -75,4 +75,17 @@ interface IImmutable_PIM_Factory_v1 {
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
         uint initialPurchaseAmount
     ) external returns (IOrchestrator_v1);
+
+    /// @notice Withdraws buy/sell fees accumulated by a bonding curve.
+    /// @dev Only callable by the current fee recipient.
+    /// @param fundingManager The address of the funding manager.
+    /// @param to The address to send the fees to.
+    function withdrawPimFee(address fundingManager, address to) external;
+
+    /// @notice Transfers the fee recipient eligibility of a bonding curve to another address.
+    /// @dev Only callable by the current fee recipient.
+    /// @param fundingManager The address of the funding manager.
+    /// @param to The address to transfer the fee recipient eligibility to.
+    function transferPimFeeEligibility(address fundingManager, address to)
+        external;
 }
