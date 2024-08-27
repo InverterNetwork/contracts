@@ -16,6 +16,8 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
@@ -133,6 +135,22 @@ contract E2EModuleRegistry is Test {
         "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
     );
 
+    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl;
+
+    InverterBeacon_v1
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon;
+
+    IModule_v1.Metadata
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata =
+        IModule_v1.Metadata(
+            1,
+            0,
+            0,
+            "https://github.com/inverter/bonding-curve-funding-manager",
+            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
+        );
+
     /*
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.IssuanceToken memory
             issuanceToken = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -187,6 +205,28 @@ contract E2EModuleRegistry is Test {
             bancorVirtualSupplyBondingCurveFundingManagerMetadata,
             IInverterBeacon_v1(
                 bancorVirtualSupplyBondingCurveFundingManagerBeacon
+            )
+        );
+
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl =
+            new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1();
+
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
+                .majorVersion,
+            address(restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl),
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
+                .minorVersion,
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
+                .patchVersion
+        );
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            IInverterBeacon_v1(
+                restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon
             )
         );
     }
