@@ -152,6 +152,7 @@ contract Immutable_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // Permissioned Functions
 
+    /// @inheritdoc IImmutable_PIM_Factory_v1
     function withdrawPimFee(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
@@ -166,6 +167,7 @@ contract Immutable_PIM_Factory_v1 is
         );
     }
 
+    /// @inheritdoc IImmutable_PIM_Factory_v1
     function transferPimFeeEligibility(address fundingManager, address to)
         external
         onlyPimFeeRecipient(fundingManager)
