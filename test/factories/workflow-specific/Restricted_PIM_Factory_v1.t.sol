@@ -117,12 +117,25 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         });
 
         // mint collateral token to deployer and approve to factory
-        token.mint(address(this), type(uint).max);
-        token.approve(address(factory), type(uint).max);
+        token.mint(admin, type(uint).max);
+    }
+
+    function testAddFunding() public {
+        vm.startPrank(admin);
+
+        token.approve(address(factory), initialCollateralSupply);
+
+        vm.expectEmit(true, true, true, true);
+        emit IRestricted_PIM_Factory_v1.FundingAdded(
+            admin, actor, address(token), initialCollateralSupply
+        );
+
+        factory.addFunding(actor, address(token), initialCollateralSupply);
+        vm.stopPrank();
     }
 
     /* Test testCreatePIMWorkflow
-        └── given a resricted bonding curve
+        └── given that the curve creation has been funded
             └── when called
                 └── then it mints initial issuance supply to admin
                 └── then it transfers initial collateral supply from msg.sender to bonding curve
@@ -135,6 +148,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     */
 
     function testCreatePIMWorkflow_WithRestrictedBondingCurve() public {
+        // add funding
+        vm.startPrank(admin);
+        token.approve(address(factory), initialCollateralSupply);
+        factory.addFunding(actor, address(token), initialCollateralSupply);
+        vm.stopPrank();
+
         // start recording logs
         vm.recordLogs();
 
@@ -146,7 +165,6 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             logicModuleConfigs,
             issuanceTokenParams
         );
-
         Vm.Log[] memory logs = vm.getRecordedLogs();
         // get issuance token address from event
         (bool emitted, bytes32 eventTopic) = eventHelpers.getEventTopic(
@@ -160,10 +178,9 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
         address fundingManager = address(orchestrator.fundingManager());
-
         // CHECK: admin RECEIVES initial issuance supply
         assertEq(
-            issuanceToken.balanceOf(admin), bcProperties.initialIssuanceSupply
+            issuanceToken.balanceOf(actor), bcProperties.initialIssuanceSupply
         );
         // CHECK: bonding curve HOLDS initial collateral supply
         assertEq(
@@ -182,7 +199,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             .generateRoleId(fundingManager, curveInteractionRole);
         assertTrue(
             orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, admin
+                curveInteractionRoleId, actor
             )
         );
         // CHECK: initialAdmin IS owner of issuance token
