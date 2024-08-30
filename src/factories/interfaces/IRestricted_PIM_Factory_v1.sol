@@ -12,6 +12,24 @@ import {IBondingCurveBase_v1} from
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
+/**
+ * @title   Restricted PIM Factory
+ *
+ * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a mechanism to pre-fund
+ *          the required collateral supply and an opinionated initial configuration.
+ *
+ * @dev     More user-friendly way to deploy a PIM workflow with an restricted bonding curve.
+ *          Anyone can pre-fund the required collateral supply for a bonding curve deployment.
+ *          Initial issuance token supply is minted to the deployer.
+ *          The deployer receives the role to interact with the curve.
+ *          Overall control over workflow remains with `initialAdmin` of the role authorizer.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          This contract is experimental in nature and has not been audited.
+ *                          Please use at your own risk!
+ *
+ * @author  Inverter Network
+ */
 interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Errors
