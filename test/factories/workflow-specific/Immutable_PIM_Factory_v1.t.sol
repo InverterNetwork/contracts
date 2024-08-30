@@ -124,14 +124,17 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
     }
 
     /* Test createPIMWorkflow
-        └── given an unrestricted bonding curve
+        ├── given an unrestricted bonding curve
+        |   └── when called
+        |       ├── then it deploys an issuance token and a workflow
+        |       ├── then it executes initial purchase
+        |       ├── then it grants issuanceToken minting rights to bonding curve
+        |       ├── then it renounces ownership over issuance token
+        |       ├── then it revokes orchestrator admin rights and transfers them to factory
+        |       └── then it emits a PIMWorkflowCreated event YES
+        └── given the initiator has not been set
             └── when called
-                └── then it deploys an issuance token and a workflow
-                └── then it executes initial purchase
-                └── then it grants issuanceToken minting rights to bonding curve
-                └── then it renounces ownership over issuance token
-                └── then it revokes orchestrator admin rights and transfers them to factory
-                └── then it emits a PIMWorkflowCreated event YES
+                └── then it reverts
     */
 
     function testCreatePIMWorkflow() public {
@@ -176,6 +179,28 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         // CHECK: initial purchase was executed
         assertGt(issuanceToken.balanceOf(workflowAdmin), 0);
         assertEq(token.balanceOf(fundingManager), initialPurchaseAmount);
+    }
+
+    function testCreatePIMWorkflow_WithoutInitiator() public {
+        IOrchestratorFactory_v1.ModuleConfig memory invalidAuthorizerConfig =
+        IOrchestratorFactory_v1.ModuleConfig(
+            roleAuthorizerMetadata, abi.encode(address(0))
+        );
+
+        vm.expectRevert(
+            IImmutable_PIM_Factory_v1
+                .PIM_WorkflowFactory__InvalidZeroAddress
+                .selector
+        );
+        factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            invalidAuthorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
     }
 
     /* Test testWithdrawPimFee
