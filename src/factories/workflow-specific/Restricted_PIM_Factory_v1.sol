@@ -153,8 +153,11 @@ contract Restricted_PIM_Factory_v1 is
         );
     }
 
+    /// @inheritdoc IRestricted_PIM_Factory_v1
     function addFunding(address actor, address token, uint amount) external {
+        // records funding amount
         fundings[_msgSender()][actor][token] += amount;
+        // sends amount from msg.sender to factory
         IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
 
         emit IRestricted_PIM_Factory_v1.FundingAdded(
@@ -162,18 +165,20 @@ contract Restricted_PIM_Factory_v1 is
         );
     }
 
+    /// @inheritdoc IRestricted_PIM_Factory_v1
     function withdrawFunding(address actor, address token, uint amount)
         external
     {
+        // checks if the requested amount is available
         uint availableFunding = fundings[_msgSender()][actor][token];
         if (amount > availableFunding) {
             revert IRestricted_PIM_Factory_v1.InsufficientFunding(
                 availableFunding
             );
         }
-
+        // if so adjusts internal balancing
         fundings[_msgSender()][actor][token] -= amount;
-
+        // and sends amount to msg sender
         IERC20(token).safeTransfer(_msgSender(), amount);
 
         emit IRestricted_PIM_Factory_v1.FundingRemoved(
