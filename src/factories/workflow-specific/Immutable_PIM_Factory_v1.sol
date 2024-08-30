@@ -84,14 +84,21 @@ contract Immutable_PIM_Factory_v1 is
             issuanceTokenParams.maxSupply,
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
+
         // MODIFY AUTHORIZER CONFIG
         // decode configData of authorizer
         // set (own) factory as orchestrator admin
         // reinterpret the `initialAdmin` field as the `initiator` address
         bytes memory authorizerConfigData = authorizerConfig.configData;
         (address initiator) = abi.decode(authorizerConfigData, (address));
+        if (initiator == address(0)) {
+            revert
+                IImmutable_PIM_Factory_v1
+                .PIM_WorkflowFactory__InvalidZeroAddress();
+        }
         authorizerConfigData = abi.encode(address(this));
         authorizerConfig.configData = authorizerConfigData;
+
         // MODIFY FUNDING MANAGER CONFIG
         // decode configData of fundingManager
         // set newly deployed token as issuance token
@@ -112,6 +119,8 @@ contract Immutable_PIM_Factory_v1 is
         fundingManagerConfigData =
             abi.encode(address(issuanceToken), bcProperties, collateralToken);
         fundingManagerConfig.configData = fundingManagerConfigData;
+
+        // deploy workflow
         orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
             .createOrchestrator(
             workflowConfig,
@@ -120,8 +129,10 @@ contract Immutable_PIM_Factory_v1 is
             paymentProcessorConfig,
             moduleConfigs
         );
+
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
+
         // enable bonding curve to mint issuance token and disable minting from factory
         issuanceToken.setMinter(fundingManager, true);
         issuanceToken.setMinter(address(this), false);
