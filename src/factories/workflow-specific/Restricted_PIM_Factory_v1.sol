@@ -162,9 +162,15 @@ contract Restricted_PIM_Factory_v1 is
         );
     }
 
-    function withdrawFunding(address actor, address token, uint amount) external {
+    function withdrawFunding(address actor, address token, uint amount)
+        external
+    {
         uint availableFunding = fundings[_msgSender()][actor][token];
-        if(amount > availableFunding) revert IRestricted_PIM_Factory_v1.InsufficientFunding(availableFunding);
+        if (amount > availableFunding) {
+            revert IRestricted_PIM_Factory_v1.InsufficientFunding(
+                availableFunding
+            );
+        }
 
         fundings[_msgSender()][actor][token] -= amount;
 
@@ -194,7 +200,8 @@ contract Restricted_PIM_Factory_v1 is
             );
         }
 
-        fundings[admin][actor][address(collateralToken)] -= initialCollateralSupply;
+        fundings[admin][actor][address(collateralToken)] -=
+            initialCollateralSupply;
 
         // collateral token is paid for by the msg.sender
         collateralToken.safeTransfer(
