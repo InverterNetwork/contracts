@@ -120,6 +120,15 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         token.mint(admin, type(uint).max);
     }
 
+    /* Test addFunding
+        └── given that token has been approved
+        |   └── when called
+        |       └── then it sends collateral tokens from sender to factory
+        |       └── then emits an event
+        └── given that token has NOT been approved
+            └── when called
+                └── then it reverts
+    */
     function testAddFunding() public {
         vm.startPrank(admin);
 
@@ -138,6 +147,21 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         vm.stopPrank();
     }
 
+    function testAddFunding_WithoutApproval() public {
+        vm.startPrank(admin);
+        vm.expectRevert();
+        factory.addFunding(actor, address(token), initialCollateralSupply);
+    }
+
+    /* Test withdrawFunding
+        └── given that caller had added funding before
+        |   └── when called
+        |       └── then it withdraws tokens from factory
+        |       └── then emits an event
+        └── given that caller had NOT added funding before (trying to steal someones funding)
+            └── when called
+                └── then it reverts
+    */
     function testWithdrawFunding() public {
         vm.startPrank(admin);
         token.approve(address(factory), initialCollateralSupply);
@@ -155,20 +179,40 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         vm.stopPrank();
     }
 
-    /* Test testCreatePIMWorkflow
+    function testWithdrawFunding_AsThief() public {
+        vm.startPrank(admin);
+        token.approve(address(factory), initialCollateralSupply);
+        factory.addFunding(actor, address(token), initialCollateralSupply);
+        vm.stopPrank();
+
+        address thief = vm.addr(69);
+        vm.startPrank(thief);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 0
+            )
+        );
+        factory.withdrawFunding(actor, address(token), initialCollateralSupply);
+        vm.stopPrank();
+    }
+
+    /* Test createPIMWorkflow
         └── given that the curve creation has been funded
-            └── when called
-                └── then it mints initial issuance supply to admin
-                └── then it transfers initial collateral supply from msg.sender to bonding curve
-                └── then it revokes issuanceToken minting rights from factory
-                └── then it grants issuanceToken minting rights to bonding curve
-                └── then it grants curve interaction role to admin
-                └── then it transfers ownership of issuance token to admin
-                └── then it revokes orchestrator admin rights and transfers them to admin
-                └── then it emits a PIMWorkflowCreated event
+        |   └── when called
+        |       └── then it mints initial issuance supply to admin
+        |       └── then it transfers initial collateral supply from msg.sender to bonding curve
+        |       └── then it revokes issuanceToken minting rights from factory
+        |       └── then it grants issuanceToken minting rights to bonding curve
+        |       └── then it grants curve interaction role to admin
+        |       └── then it transfers ownership of issuance token to admin
+        |       └── then it revokes orchestrator admin rights and transfers them to admin
+        |       └── then it emits a PIMWorkflowCreated event
+        └── given that there is no funding
+        |   └── when called
+        |       └── then it reverts
     */
 
-    function testCreatePIMWorkflow_WithRestrictedBondingCurve() public {
+    function testCreatePIMWorkflow_WithFunding() public {
         // add funding
         vm.startPrank(admin);
         token.approve(address(factory), initialCollateralSupply);
@@ -231,6 +275,22 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // CHECK: factory DOES NOT have admin rights over workflow
         assertFalse(
             orchestrator.authorizer().hasRole(adminRole, address(factory))
+        );
+    }
+
+    function testCreatePIMWorkflow_WithoutFunding() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 0
+            )
+        );
+        factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams
         );
     }
 }
