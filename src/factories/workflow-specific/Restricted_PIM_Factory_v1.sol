@@ -76,8 +76,7 @@ contract Restricted_PIM_Factory_v1 is
         // set (own) factory as orchestrator admin
         bytes memory auhorizerConfigData = authorizerConfig.configData;
         (address realAdmin) = abi.decode(auhorizerConfigData, (address));
-        address temporaryAdmin = address(this);
-        auhorizerConfigData = abi.encode(temporaryAdmin);
+        auhorizerConfigData = abi.encode(address(this));
         authorizerConfig.configData = auhorizerConfigData;
 
         // MODIFY FUNDING MANAGER CONFIG
@@ -122,7 +121,8 @@ contract Restricted_PIM_Factory_v1 is
             issuanceToken,
             bcProperties.initialCollateralSupply,
             bcProperties.initialIssuanceSupply,
-            realAdmin
+            realAdmin,
+            _msgSender()
         );
 
         // assign permissions to buy/sell from curve to admin
@@ -130,7 +130,7 @@ contract Restricted_PIM_Factory_v1 is
             fundingManager
         ).CURVE_INTERACTION_ROLE();
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-            .grantModuleRole(curveAccess, realAdmin);
+            .grantModuleRole(curveAccess, _msgSender());
         // revoke minting rights from factory
         issuanceToken.setMinter(address(this), false);
 
@@ -152,11 +152,12 @@ contract Restricted_PIM_Factory_v1 is
         ERC20Issuance_v1 issuanceToken,
         uint initialCollateralSupply,
         uint initialIssuanceSupply,
+        address paymaster,
         address recipient
     ) private {
         // collateral token is paid for by the msg.sender
         collateralToken.transferFrom(
-            _msgSender(), address(fundingManager), initialCollateralSupply
+            paymaster, address(fundingManager), initialCollateralSupply
         );
         // issuance token is minted to the the specified recipient
         issuanceToken.mint(recipient, initialIssuanceSupply);
