@@ -85,5 +85,6 @@ interface IRestricted_PIM_Factory_v1 {
     /// @param actor The address could have used the funding for a new bonding curve deployment.
     /// @param token The token that was sent to the factory to be used as collateral token for a bonding curve.
     /// @param amount The amount of `token` that was provided.
-    function withdrawFunding(address actor, address token, uint amount) external;
+    function withdrawFunding(address actor, address token, uint amount)
+        external;
 }
