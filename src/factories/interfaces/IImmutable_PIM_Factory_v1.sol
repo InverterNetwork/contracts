@@ -34,6 +34,9 @@ interface IImmutable_PIM_Factory_v1 {
     /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
     error PIM_WorkflowFactory__OnlyPimFeeRecipient();
 
+    /// @notice Error thrown when a zero address is passed as initiator.
+    error PIM_WorkflowFactory__InvalidZeroAddress();
+
     //--------------------------------------------------------------------------
     // Events
 
