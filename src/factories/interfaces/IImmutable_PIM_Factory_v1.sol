@@ -12,6 +12,21 @@ import {IBondingCurveBase_v1} from
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
+/**
+ * @title   Immutable PIM Factory
+ *
+ * @notice  Used to deploy a PIM workflow with an unrestricted bonding curve and a mechanism to
+ *          ensure immutability of the workflow while still enabling the claiming of fees.
+ *
+ * @dev     More user-friendly way to deploy a PIM workflow with an unrestricted bonding curve.
+ *          Acts as wrapper for workflow to make it "unruggable" while exposing fee claiming functionality.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          This contract is experimental in nature and has not been audited.
+ *                          Please use at your own risk!
+ *
+ * @author  Inverter Network
+ */
 interface IImmutable_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Errors
@@ -57,7 +72,7 @@ interface IImmutable_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Deploys a new issuance token and uses that to deploy a workflow with an open yet immutable bonding curve.
+    /// @notice Deploys a new issuance with workflow that includes open yet immutable bonding curve.
     /// @param workflowConfig The workflow's config data.
     /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1} instance.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
@@ -65,7 +80,7 @@ interface IImmutable_PIM_Factory_v1 {
     /// @param moduleConfigs Variable length set of optional module's config data.
     /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
     /// @param initialPurchaseAmount The volume of the first purchase in terms of collateral token.
-    /// @return CreatedOrchestrator Returns the created orchestrator instance.
+    /// @return Returns an instance of the created orchestrator.
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig,
