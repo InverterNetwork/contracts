@@ -31,15 +31,25 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
+// External Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
 contract Restricted_PIM_Factory_v1 is
     ERC2771Context,
     IRestricted_PIM_Factory_v1
 {
+    using SafeERC20 for IERC20;
+
     //--------------------------------------------------------------------------
     // State Variables
 
     // store address of orchestratorfactory
     address public orchestratorFactory;
+    // store available fundings
+    mapping(
+        address paymaster
+            => mapping(address actor => mapping(address token => uint amount))
+    ) fundings;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -143,6 +153,15 @@ contract Restricted_PIM_Factory_v1 is
         );
     }
 
+    function addFunding(address actor, address token, uint amount) external {
+        fundings[_msgSender()][actor][token] += amount;
+        IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
+
+        emit IRestricted_PIM_Factory_v1.FundingAdded(
+            _msgSender(), actor, token, amount
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions
 
@@ -152,15 +171,24 @@ contract Restricted_PIM_Factory_v1 is
         ERC20Issuance_v1 issuanceToken,
         uint initialCollateralSupply,
         uint initialIssuanceSupply,
-        address paymaster,
-        address recipient
+        address admin,
+        address actor
     ) private {
+        uint availableFunding = fundings[admin][actor][address(collateralToken)];
+        if (availableFunding < initialCollateralSupply) {
+            revert IRestricted_PIM_Factory_v1.InsufficientFunding(
+                availableFunding
+            );
+        }
+
+        fundings[admin][actor][address(collateralToken)] -= initialCollateralSupply;
+
         // collateral token is paid for by the msg.sender
-        collateralToken.transferFrom(
-            paymaster, address(fundingManager), initialCollateralSupply
+        collateralToken.safeTransfer(
+            address(fundingManager), initialCollateralSupply
         );
         // issuance token is minted to the the specified recipient
-        issuanceToken.mint(recipient, initialIssuanceSupply);
+        issuanceToken.mint(actor, initialIssuanceSupply);
     }
 
     function _transferTokenOwnership(

@@ -14,6 +14,10 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
+    // Errors
+    error InsufficientFunding(uint availableFunding);
+
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a new PIM workflow is created.
@@ -24,6 +28,18 @@ interface IRestricted_PIM_Factory_v1 {
         address indexed orchestrator,
         address indexed issuanceToken,
         address indexed deployer
+    );
+
+    /// @notice Event emitted when new funding is added.
+    /// @param paymaster Address that pays funding.
+    /// @param actor Address that can use new funding.
+    /// @param token Address of token used for funding.
+    /// @param amount Funding amount.
+    event FundingAdded(
+        address indexed paymaster,
+        address indexed actor,
+        address indexed token,
+        uint amount
     );
 
     //--------------------------------------------------------------------------
