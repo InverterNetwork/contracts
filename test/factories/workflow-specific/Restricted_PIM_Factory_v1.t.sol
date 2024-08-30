@@ -125,12 +125,33 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         token.approve(address(factory), initialCollateralSupply);
 
+        // CHECK: event is emitted
         vm.expectEmit(true, true, true, true);
         emit IRestricted_PIM_Factory_v1.FundingAdded(
             admin, actor, address(token), initialCollateralSupply
         );
 
         factory.addFunding(actor, address(token), initialCollateralSupply);
+
+        // CHECK: factory HOLDS collateral tokens
+        assertEq(token.balanceOf(address(factory)), initialCollateralSupply);
+        vm.stopPrank();
+    }
+
+    function testWithdrawFunding() public {
+        vm.startPrank(admin);
+        token.approve(address(factory), initialCollateralSupply);
+        factory.addFunding(actor, address(token), initialCollateralSupply);
+
+        // CHECK: event is emitted
+        vm.expectEmit(true, true, true, true);
+        emit IRestricted_PIM_Factory_v1.FundingRemoved(
+            admin, actor, address(token), initialCollateralSupply
+        );
+
+        // CHECK: factory DOES NOT hold collateral tokens
+        factory.withdrawFunding(actor, address(token), initialCollateralSupply);
+        assertEq(token.balanceOf(address(factory)), 0);
         vm.stopPrank();
     }
 

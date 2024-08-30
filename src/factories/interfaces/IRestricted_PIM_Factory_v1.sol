@@ -42,6 +42,18 @@ interface IRestricted_PIM_Factory_v1 {
         uint amount
     );
 
+    /// @notice Event emitted when existing funding is removed.
+    /// @param paymaster Address that agreed to pay for funding.
+    /// @param actor Address that could have used the funding.
+    /// @param token Address of token used that would have been used for funding.
+    /// @param amount Funding amount.
+    event FundingRemoved(
+        address indexed paymaster,
+        address indexed actor,
+        address indexed token,
+        uint amount
+    );
+
     //--------------------------------------------------------------------------
     // Functions
 
