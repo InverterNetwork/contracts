@@ -43,9 +43,9 @@ contract Restricted_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // State Variables
 
-    // store address of orchestratorfactory
+    // Stores address of orchestratorfactory.
     address public orchestratorFactory;
-    // store available fundings
+    // Stores available fundings.
     mapping(
         address paymaster
             => mapping(address actor => mapping(address token => uint amount))
@@ -232,7 +232,7 @@ contract Restricted_PIM_Factory_v1 is
         address newAdmin
     ) private {
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        // if renounced flag is set, add zero address as admin (because workflow must have at least one admin set)
+        // grant role to address from role authorizer's `initialAdmin`
         orchestrator.authorizer().grantRole(adminRole, newAdmin);
         // and revoke admin role from factory
         orchestrator.authorizer().revokeRole(adminRole, address(this));
