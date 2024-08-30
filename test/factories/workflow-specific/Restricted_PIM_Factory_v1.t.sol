@@ -42,11 +42,10 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
 
     // addresses
-    address workflowAdmin = vm.addr(420);
-    address factoryDeployer = vm.addr(1);
-    address workflowDeployer = vm.addr(2);
+    address admin = vm.addr(420);
+    address actor = address(this);
+    address paymaster = vm.addr(1);
     address mockTrustedForwarder = vm.addr(3);
-    address alice = vm.addr(0xA11CE);
 
     // bc params
     uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
@@ -72,7 +71,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         authorizerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(address(workflowAdmin))
+            roleAuthorizerMetadata, abi.encode(address(admin))
         );
 
         // PaymentProcessor
@@ -109,7 +108,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             abi.encode(address(0), bcProperties, token)
         );
 
-        // Put issuance token params in storage
+        // Assemble bonding curve params
         issuanceTokenParams = IBondingCurveBase_v1.IssuanceToken({
             name: "Bonding Curve Token",
             symbol: "BCT",
@@ -164,8 +163,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         // CHECK: admin RECEIVES initial issuance supply
         assertEq(
-            issuanceToken.balanceOf(workflowAdmin),
-            bcProperties.initialIssuanceSupply
+            issuanceToken.balanceOf(admin), bcProperties.initialIssuanceSupply
         );
         // CHECK: bonding curve HOLDS initial collateral supply
         assertEq(
@@ -184,14 +182,14 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             .generateRoleId(fundingManager, curveInteractionRole);
         assertTrue(
             orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, workflowAdmin
+                curveInteractionRoleId, admin
             )
         );
         // CHECK: initialAdmin IS owner of issuance token
-        assertEq(issuanceToken.owner(), workflowAdmin);
+        assertEq(issuanceToken.owner(), admin);
         // CHECK: initialAdmin IS orchestrator admin
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        assertTrue(orchestrator.authorizer().hasRole(adminRole, workflowAdmin));
+        assertTrue(orchestrator.authorizer().hasRole(adminRole, admin));
         // CHECK: factory DOES NOT have admin rights over workflow
         assertFalse(
             orchestrator.authorizer().hasRole(adminRole, address(factory))
