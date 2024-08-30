@@ -73,4 +73,17 @@ interface IRestricted_PIM_Factory_v1 {
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
     ) external returns (IOrchestrator_v1);
+
+    /// @notice Adds `amount` of some `token` to factory to be used by some `actor` for a bonding curve deployment.
+    /// @param actor The address that can use the funding for a new bonding curve deployment.
+    /// @param token The token sent to the factory and to be used as collateral token for a bonding curve.
+    /// @param amount The amount of `token` to be provided as initialCollateralSupply.
+    function addFunding(address actor, address token, uint amount) external;
+
+    /// @notice Withdraws an existing funding from the factory.
+    /// @dev Can only be withdrawn by the address that added funding in the first place.
+    /// @param actor The address could have used the funding for a new bonding curve deployment.
+    /// @param token The token that was sent to the factory to be used as collateral token for a bonding curve.
+    /// @param amount The amount of `token` that was provided.
+    function withdrawFunding(address actor, address token, uint amount) external;
 }
