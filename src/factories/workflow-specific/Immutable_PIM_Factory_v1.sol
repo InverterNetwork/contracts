@@ -36,10 +36,10 @@ contract Immutable_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // State Variables
 
-    /// @dev	store address of {Orchestratorfactory_v1}.
+    /// @dev	Stores address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
 
-    /// @dev	mapping of Funding Manager address to `feeRecipient` address.
+    /// @dev	Mapping of who can claim fees for a given funding manager.
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
