@@ -162,6 +162,19 @@ contract Restricted_PIM_Factory_v1 is
         );
     }
 
+    function withdrawFunding(address actor, address token, uint amount) external {
+        uint availableFunding = fundings[_msgSender()][actor][token];
+        if(amount > availableFunding) revert IRestricted_PIM_Factory_v1.InsufficientFunding(availableFunding);
+
+        fundings[_msgSender()][actor][token] -= amount;
+
+        IERC20(token).safeTransfer(_msgSender(), amount);
+
+        emit IRestricted_PIM_Factory_v1.FundingRemoved(
+            _msgSender(), actor, token, amount
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Internal Functions
 
