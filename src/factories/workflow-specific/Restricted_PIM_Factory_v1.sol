@@ -45,7 +45,7 @@ contract Restricted_PIM_Factory_v1 is
     address public orchestratorFactory;
     // Stores available fundings.
     mapping(
-        address paymaster
+        address sponsor
             => mapping(address actor => mapping(address token => uint amount))
     ) fundings;
 

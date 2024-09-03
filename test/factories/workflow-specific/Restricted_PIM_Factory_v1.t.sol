@@ -44,7 +44,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     // addresses
     address admin = vm.addr(420);
     address actor = address(this);
-    address paymaster = vm.addr(1);
+    address sponsor = vm.addr(1);
     address mockTrustedForwarder = vm.addr(3);
 
     // bc params
