@@ -13,7 +13,7 @@ import {IBondingCurveBase_v1} from
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 /**
- * @title   Restricted PIM Factory
+ * @title   Inverter Restricted PIM Factory
  *
  * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a mechanism to pre-fund
  *          the required collateral supply and an opinionated initial configuration.
@@ -74,6 +74,13 @@ interface IRestricted_PIM_Factory_v1 {
 
     //--------------------------------------------------------------------------
     // Functions
+
+    /// @notice Returns the amount of funding for a given sponsor, actor and token.
+    /// @param  sponsor The address of the sponsor.
+    /// @param  actor The address of the actor (who can use the funding).
+    /// @param  token The address of the token used for funding.
+    /// @return uint The amount of funding.
+    function fundings(address sponsor, address actor, address token) external view returns (uint);
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
     /// @param workflowConfig The workflow's config data.

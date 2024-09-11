@@ -29,6 +29,21 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 
+/**
+ * @title   Inverter Immutable PIM Factory
+ *
+ * @notice  Used to deploy a PIM workflow with an unrestricted bonding curve and a mechanism to
+ *          ensure immutability of the workflow while still enabling the claiming of fees.
+ *
+ * @dev     More user-friendly way to deploy a PIM workflow with an unrestricted bonding curve.
+ *          Acts as wrapper for workflow to make it "unruggable" while exposing fee claiming functionality.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          This contract is experimental in nature and has not been audited.
+ *                          Please use at your own risk!
+ *
+ * @author  Inverter Network
+ */
 contract Immutable_PIM_Factory_v1 is
     ERC2771Context,
     IImmutable_PIM_Factory_v1
