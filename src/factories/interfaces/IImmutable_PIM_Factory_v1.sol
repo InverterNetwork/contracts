@@ -13,7 +13,7 @@ import {IBondingCurveBase_v1} from
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 /**
- * @title   Immutable PIM Factory
+ * @title   Inverter Immutable PIM Factory
  *
  * @notice  Used to deploy a PIM workflow with an unrestricted bonding curve and a mechanism to
  *          ensure immutability of the workflow while still enabling the claiming of fees.
