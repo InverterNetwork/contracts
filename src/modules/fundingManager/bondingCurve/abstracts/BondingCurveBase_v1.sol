@@ -269,6 +269,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Add workflow fee if applicable
         if (workflowFeeAmount > 0) {
             projectCollateralFeeCollected += workflowFeeAmount;
+            emit ProjectCollateralFeeAdded(projectFeeAmount);
         }
 
         // Calculate mint amount based on upstream formula
