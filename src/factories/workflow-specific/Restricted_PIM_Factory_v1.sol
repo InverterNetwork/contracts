@@ -32,6 +32,24 @@ import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
+/**
+ * @title   Inverter Restricted PIM Factory
+ *
+ * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a mechanism to pre-fund
+ *          the required collateral supply and an opinionated initial configuration.
+ *
+ * @dev     More user-friendly way to deploy a PIM workflow with an restricted bonding curve.
+ *          Anyone can pre-fund the required collateral supply for a bonding curve deployment.
+ *          Initial issuance token supply is minted to the deployer.
+ *          The deployer receives the role to interact with the curve.
+ *          Overall control over workflow remains with `initialAdmin` of the role authorizer.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          This contract is experimental in nature and has not been audited.
+ *                          Please use at your own risk!
+ *
+ * @author  Inverter Network
+ */
 contract Restricted_PIM_Factory_v1 is
     ERC2771Context,
     IRestricted_PIM_Factory_v1
@@ -47,7 +65,7 @@ contract Restricted_PIM_Factory_v1 is
     mapping(
         address sponsor
             => mapping(address actor => mapping(address token => uint amount))
-    ) fundings;
+    ) public fundings;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -122,7 +140,7 @@ contract Restricted_PIM_Factory_v1 is
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
 
-        // transfer initial collateral supply from msg.sender to  bonding curve and mint issuance token to recipient
+        // transfer initial collateral supply from msg.sender to bonding curve and mint issuance token to recipient
         _manageInitialSupplies(
             IBondingCurveBase_v1(fundingManager),
             IERC20(collateralToken),
@@ -206,7 +224,7 @@ contract Restricted_PIM_Factory_v1 is
         fundings[admin][actor][address(collateralToken)] -=
             initialCollateralSupply;
 
-        // collateral token is paid for by the msg.sender
+        // collateral token funding needs to be sponsored beforehand
         collateralToken.safeTransfer(
             address(fundingManager), initialCollateralSupply
         );
