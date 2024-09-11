@@ -80,7 +80,10 @@ interface IRestricted_PIM_Factory_v1 {
     /// @param  actor The address of the actor (who can use the funding).
     /// @param  token The address of the token used for funding.
     /// @return uint The amount of funding.
-    function fundings(address sponsor, address actor, address token) external view returns (uint);
+    function fundings(address sponsor, address actor, address token)
+        external
+        view
+        returns (uint);
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
     /// @param workflowConfig The workflow's config data.
