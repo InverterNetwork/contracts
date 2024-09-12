@@ -57,6 +57,9 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
+    /// @dev	Base Points used for percentage calculation. This value represents 100%.
+    uint internal constant BPS = 10_000;
+
     /// @dev    The token that is deposited.
     IERC20 private _token;
 
@@ -94,6 +97,17 @@ contract FM_DepositVault_v1 is
         address from = _msgSender();
         token().safeTransferFrom(from, address(this), amount);
 
+        (uint collateralFeePercentage, address collateralTreasury) =
+        _getFeeManagerCollateralFeeData(
+            bytes4(keccak256(bytes("deposit(uint)")))
+        );
+
+        uint protocolFeeAmount = amount * collateralFeePercentage / BPS;
+
+        _processProtocolFeeViaTransfer(
+            collateralTreasury, _token, protocolFeeAmount
+        );
+
         emit Deposit(from, amount);
     }
 
@@ -109,5 +123,34 @@ contract FM_DepositVault_v1 is
         token().safeTransfer(to, amount);
 
         emit TransferOrchestratorToken(to, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev	Internal function to transfer protocol fees to the treasury.
+    /// @param  _treasury The address of the protocol treasury.
+    /// @param  _token The token to transfer the fees from.
+    /// @param  _feeAmount The amount of fees to transfer.
+    function _processProtocolFeeViaTransfer(
+        address _treasury,
+        IERC20 _token,
+        uint _feeAmount
+    ) internal {
+        // skip protocol fee collection if fee is 0
+        if (_feeAmount > 0) {
+            _validateRecipient(_treasury);
+
+            // transfer fee amount
+            _token.safeTransfer(_treasury, _feeAmount);
+            emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+        }
+    }
+
+    /// @dev    Validates the recipient address.
+    function _validateRecipient(address _receiver) internal view {
+        if (_receiver == address(0) || _receiver == address(this)) {
+            revert Module__DepositVault__InvalidRecipient();
+        }
     }
 }
