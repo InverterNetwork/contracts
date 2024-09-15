@@ -18,11 +18,11 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
  * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a mechanism to pre-fund
  *          the required collateral supply and an opinionated initial configuration.
  *
- * @dev     More user-friendly way to deploy a PIM workflow with an restricted bonding curve.
- *          Anyone can pre-fund the required collateral supply for a bonding curve deployment.
+ * @dev     More user-friendly way to deploy a PIM workflow with a restricted bonding curve.
+ *          Anyone can sponsor the required collateral supply for a bonding curve deployment.
  *          Initial issuance token supply is minted to the deployer.
  *          The deployer receives the role to interact with the curve.
- *          Overall control over workflow remains with `initialAdmin` of the role authorizer.
+ *          Overall control over workflow remains with the sponsor, (= `initialAdmin` of the role authorizer).
  *
  * @custom:security-contact security@inverter.network
  *                          This contract is experimental in nature and has not been audited.
@@ -86,6 +86,7 @@ interface IRestricted_PIM_Factory_v1 {
         returns (uint);
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
+    /// @dev Requires the deployment to have been funded previously via `addFunding`. 
     /// @param workflowConfig The workflow's config data.
     /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1} instance.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.

@@ -2,6 +2,7 @@
 pragma solidity 0.8.23;
 
 // External Interfaces
+import {IMintWrapper} from "@ex/token/IMintWrapper.sol";
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -11,20 +12,20 @@ import {Ownable} from "@oz/access/Ownable.sol";
 /**
  * @title   Inverter Mint Wrapper
  *
- * @notice  This contract is an ownable wrapper for managing the permissioning around minting rights.
+ * @notice  Used as a wrapper around the {IERC20Issuance_v1} to manage the permissioning around minting rights.
+ *          The additional layer is primarily used to avoid standard warnings on popular token trackers that are
+ *          displayed to users when ERC20 tokens have an owner (which can be avoided by using the wrapper).
  *
- * @dev     The contract implements functionalities for:
- *          - Assigning minting rights.
- *          - Revoking minting rights.
- *          - Minting tokens (if rights are assigned).
- *
+ * @dev     Using the MintWrapper for a PIM Workflow results in the FundingManager returning the wrapper's address
+ *          as the issuance token (`getIssuanceToken`) which can be confusing for users.
+ *         
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          This contract is experimental in nature and has not been audited.
+ *                          Please use at your own risk!
  *
- * @author Inverter Network
+ * @author  Inverter Network
  */
-contract MintWrapper is Ownable {
+contract MintWrapper is IMintWrapper, Ownable {
     //--------------------------------------------------------------------------
     // State Variables
 
