@@ -6,7 +6,6 @@ import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
 // External Dependencies
-import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 
 /**
@@ -25,7 +24,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *
  * @author Inverter Network
  */
-contract MintWrapper is ERC2771Context, Ownable {
+contract MintWrapper is  Ownable {
     //--------------------------------------------------------------------------
     // State Variables
 
@@ -50,9 +49,8 @@ contract MintWrapper is ERC2771Context, Ownable {
 
     constructor(
         IERC20Issuance_v1 _issuanceToken,
-        address _trustedForwarder,
         address _owner
-    ) ERC2771Context(_trustedForwarder) Ownable(_owner) {
+    ) Ownable(_owner) {
 
         issuanceToken = _issuanceToken;
     }
@@ -85,40 +83,5 @@ contract MintWrapper is ERC2771Context, Ownable {
     function _setMinter(address _minter, bool _allowed) internal {
         allowedMinters[_minter] = _allowed;
         emit IERC20Issuance_v1.MinterSet(_minter, _allowed);
-    }
-
-    //--------------------------------------------------------------------------
-    // ERC2771 Context
-
-    /// Needs to be overridden, because they are imported via the Ownable as well.
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ERC2771Context, Context)
-        returns (address sender)
-    {
-        return ERC2771Context._msgSender();
-    }
-
-    /// Needs to be overridden, because they are imported via the Ownable as well.PI
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ERC2771Context, Context)
-        returns (bytes calldata)
-    {
-        return ERC2771Context._msgData();
-    }
-
-    function _contextSuffixLength()
-        internal
-        view
-        virtual
-        override(ERC2771Context, Context)
-        returns (uint)
-    {
-        return ERC2771Context._contextSuffixLength();
     }
 }
