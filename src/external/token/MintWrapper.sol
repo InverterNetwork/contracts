@@ -24,7 +24,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *
  * @author Inverter Network
  */
-contract MintWrapper is  Ownable {
+contract MintWrapper is Ownable {
     //--------------------------------------------------------------------------
     // State Variables
 
@@ -47,11 +47,9 @@ contract MintWrapper is  Ownable {
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(
-        IERC20Issuance_v1 _issuanceToken,
-        address _owner
-    ) Ownable(_owner) {
-
+    constructor(IERC20Issuance_v1 _issuanceToken, address _owner)
+        Ownable(_owner)
+    {
         issuanceToken = _issuanceToken;
     }
 

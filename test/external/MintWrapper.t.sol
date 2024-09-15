@@ -38,8 +38,7 @@ contract MintWrapperTest is Test {
         {
             vm.expectRevert(
                 abi.encodeWithSelector(
-                    Ownable.OwnableUnauthorizedAccount.selector,
-                    address(0xB0B)
+                    Ownable.OwnableUnauthorizedAccount.selector, address(0xB0B)
                 )
             );
 
@@ -96,7 +95,6 @@ contract MintWrapperTest is Test {
         }
     }
 
-
     function test_Mint(uint amount) public {
         wrapper.setMinter(address(this), true);
 
@@ -129,7 +127,7 @@ contract MintWrapperTest is Test {
 
     function test_Burn(uint amount) public {
         wrapper.setMinter(address(this), true);
-        
+
         vm.assume(amount < token.cap());
 
         uint supplyBefore = token.totalSupply();

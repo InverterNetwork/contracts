@@ -15,6 +15,7 @@ import {IRestricted_PIM_Factory_v1} from
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IOwnable} from "@ex/interfaces/IOwnable.sol";
 
 // Internal Implementations
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
@@ -25,6 +26,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Implementations
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {MintWrapper} from "src/external/token/MintWrapper.sol";
 
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
@@ -88,6 +90,14 @@ contract Restricted_PIM_Factory_v1 is
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
     ) external returns (IOrchestrator_v1 orchestrator) {
+        // MODIFY AUTHORIZER CONFIG
+        // decode configData of authorizer
+        // set (own) factory as orchestrator admin
+        bytes memory auhorizerConfigData = authorizerConfig.configData;
+        (address realAdmin) = abi.decode(auhorizerConfigData, (address));
+        auhorizerConfigData = abi.encode(address(this));
+        authorizerConfig.configData = auhorizerConfigData;
+
         // deploy issuance token
         ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
             issuanceTokenParams.name,
@@ -97,13 +107,14 @@ contract Restricted_PIM_Factory_v1 is
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
 
-        // MODIFY AUTHORIZER CONFIG
-        // decode configData of authorizer
-        // set (own) factory as orchestrator admin
-        bytes memory auhorizerConfigData = authorizerConfig.configData;
-        (address realAdmin) = abi.decode(auhorizerConfigData, (address));
-        auhorizerConfigData = abi.encode(address(this));
-        authorizerConfig.configData = auhorizerConfigData;
+        // deploy mint wrapper
+        MintWrapper mintWrapper = new MintWrapper(
+            issuanceToken,
+            address(this) // assigns owner role to itself initially to manage minting rights temporarily
+        );
+
+        // set mint wrapper as minter
+        issuanceToken.setMinter(address(mintWrapper), true);
 
         // MODIFY FUNDING MANAGER CONFIG
         // decode configData of fundingManager
@@ -123,7 +134,7 @@ contract Restricted_PIM_Factory_v1 is
             )
         );
         fundingManagerConfigData =
-            abi.encode(address(issuanceToken), bcProperties, collateralToken);
+            abi.encode(address(mintWrapper), bcProperties, collateralToken);
         fundingManagerConfig.configData = fundingManagerConfigData;
         orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
             .createOrchestrator(
@@ -138,9 +149,9 @@ contract Restricted_PIM_Factory_v1 is
         address fundingManager = address(orchestrator.fundingManager());
 
         // enable bonding curve to mint issuance token
-        issuanceToken.setMinter(fundingManager, true);
+        mintWrapper.setMinter(fundingManager, true);
 
-        // transfer initial collateral supply from msg.sender to bonding curve and mint issuance token to recipient
+        // transfer initial collateral supply from realAdmin to bonding curve and mint issuance token to msg.sender
         _manageInitialSupplies(
             IBondingCurveBase_v1(fundingManager),
             IERC20(collateralToken),
@@ -157,12 +168,11 @@ contract Restricted_PIM_Factory_v1 is
         ).CURVE_INTERACTION_ROLE();
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
             .grantModuleRole(curveAccess, _msgSender());
-        // revoke minting rights from factory
-        issuanceToken.setMinter(address(this), false);
 
         // revoke privileges from factory
-        _transferTokenOwnership(issuanceToken, realAdmin);
+        _renounceTokenPrivileges(issuanceToken);
         _transferWorkflowAdminRights(orchestrator, realAdmin);
+        _transferOwnership(address(mintWrapper), realAdmin);
 
         emit IRestricted_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator), address(issuanceToken), _msgSender()
@@ -232,15 +242,19 @@ contract Restricted_PIM_Factory_v1 is
         issuanceToken.mint(actor, initialIssuanceSupply);
     }
 
-    function _transferTokenOwnership(
-        ERC20Issuance_v1 issuanceToken,
-        address newAdmin
-    ) private {
+    function _transferOwnership(address ownableContract, address newAdmin)
+        private
+    {
         if (newAdmin == address(0)) {
-            issuanceToken.renounceOwnership();
+            IOwnable(ownableContract).renounceOwnership();
         } else {
-            issuanceToken.transferOwnership(newAdmin);
+            IOwnable(ownableContract).transferOwnership(newAdmin);
         }
+    }
+
+    function _renounceTokenPrivileges(ERC20Issuance_v1 issuanceToken) private {
+        issuanceToken.setMinter(address(this), false);
+        _transferOwnership(address(issuanceToken), address(0));
     }
 
     function _transferWorkflowAdminRights(
