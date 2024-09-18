@@ -364,9 +364,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
             amount
                 > token().balanceOf(address(this)) - projectCollateralFeeCollected
         ) {
-            revert
-                Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidOrchestratorTokenWithdrawAmount(
-            );
+            revert InvalidOrchestratorTokenWithdrawAmount();
         }
         token().safeTransfer(to, amount);
 

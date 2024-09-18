@@ -79,6 +79,8 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _burn(_from, _amount);
     }
 
+    // @note Spend allowance function
+
     //------------------------------------------------------------------------------
     // Internal Functions
 
