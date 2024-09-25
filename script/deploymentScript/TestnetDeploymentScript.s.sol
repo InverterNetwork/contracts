@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 
 // Scripts
 import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
-import {WorkflowSpecificFactoryDeploymentScript} from
-    "script/deploymentScript/WorkflowSpecificFactoryDeploymentScript.s.sol";
+import {CustomFactoryDeploymentScript} from
+    "script/deploymentScript/CustomFactoryDeploymentScript.s.sol";
 
 // Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
@@ -91,10 +91,10 @@ contract TestnetDeploymentScript is DeploymentScript {
 
         super.run();
 
-        WorkflowSpecificFactoryDeploymentScript
-            workflowSpecificFactoryDeploymentScript =
-                new WorkflowSpecificFactoryDeploymentScript();
-        workflowSpecificFactoryDeploymentScript.deploy(
+        CustomFactoryDeploymentScript
+            customFactoryDeploymentScript =
+                new CustomFactoryDeploymentScript();
+        customFactoryDeploymentScript.deploy(
             orchestratorFactory, forwarder
         );
     }
