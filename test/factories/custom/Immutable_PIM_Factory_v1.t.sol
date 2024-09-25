@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 
 // Internal Dependencies
 import {IOrchestrator_v1} from
@@ -17,7 +16,7 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {Immutable_PIM_Factory_v1} from
-    "src/factories/workflow-specific/Immutable_PIM_Factory_v1.sol";
+    "src/factories/custom/Immutable_PIM_Factory_v1.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
