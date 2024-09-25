@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 import "forge-std/Script.sol";
 
 import {Restricted_PIM_Factory_v1} from
-    "src/factories/workflow-specific/Restricted_PIM_Factory_v1.sol";
+    "src/factories/custom/Restricted_PIM_Factory_v1.sol";
 import {Immutable_PIM_Factory_v1} from
-    "src/factories/workflow-specific/Immutable_PIM_Factory_v1.sol";
+    "src/factories/custom/Immutable_PIM_Factory_v1.sol";
 
-contract WorkflowSpecificFactoryDeploymentScript is Script {
+contract CustomFactoryDeploymentScript is Script {
     function run() public virtual {
         address orchestratorFactory =
             vm.envAddress("ORCHESTRATOR_FACTORY_ADDRESS");
