@@ -91,11 +91,8 @@ contract TestnetDeploymentScript is DeploymentScript {
 
         super.run();
 
-        CustomFactoryDeploymentScript
-            customFactoryDeploymentScript =
-                new CustomFactoryDeploymentScript();
-        customFactoryDeploymentScript.deploy(
-            orchestratorFactory, forwarder
-        );
+        CustomFactoryDeploymentScript customFactoryDeploymentScript =
+            new CustomFactoryDeploymentScript();
+        customFactoryDeploymentScript.deploy(orchestratorFactory, forwarder);
     }
 }
