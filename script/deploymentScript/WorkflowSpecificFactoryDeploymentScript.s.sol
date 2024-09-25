@@ -8,15 +8,39 @@ import {Restricted_PIM_Factory_v1} from
 import {Immutable_PIM_Factory_v1} from
     "src/factories/workflow-specific/Immutable_PIM_Factory_v1.sol";
 
-contract DeployWorkflowSpecificFactory is Script {
-    address orchestratorFactory = vm.envAddress("ORCHESTRATOR_FACTORY_ADDRESS");
-    address trustedForwarder = vm.envAddress("TRUSTED_FORWARDER_ADDRESS");
-    string factoryType = vm.envString("FACTORY_TYPE");
+contract WorkflowSpecificFactoryDeploymentScript is Script {
+    function run() public virtual {
+        address orchestratorFactory =
+            vm.envAddress("ORCHESTRATOR_FACTORY_ADDRESS");
+        address trustedForwarder = vm.envAddress("TRUSTED_FORWARDER_ADDRESS");
+        string memory factoryType = vm.envString("FACTORY_TYPE");
+        _deploy(orchestratorFactory, trustedForwarder, factoryType);
+    }
 
-    function run() public verifyRequiredParameters {
+    function deploy(address orchestratorFactory, address trustedForwarder)
+        public
+    {
+        console2.log();
+        console2.log(
+            "================================================================================"
+        );
+        console2.log("Start Workflow Specific Factory Deployment Script");
+        console2.log(
+            "================================================================================"
+        );
+
+        _deploy(orchestratorFactory, trustedForwarder, "RESTRICTED");
+        _deploy(orchestratorFactory, trustedForwarder, "IMMUTABLE");
+    }
+
+    function _deploy(
+        address orchestratorFactory,
+        address trustedForwarder,
+        string memory factoryType
+    ) public validateInputs(orchestratorFactory, trustedForwarder) {
         vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
 
-        if (isEqual(factoryType, "RESTRICTED")) {
+        if (_isEqual(factoryType, "RESTRICTED")) {
             {
                 console2.log(
                     "Deploying Restricted_PIM_Factory_v1 at address: ",
@@ -27,7 +51,7 @@ contract DeployWorkflowSpecificFactory is Script {
                     )
                 );
             }
-        } else if (isEqual(factoryType, "IMMUTABLE")) {
+        } else if (_isEqual(factoryType, "IMMUTABLE")) {
             {
                 console2.log(
                     "Deploying Immutable_PIM_Factory_v1 at address: ",
@@ -45,7 +69,7 @@ contract DeployWorkflowSpecificFactory is Script {
         vm.stopBroadcast();
     }
 
-    function isEqual(string memory a, string memory b)
+    function _isEqual(string memory a, string memory b)
         internal
         pure
         returns (bool)
@@ -53,7 +77,10 @@ contract DeployWorkflowSpecificFactory is Script {
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 
-    modifier verifyRequiredParameters() {
+    modifier validateInputs(
+        address orchestratorFactory,
+        address trustedForwarder
+    ) {
         require(
             orchestratorFactory != address(0),
             "Orchestrator Factory address not set - aborting!"
