@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IReservePool_v1 {
+interface IFM_EXT_ReservePool_v1 {
+    //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Error thrown when the amount is zero.
+    error Module__FM_EXT_ReservePool__InvalidAmount();
+
     //--------------------------------------------------------------------------
     // Events
 

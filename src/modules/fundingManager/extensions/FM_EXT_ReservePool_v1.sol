@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {IReservePool_v1} from
-    "src/modules/fundingManager/extensions/interfaces/IReservePool_v1.sol";
+import {IFM_EXT_ReservePool_v1} from
+    "src/modules/fundingManager/extensions/interfaces/IFM_EXT_ReservePool_v1.sol";
 
 // External Dependencies
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -16,7 +16,7 @@ import {ERC165Upgradeable} from
 /// @notice Pool holding the spreads between mint and burn.
 
 /**
- * @title   Reserve Pool //@note do we really wanna call it Reserve Pool?
+ * @title   Reserve Pool //@note do we really wanna call it Reserve Pool? Also add FM_EXT
  *
  * @notice  Pool holding token Reserves for later use.
  *
@@ -28,7 +28,7 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract ReservePool_v1 is IReservePool_v1, Module_v1 {
+contract FM_EXT_ReservePool_v1 is IFM_EXT_ReservePool_v1, Module_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -37,20 +37,33 @@ contract ReservePool_v1 is IReservePool_v1, Module_v1 {
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IReservePool_v1).interfaceId
+        return interfaceId == type(IFM_EXT_ReservePool_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev    Modifier to guarantee the amount is valid.
+    modifier validAmount(uint amt) {
+        if (amt == 0) {
+            revert Module__FM_EXT_ReservePool__InvalidAmount();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc IReservePool_v1
+    /// @inheritdoc IFM_EXT_ReservePool_v1
     function withdraw(address tok, uint amt, address dst)
         external
         //@note do we want to keep it that way? Special role?
         onlyOrchestratorAdmin
+        validAmount(amt)
+        validAddress(dst)
     {
         // if tok == address(0) then send eth //@note do we want to enable sending eth?
         if (tok == address(0)) {
