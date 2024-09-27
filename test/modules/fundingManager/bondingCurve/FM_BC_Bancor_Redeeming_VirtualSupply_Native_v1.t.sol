@@ -3,20 +3,20 @@ pragma solidity ^0.8.0;
 
 import {Clones} from "@oz/proxy/Clones.sol";
 import {BancorFormula} from
-    "@src/modules/fundingManager/bondingCurve/formulas/BancorFormula.sol";
+    "src/modules/fundingManager/bondingCurve/formulas/BancorFormula.sol";
 import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1,
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFundingManager_v1
 } from
-    "@src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+    "src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@test/modules/ModuleTest.sol";
-import {OZErrors} from "@test/utils/errors/OZErrors.sol";
+} from "test/modules/ModuleTest.sol";
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_Native_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_Native_v1.sol";
