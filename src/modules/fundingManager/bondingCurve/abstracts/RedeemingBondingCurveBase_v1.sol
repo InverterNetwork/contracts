@@ -136,14 +136,14 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
 
         // Deduct protocol sell fee from issuance, if applicable
-        (_depositAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        (_depositAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
         // Calculate redeem amount from formula
         redeemAmount = _redeemTokensFormulaWrapper(_depositAmount);
 
         // Deduct protocol and project sell fee from collateral, if applicable
-        (redeemAmount, /* protocolFeeAmount */, /* workflowFeeAmount */ ) =
+        (redeemAmount, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(
             redeemAmount, collateralSellFeePercentage, sellFee
         );
@@ -211,12 +211,12 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
 
         uint protocolFeeAmount;
-        uint workflowFeeAmount;
+        uint projectFeeAmount;
         uint netDeposit;
 
-        // Get net amount, protocol and workflow fee amounts. Currently there is no issuance project
+        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (netDeposit, protocolFeeAmount, /* workflowFee */ ) =
+        (netDeposit, protocolFeeAmount, /* projectFee */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
         issuanceFeeAmount = protocolFeeAmount;
@@ -246,8 +246,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
             );
         }
 
-        // Get net amount, protocol and workflow fee amounts
-        (collateralRedeemAmount, protocolFeeAmount, workflowFeeAmount) =
+        // Get net amount, protocol and project fee amounts
+        (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
         _calculateNetAndSplitFees(
             collateralRedeemAmount, collateralSellFeePercentage, sellFee
         );
@@ -256,9 +256,10 @@ abstract contract RedeemingBondingCurveBase_v1 is
             collateralTreasury, collateralToken, protocolFeeAmount
         );
 
-        // Add workflow fee if applicable
-        if (workflowFeeAmount > 0) {
-            projectCollateralFeeCollected += workflowFeeAmount;
+        // Add project fee if applicable
+        if (projectFeeAmount > 0) {
+            projectCollateralFeeCollected += projectFeeAmount;
+            emit ProjectCollateralFeeAdded(projectFeeAmount);
         } // Add fee amount to total collected fee
 
         // Revert when the redeem amount is lower than minimum amount the user expects
@@ -284,7 +285,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev	Sets the sell transaction fee, expressed in BPS.
     /// @param  _fee The fee percentage to set for sell transactions.
     function _setSellFee(uint _fee) internal virtual {
-        _validateWorkflowFee(_fee);
+        _validateProjectFee(_fee);
         emit SellFeeUpdated(_fee, sellFee);
         sellFee = _fee;
     }

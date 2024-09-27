@@ -384,6 +384,16 @@ contract BondingCurveBaseV1Test is ModuleTest {
             amountAfterFirstFeeCollection, _issuanceFee, 0
         );
 
+        if (projectCollateralFeeAmount != 0) {
+            // Emit event
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            emit IBondingCurveBase_v1.ProjectCollateralFeeAdded(
+                projectCollateralFeeAmount
+            );
+        }
+
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)

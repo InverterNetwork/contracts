@@ -51,6 +51,9 @@ interface IBondingCurveBase_v1 {
     /// @notice Event emitted when project collateral fee is withdrawn.
     event ProjectCollateralFeeWithdrawn(address receiver, uint amount);
 
+    /// @notice Event emitted when project collateral fee is added.
+    event ProjectCollateralFeeAdded(uint amount);
+
     /// @notice Event emitted when tokens have been succesfully issued.
     /// @param  receiver The address that will receive the issued tokens.
     /// @param  depositAmount The amount of collateral token deposited.
