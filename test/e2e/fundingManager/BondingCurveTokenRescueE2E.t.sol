@@ -152,6 +152,10 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         // --------------------------------------------------------------------------------
         // Start Token Rescue
 
+        //Pause Buy and Sell functionality
+        fundingManager.closeBuy();
+        fundingManager.closeSell();
+
         // Stop minting of new tokens
 
         issuanceToken.setMinter(address(fundingManager), false);
@@ -206,7 +210,7 @@ contract BondingCurveTokenRescueE2E is E2ETest {
             block.timestamp // endTime
         );
 
-        // Set Minter for Issuance to new BC
+        // Initiate setting of new Funding Manager
         orchestrator.initiateSetFundingManagerWithTimelock(
             IFundingManager_v1(newBondingCurve)
         );
@@ -221,6 +225,10 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         // Enable Minting again for new BC
 
         issuanceToken.setMinter(newBondingCurve, true);
+
+        // Open Buy and Sell functionality again
+        fundingManager.openBuy();
+        fundingManager.openSell();
 
         // Check if everything is setup correctly
 
