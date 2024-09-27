@@ -5,7 +5,7 @@ interface IFM_DepositVault_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Receiver address can not be zero address or.
+    /// @notice Receiver address can not be zero address or
     /// Deposit Vault Funding Manager itself.
     error Module__DepositVault__InvalidRecipient();
 

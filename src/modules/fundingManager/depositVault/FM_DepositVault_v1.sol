@@ -102,12 +102,14 @@ contract FM_DepositVault_v1 is
             bytes4(keccak256(bytes("deposit(uint)")))
         );
 
-        uint protocolFeeAmount = amount * collateralFeePercentage / BPS;
+        // skip protocol fee collection if fee is 0
+        if (collateralFeePercentage > 0) {
+            uint protocolFeeAmount = amount * collateralFeePercentage / BPS;
 
-        _processProtocolFeeViaTransfer(
-            collateralTreasury, _token, protocolFeeAmount
-        );
-
+            _processProtocolFeeViaTransfer(
+                collateralTreasury, _token, protocolFeeAmount
+            );
+        }
         emit Deposit(from, amount);
     }
 
