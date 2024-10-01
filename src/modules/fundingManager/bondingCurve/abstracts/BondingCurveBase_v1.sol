@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
@@ -389,7 +389,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
             // transfer fee amount
             _token.safeTransfer(_treasury, _feeAmount);
-            emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+            emit IModule_v1.ProtocolFeeTransferred(
+                address(_token), _treasury, _feeAmount
+            );
         }
     }
 

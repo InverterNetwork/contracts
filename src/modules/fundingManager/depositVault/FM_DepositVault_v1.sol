@@ -9,7 +9,7 @@ import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
@@ -145,7 +145,9 @@ contract FM_DepositVault_v1 is
 
             // transfer fee amount
             _token.safeTransfer(_treasury, _feeAmount);
-            emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+            emit IModule_v1.ProtocolFeeTransferred(
+                address(_token), _treasury, _feeAmount
+            );
         }
     }
 

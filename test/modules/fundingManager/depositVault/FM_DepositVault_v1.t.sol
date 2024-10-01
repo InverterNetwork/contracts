@@ -110,7 +110,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         // Deposit
         if (expectedFeeAmount != 0) {
             vm.expectEmit(true, true, true, true);
-            emit IFM_DepositVault_v1.ProtocolFeeTransferred(
+            emit IModule_v1.ProtocolFeeTransferred(
                 address(_token),
                 feeManager.getDefaultProtocolTreasury(),
                 expectedFeeAmount
@@ -167,7 +167,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(vault)), amount);
 
         vm.expectEmit(true, true, true, true);
-        emit IFM_DepositVault_v1.ProtocolFeeTransferred(
+        emit IModule_v1.ProtocolFeeTransferred(
             address(_token), treasury, amount
         );
 
