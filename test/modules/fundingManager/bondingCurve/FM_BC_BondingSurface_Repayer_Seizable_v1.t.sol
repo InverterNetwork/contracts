@@ -35,7 +35,7 @@ import {ILiquidityVaultController} from
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1.sol";
-import {IRepayer_v1} from "@lm/interfaces/IRepayer_v1.sol";
+import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 
 // Errors

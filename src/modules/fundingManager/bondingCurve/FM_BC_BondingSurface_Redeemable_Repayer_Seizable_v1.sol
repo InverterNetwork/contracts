@@ -16,7 +16,7 @@ import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1.sol";
-import {IRepayer_v1} from "@lm/interfaces/IRepayer_v1.sol";
+import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
 import {IOrchestrator_v1} from
@@ -454,7 +454,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        // @note When upgrading to Topos next version, we should add an interface check here. 
+        // @note When upgrading to Topos next version, we should add an interface check here.
         if (address(_lvc) == address(0) || address(_lvc) == address(this)) {
             revert
                 FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAddress(
