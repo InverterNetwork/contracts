@@ -111,7 +111,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     /// @notice Restricts buying and selling functionalities to specific role.
     bool public buyAndSellIsRestricted;
     /// @notice Address of the reserve pool.
-    address public reservePool; // Todo: might need change from address to interface based on contract. Todo: Rename to token vault. Todo: Add interface type
+    address public tokenVault; // Todo: might need change from address to interface based on contract. Todo: Add interface type
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -126,14 +126,14 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
 
         address _issuanceToken;
         address _acceptedToken;
-        address _reservePool; // Todo: Might need renaming based on the contract name
+        address _tokenVault;
         BondingCurveProperties memory bondingCurveProperties;
         address _liquidityVaultController;
 
         (
             _issuanceToken,
             _acceptedToken,
-            _reservePool,
+            _tokenVault,
             _liquidityVaultController,
             bondingCurveProperties
         ) = abi.decode(
@@ -163,8 +163,8 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         }
         // Set formula contract
         formula = IBondingSurface(bondingCurveProperties.formula);
-        // Set reserve pool
-        reservePool = _reservePool; // Todo: Do we want to enable a setter for this? The original didn't have one but they did have a migrations functionality
+        // Set token Vault
+        _setTokenVault(_tokenVault);
 
         // Set Bonding Curve Properties
         // Set capital required
@@ -496,6 +496,15 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     }
 
     //--------------------------------------------------------------------------
+    // OnlyOrchestratorAdmin Functions
+
+    function setTokenVault(
+        address _tokenVault //@todo test
+    ) external onlyOrchestratorAdmin {
+        _setTokenVault(_tokenVault);
+    }
+
+    //--------------------------------------------------------------------------
     // Upstream Function Implementations
 
     /// @dev Calculates the amount of tokens to mint for a given deposit amount using the formula contract.
@@ -569,6 +578,14 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
 
     //--------------------------------------------------------------------------
     // Internal Functions
+
+    /// @dev Sets the token vault address.
+    /// @param _tokenVault The address of the token vault.
+    function _setTokenVault(
+        address _tokenVault //@todo test
+    ) internal validAddress(_tokenVault) {
+        tokenVault = _tokenVault;
+    }
 
     /// @dev Set the current seize state, which defines the percentage of seizable amount
     function _setSeize(uint64 _seize) internal {

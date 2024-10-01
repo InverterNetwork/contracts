@@ -93,7 +93,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
     address burner = makeAddr("burner");
     address coverManager = address(0xa1bc);
     address riskManager = address(0xb0b);
-    address reservePool = makeAddr("reservePool");
+    address tokenVault = makeAddr("tokenVault");
     bytes32 CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     function setUp() public {
@@ -139,7 +139,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
             abi.encode(
                 address(issuanceToken),
                 _token, // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                reservePool,
+                tokenVault,
                 liquidityVaultController,
                 bc_properties
             )
@@ -222,8 +222,8 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
         );
         // Reserve Pool
         assertEq(
-            address(bondingCurveFundingManager.reservePool()),
-            reservePool,
+            address(bondingCurveFundingManager.tokenVault()),
+            tokenVault,
             "Initial reserve pool has not been set correctly"
         );
     }
