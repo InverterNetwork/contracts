@@ -19,9 +19,9 @@ import {
 
 // SuT
 import {
-    FM_EXT_ReservePool_v1,
-    IFM_EXT_ReservePool_v1
-} from "@fm/extensions/FM_EXT_ReservePool_v1.sol";
+    FM_EXT_TokenVault_v1,
+    IFM_EXT_TokenVault_v1
+} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
 
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
@@ -33,14 +33,14 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract FM_EXT_ReservePool_v1Test is ModuleTest {
+contract FM_EXT_TokenVault_v1Test is ModuleTest {
     // SuT
-    FM_EXT_ReservePool_v1 pool;
+    FM_EXT_TokenVault_v1 pool;
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new FM_EXT_ReservePool_v1());
-        pool = FM_EXT_ReservePool_v1(Clones.clone(impl));
+        address impl = address(new FM_EXT_TokenVault_v1());
+        pool = FM_EXT_TokenVault_v1(Clones.clone(impl));
 
         _setUpOrchestrator(pool);
 
@@ -49,7 +49,7 @@ contract FM_EXT_ReservePool_v1Test is ModuleTest {
 
     function testSupportsInterface() public {
         assertTrue(
-            pool.supportsInterface(type(IFM_EXT_ReservePool_v1).interfaceId)
+            pool.supportsInterface(type(IFM_EXT_TokenVault_v1).interfaceId)
         );
     }
 
@@ -68,8 +68,8 @@ contract FM_EXT_ReservePool_v1Test is ModuleTest {
         vm.deal(address(pool), amount);
         if (amount == 0) {
             vm.expectRevert(
-                IFM_EXT_ReservePool_v1
-                    .Module__FM_EXT_ReservePool__InvalidAmount
+                IFM_EXT_TokenVault_v1
+                    .Module__FM_EXT_TokenVault__InvalidAmount
                     .selector
             );
         }
@@ -88,12 +88,12 @@ contract FM_EXT_ReservePool_v1Test is ModuleTest {
             vm.deal(address(pool), amount);
 
             vm.expectEmit(true, true, true, true);
-            emit IFM_EXT_ReservePool_v1.EthWithdrawn(dst, amount);
+            emit IFM_EXT_TokenVault_v1.EthWithdrawn(dst, amount);
         } else {
             if (token == address(_token)) {
                 _token.mint(address(pool), amount);
                 vm.expectEmit(true, true, true, true);
-                emit IFM_EXT_ReservePool_v1.TokensWithdrawn(token, dst, amount);
+                emit IFM_EXT_TokenVault_v1.TokensWithdrawn(token, dst, amount);
             } else {
                 vm.expectRevert();
             }
@@ -126,8 +126,8 @@ contract FM_EXT_ReservePool_v1Test is ModuleTest {
 
         //validAmount(amt)
         vm.expectRevert(
-            IFM_EXT_ReservePool_v1
-                .Module__FM_EXT_ReservePool__InvalidAmount
+            IFM_EXT_TokenVault_v1
+                .Module__FM_EXT_TokenVault__InvalidAmount
                 .selector
         );
         pool.withdraw(address(0), 0, address(0));

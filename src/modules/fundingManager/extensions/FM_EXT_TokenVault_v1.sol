@@ -3,8 +3,8 @@ pragma solidity ^0.8.17;
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {IFM_EXT_ReservePool_v1} from
-    "src/modules/fundingManager/extensions/interfaces/IFM_EXT_ReservePool_v1.sol";
+import {IFM_EXT_TokenVault_v1} from
+    "src/modules/fundingManager/extensions/interfaces/IFM_EXT_TokenVault_v1.sol";
 
 // External Dependencies
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -12,11 +12,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-/// @title Reserve pool
-/// @notice Pool holding the spreads between mint and burn.
-
 /**
- * @title   Reserve Pool //@note do we really wanna call it Reserve Pool? Also add FM_EXT
+ * @title   Token Vault
  *
  * @notice  Pool holding token Reserves for later use.
  *
@@ -28,7 +25,7 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract FM_EXT_ReservePool_v1 is IFM_EXT_ReservePool_v1, Module_v1 {
+contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -37,7 +34,7 @@ contract FM_EXT_ReservePool_v1 is IFM_EXT_ReservePool_v1, Module_v1 {
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IFM_EXT_ReservePool_v1).interfaceId
+        return interfaceId == type(IFM_EXT_TokenVault_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -49,7 +46,7 @@ contract FM_EXT_ReservePool_v1 is IFM_EXT_ReservePool_v1, Module_v1 {
     /// @dev    Modifier to guarantee the amount is valid.
     modifier validAmount(uint amt) {
         if (amt == 0) {
-            revert Module__FM_EXT_ReservePool__InvalidAmount();
+            revert Module__FM_EXT_TokenVault__InvalidAmount();
         }
         _;
     }
@@ -57,7 +54,7 @@ contract FM_EXT_ReservePool_v1 is IFM_EXT_ReservePool_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc IFM_EXT_ReservePool_v1
+    /// @inheritdoc IFM_EXT_TokenVault_v1
     function withdraw(address tok, uint amt, address dst)
         external
         //@note do we want to keep it that way? Special role?
