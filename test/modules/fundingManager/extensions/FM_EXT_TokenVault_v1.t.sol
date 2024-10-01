@@ -35,21 +35,21 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract FM_EXT_TokenVault_v1Test is ModuleTest {
     // SuT
-    FM_EXT_TokenVault_v1 pool;
+    FM_EXT_TokenVault_v1 vault;
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
         address impl = address(new FM_EXT_TokenVault_v1());
-        pool = FM_EXT_TokenVault_v1(Clones.clone(impl));
+        vault = FM_EXT_TokenVault_v1(Clones.clone(impl));
 
-        _setUpOrchestrator(pool);
+        _setUpOrchestrator(vault);
 
-        pool.init(_orchestrator, _METADATA, bytes(""));
+        vault.init(_orchestrator, _METADATA, bytes(""));
     }
 
     function testSupportsInterface() public {
         assertTrue(
-            pool.supportsInterface(type(IFM_EXT_TokenVault_v1).interfaceId)
+            vault.supportsInterface(type(IFM_EXT_TokenVault_v1).interfaceId)
         );
     }
 
@@ -58,14 +58,14 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        pool.init(_orchestrator, _METADATA, bytes(""));
+        vault.init(_orchestrator, _METADATA, bytes(""));
     }
 
     //--------------------------------------------------------------------------
     //Modifier
 
     function testValidAmount(uint amount) public {
-        vm.deal(address(pool), amount);
+        _token.mint(address(vault), amount);
         if (amount == 0) {
             vm.expectRevert(
                 IFM_EXT_TokenVault_v1
@@ -74,7 +74,7 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
             );
         }
 
-        pool.withdraw(address(0), amount, address(1));
+        vault.withdraw(address(_token), amount, address(1));
     }
 
     //--------------------------------------------------------------------------
@@ -82,33 +82,23 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
 
     function testWithdraw(address token, uint amount, address dst) public {
         vm.assume(amount > 0);
-        vm.assume(dst != address(0) || dst != address(pool));
 
-        if (token == address(0)) {
-            vm.deal(address(pool), amount);
+        vm.assume(token != address(0) || token != address(vault));
+        vm.assume(dst != address(0) || dst != address(vault));
 
+        if (token == address(_token)) {
+            _token.mint(address(vault), amount);
             vm.expectEmit(true, true, true, true);
-            emit IFM_EXT_TokenVault_v1.EthWithdrawn(dst, amount);
+            emit IFM_EXT_TokenVault_v1.TokensWithdrawn(token, dst, amount);
         } else {
-            if (token == address(_token)) {
-                _token.mint(address(pool), amount);
-                vm.expectEmit(true, true, true, true);
-                emit IFM_EXT_TokenVault_v1.TokensWithdrawn(token, dst, amount);
-            } else {
-                vm.expectRevert();
-            }
+            vm.expectRevert();
         }
 
-        pool.withdraw(token, amount, dst);
+        vault.withdraw(token, amount, dst);
 
-        if (token == address(0)) {
-            assertEq(address(pool).balance, 0);
-            assertEq(dst.balance, amount);
-        } else {
-            if (token == address(_token)) {
-                assertEq(_token.balanceOf(address(pool)), 0);
-                assertEq(_token.balanceOf(dst), amount);
-            }
+        if (token == address(_token)) {
+            assertEq(_token.balanceOf(address(vault)), 0);
+            assertEq(_token.balanceOf(dst), amount);
         }
     }
 
@@ -122,7 +112,11 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
             )
         );
         vm.prank(address(0));
-        pool.withdraw(address(0), 0, address(0));
+        vault.withdraw(address(0), 0, address(0));
+
+        //validAddress(tok)
+        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vault.withdraw(address(0), 1, address(1));
 
         //validAmount(amt)
         vm.expectRevert(
@@ -130,9 +124,9 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
                 .Module__FM_EXT_TokenVault__InvalidAmount
                 .selector
         );
-        pool.withdraw(address(0), 0, address(0));
+        vault.withdraw(address(1), 0, address(0));
         //validAddress(dst)
         vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
-        pool.withdraw(address(0), 1, address(0));
+        vault.withdraw(address(1), 1, address(0));
     }
 }

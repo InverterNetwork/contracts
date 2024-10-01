@@ -59,19 +59,11 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
         external
         //@note do we want to keep it that way? Special role?
         onlyOrchestratorAdmin
+        validAddress(tok)
         validAmount(amt)
         validAddress(dst)
     {
-        // if tok == address(0) then send eth //@note do we want to enable sending eth?
-        if (tok == address(0)) {
-            (bool success,) = dst.call{value: amt}("");
-            require(success);
-            emit EthWithdrawn(dst, amt);
-        }
-        // else send tokens
-        else {
-            IERC20(tok).safeTransfer(dst, amt);
-            emit TokensWithdrawn(tok, dst, amt);
-        }
+        IERC20(tok).safeTransfer(dst, amt);
+        emit TokensWithdrawn(tok, dst, amt);
     }
 }
