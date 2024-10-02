@@ -35,6 +35,13 @@ interface IERC20Issuance_v1 is IERC20 {
     /// @param  _amount The amount of tokens to burn.
     function burn(address _from, uint _amount) external;
 
+    /// @notice Spend allowance.
+    /// @param  _from The address of the owner.
+    /// @param  _spender The address of the spender.
+    /// @param  _amount The amount of tokens to spend.
+    function spentAllowance(address _from, address _spender, uint _amount)
+        external;
+
     // Read
 
     /// @notice Mapping of allowed minters.
