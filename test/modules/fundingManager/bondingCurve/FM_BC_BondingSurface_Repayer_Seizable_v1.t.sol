@@ -132,6 +132,9 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
         _setUpOrchestrator(bondingCurveFundingManager);
         _authorizer.setIsAuthorized(address(this), true);
 
+        // Set Minter
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true); //@todo This wasnt set??
+
         // Init Module
         bondingCurveFundingManager.init(
             _orchestrator,
@@ -400,7 +403,6 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
             └── When: the function burnIssuanceToken() gets called
                 └── Then: it should burn _amount from msg.sender's balance
     */
-    /* //@todo keep in?
 
     function testBurnIssuanceToken_revertGivenAmountBiggerThanMsgSenderBalance(
         uint _amount
@@ -441,9 +443,9 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
 
         // Assert right amount has been burned
         assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - _amount);
-    } */
+    }
 
-    /*  Test burnIssuanceTokenFor() //@todo keep in?
+    /*  Test burnIssuanceTokenFor()
         ├── Given: _owner != msg.sender
         │   ├── And: the allowance < _amount
         │   │   └── When: the function burnIssuanceTokenFor() gets called
@@ -464,7 +466,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
                     └── Then: it should burn _amount from _owner's balance
     */
 
-    /*  function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(
+    /* function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(//@todo
         uint _amount
     ) public {
         address tokenOwner = makeAddr("tokenOwner");
@@ -487,7 +489,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
             vm.expectRevert();
             bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, _amount);
         }
-    }
+    } */
 
     function testBurnIssuanceTokenFor_revertGivenAmountBiggerThanOwnerBalance(
         uint _amount
@@ -579,7 +581,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
 
         // Assert right amount has been burned
         assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - _amount);
-    } */
+    }
 
     /*  Test calculatebasePriceToCapitalRatio()
         └── When: the function calculatebasePriceToCapitalRatio() gets called
