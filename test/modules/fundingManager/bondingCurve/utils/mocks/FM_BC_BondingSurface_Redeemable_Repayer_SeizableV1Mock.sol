@@ -59,6 +59,10 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_SeizableV1Mock is
         _setBasePriceMultiplier(_newBasePriceMultiplier);
     }
 
+    function exposed_setTokenVault(address _tokenVault) external {
+        _setTokenVault(_tokenVault);
+    }
+
     function exposed_setSeize(uint64 _seize) external {
         _setSeize(_seize);
     }

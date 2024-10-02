@@ -1303,6 +1303,22 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
+    // OnlyOrchestratorAdmin Functions
+
+    function testSetTokenVault_ModifierInPosition() public {
+        // onlyOrchestratorAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                address(0)
+            )
+        );
+        vm.prank(address(0));
+        bondingCurveFundingManager.setTokenVault(address(0));
+    }
+
+    //--------------------------------------------------------------------------
     // Internal Functions
 
     /*  Test _issueTokensFormulaWrapper()
@@ -1646,6 +1662,29 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
         assertEq(expectUpdatedBasePriceMultiplier, _basePriceMultiplier);
         // Assert _updateVariables has been called succesfully
         assertEq(expectbasePriceToCapitalRatio, actualBasePriceToCapitalRatio);
+    }
+
+    /*    Test _setTokenVault()
+        └── Given: the function _setTokenVault() gets called
+            ├── When: the given address is address(0)
+            │   └── Then is should revert
+            └── When: the given address is not address(0)
+                └── Then: it should set the token vault address to the given address
+    */
+
+    function testSetTokenVault_revertGivenAddressIsZero() public {
+        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        bondingCurveFundingManager.exposed_setTokenVault(address(0));
+    }
+
+    function testSetTokenVault_worksGivenAddressIsNotZero(address newVault)
+        public
+    {
+        vm.assume(newVault != address(0));
+        // Execute Tx
+        bondingCurveFundingManager.exposed_setTokenVault(newVault);
+        // Assert that the token vault address has been set to the given address
+        assertEq(bondingCurveFundingManager.tokenVault(), newVault);
     }
 
     /*    Test _calculateBasePriceToCapitalRatio()
