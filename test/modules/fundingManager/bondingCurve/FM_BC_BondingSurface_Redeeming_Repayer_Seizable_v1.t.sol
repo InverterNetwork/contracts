@@ -10,6 +10,9 @@ import {
     IFundingManager_v1
 } from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
 
+import {IFM_BC_BondingSurface_Redeeming_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
@@ -323,8 +326,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-            .BuyAndSellIsUnrestricted();
+        emit IFM_BC_BondingSurface_Redeeming_v1.BuyAndSellIsUnrestricted();
         bondingCurveFundingManager.unrestrictBuyAndSell();
     }
 
@@ -365,8 +367,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-            .BuyAndSellIsRestricted();
+        emit IFM_BC_BondingSurface_Redeeming_v1.BuyAndSellIsRestricted();
         bondingCurveFundingManager.restrictBuyAndSell();
     }
 
@@ -1526,8 +1527,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-            .CapitalRequiredChanged(
+        emit IFM_BC_BondingSurface_Redeeming_v1.CapitalRequiredChanged(
             currentCapitalRequirements, _capitalRequirements
         );
         bondingCurveFundingManager.exposed_setCapitalRequired(
@@ -1642,8 +1642,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-            .BasePriceMultiplierChanged(
+        emit IFM_BC_BondingSurface_Redeeming_v1.BasePriceMultiplierChanged(
             currentBasePriceMultiplier, _basePriceMultiplier
         );
         bondingCurveFundingManager.exposed_setBasePriceMultiplier(
@@ -1767,8 +1766,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-            .BasePriceToCapitalRatioChanged(
+        emit IFM_BC_BondingSurface_Redeeming_v1.BasePriceToCapitalRatioChanged(
             currentBasePriceToCapitalRatio, expectedReturnValue
         );
         bondingCurveFundingManager.exposed_updateVariables();

@@ -270,6 +270,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         if (workflowFeeAmount > 0) {
             projectCollateralFeeCollected += workflowFeeAmount;
         }
+        //processProjectFee @todo internal function to do immediate transfer
 
         // Calculate mint amount based on upstream formula
         uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);

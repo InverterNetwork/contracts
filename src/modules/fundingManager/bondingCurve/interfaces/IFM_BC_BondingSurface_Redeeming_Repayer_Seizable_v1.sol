@@ -64,34 +64,13 @@ interface IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 {
     /// @notice Emits when the collateral has been seized, with the amount
     event CollateralSeized(uint amount);
 
-    /// @notice Emits when the capital required gets updated
-    event CapitalRequiredChanged(
-        uint currentCapitalRequired, uint newCapitalRequired
-    );
-
-    /// @notice Emits when the Base Price Multiplier gets updated
-    event BasePriceMultiplierChanged(
-        uint currentBasePriceMultiplier, uint newBasePriceMultiplier
-    );
-
     /// @notice Emits when seize percentage gets updated
     event SeizeChanged(uint64 currentSeize, uint64 newSeize);
-
-    /// @notice Emits when basePriceToCapitalRatio gets updated
-    event BasePriceToCapitalRatioChanged(
-        uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
-    );
 
     /// @notice Emits when Liquidity Vault Controller gets updated
     event LiquidityVaultControllerChanged(
         address newLiquidityVaultController, address oldLiquidityVaultController
     );
-
-    /// @notice Emits when buy and sell restriction is set.
-    event BuyAndSellIsRestricted();
-
-    /// @notice Emits when buy and sell restriction is removed.
-    event BuyAndSellIsUnrestricted();
 
     //--------------------------------------------------------------------------
     // Structs
@@ -146,22 +125,4 @@ interface IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 {
     /// @param _owner Address whose tokens will be burnt
     /// @param _amount Burn amount
     function burnIssuanceTokenFor(address _owner, uint _amount) external;
-
-    /// @notice Calculates the ratio of base price multiplier to capital required.
-    /// @dev Calls `_calculateBasePriceToCapitalRatio` internally. Reverts if ratio exceeds 1e36.
-    /// @param _capitalRequired The capital required.
-    /// @param _basePriceMultiplier The base price multiplier.
-    /// @return _basePriceToCapitalRatio The calculated price to capital ratio.
-    function calculateBasePriceToCapitalRatio(
-        uint _capitalRequired,
-        uint _basePriceMultiplier
-    ) external view returns (uint _basePriceToCapitalRatio);
-
-    /// @notice Restricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
-    /// @dev    Only callable by the COVER_MANAGER_ROLE.
-    function restrictBuyAndSell() external;
-
-    /// @notice Unrestricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
-    /// @dev    Only callable by the COVER_MANAGER_ROLE.
-    function unrestrictBuyAndSell() external;
 }
