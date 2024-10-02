@@ -4,58 +4,58 @@ pragma solidity ^0.8.0;
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
 
-interface IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 {
+interface IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Invalid Bonding Surface Formula contract
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
     );
 
     /// @notice Amount does not match the requirements
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAmount(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
     );
 
     /// @notice Invalid address passed as argument
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAddress(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAddress(
     );
 
     /// @notice Buy fee can not be set.
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidFunctionality(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidFunctionality(
     );
 
     // /// @notice Only set liquidity pool address can call this function
-    // error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidliquidityVaultController(
+    // error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidliquidityVaultController(
     //     address caller
     // );
 
     /// @notice Invalid Liquidity Vault Controller
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidLiquidityVaultController(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidLiquidityVaultController(
         address invalidLiquidityVaultController
     );
 
     /// @notice Seize cannot be bigger than MAX_SEIZE = 1%
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidSeize(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidSeize(
         uint64 seize
     );
 
     /// @notice Fee percentage cannont be higher than ToDO: %
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidFeePercentage(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidFeePercentage(
         uint fee
     );
 
     /// @notice Amount exeeds the seizable amount, defined by a percentage of total collateral
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidSeizeAmount(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidSeizeAmount(
         uint amount
     );
 
     /// @notice Timestamp is still in the future, so a seize is not allowed
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__SeizeTimeout(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__SeizeTimeout(
         uint allowedTimestamp
     );
 
     /// @notice No capital is available.
-    error FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__NoCapitalAvailable(
+    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable(
     );
 
     //--------------------------------------------------------------------------

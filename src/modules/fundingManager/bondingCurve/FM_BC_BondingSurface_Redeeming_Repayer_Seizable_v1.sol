@@ -14,8 +14,8 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
-import {IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
@@ -47,9 +47,9 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /// bonding curve as well as the opening and closing of the issuance and redeeming functionalities.
 /// The contract implements the formulaWrapper functions enforced by the upstream contracts,
 /// using the Bonding Surface formula to calculate the issuance/redeeming rate.
-contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
+contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     IRepayer_v1,
-    IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1,
+    IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1,
     IFundingManager_v1,
     RedeemingBondingCurveBase_v1
 {
@@ -158,7 +158,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
             )
         ) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
             );
         }
         // Set formula contract
@@ -194,7 +194,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     modifier onlyLiquidityVaultController() {
         if (_msgSender() != address(liquidityVaultController)) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidLiquidityVaultController(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidLiquidityVaultController(
                 _msgSender()
             );
         }
@@ -273,12 +273,12 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function burnIssuanceToken(uint _amount) external {
         _burn(_msgSender(), _amount);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function burnIssuanceTokenFor(address _owner, uint _amount) external {
         if (_owner != _msgSender()) {
             // Does not update allowance if set to infinite
@@ -288,7 +288,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         _burn(_owner, _amount);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
@@ -329,7 +329,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         return _getRepayableAmount();
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function seizable() public view returns (uint) {
         uint currentBalance = _getCapitalAvailable();
 
@@ -365,19 +365,19 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     //--------------------------------------------------------------------------
     // OnlyCoverManager Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function seize(uint _amount) public onlyModuleRole(COVER_MANAGER_ROLE) {
         uint _seizableAmount = seizable();
         if (_amount > _seizableAmount) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidSeizeAmount(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidSeizeAmount(
                 _seizableAmount
             );
         }
         // solhint-disable-next-line not-rely-on-time
         else if (lastSeizeTimestamp + SEIZE_DELAY > block.timestamp) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__SeizeTimeout(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__SeizeTimeout(
                 lastSeizeTimestamp + SEIZE_DELAY
             );
         }
@@ -394,7 +394,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         emit CollateralSeized(_amount);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function adjustSeize(uint64 _seize)
         public
         onlyModuleRole(COVER_MANAGER_ROLE)
@@ -411,20 +411,20 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     {
         if (_fee > MAX_FEE) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidFeePercentage(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidFeePercentage(
                 _fee
             );
         }
         _setSellFee(_fee);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function restrictBuyAndSell() external onlyModuleRole(COVER_MANAGER_ROLE) {
         buyAndSellIsRestricted = true;
         emit BuyAndSellIsRestricted();
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function unrestrictBuyAndSell()
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
@@ -440,14 +440,14 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     {
         if (_amount > _getSmallerCaCr()) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAmount(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
             );
         }
         emit RepayableAmountChanged(_amount, repayableAmount);
         repayableAmount = _amount;
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function setLiquidityVaultControllerContract(ILiquidityVaultController _lvc)
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
@@ -455,7 +455,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         // @note When upgrading to Topos next version, we should add an interface check here.
         if (address(_lvc) == address(0) || address(_lvc) == address(this)) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAddress(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAddress(
             );
         }
         emit LiquidityVaultControllerChanged(
@@ -470,14 +470,14 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         override(BondingCurveBase_v1)
     {
         revert
-            FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidFunctionality(
+            FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidFunctionality(
         );
     }
 
     //--------------------------------------------------------------------------
     // OnlyRiskManager Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function setCapitalRequired(uint _newCapitalRequired)
         public
         onlyModuleRole(RISK_MANAGER_ROLE)
@@ -485,7 +485,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         _setCapitalRequired(_newCapitalRequired);
     }
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function setBasePriceMultiplier(uint _newBasePriceMultiplier)
         public
         onlyModuleRole(RISK_MANAGER_ROLE)
@@ -518,7 +518,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__NoCapitalAvailable(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable(
             );
         }
 
@@ -541,7 +541,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__NoCapitalAvailable(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable(
             );
         }
         redeemAmount = formula.tokenIn(
@@ -589,7 +589,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     function _setSeize(uint64 _seize) internal {
         if (_seize > MAX_SEIZE) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidSeize(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidSeize(
                 _seize
             );
         }
@@ -608,7 +608,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAmount(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
             );
         }
         emit CapitalRequiredChanged(capitalRequired, _newCapitalRequired);
@@ -619,7 +619,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     function _setBasePriceMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAmount(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
             );
         }
         emit BasePriceMultiplierChanged(
@@ -667,7 +667,7 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         );
         if (_basePriceToCapitalRatio > 1e36) {
             revert
-                FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1__InvalidInputAmount(
+                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
             );
         }
     }
