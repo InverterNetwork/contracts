@@ -163,8 +163,6 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
         }
         // Set formula contract
         formula = IBondingSurface(bondingCurveProperties.formula);
-        // Set token Vault
-        _setTokenVault(_tokenVault);
 
         // Set Bonding Curve Properties
         // Set capital required
