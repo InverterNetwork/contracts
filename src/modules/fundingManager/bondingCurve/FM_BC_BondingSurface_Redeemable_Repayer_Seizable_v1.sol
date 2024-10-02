@@ -283,8 +283,8 @@ contract FM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1 is
     /// @inheritdoc IFM_BC_BondingSurface_Redeemable_Repayer_Seizable_v1
     function burnIssuanceTokenFor(address _owner, uint _amount) external {
         if (_owner != _msgSender()) {
-            // // Does not update allowance if set to infinite
-            // _spendAllowance(_owner, _msgSender(), _amount);
+            // Does not update allowance if set to infinite
+            _spendAllowance(_owner, _msgSender(), _amount);
         }
         // Will revert if balance < amount
         _burn(_owner, _amount);

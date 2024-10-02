@@ -466,7 +466,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
                     └── Then: it should burn _amount from _owner's balance
     */
 
-    /* function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(//@todo
+    function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(
         uint _amount
     ) public {
         address tokenOwner = makeAddr("tokenOwner");
@@ -489,7 +489,7 @@ contract FM_BC_BondingSurface_Repayer_Seizable_v1Test is ModuleTest {
             vm.expectRevert();
             bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, _amount);
         }
-    } */
+    }
 
     function testBurnIssuanceTokenFor_revertGivenAmountBiggerThanOwnerBalance(
         uint _amount
