@@ -11,11 +11,6 @@ interface IFM_EXT_TokenVault_v1 {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Event emitted when eth is withdrawn.
-    /// @param dst The address to send the eth to.
-    /// @param amount The amount of eth withdrawn.
-    event EthWithdrawn(address indexed dst, uint amount);
-
     /// @notice Event emitted when tokens are withdrawn.
     /// @param token The token to withdraw.
     /// @param dst The address to send the tokens to.

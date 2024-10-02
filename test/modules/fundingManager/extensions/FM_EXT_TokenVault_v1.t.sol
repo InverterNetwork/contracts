@@ -80,6 +80,16 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
+    /* Test validAmount() modifier
+    ├── Given the vault contains a specific amount of tokens
+    │   └── And the amount is equal to 0
+    │       └── When the withdraw() function is called
+    │           └── Then the transaction should revert with Module__FM_EXT_TokenVault__InvalidAmount error
+    └── Given the amount is greater than 0
+        └── When the withdraw() function is called
+            └── Then the transaction should succeed
+    */
+
     function testWithdraw(address token, uint amount, address dst) public {
         vm.assume(amount > 0);
 

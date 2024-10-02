@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -13,7 +13,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Token Vault
+ * @title   Inverter Token Vault
  *
  * @notice  Pool holding token Reserves for later use.
  *
@@ -57,6 +57,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     /// @inheritdoc IFM_EXT_TokenVault_v1
     function withdraw(address tok, uint amt, address dst)
         external
+        virtual
         //@note do we want to keep it that way? Special role?
         onlyOrchestratorAdmin
         validAddress(tok)
