@@ -12,30 +12,28 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-
-// import {InverterReverter_v1} from "@ex/reverter/InverterReverter_v1.sol";
-// import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-// import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
-// import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-// import {AUT_EXT_VotingRoles_v1} from
-//     "@aut/extensions/AUT_EXT_VotingRoles_v1.sol";
-// import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-//     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-// import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-//     "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-// import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
-// import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
-// import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
-// import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
-// import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
-// import {PP_Simple_v1} from "@pp/PP_Simple_v1.sol";
-// import {PP_Streaming_v1} from "@pp/PP_Streaming_v1.sol";
-
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {NativeIssuance_v1} from "@ex/token/NativeIssuance_v1.sol";
-
 import {TestnetDeploymentScript} from "./TestnetDeploymentScript.s.sol";
 
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+// Import the contracts so they will be added to the built artifacts
+import {InverterReverter_v1} from "@ex/reverter/InverterReverter_v1.sol";
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {AUT_EXT_VotingRoles_v1} from
+    "@aut/extensions/AUT_EXT_VotingRoles_v1.sol";
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
+import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
+import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
+import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
+import {PP_Simple_v1} from "@pp/PP_Simple_v1.sol";
+import {PP_Streaming_v1} from "@pp/PP_Streaming_v1.sol";
 
 contract DeployPIML1 is TestnetDeploymentScript {
     address public erc20TokenRemote;
