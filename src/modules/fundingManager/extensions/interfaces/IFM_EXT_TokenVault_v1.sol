@@ -24,8 +24,8 @@ interface IFM_EXT_TokenVault_v1 {
 
     /// @notice Enables withdrawal of reserve
     /// @dev    This function is only callable by the owner.
-    /// @param  tok The token to withdraw.
-    /// @param  amt The amount to withdraw.
-    /// @param  dst The address to send the tokens to.
-    function withdraw(address tok, uint amt, address dst) external;
+    /// @param  tok_ The token to withdraw.
+    /// @param  amt_ The amount to withdraw.
+    /// @param  dst_ The address to send the tokens to.
+    function withdraw(address tok_, uint amt_, address dst_) external;
 }

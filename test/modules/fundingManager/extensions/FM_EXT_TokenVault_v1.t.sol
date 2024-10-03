@@ -33,14 +33,17 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
+import {FM_EXT_TokenVault_v1_Exposed} from
+    "test/modules/fundingManager/extensions/FM_EXT_TokenVault_v1_Exposed.sol";
+
 contract FM_EXT_TokenVault_v1Test is ModuleTest {
     // SuT
-    FM_EXT_TokenVault_v1 vault;
+    FM_EXT_TokenVault_v1_Exposed vault;
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
         address impl = address(new FM_EXT_TokenVault_v1());
-        vault = FM_EXT_TokenVault_v1(Clones.clone(impl));
+        vault = FM_EXT_TokenVault_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
 
@@ -64,56 +67,26 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
     //--------------------------------------------------------------------------
     //Modifier
 
-    function testValidAmount(uint amount) public {
-        _token.mint(address(vault), amount);
-        if (amount == 0) {
-            vm.expectRevert(
-                IFM_EXT_TokenVault_v1
-                    .Module__FM_EXT_TokenVault__InvalidAmount
-                    .selector
-            );
-        }
-
-        vault.withdraw(address(_token), amount, address(1));
-    }
-
-    //--------------------------------------------------------------------------
-    // Mutating Functions
-
-    /* Test validAmount() modifier
-    ├── Given the vault contains a specific amount of tokens
-    │   └── And the amount is equal to 0
-    │       └── When the withdraw() function is called
-    │           └── Then the transaction should revert with Module__FM_EXT_TokenVault__InvalidAmount error
-    └── Given the amount is greater than 0
-        └── When the withdraw() function is called
-            └── Then the transaction should succeed
+    /* Test withdraw() function modifiers in place 
+        ├── Given the caller is not the Orchestrator Admin
+        │   └── And the modifier onlyOrchestratorAdmin is in position
+        │       └── When the function withdraw() is called
+        │           └── Then it should revert
+        ├── Given the token address is invalid
+        │   └── And the modifier validAddress(tok_) is in position
+        │       └── When the function withdraw() is called
+        │           └── Then it should revert
+        ├── Given an invalid amount
+        │   └── And the modifier validAmount(amt_) is in position
+        │       └── When the function withdraw() is called
+        │           └── Then it should revert
+        └── Given the destination address is invalid
+            └── And the modifier validAddress(dst_) is in position
+                └── When the function withdraw() is called
+                    └── Then it should revert
     */
 
-    function testWithdraw(address token, uint amount, address dst) public {
-        vm.assume(amount > 0);
-
-        vm.assume(token != address(0) || token != address(vault));
-        vm.assume(dst != address(0) || dst != address(vault));
-
-        if (token == address(_token)) {
-            _token.mint(address(vault), amount);
-            vm.expectEmit(true, true, true, true);
-            emit IFM_EXT_TokenVault_v1.TokensWithdrawn(token, dst, amount);
-        } else {
-            vm.expectRevert();
-        }
-
-        vault.withdraw(token, amount, dst);
-
-        if (token == address(_token)) {
-            assertEq(_token.balanceOf(address(vault)), 0);
-            assertEq(_token.balanceOf(dst), amount);
-        }
-    }
-
-    function testWithdrawModifierInPosition() public {
-        // onlyOrchestratorAdmin
+    function testWithdraw_onlyOrchestratorAdminModifierInPosition() public {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
@@ -123,20 +96,84 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
         );
         vm.prank(address(0));
         vault.withdraw(address(0), 0, address(0));
+    }
 
-        //validAddress(tok)
+    function testWithdraw_validAddressTokModifierInPosition() public {
         vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
         vault.withdraw(address(0), 1, address(1));
+    }
 
-        //validAmount(amt)
+    function testWithdraw_validAmountModifierInPosition() public {
         vm.expectRevert(
             IFM_EXT_TokenVault_v1
                 .Module__FM_EXT_TokenVault__InvalidAmount
                 .selector
         );
-        vault.withdraw(address(1), 0, address(0));
-        //validAddress(dst)
+        vault.withdraw(address(_token), 0, address(1));
+    }
+
+    function testWithdraw_validAddressDstModifierInPosition() public {
         vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
         vault.withdraw(address(1), 1, address(0));
+    }
+
+    //--------------------------------------------------------------------------
+    // Mutating Functions
+
+    // @todo Add Gherkin
+    /* Test withdraw() function
+       └── Given token address is valid
+           └── And the amount is valid
+               └── And the destination address is valid
+                   └── When the function withdraw() is called
+                       └── Then it should transfer the tokens
+                           └── And it should emit an event
+    */
+
+    function testWithdraw_worksGivenValidInputs(uint amount, address dst)
+        public
+    {
+        vm.assume(amount > 0);
+        vm.assume(dst != address(0) && dst != address(vault));
+
+        // Setup
+        _token.mint(address(vault), amount);
+
+        // Test condition
+        vm.expectEmit(true, true, true, true);
+        emit IFM_EXT_TokenVault_v1.TokensWithdrawn(address(_token), dst, amount);
+        vault.withdraw(address(_token), amount, dst);
+
+        assertEq(_token.balanceOf(address(vault)), 0);
+        assertEq(_token.balanceOf(dst), amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /*  Test internal _onlyValidAmount() function 
+        # Given the amount is 0
+        ## When the internal function _onlyValidAmount() is called
+        ### Then it should revert
+        # Given the amount is not 0
+        ## When the internal function _onlyValidAmount() is called
+        ### Then it should work
+    */
+
+    function testInternalOnlyValidAmount_revertGivenZeroAmount() public {
+        vm.expectRevert(
+            IFM_EXT_TokenVault_v1
+                .Module__FM_EXT_TokenVault__InvalidAmount
+                .selector
+        );
+        vault.exposed_onlyValidAmount(0);
+    }
+
+    function testInternalOnlyValidAmount_worksGivenNonZeroAmount(uint amount_)
+        public
+        view
+    {
+        vm.assume(amount_ != 0);
+        vault.exposed_onlyValidAmount(amount_);
     }
 }

@@ -44,10 +44,8 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     // Modifiers
 
     /// @dev    Modifier to guarantee the amount is valid.
-    modifier validAmount(uint amt) {
-        if (amt == 0) {
-            revert Module__FM_EXT_TokenVault__InvalidAmount();
-        }
+    modifier validAmount(uint amt_) {
+        _onlyValidAmount(amt_);
         _;
     }
 
@@ -55,16 +53,26 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     // Mutating Functions
 
     /// @inheritdoc IFM_EXT_TokenVault_v1
-    function withdraw(address tok, uint amt, address dst)
+    function withdraw(address tok_, uint amt_, address dst_)
         external
         virtual
         //@note do we want to keep it that way? Special role?
         onlyOrchestratorAdmin
-        validAddress(tok)
-        validAmount(amt)
-        validAddress(dst)
+        validAddress(tok_)
+        validAmount(amt_)
+        validAddress(dst_)
     {
-        IERC20(tok).safeTransfer(dst, amt);
-        emit TokensWithdrawn(tok, dst, amt);
+        IERC20(tok_).safeTransfer(dst_, amt_);
+        emit TokensWithdrawn(tok_, dst_, amt_);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /// @dev Revert given the amount is invalid, i.e. equal to 0.
+    function _onlyValidAmount(uint amt_) internal pure {
+        if (amt_ == 0) {
+            revert Module__FM_EXT_TokenVault__InvalidAmount();
+        }
     }
 }
