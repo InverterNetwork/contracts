@@ -197,7 +197,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         _;
     }
 
-    // @todo want
     modifier onlyLiquidityVaultController() {
         if (_msgSender() != address(liquidityVaultController)) {
             revert
@@ -373,8 +372,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         override(RedeemingBondingCurveBase_v1)
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        //@todo can be removed from test as its already checked in the base contract
-        // @note Overridden the internal _validateWorkflowFee function as the max is different than specified for Topos
         _setSellFee(_fee);
     }
 
@@ -397,7 +394,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        // @note When upgrading to Topos next version, we should add an interface check here.
+        // @update-info When upgrading to Topos next version, we should add an interface check here.
         if (address(_lvc) == address(0) || address(_lvc) == address(this)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAddress(
@@ -426,7 +423,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     function setCapitalRequired(uint _newCapitalRequired)
         public
         override(FM_BC_BondingSurface_Redeeming_v1)
-        onlyModuleRole(RISK_MANAGER_ROLE) //@todo override
+        onlyModuleRole(RISK_MANAGER_ROLE)
     {
         _setCapitalRequired(_newCapitalRequired);
     }
@@ -434,7 +431,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     function setBasePriceMultiplier(uint _newBasePriceMultiplier)
         public
         override(FM_BC_BondingSurface_Redeeming_v1)
-        onlyModuleRole(RISK_MANAGER_ROLE) //@todo override
+        onlyModuleRole(RISK_MANAGER_ROLE)
     {
         _setBasePriceMultiplier(_newBasePriceMultiplier);
     }
