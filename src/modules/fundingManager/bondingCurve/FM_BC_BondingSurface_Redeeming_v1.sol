@@ -361,7 +361,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _updateVariables();
     }
 
-    // @todo Natspec
+    /// @dev    Sets the base price multiplier and updates the according variables.
+    /// @param  _newBasePriceMultiplier The new base price multiplier.
     function _setBasePriceMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
             revert

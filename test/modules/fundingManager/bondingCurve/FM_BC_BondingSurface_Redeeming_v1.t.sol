@@ -102,7 +102,6 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         bc_properties.formula = formula;
         bc_properties.capitalRequired = CAPITAL_REQUIREMENT;
         bc_properties.basePriceMultiplier = BASE_PRICE_MULTIPLIER;
-        bc_properties.seize = 0; //@todo remove
 
         // Set pAMM properties
         bc_properties.buyIsOpen = BUY_IS_OPEN;

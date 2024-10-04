@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {FM_BC_BondingSurface_Redeeming_v1} from
-    "src/modules/fundingManager/bondingCurve//FM_BC_BondingSurface_Redeeming_v1.sol";
+    "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
 import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {BondingCurveBase_v1} from
@@ -18,6 +18,8 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 import {IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
@@ -66,7 +68,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         override(FM_BC_BondingSurface_Redeeming_v1)
         returns (bool)
     {
-        return interfaceId //@todo is this still correct?
+        return interfaceId
             == type(IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1).interfaceId
             || interfaceId == type(IRepayer_v1).interfaceId
             || super.supportsInterface(interfaceId);
@@ -124,18 +126,20 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         address _issuanceToken;
         address _acceptedToken;
         address _tokenVault;
-        BondingCurveProperties memory bondingCurveProperties;
         address _liquidityVaultController;
+        BondingCurveProperties memory bondingCurveProperties;
+        uint64 _seize;
 
         (
             _issuanceToken,
             _acceptedToken,
             _tokenVault,
             _liquidityVaultController,
-            bondingCurveProperties
+            bondingCurveProperties,
+            _seize
         ) = abi.decode(
             configData,
-            (address, address, address, address, BondingCurveProperties)
+            (address, address, address, address, BondingCurveProperties, uint64)
         );
 
         // Set accepted token
@@ -164,8 +168,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         // Set Bonding Curve Properties
         // Set capital required
         _setCapitalRequired(bondingCurveProperties.capitalRequired);
-        // Set currentSeize
-        _setSeize(bondingCurveProperties.seize);
         // Set base price multiplier
         _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
         // Set buy fee
@@ -178,6 +180,9 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         sellIsOpen = bondingCurveProperties.sellIsOpen;
         // Set buy and sell restriction to restricted if true. By default buy and sell is unrestricted.
         buyAndSellIsRestricted = bondingCurveProperties.buyAndSellIsRestricted;
+
+        // Set currentSeize
+        _setSeize(_seize);
 
         emit OrchestratorTokenSet(
             _acceptedToken, IERC20Metadata(address(_token)).decimals()

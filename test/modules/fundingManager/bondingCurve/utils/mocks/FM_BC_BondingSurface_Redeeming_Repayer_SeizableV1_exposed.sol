@@ -11,8 +11,7 @@ import {IOrchestrator_v1} from
 import {
     FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1,
     IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-} from
-    "src/modules/fundingManager/bondingCurve/FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
+} from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 contract FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed is

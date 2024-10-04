@@ -57,21 +57,6 @@ interface IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 {
     event BuyAndSellIsUnrestricted();
 
     //--------------------------------------------------------------------------
-    // Structs
-
-    // struct BondingCurveProperties {
-    //     address formula; // The formula contract used to calculate the issucance and redemption rate
-    //     uint capitalRequired; // The initial capital requirement for the formula contract
-    //     uint basePriceMultiplier; // Base price multiplier in the bonding curve formula
-    //     uint buyFee; // The buy fee expressed in base points
-    //     uint sellFee; // The sell fee expressed in base points
-    //     bool sellIsOpen; // The indicator used for enabling/disabling the selling functionalties on deployment
-    //     bool buyIsOpen; // The indicator used for enabling/disabling the buying functionalities on deployment
-    //     uint64 seize; // The current seize percentage expresses in BPS
-    //     bool buyAndSellIsRestricted; // The indicator used for restrict/unrestrict buying and selling functionalities to the CURVE_INTERACTION_ROLE
-    // }
-
-    //--------------------------------------------------------------------------
     // Functions
 
     /// @notice Sets a new liquidity valut controller address

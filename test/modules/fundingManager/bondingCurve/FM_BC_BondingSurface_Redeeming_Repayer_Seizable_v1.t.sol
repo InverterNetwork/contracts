@@ -36,6 +36,8 @@ import {
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
+import {IFM_BC_BondingSurface_Redeeming_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 import {IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
@@ -106,8 +108,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         issuanceToken = new ERC20Issuance_v1(
             NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
         );
-        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
-            bc_properties;
+        FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            .BondingCurveProperties memory bc_properties;
 
         // Deploy formula and cast to address for encoding
         BondingSurface bondingSurface = new BondingSurface();
@@ -117,7 +119,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bc_properties.formula = formula;
         bc_properties.capitalRequired = CAPITAL_REQUIREMENT;
         bc_properties.basePriceMultiplier = BASE_PRICE_MULTIPLIER;
-        bc_properties.seize = MAX_SEIZE;
 
         // Set pAMM properties
         bc_properties.buyIsOpen = BUY_IS_OPEN;
@@ -146,10 +147,11 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             _METADATA,
             abi.encode(
                 address(issuanceToken),
-                _token, // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                tokenVault,
+                address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
+                address(tokenVault),
                 liquidityVaultController,
-                bc_properties
+                bc_properties,
+                MAX_SEIZE
             )
         );
         // Mint minimal reserve necessary to operate the BC
