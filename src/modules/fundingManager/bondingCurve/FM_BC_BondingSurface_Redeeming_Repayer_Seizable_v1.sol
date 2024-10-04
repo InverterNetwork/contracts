@@ -59,9 +59,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     FM_BC_BondingSurface_Redeeming_v1
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(
-        bytes4 interfaceId //@todo adapt tests
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -439,10 +437,11 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     //--------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
-    //@todo Natspec
-    function setTokenVault(
-        address _tokenVault //@todo test
-    ) external onlyOrchestratorAdmin {
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+    function setTokenVault(address _tokenVault)
+        external
+        onlyOrchestratorAdmin
+    {
         _setTokenVault(_tokenVault);
     }
 
@@ -456,6 +455,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         validAddress(_tokenVault)
     {
         tokenVault = _tokenVault;
+        emit TokenVaultSet(_tokenVault);
     }
 
     /// @dev Set the current seize state, which defines the percentage of seizable amount
@@ -494,7 +494,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         override(BondingCurveBase_v1)
     {
         if (_workflowFee > MAX_FEE) {
-            revert Module__BondingCurveBase__InvalidFeePercentage(); //@todo do we need to output the fee amount?
+            revert Module__BondingCurveBase__InvalidFeePercentage();
         }
     }
 

@@ -139,7 +139,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         _authorizer.setIsAuthorized(address(this), true);
 
         // Set Minter
-        issuanceToken.setMinter(address(bondingCurveFundingManager), true); //@todo This wasnt set??
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -241,6 +241,23 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
     function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
+    }
+
+    //--------------------------------------------------------------------------
+    // Tests: Supports Interface
+
+    function testSupportsInterface() public {
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1)
+                    .interfaceId
+            )
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IRepayer_v1).interfaceId
+            )
+        );
     }
 
     //--------------------------------------------------------------------------

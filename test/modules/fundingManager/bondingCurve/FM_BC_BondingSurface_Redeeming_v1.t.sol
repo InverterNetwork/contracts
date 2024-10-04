@@ -106,8 +106,9 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Set pAMM properties
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.sellFee = SELL_FEE; //@todo should this be part of the struct? What about buy fee?
-        bc_properties.buyAndSellIsRestricted = false; //@todo should this be part of the struct?
+        bc_properties.buyFee = BUY_FEE; //@todo add Buy fee to struct and to init
+        bc_properties.sellFee = SELL_FEE;
+        bc_properties.buyAndSellIsRestricted = false; //@todo remove
 
         address impl = address(new FM_BC_BondingSurface_RedeemingV1_exposed());
 
@@ -118,7 +119,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         // Set Minter
-        issuanceToken.setMinter(address(bondingCurveFundingManager), true); //@todo This wasnt set??
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true); //@todo Marvin G This wasnt set??
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -200,6 +201,22 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
+    // Tests: Supports Interface
+
+    function testSupportsInterface() public {
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IFM_BC_BondingSurface_Redeeming_v1).interfaceId
+            )
+        );
+        assertTrue(
+            bondingCurveFundingManager.supportsInterface(
+                type(IFundingManager_v1).interfaceId
+            )
+        );
+    }
+
+    //--------------------------------------------------------------------------
     // Public Functions
 
     function testCalculatebasePriceToCapitalRatio_worksGivenReturnValueInternalFunction(
@@ -231,13 +248,13 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
-    // OnlyCoverManager Functions //@todo rename
+    // OnlyOrchestratorAdmin Functions
 
     /*  Test setCapitalRequired()
-        ├── Given: the caller has not the RISK_MANAGER_ROLE //@todo adapt
+        ├── Given: the caller is not the OrchestratorAdmin
         │   └── When: the function setCapitalRequired() is called
         │       └── Then: it should revert
-        └── Given: the caller has the role of RISK_MANAGER_ROLE
+        └── Given: the caller is the OrchestratorAdmin
             └── When: the function setCapitalRequired() is called
                 └── Then: it should call the internal function and set the state
     */
@@ -280,10 +297,10 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     }
 
     /*  Test setBaseMultiplier()
-        ├── Given: the caller has not the RISK_MANAGER_ROLE //@todo adapt
+        ├── Given: the caller is not the OrchestratorAdmin
         │   └── When: the function setBaseMultiplier() is called
         │       └── Then: it should revert
-        └── Given: the caller has the RISK_MANAGER_ROLE
+        └── Given: the caller is the OrchestratorAdmin
             └── When: the function setBaseMultiplier() is called
                 └── Then: it should call the internal function and set the state
     */

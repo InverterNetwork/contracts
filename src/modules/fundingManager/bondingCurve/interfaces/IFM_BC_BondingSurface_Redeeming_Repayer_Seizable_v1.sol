@@ -50,6 +50,9 @@ interface IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 {
         address newLiquidityVaultController, address oldLiquidityVaultController
     );
 
+    /// @notice Emits when the token vault gets updated
+    event TokenVaultSet(address tokenVault);
+
     /// @notice Emits when buy and sell restriction is set.
     event BuyAndSellIsRestricted();
 
@@ -94,4 +97,9 @@ interface IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 {
     /// @notice Unrestricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
     function unrestrictBuyAndSell() external;
+
+    /// @notice Sets the token vault address.
+    /// @dev    Only callable by OrchestratorAdmin
+    /// @param _tokenVault The address of the token vault.
+    function setTokenVault(address _tokenVault) external;
 }
