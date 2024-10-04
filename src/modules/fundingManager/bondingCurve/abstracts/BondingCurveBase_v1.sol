@@ -478,7 +478,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         virtual
     {
-        //@todo Add comment to Linear Issue
         issuanceToken.spentAllowance(_owner, _spender, _amount);
     }
 }

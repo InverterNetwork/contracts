@@ -54,7 +54,6 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         uint sellFee;
         bool buyIsOpen;
         bool sellIsOpen;
-        bool buyAndSellIsRestricted; // The indicator used for restrict/unrestrict buying and selling functionalities to the CURVE_INTERACTION_ROLE
     }
 
     //--------------------------------------------------------------------------

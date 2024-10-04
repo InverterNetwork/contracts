@@ -67,6 +67,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     uint internal constant MAX_SUPPLY = type(uint).max;
     uint private constant CAPITAL_REQUIREMENT = 1_000_000 * 1e18;
 
+    uint private constant BUY_FEE = 100;
     uint private constant SELL_FEE = 100;
     bool private constant BUY_IS_OPEN = true;
     bool private constant SELL_IS_OPEN = true;
@@ -106,9 +107,8 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Set pAMM properties
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
-        bc_properties.buyFee = BUY_FEE; //@todo add Buy fee to struct and to init
+        bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
-        bc_properties.buyAndSellIsRestricted = false; //@todo remove
 
         address impl = address(new FM_BC_BondingSurface_RedeemingV1_exposed());
 
@@ -169,7 +169,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         );
         assertEq(
             bondingCurveFundingManager.buyFee(),
-            0,
+            BUY_FEE,
             "Buy fee has not been set correctly"
         );
         assertEq(

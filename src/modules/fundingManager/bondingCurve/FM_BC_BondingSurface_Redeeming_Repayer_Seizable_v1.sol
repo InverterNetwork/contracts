@@ -127,6 +127,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         address _liquidityVaultController;
         BondingCurveProperties memory bondingCurveProperties;
         uint64 _seize;
+        bool _buyAndSellIsRestricted; // The indicator used for restrict/unrestrict buying and selling functionalities to the CURVE_INTERACTION_ROLE
 
         (
             _issuanceToken,
@@ -134,10 +135,19 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
             _tokenVault,
             _liquidityVaultController,
             bondingCurveProperties,
-            _seize
+            _seize,
+            _buyAndSellIsRestricted
         ) = abi.decode(
             configData,
-            (address, address, address, address, BondingCurveProperties, uint64)
+            (
+                address,
+                address,
+                address,
+                address,
+                BondingCurveProperties,
+                uint64,
+                bool
+            )
         );
 
         // Set accepted token
@@ -177,7 +187,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         // Set selling functionality to open if true. By default selling is false
         sellIsOpen = bondingCurveProperties.sellIsOpen;
         // Set buy and sell restriction to restricted if true. By default buy and sell is unrestricted.
-        buyAndSellIsRestricted = bondingCurveProperties.buyAndSellIsRestricted;
+        buyAndSellIsRestricted = _buyAndSellIsRestricted;
 
         // Set currentSeize
         _setSeize(_seize);

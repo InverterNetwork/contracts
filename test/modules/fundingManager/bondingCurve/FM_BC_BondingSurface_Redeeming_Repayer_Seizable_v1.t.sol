@@ -124,7 +124,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
         bc_properties.sellFee = SELL_FEE;
-        bc_properties.buyAndSellIsRestricted = BUY_AND_SELL_IS_RESTRICTED;
 
         address impl = address(
             new FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed()
@@ -151,7 +150,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                 address(tokenVault),
                 liquidityVaultController,
                 bc_properties,
-                MAX_SEIZE
+                MAX_SEIZE,
+                BUY_AND_SELL_IS_RESTRICTED
             )
         );
         // Mint minimal reserve necessary to operate the BC

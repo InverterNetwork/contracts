@@ -132,7 +132,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         // Set base price multiplier
         _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
         // Set buy fee
-        _setBuyFee(0);
+        _setBuyFee(bondingCurveProperties.buyFee);
         // Set sell fee
         _setSellFee(bondingCurveProperties.sellFee);
         // Set buying functionality to open if true. By default buying is false
