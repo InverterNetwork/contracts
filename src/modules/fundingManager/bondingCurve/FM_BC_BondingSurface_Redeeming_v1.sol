@@ -75,12 +75,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     /// @dev Minimum collateral reserve
     uint public constant MIN_RESERVE = 1 ether;
-    /// @dev Role associated with the managing of the bonding curve values
-    bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER"; //@todo what roles do we want here?
-    /// @dev Role associated with the managing of setting withdraw addresses and setting the fee
-    bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
-    /// @dev Minter/Burner Role.
-    bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     //--------------------------------------------------------------------------
     // Storage
@@ -96,8 +90,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     uint public basePriceMultiplier;
     /// @dev (basePriceMultiplier / capitalRequired)
     uint public basePriceToCapitalRatio;
-    /// @notice Restricts buying and selling functionalities to specific role.
-    bool public buyAndSellIsRestricted;
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -107,25 +99,15 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
+    ) external virtual override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
         address _issuanceToken;
         address _acceptedToken;
-        address _tokenVault;
         BondingCurveProperties memory bondingCurveProperties;
-        address _liquidityVaultController;
 
-        (
-            _issuanceToken,
-            _acceptedToken,
-            _tokenVault,
-            _liquidityVaultController,
-            bondingCurveProperties
-        ) = abi.decode(
-            configData,
-            (address, address, address, address, BondingCurveProperties)
-        );
+        (_issuanceToken, _acceptedToken, bondingCurveProperties) =
+            abi.decode(configData, (address, address, BondingCurveProperties));
 
         // Set accepted token
         _token = IERC20(_acceptedToken);
@@ -159,8 +141,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         buyIsOpen = bondingCurveProperties.buyIsOpen;
         // Set selling functionality to open if true. By default selling is false
         sellIsOpen = bondingCurveProperties.sellIsOpen;
-        // Set buy and sell restriction to restricted if true. By default buy and sell is unrestricted.
-        buyAndSellIsRestricted = bondingCurveProperties.buyAndSellIsRestricted;
 
         emit OrchestratorTokenSet(
             _acceptedToken, IERC20Metadata(address(_token)).decimals()
@@ -170,17 +150,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    // @todo want
-    modifier isBuyAndSellRestricted() {
-        _isBuyAndSellRestrictedModifier();
-        _;
-    }
-
     //--------------------------------------------------------------------------
     // Public Functions
-    // @todo want
+
     /// @notice Buy tokens on behalf of a specified receiver address.
-    /// @dev
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
@@ -189,63 +162,50 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         virtual
         override(BondingCurveBase_v1)
         buyingIsEnabled
-        isBuyAndSellRestricted
         validReceiver(_receiver)
     {
         _buyOrder(_receiver, _depositAmount, _minAmountOut);
     }
-    // @todo want
+
     /// @notice Buy tokens for the sender's address.
-    /// @dev
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(BondingCurveBase_v1)
         buyingIsEnabled
-        isBuyAndSellRestricted
     {
         _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
-    // @todo want
+
     /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
-    /// @dev   This function wraps the `_sellOrder` internal function with specified parameters to handle
-    ///         the transaction and direct the proceeds. The function has a mechanism to restrict the sell functionality
-    ///         to the CURVE_INTERACTION_ROLE
     /// @param  _receiver The address that will receive the redeemed tokens.
     /// @param  _depositAmount The amount of tokens to be sold.
     /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
-
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
         sellingIsEnabled
-        isBuyAndSellRestricted
         validReceiver(_receiver)
     {
         _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
-    // @todo want
+
     /// @notice Redeem collateral for the sender's address.
-    /// @dev    The function has a mechanism to restrict the sell functionality to the CURVE_INTERACTION_ROLE.
     /// @param _depositAmount The amount of issued token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
         sellingIsEnabled
-        isBuyAndSellRestricted
     {
         _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    // @todo want
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
@@ -255,10 +215,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             _capitalRequired, _basePriceMultiplier
         );
     }
-    // @todo want
+
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// @return uint The static price for buying the issuance token.
-
     function getStaticPriceForBuying()
         external
         view
@@ -267,11 +226,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     {
         return _issueTokensFormulaWrapper(1);
     }
-    // @todo want
+
     /// @notice Calculates and returns the static price for selling the issuance token.
     ///         The return value is formatted in PPM.
     /// @return uint The static price for selling the issuance token.
-
     function getStaticPriceForSelling()
         external
         view
@@ -283,58 +241,35 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     //--------------------------------------------------------------------------
     // Public IFundingManager Functions
-
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         return _token;
     }
 
     //--------------------------------------------------------------------------
-    // OnlyCoverManager Functions
+    // OnlyOrchestratorAdmin Functions
 
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function restrictBuyAndSell()
-        external
-        onlyModuleRole(COVER_MANAGER_ROLE) //@todo use OrchestratorAdmin here
-    {
-        buyAndSellIsRestricted = true;
-        emit BuyAndSellIsRestricted();
-    }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-
-    function unrestrictBuyAndSell()
-        external
-        onlyModuleRole(COVER_MANAGER_ROLE) //@todo use OrchestratorAdmin here
-    {
-        buyAndSellIsRestricted = false;
-        emit BuyAndSellIsUnrestricted();
-    }
-
-    //--------------------------------------------------------------------------
-    // OnlyRiskManager Functions
-    // @todo want
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setCapitalRequired(uint _newCapitalRequired)
         public
-        onlyModuleRole(RISK_MANAGER_ROLE) //@todo use OrchestratorAdmin here
+        virtual
+        onlyOrchestratorAdmin
     {
         _setCapitalRequired(_newCapitalRequired);
     }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setBasePriceMultiplier(uint _newBasePriceMultiplier)
         public
-        onlyModuleRole(RISK_MANAGER_ROLE) //@todo use OrchestratorAdmin here
+        virtual
+        onlyOrchestratorAdmin
     {
         _setBasePriceMultiplier(_newBasePriceMultiplier);
     }
 
     //--------------------------------------------------------------------------
     // Upstream Function Implementations
-    // @todo want
+
     /// @dev Calculates the amount of tokens to mint for a given deposit amount using the formula contract.
     /// This internal function is an override of BondingCurveBase_v1's abstract function.
     /// @param _depositAmount The amount of collateral deposited to purchase tokens.
@@ -356,12 +291,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             _depositAmount, capitalAvailable, basePriceToCapitalRatio
         );
     }
-    // @todo want
+
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
     /// @param _depositAmount The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
-
     function _redeemTokensFormulaWrapper(uint _depositAmount)
         internal
         view
@@ -386,8 +320,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
-    // @todo want
+    // OnlyPaymentClient Functions
+
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to, uint amount)
         external
@@ -408,16 +342,14 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    // @todo want
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
     /// @return uint Capital available in contract
     function _getCapitalAvailable() internal view returns (uint) {
         return _token.balanceOf(address(this)) - projectCollateralFeeCollected;
     }
-    // @todo want
+
     /// @dev Set the capital required state used in the bonding curve calculations.
     /// _newCapitalRequired cannot be zero
-
     function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
             revert
@@ -428,8 +360,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         capitalRequired = _newCapitalRequired;
         _updateVariables();
     }
-    // @todo want
 
+    // @todo Natspec
     function _setBasePriceMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
             revert
@@ -453,9 +385,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
         basePriceToCapitalRatio = newBasePriceToCapitalRatio;
     }
-    // @todo want
-    /// @dev Internal function which calculates the price multiplier to capital ratio
 
+    /// @dev Internal function which calculates the price multiplier to capital ratio
     function _calculateBasePriceToCapitalRatio(
         uint _capitalRequired,
         uint _basePriceMultiplier
@@ -467,12 +398,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             revert
                 FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
             );
-        }
-    }
-
-    function _isBuyAndSellRestrictedModifier() internal view {
-        if (buyAndSellIsRestricted) {
-            _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }
     }
 }

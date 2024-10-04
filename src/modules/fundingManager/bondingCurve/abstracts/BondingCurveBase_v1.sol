@@ -432,7 +432,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev    Validates the workflow fee.
-    function _validateWorkflowFee(uint _workflowFee) internal pure {
+    function _validateWorkflowFee(uint _workflowFee) internal pure virtual {
         if (_workflowFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }

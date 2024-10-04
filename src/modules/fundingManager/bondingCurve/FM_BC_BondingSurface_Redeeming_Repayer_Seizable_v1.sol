@@ -10,6 +10,8 @@ import {RedeemingBondingCurveBase_v1} from
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 // Internal Interfaces
 import {IBondingCurveBase_v1} from
@@ -61,10 +63,10 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         public
         view
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(FM_BC_BondingSurface_Redeeming_v1)
         returns (bool)
     {
-        return interfaceId
+        return interfaceId //@todo is this still correct?
             == type(IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1).interfaceId
             || interfaceId == type(IRepayer_v1).interfaceId
             || super.supportsInterface(interfaceId);
@@ -105,6 +107,9 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     /// @notice Address of the reserve pool.
     address public tokenVault; // Todo: might need change from address to interface based on contract. Todo: Add interface type
 
+    /// @notice Restricts buying and selling functionalities to specific role.
+    bool public buyAndSellIsRestricted;
+
     //--------------------------------------------------------------------------
     // Init Function
 
@@ -113,7 +118,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
         bytes memory configData
-    ) external override(Module_v1) initializer {
+    ) external override(FM_BC_BondingSurface_Redeeming_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
         address _issuanceToken;
@@ -182,6 +187,11 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
+    modifier isBuyAndSellRestricted() {
+        _isBuyAndSellRestrictedModifier();
+        _;
+    }
+
     // @todo want
     modifier onlyLiquidityVaultController() {
         if (_msgSender() != address(liquidityVaultController)) {
@@ -193,14 +203,70 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         _;
     }
 
-    // @todo want
+    //--------------------------------------------------------------------------
+    // Public Functions
+
+    /// @notice Buy tokens on behalf of a specified receiver address.
+    /// @dev The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @param _receiver The address that will receive the bought tokens.
+    /// @param _depositAmount The amount of collateral token depoisited.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        override(FM_BC_BondingSurface_Redeeming_v1)
+        isBuyAndSellRestricted
+    {
+        super._buyOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
+    /// @notice Buy tokens for the sender's address.
+    /// @dev The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @param _depositAmount The amount of collateral token depoisited.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function buy(uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        override(FM_BC_BondingSurface_Redeeming_v1)
+        isBuyAndSellRestricted
+    {
+        super._buyOrder(_msgSender(), _depositAmount, _minAmountOut);
+    }
+
+    /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
+    /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @param  _receiver The address that will receive the redeemed tokens.
+    /// @param  _depositAmount The amount of tokens to be sold.
+    /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        override(FM_BC_BondingSurface_Redeeming_v1)
+        isBuyAndSellRestricted
+    {
+        super._sellOrder(_receiver, _depositAmount, _minAmountOut);
+    }
+
+    /// @notice Redeem collateral for the sender's address.
+    /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @param _depositAmount The amount of issued token depoisited.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    function sell(uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        override(FM_BC_BondingSurface_Redeeming_v1)
+        isBuyAndSellRestricted
+    {
+        super._sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+    }
+
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function burnIssuanceToken(uint _amount) external {
         _burn(_msgSender(), _amount);
     }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function burnIssuanceTokenFor(address _owner, uint _amount) external {
         if (_owner != _msgSender()) {
             // Does not update allowance if set to infinite
@@ -210,25 +276,20 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         _burn(_owner, _amount);
     }
 
-    //--------------------------------------------------------------------------
-    // Implementation Specific Public Functions
-    // @todo want
     /// @inheritdoc IRepayer_v1
     function getRepayableAmount() external view returns (uint) {
         return _getRepayableAmount();
     }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function seizable() public view returns (uint) {
         uint currentBalance = _getCapitalAvailable();
 
         return (currentBalance * currentSeize) / BPS;
     }
 
-    // @todo want
     //--------------------------------------------------------------------------
-    // OnlyLiquidtyPool Functions
+    // OnlyLiquidityVaultController Functions
 
     /// @inheritdoc IRepayer_v1
     function transferRepayment(address _to, uint _amount)
@@ -247,7 +308,22 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
 
     //--------------------------------------------------------------------------
     // OnlyCoverManager Functions
-    // @todo want
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+    function restrictBuyAndSell() external onlyModuleRole(COVER_MANAGER_ROLE) {
+        buyAndSellIsRestricted = true;
+        emit BuyAndSellIsRestricted();
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+    function unrestrictBuyAndSell()
+        external
+        onlyModuleRole(COVER_MANAGER_ROLE)
+    {
+        buyAndSellIsRestricted = false;
+        emit BuyAndSellIsUnrestricted();
+    }
+
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function seize(uint _amount) public onlyModuleRole(COVER_MANAGER_ROLE) {
         uint _seizableAmount = seizable();
@@ -276,36 +352,28 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         _token.transfer(_msgSender(), _amount);
         emit CollateralSeized(_amount);
     }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function adjustSeize(uint64 _seize)
         public
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
         _setSeize(_seize);
     }
-    // @todo want
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
 
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
     function setSellFee(uint _fee)
         external
         virtual
         override(RedeemingBondingCurveBase_v1)
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        /* if (_fee > MAX_FEE) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidFeePercentage(
-                _fee
-            );
-        } */
         //@todo can be removed from test as its already checked in the base contract
+        // @note Overridden the internal _validateWorkflowFee function as the max is different than specified for Topos
         _setSellFee(_fee);
     }
-    // @todo want
-    /// @inheritdoc IRepayer_v1
 
+    /// @inheritdoc IRepayer_v1
     function setRepayableAmount(uint _amount)
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
@@ -318,9 +386,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         emit RepayableAmountChanged(_amount, repayableAmount);
         repayableAmount = _amount;
     }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
     function setLiquidityVaultControllerContract(ILiquidityVaultController _lvc)
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
@@ -336,8 +403,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         );
         liquidityVaultController = _lvc;
     }
-    // @todo want
 
+    /// @notice Disabled function for setting the buy fee
     function setBuyFee(uint /*_fee*/ )
         external
         pure
@@ -350,19 +417,18 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
 
     //--------------------------------------------------------------------------
     // OnlyRiskManager Functions
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+
     function setCapitalRequired(uint _newCapitalRequired)
         public
+        override(FM_BC_BondingSurface_Redeeming_v1)
         onlyModuleRole(RISK_MANAGER_ROLE) //@todo override
     {
         _setCapitalRequired(_newCapitalRequired);
     }
-    // @todo want
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
 
     function setBasePriceMultiplier(uint _newBasePriceMultiplier)
         public
+        override(FM_BC_BondingSurface_Redeeming_v1)
         onlyModuleRole(RISK_MANAGER_ROLE) //@todo override
     {
         _setBasePriceMultiplier(_newBasePriceMultiplier);
@@ -370,7 +436,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
 
     //--------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
-    // @todo want
+
+    //@todo Natspec
     function setTokenVault(
         address _tokenVault //@todo test
     ) external onlyOrchestratorAdmin {
@@ -379,7 +446,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
 
     //--------------------------------------------------------------------------
     // Internal Functions
-    // @todo want
+
     /// @dev Sets the token vault address.
     /// @param _tokenVault The address of the token vault.
     function _setTokenVault(address _tokenVault)
@@ -388,9 +455,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     {
         tokenVault = _tokenVault;
     }
-    // @todo want
-    /// @dev Set the current seize state, which defines the percentage of seizable amount
 
+    /// @dev Set the current seize state, which defines the percentage of seizable amount
     function _setSeize(uint64 _seize) internal {
         if (_seize > MAX_SEIZE) {
             revert
@@ -401,23 +467,40 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
         emit SeizeChanged(currentSeize, _seize);
         currentSeize = _seize;
     }
-    // @todo want
+
     /// @notice If the repayable amount was not defined, it is automatically set to the smaller between the Ca and the Cr value
     /// @notice The repayable amount as maximum is applied when is gt 0 and is lt the smallest between Cr and Ca
-
     function _getRepayableAmount() internal view returns (uint) {
         uint _repayable = _getSmallerCaCr();
         return (repayableAmount == 0 || repayableAmount > _repayable)
             ? _repayable
             : repayableAmount;
     }
-    // @todo want
+
     /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Required (Cr), the repayable amount can be lte Cr
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
-
     function _getSmallerCaCr() internal view returns (uint) {
         uint _ca = _getCapitalAvailable();
         uint _cr = capitalRequired;
         return _ca > _cr ? _cr : _ca;
+    }
+
+    /// @dev    Validates the workflow fee.
+    function _validateWorkflowFee(uint _workflowFee)
+        internal
+        pure
+        override(BondingCurveBase_v1)
+    {
+        if (_workflowFee > MAX_FEE) {
+            revert Module__BondingCurveBase__InvalidFeePercentage(); //@todo do we need to output the fee amount?
+        }
+    }
+
+    ///@dev Validate if buy and sell is restricted, and if so
+    ///     check if the caller has the CURVE_INTERACTION_ROLE
+    function _isBuyAndSellRestrictedModifier() internal view {
+        if (buyAndSellIsRestricted) {
+            _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
+        }
     }
 }

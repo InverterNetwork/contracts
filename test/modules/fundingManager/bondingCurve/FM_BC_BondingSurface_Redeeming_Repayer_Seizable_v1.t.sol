@@ -7,7 +7,8 @@ import "forge-std/console.sol";
 import {
     IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1,
     FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1,
-    IFundingManager_v1
+    IFundingManager_v1,
+    IBondingCurveBase_v1
 } from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
 
 import {IFM_BC_BondingSurface_Redeeming_v1} from
@@ -105,8 +106,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         issuanceToken = new ERC20Issuance_v1(
             NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
         );
-        IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-            .BondingCurveProperties memory bc_properties;
+        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
+            bc_properties;
 
         // Deploy formula and cast to address for encoding
         BondingSurface bondingSurface = new BondingSurface();
@@ -326,7 +327,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_v1.BuyAndSellIsUnrestricted();
+        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            .BuyAndSellIsUnrestricted();
         bondingCurveFundingManager.unrestrictBuyAndSell();
     }
 
@@ -367,7 +369,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IFM_BC_BondingSurface_Redeeming_v1.BuyAndSellIsRestricted();
+        emit IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            .BuyAndSellIsRestricted();
         bondingCurveFundingManager.restrictBuyAndSell();
     }
 
@@ -1051,10 +1054,9 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // Execute Tx
         vm.expectRevert(
             abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
-                    .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidFeePercentage
-                    .selector,
-                _fee
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidFeePercentage
+                    .selector
             )
         );
         bondingCurveFundingManager.setSellFee(_fee);
@@ -1342,7 +1344,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
 
         // Execute Tx
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable
                 .selector
         );
@@ -1398,7 +1400,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
 
         // Execute Tx
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable
                 .selector
         );
@@ -1505,7 +1507,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         uint capitalRequirements = 0;
         // Expect Revert
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
                 .selector
         );
@@ -1615,7 +1617,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         uint basePriceMultiplier = 0;
         // Expect Revert
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
                 .selector
         );
@@ -1705,7 +1707,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         _basePriceMultiplier = bound(_basePriceMultiplier, 1e37, 1e38); // Higher minimum bound
 
         vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1
+            IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
                 .selector
         );
