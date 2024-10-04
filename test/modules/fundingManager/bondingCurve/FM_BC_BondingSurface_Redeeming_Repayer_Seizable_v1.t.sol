@@ -45,8 +45,8 @@ import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Mocks
-import {FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1Mock} from
-    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1Mock.sol";
+import {FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed} from
+    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed.sol";
 
 /*     
     PLEASE NOTE: The following tests have been tested in other test contracts
@@ -84,7 +84,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
     uint private constant BASE_PRICE_MULTIPLIER = 0.000001 ether;
     uint64 private constant SEIZE_DELAY = 7 days;
 
-    FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1Mock
+    FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed
         bondingCurveFundingManager;
     address formula;
     ERC20Issuance_v1 issuanceToken;
@@ -125,11 +125,12 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bc_properties.sellFee = SELL_FEE;
         bc_properties.buyAndSellIsRestricted = BUY_AND_SELL_IS_RESTRICTED;
 
-        address impl =
-            address(new FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1Mock());
+        address impl = address(
+            new FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed()
+        );
 
         bondingCurveFundingManager =
-        FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1Mock(
+        FM_BC_BondingSurface_Redeeming_Repayer_SeizableV1_exposed(
             Clones.clone(impl)
         );
 
@@ -599,39 +600,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
 
         // Assert right amount has been burned
         assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - _amount);
-    }
-
-    /*  Test calculatebasePriceToCapitalRatio()
-        └── When: the function calculatebasePriceToCapitalRatio() gets called
-            └── Then: it should return the return value of _calculateBasePriceToCapitalRatio()
-    */
-    // @note Base
-    function testCalculatebasePriceToCapitalRatio_worksGivenReturnValueInternalFunction(
-        uint _capitalRequirements,
-        uint _basePriceMultiplier
-    ) public {
-        // Set bounds so when values used for calculation, the result < 1e36
-        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
-        _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
-
-        // Setup
-        bondingCurveFundingManager.setBasePriceMultiplier(_basePriceMultiplier);
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
-
-        // Use expected value from internal function
-        uint expectedReturnValue = bondingCurveFundingManager
-            .exposed_calculateBasePriceToCapitalRatio(
-            _capitalRequirements, _basePriceMultiplier
-        );
-
-        // Execute Tx
-        uint functionReturnValue = bondingCurveFundingManager
-            .exposed_calculateBasePriceToCapitalRatio(
-            _capitalRequirements, _basePriceMultiplier
-        );
-
-        // Assert expected return value
-        assertEq(functionReturnValue, expectedReturnValue);
     }
 
     //--------------------------------------------------------------------------
@@ -1245,11 +1213,10 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         ├── Given: the caller has not the RISK_MANAGER_ROLE
         │   └── When: the function setCapitalRequired() is called
         │       └── Then: it should revert
-        └── Given: the caller has the role of RISK_MANAGER_ROLE
+        └── Given: the caller has the role of RISK_MANAGER_ROLE //@todo remove as its tested in the base contract?
             └── When: the function setCapitalRequired() is called
                 └── Then: it should call the internal function and set the state
     */
-    // @note Base
     function testSetCapitalRequired_revertGivenCallerHasNotRiskManagerRole()
         public
     {
@@ -1295,11 +1262,11 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         ├── Given: the caller has not the RISK_MANAGER_ROLE
         │   └── When: the function setBaseMultiplier() is called
         │       └── Then: it should revert
-        └── Given: the caller has the RISK_MANAGER_ROLE
+        └── Given: the caller has the RISK_MANAGER_ROLE //@todo remove as its tested in the base contract?
             └── When: the function setBaseMultiplier() is called
                 └── Then: it should call the internal function and set the state
     */
-    // @note Base
+
     function testSetBaseMultiplier_revertGivenCallerHasNotRiskManagerRole()
         public
     {
@@ -1321,7 +1288,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.setBasePriceMultiplier(newBaseMultiplier);
         }
     }
-    // @note Base
 
     function testSetBaseMultiplier_worksGivenCallerHasRiskManagerRole(
         uint _newBaseMultiplier
@@ -1361,238 +1327,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
 
     //--------------------------------------------------------------------------
     // Internal Functions
-
-    /*  Test _issueTokensFormulaWrapper()
-        ├── Given: capital available == 0
-        │   └── When: the function _issueTokensFormulaWrapper() gets called
-        │       └── Then: it should revert
-        └── Given: capital available > 0
-            └── When: the function _issueTokensFormulaWrapper() gets called
-                └── Then: it should return the same as formula.tokenIn
-    */
-    // @note Base
-    function testInternalIssueTokensFormulaWrapper_revertGivenCapitalAvailableIsZero(
-    ) public {
-        uint _depositAmount = 1;
-
-        // Transfer all capital that is in the bonding curve funding manager
-        vm.prank(address(bondingCurveFundingManager));
-        _token.transfer(seller, MIN_RESERVE);
-
-        // Execute Tx
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable
-                .selector
-        );
-        bondingCurveFundingManager.exposed_issueTokensFormulaWrapper(
-            _depositAmount
-        );
-    }
-    // @note Base
-
-    function testInternalIssueTokensFormulaWrapper_works(uint _depositAmount)
-        public
-    {
-        // Setup
-        // protect agains overflow
-        _depositAmount = bound(
-            _depositAmount,
-            1,
-            1e36 - bondingCurveFundingManager.exposed_getCapitalAvailable()
-        );
-
-        // Get expected return value
-        uint expectedReturnValue = IBondingSurface(formula).tokenOut(
-            _depositAmount,
-            bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.basePriceToCapitalRatio()
-        );
-        // Actual return value
-        uint functionReturnValue = bondingCurveFundingManager
-            .exposed_issueTokensFormulaWrapper(_depositAmount);
-
-        // Assert eq
-        assertEq(functionReturnValue, expectedReturnValue);
-    }
-
-    /*  Test _redeemTokensFormulaWrapper()
-        ├── Given: capital available == 0
-        │   └── When: the function _redeemTokensFormulaWrapper() gets called
-        │       └── Then: it should revert
-        ├── Given: (capitalAvailable - redeemAmount) < MIN_RESERVE
-        │   └── When: the function _redeemTokensFormulaWrapper() gets called
-        │       └── Then: it should return (capitalAvailable - MIN_RESERVE) instead of redeemAmount
-        └── Given: (capitalAvailable - redeemAmount) >= MIN_RESERVE
-            └── When: the function _redeemTokensFormulaWrapper() gets called
-                └── Then: it should return redeemAmount
-    */
-    // @note Base
-    function testInternalRedeemTokensFormulaWrapper_revertGivenCapitalAvailableIsZero(
-    ) public {
-        uint _depositAmount = 1;
-
-        // Transfer all capital that is in the bonding curve funding manager
-        vm.prank(address(bondingCurveFundingManager));
-        _token.transfer(seller, MIN_RESERVE);
-
-        // Execute Tx
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable
-                .selector
-        );
-        bondingCurveFundingManager.exposed_redeemTokensFormulaWrapper(
-            _depositAmount
-        );
-    }
-    // @note Base
-
-    function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsCapitalAvailableMinusMinReserve(
-        uint _depositAmount
-    ) public {
-        // protect agains overflow
-        _depositAmount = bound(_depositAmount, 1, 1e36 - MIN_RESERVE);
-
-        // Calculate expected return value. Because capital available == MIN_RESERVE, any redeem amount
-        // triggers a change in return value as the balance may never dip below MIN_RESERVE, making the return
-        // value 0
-        uint expectedReturnValue = bondingCurveFundingManager
-            .exposed_getCapitalAvailable() - MIN_RESERVE;
-
-        // Get return value
-        uint functionReturnValue = bondingCurveFundingManager
-            .exposed_redeemTokensFormulaWrapper(_depositAmount);
-
-        // Assert equal
-        assertEq(functionReturnValue, expectedReturnValue);
-    }
-    // @note Base
-
-    function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsRedeemAmount(
-        uint _depositAmount
-    ) public {
-        // protect agains under/overflow
-        _depositAmount = bound(
-            _depositAmount,
-            1e16,
-            1e36 - bondingCurveFundingManager.exposed_getCapitalAvailable()
-        );
-        _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _depositAmount
-        );
-
-        // Get expected return value
-        uint redeemAmount = IBondingSurface(formula).tokenIn(
-            _depositAmount,
-            bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.basePriceToCapitalRatio()
-        );
-        // Get return value
-        uint functionReturnValue = bondingCurveFundingManager
-            .exposed_redeemTokensFormulaWrapper(_depositAmount);
-
-        // Because of precision loss, the assert is done to be in range of 0.0000000001% of each other
-        assertApproxEqRel(functionReturnValue, redeemAmount, 0.0000000001e18);
-    }
-
-    /*  Test internal _getCapitalAvailable()
-        └── When the function _getCapitalAvailable() is called
-            └── Then it should return balance of contract - project fee collected
-    */
-    // @note Base
-    function testInternalGetCapitalAvailable_worksGivenValueReturnedHasFeeSubtracted(
-        uint _amount
-    ) public {
-        // Setup
-        // Collateral amount
-        _amount = bound(_amount, 1, 1e36);
-        // Fee collected of 2%
-        uint _projectCollateralFeeCollected = _amount * 200 / 10_000;
-        // Mint collateral to funding manager
-        _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager),
-            _amount + _projectCollateralFeeCollected
-        );
-        // Set project fee collected through helper
-        _setProjectCollateralFeeCollectedHelper(_projectCollateralFeeCollected);
-
-        // Get state value of fee collected
-        uint feeCollected =
-            bondingCurveFundingManager.projectCollateralFeeCollected();
-        // Calculate expected return value
-        uint expectedReturnValue =
-            _token.balanceOf(address(bondingCurveFundingManager)) - feeCollected;
-        // Get return value
-        uint returnValue =
-            bondingCurveFundingManager.exposed_getCapitalAvailable();
-
-        // Assert value
-        assertEq(returnValue, expectedReturnValue);
-    }
-
-    /*  Test _setCapitalRequired()
-        ├── Given: the parameter _newCapitalRequired == 0
-        │   └── When: the function _setCapitalRequired() is called
-        │       └── Then: it should revert
-        └── Given: the parameter _newCapitalRequired > 0
-            └── When: the function _setCapitalRequired() is called
-                └── Then: it should succeed in writing the new value to state
-                    ├── And: it should emit an event
-                    └── And: it should call _updateVariables() to update basePriceToCapitalRatio
-     */
-    // @note Base
-    function testInternalSetCapitalRequired_revertGivenValueIsZero() public {
-        // Set invalid value
-        uint capitalRequirements = 0;
-        // Expect Revert
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
-                .selector
-        );
-        bondingCurveFundingManager.exposed_setBasePriceMultiplier(
-            capitalRequirements
-        );
-    }
-    // @note Base
-
-    function testInternalSetCapitalRequired_worksGivenValueIsNotZero(
-        uint _capitalRequirements
-    ) public {
-        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
-
-        // Get current value for expected emit
-        uint currentCapitalRequirements =
-            bondingCurveFundingManager.capitalRequired();
-
-        // Execute Tx
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_v1.CapitalRequiredChanged(
-            currentCapitalRequirements, _capitalRequirements
-        );
-        bondingCurveFundingManager.exposed_setCapitalRequired(
-            _capitalRequirements
-        );
-
-        // Get assert values
-        uint expectUpdatedCapitalRequired =
-            bondingCurveFundingManager.capitalRequired();
-        uint expectbasePriceToCapitalRatio = bondingCurveFundingManager
-            .exposed_calculateBasePriceToCapitalRatio(
-            _capitalRequirements,
-            bondingCurveFundingManager.basePriceMultiplier()
-        );
-        uint actualBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
-
-        // Assert value has been set succesfully
-        assertEq(expectUpdatedCapitalRequired, _capitalRequirements);
-        // Assert _updateVariables has been called succesfully
-        assertEq(expectbasePriceToCapitalRatio, actualBasePriceToCapitalRatio);
-    }
 
     /*    Test _setSeize()
         ├── Given: the parameter _seize > MAX_SEIZE
@@ -1641,75 +1375,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // assertEq(bondingCurveFundingManager.currentSeize(), _seize);
     }
 
-    /*  Test _setBasePriceMultiplier()
-        ├── Given: the parameter _newBasePriceMultiplier == 0
-        │   └── When: the function _setBasePriceMultiplier() is called
-        │       └── Then: it should revert
-        └── Given: the parameter _newBasePriceMultiplier > 0
-            └── When: the function _setBasePriceMultiplier() is called
-                └── Then: it should succeed in writing the new value to state
-                    ├── And: it should emit an event
-                    └── And: it should call _updateVariables() to update basePriceToCapitalRatio
-     */
-    // @note Base
-    function testInternalSetBasePriceMultiplier_revertGivenValueIsZero()
-        public
-    {
-        // Set invalid value
-        uint basePriceMultiplier = 0;
-        // Expect Revert
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
-                .selector
-        );
-        bondingCurveFundingManager.exposed_setBasePriceMultiplier(
-            basePriceMultiplier
-        );
-    }
-    // @note Base
-
-    function testInternalSetBasePriceMultiplier_worksGivenValueIsNotZero(
-        uint _basePriceMultiplier
-    ) public {
-        // Set capital required to fixed value so no revert can happen when fuzzing basePriceMultiplier
-        uint capitalRequirement = 1e18;
-        _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
-
-        // setup
-        bondingCurveFundingManager.setCapitalRequired(capitalRequirement);
-
-        // Get current value for expected emit
-        uint currentBasePriceMultiplier =
-            bondingCurveFundingManager.basePriceMultiplier();
-
-        // Execute Tx
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_v1.BasePriceMultiplierChanged(
-            currentBasePriceMultiplier, _basePriceMultiplier
-        );
-        bondingCurveFundingManager.exposed_setBasePriceMultiplier(
-            _basePriceMultiplier
-        );
-
-        // Get assert values
-        uint expectUpdatedBasePriceMultiplier =
-            bondingCurveFundingManager.basePriceMultiplier();
-        uint expectbasePriceToCapitalRatio = bondingCurveFundingManager
-            .exposed_calculateBasePriceToCapitalRatio(
-            capitalRequirement, _basePriceMultiplier
-        );
-        uint actualBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
-
-        // Assert value has been set succesfully
-        assertEq(expectUpdatedBasePriceMultiplier, _basePriceMultiplier);
-        // Assert _updateVariables has been called succesfully
-        assertEq(expectbasePriceToCapitalRatio, actualBasePriceToCapitalRatio);
-    }
-
     /*    Test _setTokenVault()
         └── Given: the function _setTokenVault() gets called
             ├── When: the given address is address(0)
@@ -1732,97 +1397,6 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.exposed_setTokenVault(newVault);
         // Assert that the token vault address has been set to the given address
         assertEq(bondingCurveFundingManager.tokenVault(), newVault);
-    }
-
-    /*    Test _calculateBasePriceToCapitalRatio()
-        └── Given: the function _calculateBasePriceToCapitalRatio() gets called
-            ├── When: the resulting _basePriceToCapitalRatio > 1e36
-            │   └── Then is should revert
-            └── When: the _basePriceToCapitalRatio < 1e36
-                └── Then: it should return _basePriceToCapitalRatio
-    */
-    // @note Base
-    function testCalculatebasePriceToCapitalRatio_revertGivenCalculationResultBiggerThan1ToPower36(
-        uint _capitalRequirements,
-        uint _basePriceMultiplier
-    ) public {
-        // Set bounds so when values used for calculation, the result is > 1e36
-        _capitalRequirements = bound(_capitalRequirements, 1, 1e18); // Lower minimum bound
-        _basePriceMultiplier = bound(_basePriceMultiplier, 1e37, 1e38); // Higher minimum bound
-
-        vm.expectRevert(
-            IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
-                .selector
-        );
-        bondingCurveFundingManager.exposed_calculateBasePriceToCapitalRatio(
-            _capitalRequirements, _basePriceMultiplier
-        );
-    }
-    // @note Base
-
-    function testCalculatebasePriceToCapitalRatio_worksGivenCalculationResultLowerThan1ToPower36(
-        uint _capitalRequirements,
-        uint _basePriceMultiplier
-    ) public {
-        // Set bounds so when values used for calculation, the result < 1e36
-        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
-        _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
-
-        // Use calculation for expected return value
-        uint expectedReturnValue = FixedPointMathLib.fdiv(
-            _basePriceMultiplier, _capitalRequirements, FixedPointMathLib.WAD
-        );
-
-        // Get function return value
-        uint functionReturnValue = bondingCurveFundingManager
-            .exposed_calculateBasePriceToCapitalRatio(
-            _capitalRequirements, _basePriceMultiplier
-        );
-
-        // Assert expected return value
-        assertEq(functionReturnValue, expectedReturnValue);
-    }
-
-    /*    Test _updateVariables()
-        └── Given: the function _updateVariables() gets called
-            └── Then: it should emit an event
-                └── And: it should update the state variable basePriceToCapitalRatio
-    */
-    // @note Base
-    function testUpdateVariables_worksGivenBasePriceToCapitalRatioStateIsSet(
-        uint _capitalRequirements,
-        uint _basePriceMultiplier
-    ) public {
-        // Set bounds so when values used for calculation, the result < 1e36
-        _capitalRequirements = bound(_capitalRequirements, 1, 1e18);
-        _basePriceMultiplier = bound(_basePriceMultiplier, 1, 1e18);
-
-        // Setup
-        bondingCurveFundingManager.setBasePriceMultiplier(_basePriceMultiplier);
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
-
-        // Use calculation for expected return value
-        uint expectedReturnValue = FixedPointMathLib.fdiv(
-            _basePriceMultiplier, _capitalRequirements, FixedPointMathLib.WAD
-        );
-        uint currentBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
-
-        // Execute Tx
-        vm.expectEmit(
-            true, true, true, true, address(bondingCurveFundingManager)
-        );
-        emit IFM_BC_BondingSurface_Redeeming_v1.BasePriceToCapitalRatioChanged(
-            currentBasePriceToCapitalRatio, expectedReturnValue
-        );
-        bondingCurveFundingManager.exposed_updateVariables();
-        // Get set state value
-        uint setStateValue =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
-
-        // Assert expected return value
-        assertEq(setStateValue, expectedReturnValue);
     }
 
     /*  Test _getSmallerCaCr()
