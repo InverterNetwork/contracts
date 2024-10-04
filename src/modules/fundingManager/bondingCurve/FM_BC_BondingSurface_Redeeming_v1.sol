@@ -120,8 +120,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             )
         ) {
             revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
-            );
+                FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
         // Set formula contract
         formula = IBondingSurface(bondingCurveProperties.formula);
@@ -280,9 +279,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     {
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable(
-            );
+            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
 
         mintAmount = formula.tokenOut(
@@ -303,9 +300,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         // Subtract fee collected from capital held by contract
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable(
-            );
+            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
         redeemAmount = formula.tokenIn(
             _depositAmount, capitalAvailable, basePriceToCapitalRatio
@@ -350,9 +345,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// _newCapitalRequired cannot be zero
     function _setCapitalRequired(uint _newCapitalRequired) internal {
         if (_newCapitalRequired == 0) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
-            );
+            revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
         emit CapitalRequiredChanged(capitalRequired, _newCapitalRequired);
         capitalRequired = _newCapitalRequired;
@@ -363,9 +356,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param  _newBasePriceMultiplier The new base price multiplier.
     function _setBasePriceMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
-            );
+            revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
         emit BasePriceMultiplierChanged(
             basePriceMultiplier, _newBasePriceMultiplier
@@ -394,9 +385,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
         );
         if (_basePriceToCapitalRatio > 1e36) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
-            );
+            revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
     }
 }

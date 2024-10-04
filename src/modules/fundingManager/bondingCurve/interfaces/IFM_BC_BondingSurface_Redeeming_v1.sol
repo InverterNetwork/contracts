@@ -6,16 +6,13 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
     // Errors
 
     /// @notice Invalid Bonding Surface Formula contract
-    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
-    );
+    error FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
 
     /// @notice Amount does not match the requirements
-    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
-    );
+    error FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
 
     /// @notice No capital is available.
-    error FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable(
-    );
+    error FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
 
     //--------------------------------------------------------------------------
     // Events

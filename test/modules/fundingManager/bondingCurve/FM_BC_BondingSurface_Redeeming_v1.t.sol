@@ -5,11 +5,11 @@ import "forge-std/console.sol";
 
 // SuT
 import {
-    IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1,
-    FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1,
+    IFM_BC_BondingSurface_Redeeming_v1,
+    FM_BC_BondingSurface_Redeeming_v1,
     IFundingManager_v1,
     IBondingCurveBase_v1
-} from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
+} from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
 
 import {IFM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
@@ -36,8 +36,8 @@ import {
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
-import {IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1.sol";
+import {IFM_BC_BondingSurface_Redeeming_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 
@@ -366,7 +366,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Execute Tx
         vm.expectRevert(
             IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable
+                .FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable
                 .selector
         );
         bondingCurveFundingManager.exposed_issueTokensFormulaWrapper(
@@ -422,7 +422,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Execute Tx
         vm.expectRevert(
             IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__NoCapitalAvailable
+                .FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable
                 .selector
         );
         bondingCurveFundingManager.exposed_redeemTokensFormulaWrapper(
@@ -529,7 +529,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Expect Revert
         vm.expectRevert(
             IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
                 .selector
         );
         bondingCurveFundingManager.exposed_setBasePriceMultiplier(
@@ -603,7 +603,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Expect Revert
         vm.expectRevert(
             IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
                 .selector
         );
         bondingCurveFundingManager.exposed_setBasePriceMultiplier(
@@ -670,7 +670,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         vm.expectRevert(
             IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
                 .selector
         );
         bondingCurveFundingManager.exposed_calculateBasePriceToCapitalRatio(

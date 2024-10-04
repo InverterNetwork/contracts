@@ -167,8 +167,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
             )
         ) {
             revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidBondingSurfaceFormula(
-            );
+                IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
         // Set formula contract
         formula = IBondingSurface(bondingCurveProperties.formula);
@@ -390,8 +390,8 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1 is
     {
         if (_amount > _getSmallerCaCr()) {
             revert
-                FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1__InvalidInputAmount(
-            );
+                IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
         emit RepayableAmountChanged(_amount, repayableAmount);
         repayableAmount = _amount;
