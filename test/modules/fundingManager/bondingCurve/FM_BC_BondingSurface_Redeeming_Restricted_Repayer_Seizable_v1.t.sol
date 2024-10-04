@@ -53,7 +53,7 @@ import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed}
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed.sol";
 
 /*     
-    PLEASE NOTE: The following tests have been tested in other test contracts
+    PLEASE NOTE: The following tests have been tested in other test contracts //@todo Marvin G is this comment section still up to date?
     - buy() & buyOrderFor()
     - sell() & sellOrderFor()
     - getStaticPriceForSelling()
@@ -1249,7 +1249,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         assertEq(stateValue, _newCapitalRequired);
     }
 
-    /*  Test setBaseMultiplier()
+    /*  Test setBaseMultiplier() //@todo Marvin G Rename to setBasePriceMultiplier
         ├── Given: the caller has not the RISK_MANAGER_ROLE
         │   └── When: the function setBaseMultiplier() is called
         │       └── Then: it should revert
@@ -1300,6 +1300,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
     //--------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
+    //@todo Marvin G Gherkin missing
     function testSetTokenVault_ModifierInPosition() public {
         // onlyOrchestratorAdmin
         vm.expectRevert(

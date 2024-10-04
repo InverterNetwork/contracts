@@ -49,7 +49,7 @@ import {FM_BC_BondingSurface_RedeemingV1_exposed} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_exposed.sol";
 
 /*     
-    PLEASE NOTE: The following tests have been tested in other test contracts
+    PLEASE NOTE: The following tests have been tested in other test contracts //@todo Marvin G is this comment section still up to date?
     - buy() & buyOrderFor()
     - sell() & sellOrderFor()
     - getStaticPriceForSelling()
@@ -219,6 +219,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Public Functions
 
+    //@todo Marvin G Gherkin missing
     function testCalculatebasePriceToCapitalRatio_worksGivenReturnValueInternalFunction(
         uint _capitalRequirements,
         uint _basePriceMultiplier
@@ -573,16 +574,6 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Assert _updateVariables has been called succesfully
         assertEq(expectbasePriceToCapitalRatio, actualBasePriceToCapitalRatio);
     }
-
-    /*    Test _setSeize()
-        ├── Given: the parameter _seize > MAX_SEIZE
-        │   └── When: the function _setSeize() gets called
-        │       └── Then: it should revert
-        └── Given: the parameter _seize <= MAX_SEIZE
-            └── When: the function _setSeize() gets called
-                └── Then: it should emit an event
-                    └── And: it should succeed in writing a new value to state
-    */
 
     /*  Test _setBasePriceMultiplier()
         ├── Given: the parameter _newBasePriceMultiplier == 0
