@@ -42,7 +42,7 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new FM_EXT_TokenVault_v1());
+        address impl = address(new FM_EXT_TokenVault_v1_Exposed());
         vault = FM_EXT_TokenVault_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
