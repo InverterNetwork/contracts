@@ -256,6 +256,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── Then it should revert
     */
 
+    // @note Topos
     function testBuy_modifierInPlace() public {
         // Set buyAndSellIsRestricted to true
         bondingCurveFundingManager.restrictBuyAndSell();
@@ -273,6 +274,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.buy(1, 1);
     }
 
+    // @note Topos
     function testBuyFor_modifierInPlace() public {
         // Set buyAndSellIsRestricted to true
         bondingCurveFundingManager.restrictBuyAndSell();
@@ -301,6 +303,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── And it should emit an event
     */
 
+    // @note Topos
     function testBuyAndSellIsUnrestricted_modifierInPlace() public {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -316,6 +319,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.unrestrictBuyAndSell();
     }
 
+    // @note Topos
     function testBuyAndSellIsUnrestricted_worksGivenCallerHasCoverManagerRole()
         public
     {
@@ -343,6 +347,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── And it should emit an event
     */
 
+    // @note Topos
     function testRestrictBuyAndSell_modifierInPlace() public {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -358,6 +363,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.restrictBuyAndSell();
     }
 
+    // @note Topos
     function testUnrestrictBuyAndSell_worksGivenCallerHasCoverManagerRole()
         public
     {
@@ -381,6 +387,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── Then it should revert
     */
 
+    // @note Topos
     function testInternalIsBuyAndSellRestrictedModifier_revertGivenCallerHasNotCoverManagerRole(
     ) public {
         // Setup
@@ -408,6 +415,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                 └── Then: it should burn _amount from msg.sender's balance
     */
 
+    // @note Topos
     function testBurnIssuanceToken_revertGivenAmountBiggerThanMsgSenderBalance(
         uint _amount
     ) public {
@@ -429,6 +437,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         }
     }
 
+    // @note Topos
     function testBurnIssuanceToken_worksGivenAmountLowerThanMsgSenderBalance(
         uint _amount
     ) public {
@@ -470,6 +479,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── Then: it should burn _amount from _owner's balance
     */
 
+    // @note Topos
     function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(
         uint _amount
     ) public {
@@ -495,6 +505,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         }
     }
 
+    // @note Topos
     function testBurnIssuanceTokenFor_revertGivenAmountBiggerThanOwnerBalance(
         uint _amount
     ) public {
@@ -519,6 +530,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, _amount);
         }
     }
+    // @note Topos
 
     function testBurnIssuanceTokenFor_worksGivenOwnerIsNotMsgSender(
         uint _amount
@@ -545,6 +557,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             issuanceToken.balanceOf(tokenOwner), ownerTokenBalance - _amount
         );
     }
+    // @note Topos
 
     function testBurnIssuanceTokenFor_revertGivenAmountBiggerThanMsgSenderBalance(
         uint _amount
@@ -566,6 +579,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.burnIssuanceTokenFor(burner, _amount);
         }
     }
+    // @note Topos
 
     function testBurnIssuanceTokenFor_worksGivenMsgSenderIsNotOwner(
         uint _amount
@@ -591,7 +605,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         └── When: the function calculatebasePriceToCapitalRatio() gets called
             └── Then: it should return the return value of _calculateBasePriceToCapitalRatio()
     */
-
+    // @note Base
     function testCalculatebasePriceToCapitalRatio_worksGivenReturnValueInternalFunction(
         uint _capitalRequirements,
         uint _basePriceMultiplier
@@ -627,6 +641,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         └── When: the function seizable() gets called
             └── Then: it should return the correct seizable amount
     */
+    // @note Topos
     function testSeizable_works(uint _tokenBalance, uint64 _seize) public {
         _tokenBalance =
             bound(_tokenBalance, 1, (UINT256_MAX - MIN_RESERVE) / 1000); // to protect agains overflow if max balance * max seize
@@ -659,6 +674,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── Then: it should return the return value of _getRepayableAmount()
     */
 
+    // @note Topos
     function testPublicGetRepayableAmount_works() public {
         // get return value from internal function
         uint internalFunctionResult =
@@ -691,6 +707,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                             └── And: it should emit an event
     */
 
+    // @note Topos
     function testTransferPayment_revertGivenCallerIsNotLiquidityVaultController(
         address _to,
         uint _amount
@@ -714,6 +731,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.transferRepayment(_to, _amount);
         }
     }
+    // @note Topos
 
     function testTransferPayment_modifierInPlace(uint _amount) public {
         address to = address(0);
@@ -730,6 +748,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.transferRepayment(to, _amount);
         }
     }
+    // @note Topos
 
     function testTransferPayment_revertGivenAmounBiggerThanRepayableAmount(
         address _to,
@@ -774,6 +793,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.transferRepayment(_to, _amount);
         }
     }
+    // @note Topos
 
     function testTransferPayment_worksGivenCallerIsLvcAndAmountIsValid(
         address _to,
@@ -850,6 +870,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                             ├── And: it should set the current timeStamp to lastSeizeTimestamp
                             └── And: it should emit an event
     */
+    // @note Topos
     function testSeize_revertGivenCallerHasNotCoverManagerRole() public {
         uint _amount = 1;
 
@@ -869,6 +890,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.seize(_amount);
         }
     }
+    // @note Topos
 
     function testSeize_revertGivenAmountBiggerThanSeizableAmount(uint _amount)
         public
@@ -886,6 +908,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         );
         bondingCurveFundingManager.seize(_amount);
     }
+    // @note Topos
 
     function testSeize_revertGivenLastSeizeTimerNotReset() public {
         uint seizeAmount = 1 ether;
@@ -915,6 +938,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         );
         bondingCurveFundingManager.seize(seizeAmount);
     }
+    // @note Topos
 
     function testSeize_worksGivenCapitalAvailableMinusMinReserveIsReturned()
         public
@@ -944,6 +968,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // Assert that no tokens have been sent
         assertEq(balanceBeforeBuy, balanceBeforeBuy);
     }
+    // @note Topos
 
     function testSeize_worksGivenCapitalAmountIsReturnd(uint _amount) public {
         // Setup
@@ -980,7 +1005,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                 └── When: the function adjustSeize() gets called
                     └── Then: it should call the internal function and set the state
     */
-
+    // @note Topos
     function testAdjustSeize_revertGivenCallerHasNotCoverManagerRole() public {
         uint64 _seize = 10_000;
 
@@ -1000,6 +1025,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.adjustSeize(_seize);
         }
     }
+    // @note Topos
 
     function testAdjustSeize_worksGivenCallerHasCoverManagerRole(uint64 _seize)
         public
@@ -1025,7 +1051,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                 └── When: the function setSellFee() gets called
                     └── Then: it should set the state of sellFee to _fee
     */
-
+    // @note Topos
     function testSetSellFee_revertGivenCallerHasNotCoverManagerRole() public {
         uint sellFee = 100;
 
@@ -1045,6 +1071,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.setSellFee(sellFee);
         }
     }
+    // @note Topos
 
     function testSetSellFee_revertGivenSeizeBiggerThanMaxSeize(uint _fee)
         public
@@ -1061,6 +1088,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         );
         bondingCurveFundingManager.setSellFee(_fee);
     }
+    // @note Topos
 
     function testAdjustSeize_worksGivenCallerHasRoleAndSeizeIsValid(uint _fee)
         public
@@ -1078,6 +1106,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         └──  When the function setBuyFee() gets called
             └── Then it should revert
     */
+    // @note Topos
     function testSetBuyFee_revert() public {
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1102,6 +1131,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── Then: it should set the state of repayableAmount to _amount
                         └── And: it should emit an event
     */
+    // @note Topos
     function testSetRepayableAmount_revertGivenCallerHasNotCoverManagerRole()
         public
     {
@@ -1137,7 +1167,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     └── Then: it should set the state liquidityVaultController to _lp
                         └── And: it should emit an event
     */
-
+    // @note Topos
     function testSetliquidityVaultControllerContract_revertGivenCallerHasNotCoverManagerRole(
         ILiquidityVaultController _lvc
     ) public {
@@ -1157,6 +1187,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
         }
     }
+    // @note Topos
 
     function testSetliquidityVaultControllerContract_revertGivenAddressIsZero()
         public
@@ -1171,6 +1202,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         );
         bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
     }
+    // @note Topos
 
     function testSetliquidityVaultControllerContract_revertGivenAddressIsEqualToFM(
     ) public {
@@ -1185,6 +1217,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         );
         bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
     }
+    // @note Topos
 
     function testSetliquidityVaultControllerContract_worksGivenCallerHasRoleAndAddressValid(
         ILiquidityVaultController _lvc
@@ -1216,7 +1249,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the function setCapitalRequired() is called
                 └── Then: it should call the internal function and set the state
     */
-
+    // @note Base
     function testSetCapitalRequired_revertGivenCallerHasNotRiskManagerRole()
         public
     {
@@ -1238,6 +1271,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.setCapitalRequired(newCapitalRequired);
         }
     }
+    // @note Base
 
     function testSetCapitalRequired_worksGivenCallerHasRiskManagerRole(
         uint _newCapitalRequired
@@ -1265,7 +1299,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the function setBaseMultiplier() is called
                 └── Then: it should call the internal function and set the state
     */
-
+    // @note Base
     function testSetBaseMultiplier_revertGivenCallerHasNotRiskManagerRole()
         public
     {
@@ -1287,6 +1321,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             bondingCurveFundingManager.setBasePriceMultiplier(newBaseMultiplier);
         }
     }
+    // @note Base
 
     function testSetBaseMultiplier_worksGivenCallerHasRiskManagerRole(
         uint _newBaseMultiplier
@@ -1310,6 +1345,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
     //--------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
+    // @note Topos
     function testSetTokenVault_ModifierInPosition() public {
         // onlyOrchestratorAdmin
         vm.expectRevert(
@@ -1334,6 +1370,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the function _issueTokensFormulaWrapper() gets called
                 └── Then: it should return the same as formula.tokenIn
     */
+    // @note Base
     function testInternalIssueTokensFormulaWrapper_revertGivenCapitalAvailableIsZero(
     ) public {
         uint _depositAmount = 1;
@@ -1352,6 +1389,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             _depositAmount
         );
     }
+    // @note Base
 
     function testInternalIssueTokensFormulaWrapper_works(uint _depositAmount)
         public
@@ -1389,7 +1427,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the function _redeemTokensFormulaWrapper() gets called
                 └── Then: it should return redeemAmount
     */
-
+    // @note Base
     function testInternalRedeemTokensFormulaWrapper_revertGivenCapitalAvailableIsZero(
     ) public {
         uint _depositAmount = 1;
@@ -1408,6 +1446,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             _depositAmount
         );
     }
+    // @note Base
 
     function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsCapitalAvailableMinusMinReserve(
         uint _depositAmount
@@ -1428,6 +1467,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // Assert equal
         assertEq(functionReturnValue, expectedReturnValue);
     }
+    // @note Base
 
     function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsRedeemAmount(
         uint _depositAmount
@@ -1460,7 +1500,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         └── When the function _getCapitalAvailable() is called
             └── Then it should return balance of contract - project fee collected
     */
-
+    // @note Base
     function testInternalGetCapitalAvailable_worksGivenValueReturnedHasFeeSubtracted(
         uint _amount
     ) public {
@@ -1501,7 +1541,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     ├── And: it should emit an event
                     └── And: it should call _updateVariables() to update basePriceToCapitalRatio
      */
-
+    // @note Base
     function testInternalSetCapitalRequired_revertGivenValueIsZero() public {
         // Set invalid value
         uint capitalRequirements = 0;
@@ -1515,6 +1555,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             capitalRequirements
         );
     }
+    // @note Base
 
     function testInternalSetCapitalRequired_worksGivenValueIsNotZero(
         uint _capitalRequirements
@@ -1562,7 +1603,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                 └── Then: it should emit an event
                     └── And: it should succeed in writing a new value to state
     */
-
+    // @note Topos
     function testInternalSetSeize_revertGivenSeizeBiggerThanMaxSeize(
         uint64 _seize
     ) public {
@@ -1579,6 +1620,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         );
         bondingCurveFundingManager.exposed_setSeize(_seize);
     }
+    // @note Topos
 
     function testInternalSetSeize_worksGivenSeizeIsValid(uint64 _seize)
         public
@@ -1609,7 +1651,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
                     ├── And: it should emit an event
                     └── And: it should call _updateVariables() to update basePriceToCapitalRatio
      */
-
+    // @note Base
     function testInternalSetBasePriceMultiplier_revertGivenValueIsZero()
         public
     {
@@ -1625,6 +1667,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             basePriceMultiplier
         );
     }
+    // @note Base
 
     function testInternalSetBasePriceMultiplier_worksGivenValueIsNotZero(
         uint _basePriceMultiplier
@@ -1674,11 +1717,12 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the given address is not address(0)
                 └── Then: it should set the token vault address to the given address
     */
-
+    // @note Topos
     function testSetTokenVault_revertGivenAddressIsZero() public {
         vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
         bondingCurveFundingManager.exposed_setTokenVault(address(0));
     }
+    // @note Topos
 
     function testSetTokenVault_worksGivenAddressIsNotZero(address newVault)
         public
@@ -1697,7 +1741,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the _basePriceToCapitalRatio < 1e36
                 └── Then: it should return _basePriceToCapitalRatio
     */
-
+    // @note Base
     function testCalculatebasePriceToCapitalRatio_revertGivenCalculationResultBiggerThan1ToPower36(
         uint _capitalRequirements,
         uint _basePriceMultiplier
@@ -1715,6 +1759,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             _capitalRequirements, _basePriceMultiplier
         );
     }
+    // @note Base
 
     function testCalculatebasePriceToCapitalRatio_worksGivenCalculationResultLowerThan1ToPower36(
         uint _capitalRequirements,
@@ -1744,7 +1789,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── Then: it should emit an event
                 └── And: it should update the state variable basePriceToCapitalRatio
     */
-
+    // @note Base
     function testUpdateVariables_worksGivenBasePriceToCapitalRatioStateIsSet(
         uint _capitalRequirements,
         uint _basePriceMultiplier
@@ -1788,7 +1833,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the function _getSmallerCaCr() gets called
                 └── Then: it should return the capitalAvailable
     */
-
+    // @note Topos
     function testGetSmallerCaCr_worksGivenCapitalAvailableIsBiggerThanCapitalRequirements(
         uint _capitalAvailable,
         uint _capitalRequirements
@@ -1807,6 +1852,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // Assert that the smaller value got returned
         assertEq(returnValue, _capitalRequirements);
     }
+    // @note Topos
 
     function testGetSmallerCaCr_worksGivenCapitalRequirementsIsBiggerThanCapitalAvailable(
         uint _capitalAvailable,
@@ -1846,7 +1892,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
             └── When: the function _getRepayableAmount() gets called
                 └── Then: it should return the state variable repayableAmount
     */
-
+    // @note Topos
     function testInternalGetRepayableAmount_worksGivenRepayableAmountBiggerReturnGetSmallerCaCr(
         uint _repayableAmount,
         uint _capitalAvailable,
@@ -1880,6 +1926,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // Assert return value == as repayableAmount
         assertEq(returnValueInternalFunction, expectedReturnValue);
     }
+    // @note Topos
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountIsZero(
         uint _capitalAvailable,
@@ -1909,6 +1956,7 @@ contract FM_BC_BondingSurface_Redeeming_Repayer_Seizable_v1Test is
         // Assert return value == as repayableAmount
         assertEq(returnValueInternalFunction, expectedReturnValue);
     }
+    // @note Topos
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountIsReturned(
         uint _repayableAmount,
