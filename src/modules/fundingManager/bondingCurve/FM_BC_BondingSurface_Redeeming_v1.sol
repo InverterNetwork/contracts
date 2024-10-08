@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Dependencies
+// Internal
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
-
-// Internal Interfaces
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
@@ -25,28 +23,37 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IAuthorizer_v1} from "src/modules/authorizer/IAuthorizer_v1.sol";
 
-// External Interfaces
+// External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
-
-// External Dependencies
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-
-// External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-/// @title Bonding Surface Bonding Curve Funding Manager Contract.
-/// @author Inverter Network.
-/// @notice This contract enables the issuance and redeeming of tokens on a bonding curve
-/// @dev This contract inherits functionalties from the contracts:
-/// - BondingCurveBase_v1
-/// - RedeemingBondingCurveBase_v1
-/// - Repayer
-/// The contract should be used by the Orchestrator Owner or manager to manage all the configuration for the
-/// bonding curve as well as the opening and closing of the issuance and redeeming functionalities.
-/// The contract implements the formulaWrapper functions enforced by the upstream contracts,
-/// using the Bonding Surface formula to calculate the issuance/redeeming rate.
+/**
+ * @title   Inverter Redeeming Bonding Surface Bonding Curve Funding Manager
+ *
+ * @notice  This contract enables the issuance and redemption of tokens on a
+ *          bonding curve.
+ *
+ * @dev     This contract inherits functionalties from the contracts:
+ *              - BondingCurveBase_v1
+ *              - RedeemingBondingCurveBase_v1
+ *              - Repayer
+ *          The contract should be used by the orchestrator admin or manager
+ *          to manage all the configuration for the bonding curve as well as the
+ *          opening and closing of the issuance and redeeming functionalities.
+ *          The contract implements the formulaWrapper functions enforced by the
+ *          using the Bonding Surface formula to calculate the issuance/
+ *          redeeming rate.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @author  Inverter Network
+ */
 contract FM_BC_BondingSurface_Redeeming_v1 is
     IFM_BC_BondingSurface_Redeeming_v1,
     IFundingManager_v1,

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Dependencies
+// Internal
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {FM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
@@ -9,11 +9,9 @@ import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
-import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
+import {FixedPointMathLib} from "@lib/FixedPointMathLib.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-
-// Internal Interfaces
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
@@ -29,30 +27,40 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
-import {IAuthorizer_v1} from "src/modules/authorizer/IAuthorizer_v1.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
-// External Interfaces
+// External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
-
-// External Dependencies
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-
-// External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-/// @title Bonding Surface Bonding Curve Funding Manager Contract.
-/// @author Inverter Network.
-/// @notice This contract enables the issuance and redeeming of tokens on a bonding curve
-/// @dev This contract inherits functionalties from the contracts:
-/// - BondingCurveBase_v1
-/// - RedeemingBondingCurveBase_v1
-/// - Repayer
-/// The contract should be used by the Orchestrator Owner or manager to manage all the configuration for the
-/// bonding curve as well as the opening and closing of the issuance and redeeming functionalities.
-/// The contract implements the formulaWrapper functions enforced by the upstream contracts,
-/// using the Bonding Surface formula to calculate the issuance/redeeming rate.
+/**
+ * @title   Inverter Redeeming Restricted Repayer Seizable Bonding
+ *          Surface Bonding Curve Funding Manager
+ *
+ * @notice  This contract enables the issuance and redeeming of tokens on a
+ *          bonding curve.
+ *
+ * @dev     This contract inherits functionalties from the contracts:
+ *              - BondingCurveBase_v1
+ *              - RedeemingBondingCurveBase_v1
+ *              - Repayer
+ *          The contract should be used by the orchestrator admin or manager
+ *          to manage all the configuration for the bonding curve as well as the
+ *          opening and closing of the issuance and redeeming functionalities.
+ *          The contract implements the formulaWrapper functions enforced by the
+ *          using the Bonding Surface formula to calculate the issuance/
+ *          redeeming rate.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @author  Inverter Network
+ */
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     IRepayer_v1,
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
@@ -85,7 +93,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     uint64 public constant SEIZE_DELAY = 7 days;
     /// @dev Role associated with the managing of the bonding curve values
     bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER";
-    /// @dev Role associated with the managing of setting withdraw addresses and setting the fee
+    /// @dev Role associated with the managing of setting withdraw addresses
+    ///      and setting the fee
     bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
     /// @dev Minter/Burner Role.
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
@@ -93,20 +102,21 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @notice Repayable amount collateral which can be pulled from the contract by the liquidity vault controller
+    /// @dev Repayable amount collateral which can be pulled from the
+    ///         contract by the liquidity vault controller
     uint public repayableAmount;
     /// @dev The current seize percentage expressed in BPS
     uint64 public currentSeize;
-    /// @dev Address of the liquidity vault controller who has access to the collateral held by the funding manager
+    /// @dev Address of the liquidity vault controller who has access to the
+    ///      collateral held by the funding manager through the Repayer
     /// through the Repayer functionality
     ILiquidityVaultController public liquidityVaultController;
-    /// @dev Tracks last seize timestamp to determine eligibility for subsequent seizures based on SEIZE_DELAY.
+    /// @dev Tracks last seize timestamp to determine eligibility for
+    ///      subsequent seizures based on SEIZE_DELAY
     uint public lastSeizeTimestamp;
-    /// @dev the amount of value that is needed to operate the protocol according to market size
-    /// and conditions
-    /// @notice Address of the reserve pool.
+    /// @dev Address of the reserve pool.
     address public tokenVault;
-    /// @notice Restricts buying and selling functionalities to specific role.
+    /// @dev Restricts buying and selling functionalities to specific role.
     bool public buyAndSellIsRestricted;
 
     //--------------------------------------------------------------------------
@@ -126,7 +136,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         address _liquidityVaultController;
         BondingCurveProperties memory bondingCurveProperties;
         uint64 _seize;
-        bool _buyAndSellIsRestricted; // The indicator used for restrict/unrestrict buying and selling functionalities to the CURVE_INTERACTION_ROLE
+        // The indicator used for restrict/unrestrict buying and selling
+        // functionalities to the CURVE_INTERACTION_ROLE
+        bool _buyAndSellIsRestricted;
 
         (
             _issuanceToken,
@@ -188,7 +200,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         buyIsOpen = bondingCurveProperties.buyIsOpen;
         // Set selling functionality to open if true. By default selling is false
         sellIsOpen = bondingCurveProperties.sellIsOpen;
-        // Set buy and sell restriction to restricted if true. By default buy and sell is unrestricted.
+        // Set buy and sell restriction to restricted if true. By default buy and
+        // sell is unrestricted
         buyAndSellIsRestricted = _buyAndSellIsRestricted;
 
         // Set currentSeize
@@ -221,10 +234,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Public Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address.
-    /// @dev The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @param  _receiver The address that will receive the bought tokens.
+    /// @param  _depositAmount The amount of collateral token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to
+    ///         receive from the transaction.
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -235,9 +249,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @notice Buy tokens for the sender's address.
-    /// @dev The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @param  _depositAmount The amount of collateral token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive
+    ///         from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -251,7 +266,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
     /// @param  _receiver The address that will receive the redeemed tokens.
     /// @param  _depositAmount The amount of tokens to be sold.
-    /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
+    /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver
+    ///         should receive from the sale.
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -263,9 +279,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Redeem collateral for the sender's address.
     /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param _depositAmount The amount of issued token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
+    /// @param  _depositAmount The amount of issued token depoisited.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive
+    ///         from the transaction.
+    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive
+    ///         from the transaction.
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
@@ -404,7 +422,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        // @update-info When upgrading to Topos next version, we should add an interface check here.
+        // @update-info When upgrading to Topos next version, we need to add an
+        //              interface check here.
         if (address(_lvc) == address(0) || address(_lvc) == address(this)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress(
