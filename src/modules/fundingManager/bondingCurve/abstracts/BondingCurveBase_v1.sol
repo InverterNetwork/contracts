@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal Dependencies
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
@@ -149,13 +149,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
 
         // Deduct protocol and project buy fee from collateral, if applicable
-        (_depositAmount, /* protocolFeeAmount */ /* workflowFeeAmount */,) =
+        (_depositAmount, /* protocolFeeAmount */ /* projectFeeAmount */,) =
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
         // Get issuance token return from formula and deduct protocol buy fee, if applicable
-        (mintAmount, /* protocolFeeAmount */ /* workflowFeeAmount */,) =
+        (mintAmount, /* protocolFeeAmount */ /* projectFeeAmount */,) =
         _calculateNetAndSplitFees(
             _issueTokensFormulaWrapper(_depositAmount),
             issuanceBuyFeePercentage,
@@ -252,32 +252,33 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             bytes4(keccak256(bytes("_buyOrder(address,uint,uint)")))
         );
 
-        // Get net amount, protocol and workflow fee amounts
-        (uint netDeposit, uint protocolFeeAmount, uint workflowFeeAmount) =
+        // Get net amount, protocol and project fee amounts
+        (uint netDeposit, uint protocolFeeAmount, uint projectFeeAmount) =
         _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
-        // collateral Fee Amount is the combination of protocolFeeAmount plus the workflowFeeAmount
-        collateralFeeAmount = protocolFeeAmount + workflowFeeAmount;
+        // collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
+        collateralFeeAmount = protocolFeeAmount + projectFeeAmount;
 
         // Process the protocol fee
         _processProtocolFeeViaTransfer(
             collateralTreasury, collateralToken, protocolFeeAmount
         );
 
-        // Add workflow fee if applicable
-        if (workflowFeeAmount > 0) {
-            projectCollateralFeeCollected += workflowFeeAmount;
+        // Add project fee if applicable
+        if (projectFeeAmount > 0) {
+            projectCollateralFeeCollected += projectFeeAmount;
+            emit ProjectCollateralFeeAdded(projectFeeAmount);
         }
 
         // Calculate mint amount based on upstream formula
         uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);
         totalIssuanceTokenMinted = issuanceMintAmount;
 
-        // Get net amount, protocol and workflow fee amounts. Currently there is no issuance project
+        // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (issuanceMintAmount, protocolFeeAmount, /* workflowFeeAmount */ ) =
+        (issuanceMintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(
             issuanceMintAmount, issuanceBuyFeePercentage, 0
         );
@@ -299,7 +300,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev	Sets the buy transaction fee, expressed in BPS.
     /// @param  _fee The fee percentage to set for buy transactions.
     function _setBuyFee(uint _fee) internal virtual {
-        _validateWorkflowFee(_fee);
+        _validateProjectFee(_fee);
         emit BuyFeeUpdated(_fee, buyFee);
         buyFee = _fee;
     }
@@ -332,25 +333,25 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev    Calculates the proportion of the fees for the given amount and returns them plus the amount
     ///         minus the fees.
     ///         Reverts under the following two conditions:
-    ///         - if (workflow fee + protocol fee) > BPS
-    ///         - if protocol fee amount or workflow fee amounts == 0 given the fee percentage is not zero. This
+    ///         - if (project fee + protocol fee) > BPS
+    ///         - if protocol fee amount or project fee amounts == 0 given the fee percentage is not zero. This
     ///         would indicate a rouding down to zero due to integer division.
     /// @param  _totalAmount The amount from which the fees will be taken.
     /// @param  _protocolFee The protocol fee percentage in relation to the BPS that will be applied to the `totalAmount`.
-    /// @param  _workflowFee The workflow fee percentage in relation to the BPS that will be applied to the `totalAmount`.
+    /// @param  _projectFee The project fee percentage in relation to the BPS that will be applied to the `totalAmount`.
     /// @return netAmount   The total amount minus the combined fee amount.
     /// @return protocolFeeAmount   The fee amount of the protocol fee.
-    /// @return workflowFeeAmount   The fee amount of the workflow fee.
+    /// @return projectFeeAmount   The fee amount of the project fee.
     function _calculateNetAndSplitFees(
         uint _totalAmount,
         uint _protocolFee,
-        uint _workflowFee
+        uint _projectFee
     )
         internal
         pure
-        returns (uint netAmount, uint protocolFeeAmount, uint workflowFeeAmount)
+        returns (uint netAmount, uint protocolFeeAmount, uint projectFeeAmount)
     {
-        if ((_protocolFee + _workflowFee) >= BPS) {
+        if ((_protocolFee + _projectFee) >= BPS) {
             revert Module__BondingCurveBase__FeeAmountToHigh();
         }
         // Calculate protocol fee amount if applicable
@@ -361,16 +362,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
                 revert Module__BondingCurveBase__TradeAmountTooLow();
             }
         }
-        // Calculate workflow fee amount if applicable
-        if (_workflowFee > 0) {
-            workflowFeeAmount = _totalAmount * _workflowFee / BPS;
-            // Revert if calculated workflow fee amount rounded down to zero
-            if (workflowFeeAmount == 0) {
+        // Calculate project fee amount if applicable
+        if (_projectFee > 0) {
+            projectFeeAmount = _totalAmount * _projectFee / BPS;
+            // Revert if calculated project fee amount rounded down to zero
+            if (projectFeeAmount == 0) {
                 revert Module__BondingCurveBase__TradeAmountTooLow();
             }
         }
 
-        netAmount = _totalAmount - protocolFeeAmount - workflowFeeAmount;
+        netAmount = _totalAmount - protocolFeeAmount - projectFeeAmount;
     }
 
     /// @dev	Internal function to transfer protocol fees to the treasury.
@@ -388,7 +389,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
             // transfer fee amount
             _token.safeTransfer(_treasury, _feeAmount);
-            emit ProtocolFeeTransferred(address(_token), _treasury, _feeAmount);
+            emit IModule_v1.ProtocolFeeTransferred(
+                address(_token), _treasury, _feeAmount
+            );
         }
     }
 
@@ -430,9 +433,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
-    /// @dev    Validates the workflow fee.
-    function _validateWorkflowFee(uint _workflowFee) internal pure {
-        if (_workflowFee > BPS) {
+    /// @dev    Validates the project fee.
+    function _validateProjectFee(uint _projectFee) internal pure {
+        if (_projectFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
     }

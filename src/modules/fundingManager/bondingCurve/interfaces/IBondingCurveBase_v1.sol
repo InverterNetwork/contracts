@@ -51,6 +51,9 @@ interface IBondingCurveBase_v1 {
     /// @notice Event emitted when project collateral fee is withdrawn.
     event ProjectCollateralFeeWithdrawn(address receiver, uint amount);
 
+    /// @notice Event emitted when project collateral fee is added.
+    event ProjectCollateralFeeAdded(uint amount);
+
     /// @notice Event emitted when tokens have been succesfully issued.
     /// @param  receiver The address that will receive the issued tokens.
     /// @param  depositAmount The amount of collateral token deposited.
@@ -73,14 +76,6 @@ interface IBondingCurveBase_v1 {
     /// @param  treasury The protocol treasury address receiving the token fee amount.
     /// @param  feeAmount The fee amount minted to the treasury.
     event ProtocolFeeMinted(
-        address indexed token, address indexed treasury, uint feeAmount
-    );
-
-    /// @notice Event emitted when protocol fee has been transferred to the treasury.
-    /// @param  token The token received as protocol fee.
-    /// @param  treasury The protocol treasury address receiving the token fee amount.
-    /// @param  feeAmount The fee amount transferred to the treasury.
-    event ProtocolFeeTransferred(
         address indexed token, address indexed treasury, uint feeAmount
     );
 
