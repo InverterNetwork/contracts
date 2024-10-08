@@ -80,7 +80,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     }
 
     /// @inheritdoc IERC20Issuance_v1
-    function spentAllowance(address _from, address _spender, uint _amount)
+    function spendAllowance(address _from, address _spender, uint _amount)
         external
         onlyMinter
     {

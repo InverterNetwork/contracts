@@ -39,7 +39,7 @@ interface IERC20Issuance_v1 is IERC20 {
     /// @param  _from The address of the owner.
     /// @param  _spender The address of the spender.
     /// @param  _amount The amount of tokens to spend.
-    function spentAllowance(address _from, address _spender, uint _amount)
+    function spendAllowance(address _from, address _spender, uint _amount)
         external;
 
     // Read

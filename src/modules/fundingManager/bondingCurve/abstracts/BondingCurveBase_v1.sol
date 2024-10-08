@@ -486,6 +486,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         virtual
     {
-        issuanceToken.spentAllowance(_owner, _spender, _amount);
+        issuanceToken.spendAllowance(_owner, _spender, _amount);
     }
 }

@@ -158,36 +158,36 @@ contract ERC20IssuanceTest is Test {
     }
 
     /*
-    test spentAllowance
+    test spendAllowance
     ├── When the caller is not the Minter
     │   └── It should revert
     └── When the caller is the Minter
     └── It should reduce the allowance by the defined amount 
     */
 
-    function testSpentAllowanceFails_IfCallerNotMinter() public {
+    function testSpendAllowanceFails_IfCallerNotMinter() public {
         vm.startPrank(address(0xB0B));
         {
             vm.expectRevert(
                 IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
             );
-            token.spentAllowance(address(this), address(0xB0B), 100);
+            token.spendAllowance(address(this), address(0xB0B), 100);
         }
     }
 
-    function testSpentAllowance(uint intitialAllowance, uint amount) public {
+    function testSpendAllowance(uint intitialAllowance, uint amount) public {
         intitialAllowance = bound(intitialAllowance, 0, type(uint32).max);
 
-        token.mint(address(0xBeef), intitialAllowance);
-        vm.prank(address(0xBeef));
+        token.mint(address(0xBEEF), intitialAllowance);
+        vm.prank(address(0xBEEF));
         token.approve(address(0xB0B), intitialAllowance);
 
         amount = bound(amount, 0, intitialAllowance);
 
-        token.spentAllowance(address(0xBeef), address(0xB0B), amount);
+        token.spendAllowance(address(0xBEEF), address(0xB0B), amount);
 
         assertEq(
-            token.allowance(address(0xBeef), address(0xB0B)),
+            token.allowance(address(0xBEEF), address(0xB0B)),
             intitialAllowance - amount
         );
     }
