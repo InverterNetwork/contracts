@@ -88,6 +88,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vm.assume(
             user != address(0) && user != address(_token)
                 && user != address(vault) && user != vault.trustedForwarder()
+                && user != treasury
         );
         //Restrict to reasonable amounts
         amount = bound(amount, 1, type(uint128).max);
