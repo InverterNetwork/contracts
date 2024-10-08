@@ -21,8 +21,7 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
-import {IERC20Issuance_v1} from
-    "@ex/token/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IOwnable} from "@ex/interfaces/IOwnable.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
@@ -241,7 +240,9 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         );
         address issuanceTokenAddress =
             eventHelpers.getAddressFromTopic(eventTopic);
-        address mintWrapperAddress = IBondingCurveBase_v1(address(orchestrator.fundingManager())).getIssuanceToken();
+        address mintWrapperAddress = IBondingCurveBase_v1(
+            address(orchestrator.fundingManager())
+        ).getIssuanceToken();
 
         // CHECK: PIMWorkflowCreated event is emitted
         assertTrue(emitted);
@@ -262,7 +263,9 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // CHECK: mint wrapper HAS minting rights on token
         assertTrue(issuanceToken.allowedMinters(mintWrapperAddress));
         // CHECK: bonding curve HAS minting rights on mint wrapper
-        assertTrue(IERC20Issuance_v1(mintWrapperAddress).allowedMinters(fundingManager));
+        assertTrue(
+            IERC20Issuance_v1(mintWrapperAddress).allowedMinters(fundingManager)
+        );
         // CHECK: initialAdmin HAS curve interaction role
         bytes32 curveInteractionRole =
         IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)

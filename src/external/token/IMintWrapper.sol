@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-
 /**
  * @title   Inverter Mint Wrapper
  *
@@ -11,7 +10,7 @@ pragma solidity ^0.8.0;
  *
  * @dev     Using the MintWrapper for a PIM Workflow results in the FundingManager returning the wrapper's address
  *          as the issuance token (`getIssuanceToken`) which can be confusing for users.
- *         
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!

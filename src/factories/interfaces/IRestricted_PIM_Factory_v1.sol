@@ -86,7 +86,7 @@ interface IRestricted_PIM_Factory_v1 {
         returns (uint);
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
-    /// @dev Requires the deployment to have been funded previously via `addFunding`. 
+    /// @dev Requires the deployment to have been funded previously via `addFunding`.
     /// @param workflowConfig The workflow's config data.
     /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1} instance.
     /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
