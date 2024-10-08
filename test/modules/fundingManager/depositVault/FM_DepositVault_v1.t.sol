@@ -8,14 +8,12 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // SuT
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
-
 import {ERC20PaymentClientBaseV1Mock} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 import {FM_DepositVault_v1_Exposed} from
-    "test/utils/mocks/modules/fundingManager/FM_DepositVault_v1_Exposed.sol";
+    "test/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
 
 // Internal Dependencies
 import {
