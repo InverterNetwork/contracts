@@ -3,40 +3,34 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import "forge-std/console.sol";
-
-import {IERC165} from "@oz/utils/introspection/IERC165.sol";
-
-import {Clones} from "@oz/proxy/Clones.sol";
-
-import "@oz/utils/Strings.sol";
-
+// Internal
 import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
+import {
+    IFundingManager_v1,
+    FundingManagerV1Mock
+} from "test/utils/mocks/modules/FundingManagerV1Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+// External
+import {IERC165} from "@oz/utils/introspection/IERC165.sol";
+import {Clones} from "@oz/proxy/Clones.sol";
+import "@oz/utils/Strings.sol";
 
 // SuT
 import {
     FM_EXT_TokenVault_v1,
     IFM_EXT_TokenVault_v1
 } from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
-
-import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
-
-import {
-    IFundingManager_v1,
-    FundingManagerV1Mock
-} from "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-// Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
 import {FM_EXT_TokenVault_v1_Exposed} from
     "test/modules/fundingManager/extensions/FM_EXT_TokenVault_v1_Exposed.sol";
 
-contract FM_EXT_TokenVault_v1Test is ModuleTest {
+contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     // SuT
     FM_EXT_TokenVault_v1_Exposed vault;
 
@@ -65,7 +59,7 @@ contract FM_EXT_TokenVault_v1Test is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
-    //Modifier
+    // Modifiers
 
     /* Test withdraw() function modifiers in place 
         ├── Given the caller is not the Orchestrator Admin
