@@ -12,16 +12,20 @@ import {Ownable} from "@oz/access/Ownable.sol";
 /**
  * @title   Inverter Mint Wrapper
  *
- * @notice  Used as a wrapper around the {IERC20Issuance_v1} to manage the permissioning around minting rights.
- *          The additional layer is primarily used to avoid standard warnings on popular token trackers that are
- *          displayed to users when ERC20 tokens have an owner (which can be avoided by using the wrapper).
+ * @notice  Used as a wrapper around the {IERC20Issuance_v1} to manage the
+ *          permissioning around minting rights. The additional layer is
+ *          primarily used to avoid standard warnings on popular token trackers
+ *          that are displayed to users when ERC20 tokens have an owner (which
+ *          can be avoided by using the wrapper).
  *
- * @dev     Using the MintWrapper for a PIM Workflow results in the FundingManager returning the wrapper's address
- *          as the issuance token (`getIssuanceToken`) which can be confusing for users.
+ * @dev     Using the MintWrapper for a PIM Workflow results in the
+ *          FundingManager returning the wrapper's address as the issuance token
+ *          (`getIssuanceToken`) which can be confusing for users.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @author  Inverter Network
  */

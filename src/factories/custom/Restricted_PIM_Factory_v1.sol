@@ -37,18 +37,21 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /**
  * @title   Inverter Restricted PIM Factory
  *
- * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a mechanism to pre-fund
- *          the required collateral supply and an opinionated initial configuration.
+ * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a
+ *          mechanism to sponsor the required collateral supply and an
+ *          opinionated initial configuration.
  *
- * @dev     More user-friendly way to deploy a PIM workflow with an restricted bonding curve.
- *          Anyone can pre-fund the required collateral supply for a bonding curve deployment.
- *          Initial issuance token supply is minted to the deployer.
- *          The deployer receives the role to interact with the curve.
- *          Overall control over workflow remains with `initialAdmin` of the role authorizer.
+ * @dev     More user-friendly way to deploy a PIM workflow with an restricted
+ *          bonding curve. Anyone can sponsor the required collateral supply for
+ *          a bonding curve deployment. Initial issuance token supply is minted
+ *          to the deployer. The deployer receives the role to interact with the
+ *          curve. Overall control over workflow remains with `initialAdmin` of
+ *          the role authorizer.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @author  Inverter Network
  */
