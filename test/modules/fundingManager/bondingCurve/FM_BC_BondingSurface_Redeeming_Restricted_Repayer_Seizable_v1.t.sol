@@ -236,7 +236,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         // Reserve Pool
         assertEq(
             address(bondingCurveFundingManager.tokenVault()),
-            address(0),
+            tokenVault,
             "Initial reserve pool has not been set correctly"
         );
     }

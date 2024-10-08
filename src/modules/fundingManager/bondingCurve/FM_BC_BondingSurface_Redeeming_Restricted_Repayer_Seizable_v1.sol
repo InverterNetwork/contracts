@@ -105,8 +105,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev the amount of value that is needed to operate the protocol according to market size
     /// and conditions
     /// @notice Address of the reserve pool.
-    address public tokenVault; // @todo Marvin G is this still relevant? might need change from address to interface based on contract. Todo: Add interface type
-
+    address public tokenVault;
     /// @notice Restricts buying and selling functionalities to specific role.
     bool public buyAndSellIsRestricted;
 
@@ -155,6 +154,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
+
+        // Set token Vault
+        _setTokenVault(_tokenVault);
 
         // Set liquidity vault controller address
         liquidityVaultController =
@@ -206,7 +208,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     modifier onlyLiquidityVaultController() {
-        //@todo Marvin G couldnt find a test for this
         if (_msgSender() != address(liquidityVaultController)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
@@ -429,6 +430,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     //--------------------------------------------------------------------------
     // OnlyRiskManager Functions
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setCapitalRequired(uint _newCapitalRequired)
         public
         override(FM_BC_BondingSurface_Redeeming_v1)
@@ -437,6 +439,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setCapitalRequired(_newCapitalRequired);
     }
 
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setBasePriceMultiplier(uint _newBasePriceMultiplier)
         public
         override(FM_BC_BondingSurface_Redeeming_v1)
@@ -454,6 +457,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         onlyOrchestratorAdmin
     {
         _setTokenVault(_tokenVault);
+    }
+
+    function withdrawProjectCollateralFee(
+        address, /* _receiver */
+        uint /* _amount */
+    ) public view override onlyOrchestratorAdmin {
+        revert
+            FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -507,11 +519,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         }
     }
 
-    ///@dev Validate if buy and sell is restricted, and if so
-    ///     check if the caller has the CURVE_INTERACTION_ROLE
+    /// @dev    Validate if buy and sell is restricted, and if so
+    ///         check if the caller has the CURVE_INTERACTION_ROLE
     function _isBuyAndSellRestrictedModifier() internal view {
         if (buyAndSellIsRestricted) {
             _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }
+    }
+
+    /// @dev    Processes project fee by transfer
+    /// @param _workflowFeeAmount The amount of project fee to transfer
+    function _projectFeeCollected(uint _workflowFeeAmount) internal override {
+        _token.safeTransfer(tokenVault, _workflowFeeAmount);
     }
 }

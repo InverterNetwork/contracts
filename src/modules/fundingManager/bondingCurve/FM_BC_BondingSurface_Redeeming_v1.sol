@@ -53,7 +53,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     RedeemingBondingCurveBase_v1
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId //@todo adapt tests
+    )
         public
         view
         virtual
@@ -154,8 +156,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param _receiver The address that will receive the bought tokens.
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function buyFor( //@todo Marvin G Do we even need this function and if so there are no tests currently
-    address _receiver, uint _depositAmount, uint _minAmountOut)
+    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(BondingCurveBase_v1)
@@ -168,12 +169,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @notice Buy tokens for the sender's address.
     /// @param _depositAmount The amount of collateral token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function buy( //@todo Marvin G Do we even need this function and if so there are no tests currently
-    uint _depositAmount, uint _minAmountOut)
+    function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(BondingCurveBase_v1)
-        buyingIsEnabled //@todo Marvin G test for modifier
+        buyingIsEnabled
     {
         _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
@@ -182,8 +182,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param  _receiver The address that will receive the redeemed tokens.
     /// @param  _depositAmount The amount of tokens to be sold.
     /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
-    function sellTo( //@todo Marvin G Do we even need this function and if so there are no tests currently
-    address _receiver, uint _depositAmount, uint _minAmountOut)
+    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
@@ -197,8 +196,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param _depositAmount The amount of issued token depoisited.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function sell( //@todo Marvin G Do we even need this function and if so there are no tests currently
-    uint _depositAmount, uint _minAmountOut)
+    function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
@@ -356,7 +354,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _updateVariables();
     }
 
-    /// @dev    Sets the base price multiplier and updates the according variables.
+    /// @dev    Sets the base price multiplier and emits an event. Reverts if the input is zero.
     /// @param  _newBasePriceMultiplier The new base price multiplier.
     function _setBasePriceMultiplier(uint _newBasePriceMultiplier) internal {
         if (_newBasePriceMultiplier == 0) {
@@ -381,12 +379,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     /// @dev Internal function which calculates the price multiplier to capital ratio
-    function _calculateBasePriceToCapitalRatio( //@todo Marvin G couldnt find a test for this
-    uint _capitalRequired, uint _basePriceMultiplier)
-        internal
-        pure
-        returns (uint _basePriceToCapitalRatio)
-    {
+    function _calculateBasePriceToCapitalRatio(
+        uint _capitalRequired,
+        uint _basePriceMultiplier
+    ) internal pure returns (uint _basePriceToCapitalRatio) {
         _basePriceToCapitalRatio = FixedPointMathLib.fdiv(
             _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
         );
