@@ -1366,7 +1366,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         └── Given: the function _setTokenVault() gets called
             ├── When: the given address is address(0)
             │   └── Then is should revert
-            └── When: the given address is not address(0)
+            ├── When: the given address is address(this)
+            │   └── Then is should revert
+            └── When: the given address is not address(0) or address(this)
                 └── Then: it should set the token vault address to the given address
     */
 
@@ -1375,10 +1377,20 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.exposed_setTokenVault(address(0));
     }
 
-    function testSetTokenVault_worksGivenAddressIsNotZero(address newVault)
+    function testSetTokenVault_revertGivenAddressIsSameContract() public {
+        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        bondingCurveFundingManager.exposed_setTokenVault(
+            address(bondingCurveFundingManager)
+        );
+    }
+
+    function testSetTokenVault_worksGivenAddressIsNotInvalid(address newVault)
         public
     {
-        vm.assume(newVault != address(0));
+        vm.assume(
+            newVault != address(0)
+                && newVault != address(bondingCurveFundingManager)
+        );
         // Execute Tx
         bondingCurveFundingManager.exposed_setTokenVault(newVault);
         // Assert that the token vault address has been set to the given address
