@@ -511,10 +511,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @dev    Validates the workflow fee.
-    function _validateWorkflowFee(
-        uint _workflowFee //@todo Marvin G couldnt find a test for this
-    ) internal pure override(BondingCurveBase_v1) {
-        if (_workflowFee > MAX_FEE) {
+    function _validateProjectFee(uint _projectFee)
+        internal
+        pure
+        override(BondingCurveBase_v1)
+    {
+        if (_projectFee > MAX_FEE) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
     }
