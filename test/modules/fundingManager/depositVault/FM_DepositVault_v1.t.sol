@@ -8,14 +8,12 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // SuT
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
-
 import {ERC20PaymentClientBaseV1Mock} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
-import {FM_DepositVault_v1AccessMock} from
-    "test/utils/mocks/modules/fundingManager/FM_DepositVault_v1AccessMock.sol";
+import {FM_DepositVault_v1_Exposed} from
+    "test/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
 
 // Internal Dependencies
 import {
@@ -32,14 +30,14 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 contract FM_DepositVaultV1Test is ModuleTest {
     // SuT
-    FM_DepositVault_v1AccessMock vault;
+    FM_DepositVault_v1_Exposed vault;
     ERC20PaymentClientBaseV1Mock client;
 
     uint internal constant BPS = 10_000;
 
     function setUp() public {
-        address impl = address(new FM_DepositVault_v1AccessMock());
-        vault = FM_DepositVault_v1AccessMock(Clones.clone(impl));
+        address impl = address(new FM_DepositVault_v1_Exposed());
+        vault = FM_DepositVault_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
 
