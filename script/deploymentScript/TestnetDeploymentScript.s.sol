@@ -93,6 +93,6 @@ contract TestnetDeploymentScript is DeploymentScript {
 
         CustomFactoryDeploymentScript customFactoryDeploymentScript =
             new CustomFactoryDeploymentScript();
-        customFactoryDeploymentScript.deploy(orchestratorFactory, forwarder);
+        customFactoryDeploymentScript.deploy(orchestratorFactory);
     }
 }
