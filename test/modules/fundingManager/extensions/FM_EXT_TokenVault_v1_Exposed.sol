@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
 import {FM_EXT_TokenVault_v1} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
