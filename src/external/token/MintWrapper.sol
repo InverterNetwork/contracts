@@ -20,8 +20,8 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *          as the issuance token (`getIssuanceToken`) which can be confusing for users.
  *         
  * @custom:security-contact security@inverter.network
- *                          This contract is experimental in nature and has not been audited.
- *                          Please use at your own risk!
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */

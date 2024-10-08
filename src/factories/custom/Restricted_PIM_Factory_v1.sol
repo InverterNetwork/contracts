@@ -47,8 +47,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          Overall control over workflow remains with `initialAdmin` of the role authorizer.
  *
  * @custom:security-contact security@inverter.network
- *                          This contract is experimental in nature and has not been audited.
- *                          Please use at your own risk!
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
  *
  * @author  Inverter Network
  */
