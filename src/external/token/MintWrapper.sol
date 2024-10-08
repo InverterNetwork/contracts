@@ -18,7 +18,7 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *
  * @dev     Using the MintWrapper for a PIM Workflow results in the FundingManager returning the wrapper's address
  *          as the issuance token (`getIssuanceToken`) which can be confusing for users.
- *         
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
@@ -32,7 +32,7 @@ contract MintWrapper is IMintWrapper, Ownable {
     /// @dev    Stores address of issuance token.
     IERC20Issuance_v1 public issuanceToken;
     /// @dev    The mapping of allowed minters.
-    mapping(address => bool) public allowedMinters;
+    mapping(address minter => bool allowed) public allowedMinters;
 
     //------------------------------------------------------------------------------
     // Modifiers
@@ -57,18 +57,23 @@ contract MintWrapper is IMintWrapper, Ownable {
     //------------------------------------------------------------------------------
     // External Functions
 
+    /// @notice Returns the decimals of the underlying token.
+    /// @return decimals The decimals of the underlying token.
     function decimals() public view returns (uint8) {
         return IERC20Metadata(address(issuanceToken)).decimals();
     }
 
+    /// @inheritdoc IMintWrapper
     function setMinter(address _minter, bool _allowed) external onlyOwner {
         _setMinter(_minter, _allowed);
     }
 
+    /// @inheritdoc IMintWrapper
     function mint(address _to, uint _amount) external onlyMinter {
         issuanceToken.mint(_to, _amount);
     }
 
+    /// @inheritdoc IMintWrapper
     function burn(address _from, uint _amount) external onlyMinter {
         issuanceToken.burn(_from, _amount);
     }
