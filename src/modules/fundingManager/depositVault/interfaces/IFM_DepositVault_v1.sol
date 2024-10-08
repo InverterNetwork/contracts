@@ -3,6 +3,13 @@ pragma solidity ^0.8.0;
 
 interface IFM_DepositVault_v1 {
     //--------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Receiver address can not be zero address or
+    /// Deposit Vault Funding Manager itself.
+    error Module__DepositVault__InvalidRecipient();
+
+    //--------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when a deposit takes place.

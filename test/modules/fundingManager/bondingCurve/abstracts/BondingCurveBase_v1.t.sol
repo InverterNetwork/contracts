@@ -55,9 +55,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address buyer
     );
     event IssuanceTokenSet(address indexed token, uint8 decimals);
-    event ProtocolFeeTransferred(
-        address indexed token, address indexed treasury, uint feeAmount
-    );
+
     event ProtocolFeeMinted(
         address indexed token, address indexed treasury, uint feeAmount
     );
@@ -612,7 +610,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit ProtocolFeeTransferred(address(_token), treasury, _feeAmount);
+        emit IModule_v1.ProtocolFeeTransferred(
+            address(_token), treasury, _feeAmount
+        );
         // Function call
         bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
             treasury, IERC20(_token), _feeAmount
