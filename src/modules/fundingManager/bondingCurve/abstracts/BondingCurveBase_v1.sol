@@ -268,8 +268,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         // Add project fee if applicable
         if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
+            _projectFeeCollected(projectFeeAmount);
         }
 
         // Calculate mint amount based on upstream formula
@@ -434,7 +433,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev    Validates the project fee.
-    function _validateProjectFee(uint _projectFee) internal pure {
+    function _validateProjectFee(uint _projectFee) internal pure virtual {
         if (_projectFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
@@ -455,6 +454,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
+    /// @dev    Internal function to add project fee collected to the state variable
+    /// @param  projectFeeAmount The amount of fee collected
+    function _projectFeeCollected(uint projectFeeAmount) internal virtual {
+        projectCollateralFeeCollected += projectFeeAmount;
+        emit ProjectCollateralFeeAdded(projectFeeAmount);
+    }
+
     //--------------------------------------------------------------------------
     // Calls to the external ERC20 contract
 
@@ -470,5 +476,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @param  _amount The amount of tokens to burn.
     function _burn(address _from, uint _amount) internal virtual {
         issuanceToken.burn(_from, _amount);
+    }
+
+    /// @dev	Spend allowance.
+    /// @param  _owner The address of the owner.
+    /// @param  _spender The address of the spender.
+    /// @param  _amount The amount of tokens to spend.
+    function _spendAllowance(address _owner, address _spender, uint _amount)
+        internal
+        virtual
+    {
+        issuanceToken.spendAllowance(_owner, _spender, _amount);
     }
 }

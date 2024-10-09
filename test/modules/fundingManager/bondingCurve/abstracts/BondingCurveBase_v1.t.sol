@@ -1202,6 +1202,28 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
     }
 
+    /*  Test internal _projectFeeCollected()
+        └── When the function _projectFeeCollected() gets called
+            └── Then the _workflowFeeAmount will be added to the projectCollateralFeeCollected
+    */
+    function testInternalProjectFeeCollected_works(uint _workflowFeeAmount)
+        public
+    {
+        uint currentFeeCollected =
+            bondingCurveFundingManager.projectCollateralFeeCollected();
+
+        // Execute Tx
+        bondingCurveFundingManager.exposed_projectFeeCollected(
+            _workflowFeeAmount
+        );
+
+        // Assert that the fee amount got added to the projectCollateralFeeCollected
+        assertEq(
+            bondingCurveFundingManager.projectCollateralFeeCollected(),
+            currentFeeCollected + _workflowFeeAmount
+        );
+    }
+
     // Test _issueTokens function
     // this is tested in the buy tests
 
