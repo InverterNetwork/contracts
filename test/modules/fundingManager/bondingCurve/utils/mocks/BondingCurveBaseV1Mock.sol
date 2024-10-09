@@ -142,6 +142,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         _setIssuanceToken(_newIssuanceToken);
     }
 
+    function exposed_projectFeeCollected(uint _workflowFeeAmount) external {
+        _projectFeeCollected(_workflowFeeAmount);
+    }
+
     //--------------------------------------------------------------------------
     // Helper function
 
