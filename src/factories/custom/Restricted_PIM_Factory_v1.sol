@@ -91,95 +91,32 @@ contract Restricted_PIM_Factory_v1 is
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
-    ) external returns (IOrchestrator_v1 orchestrator) {
-        // MODIFY AUTHORIZER CONFIG
-        // decode configData of authorizer
-        // set (own) factory as orchestrator admin
-        bytes memory auhorizerConfigData = authorizerConfig.configData;
-        (address realAdmin) = abi.decode(auhorizerConfigData, (address));
-        auhorizerConfigData = abi.encode(address(this));
-        authorizerConfig.configData = auhorizerConfigData;
-
-        // deploy issuance token
-        ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
-            issuanceTokenParams.name,
-            issuanceTokenParams.symbol,
-            issuanceTokenParams.decimals,
-            issuanceTokenParams.maxSupply,
-            address(this) // assigns owner role to itself initially to manage minting rights temporarily
-        );
-
-        // deploy mint wrapper
-        MintWrapper mintWrapper = new MintWrapper(
-            issuanceToken,
-            address(this) // assigns owner role to itself initially to manage minting rights temporarily
-        );
-
-        // set mint wrapper as minter
-        issuanceToken.setMinter(address(mintWrapper), true);
-
-        // MODIFY FUNDING MANAGER CONFIG
-        // decode configData of fundingManager
-        // set newly deployed token as issuance token
-        bytes memory fundingManagerConfigData = fundingManagerConfig.configData;
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        address beneficiary
+    ) external returns (IOrchestrator_v1) {
+        // deploy workflow and decode relevant config params
         (
-            ,
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
-                memory bcProperties,
-            address collateralToken
-        ) = abi.decode(
-            fundingManagerConfigData,
-            (
-                address,
-                IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties,
-                address
-            )
-        );
-        fundingManagerConfigData =
-            abi.encode(address(mintWrapper), bcProperties, collateralToken);
-        fundingManagerConfig.configData = fundingManagerConfigData;
-        orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
-            .createOrchestrator(
+            DeployedContracts memory deployedContracts,
+            DecodedConfigParams memory decodedConfigParams
+        ) = _deployWorkflow(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
-            moduleConfigs
+            moduleConfigs,
+            issuanceTokenParams
         );
 
-        // get bonding curve / funding manager
-        address fundingManager = address(orchestrator.fundingManager());
-
-        // enable bonding curve to mint issuance token
-        mintWrapper.setMinter(fundingManager, true);
-
-        // transfer initial collateral supply from realAdmin to bonding curve and mint issuance token to msg.sender
-        _manageInitialSupplies(
-            IBondingCurveBase_v1(fundingManager),
-            IERC20(collateralToken),
-            issuanceToken,
-            bcProperties.initialCollateralSupply,
-            bcProperties.initialIssuanceSupply,
-            realAdmin,
-            _msgSender()
-        );
-
-        // assign permissions to buy/sell from curve to admin
-        bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            fundingManager
-        ).CURVE_INTERACTION_ROLE();
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-            .grantModuleRole(curveAccess, _msgSender());
-
-        // revoke privileges from factory
-        _renounceTokenPrivileges(issuanceToken);
-        _transferWorkflowAdminRights(orchestrator, realAdmin);
-        _transferOwnership(address(mintWrapper), realAdmin);
+        // finish workflow configuration
+        _configureWorkflow(deployedContracts, decodedConfigParams, beneficiary);
 
         emit IRestricted_PIM_Factory_v1.PIMWorkflowCreated(
-            address(orchestrator), address(issuanceToken), _msgSender()
+            address(deployedContracts.orchestrator),
+            address(deployedContracts.issuanceToken),
+            beneficiary
         );
+
+        return deployedContracts.orchestrator;
     }
 
     /// @inheritdoc IRestricted_PIM_Factory_v1
@@ -218,6 +155,134 @@ contract Restricted_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
+    // deploys
+    function _deployWorkflow(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
+    ) private returns (DeployedContracts memory, DecodedConfigParams memory) {
+        // MODIFY AUTHORIZER CONFIG
+        // decode configData of authorizer
+        // set (own) factory as orchestrator admin
+        // store decoded realAdmin to return
+        address realAdmin;
+        {
+            bytes memory auhorizerConfigData = authorizerConfig.configData;
+            (realAdmin) = abi.decode(auhorizerConfigData, (address));
+        }
+        authorizerConfig.configData = abi.encode(address(this));
+
+        // deploy issuance token
+        ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
+            issuanceTokenParams.name,
+            issuanceTokenParams.symbol,
+            issuanceTokenParams.decimals,
+            issuanceTokenParams.maxSupply,
+            address(this) // assigns owner role to itself initially to manage minting rights temporarily
+        );
+
+        // deploy mint wrapper
+        MintWrapper mintWrapper = new MintWrapper(
+            issuanceToken,
+            address(this) // assigns owner role to itself initially to manage minting rights temporarily
+        );
+
+        // set mint wrapper as minter
+        issuanceToken.setMinter(address(mintWrapper), true);
+        // MODIFY FUNDING MANAGER CONFIG
+        // decode configData of fundingManager
+        // store bcProperties and collateralToken to return
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bcProperties;
+        address collateralToken;
+        {
+            bytes memory fundingManagerConfigData =
+                fundingManagerConfig.configData;
+            (, bcProperties, collateralToken) = abi.decode(
+                fundingManagerConfigData,
+                (
+                    address,
+                    IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+                        .BondingCurveProperties,
+                    address
+                )
+            );
+        }
+        // set newly deployed mint wrapper as issuance token
+        fundingManagerConfig.configData =
+            abi.encode(address(mintWrapper), bcProperties, collateralToken);
+
+        // deploy workflow
+        IOrchestrator_v1 orchestrator = IOrchestratorFactory_v1(
+            orchestratorFactory
+        ).createOrchestrator(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
+
+        // return deployed contracts and all relevant decoded config params
+        return (
+            DeployedContracts({
+                issuanceToken: issuanceToken,
+                mintWrapper: mintWrapper,
+                orchestrator: orchestrator
+            }),
+            DecodedConfigParams({
+                collateralToken: IERC20(collateralToken),
+                initialCollateralSupply: bcProperties.initialCollateralSupply,
+                initialIssuanceSupply: bcProperties.initialIssuanceSupply,
+                realAdmin: realAdmin
+            })
+        );
+    }
+
+    function _configureWorkflow(
+        DeployedContracts memory deployedContracts,
+        DecodedConfigParams memory decodedConfigParams,
+        address beneficiary
+    ) private {
+        // get bonding curve / funding manager
+        address fundingManager =
+            address(deployedContracts.orchestrator.fundingManager());
+
+        // enable bonding curve to mint issuance token
+        deployedContracts.mintWrapper.setMinter(fundingManager, true);
+
+        // transfer initial collateral supply from realAdmin to bonding curve and mint issuance token to msg.sender
+        _manageInitialSupplies(
+            IBondingCurveBase_v1(fundingManager),
+            decodedConfigParams.collateralToken,
+            deployedContracts.issuanceToken,
+            decodedConfigParams.initialCollateralSupply,
+            decodedConfigParams.initialIssuanceSupply,
+            decodedConfigParams.realAdmin,
+            beneficiary
+        );
+
+        // assign permissions to buy/sell from curve to admin
+        bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            fundingManager
+        ).CURVE_INTERACTION_ROLE();
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
+            .grantModuleRole(curveAccess, beneficiary);
+
+        // revoke privileges from factory
+        _renounceTokenPrivileges(deployedContracts.issuanceToken);
+        _transferWorkflowAdminRights(
+            deployedContracts.orchestrator, decodedConfigParams.realAdmin
+        );
+        _transferOwnership(
+            address(deployedContracts.mintWrapper),
+            decodedConfigParams.realAdmin
+        );
+    }
+
     function _manageInitialSupplies(
         IBondingCurveBase_v1 fundingManager,
         IERC20 collateralToken,
@@ -225,24 +290,27 @@ contract Restricted_PIM_Factory_v1 is
         uint initialCollateralSupply,
         uint initialIssuanceSupply,
         address admin,
-        address actor
+        address beneficiary
     ) private {
-        uint availableFunding = fundings[admin][actor][address(collateralToken)];
+        uint availableFunding =
+            fundings[admin][beneficiary][address(collateralToken)];
+
         if (availableFunding < initialCollateralSupply) {
             revert IRestricted_PIM_Factory_v1.InsufficientFunding(
                 availableFunding
             );
         }
 
-        fundings[admin][actor][address(collateralToken)] -=
+        fundings[admin][beneficiary][address(collateralToken)] -=
             initialCollateralSupply;
 
         // collateral token funding needs to be sponsored beforehand
         collateralToken.safeTransfer(
             address(fundingManager), initialCollateralSupply
         );
+
         // issuance token is minted to the the specified recipient
-        issuanceToken.mint(actor, initialIssuanceSupply);
+        issuanceToken.mint(beneficiary, initialIssuanceSupply);
     }
 
     function _transferOwnership(address ownableContract, address newAdmin)
