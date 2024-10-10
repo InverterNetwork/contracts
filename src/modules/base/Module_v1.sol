@@ -44,7 +44,7 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-abstract contract Module_v1 is
+abstract contract Module_v12 is
     IModule_v1,
     Initializable,
     ERC2771ContextUpgradeable,
