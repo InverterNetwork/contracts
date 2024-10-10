@@ -167,7 +167,7 @@ contract Restricted_PIM_Factory_v1 is
         // MODIFY AUTHORIZER CONFIG
         // decode configData of authorizer
         // set (own) factory as orchestrator admin
-        // safe realAdmin for later
+        // store decoded realAdmin to return
         address realAdmin;
         {
             bytes memory auhorizerConfigData = authorizerConfig.configData;
@@ -194,7 +194,7 @@ contract Restricted_PIM_Factory_v1 is
         issuanceToken.setMinter(address(mintWrapper), true);
         // MODIFY FUNDING MANAGER CONFIG
         // decode configData of fundingManager
-        // store bcProperties and collateralToken for later
+        // store bcProperties and collateralToken to return
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bcProperties;
         address collateralToken;
@@ -226,7 +226,7 @@ contract Restricted_PIM_Factory_v1 is
             moduleConfigs
         );
 
-        // put all decoded params that are relevant for configuration into a struct for easy access
+        // return deployed contracts and all relevant decoded config params
         return (
             DeployedContracts({
                 issuanceToken: issuanceToken,
