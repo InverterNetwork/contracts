@@ -41,6 +41,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
+    address beneficiary = vm.addr(69);
 
     // addresses
     address admin = vm.addr(420);
@@ -200,12 +201,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     /* Test createPIMWorkflow
         └── given that the curve creation has been funded
         |   └── when called
-        |       └── then it mints initial issuance supply to admin
+        |       └── then it mints initial issuance supply to beneficiary
         |       └── then it transfers initial collateral supply from sponsor to bonding curve
         |       └── then it revokes issuanceToken minting rights from factory
         |       └── then it grants issuanceToken minting rights to mint wrapper
         |       └── then it grants minting minting rights on mint wrapper to bonding curve
-        |       └── then it grants curve interaction role to admin
+        |       └── then it grants curve interaction role to beneficiary
         |       └── then it transfers ownership of mint wrapper to admin
         |       └── then it renounces ownership of issuance token
         |       └── then it revokes orchestrator admin rights from factory and transfers them to admin
@@ -219,19 +220,19 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         // add funding
         vm.startPrank(admin);
         token.approve(address(factory), initialCollateralSupply);
-        factory.addFunding(actor, address(token), initialCollateralSupply);
+        factory.addFunding(beneficiary, address(token), initialCollateralSupply);
         vm.stopPrank();
 
         // start recording logs
         vm.recordLogs();
-
         IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            issuanceTokenParams
+            issuanceTokenParams,
+            beneficiary
         );
         Vm.Log[] memory logs = vm.getRecordedLogs();
         // get issuance token address from event
@@ -249,9 +250,10 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
         address fundingManager = address(orchestrator.fundingManager());
-        // CHECK: admin RECEIVES initial issuance supply
+        // CHECK: beneficiary RECEIVES initial issuance supply
         assertEq(
-            issuanceToken.balanceOf(actor), bcProperties.initialIssuanceSupply
+            issuanceToken.balanceOf(beneficiary),
+            bcProperties.initialIssuanceSupply
         );
         // CHECK: bonding curve HOLDS initial collateral supply
         assertEq(
@@ -266,7 +268,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         assertTrue(
             IERC20Issuance_v1(mintWrapperAddress).allowedMinters(fundingManager)
         );
-        // CHECK: initialAdmin HAS curve interaction role
+        // CHECK: beneficiary HAS curve interaction role
         bytes32 curveInteractionRole =
         IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
             .CURVE_INTERACTION_ROLE();
@@ -274,7 +276,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             .generateRoleId(fundingManager, curveInteractionRole);
         assertTrue(
             orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, actor
+                curveInteractionRoleId, beneficiary
             )
         );
         // CHECK: issuance token HAS NO owner
@@ -302,7 +304,8 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             authorizerConfig,
             paymentProcessorConfig,
             logicModuleConfigs,
-            issuanceTokenParams
+            issuanceTokenParams,
+            beneficiary
         );
     }
 }
