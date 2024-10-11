@@ -11,6 +11,10 @@ import {IBondingCurveBase_v1} from
 
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {MintWrapper} from "src/external/token/MintWrapper.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 /**
  * @title   Inverter Restricted PIM Factory
@@ -35,6 +39,31 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
  */
 interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Contains all contracts deployed by the factory.
+    /// @param  orchestrator The orchestrator contract.
+    /// @param  issuanceToken The issuance token.
+    /// @param  mintWrapper The wrapper that directly mints from issuance token.
+    struct DeployedContracts {
+        IOrchestrator_v1 orchestrator;
+        ERC20Issuance_v1 issuanceToken;
+        MintWrapper mintWrapper;
+    }
+
+    /// @notice Contains all decoded configuration parameters.
+    /// @param  collateralToken The collateral token.
+    /// @param  initialCollateralSupply The initial collateral supply.
+    /// @param  initialIssuanceSupply The initial issuance supply.
+    /// @param  realAdmin The admin of the workflow.
+    struct DecodedConfigParams {
+        IERC20 collateralToken;
+        uint initialCollateralSupply;
+        uint initialIssuanceSupply;
+        address realAdmin;
+    }
+
+    //--------------------------------------------------------------------------
     // Errors
     error InsufficientFunding(uint availableFunding);
 
@@ -43,12 +72,12 @@ interface IRestricted_PIM_Factory_v1 {
 
     /// @notice Event emitted when a new PIM workflow is created.
     /// @param orchestrator The address of the orchestrator.
-    /// @param issuanceToken The address of the issuance token.
-    /// @param deployer The address of the deployer.
+    /// @param issuanceToken The token issued by the bonding curve.
+    /// @param beneficiary The beneficiary receives initial issuance supply and minting rights.
     event PIMWorkflowCreated(
         address indexed orchestrator,
         address indexed issuanceToken,
-        address indexed deployer
+        address indexed beneficiary
     );
 
     /// @notice Event emitted when new funding is added.
@@ -96,6 +125,7 @@ interface IRestricted_PIM_Factory_v1 {
     /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config data.
     /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
+    /// @param beneficiary The beneficiary of the PIM receives initial supply & holds minting rights).
     /// @return CreatedOrchestrator Returns the created orchestrator instance.
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
@@ -103,7 +133,8 @@ interface IRestricted_PIM_Factory_v1 {
         IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
-        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        address beneficiary
     ) external returns (IOrchestrator_v1);
 
     /// @notice Adds `amount` of some `token` to factory to be used by some `actor` for a bonding curve deployment.
