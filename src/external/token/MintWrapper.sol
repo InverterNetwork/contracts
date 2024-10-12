@@ -61,10 +61,19 @@ contract MintWrapper is IMintWrapper, Ownable {
     //------------------------------------------------------------------------------
     // External Functions
 
-    /// @notice Returns the decimals of the underlying token.
-    /// @return decimals The decimals of the underlying token.
+    /// @inheritdoc IMintWrapper
     function decimals() public view returns (uint8) {
         return IERC20Metadata(address(issuanceToken)).decimals();
+    }
+
+    /// @inheritdoc IMintWrapper
+    function symbol() public view returns (string memory) {
+        return IERC20Metadata(address(issuanceToken)).symbol();
+    }
+
+    /// @inheritdoc IMintWrapper
+    function name() public view returns (string memory) {
+        return IERC20Metadata(address(issuanceToken)).name();
     }
 
     /// @inheritdoc IMintWrapper
@@ -85,9 +94,6 @@ contract MintWrapper is IMintWrapper, Ownable {
     //------------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Sets the minting rights of an address.
-    /// @param  _minter The address of the minter.
-    /// @param  _allowed If the address is allowed to mint or not.
     function _setMinter(address _minter, bool _allowed) internal {
         allowedMinters[_minter] = _allowed;
         emit IERC20Issuance_v1.MinterSet(_minter, _allowed);
