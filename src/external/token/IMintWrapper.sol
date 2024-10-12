@@ -58,4 +58,16 @@ interface IMintWrapper {
     /// @param  _minter The address of the minter.
     /// @return If the address is allowed to mint or not.
     function allowedMinters(address _minter) external view returns (bool);
+
+    /// @notice Returns the decimals of the underlying token.
+    /// @return decimals The decimals of the underlying token.
+    function decimals() external view returns (uint8);
+
+    /// @notice Returns the symbol of the underlying token.
+    /// @return decimals The symbol of the underlying token.
+    function symbol() external view returns (string memory);
+
+    /// @notice Returns the name of the underlying token.
+    /// @return decimals The name of the underlying token.
+    function name() external view returns (string memory);
 }
