@@ -32,8 +32,7 @@ import {MintWrapper} from "src/external/token/MintWrapper.sol";
 
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
-import {ERC165Upgradeable} from
-    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -261,7 +260,7 @@ contract Restricted_PIM_Factory_v1 is
             type(ILM_PC_PaymentRouter_v1).interfaceId;
         for (uint i; i < modules.length; ++i) {
             if (
-                ERC165Upgradeable(modules[i]).supportsInterface(
+                ERC165(modules[i]).supportsInterface(
                     paymentRouterInterfaceId
                 )
             ) {
