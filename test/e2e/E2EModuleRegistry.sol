@@ -21,6 +21,7 @@ import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
 import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
 import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
+import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
@@ -451,6 +452,49 @@ contract E2EModuleRegistry is Test {
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
             bountyManagerMetadata, IInverterBeacon_v1(bountyManagerBeacon)
+        );
+    }
+
+    // LM_PC_PaymentRouter_v1
+    LM_PC_PaymentRouter_v1 paymentRouterImpl;
+
+    InverterBeacon_v1 paymentRouterBeacon;
+
+    IModule_v1.Metadata public paymentRouterMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_PaymentRouter_v1"
+    );
+
+    /*
+     IOrchestratorFactory_v1.ModuleConfig paymentRouterFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
+        paymentRouterMetadata,
+        bytes(""),
+        HAS_NO_DEPENDENCIES, EMPTY_DEPENDENCY_LIST)
+    );
+    */
+
+    function setUpPaymentRouter() internal {
+        // Deploy module implementations.
+        paymentRouterImpl = new LM_PC_PaymentRouter_v1();
+
+        // Deploy module beacons.
+        paymentRouterBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            paymentRouterMetadata.majorVersion,
+            address(paymentRouterImpl),
+            paymentRouterMetadata.minorVersion,
+            paymentRouterMetadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            paymentRouterMetadata, IInverterBeacon_v1(paymentRouterBeacon)
         );
     }
 
