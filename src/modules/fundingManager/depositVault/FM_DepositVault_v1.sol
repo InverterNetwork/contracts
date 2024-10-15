@@ -130,23 +130,23 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev	Internal function to transfer protocol fees to the treasury.
-    /// @param  _treasury The address of the protocol treasury.
-    /// @param  _token The token to transfer the fees from.
-    /// @param  _feeAmount The amount of fees to transfer.
+    /// @dev	Transfer protocol fees to the treasury.
+    /// @param  treasury_ The address of the protocol treasury.
+    /// @param  token_ The token to transfer the fees from.
+    /// @param  feeAmount_ The amount of fees to transfer.
     function _processProtocolFeeViaTransfer(
-        address _treasury,
-        IERC20 _token,
-        uint _feeAmount
+        address treasury_,
+        IERC20 token_,
+        uint feeAmount_
     ) internal {
         // skip protocol fee collection if fee is 0
-        if (_feeAmount > 0) {
-            _validateRecipient(_treasury);
+        if (feeAmount_ > 0) {
+            _validateRecipient(treasury_);
 
             // transfer fee amount
-            _token.safeTransfer(_treasury, _feeAmount);
+            token_.safeTransfer(treasury_, feeAmount_);
             emit IModule_v1.ProtocolFeeTransferred(
-                address(_token), _treasury, _feeAmount
+                address(token_), treasury_, feeAmount_
             );
         }
     }
