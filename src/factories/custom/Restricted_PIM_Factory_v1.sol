@@ -21,7 +21,8 @@ import {ILM_PC_PaymentRouter_v1} from
 // Internal Implementations
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {LM_PC_PaymentRouter_v1} from "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
 
 // External Interfaces
 import {IOwnable} from "@ex/interfaces/IOwnable.sol";
@@ -260,11 +261,8 @@ contract Restricted_PIM_Factory_v1 is
         bytes4 paymentRouterInterfaceId =
             type(ILM_PC_PaymentRouter_v1).interfaceId;
         for (uint i; i < modules.length; ++i) {
-            if (
-                ERC165(modules[i]).supportsInterface(
-                    paymentRouterInterfaceId
-                )
-            ) {
+            if (ERC165(modules[i]).supportsInterface(paymentRouterInterfaceId))
+            {
                 paymentRouter = modules[i];
             }
         }
@@ -291,7 +289,8 @@ contract Restricted_PIM_Factory_v1 is
             .grantModuleRole(curveAccess, beneficiary);
 
         // assign payment pusher role to beneficiary
-        bytes32 paymentPusherRole = LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
+        bytes32 paymentPusherRole =
+            LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
         LM_PC_PaymentRouter_v1(paymentRouter).grantModuleRole(
             paymentPusherRole, beneficiary
         );
