@@ -13,7 +13,6 @@ import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 // External Dependencies
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-
 /**
  * @title   Inverter Template Payment Processor
  *
