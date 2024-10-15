@@ -259,7 +259,7 @@ contract Restricted_PIM_Factory_v1 is
         address paymentRouter;
         bytes4 paymentRouterInterfaceId =
             type(ILM_PC_PaymentRouter_v1).interfaceId;
-        for (uint i = 0; i < modules.length; i++) {
+        for (uint i; i < modules.length; ++i) {
             if (
                 ERC165Upgradeable(modules[i]).supportsInterface(
                     paymentRouterInterfaceId
