@@ -167,8 +167,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
-        // Set token Vault
-        _setTokenVault(_tokenVault);
+        //@todo this does not work, as the address of the simultaneously deployed tokenVault is not known at the point of deployment
+        /* // Set token Vault
+        _setTokenVault(_tokenVault); */
 
         // Set liquidity vault controller address
         liquidityVaultController =
