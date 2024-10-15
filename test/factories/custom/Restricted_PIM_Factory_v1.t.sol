@@ -23,6 +23,10 @@ import {IBondingCurveBase_v1} from
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IOwnable} from "@ex/interfaces/IOwnable.sol";
+import {ILM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_PaymentRouter_v1.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
@@ -83,10 +87,10 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         );
 
         // Additional Logic Modules: bounty manager
-        setUpBountyManager();
+        setUpLM_PC_PaymentRouter_v1();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata, bytes("")
+                LM_PC_PaymentRouter_v1Metadata, bytes("")
             )
         );
 
@@ -207,6 +211,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         |       └── then it grants issuanceToken minting rights to mint wrapper
         |       └── then it grants minting minting rights on mint wrapper to bonding curve
         |       └── then it grants curve interaction role to beneficiary
+        |       └── then it grants payment pusher role to beneficiary
         |       └── then it transfers ownership of mint wrapper to admin
         |       └── then it renounces ownership of issuance token
         |       └── then it revokes orchestrator admin rights from factory and transfers them to admin
@@ -277,6 +282,28 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         assertTrue(
             orchestrator.authorizer().checkForRole(
                 curveInteractionRoleId, beneficiary
+            )
+        );
+        // CHECK: beneficiary HAS payment pusher role
+        address paymentRouter;
+        address[] memory modules = orchestrator.listModules();
+        for (uint i = 0; i < modules.length; i++) {
+            if (
+                ERC165Upgradeable(modules[i]).supportsInterface(
+                    type(ILM_PC_PaymentRouter_v1).interfaceId
+                )
+            ) {
+                paymentRouter = modules[i];
+            }
+        }
+        bytes32 paymentPusherRole =
+            ILM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
+        bytes32 paymentPusherRoleId = orchestrator.authorizer().generateRoleId(
+            paymentRouter, paymentPusherRole
+        );
+        assertTrue(
+            orchestrator.authorizer().checkForRole(
+                paymentPusherRoleId, beneficiary
             )
         );
         // CHECK: issuance token HAS NO owner
