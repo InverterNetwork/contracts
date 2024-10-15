@@ -15,13 +15,15 @@ import {IRestricted_PIM_Factory_v1} from
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IOwnable} from "@ex/interfaces/IOwnable.sol";
+import {ILM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/interfaces/ILM_PC_PaymentRouter_v1.sol";
 
 // Internal Implementations
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 // External Interfaces
+import {IOwnable} from "@ex/interfaces/IOwnable.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // External Implementations
@@ -30,6 +32,7 @@ import {MintWrapper} from "src/external/token/MintWrapper.sol";
 
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
+import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -250,6 +253,20 @@ contract Restricted_PIM_Factory_v1 is
         // get bonding curve / funding manager
         address fundingManager =
             address(deployedContracts.orchestrator.fundingManager());
+        // get payment router
+        address[] memory modules = deployedContracts.orchestrator.listModules();
+        address paymentRouter;
+        bytes4 paymentRouterInterfaceId =
+            type(ILM_PC_PaymentRouter_v1).interfaceId;
+        for (uint i; i < modules.length; ++i) {
+            if (
+                ERC165(modules[i]).supportsInterface(
+                    paymentRouterInterfaceId
+                )
+            ) {
+                paymentRouter = modules[i];
+            }
+        }
 
         // enable bonding curve to mint issuance token
         deployedContracts.mintWrapper.setMinter(fundingManager, true);
@@ -271,6 +288,13 @@ contract Restricted_PIM_Factory_v1 is
         ).CURVE_INTERACTION_ROLE();
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
             .grantModuleRole(curveAccess, beneficiary);
+
+        // assign payment pusher role to beneficiary
+        bytes32 paymentPusherRole =
+            ILM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
+        IModule_v1(paymentRouter).grantModuleRole(
+            paymentPusherRole, beneficiary
+        );
 
         // revoke privileges from factory
         _renounceTokenPrivileges(deployedContracts.issuanceToken);
