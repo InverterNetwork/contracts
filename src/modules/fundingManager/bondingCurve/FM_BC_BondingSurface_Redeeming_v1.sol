@@ -60,9 +60,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     RedeemingBondingCurveBase_v1
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(
-        bytes4 interfaceId //@todo adapt tests
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual

@@ -47,18 +47,6 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {FM_BC_BondingSurface_RedeemingV1_exposed} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_exposed.sol";
 
-/*     
-    PLEASE NOTE: The following tests have been tested in other test contracts //@todo Marvin G is this comment section still up to date?
-    - buy() & buyOrderFor()
-    - sell() & sellOrderFor()
-    - getStaticPriceForSelling()
-    - getStaticPriceForBuying()
-
-    Also, since the following function just wrap the Bonding Surface contract, their content is assumed to be tested in the original formula tests, not here:
-
-    - _issueTokensFormulaWrapper(uint _depositAmount)
-
-    */
 contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     string private constant NAME = "Bonding Surface Token";
     string private constant SYMBOL = "BST";
@@ -119,7 +107,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         // Set Minter
-        issuanceToken.setMinter(address(bondingCurveFundingManager), true); //@todo Marvin G This wasnt set??
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -199,6 +187,12 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
+
+    /*
+    Test: Init fails for invalid formula
+    └── When: the formula in BondingCurveProperties is not a valid BondingSurface formula
+        └── Then: it should revert
+    */
 
     function testInitFailsForInvalidFormula() public {
         IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
