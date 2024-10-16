@@ -38,6 +38,15 @@ contract NativeIssuanceTest is Test {
         assertEq(nativeIssuance.owner(), initialOwner);
     }
 
+    /*
+    test mint
+    ├── When the mint amount is valid and the caller is allowed
+    │   └── It should mint the tokens
+    ├── When the caller is not the Minter
+    │   └── It should revert
+    └── When the address to mint to is zero address
+        └── It should revert
+    */
     function testMint() public {
         vm.startPrank(initialOwner);
 
@@ -72,6 +81,17 @@ contract NativeIssuanceTest is Test {
         nativeIssuance.mint(address(0), mintAmount);
     }
 
+    /*
+    test burn
+    ├──  When the caller is the Minter
+    │    └── It should burn 
+    ├── When the caller is not the Minter
+    │   └── It should revert
+    ├── When the address to burn from is zero address
+    │   └── It should revert
+    └── When the amount to burn is invalid
+        └── It should revert
+    */
     function testBurn() public {
         // First, mint some tokens to the initialOwner
         vm.startPrank(initialOwner);
@@ -120,6 +140,15 @@ contract NativeIssuanceTest is Test {
         nativeIssuance.burn(initialOwner, burnAmount + 1);
     }
 
+    /*
+    test depositNative
+    ├── When it is called with a valid amount and valid address
+    │   └── It should return the correct balance of the caller after the deposit
+    ├── When it is called with an invalid address
+    │   └── It should revert
+    └── When it is called with zero value
+        └── It should revert
+    */
     function testDepositNative() public {
         nativeIssuance.mint(initialOwner, mintAmount);
         nativeIssuance.depositNative{value: burnAmount}(initialOwner);
@@ -149,6 +178,13 @@ contract NativeIssuanceTest is Test {
         assertEq(nativeIssuance.depositsForBurning(initialOwner), 0);
     }
 
+    /*
+    test setMinter
+    ├── When it is called with a valid minter address
+    │   └── It should update the minter
+    └── When it is called by an unauthorized address
+        └── It should revert
+    */
     function testSetMinter() public {
         vm.startPrank(initialOwner);
 
@@ -168,6 +204,15 @@ contract NativeIssuanceTest is Test {
         nativeIssuance.setMinter(minter, true);
     }
 
+    /*
+    test readOnly functions
+    ├── When balanceOf is called with a valid address
+    │   └── It should return the correct balance
+    ├── When static functions called 
+    │   └── Return the expected values
+    └── When functions called that not supported in this contract
+        └── It should revert `NotSupported` error.
+    */
     function testBalanceOf() public {
         vm.startPrank(initialOwner);
         nativeIssuance.mint(initialOwner, mintAmount);

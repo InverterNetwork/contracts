@@ -28,8 +28,8 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Mock} from
 import {NativeMinterMock} from "test/utils/mocks/external/NativeMinterMock.sol";
 
 contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
-    string internal constant NAME = "Bonding Curve Token";
-    string internal constant SYMBOL = "BCT";
+    string internal constant NAME = "Native Issuance";
+    string internal constant SYMBOL = "NATIVE";
     uint8 internal constant DECIMALS = 18;
     uint internal constant MAX_SUPPLY = type(uint).max;
 
@@ -105,16 +105,16 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
     // Tests: Initialization
 
     function testInit() public override {
-        // assertEq(
-        //     issuanceToken.name(),
-        //     string(abi.encodePacked(NAME)),
-        //     "Name has not been set correctly"
-        // );
-        // assertEq(
-        //     issuanceToken.symbol(),
-        //     string(abi.encodePacked(SYMBOL)),
-        //     "Symbol has not been set correctly"
-        // );
+        assertEq(
+            issuanceToken.name(),
+            string(abi.encodePacked(NAME)),
+            "Name has not been set correctly"
+        );
+        assertEq(
+            issuanceToken.symbol(),
+            string(abi.encodePacked(SYMBOL)),
+            "Symbol has not been set correctly"
+        );
         assertEq(
             issuanceToken.decimals(),
             DECIMALS,
@@ -177,6 +177,16 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
+    //--------------------------------------------------------------------------
+    // Public Functions
+
+    /* Test `buy` function
+        └── when the fee is 0
+            ├── it should pull the buy amount from the caller
+            ├── it should determine the mint amount of tokens to mint 
+            ├── it should mint the tokens to the receiver        
+    */
+
     function testBuyOrderWithZeroFee(uint amount) public {
         // Setup
         // Above an amount of 1e38 the BancorFormula starts to revert.
@@ -222,6 +232,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
         assertEq(issuanceToken.balanceOf(buyer), formulaReturn);
     }
 
+    /* Test `sell` function
+        ├── when the sell amount is 0 or msg.value is 0
+        │       └── it should revert 
+        └── when the sell amount is not 0
+                └── when the fee is 0
+                        ├── it should take the sell amount from the caller
+                        ├── it should determine the redeem amount of the sent tokens 
+                        └── When there IS enough collateral in the contract to cover the redeem amount
+                                └── When the amount of redeemed tokens does not exceed the virtual issuance supply
+                                        └── it should send the rest to the receiver    
+    */
     function testSellOrderWithZeroFee(uint amountIn) public {
         // Setup
 
