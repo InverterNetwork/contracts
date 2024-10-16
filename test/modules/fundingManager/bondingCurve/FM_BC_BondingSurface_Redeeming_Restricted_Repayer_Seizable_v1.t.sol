@@ -53,16 +53,9 @@ import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed}
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed.sol";
 
 /*     
-    PLEASE NOTE: The following tests have been tested in other test contracts //@todo Marvin G is this comment section still up to date?
+    PLEASE NOTE: The following tests have been tested in other test contracts 
     - buy() & buyOrderFor()
     - sell() & sellOrderFor()
-    - getStaticPriceForSelling()
-    - getStaticPriceForBuying()
-
-    Also, since the following function just wrap the Bonding Surface contract, their content is assumed to be tested in the original formula tests, not here:
-
-    - _issueTokensFormulaWrapper(uint _depositAmount)
-
     */
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
     ModuleTest
@@ -244,6 +237,53 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
     function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
+    }
+
+    /*
+    Test: Init fails for invalid formula
+    └── When: the formula in BondingCurveProperties is not a valid BondingSurface formula
+        └── Then: it should revert
+    */
+
+    function testInitFailsForInvalidFormula() public {
+        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
+            bc_properties;
+        bc_properties.formula = address(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            )
+        );
+
+        address impl = address(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            )
+        );
+
+        bondingCurveFundingManager =
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            Clones.clone(impl)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_v1
+                    .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula
+                    .selector
+            )
+        );
+
+        bondingCurveFundingManager.init(
+            _orchestrator,
+            _METADATA,
+            abi.encode(
+                address(issuanceToken),
+                address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
+                address(tokenVault),
+                liquidityVaultController,
+                bc_properties,
+                MAX_SEIZE,
+                BUY_AND_SELL_IS_RESTRICTED
+            )
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -1119,6 +1159,26 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         }
     }
 
+    function testSetRepayableAmount_revertGivenCallerHasNotCoverManagerRole(
+        uint amount
+    ) public {
+        amount = bound(
+            amount,
+            bondingCurveFundingManager.exposed_getSmallerCaCr() + 1,
+            type(uint).max
+        );
+
+        // Execute Tx
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_v1
+                    .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.setRepayableAmount(amount);
+    }
+
     /*  Test setliquidityVaultControllerContract()
         ├── Given: the caller has not the COVER_MANAGER_ROLE
         │   └── When: the function setliquidityVaultControllerContract() gets called
@@ -1207,9 +1267,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         ├── Given: the caller has not the RISK_MANAGER_ROLE
         │   └── When: the function setCapitalRequired() is called
         │       └── Then: it should revert
-        └── Given: the caller has the role of RISK_MANAGER_ROLE //@todo Marvin G remove as its tested in the base contract?
-            └── When: the function setCapitalRequired() is called
-                └── Then: it should call the internal function and set the state
     */
     function testSetCapitalRequired_modifierInPosition() public {
         uint newCapitalRequired = 1 ether;
@@ -1231,34 +1288,13 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         }
     }
 
-    function testSetCapitalRequired_worksGivenCallerHasRiskManagerRole(
-        uint _newCapitalRequired
-    ) public {
-        vm.assume(
-            _newCapitalRequired != bondingCurveFundingManager.capitalRequired()
-        );
-        _newCapitalRequired = bound(_newCapitalRequired, 1, 1e18);
-
-        // Execute Tx
-        bondingCurveFundingManager.setCapitalRequired(_newCapitalRequired);
-
-        // Get current state value
-        uint stateValue = bondingCurveFundingManager.capitalRequired();
-
-        // Assert state has been updated
-        assertEq(stateValue, _newCapitalRequired);
-    }
-
-    /*  Test setBaseMultiplier() //@todo Marvin G Rename to setBasePriceMultiplier
+    /*  Test setBaseMultiplier() 
         ├── Given: the caller has not the RISK_MANAGER_ROLE
         │   └── When: the function setBaseMultiplier() is called
         │       └── Then: it should revert
-        └── Given: the caller has the RISK_MANAGER_ROLE //@todo Marvin G remove as its tested in the base contract?
-            └── When: the function setBaseMultiplier() is called
-                └── Then: it should call the internal function and set the state
     */
 
-    function testSetBaseMultiplier_modifierInPosition() public {
+    function testSetBasePriceMultiplier_modifierInPosition() public {
         uint newBaseMultiplier = 1;
 
         // Execute Tx
@@ -1278,29 +1314,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         }
     }
 
-    function testSetBaseMultiplier_worksGivenCallerHasRiskManagerRole(
-        uint _newBaseMultiplier
-    ) public {
-        vm.assume(
-            _newBaseMultiplier
-                != bondingCurveFundingManager.basePriceMultiplier()
-        );
-        _newBaseMultiplier = bound(_newBaseMultiplier, 1, 1e18);
-
-        // Execute Tx
-        bondingCurveFundingManager.setBasePriceMultiplier(_newBaseMultiplier);
-
-        // Get current state value
-        uint stateValue = bondingCurveFundingManager.basePriceMultiplier();
-
-        // Assert state has been updated
-        assertEq(stateValue, _newBaseMultiplier);
-    }
-
     //--------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
-    //@todo Marvin G Gherkin missing
+    /* Test: setTokenVault() modifier in position
+        └── Given: the caller is not the OrchestratorAdmin
+            └── When: the function setTokenVault() gets called
+                └── Then: it should revert
+        └── Given: the caller is the OrchestratorAdmin
+            └── When: the function setTokenVault() gets called
+                └── Then: it should change the _tokenVault address to the given address
+    */
     function testSetTokenVault_ModifierInPosition() public {
         // onlyOrchestratorAdmin
         vm.expectRevert(
@@ -1312,6 +1336,49 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         );
         vm.prank(address(0));
         bondingCurveFundingManager.setTokenVault(address(0));
+    }
+
+    function testSetTokenVault_worksGivenCallerIsOrchestratorAdmin(
+        address _tokenVault
+    ) public {
+        vm.assume(_tokenVault != address(0));
+        bondingCurveFundingManager.setTokenVault(_tokenVault);
+
+        assertEq(_tokenVault, bondingCurveFundingManager.tokenVault());
+    }
+
+    /* Test: withdrawProjectCollateralFee
+         └── Given: the caller is not the OrchestratorAdmin
+            └── When: the function withdrawProjectCollateralFee() gets called
+                └── Then: it should revert
+        └── Given: the caller is the OrchestratorAdmin
+            └── When: the function withdrawProjectCollateralFee() gets called
+                └── Then: it should revert
+    */
+
+    function testWithdrawProjectCollateralFee_ModifierInPosition() public {
+        // onlyOrchestratorAdmin
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _authorizer.getAdminRole(),
+                address(0)
+            )
+        );
+        vm.prank(address(0));
+        bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
+    }
+
+    function testWithdrawProjectCollateralFee_revertsGivenCallerIsOrchestratorAdmin(
+    ) public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
     }
 
     //--------------------------------------------------------------------------
@@ -1552,6 +1619,31 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         assertEq(returnValueInternalFunction, _repayableAmount);
     }
 
+    /*  Test _projectFeeCollected()
+        └── Given: a tokenVault is set
+            └── And: Tokens are available to be collected
+                └── When: function _projectFeeCollected is called
+                    └── Then: it should immediatley transfer the fee to the tokenVault
+    */
+
+    function testInternalProjectFeeCollected_worksGivenTokenVaultIsSetAndTokensAreAvailableToBeCollected(
+        uint amount
+    ) public {
+        amount = bound(amount, 1, type(uint128).max);
+
+        // Set tokenVault
+        bondingCurveFundingManager.setTokenVault(tokenVault);
+
+        //mint tokens to fundingManager
+        _token.mint(address(bondingCurveFundingManager), amount);
+        //call exposed function
+        bondingCurveFundingManager.exposed_projectFeeCollected(amount);
+
+        assertEq(_token.balanceOf(tokenVault), amount);
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)), MIN_RESERVE
+        );
+    }
     //--------------------------------------------------------------------------
     // Test Helper Functions
 
