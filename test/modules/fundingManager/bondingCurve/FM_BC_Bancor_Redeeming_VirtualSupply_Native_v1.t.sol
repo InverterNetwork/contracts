@@ -121,7 +121,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
             "Decimals has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
+            bondingCurveFundingManager.exposed_collateralTokenDecimals(),
             _token.decimals(),
             "Collateral token decimals has not been set correctly"
         );
@@ -141,12 +141,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
             "Virtual collateral supply has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
+            bondingCurveFundingManager.exposed_reserveRatioForBuying(),
             RESERVE_RATIO_FOR_BUYING,
             "Reserve ratio for buying has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.call_reserveRatioForSelling(),
+            bondingCurveFundingManager.exposed_reserveRatioForSelling(),
             RESERVE_RATIO_FOR_SELLING,
             "Reserve ratio for selling has not been set correctly"
         );
@@ -194,7 +194,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
             amount,
             1e16,
             1e38,
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
+            bondingCurveFundingManager.exposed_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
 
@@ -211,12 +211,13 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
 
         // Use formula to get expected return values
         uint decimalConverted_depositAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(amount, _token.decimals(), 18);
+            .exposed_convertAmountToRequiredDecimal(amount, _token.decimals(), 18);
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculatePurchaseReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForBuying(),
+            bondingCurveFundingManager.exposed_getFormulaVirtualIssuanceSupply(),
+            bondingCurveFundingManager.exposed_getFormulaVirtualCollateralSupply(
+            ),
+            bondingCurveFundingManager.exposed_reserveRatioForBuying(),
             decimalConverted_depositAmount
         );
 
@@ -251,7 +252,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
             amountIn,
             100,
             1e36,
-            bondingCurveFundingManager.call_collateralTokenDecimals(),
+            bondingCurveFundingManager.exposed_collateralTokenDecimals(),
             issuanceToken.decimals()
         );
         // see comment in testBuyOrderWithZeroFee for information on the upper bound
@@ -283,21 +284,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Test is ModuleTest {
         _openCurveInteractions(); // Open Buy & sell
 
         uint decimalConverted_userSellAmount = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
+            .exposed_convertAmountToRequiredDecimal(
             userSellAmount, issuanceToken.decimals(), 18
         );
         // Use formula to get expected return values
         uint formulaReturn = bondingCurveFundingManager.formula()
             .calculateSaleReturn(
-            bondingCurveFundingManager.call_getFormulaVirtualIssuanceSupply(),
-            bondingCurveFundingManager.call_getFormulaVirtualCollateralSupply(),
-            bondingCurveFundingManager.call_reserveRatioForSelling(),
+            bondingCurveFundingManager.exposed_getFormulaVirtualIssuanceSupply(),
+            bondingCurveFundingManager.exposed_getFormulaVirtualCollateralSupply(
+            ),
+            bondingCurveFundingManager.exposed_reserveRatioForSelling(),
             decimalConverted_userSellAmount
         );
 
         // normalize the formulaReturn. This is the amount in the context of the collateral token
         uint normalized_formulaReturn = bondingCurveFundingManager
-            .call_convertAmountToRequiredDecimal(
+            .exposed_convertAmountToRequiredDecimal(
             formulaReturn, 18, _token.decimals()
         );
 

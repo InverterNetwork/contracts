@@ -15,19 +15,19 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_Native_v1} from
 contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Mock is
     FM_BC_Bancor_Redeeming_VirtualSupply_Native_v1
 {
-    function call_reserveRatioForBuying() external view returns (uint32) {
+    function exposed_reserveRatioForBuying() external view returns (uint32) {
         return reserveRatioForBuying;
     }
 
-    function call_reserveRatioForSelling() external view returns (uint32) {
+    function exposed_reserveRatioForSelling() external view returns (uint32) {
         return reserveRatioForSelling;
     }
 
-    function call_collateralTokenDecimals() external view returns (uint8) {
+    function exposed_collateralTokenDecimals() external view returns (uint8) {
         return collateralTokenDecimals;
     }
 
-    function call_convertAmountToRequiredDecimal(
+    function exposed_convertAmountToRequiredDecimal(
         uint _amount,
         uint8 _tokenDecimals,
         uint8 _requiredDecimals
@@ -38,7 +38,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Mock is
     }
 
     // Note: this function returns the virtual issuance supply in the same format it will be fed to the Bancor formula
-    function call_getFormulaVirtualIssuanceSupply()
+    function exposed_getFormulaVirtualIssuanceSupply()
         external
         view
         returns (uint)
@@ -49,7 +49,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_NativeV1Mock is
     }
 
     // Note: this function returns the virtual collateral supply in the same format it will be fed to the Bancor formula
-    function call_getFormulaVirtualCollateralSupply()
+    function exposed_getFormulaVirtualCollateralSupply()
         external
         view
         returns (uint)
