@@ -247,7 +247,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         override(BondingCurveBase_v1)
         isBuyAndSellRestricted
     {
-        super._buyOrder(_receiver, _depositAmount, _minAmountOut);
+        super.buyFor(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Buy tokens for the sender's address.
@@ -275,7 +275,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         override(RedeemingBondingCurveBase_v1)
         isBuyAndSellRestricted
     {
-        super._sellOrder(_receiver, _depositAmount, _minAmountOut);
+        super.sellTo(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Redeem collateral for the sender's address.
