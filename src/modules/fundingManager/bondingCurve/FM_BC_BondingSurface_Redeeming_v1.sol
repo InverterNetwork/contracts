@@ -60,9 +60,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     RedeemingBondingCurveBase_v1
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(
-        bytes4 interfaceId //@todo adapt tests
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -154,64 +152,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Modifiers
-
-    //--------------------------------------------------------------------------
     // Public Functions
-
-    /// @notice Buy tokens on behalf of a specified receiver address.
-    /// @param _receiver The address that will receive the bought tokens.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
-        public
-        virtual
-        override(BondingCurveBase_v1)
-        buyingIsEnabled
-        validReceiver(_receiver)
-    {
-        _buyOrder(_receiver, _depositAmount, _minAmountOut);
-    }
-
-    /// @notice Buy tokens for the sender's address.
-    /// @param _depositAmount The amount of collateral token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function buy(uint _depositAmount, uint _minAmountOut)
-        public
-        virtual
-        override(BondingCurveBase_v1)
-        buyingIsEnabled
-    {
-        _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
-    }
-
-    /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
-    /// @param  _receiver The address that will receive the redeemed tokens.
-    /// @param  _depositAmount The amount of tokens to be sold.
-    /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver should receive from the sale.
-    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1)
-        sellingIsEnabled
-        validReceiver(_receiver)
-    {
-        _sellOrder(_receiver, _depositAmount, _minAmountOut);
-    }
-
-    /// @notice Redeem collateral for the sender's address.
-    /// @param _depositAmount The amount of issued token depoisited.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    /// @param _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function sell(uint _depositAmount, uint _minAmountOut)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1)
-        sellingIsEnabled
-    {
-        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
-    }
-
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function calculateBasePriceToCapitalRatio(
         uint _capitalRequired,

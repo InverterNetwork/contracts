@@ -58,4 +58,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed is
     {
         return projectCollateralFeeCollected = _amount;
     }
+
+    function exposed_projectFeeCollected(uint _workflowFeeAmount) external {
+        _projectFeeCollected(_workflowFeeAmount);
+    }
 }
