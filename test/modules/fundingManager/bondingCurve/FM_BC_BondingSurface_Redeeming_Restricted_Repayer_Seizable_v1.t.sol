@@ -1624,6 +1624,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
             └── And: Tokens are available to be collected
                 └── When: function _projectFeeCollected is called
                     └── Then: it should immediatley transfer the fee to the tokenVault
+                        └── And: Emit ProjectCollateralFeeWithdrawn event
     */
 
     function testInternalProjectFeeCollected_worksGivenTokenVaultIsSetAndTokensAreAvailableToBeCollected(
@@ -1636,6 +1637,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
 
         //mint tokens to fundingManager
         _token.mint(address(bondingCurveFundingManager), amount);
+
+        vm.expectEmit(true, true, true, true);
+        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+            tokenVault, amount
+        );
+
         //call exposed function
         bondingCurveFundingManager.exposed_projectFeeCollected(amount);
 

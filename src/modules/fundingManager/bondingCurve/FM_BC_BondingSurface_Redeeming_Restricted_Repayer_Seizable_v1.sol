@@ -552,5 +552,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @param _workflowFeeAmount The amount of project fee to transfer
     function _projectFeeCollected(uint _workflowFeeAmount) internal override {
         _token.safeTransfer(tokenVault, _workflowFeeAmount);
+        emit ProjectCollateralFeeWithdrawn(tokenVault, _workflowFeeAmount);
     }
 }
