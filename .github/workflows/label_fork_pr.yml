@@ -1,0 +1,21 @@
+name: External contribution PRs
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  label-fork:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if the PR is from a fork
+        id: check_fork
+        run: echo "isFork=${{ github.event.pull_request.head.repo.fork }}" >> $GITHUB_ENV
+
+      - name: Add label to PR if it's from a fork
+        if: env.isFork == 'true'
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: "external contribution"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
