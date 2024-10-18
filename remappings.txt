@@ -8,3 +8,4 @@
 @lm/=src/modules/logicModule/
 @lm_pc/=src/modules/logicModule/paymentClient/
 @aut/=src/modules/authorizer/
+@lib/=src/modules/lib/
