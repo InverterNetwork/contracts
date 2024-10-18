@@ -3,6 +3,13 @@ pragma solidity ^0.8.0;
 
 interface ILM_PC_PaymentRouter_v1 {
     //--------------------------------------------------------------------------
+    // Non-Mutating Functions
+
+    /// @notice Returns constant PAYMENT_PUSHER_ROLE.
+    /// @return Role that allows to push payments thorugh the Payment Router.
+    function PAYMENT_PUSHER_ROLE() external view returns (bytes32);
+
+    //--------------------------------------------------------------------------
     // Mutating Functions
 
     /// @notice Adds a new Payment Order.
