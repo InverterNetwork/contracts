@@ -20,15 +20,15 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  * @title   Inverter Restricted PIM Factory
  *
  * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a
- *          mechanism to sponsor the required collateral supply and an
+ *          mechanism to sponsor the required collateral supply and a highly
  *          opinionated initial configuration.
  *
- * @dev     More user-friendly way to deploy a PIM workflow with an restricted
- *          bonding curve. Anyone can sponsor the required collateral supply for
- *          a bonding curve deployment. Initial issuance token supply is minted
- *          to the deployer. The deployer receives the role to interact with the
- *          curve. Overall control over workflow remains with `initialAdmin` of
- *          the role authorizer.
+ * @dev     More user-friendly way to deploy a use case-specific PIM workflow
+ *          with an restricted bonding curve. Anyone can sponsor the
+ *          required collateral supply for a bonding curve deployment. Initial
+ *          issuance token supply is minted to the beneficiary. The beneficiary receives
+ *          the role to interact with the curve. Overall control over workflow remains
+ *          with `initialAdmin` of the role authorizer.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -82,24 +82,24 @@ interface IRestricted_PIM_Factory_v1 {
 
     /// @notice Event emitted when new funding is added.
     /// @param sponsor Address that pays funding.
-    /// @param actor Address that can use new funding.
+    /// @param beneficiary Address that can use new funding.
     /// @param token Address of token used for funding.
     /// @param amount Funding amount.
     event FundingAdded(
         address indexed sponsor,
-        address indexed actor,
+        address indexed beneficiary,
         address indexed token,
         uint amount
     );
 
     /// @notice Event emitted when existing funding is removed.
     /// @param sponsor Address that agreed to pay for funding.
-    /// @param actor Address that could have used the funding.
+    /// @param beneficiary Address that could have used the funding.
     /// @param token Address of token used that would have been used for funding.
     /// @param amount Funding amount.
     event FundingRemoved(
         address indexed sponsor,
-        address indexed actor,
+        address indexed beneficiary,
         address indexed token,
         uint amount
     );
@@ -107,12 +107,12 @@ interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Returns the amount of funding for a given sponsor, actor and token.
+    /// @notice Returns the amount of funding for a given sponsor, beneficiary and token.
     /// @param  sponsor The address of the sponsor.
-    /// @param  actor The address of the actor (who can use the funding).
+    /// @param  beneficiary The address of the beneficiary (who can use the funding).
     /// @param  token The address of the token used for funding.
     /// @return uint The amount of funding.
-    function fundings(address sponsor, address actor, address token)
+    function fundings(address sponsor, address beneficiary, address token)
         external
         view
         returns (uint);
@@ -138,16 +138,17 @@ interface IRestricted_PIM_Factory_v1 {
     ) external returns (IOrchestrator_v1);
 
     /// @notice Adds `amount` of some `token` to factory to be used by some `actor` for a bonding curve deployment.
-    /// @param actor The address that can use the funding for a new bonding curve deployment.
+    /// @param beneficiary The address that can use the funding for a new bonding curve deployment.
     /// @param token The token sent to the factory and to be used as collateral token for a bonding curve.
     /// @param amount The amount of `token` to be provided as initialCollateralSupply.
-    function addFunding(address actor, address token, uint amount) external;
+    function addFunding(address beneficiary, address token, uint amount)
+        external;
 
     /// @notice Withdraws an existing funding from the factory.
     /// @dev Can only be withdrawn by the address that added funding in the first place.
-    /// @param actor The address could have used the funding for a new bonding curve deployment.
+    /// @param beneficiary The address could have used the funding for a new bonding curve deployment.
     /// @param token The token that was sent to the factory to be used as collateral token for a bonding curve.
     /// @param amount The amount of `token` that was provided.
-    function withdrawFunding(address actor, address token, uint amount)
+    function withdrawFunding(address beneficiary, address token, uint amount)
         external;
 }
