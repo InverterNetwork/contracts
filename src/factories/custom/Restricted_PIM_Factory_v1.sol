@@ -68,11 +68,13 @@ contract Restricted_PIM_Factory_v1 is
     // State Variables
 
     // Stores address of orchestratorfactory.
-    address public orchestratorFactory;
+    address public immutable orchestratorFactory;
     // Stores available fundings.
     mapping(
         address sponsor
-            => mapping(address actor => mapping(address token => uint amount))
+            => mapping(
+                address beneficiary => mapping(address token => uint amount)
+            )
     ) public fundings;
 
     //--------------------------------------------------------------------------
@@ -123,35 +125,37 @@ contract Restricted_PIM_Factory_v1 is
     }
 
     /// @inheritdoc IRestricted_PIM_Factory_v1
-    function addFunding(address actor, address token, uint amount) external {
+    function addFunding(address beneficiary, address token, uint amount)
+        external
+    {
         // records funding amount
-        fundings[_msgSender()][actor][token] += amount;
+        fundings[_msgSender()][beneficiary][token] += amount;
         // sends amount from msg.sender to factory
         IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
 
         emit IRestricted_PIM_Factory_v1.FundingAdded(
-            _msgSender(), actor, token, amount
+            _msgSender(), beneficiary, token, amount
         );
     }
 
     /// @inheritdoc IRestricted_PIM_Factory_v1
-    function withdrawFunding(address actor, address token, uint amount)
+    function withdrawFunding(address beneficiary, address token, uint amount)
         external
     {
         // checks if the requested amount is available
-        uint availableFunding = fundings[_msgSender()][actor][token];
+        uint availableFunding = fundings[_msgSender()][beneficiary][token];
         if (amount > availableFunding) {
             revert IRestricted_PIM_Factory_v1.InsufficientFunding(
                 availableFunding
             );
         }
         // if so adjusts internal balancing
-        fundings[_msgSender()][actor][token] -= amount;
+        fundings[_msgSender()][beneficiary][token] -= amount;
         // and sends amount to msg sender
         IERC20(token).safeTransfer(_msgSender(), amount);
 
         emit IRestricted_PIM_Factory_v1.FundingRemoved(
-            _msgSender(), actor, token, amount
+            _msgSender(), beneficiary, token, amount
         );
     }
 
@@ -259,11 +263,8 @@ contract Restricted_PIM_Factory_v1 is
         bytes4 paymentRouterInterfaceId =
             type(ILM_PC_PaymentRouter_v1).interfaceId;
         for (uint i; i < modules.length; ++i) {
-            if (
-                ERC165(modules[i]).supportsInterface(
-                    paymentRouterInterfaceId
-                )
-            ) {
+            if (ERC165(modules[i]).supportsInterface(paymentRouterInterfaceId))
+            {
                 paymentRouter = modules[i];
             }
         }
@@ -271,7 +272,7 @@ contract Restricted_PIM_Factory_v1 is
         // enable bonding curve to mint issuance token
         deployedContracts.mintWrapper.setMinter(fundingManager, true);
 
-        // transfer initial collateral supply from realAdmin to bonding curve and mint issuance token to msg.sender
+        // transfer initial collateral supply from realAdmin to bonding curve and mint issuance token to beneficiary
         _manageInitialSupplies(
             IBondingCurveBase_v1(fundingManager),
             decodedConfigParams.collateralToken,
