@@ -5,6 +5,8 @@ import "forge-std/Script.sol";
 
 // Scripts
 import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
+import {CustomFactoryDeploymentScript} from
+    "script/deploymentScript/CustomFactoryDeploymentScript.s.sol";
 
 // Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
@@ -33,7 +35,7 @@ contract TestnetDeploymentScript is DeploymentScript {
 
     uint64 immutable DEFAULT_LIVENESS = 25_000;
 
-    function run() public virtual override {
+    function run() public virtual override(DeploymentScript) {
         console2.log();
         console2.log(
             "================================================================================"
@@ -88,5 +90,9 @@ contract TestnetDeploymentScript is DeploymentScript {
         proxyAndBeaconDeployer.setFactory(deterministicFactory);
 
         super.run();
+
+        CustomFactoryDeploymentScript customFactoryDeploymentScript =
+            new CustomFactoryDeploymentScript();
+        customFactoryDeploymentScript.deploy(orchestratorFactory);
     }
 }
