@@ -148,7 +148,7 @@ To keep your fork in sync with the `upstream` repository, periodically fetch and
 git fetch upstream
 ```
 
-2.Merge the upstream dev branch into your local dev branch:
+2. Merge the upstream dev branch into your local dev branch:
 
 ```bash
 git checkout dev
