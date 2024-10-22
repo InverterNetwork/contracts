@@ -22,6 +22,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed is
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     //--------------------------------------------------------------------------
+    // Mock access for modifiers
+
+    function exposed_onlyLiquidityVaultControllerModifier()
+        external
+        onlyLiquidityVaultController
+    {}
+
+    //--------------------------------------------------------------------------
     // Mock access for internal functions
 
     function exposed_isBuyAndSellRestrictedModifier() external view {
@@ -57,5 +65,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed is
         returns (uint)
     {
         return projectCollateralFeeCollected = _amount;
+    }
+
+    function exposed_projectFeeCollected(uint _workflowFeeAmount) external {
+        _projectFeeCollected(_workflowFeeAmount);
     }
 }

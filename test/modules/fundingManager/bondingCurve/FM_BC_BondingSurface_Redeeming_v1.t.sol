@@ -29,10 +29,8 @@ import {
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {
-    IRedeemingBondingCurveBase_v1,
-    IRedeemingBondingCurveBase_v1
-} from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
@@ -40,7 +38,8 @@ import {IFM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
-
+import {ERC20PaymentClientBaseV1Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -48,18 +47,6 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {FM_BC_BondingSurface_RedeemingV1_exposed} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_exposed.sol";
 
-/*     
-    PLEASE NOTE: The following tests have been tested in other test contracts //@todo Marvin G is this comment section still up to date?
-    - buy() & buyOrderFor()
-    - sell() & sellOrderFor()
-    - getStaticPriceForSelling()
-    - getStaticPriceForBuying()
-
-    Also, since the following function just wrap the Bonding Surface contract, their content is assumed to be tested in the original formula tests, not here:
-
-    - _issueTokensFormulaWrapper(uint _depositAmount)
-
-    */
 contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     string private constant NAME = "Bonding Surface Token";
     string private constant SYMBOL = "BST";
@@ -79,6 +66,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     FM_BC_BondingSurface_RedeemingV1_exposed bondingCurveFundingManager;
     address formula;
     ERC20Issuance_v1 issuanceToken;
+    ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
 
     // Addresses
     address owner_address = address(0xA1BA);
@@ -119,7 +107,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
 
         // Set Minter
-        issuanceToken.setMinter(address(bondingCurveFundingManager), true); //@todo Marvin G This wasnt set??
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -200,6 +188,41 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
+    /*
+    Test: Init fails for invalid formula
+    └── When: the formula in BondingCurveProperties is not a valid BondingSurface formula
+        └── Then: it should revert
+    */
+
+    function testInitFailsForInvalidFormula() public {
+        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
+            bc_properties;
+        bc_properties.formula = address(new FM_BC_BondingSurface_Redeeming_v1());
+
+        address impl = address(new FM_BC_BondingSurface_RedeemingV1_exposed());
+
+        bondingCurveFundingManager =
+            FM_BC_BondingSurface_RedeemingV1_exposed(Clones.clone(impl));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_v1
+                    .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula
+                    .selector
+            )
+        );
+
+        bondingCurveFundingManager.init(
+            _orchestrator,
+            _METADATA,
+            abi.encode(
+                address(issuanceToken),
+                _token, // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
+                bc_properties
+            )
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Tests: Supports Interface
 
@@ -219,7 +242,10 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    //@todo Marvin G Gherkin missing
+    /*  Test calculateBasePriceToCapitalRatio
+        └── When: calculateBasePriceCapitalRatio is called
+            └── Then: it returns the value of the internal function
+    */
     function testCalculatebasePriceToCapitalRatio_worksGivenReturnValueInternalFunction(
         uint _capitalRequirements,
         uint _basePriceMultiplier
@@ -240,11 +266,70 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         // Execute Tx
         uint functionReturnValue = bondingCurveFundingManager
-            .exposed_calculateBasePriceToCapitalRatio(
+            .calculateBasePriceToCapitalRatio(
             _capitalRequirements, _basePriceMultiplier
         );
 
         // Assert expected return value
+        assertEq(functionReturnValue, expectedReturnValue);
+    }
+
+    /*  Test getStaticPriceForBuying
+        └── When: getStaticPriceForBuying is called
+            └── Then: it returns the value of the internal function
+    */
+    function testGetStaticPriceForBuying_worksGivenReturnValueInternalFunction(
+        uint initialAmount
+    ) public {
+        // Increase the amount of collateral tokens
+        initialAmount = bound(
+            initialAmount,
+            0,
+            //max amount of collateral tokens allowed by the formula
+            1e36
+            //Current balance
+            - _token.balanceOf(address(bondingCurveFundingManager))
+            //Tokens that are simulated to be minted via the _issueTokensFormulaWrapper(1) function call
+            - 1
+        );
+        if (initialAmount != 0) {
+            _token.mint(address(bondingCurveFundingManager), initialAmount);
+        }
+
+        // Use expected value from internal function
+        uint expectedReturnValue =
+            bondingCurveFundingManager.exposed_issueTokensFormulaWrapper(1);
+
+        // Actual return value
+        uint functionReturnValue =
+            bondingCurveFundingManager.getStaticPriceForBuying();
+
+        // Assert eq
+        assertEq(functionReturnValue, expectedReturnValue);
+    }
+
+    /*  Test getStaticPriceForSelling
+        └── When: getStaticPriceForSelling is called
+            └── Then: it returns the value of the internal function
+    */
+    function testGetStaticPriceForSelling_worksGivenReturnValueInternalFunction(
+        uint initialAmount
+    ) public {
+        // Increase the amount of collateral tokens
+        initialAmount = bound(initialAmount, 0, type(uint32).max); //@todo higher amount fails?
+        if (initialAmount != 0) {
+            _token.mint(address(bondingCurveFundingManager), initialAmount);
+        }
+
+        // Use expected value from internal function
+        uint expectedReturnValue =
+            bondingCurveFundingManager.exposed_redeemTokensFormulaWrapper(1);
+
+        // Actual return value
+        uint functionReturnValue =
+            bondingCurveFundingManager.getStaticPriceForSelling();
+
+        // Assert eq
         assertEq(functionReturnValue, expectedReturnValue);
     }
 
@@ -255,9 +340,13 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         ├── Given: the caller is not the OrchestratorAdmin
         │   └── When: the function setCapitalRequired() is called
         │       └── Then: it should revert
+        ├── Given: the amount is invalid
+        │   └── When: the function setCapitalRequired() is called
+        │       └── Then: it should revert
         └── Given: the caller is the OrchestratorAdmin
             └── When: the function setCapitalRequired() is called
                 └── Then: it should call the internal function and set the state
+
     */
 
     function testSetCapitalRequired_revertGivenCallerHasNotRiskManagerRole()
@@ -276,6 +365,22 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
                 )
             );
             bondingCurveFundingManager.setCapitalRequired(newCapitalRequired);
+        }
+    }
+
+    function testSetCapitalRequired_revertGivenAmountIsInvalid() public {
+        uint newCapitalRequired = 1 ether;
+
+        // Execute Tx
+        {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IFM_BC_BondingSurface_Redeeming_v1
+                        .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
+                        .selector
+                )
+            );
+            bondingCurveFundingManager.setCapitalRequired(0);
         }
     }
 
@@ -342,6 +447,113 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         // Assert state has been updated
         assertEq(stateValue, _newBaseMultiplier);
+    }
+
+    //--------------------------------------------------------------------------
+    // OnlyPaymentClient Functions
+
+    /* Test transferOrchestratorToken 
+        ├── given the onlyPaymentClient modifier is set (individual modifier tests are done in Module_v1.t.sol)
+        │   └── and the conditions of the modifier are not met
+        │       └── when the function transferOrchestratorToken() gets called
+        │           └── then it should revert
+        └── given the caller is a PaymentClient module
+                └── and the PaymentClient module is registered in the Orchestrator
+                    ├── and the withdraw amount + project collateral fee > FM collateral token balance
+                    │   └── when the function transferOrchestratorToken() gets called
+                    │       └── then it should revert
+                    └── and the FM has enough collateral token for amount to be transferred
+                            when the function transferOrchestratorToken() gets called
+                            └── then is should send the funds to the specified address
+                                └── and it should emit an event
+    */
+
+    function testTransferOrchestratorToken_ModifierInPosition(
+        address caller,
+        address to,
+        uint amount
+    ) public {
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+
+        vm.prank(caller);
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        bondingCurveFundingManager.transferOrchestratorToken(to, amount);
+    }
+
+    function testTransferOrchestratorToken_FailsGivenNotEnoughCollateralInFM(
+        address to,
+        uint amount,
+        uint projectCollateralFeeCollected
+    ) public virtual {
+        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
+
+        amount = bound(amount, 1, type(uint128).max);
+        projectCollateralFeeCollected =
+            bound(projectCollateralFeeCollected, 1, type(uint128).max);
+
+        // Add collateral fee collected to create fail scenario
+        _setProjectCollateralFeeCollectedHelper(projectCollateralFeeCollected);
+        assertEq(
+            bondingCurveFundingManager.projectCollateralFeeCollected(),
+            projectCollateralFeeCollected
+        );
+        amount = amount + projectCollateralFeeCollected; // Withdraw amount which includes the fee
+
+        _token.mint(address(bondingCurveFundingManager), amount);
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            amount + MIN_RESERVE
+        );
+
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
+        {
+            vm.expectRevert(
+                IFundingManager_v1
+                    .InvalidOrchestratorTokenWithdrawAmount
+                    .selector
+            );
+            bondingCurveFundingManager.transferOrchestratorToken(
+                to, amount + MIN_RESERVE
+            );
+        }
+        vm.stopPrank();
+    }
+
+    function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(
+        address to,
+        uint amount
+    ) public virtual {
+        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
+        amount = bound(amount, 0, type(uint128).max);
+
+        _token.mint(address(bondingCurveFundingManager), amount);
+
+        assertEq(_token.balanceOf(to), 0);
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            amount + bondingCurveFundingManager.MIN_RESERVE()
+        );
+
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+        vm.startPrank(address(_erc20PaymentClientMock));
+        {
+            vm.expectEmit(true, true, true, true);
+            emit IFundingManager_v1.TransferOrchestratorToken(to, amount);
+
+            bondingCurveFundingManager.transferOrchestratorToken(to, amount);
+        }
+        vm.stopPrank();
+
+        assertEq(_token.balanceOf(to), amount);
+        assertEq(
+            _token.balanceOf(address(bondingCurveFundingManager)),
+            bondingCurveFundingManager.MIN_RESERVE()
+        );
     }
 
     //--------------------------------------------------------------------------

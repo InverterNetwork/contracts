@@ -167,9 +167,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
-        // Set token Vault
-        _setTokenVault(_tokenVault);
-
         // Set liquidity vault controller address
         liquidityVaultController =
             ILiquidityVaultController(_liquidityVaultController);
@@ -242,10 +239,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(FM_BC_BondingSurface_Redeeming_v1)
+        override(BondingCurveBase_v1)
         isBuyAndSellRestricted
     {
-        super._buyOrder(_receiver, _depositAmount, _minAmountOut);
+        super.buyFor(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Buy tokens for the sender's address.
@@ -256,10 +253,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(FM_BC_BondingSurface_Redeeming_v1)
-        isBuyAndSellRestricted
+        override(BondingCurveBase_v1)
     {
-        super._buyOrder(_msgSender(), _depositAmount, _minAmountOut);
+        buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
@@ -271,10 +267,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(FM_BC_BondingSurface_Redeeming_v1)
+        override(RedeemingBondingCurveBase_v1)
         isBuyAndSellRestricted
     {
-        super._sellOrder(_receiver, _depositAmount, _minAmountOut);
+        super.sellTo(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @notice Redeem collateral for the sender's address.
@@ -287,10 +283,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(FM_BC_BondingSurface_Redeeming_v1)
-        isBuyAndSellRestricted
+        override(RedeemingBondingCurveBase_v1)
     {
-        super._sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+        sellTo(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -552,5 +547,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @param _workflowFeeAmount The amount of project fee to transfer
     function _projectFeeCollected(uint _workflowFeeAmount) internal override {
         _token.safeTransfer(tokenVault, _workflowFeeAmount);
+        emit ProjectCollateralFeeWithdrawn(tokenVault, _workflowFeeAmount);
     }
 }
