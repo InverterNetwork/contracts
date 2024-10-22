@@ -167,10 +167,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
-        //@todo this does not work, as the address of the simultaneously deployed tokenVault is not known at the point of deployment
-        /* // Set token Vault
-        _setTokenVault(_tokenVault); */
-
         // Set liquidity vault controller address
         liquidityVaultController =
             ILiquidityVaultController(_liquidityVaultController);
@@ -222,7 +218,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     modifier onlyLiquidityVaultController() {
-        //@todo Marvin G couldnt find a test for this
         if (_msgSender() != address(liquidityVaultController)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(

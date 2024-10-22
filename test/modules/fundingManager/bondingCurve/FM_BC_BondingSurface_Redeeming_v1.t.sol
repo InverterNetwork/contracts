@@ -468,7 +468,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
                                 └── and it should emit an event
     */
 
-    function testTransferOrchestratorToken_OnlyPaymentClientModifierSet(
+    function testTransferOrchestratorToken_ModifierInPosition(
         address caller,
         address to,
         uint amount

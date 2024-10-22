@@ -239,6 +239,42 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
     }
 
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /*
+    Test: OnlyLiquidityVaultController Modifier
+    └── Given: the caller is not the liquidityVaultController
+        └── When: the function buy() is called
+            └── Then: it should revert
+     */
+
+    function testOnlyLiquidityVaultControllerModifier(
+        address caller,
+        bool isLiquidityVaultController
+    ) public {
+        vm.assume(caller != liquidityVaultController);
+        if (isLiquidityVaultController) {
+            caller = liquidityVaultController;
+        } else {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                        .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController
+                        .selector,
+                    caller
+                )
+            );
+        }
+
+        vm.prank(caller);
+        bondingCurveFundingManager.exposed_onlyLiquidityVaultControllerModifier(
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // Public Functions
+
     /*
     Test: Init fails for invalid formula
     └── When: the formula in BondingCurveProperties is not a valid BondingSurface formula
