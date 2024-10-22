@@ -1,0 +1,154 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.0;
+
+// Internal Interfaces
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+
+// Internal Dependencies
+import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {MintWrapper} from "src/external/token/MintWrapper.sol";
+
+// External Interfaces
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+/**
+ * @title   Inverter Restricted PIM Factory
+ *
+ * @notice  Used to deploy a PIM workflow with a restricted bonding curve with a
+ *          mechanism to sponsor the required collateral supply and a highly
+ *          opinionated initial configuration.
+ *
+ * @dev     More user-friendly way to deploy a use case-specific PIM workflow
+ *          with an restricted bonding curve. Anyone can sponsor the
+ *          required collateral supply for a bonding curve deployment. Initial
+ *          issuance token supply is minted to the beneficiary. The beneficiary receives
+ *          the role to interact with the curve. Overall control over workflow remains
+ *          with `initialAdmin` of the role authorizer.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @author  Inverter Network
+ */
+interface IRestricted_PIM_Factory_v1 {
+    //--------------------------------------------------------------------------
+    // Structs
+
+    /// @notice Contains all contracts deployed by the factory.
+    /// @param  orchestrator The orchestrator contract.
+    /// @param  issuanceToken The issuance token.
+    /// @param  mintWrapper The wrapper that directly mints from issuance token.
+    struct DeployedContracts {
+        IOrchestrator_v1 orchestrator;
+        ERC20Issuance_v1 issuanceToken;
+        MintWrapper mintWrapper;
+    }
+
+    /// @notice Contains all decoded configuration parameters.
+    /// @param  collateralToken The collateral token.
+    /// @param  initialCollateralSupply The initial collateral supply.
+    /// @param  initialIssuanceSupply The initial issuance supply.
+    /// @param  realAdmin The admin of the workflow.
+    struct DecodedConfigParams {
+        IERC20 collateralToken;
+        uint initialCollateralSupply;
+        uint initialIssuanceSupply;
+        address realAdmin;
+    }
+
+    //--------------------------------------------------------------------------
+    // Errors
+    error InsufficientFunding(uint availableFunding);
+
+    //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Event emitted when a new PIM workflow is created.
+    /// @param orchestrator The address of the orchestrator.
+    /// @param issuanceToken The token issued by the bonding curve.
+    /// @param beneficiary The beneficiary receives initial issuance supply and minting rights.
+    event PIMWorkflowCreated(
+        address indexed orchestrator,
+        address indexed issuanceToken,
+        address indexed beneficiary
+    );
+
+    /// @notice Event emitted when new funding is added.
+    /// @param sponsor Address that pays funding.
+    /// @param beneficiary Address that can use new funding.
+    /// @param token Address of token used for funding.
+    /// @param amount Funding amount.
+    event FundingAdded(
+        address indexed sponsor,
+        address indexed beneficiary,
+        address indexed token,
+        uint amount
+    );
+
+    /// @notice Event emitted when existing funding is removed.
+    /// @param sponsor Address that agreed to pay for funding.
+    /// @param beneficiary Address that could have used the funding.
+    /// @param token Address of token used that would have been used for funding.
+    /// @param amount Funding amount.
+    event FundingRemoved(
+        address indexed sponsor,
+        address indexed beneficiary,
+        address indexed token,
+        uint amount
+    );
+
+    //--------------------------------------------------------------------------
+    // Functions
+
+    /// @notice Returns the amount of funding for a given sponsor, beneficiary and token.
+    /// @param  sponsor The address of the sponsor.
+    /// @param  beneficiary The address of the beneficiary (who can use the funding).
+    /// @param  token The address of the token used for funding.
+    /// @return uint The amount of funding.
+    function fundings(address sponsor, address beneficiary, address token)
+        external
+        view
+        returns (uint);
+
+    /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
+    /// @dev Requires the deployment to have been funded previously via `addFunding`.
+    /// @param workflowConfig The workflow's config data.
+    /// @param fundingManagerConfig The config data for the orchestrator's {IFundingManager_v1} instance.
+    /// @param authorizerConfig The config data for the orchestrator's {IAuthorizer_v1} instance.
+    /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
+    /// @param moduleConfigs Variable length set of optional module's config data.
+    /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
+    /// @param beneficiary The beneficiary of the PIM receives initial supply & holds minting rights).
+    /// @return CreatedOrchestrator Returns the created orchestrator instance.
+    function createPIMWorkflow(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        address beneficiary
+    ) external returns (IOrchestrator_v1);
+
+    /// @notice Adds `amount` of some `token` to factory to be used by some `actor` for a bonding curve deployment.
+    /// @param beneficiary The address that can use the funding for a new bonding curve deployment.
+    /// @param token The token sent to the factory and to be used as collateral token for a bonding curve.
+    /// @param amount The amount of `token` to be provided as initialCollateralSupply.
+    function addFunding(address beneficiary, address token, uint amount)
+        external;
+
+    /// @notice Withdraws an existing funding from the factory.
+    /// @dev Can only be withdrawn by the address that added funding in the first place.
+    /// @param beneficiary The address could have used the funding for a new bonding curve deployment.
+    /// @param token The token that was sent to the factory to be used as collateral token for a bonding curve.
+    /// @param amount The amount of `token` that was provided.
+    function withdrawFunding(address beneficiary, address token, uint amount)
+        external;
+}
