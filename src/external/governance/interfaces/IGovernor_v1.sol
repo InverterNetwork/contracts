@@ -59,6 +59,10 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Events
 
+    /// @notice Event emitted when a new beacon is added to the linked beacons.
+    /// @param  beacon The address of the new beacon.
+    event BeaconAddedToLinkedBeacons(address beacon);
+
     /// @notice Event emitted when a new timelock period for a upgrade of a {IInverterBeacon_v1} is started.
     /// @param  beacon The address of the {IInverterBeacon_v1}.
     /// @param  newImplementation The address of the new Implementation.
