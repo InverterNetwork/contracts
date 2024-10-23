@@ -256,7 +256,7 @@ interface IGovernor_v1 {
     ) external;
 
     //--------------------------------------------------------------------------
-    // Factory Functions
+    // Register Beacons
 
     /// @notice Registers a {IInverterBeacon_v1} with the provided `metadata` in the target {ModuleFactory_v1}.
     /// @dev	Can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
@@ -266,6 +266,11 @@ interface IGovernor_v1 {
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external;
+
+    /// @notice Registers a {IInverterBeacon_v1} as a linked beacon that is not a module.
+    /// @dev	Can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
+    /// @param  beacon The {IInverterBeacon_v1} that will be registered.
+    function registerNonModuleBeacons(IInverterBeacon_v1 beacon) external;
 
     //--------------------------------------------------------------------------
     // Beacon Functions

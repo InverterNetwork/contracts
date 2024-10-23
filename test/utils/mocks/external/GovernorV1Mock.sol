@@ -102,6 +102,8 @@ contract GovernorV1Mock is IGovernor_v1 {
         IInverterBeacon_v1 beacon
     ) external {}
 
+    function registerNonModuleBeacons(IInverterBeacon_v1 beacon) external {}
+
     //--------------------------------------------------------------------------
     // Beacon Functions
 
