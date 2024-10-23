@@ -343,7 +343,7 @@ contract Governor_v1 is
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external onlyCommunityOrTeamMultisig {
-        _addBeaconToLinkedBeacons(beacon); //@todo test?
+        _addBeaconToLinkedBeacons(beacon);
         moduleFactory.registerMetadata(metadata, beacon);
     }
 
@@ -352,7 +352,7 @@ contract Governor_v1 is
         external
         onlyCommunityOrTeamMultisig
     {
-        _addBeaconToLinkedBeacons(beacon); //@note check if module?
+        _addBeaconToLinkedBeacons(beacon);
     }
 
     //--------------------------------------------------------------------------
