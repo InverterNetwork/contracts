@@ -14,6 +14,9 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
     /// @notice No capital is available.
     error FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
 
+    /// @notice The minimum reserve has been reached.
+    error FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+
     //--------------------------------------------------------------------------
     // Events
 

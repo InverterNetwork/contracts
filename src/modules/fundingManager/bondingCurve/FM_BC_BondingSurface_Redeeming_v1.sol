@@ -258,7 +258,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
         // The asset pool must never be empty.
         if (capitalAvailable - redeemAmount < MIN_RESERVE) {
-            redeemAmount = capitalAvailable - MIN_RESERVE;
+            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
     }
 

@@ -74,4 +74,14 @@ contract FM_BC_BondingSurface_RedeemingV1_exposed is
     {
         return projectCollateralFeeCollected = _amount;
     }
+
+    function exposed_formulaTokenIn(
+        uint _depositAmount,
+        uint _capitalAvailable,
+        uint _basePriceToCapitalRatio
+    ) external view returns (uint _redeemAmount) {
+        return formula.tokenIn(
+            _depositAmount, _capitalAvailable, _basePriceToCapitalRatio
+        );
+    }
 }

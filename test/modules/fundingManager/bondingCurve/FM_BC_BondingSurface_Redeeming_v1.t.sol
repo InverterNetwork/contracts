@@ -618,7 +618,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         │       └── Then: it should revert
         ├── Given: (capitalAvailable - redeemAmount) < MIN_RESERVE
         │   └── When: the function _redeemTokensFormulaWrapper() gets called
-        │       └── Then: it should return (capitalAvailable - MIN_RESERVE) instead of redeemAmount
+        │       └── Then: it should revert with FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
         └── Given: (capitalAvailable - redeemAmount) >= MIN_RESERVE
             └── When: the function _redeemTokensFormulaWrapper() gets called
                 └── Then: it should return redeemAmount
@@ -643,24 +643,36 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         );
     }
 
-    function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsCapitalAvailableMinusMinReserve(
+    function testInternalRedeemTokensFormulaWrapper_revertsGivenCapitalAvailableMinusRedeemAmountIsSmallerThanMinReserveIs(
         uint _depositAmount
     ) public {
-        // protect agains overflow
-        _depositAmount = bound(_depositAmount, 1, 1e36 - MIN_RESERVE);
+        // protect agains under/overflow
+        _depositAmount = bound(
+            _depositAmount,
+            1e16,
+            1e36 - bondingCurveFundingManager.exposed_getCapitalAvailable()
+        );
 
-        // Calculate expected return value. Because capital available == MIN_RESERVE, any redeem amount
-        // triggers a change in return value as the balance may never dip below MIN_RESERVE, making the return
-        // value 0
-        uint expectedReturnValue = bondingCurveFundingManager
-            .exposed_getCapitalAvailable() - MIN_RESERVE;
+        uint _capitalAvailable =
+            bondingCurveFundingManager.exposed_getCapitalAvailable();
+
+        uint _redeemAmount = bondingCurveFundingManager.exposed_formulaTokenIn(
+            _depositAmount,
+            _capitalAvailable,
+            bondingCurveFundingManager.basePriceToCapitalRatio()
+        );
+        vm.assume(_capitalAvailable - _redeemAmount < MIN_RESERVE);
+
+        // Execute Tx
+        vm.expectRevert(
+            IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
+                .selector
+        );
 
         // Get return value
         uint functionReturnValue = bondingCurveFundingManager
             .exposed_redeemTokensFormulaWrapper(_depositAmount);
-
-        // Assert equal
-        assertEq(functionReturnValue, expectedReturnValue);
     }
 
     function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsRedeemAmount(
@@ -672,8 +684,20 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
             1e16,
             1e36 - bondingCurveFundingManager.exposed_getCapitalAvailable()
         );
+
         _mintCollateralTokenToAddressHelper(
             address(bondingCurveFundingManager), _depositAmount
+        );
+
+        uint _redeemAmount = bondingCurveFundingManager.exposed_formulaTokenIn(
+            _depositAmount,
+            bondingCurveFundingManager.exposed_getCapitalAvailable(),
+            bondingCurveFundingManager.basePriceToCapitalRatio()
+        );
+
+        vm.assume(
+            bondingCurveFundingManager.exposed_getCapitalAvailable()
+                - _redeemAmount >= MIN_RESERVE
         );
 
         // Get expected return value
