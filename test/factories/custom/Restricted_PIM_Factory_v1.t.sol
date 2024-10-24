@@ -419,26 +419,26 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         assertEq(recordedSponsor, address(0));
     }
 
-    // /* Test createPIMWorkflow
-    //     └── given that the curve creation has been funded
-    //     |   └── when called
-    //     |       └── then it mints initial issuance supply to beneficiary
-    //     |       └── then it transfers initial collateral supply from sponsor to bonding curve
-    //     |       └── then it revokes issuanceToken minting rights from factory
-    //     |       └── then it grants issuanceToken minting rights to mint wrapper
-    //     |       └── then it grants minting minting rights on mint wrapper to bonding curve
-    //     |       └── then it grants curve interaction role to beneficiary
-    //     |       └── then it grants payment pusher role to beneficiary
-    //     |       └── then it transfers ownership of mint wrapper to admin
-    //     |       └── then it renounces ownership of issuance token
-    //     |       └── then it revokes orchestrator admin rights from factory and transfers them to admin
-    //     |       └── then it removes available funding from factory
-    //     |       └── then it resets the sponsor
-    //     |       └── then it emits a PIMWorkflowCreated event
-    //     └── given that there is no funding
-    //     |   └── when called
-    //     |       └── then it reverts
-    // */
+    /* Test createPIMWorkflow
+        └── given that the curve creation has been funded
+        |   └── when called
+        |       └── then it mints initial issuance supply to beneficiary
+        |       └── then it transfers initial collateral supply from sponsor to bonding curve
+        |       └── then it revokes issuanceToken minting rights from factory
+        |       └── then it grants issuanceToken minting rights to mint wrapper
+        |       └── then it grants minting minting rights on mint wrapper to bonding curve
+        |       └── then it grants curve interaction role to beneficiary
+        |       └── then it grants payment pusher role to beneficiary
+        |       └── then it transfers ownership of mint wrapper to admin
+        |       └── then it renounces ownership of issuance token
+        |       └── then it revokes orchestrator admin rights from factory and transfers them to admin
+        |       └── then it removes available funding from factory
+        |       └── then it resets the sponsor
+        |       └── then it emits a PIMWorkflowCreated event
+        └── given that there is no funding
+        |   └── when called
+        |       └── then it reverts
+    */
 
     function testCreatePIMWorkflow_WithFunding() public {
         // add funding
