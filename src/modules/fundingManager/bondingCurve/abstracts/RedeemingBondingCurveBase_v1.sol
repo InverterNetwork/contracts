@@ -258,9 +258,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Add project fee if applicable
         if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
-        } // Add fee amount to total collected fee
+            _projectFeeCollected(projectFeeAmount);
+        }
 
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
