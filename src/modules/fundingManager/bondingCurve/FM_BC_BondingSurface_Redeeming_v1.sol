@@ -96,6 +96,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev (basePriceMultiplier / capitalRequired)
     uint public basePriceToCapitalRatio;
 
+    /// @dev    Storage gap for future upgrades.
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Init Function
 

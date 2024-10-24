@@ -119,6 +119,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev Restricts buying and selling functionalities to specific role.
     bool public buyAndSellIsRestricted;
 
+    /// @dev    Storage gap for future upgrades.
+    uint[50] private __gap;
+
     //--------------------------------------------------------------------------
     // Init Function
 
