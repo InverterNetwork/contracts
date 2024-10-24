@@ -15,6 +15,8 @@ import {IRestricted_PIM_Factory_v1} from
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {LM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
 import {ILM_PC_PaymentRouter_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_PaymentRouter_v1.sol";
 
@@ -324,7 +326,7 @@ contract Restricted_PIM_Factory_v1 is
 
         // assign payment pusher role to beneficiary
         bytes32 paymentPusherRole =
-            ILM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
+            LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
         IModule_v1(paymentRouter).grantModuleRole(
             paymentPusherRole, beneficiary
         );
