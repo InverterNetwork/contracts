@@ -63,9 +63,30 @@ interface IRestricted_PIM_Factory_v1 {
         address realAdmin;
     }
 
+    /// @notice Contains information about a funding.
+    /// @dev The sponsor is stored in this struct (vs in the mapping) to not have
+    ///      the deployer have to know about the sponsor.
+    /// @param  amount The amount of funding.
+    /// @param  sponsor The address of the sponsor.
+    struct Funding {
+        uint amount;
+        address sponsor;
+    }
+
     //--------------------------------------------------------------------------
     // Errors
+
+    /// @notice There is not enough funding for the desired transaction.
+    /// @param  availableFunding Currently available funding.
     error InsufficientFunding(uint availableFunding);
+
+    /// @notice The funding has already been added by a different sponsor.
+    /// @dev This is to prevent a new sponsor adding funding to a previously
+    ///      funded deployment.
+    error FundingAlreadyAddedByDifferentSponsor();
+
+    /// @notice The caller is not authorized to perform the desired action.
+    error NotAuthorized();
 
     //--------------------------------------------------------------------------
     // Events
@@ -81,41 +102,53 @@ interface IRestricted_PIM_Factory_v1 {
     );
 
     /// @notice Event emitted when new funding is added.
-    /// @param sponsor Address that pays funding.
+    /// @param sponsor Address that sponsors the funding.
+    /// @param deployer Address that can do the deployment.
     /// @param beneficiary Address that can use new funding.
+    /// @param admin Address that can interact with the workflow.
     /// @param token Address of token used for funding.
     /// @param amount Funding amount.
     event FundingAdded(
         address indexed sponsor,
+        address indexed deployer,
         address indexed beneficiary,
-        address indexed token,
+        address admin,
+        address token,
         uint amount
     );
 
     /// @notice Event emitted when existing funding is removed.
-    /// @param sponsor Address that agreed to pay for funding.
-    /// @param beneficiary Address that could have used the funding.
-    /// @param token Address of token used that would have been used for funding.
+    /// @param sponsor Address that would have sponsored the funding.
+    /// @param deployer Address that could have done the deployment.
+    /// @param beneficiary Address that could have used new funding.
+    /// @param admin Address that could have interacted with the workflow.
+    /// @param token Address of token used for funding.
     /// @param amount Funding amount.
     event FundingRemoved(
         address indexed sponsor,
+        address indexed deployer,
         address indexed beneficiary,
-        address indexed token,
+        address admin,
+        address token,
         uint amount
     );
 
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Returns the amount of funding for a given sponsor, beneficiary and token.
-    /// @param  sponsor The address of the sponsor.
-    /// @param  beneficiary The address of the beneficiary (who can use the funding).
+    /// @notice Returns an existing Funding.
+    /// @param  deployer The address of the deployer.
+    /// @param  beneficiary The address of the beneficiary (who receives benefits of deployment).
+    /// @param  admin The address of the admin.
     /// @param  token The address of the token used for funding.
-    /// @return uint The amount of funding.
-    function fundings(address sponsor, address beneficiary, address token)
-        external
-        view
-        returns (uint);
+    /// @return amount The amount of funding.
+    /// @return sponsor The address of the sponsor.
+    function fundings(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token
+    ) external view returns (uint amount, address sponsor);
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
     /// @dev Requires the deployment to have been funded previously via `addFunding`.
@@ -138,17 +171,31 @@ interface IRestricted_PIM_Factory_v1 {
     ) external returns (IOrchestrator_v1);
 
     /// @notice Adds `amount` of some `token` to factory to be used by some `actor` for a bonding curve deployment.
-    /// @param beneficiary The address that can use the funding for a new bonding curve deployment.
-    /// @param token The token sent to the factory and to be used as collateral token for a bonding curve.
+    /// @param deployer The address that can do the deployment.
+    /// @param beneficiary The address that can use the funding.
+    /// @param admin The address that controls the workflow.
+    /// @param token The token used for funding.
     /// @param amount The amount of `token` to be provided as initialCollateralSupply.
-    function addFunding(address beneficiary, address token, uint amount)
-        external;
+    function addFunding(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token,
+        uint amount
+    ) external;
 
     /// @notice Withdraws an existing funding from the factory.
     /// @dev Can only be withdrawn by the address that added funding in the first place.
-    /// @param beneficiary The address could have used the funding for a new bonding curve deployment.
-    /// @param token The token that was sent to the factory to be used as collateral token for a bonding curve.
-    /// @param amount The amount of `token` that was provided.
-    function withdrawFunding(address beneficiary, address token, uint amount)
-        external;
+    /// @param deployer The address that could have dobe the deployment.
+    /// @param beneficiary The address that could have used the funding.
+    /// @param admin The address that would have controlled the workflow.
+    /// @param token The token supposed to be used for funding.
+    /// @param amount The amount of `token` to be withdrawn.
+    function withdrawFunding(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token,
+        uint amount
+    ) external;
 }

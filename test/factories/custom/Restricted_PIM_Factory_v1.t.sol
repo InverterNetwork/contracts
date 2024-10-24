@@ -25,6 +25,8 @@ import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IOwnable} from "@ex/interfaces/IOwnable.sol";
 import {ILM_PC_PaymentRouter_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
@@ -45,12 +47,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
-    address beneficiary = vm.addr(69);
 
     // addresses
-    address admin = vm.addr(420);
-    address actor = address(this);
-    address sponsor = vm.addr(1);
+    address sponsor = vm.addr(420);
+    address deployer = address(this);
+    address beneficiary = vm.addr(69);
+    address admin = vm.addr(666);
     address mockTrustedForwarder = vm.addr(3);
 
     // bc params
@@ -122,84 +124,299 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             maxSupply: type(uint).max - 1
         });
 
-        // mint collateral token to deployer and approve to factory
-        token.mint(admin, type(uint).max);
+        // mint collateral token to sponsor
+        token.mint(sponsor, type(uint).max);
     }
 
     /* Test addFunding
         └── given that token has been approved
         |   └── when called
         |       └── then it sends collateral tokens from sender to factory
+        |       └── then records the funding amount
         |       └── then emits an event
         └── given that token has NOT been approved
             └── when called
                 └── then it reverts
     */
     function testAddFunding() public {
-        vm.startPrank(admin);
+        vm.startPrank(sponsor);
 
         token.approve(address(factory), initialCollateralSupply);
 
         // CHECK: event is emitted
         vm.expectEmit(true, true, true, true);
         emit IRestricted_PIM_Factory_v1.FundingAdded(
-            admin, actor, address(token), initialCollateralSupply
+            sponsor,
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
         );
 
-        factory.addFunding(actor, address(token), initialCollateralSupply);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
 
+        // CHECK: funding amount is recorded
+        (uint amount, address recordedSponsor) =
+            factory.fundings(deployer, beneficiary, admin, address(token));
+        assertEq(amount, initialCollateralSupply);
+        assertEq(recordedSponsor, sponsor);
         // CHECK: factory HOLDS collateral tokens
         assertEq(token.balanceOf(address(factory)), initialCollateralSupply);
         vm.stopPrank();
     }
 
     function testAddFunding_WithoutApproval() public {
-        vm.startPrank(admin);
+        vm.startPrank(sponsor);
         vm.expectRevert();
-        factory.addFunding(actor, address(token), initialCollateralSupply);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
+    }
+
+    function testAddFunding_MultipleTimes() public {
+        vm.startPrank(sponsor);
+
+        uint firstAmount = 10;
+        uint secondAmount = 10;
+
+        // First funding
+        token.approve(address(factory), firstAmount);
+        factory.addFunding(
+            deployer, beneficiary, admin, address(token), firstAmount
+        );
+
+        // Second funding
+        token.approve(address(factory), secondAmount);
+        factory.addFunding(
+            deployer, beneficiary, admin, address(token), secondAmount
+        );
+
+        // CHECK: total funding amount is recorded correctly
+        (uint amount,) =
+            factory.fundings(deployer, beneficiary, admin, address(token));
+        assertEq(amount, firstAmount + secondAmount);
+
+        // CHECK: factory HOLDS total collateral tokens
+        assertEq(token.balanceOf(address(factory)), firstAmount + secondAmount);
+        vm.stopPrank();
+    }
+
+    function testAddFunding_DifferentSponsor() public {
+        // First sponsor adds funding
+        vm.startPrank(sponsor);
+        token.approve(address(factory), initialCollateralSupply / 2);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply / 2
+        );
+        vm.stopPrank();
+
+        // Different sponsor tries to add funding
+        address differentSponsor = address(0x123);
+        vm.startPrank(differentSponsor);
+        deal(address(token), differentSponsor, initialCollateralSupply / 2);
+        token.approve(address(factory), initialCollateralSupply / 2);
+
+        vm.expectRevert(
+            IRestricted_PIM_Factory_v1
+                .FundingAlreadyAddedByDifferentSponsor
+                .selector
+        );
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply / 2
+        );
+        vm.stopPrank();
     }
 
     /* Test withdrawFunding
         └── given that caller had added funding before
         |   └── when called
         |       └── then it withdraws tokens from factory
+        |       └── then it adjusts the funding amount as recorded on the contract
         |       └── then emits an event
         └── given that caller had NOT added funding before (trying to steal someones funding)
             └── when called
                 └── then it reverts
     */
-    function testWithdrawFunding() public {
-        vm.startPrank(admin);
+
+    function testWithdrawFunding_Completely() public {
+        vm.startPrank(sponsor);
         token.approve(address(factory), initialCollateralSupply);
-        factory.addFunding(actor, address(token), initialCollateralSupply);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
 
         // CHECK: event is emitted
         vm.expectEmit(true, true, true, true);
         emit IRestricted_PIM_Factory_v1.FundingRemoved(
-            admin, actor, address(token), initialCollateralSupply
+            sponsor,
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
         );
 
         // CHECK: factory DOES NOT hold collateral tokens
-        factory.withdrawFunding(actor, address(token), initialCollateralSupply);
+        factory.withdrawFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
         assertEq(token.balanceOf(address(factory)), 0);
+
+        // CHECK: funding amount is adjusted on contract
+        (uint amount, address recordedSponsor) =
+            factory.fundings(deployer, beneficiary, admin, address(token));
+        assertEq(amount, 0);
+
+        // CHECK: sponsor is set to zero
+        assertEq(recordedSponsor, address(0));
         vm.stopPrank();
     }
 
-    function testWithdrawFunding_AsThief() public {
-        vm.startPrank(admin);
+    function testWithdrawFunding_Partially() public {
+        uint partialWithdrawalAmount = initialCollateralSupply / 2;
+
+        vm.startPrank(sponsor);
         token.approve(address(factory), initialCollateralSupply);
-        factory.addFunding(actor, address(token), initialCollateralSupply);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
+
+        // CHECK: event is emitted
+        vm.expectEmit(true, true, true, true);
+        emit IRestricted_PIM_Factory_v1.FundingRemoved(
+            sponsor,
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            partialWithdrawalAmount
+        );
+
+        // Perform partial withdrawal
+        factory.withdrawFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            partialWithdrawalAmount
+        );
+
+        // CHECK: factory holds remaining collateral tokens
+        assertEq(
+            token.balanceOf(address(factory)),
+            initialCollateralSupply - partialWithdrawalAmount
+        );
+
+        // CHECK: funding amount is adjusted on contract
+        (uint remainingAmount, address recordedSponsor) =
+            factory.fundings(deployer, beneficiary, admin, address(token));
+        assertEq(
+            remainingAmount, initialCollateralSupply - partialWithdrawalAmount
+        );
+
+        // CHECK: sponsor is still set
+        assertEq(recordedSponsor, sponsor);
+
+        vm.stopPrank();
+    }
+
+    function testWithdrawFunding_OnlySponsorCanWithdraw() public {
+        // Setup: Add funding
+        vm.startPrank(sponsor);
+        token.approve(address(factory), initialCollateralSupply);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
         vm.stopPrank();
 
-        address thief = vm.addr(69);
-        vm.startPrank(thief);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 0
-            )
+        // Attempt to withdraw as non-sponsor
+        vm.startPrank(deployer);
+        vm.expectRevert(IRestricted_PIM_Factory_v1.NotAuthorized.selector);
+        factory.withdrawFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
         );
-        factory.withdrawFunding(actor, address(token), initialCollateralSupply);
         vm.stopPrank();
+
+        // Attempt to withdraw as beneficiary
+        vm.startPrank(beneficiary);
+        vm.expectRevert(IRestricted_PIM_Factory_v1.NotAuthorized.selector);
+        factory.withdrawFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
+        vm.stopPrank();
+
+        // Attempt to withdraw as admin
+        vm.startPrank(admin);
+        vm.expectRevert(IRestricted_PIM_Factory_v1.NotAuthorized.selector);
+        factory.withdrawFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
+        vm.stopPrank();
+
+        // Successful withdrawal as sponsor
+        vm.startPrank(sponsor);
+        factory.withdrawFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
+        vm.stopPrank();
+
+        // CHECK: Funding is completely withdrawn
+        (uint remainingAmount, address recordedSponsor) =
+            factory.fundings(deployer, beneficiary, admin, address(token));
+        assertEq(remainingAmount, 0);
+        // CHECK: sponsor is reset
+        assertEq(recordedSponsor, address(0));
     }
 
     /* Test createPIMWorkflow
@@ -215,6 +432,8 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         |       └── then it transfers ownership of mint wrapper to admin
         |       └── then it renounces ownership of issuance token
         |       └── then it revokes orchestrator admin rights from factory and transfers them to admin
+        |       └── then it removes available funding from factory
+        |       └── then it resets the sponsor
         |       └── then it emits a PIMWorkflowCreated event
         └── given that there is no funding
         |   └── when called
@@ -223,11 +442,18 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
     function testCreatePIMWorkflow_WithFunding() public {
         // add funding
-        vm.startPrank(admin);
+        vm.startPrank(sponsor);
         token.approve(address(factory), initialCollateralSupply);
-        factory.addFunding(beneficiary, address(token), initialCollateralSupply);
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
         vm.stopPrank();
 
+        vm.startPrank(deployer);
         // start recording logs
         vm.recordLogs();
         IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
@@ -240,6 +466,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             beneficiary
         );
         Vm.Log[] memory logs = vm.getRecordedLogs();
+        vm.stopPrank();
         // get issuance token address from event
         (bool emitted, bytes32 eventTopic) = eventHelpers.getEventTopic(
             IRestricted_PIM_Factory_v1.PIMWorkflowCreated.selector, logs, 2
@@ -265,8 +492,14 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             token.balanceOf(fundingManager),
             bcProperties.initialCollateralSupply
         );
-        // CHECK: factory DOES NOT have minting rights on token anymore
+        // CHECK: factory DOES NOT have minting rights on token
         assertFalse(issuanceToken.allowedMinters(address(factory)));
+        // CHECK: factory DOES NOT have minting rights on mint wrapper
+        assertFalse(
+            IERC20Issuance_v1(mintWrapperAddress).allowedMinters(
+                address(factory)
+            )
+        );
         // CHECK: mint wrapper HAS minting rights on token
         assertTrue(issuanceToken.allowedMinters(mintWrapperAddress));
         // CHECK: bonding curve HAS minting rights on mint wrapper
@@ -297,7 +530,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             }
         }
         bytes32 paymentPusherRole =
-            ILM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
+            LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
         bytes32 paymentPusherRoleId = orchestrator.authorizer().generateRoleId(
             paymentRouter, paymentPusherRole
         );
@@ -317,6 +550,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         assertFalse(
             orchestrator.authorizer().hasRole(adminRole, address(factory))
         );
+        // CHECK: available funding is removed from factory
+        (uint amount, address recordedSponsor) =
+            factory.fundings(deployer, beneficiary, admin, address(token));
+        assertEq(amount, 0);
+        // CHECK: sponsor is reset
+        assertEq(recordedSponsor, address(0));
     }
 
     function testCreatePIMWorkflow_WithoutFunding() public {
