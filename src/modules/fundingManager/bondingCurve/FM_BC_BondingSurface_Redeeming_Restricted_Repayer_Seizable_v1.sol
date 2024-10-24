@@ -330,6 +330,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         __Module_orchestrator.fundingManager().token().safeTransfer(
             _to, _amount
         );
+        if (MIN_RESERVE > token().balanceOf(address(this))) {
+            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+        }
+
         emit RepaymentTransfer(_to, _amount);
     }
 

@@ -753,6 +753,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
                 ├── And: the _amount > the repayable amount available
                 │   └── When: the function transferRepayment() gets called
                 │       └── Then: it should revert
+                ├── And: the _amount > the repayable amount available
+                │   └── When: the function transferRepayment() gets called
+                │       └── Then: it should revert
                 └── And: _amount <= repayable amount available
                     └── When: the function transferRepayment() gets called
                         └── Then: it should transfer _amount to the _to address
@@ -841,6 +844,37 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
             );
             bondingCurveFundingManager.transferRepayment(_to, _amount);
         }
+    }
+
+    function testTransferPayment_revertGivenMinReserveIsReached(
+        address _to,
+        uint _amount
+    ) public {
+        // Valid _to address
+        vm.assume(
+            _to != liquidityVaultController
+                && _to != address(bondingCurveFundingManager) && _to != address(0)
+        );
+        _amount = bound(_amount, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+
+        // Setup
+        // set and mint the amount needed for this test.
+        _mintCollateralTokenToAddressHelper(
+            address(bondingCurveFundingManager), _amount
+        );
+        // Set capital requirement
+        bondingCurveFundingManager.setCapitalRequired(_amount + MIN_RESERVE);
+        // Set repayable amount
+        bondingCurveFundingManager.setRepayableAmount(_amount + MIN_RESERVE);
+
+        // Execute Tx
+        vm.prank(liquidityVaultController);
+        vm.expectRevert(
+            IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
+                .selector
+        );
+        bondingCurveFundingManager.transferRepayment(_to, _amount + MIN_RESERVE);
     }
 
     function testTransferPayment_worksGivenCallerIsLvcAndAmountIsValid(
