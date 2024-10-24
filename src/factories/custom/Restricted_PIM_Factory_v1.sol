@@ -71,9 +71,13 @@ contract Restricted_PIM_Factory_v1 is
     address public immutable orchestratorFactory;
     // Stores available fundings.
     mapping(
-        address sponsor
+        address deployer
             => mapping(
-                address beneficiary => mapping(address token => uint amount)
+                address beneficiary
+                    => mapping(
+                        address admin
+                            => mapping(address token => Funding funding)
+                    )
             )
     ) public fundings;
 
@@ -125,37 +129,65 @@ contract Restricted_PIM_Factory_v1 is
     }
 
     /// @inheritdoc IRestricted_PIM_Factory_v1
-    function addFunding(address beneficiary, address token, uint amount)
-        external
-    {
+    function addFunding(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token,
+        uint amount
+    ) external {
+        Funding storage funding = fundings[deployer][beneficiary][admin][token];
+        if (funding.sponsor != address(0) && funding.sponsor != _msgSender()) {
+            revert
+                IRestricted_PIM_Factory_v1
+                .FundingAlreadyAddedByDifferentSponsor();
+        }
+
         // records funding amount
-        fundings[_msgSender()][beneficiary][token] += amount;
+        funding.amount += amount;
+        funding.sponsor = _msgSender();
         // sends amount from msg.sender to factory
         IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
 
         emit IRestricted_PIM_Factory_v1.FundingAdded(
-            _msgSender(), beneficiary, token, amount
+            _msgSender(), deployer, beneficiary, admin, token, amount
         );
     }
 
     /// @inheritdoc IRestricted_PIM_Factory_v1
-    function withdrawFunding(address beneficiary, address token, uint amount)
-        external
-    {
+    function withdrawFunding(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token,
+        uint amount
+    ) external {
         // checks if the requested amount is available
-        uint availableFunding = fundings[_msgSender()][beneficiary][token];
-        if (amount > availableFunding) {
+        Funding storage funding = fundings[deployer][beneficiary][admin][token];
+
+        if (amount > funding.amount) {
             revert IRestricted_PIM_Factory_v1.InsufficientFunding(
-                availableFunding
+                funding.amount
             );
         }
+
+        if (_msgSender() != funding.sponsor) {
+            revert IRestricted_PIM_Factory_v1.NotAuthorized();
+        }
+
         // if so adjusts internal balancing
-        fundings[_msgSender()][beneficiary][token] -= amount;
+        funding.amount -= amount;
+
+        // if complete withdrawal, reset sponsor
+        if (funding.amount == 0) {
+            funding.sponsor = address(0);
+        }
+
         // and sends amount to msg sender
         IERC20(token).safeTransfer(_msgSender(), amount);
 
         emit IRestricted_PIM_Factory_v1.FundingRemoved(
-            _msgSender(), beneficiary, token, amount
+            _msgSender(), deployer, beneficiary, admin, token, amount
         );
     }
 
@@ -317,17 +349,19 @@ contract Restricted_PIM_Factory_v1 is
         address admin,
         address beneficiary
     ) private {
-        uint availableFunding =
-            fundings[admin][beneficiary][address(collateralToken)];
+        Funding storage funding =
+            fundings[_msgSender()][beneficiary][admin][address(collateralToken)];
 
-        if (availableFunding < initialCollateralSupply) {
+        if (funding.amount < initialCollateralSupply) {
             revert IRestricted_PIM_Factory_v1.InsufficientFunding(
-                availableFunding
+                funding.amount
             );
         }
 
-        fundings[admin][beneficiary][address(collateralToken)] -=
-            initialCollateralSupply;
+        funding.amount -= initialCollateralSupply;
+        if (funding.amount == 0) {
+            funding.sponsor = address(0);
+        }
 
         // collateral token funding needs to be sponsored beforehand
         collateralToken.safeTransfer(
