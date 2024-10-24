@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 interface IFundingManager_v1 {
+    /// @notice Funding manager does not hold the amount of collateral the payment client tries to transfer.
+    error InvalidOrchestratorTokenWithdrawAmount();
+
     //--------------------------------------------------------------------------
     // Events
 

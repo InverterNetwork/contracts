@@ -55,9 +55,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address buyer
     );
     event IssuanceTokenSet(address indexed token, uint8 decimals);
-    event ProtocolFeeTransferred(
-        address indexed token, address indexed treasury, uint feeAmount
-    );
+
     event ProtocolFeeMinted(
         address indexed token, address indexed treasury, uint feeAmount
     );
@@ -384,6 +382,16 @@ contract BondingCurveBaseV1Test is ModuleTest {
             amountAfterFirstFeeCollection, _issuanceFee, 0
         );
 
+        if (projectCollateralFeeAmount != 0) {
+            // Emit event
+            vm.expectEmit(
+                true, true, true, true, address(bondingCurveFundingManager)
+            );
+            emit IBondingCurveBase_v1.ProjectCollateralFeeAdded(
+                projectCollateralFeeAmount
+            );
+        }
+
         // Emit event
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
@@ -602,7 +610,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit ProtocolFeeTransferred(address(_token), treasury, _feeAmount);
+        emit IModule_v1.ProtocolFeeTransferred(
+            address(_token), treasury, _feeAmount
+        );
         // Function call
         bondingCurveFundingManager.call_processProtocolFeeViaTransfer(
             treasury, IERC20(_token), _feeAmount
@@ -1189,6 +1199,28 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         bondingCurveFundingManager.call_ensureNonZeroTradeParameters(
             _depositAmount, _minAmountOut
+        );
+    }
+
+    /*  Test internal _projectFeeCollected()
+        └── When the function _projectFeeCollected() gets called
+            └── Then the _workflowFeeAmount will be added to the projectCollateralFeeCollected
+    */
+    function testInternalProjectFeeCollected_works(uint _workflowFeeAmount)
+        public
+    {
+        uint currentFeeCollected =
+            bondingCurveFundingManager.projectCollateralFeeCollected();
+
+        // Execute Tx
+        bondingCurveFundingManager.exposed_projectFeeCollected(
+            _workflowFeeAmount
+        );
+
+        // Assert that the fee amount got added to the projectCollateralFeeCollected
+        assertEq(
+            bondingCurveFundingManager.projectCollateralFeeCollected(),
+            currentFeeCollected + _workflowFeeAmount
         );
     }
 
