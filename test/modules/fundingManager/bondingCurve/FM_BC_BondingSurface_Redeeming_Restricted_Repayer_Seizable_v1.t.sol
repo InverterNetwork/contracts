@@ -76,7 +76,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
     bytes32 private constant RISK_MANAGER_ROLE = "RISK_MANAGER";
     bytes32 private constant COVER_MANAGER_ROLE = "COVER_MANAGER";
 
-    uint private constant MIN_RESERVE = 1 ether;
+    uint private MIN_RESERVE = 10 ** _token.decimals();
     uint64 private constant MAX_SEIZE = 100;
     uint64 private constant MAX_SELL_FEE = 100;
     uint private constant BASE_PRICE_MULTIPLIER = 0.000001 ether;
@@ -166,6 +166,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
             CURVE_INTERACTION_ROLE, targets
         );
     }
+
     //--------------------------------------------------------------------------
     // Test: Initialization
 
@@ -189,6 +190,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
             address(bondingCurveFundingManager.token()),
             address(_token),
             "Collateral token not set correctly"
+        );
+        // MIN_RESERVE
+        assertEq(
+            bondingCurveFundingManager.MIN_RESERVE(),
+            MIN_RESERVE,
+            "MIN_RESERVE has not been set correctly"
         );
         // Buy/Sell conditions
         assertEq(
@@ -239,6 +246,71 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
     function testReinitFails() public override {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         bondingCurveFundingManager.init(_orchestrator, _METADATA, abi.encode());
+    }
+
+    /*
+    Test: Init
+    └── Given: decimals are not 18
+        └── When: the function init is called
+            └── Then: it should adapt the MIN_RESERVE accordingly
+    */
+
+    function testInit_GivenDecimalsAreNot18(uint8 decimals) public {
+        //uint 256 only has 77 Decimals
+        if (decimals == 1 || decimals > 77) decimals = 1;
+
+        // set new decimals
+        _token.setDecimals(decimals);
+
+        // Setup bondingCurve properties
+        IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
+            bc_properties;
+
+        // Deploy formula and cast to address for encoding
+        BondingSurface bondingSurface = new BondingSurface();
+        formula = address(bondingSurface);
+
+        // Set Formula contract properties
+        bc_properties.formula = formula;
+        bc_properties.capitalRequired = CAPITAL_REQUIREMENT;
+        bc_properties.basePriceMultiplier = BASE_PRICE_MULTIPLIER;
+
+        // Set pAMM properties
+        bc_properties.buyIsOpen = BUY_IS_OPEN;
+        bc_properties.sellIsOpen = SELL_IS_OPEN;
+        bc_properties.buyFee = BUY_FEE;
+        bc_properties.sellFee = SELL_FEE;
+
+        address impl = address(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            )
+        );
+
+        bondingCurveFundingManager =
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            Clones.clone(impl)
+        );
+
+        bondingCurveFundingManager.init(
+            _orchestrator,
+            _METADATA,
+            abi.encode(
+                address(issuanceToken),
+                address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
+                address(tokenVault),
+                liquidityVaultController,
+                bc_properties,
+                MAX_SEIZE,
+                BUY_AND_SELL_IS_RESTRICTED
+            )
+        );
+
+        //assert that MIN_RESERVE is set correctly
+        assertEq(
+            bondingCurveFundingManager.MIN_RESERVE(),
+            10 ** decimals,
+            "MIN_RESERVE has not been set correctly"
+        );
     }
 
     //--------------------------------------------------------------------------

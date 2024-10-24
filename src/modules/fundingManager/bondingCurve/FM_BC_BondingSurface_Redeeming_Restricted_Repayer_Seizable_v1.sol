@@ -167,6 +167,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         // Set accepted token
         _token = IERC20(_acceptedToken);
 
+        // MIN_RESERVE is in dependency to the decimals of the workflow token
+        MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
+
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(_issuanceToken));
 
