@@ -190,7 +190,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         // Set base price multiplier
         _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
         // Set buy fee
-        _setBuyFee(0);
+        _setBuyFee(bondingCurveProperties.buyFee);
         // Set sell fee
         _setSellFee(bondingCurveProperties.sellFee);
         // Set buying functionality to open if true. By default buying is false
@@ -432,17 +432,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             address(_lvc), address(liquidityVaultController)
         );
         liquidityVaultController = _lvc;
-    }
-
-    /// @notice Disabled function for setting the buy fee
-    function setBuyFee(uint /*_fee*/ )
-        external
-        pure
-        override(BondingCurveBase_v1)
-    {
-        revert
-            FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
-        );
     }
 
     //--------------------------------------------------------------------------

@@ -66,6 +66,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
     uint internal constant MAX_SUPPLY = type(uint).max;
     uint private constant CAPITAL_REQUIREMENT = 1_000_000 * 1e18; // Taken from Topos repo test case
 
+    uint private constant BUY_FEE = 100;
     uint private constant SELL_FEE = 100;
     bool private constant BUY_IS_OPEN = true;
     bool private constant SELL_IS_OPEN = true;
@@ -118,6 +119,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         // Set pAMM properties
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
+        bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
 
         address impl = address(
@@ -196,7 +198,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         );
         assertEq(
             bondingCurveFundingManager.buyFee(),
-            0,
+            BUY_FEE,
             "Buy fee has not been set correctly"
         );
         assertEq(
@@ -1175,22 +1177,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.setSellFee(_fee);
 
         assertEq(bondingCurveFundingManager.sellFee(), _fee);
-    }
-
-    /*  Test setBuyFee()
-        └──  When the function setBuyFee() gets called
-            └── Then it should revert
-    */
-
-    function testSetBuyFee_revert() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality
-                    .selector
-            )
-        );
-        bondingCurveFundingManager.setBuyFee(1);
     }
 
     /*  Test setRepayableAmount()
