@@ -32,8 +32,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed is
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
-    function exposed_isBuyAndSellRestrictedModifier() external view {
-        _isBuyAndSellRestrictedModifier();
+    function exposed_checkBuyAndSellRestrictionsModifier() external view {
+        _checkBuyAndSellRestrictionsModifier();
     }
 
     function exposed_getRepayableAmount() external view returns (uint) {

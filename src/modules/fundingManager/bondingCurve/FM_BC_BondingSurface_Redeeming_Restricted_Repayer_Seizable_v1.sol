@@ -212,8 +212,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    modifier isBuyAndSellRestricted() {
-        _isBuyAndSellRestrictedModifier();
+    modifier checkBuyAndSellRestrictions() {
+        _checkBuyAndSellRestrictionsModifier();
         _;
     }
 
@@ -240,7 +240,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         public
         virtual
         override(BondingCurveBase_v1)
-        isBuyAndSellRestricted
+        checkBuyAndSellRestrictions
     {
         super.buyFor(_receiver, _depositAmount, _minAmountOut);
     }
@@ -268,7 +268,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
-        isBuyAndSellRestricted
+        checkBuyAndSellRestrictions
     {
         super.sellTo(_receiver, _depositAmount, _minAmountOut);
     }
@@ -541,7 +541,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @dev    Validate if buy and sell is restricted, and if so
     ///         check if the caller has the CURVE_INTERACTION_ROLE
-    function _isBuyAndSellRestrictedModifier() internal view {
+    function _checkBuyAndSellRestrictionsModifier() internal view {
         if (buyAndSellIsRestricted) {
             _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }

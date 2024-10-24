@@ -345,12 +345,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
 
     /*  Test buy() & buyFor() functions
         Please Note: The functions have been extensively tested in the BondingCurveBase_v1.t contract. These
-        tests only check for the placement of the isBuyAndSellRestricted() modifier
-        ├── Given the modifier isBuyAndSellRestricted() is in place
+        tests only check for the placement of the checkBuyAndSellRestrictions() modifier
+        ├── Given the modifier checkBuyAndSellRestrictions() is in place
         │   └── And the modifier condition isn't met
         │       ├── When the function buy() is called
         │       └── Then it should revert
-        └── Given the modifier isBuyAndSellRestricted() is in place
+        └── Given the modifier checkBuyAndSellRestrictions() is in place
             └── And the modifier condition isn't met
                 └── When the function buyFor() is called
                     └── Then it should revert
@@ -474,14 +474,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         bondingCurveFundingManager.restrictBuyAndSell();
     }
 
-    /*  Test internal _isBuyAndSellRestrictedModifier() function
+    /*  Test internal _checkBuyAndSellRestrictionsModifier() function
         └── Given buy and selling is restricted
             └── And the msg.sender does not have the CURVE_INTERACTION_ROLE
-                └── When the function _isBuyAndSellRestrictedModifier() is called
+                └── When the function _checkBuyAndSellRestrictionsModifier() is called
                     └── Then it should revert
     */
 
-    function testInternalIsBuyAndSellRestrictedModifier_revertGivenCallerHasNotCoverManagerRole(
+    function testInternalcheckBuyAndSellRestrictionsModifier_revertGivenCallerHasNotCoverManagerRole(
     ) public {
         // Setup
         bondingCurveFundingManager.restrictBuyAndSell();
@@ -496,7 +496,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
             )
         );
         vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.exposed_isBuyAndSellRestrictedModifier();
+        bondingCurveFundingManager.exposed_checkBuyAndSellRestrictionsModifier();
     }
 
     /*  Test burnIssuanceToken()
