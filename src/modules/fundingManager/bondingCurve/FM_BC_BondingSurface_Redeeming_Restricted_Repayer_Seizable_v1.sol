@@ -379,7 +379,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         }
 
         // solhint-disable-next-line not-rely-on-time
-        lastSeizeTimestamp = uint64(block.timestamp);
+        lastSeizeTimestamp = block.timestamp;
         _token.transfer(_msgSender(), _amount);
         emit CollateralSeized(_amount);
     }
