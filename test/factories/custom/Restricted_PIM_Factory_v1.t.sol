@@ -25,6 +25,8 @@ import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 import {IOwnable} from "@ex/interfaces/IOwnable.sol";
 import {ILM_PC_PaymentRouter_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
@@ -528,7 +530,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             }
         }
         bytes32 paymentPusherRole =
-            ILM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
+            LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE();
         bytes32 paymentPusherRoleId = orchestrator.authorizer().generateRoleId(
             paymentRouter, paymentPusherRole
         );
