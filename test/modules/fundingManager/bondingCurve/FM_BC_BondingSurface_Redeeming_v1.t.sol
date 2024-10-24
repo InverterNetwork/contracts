@@ -462,6 +462,9 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
                     ├── and the withdraw amount + project collateral fee > FM collateral token balance
                     │   └── when the function transferOrchestratorToken() gets called
                     │       └── then it should revert
+                    ├── and FM collateral token balance < MIN_RESERVE
+                    │   └── when the function transferOrchestratorToken() gets called
+                    │       └── then it should revert with FM_BC_BondingSurface_Redeeming_v1__MinReserveReached //@todo 
                     └── and the FM has enough collateral token for amount to be transferred
                             when the function transferOrchestratorToken() gets called
                             └── then is should send the funds to the specified address
@@ -520,6 +523,33 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
             );
         }
         vm.stopPrank();
+    }
+
+    function testTransferOrchestratorToken_FailsGivenMinReserveIsReached(
+        address to,
+        uint amount
+    ) public virtual {
+        vm.assume(to != address(0) && to != address(bondingCurveFundingManager));
+        amount = bound(
+            amount, bondingCurveFundingManager.MIN_RESERVE(), type(uint128).max
+        );
+
+        _token.mint(
+            address(bondingCurveFundingManager),
+            amount - bondingCurveFundingManager.MIN_RESERVE()
+        );
+
+        // Add logic module to workflow to pass modifier
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
+
+        vm.expectRevert(
+            IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
+                .selector
+        );
+        vm.prank(address(_erc20PaymentClientMock));
+        bondingCurveFundingManager.transferOrchestratorToken(to, amount);
     }
 
     function testTransferOrchestratorToken_WorksGivenFunctionGetsCalled(

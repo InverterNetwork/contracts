@@ -277,7 +277,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         ) {
             revert InvalidOrchestratorTokenWithdrawAmount();
         }
+
         token().safeTransfer(to, amount);
+
+        if (MIN_RESERVE > token().balanceOf(address(this))) {
+            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+        }
 
         emit TransferOrchestratorToken(to, amount);
     }
