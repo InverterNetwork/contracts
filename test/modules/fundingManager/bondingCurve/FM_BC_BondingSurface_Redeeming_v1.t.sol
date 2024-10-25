@@ -437,19 +437,14 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     }
 
     function testSetCapitalRequired_revertGivenAmountIsInvalid() public {
-        uint newCapitalRequired = 1 ether;
-
-        // Execute Tx
-        {
-            vm.expectRevert(
-                abi.encodeWithSelector(
-                    IFM_BC_BondingSurface_Redeeming_v1
-                        .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
-                        .selector
-                )
-            );
-            bondingCurveFundingManager.setCapitalRequired(0);
-        }
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_v1
+                    .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.setCapitalRequired(0);
     }
 
     function testSetCapitalRequired_worksGivenCallerHasRiskManagerRole(
@@ -768,9 +763,9 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
                 .selector
         );
 
-        // Get return value
-        uint functionReturnValue = bondingCurveFundingManager
-            .exposed_redeemTokensFormulaWrapper(_depositAmount);
+        bondingCurveFundingManager.exposed_redeemTokensFormulaWrapper(
+            _depositAmount
+        );
     }
 
     function testInternalRedeemTokensFormulaWrapper_worksGivenItReturnsRedeemAmount(
