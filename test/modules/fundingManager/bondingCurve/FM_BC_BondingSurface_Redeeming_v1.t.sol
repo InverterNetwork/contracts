@@ -359,8 +359,11 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         }
 
         // Use expected value from internal function
-        uint expectedReturnValue =
-            bondingCurveFundingManager.exposed_issueTokensFormulaWrapper(1);
+        uint expectedReturnValue = BondingSurface(formula).spotPrice(
+            bondingCurveFundingManager.exposed_getCapitalAvailable(),
+            bondingCurveFundingManager.capitalRequired(),
+            bondingCurveFundingManager.basePriceMultiplier()
+        );
 
         // Actual return value
         uint functionReturnValue =
@@ -384,8 +387,11 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         }
 
         // Use expected value from internal function
-        uint expectedReturnValue =
-            bondingCurveFundingManager.exposed_redeemTokensFormulaWrapper(1);
+        uint expectedReturnValue = BondingSurface(formula).spotPrice(
+            bondingCurveFundingManager.exposed_getCapitalAvailable(),
+            bondingCurveFundingManager.capitalRequired(),
+            bondingCurveFundingManager.basePriceMultiplier()
+        );
 
         // Actual return value
         uint functionReturnValue =

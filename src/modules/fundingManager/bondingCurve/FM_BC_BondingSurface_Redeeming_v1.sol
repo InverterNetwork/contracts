@@ -177,7 +177,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         override(BondingCurveBase_v1)
         returns (uint)
     {
-        return _issueTokensFormulaWrapper(1);
+        return formula.spotPrice(
+            _getCapitalAvailable(), capitalRequired, basePriceMultiplier
+        );
     }
 
     /// @notice Calculates and returns the static price for selling the issuance token.
@@ -189,7 +191,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        return _redeemTokensFormulaWrapper(1);
+        return formula.spotPrice(
+            _getCapitalAvailable(), capitalRequired, basePriceMultiplier
+        );
     }
 
     //--------------------------------------------------------------------------
