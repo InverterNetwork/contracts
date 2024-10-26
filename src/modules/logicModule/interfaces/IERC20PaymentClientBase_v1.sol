@@ -9,20 +9,24 @@ interface IERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
+    // TODO: change struct
+
     /// @notice Struct used to store information about a payment order.
     /// @param  recipient The recipient of the payment.
     /// @param  paymentToken The token in which to pay.
     /// @param  amount The amount of tokens to pay.
-    /// @param  start Timestamp at which the payment should start.
-    /// @param  cliff Duration of the payment cliff.
-    /// @param  end Timestamp at which the payment should be fulfilled.
+    /// @param  originChainId TODO
+    /// @param  targetChainId TODO
+    /// @param  flags TODO
+    /// @param  data TODO
     struct PaymentOrder {
         address recipient;
-        address paymentToken;
+        address paymentToken; // token should be always on the local chain_id?
         uint amount;
-        uint start;
-        uint cliff;
-        uint end;
+        uint originChainId; // for futerproofing, not sure if it makes sense at this point
+        uint targetChainId;
+        bytes16 flags; // 0-127
+        bytes32[] data; //
     }
 
     //--------------------------------------------------------------------------

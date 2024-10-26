@@ -46,10 +46,7 @@ contract PP_SimpleV1Test is ModuleTest {
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
-        uint amount,
-        uint start,
-        uint cliff,
-        uint end
+        uint amount
     );
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
@@ -118,15 +115,27 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(recipient != address(0));
         vm.assume(amount != 0);
 
+        // TODO: use new format of PaymentOrder
+        // struct PaymentOrder {
+        //     address recipient;
+        //     address paymentToken; // token should be always on the local chain_id?
+        //     uint amount;
+        //     uint originChainId; // for futerproofing, not sure if it makes sense at this point
+        //     uint targetChainId;
+        //     bytes16 flags; // 0-127
+        //     bytes32[] data; //
+        // }
+
         // Add payment order to client.
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp
+                originChainId: 1,
+                targetChainId: 1,
+                flags: bytes16(0),
+                data: new bytes32[](0)
             })
         );
 
