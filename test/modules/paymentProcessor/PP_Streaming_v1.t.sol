@@ -72,7 +72,6 @@ contract PP_StreamingV1Test is ModuleTest {
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
-        uint streamId,
         uint amount,
         uint start,
         uint cliff,

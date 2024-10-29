@@ -225,14 +225,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     numStreams[address(client)][orders[i].recipient] + 1
                 );
 
+                (uint start, uint cliff, uint end) = _decodeParams(orders[i].data);
+
                 emit PaymentOrderProcessed(
                     address(client),
                     orders[i].recipient,
                     orders[i].paymentToken,
                     orders[i].amount,
-                    orders[i].start,
-                    orders[i].cliff,
-                    orders[i].end
+                    start,
+                    cliff,
+                    end
                 );
 
                 unchecked {
@@ -406,9 +408,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
+        (uint start, uint cliff, uint end) = _decodeParams(order.data);
+
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount)
-            && _validTimes(order.start, order.cliff, order.end)
+            && _validTimes(start, cliff, end)
             && _validPaymentToken(order.paymentToken);
     }
 
@@ -663,14 +667,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal {
         ++numStreams[_client][_order.recipient];
 
+        (uint start, uint cliff, uint end) = _decodeParams(_order.data);
+
         streams[_client][_order.recipient][_streamId] = Stream(
             _order.paymentToken,
             _streamId,
             _order.amount,
             0,
-            _order.start,
-            _order.cliff,
-            _order.end
+            start,
+            cliff,
+            end
         );
 
         // We do not want activePaymentReceivers[_client] to have duplicate paymentReceiver entries
@@ -690,9 +696,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             _order.paymentToken,
             _streamId,
             _order.amount,
-            _order.start,
-            _order.cliff,
-            _order.end
+            start,
+            cliff,
+            end
         );
     }
 
@@ -914,5 +920,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             )
         );
         return (success && data.length != 0 && _token.code.length != 0);
+    }
+
+    function _decodeParams(bytes32[] memory data) internal pure returns (uint start, uint cliff, uint end) {
+        start = uint(data[0]);
+        cliff = uint(data[1]);
+        end = uint(data[2]);
     }
 }

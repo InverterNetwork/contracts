@@ -81,11 +81,12 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint end
     );
 
+    // TODO: fix missing streamId
+
     /// @notice Emitted when a payment gets processed for execution.
     /// @param  paymentClient The payment client that originated the order.
     /// @param  recipient The address that will receive the payment.
     /// @param  paymentToken The address of the token that will be used for the payment.
-    /// @param  streamId ID of the streaming payment order that was processed.
     /// @param  amount The amount of tokens the payment consists of.
     /// @param  start The start date of the streaming period.
     /// @param  cliff The duration of the cliff period.
@@ -94,7 +95,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
-        uint streamId,
         uint amount,
         uint start,
         uint cliff,
