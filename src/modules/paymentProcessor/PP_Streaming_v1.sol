@@ -225,7 +225,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     numStreams[address(client)][orders[i].recipient] + 1
                 );
 
-                (uint start, uint cliff, uint end) = _decodeParams(orders[i].data);
+                (uint start, uint cliff, uint end) =
+                    _decodeParams(orders[i].data);
 
                 emit PaymentOrderProcessed(
                     address(client),
@@ -411,8 +412,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         (uint start, uint cliff, uint end) = _decodeParams(order.data);
 
         return _validPaymentReceiver(order.recipient)
-            && _validTotal(order.amount)
-            && _validTimes(start, cliff, end)
+            && _validTotal(order.amount) && _validTimes(start, cliff, end)
             && _validPaymentToken(order.paymentToken);
     }
 
@@ -670,13 +670,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         (uint start, uint cliff, uint end) = _decodeParams(_order.data);
 
         streams[_client][_order.recipient][_streamId] = Stream(
-            _order.paymentToken,
-            _streamId,
-            _order.amount,
-            0,
-            start,
-            cliff,
-            end
+            _order.paymentToken, _streamId, _order.amount, 0, start, cliff, end
         );
 
         // We do not want activePaymentReceivers[_client] to have duplicate paymentReceiver entries
@@ -922,7 +916,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return (success && data.length != 0 && _token.code.length != 0);
     }
 
-    function _decodeParams(bytes32[] memory data) internal pure returns (uint start, uint cliff, uint end) {
+    function _decodeParams(bytes32[] memory data)
+        internal
+        pure
+        returns (uint start, uint cliff, uint end)
+    {
         start = uint(data[0]);
         cliff = uint(data[1]);
         end = uint(data[2]);
