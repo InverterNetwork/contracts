@@ -29,8 +29,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @dev     Implements {IFundingManager_v1} interface.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.1.0
  *
  * @author  Inverter Network
  */
@@ -57,7 +60,8 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev	Base Points used for percentage calculation. This value represents 100%.
+    /// @dev	Base Points used for percentage calculation.
+    ///         This value represents 100%.
     uint internal constant BPS = 10_000;
 
     /// @dev    The token that is deposited.
