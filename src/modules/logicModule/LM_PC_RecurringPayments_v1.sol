@@ -298,6 +298,10 @@ contract LM_PC_RecurringPayments_v1 is
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
                     // add paymentOrder for this epoch
+                    bytes32[] memory data = new bytes32[](3);
+                    data[0] = bytes32(block.timestamp);
+                    data[1] = bytes32(0);
+
                     _addPaymentOrder(
                         PaymentOrder({
                             recipient: currentPayment.recipient,
@@ -305,29 +309,28 @@ contract LM_PC_RecurringPayments_v1 is
                                 orchestrator().fundingManager().token()
                             ),
                             amount: currentPayment.amount,
-                            start: block.timestamp,
-                            cliff: 0,
-                            // End of current epoch is the end date
-                            end: (currentEpoch + 1) * epochLength
+                            originChainId: block.chainid,
+                            targetChainId: block.chainid,
+                            flags: 0,
+                            data: data
                         })
                     );
 
                     // if past epochs have not been triggered
                     if (epochsNotTriggered > 1) {
+                        data[2] = bytes32(currentEpoch * epochLength);
                         _addPaymentOrder(
                             PaymentOrder({
                                 recipient: currentPayment.recipient,
-                                // because we already made a payment that for the current epoch
                                 paymentToken: address(
                                     orchestrator().fundingManager().token()
                                 ),
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
-                                start: block.timestamp,
-                                cliff: 0,
-                                // Payment was already due so end is start of this epoch which should
-                                // already have passed
-                                end: currentEpoch * epochLength
+                                originChainId: block.chainid,
+                                targetChainId: block.chainid,
+                                flags: 0,
+                                data: data
                             })
                         );
                     }
