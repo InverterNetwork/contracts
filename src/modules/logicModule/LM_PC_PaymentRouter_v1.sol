@@ -72,16 +72,31 @@ contract LM_PC_PaymentRouter_v1 is
         uint cliff,
         uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
-        _addPaymentOrder(
-            PaymentOrder(
-                recipient,
-                paymentToken,
-                amount,
-                start == 0 ? block.timestamp : start,
-                cliff,
-                end
-            )
-        );
+        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        if (start != 0) {
+            flags |= (1 << 0); // Set bit 0 for start
+        }
+        if (end != 0) {
+            flags |= (1 << 1); // Set bit 1 for end
+        }
+        if (cliff != 0) {
+            flags |= (1 << 2); // Set bit 2 for cliff
+        }
+
+        // Convert flags to bytes16
+        bytes16 flagsBytes = bytes16(flags);
+
+        PaymentOrder memory order = PaymentOrder({
+            recipient: recipient,
+            paymentToken: paymentToken,
+            amount: amount,
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flagsBytes,
+            data: new bytes32[](0) // Initialize with an empty array
+        });
+
+        _addPaymentOrder(order);
 
         // call PaymentProcessor
         __Module_orchestrator.paymentProcessor().processPayments(
@@ -108,17 +123,32 @@ contract LM_PC_PaymentRouter_v1 is
             revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
         }
 
+        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        if (start != 0) {
+            flags |= (1 << 0); // Set bit 0 for start
+        }
+        if (end != 0) {
+            flags |= (1 << 1); // Set bit 1 for end
+        }
+        if (cliff != 0) {
+            flags |= (1 << 2); // Set bit 2 for cliff
+        }
+
+        // Convert flags to bytes16
+        bytes16 flagsBytes = bytes16(flags);
+
         // Loop through the arrays and add Payments
         for (uint8 i = 0; i < numOfOrders; i++) {
             _addPaymentOrder(
-                PaymentOrder(
-                    recipients[i],
-                    paymentTokens[i],
-                    amounts[i],
-                    start == 0 ? block.timestamp : start,
-                    cliff,
-                    end
-                )
+                PaymentOrder({
+                    recipient: recipients[i],
+                    paymentToken: paymentTokens[i],
+                    amount: amounts[i],
+                    originChainId: block.chainid,
+                    targetChainId: block.chainid,
+                    flags: flagsBytes,
+                    data: new bytes32[](0)
+                })
             );
         }
 
