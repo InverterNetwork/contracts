@@ -790,7 +790,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             ((_tokenBalance + tokenBalanceFundingMangerBaseline) * _seize) / BPS;
 
         // Execute tx
-        uint returnValue = bondingCurveFundingManager.seizable();
+        uint returnValue = bondingCurveFundingManager.getSeizableAmount();
 
         // Assert right return value
         assertEq(returnValue, expectedReturnValue);
@@ -1050,7 +1050,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     function testSeize_revertGivenAmountBiggerThanSeizableAmount(uint _amount)
         public
     {
-        uint currentSeizable = bondingCurveFundingManager.seizable();
+        uint currentSeizable = bondingCurveFundingManager.getSeizableAmount();
         vm.assume(_amount > currentSeizable);
 
         vm.expectRevert(

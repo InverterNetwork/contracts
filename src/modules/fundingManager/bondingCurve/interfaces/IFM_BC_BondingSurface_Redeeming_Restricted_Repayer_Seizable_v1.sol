@@ -60,16 +60,19 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     event BuyAndSellIsUnrestricted();
 
     //--------------------------------------------------------------------------
-    // Functions
+    // Getter Functions
+
+    /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
+    /// @return amount Maximum number of tokens that can be seized
+    function getSeizableAmount() external view returns (uint amount);
+
+    //--------------------------------------------------------------------------
+    // Mutating Functions
 
     /// @notice Sets a new liquidity valut controller address
     /// @param _lp Address of the liquidity vault controller
     function setLiquidityVaultControllerContract(ILiquidityVaultController _lp)
         external;
-
-    /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
-    /// @return uint Maximum number of tokens that can be seized
-    function seizable() external view returns (uint);
 
     /// @notice Adjust the seize percentage, which is seizable from the contract
     /// @param _seize The seize in percentage, expressed as BPS

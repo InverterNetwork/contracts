@@ -315,12 +315,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function seizable( //@note should we rename this function to getSeizableAmount()?
-    )
-        public
-        view
-        returns (uint)
-    {
+    function getSeizableAmount() public view returns (uint amount) {
         uint currentBalance = _getCapitalAvailable();
 
         return (currentBalance * currentSeize) / BPS;
@@ -368,7 +363,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function seize(uint _amount) public onlyModuleRole(COVER_MANAGER_ROLE) {
-        uint _seizableAmount = seizable();
+        uint _seizableAmount = getSeizableAmount();
         if (_amount > _seizableAmount) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount(
