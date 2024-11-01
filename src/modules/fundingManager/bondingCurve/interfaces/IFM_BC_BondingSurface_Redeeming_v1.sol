@@ -55,9 +55,39 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         bool buyIsOpen;
         bool sellIsOpen;
     }
+    //--------------------------------------------------------------------------
+    // Getter Functions
+
+    /// @notice Returns the formula contract used to calculate the issuance and redemption rate.
+    /// @return formula The formula contract address.
+    function getBondingSurfaceFormula()
+        external
+        view
+        returns (address formula);
+
+    /// @notice Returns the initial capital requirement for the formula contract.
+    /// @return capitalRequired The capital required.
+    function getCapitalRequired()
+        external
+        view
+        returns (uint capitalRequired);
+
+    /// @notice Returns the base price multiplier.
+    /// @return basePriceMultiplier The base price multiplier.
+    function getBasePriceMultiplier()
+        external
+        view
+        returns (uint basePriceMultiplier);
+
+    /// @notice Returns the base price to capital ratio.
+    /// @return basePriceToCapitalRatio The base price to capital ratio.
+    function getBasePriceToCapitalRatio()
+        external
+        view
+        returns (uint basePriceToCapitalRatio);
 
     //--------------------------------------------------------------------------
-    // Functions
+    // Mutating Functions
 
     /// @dev Update the base price multiplier used for the bonding curve
     /// @param _newBasePriceMultiplier Base price multiplier used for price calculation

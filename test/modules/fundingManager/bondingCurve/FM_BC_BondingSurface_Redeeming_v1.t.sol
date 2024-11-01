@@ -47,7 +47,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {FM_BC_BondingSurface_RedeemingV1_exposed} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_exposed.sol";
 
-contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
+contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     string private constant NAME = "Bonding Surface Token";
     string private constant SYMBOL = "BST";
     uint8 internal constant DECIMALS = 18;
@@ -178,12 +178,12 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         );
         // Bonding Curve Properties
         assertEq(
-            address(bondingCurveFundingManager.formula()),
+            bondingCurveFundingManager.getBondingSurfaceFormula(),
             formula,
             "Formula has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.capitalRequired(),
+            bondingCurveFundingManager.getCapitalRequired(),
             CAPITAL_REQUIREMENT,
             "Initial capital requirements has not been set correctly"
         );
@@ -361,8 +361,8 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Use expected value from internal function
         uint expectedReturnValue = BondingSurface(formula).spotPrice(
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.capitalRequired(),
-            bondingCurveFundingManager.basePriceMultiplier()
+            bondingCurveFundingManager.getCapitalRequired(),
+            bondingCurveFundingManager.getBasePriceMultiplier()
         );
 
         // Actual return value
@@ -389,8 +389,8 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         // Use expected value from internal function
         uint expectedReturnValue = BondingSurface(formula).spotPrice(
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.capitalRequired(),
-            bondingCurveFundingManager.basePriceMultiplier()
+            bondingCurveFundingManager.getCapitalRequired(),
+            bondingCurveFundingManager.getBasePriceMultiplier()
         );
 
         // Actual return value
@@ -451,7 +451,8 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         uint _newCapitalRequired
     ) public {
         vm.assume(
-            _newCapitalRequired != bondingCurveFundingManager.capitalRequired()
+            _newCapitalRequired
+                != bondingCurveFundingManager.getCapitalRequired()
         );
         _newCapitalRequired = bound(_newCapitalRequired, 1, 1e18);
 
@@ -459,7 +460,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         bondingCurveFundingManager.setCapitalRequired(_newCapitalRequired);
 
         // Get current state value
-        uint stateValue = bondingCurveFundingManager.capitalRequired();
+        uint stateValue = bondingCurveFundingManager.getCapitalRequired();
 
         // Assert state has been updated
         assertEq(stateValue, _newCapitalRequired);
@@ -498,7 +499,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
     ) public {
         vm.assume(
             _newBaseMultiplier
-                != bondingCurveFundingManager.basePriceMultiplier()
+                != bondingCurveFundingManager.getBasePriceMultiplier()
         );
         _newBaseMultiplier = bound(_newBaseMultiplier, 1, 1e18);
 
@@ -506,7 +507,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         bondingCurveFundingManager.setBasePriceMultiplier(_newBaseMultiplier);
 
         // Get current state value
-        uint stateValue = bondingCurveFundingManager.basePriceMultiplier();
+        uint stateValue = bondingCurveFundingManager.getBasePriceMultiplier();
 
         // Assert state has been updated
         assertEq(stateValue, _newBaseMultiplier);
@@ -695,7 +696,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         uint expectedReturnValue = IBondingSurface(formula).tokenOut(
             _depositAmount,
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.basePriceToCapitalRatio()
+            bondingCurveFundingManager.getBasePriceToCapitalRatio()
         );
         // Actual return value
         uint functionReturnValue = bondingCurveFundingManager
@@ -752,7 +753,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         uint _redeemAmount = bondingCurveFundingManager.exposed_formulaTokenIn(
             _depositAmount,
             _capitalAvailable,
-            bondingCurveFundingManager.basePriceToCapitalRatio()
+            bondingCurveFundingManager.getBasePriceToCapitalRatio()
         );
         vm.assume(_capitalAvailable - _redeemAmount < MIN_RESERVE);
 
@@ -785,7 +786,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         uint _redeemAmount = bondingCurveFundingManager.exposed_formulaTokenIn(
             _depositAmount,
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.basePriceToCapitalRatio()
+            bondingCurveFundingManager.getBasePriceToCapitalRatio()
         );
 
         vm.assume(
@@ -797,7 +798,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         uint redeemAmount = IBondingSurface(formula).tokenIn(
             _depositAmount,
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
-            bondingCurveFundingManager.basePriceToCapitalRatio()
+            bondingCurveFundingManager.getBasePriceToCapitalRatio()
         );
         // Get return value
         uint functionReturnValue = bondingCurveFundingManager
@@ -874,7 +875,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         // Get current value for expected emit
         uint currentCapitalRequirements =
-            bondingCurveFundingManager.capitalRequired();
+            bondingCurveFundingManager.getCapitalRequired();
 
         // Execute Tx
         vm.expectEmit(
@@ -889,14 +890,14 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         // Get assert values
         uint expectUpdatedCapitalRequired =
-            bondingCurveFundingManager.capitalRequired();
+            bondingCurveFundingManager.getCapitalRequired();
         uint expectbasePriceToCapitalRatio = bondingCurveFundingManager
             .exposed_calculateBasePriceToCapitalRatio(
             _capitalRequirements,
-            bondingCurveFundingManager.basePriceMultiplier()
+            bondingCurveFundingManager.getBasePriceMultiplier()
         );
         uint actualBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
+            bondingCurveFundingManager.getBasePriceToCapitalRatio();
 
         // Assert value has been set succesfully
         assertEq(expectUpdatedCapitalRequired, _capitalRequirements);
@@ -943,7 +944,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         // Get current value for expected emit
         uint currentBasePriceMultiplier =
-            bondingCurveFundingManager.basePriceMultiplier();
+            bondingCurveFundingManager.getBasePriceMultiplier();
 
         // Execute Tx
         vm.expectEmit(
@@ -958,13 +959,13 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
 
         // Get assert values
         uint expectUpdatedBasePriceMultiplier =
-            bondingCurveFundingManager.basePriceMultiplier();
+            bondingCurveFundingManager.getBasePriceMultiplier();
         uint expectbasePriceToCapitalRatio = bondingCurveFundingManager
             .exposed_calculateBasePriceToCapitalRatio(
             capitalRequirement, _basePriceMultiplier
         );
         uint actualBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
+            bondingCurveFundingManager.getBasePriceToCapitalRatio();
 
         // Assert value has been set succesfully
         assertEq(expectUpdatedBasePriceMultiplier, _basePriceMultiplier);
@@ -1044,7 +1045,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
             _basePriceMultiplier, _capitalRequirements, FixedPointMathLib.WAD
         );
         uint currentBasePriceToCapitalRatio =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
+            bondingCurveFundingManager.getBasePriceToCapitalRatio();
 
         // Execute Tx
         vm.expectEmit(
@@ -1056,7 +1057,7 @@ contract FM_BC_BondingSurface_Redeeming_v1Test is ModuleTest {
         bondingCurveFundingManager.exposed_updateVariables();
         // Get set state value
         uint setStateValue =
-            bondingCurveFundingManager.basePriceToCapitalRatio();
+            bondingCurveFundingManager.getBasePriceToCapitalRatio();
 
         // Assert expected return value
         assertEq(setStateValue, expectedReturnValue);

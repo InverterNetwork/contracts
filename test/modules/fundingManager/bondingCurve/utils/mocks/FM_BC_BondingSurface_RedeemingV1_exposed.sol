@@ -80,7 +80,7 @@ contract FM_BC_BondingSurface_RedeemingV1_exposed is
         uint _capitalAvailable,
         uint _basePriceToCapitalRatio
     ) external view returns (uint _redeemAmount) {
-        return formula.tokenIn(
+        return _formula.tokenIn(
             _depositAmount, _capitalAvailable, _basePriceToCapitalRatio
         );
     }

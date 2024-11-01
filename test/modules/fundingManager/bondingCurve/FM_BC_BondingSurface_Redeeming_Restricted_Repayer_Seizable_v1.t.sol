@@ -57,7 +57,7 @@ import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed}
     - buy() & buyOrderFor()
     - sell() & sellOrderFor()
     */
-contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
+contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     ModuleTest
 {
     string private constant NAME = "Topos Token";
@@ -220,12 +220,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1Test is
         );
         // Bonding Curve Properties
         assertEq(
-            address(bondingCurveFundingManager.formula()),
+            bondingCurveFundingManager.getBondingSurfaceFormula(),
             formula,
             "Formula has not been set correctly"
         );
         assertEq(
-            bondingCurveFundingManager.capitalRequired(),
+            bondingCurveFundingManager.getCapitalRequired(),
             CAPITAL_REQUIREMENT,
             "Initial capital requirements has not been set correctly"
         );

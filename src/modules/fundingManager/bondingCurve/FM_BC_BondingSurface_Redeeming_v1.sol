@@ -44,7 +44,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *          to manage all the configuration for the bonding curve as well as the
  *          opening and closing of the issuance and redeeming functionalities.
  *          The contract implements the formulaWrapper functions enforced by the
- *          using the Bonding Surface formula to calculate the issuance/
+ *          using the Bonding Surface _formula to calculate the issuance/
  *          redeeming rate.
  *
  * @custom:security-contact security@inverter.network
@@ -85,16 +85,16 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // Storage
 
     /// @dev The interface of the Formula used to calculate the issuance and redeeming amount.
-    IBondingSurface public formula;
+    IBondingSurface internal _formula;
     /// @dev Token that is accepted by this funding manager for deposits.
     IERC20 internal _token;
     /// @dev the amount of value that is needed to operate the protocol according to market size
     /// and conditions
-    uint public capitalRequired;
+    uint internal _capitalRequired;
     /// @dev Base price multiplier in the bonding curve formula
-    uint public basePriceMultiplier;
+    uint internal _basePriceMultiplier;
     /// @dev (basePriceMultiplier / capitalRequired)
-    uint public basePriceToCapitalRatio;
+    uint internal _basePriceToCapitalRatio;
 
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
@@ -136,7 +136,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
                 FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
         // Set formula contract
-        formula = IBondingSurface(bondingCurveProperties.formula);
+        _formula = IBondingSurface(bondingCurveProperties.formula);
 
         // Set Bonding Curve Properties
         // Set capital required
@@ -159,13 +159,14 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     //--------------------------------------------------------------------------
     // Public Functions
+
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function calculateBasePriceToCapitalRatio(
-        uint _capitalRequired,
-        uint _basePriceMultiplier
+        uint capitalRequired_,
+        uint basePriceMultiplier_
     ) external pure returns (uint) {
         return _calculateBasePriceToCapitalRatio(
-            _capitalRequired, _basePriceMultiplier
+            capitalRequired_, basePriceMultiplier_
         );
     }
 
@@ -177,8 +178,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         override(BondingCurveBase_v1)
         returns (uint)
     {
-        return formula.spotPrice(
-            _getCapitalAvailable(), capitalRequired, basePriceMultiplier
+        return _formula.spotPrice(
+            _getCapitalAvailable(), _capitalRequired, _basePriceMultiplier
         );
     }
 
@@ -191,15 +192,53 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         override(RedeemingBondingCurveBase_v1)
         returns (uint)
     {
-        return formula.spotPrice(
-            _getCapitalAvailable(), capitalRequired, basePriceMultiplier
+        return _formula.spotPrice(
+            _getCapitalAvailable(), _capitalRequired, _basePriceMultiplier
         );
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    function getBondingSurfaceFormula()
+        external
+        view
+        returns (address formula)
+    {
+        return address(_formula);
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    function getCapitalRequired()
+        external
+        view
+        returns (uint capitalRequired)
+    {
+        return _capitalRequired;
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    function getBasePriceMultiplier()
+        external
+        view
+        returns (uint basePriceMultiplier)
+    {
+        return _basePriceMultiplier;
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    function getBasePriceToCapitalRatio()
+        external
+        view
+        returns (uint basePriceToCapitalRatio)
+    {
+        return _basePriceToCapitalRatio;
     }
 
     //--------------------------------------------------------------------------
     // Public IFundingManager Functions
+
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
+        //@note should this be getToken?
         return _token;
     }
 
@@ -207,12 +246,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // OnlyOrchestratorAdmin Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function setCapitalRequired(uint _newCapitalRequired)
+    function setCapitalRequired(uint newCapitalRequired_)
         public
         virtual
         onlyOrchestratorAdmin
     {
-        _setCapitalRequired(_newCapitalRequired);
+        _setCapitalRequired(newCapitalRequired_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
@@ -242,8 +281,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
 
-        mintAmount = formula.tokenOut(
-            _depositAmount, capitalAvailable, basePriceToCapitalRatio
+        mintAmount = _formula.tokenOut(
+            _depositAmount, capitalAvailable, _basePriceToCapitalRatio
         );
     }
 
@@ -262,8 +301,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         if (capitalAvailable == 0) {
             revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
-        redeemAmount = formula.tokenIn(
-            _depositAmount, capitalAvailable, basePriceToCapitalRatio
+        redeemAmount = _formula.tokenIn(
+            _depositAmount, capitalAvailable, _basePriceToCapitalRatio
         );
 
         // The asset pool must never be empty.
@@ -307,13 +346,13 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     /// @dev Set the capital required state used in the bonding curve calculations.
-    /// _newCapitalRequired cannot be zero
-    function _setCapitalRequired(uint _newCapitalRequired) internal {
-        if (_newCapitalRequired == 0) {
+    /// newCapitalRequired_ cannot be zero
+    function _setCapitalRequired(uint newCapitalRequired_) internal {
+        if (newCapitalRequired_ == 0) {
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
-        emit CapitalRequiredChanged(capitalRequired, _newCapitalRequired);
-        capitalRequired = _newCapitalRequired;
+        emit CapitalRequiredChanged(_capitalRequired, newCapitalRequired_);
+        _capitalRequired = newCapitalRequired_;
         _updateVariables();
     }
 
@@ -324,21 +363,21 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
         emit BasePriceMultiplierChanged(
-            basePriceMultiplier, _newBasePriceMultiplier
+            _basePriceMultiplier, _newBasePriceMultiplier
         );
-        basePriceMultiplier = _newBasePriceMultiplier;
+        _basePriceMultiplier = _newBasePriceMultiplier;
         _updateVariables();
     }
 
     /// @dev Precomputes and sets the price multiplier to capital ratio
     function _updateVariables() internal {
         uint newBasePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
-            capitalRequired, basePriceMultiplier
+            _capitalRequired, _basePriceMultiplier
         );
         emit BasePriceToCapitalRatioChanged(
-            basePriceToCapitalRatio, newBasePriceToCapitalRatio
+            _basePriceToCapitalRatio, newBasePriceToCapitalRatio
         );
-        basePriceToCapitalRatio = newBasePriceToCapitalRatio;
+        _basePriceToCapitalRatio = newBasePriceToCapitalRatio;
     }
 
     /// @dev Internal function which calculates the price multiplier to capital ratio

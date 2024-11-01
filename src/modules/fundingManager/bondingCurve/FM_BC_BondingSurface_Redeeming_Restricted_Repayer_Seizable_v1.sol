@@ -104,20 +104,20 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @dev Repayable amount collateral which can be pulled from the
     ///         contract by the liquidity vault controller
-    uint public repayableAmount;
+    uint internal _repayableAmount;
     /// @dev The current seize percentage expressed in BPS
-    uint64 public currentSeize;
+    uint64 public currentSeize; //@todo internal
     /// @dev Address of the liquidity vault controller who has access to the
     ///      collateral held by the funding manager through the Repayer
     /// through the Repayer functionality
-    ILiquidityVaultController public liquidityVaultController;
+    ILiquidityVaultController public liquidityVaultController; //@todo internal
     /// @dev Tracks last seize timestamp to determine eligibility for
     ///      subsequent seizures based on SEIZE_DELAY
-    uint public lastSeizeTimestamp;
+    uint public lastSeizeTimestamp; //@todo internal
     /// @dev Address of the reserve pool.
-    address public tokenVault;
+    address public tokenVault; //@todo internal
     /// @dev Restricts buying and selling functionalities to specific role.
-    bool public buyAndSellIsRestricted;
+    bool public buyAndSellIsRestricted; //@todo internal
 
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
@@ -188,7 +188,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
                 .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
         // Set formula contract
-        formula = IBondingSurface(bondingCurveProperties.formula);
+        _formula = IBondingSurface(bondingCurveProperties.formula);
 
         // Set Bonding Curve Properties
         // Set capital required
@@ -315,7 +315,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function seizable() public view returns (uint) {
+    function seizable( //@note should we rename this function to getSeizableAmount()?
+    )
+        public
+        view
+        returns (uint)
+    {
         uint currentBalance = _getCapitalAvailable();
 
         return (currentBalance * currentSeize) / BPS;
@@ -418,8 +423,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
                 IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
-        emit RepayableAmountChanged(_amount, repayableAmount);
-        repayableAmount = _amount;
+        emit RepayableAmountChanged(_amount, _repayableAmount);
+        _repayableAmount = _amount;
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -510,16 +515,16 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice The repayable amount as maximum is applied when is gt 0 and is lt the smallest between Cr and Ca
     function _getRepayableAmount() internal view returns (uint) {
         uint _repayable = _getSmallerCaCr();
-        return (repayableAmount == 0 || repayableAmount > _repayable)
+        return (_repayableAmount == 0 || _repayableAmount > _repayable)
             ? _repayable
-            : repayableAmount;
+            : _repayableAmount;
     }
 
     /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Required (Cr), the repayable amount can be lte Cr
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
     function _getSmallerCaCr() internal view returns (uint) {
         uint _ca = _getCapitalAvailable();
-        uint _cr = capitalRequired;
+        uint _cr = _capitalRequired;
         return _ca > _cr ? _cr : _ca;
     }
 
