@@ -172,7 +172,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     amount,
                     block.timestamp,
                     0,
-                    block.timestamp + 100_000
+                    block.timestamp + durations[i]
                 )
             );
 
@@ -1990,7 +1990,7 @@ contract PP_StreamingV1Test is ModuleTest {
         uint cliff,
         uint end
     )
-        internal
+        internal view
         returns (IERC20PaymentClientBase_v1.PaymentOrder memory paymentOrder)
     {
         uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
