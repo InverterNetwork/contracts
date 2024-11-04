@@ -297,11 +297,21 @@ contract LM_PC_RecurringPayments_v1 is
                     currentEpoch - currentPayment.lastTriggeredEpoch;
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
-                    // add paymentOrder for this epoch
+                    // create flags
+                    // set start, end and cliff to true 
+                    // and convert to bytes16
+                    uint128 flags = 0;
+                    flags |= (1 << 0);
+                    flags |= (1 << 1);
+                    flags |= (1 << 2);
+                    bytes16 flagsBytes = bytes16(flags);
+                    // assemble data array
                     bytes32[] memory data = new bytes32[](3);
                     data[0] = bytes32(block.timestamp);
                     data[1] = bytes32(0);
+                    data[2] = bytes32((currentEpoch + 1) * epochLength);
 
+                    // add paymentOrder for this epoch
                     _addPaymentOrder(
                         PaymentOrder({
                             recipient: currentPayment.recipient,
@@ -311,7 +321,7 @@ contract LM_PC_RecurringPayments_v1 is
                             amount: currentPayment.amount,
                             originChainId: block.chainid,
                             targetChainId: block.chainid,
-                            flags: 0,
+                            flags: flagsBytes,
                             data: data
                         })
                     );
@@ -329,7 +339,7 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 originChainId: block.chainid,
                                 targetChainId: block.chainid,
-                                flags: 0,
+                                flags: flagsBytes,
                                 data: data
                             })
                         );

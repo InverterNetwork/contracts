@@ -30,6 +30,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
     uint private constant _SENTINEL = type(uint).max;
+    bytes16 private constant _FLAGS_SET = bytes16(0x00000000000000000000000000000007);
 
     event RecurringPaymentAdded(
         uint indexed recurringPaymentId,
@@ -624,6 +625,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint growingSequenceBefore;
         uint growingSequenceCurrent;
         for (uint i; i < length; i++) {
+            console.log(receiver[i]);
             // This is a way to introduce randomness and grow the startEpoch in reasonable steps
             growingSequenceCurrent = growingSequenceBefore + i;
 
@@ -686,7 +688,6 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             recurringPaymentManager.paymentOrders();
-
         assertEq(length, currentRecurringPayments.length);
 
         // prediction of how many orders have to be created for this recurring payment
@@ -762,12 +763,11 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         assertEq(order.recipient, recipient);
 
         assertEq(order.amount, amount);
-
-        // Decode start and end from flags and data
-        bool hasStart = (uint128(order.flags) & (1 << 0)) != 0;
-        bool hasEnd = (uint128(order.flags) & (1 << 1)) != 0;
-        uint decodedStart = hasStart ? uint(order.data[0]) : 0;
-        uint decodedEnd = hasEnd ? uint(order.data[1]) : 0;
+        // if first three flags are set the flags array is 0x07
+        assertEq(order.flags, _FLAGS_SET);
+        
+        uint decodedStart = uint(order.data[0]);
+        uint decodedEnd = uint(order.data[2]);
 
         assertEq(decodedStart, start);
         assertEq(decodedEnd, end);

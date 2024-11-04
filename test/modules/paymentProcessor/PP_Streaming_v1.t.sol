@@ -1805,7 +1805,6 @@ contract PP_StreamingV1Test is ModuleTest {
         // Them being equal is fine if no streaming is desired (instant payout)
         if (start > end) {
             resultShouldBe = false;
-            console.log("start > end");
         }
 
         // Check whether the start with cliff added is greater than the end time
@@ -1813,7 +1812,6 @@ contract PP_StreamingV1Test is ModuleTest {
         // (if cliff > 0)
         if (start + cliff > end) {
             resultShouldBe = false;
-            console.log("start + cliff > end");
         }
 
         bool result = paymentProcessor.original_validTimes(start, cliff, end);
