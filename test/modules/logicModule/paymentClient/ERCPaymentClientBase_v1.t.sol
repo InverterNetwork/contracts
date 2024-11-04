@@ -169,6 +169,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAddPaymentOrders() public {
         IERC20PaymentClientBase_v1.PaymentOrder[] memory ordersToAdd =
             new IERC20PaymentClientBase_v1.PaymentOrder[](3);
+
         ordersToAdd[0] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE1),
             paymentToken: address(_token),
@@ -183,7 +184,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         flags |= (1 << 0); // Set bit 0 for start
         flags |= (1 << 1); // Set bit 1 for end
         bytes16 flagsBytes = bytes16(flags);
-        bytes32[] memory data = new bytes32[](1);
+        bytes32[] memory data = new bytes32[](2);
         data[0] = bytes32(block.timestamp);
         data[1] = bytes32(block.timestamp + 1);
 
@@ -215,19 +216,18 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         emit PaymentOrderAdded(address(0xCAFE1), address(_token), 100e18);
         emit PaymentOrderAdded(address(0xCAFE2), address(_token), 100e18);
         emit PaymentOrderAdded(address(0xCAFE3), address(_token), 100e18);
-
         paymentClient.addPaymentOrders(ordersToAdd);
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
-
         assertEq(orders.length, 3);
         for (uint i; i < 3; ++i) {
             assertEq(orders[i].recipient, ordersToAdd[i].recipient);
             assertEq(orders[i].amount, ordersToAdd[i].amount);
-            assertEq(orders[i].data[1], ordersToAdd[i].data[1]);
+            for (uint j; j < orders[i].data.length; ++j) {
+                assertEq(orders[i].data[j], ordersToAdd[i].data[j]);
+            }
         }
-
         assertEq(paymentClient.outstandingTokenAmount(address(_token)), 300e18);
     }
 
