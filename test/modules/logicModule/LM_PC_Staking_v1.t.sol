@@ -650,11 +650,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(1, orders.length);
         assertEq(user, orders[0].recipient);
         assertEq(expectedPayout, orders[0].amount);
-        bytes memory encodedData = abi.encode(orders[0].data);
-        (uint start, uint cliff, uint end) =
-            abi.decode(encodedData, (uint, uint, uint));
-        assertEq(block.timestamp, start);
-        assertEq(block.timestamp, end);
+        assertEq(orders[0].flags, 0);
+        assertEq(orders[0].data.length, 0);
+
 
         // Make sure payment Processor was triggered
         assertEq(1, _paymentProcessor.processPaymentsTriggered());
