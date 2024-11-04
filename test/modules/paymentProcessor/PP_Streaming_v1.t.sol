@@ -466,7 +466,7 @@ contract PP_StreamingV1Test is ModuleTest {
                     address(_token),
                     amount,
                     block.timestamp,
-                    0,
+                    50_000,
                     block.timestamp + 100_000
                 )
             );
@@ -484,7 +484,6 @@ contract PP_StreamingV1Test is ModuleTest {
         // All recepients try to claim their vested tokens without success
         for (uint i; i < recipients.length;) {
             uint balanceBefore = _token.balanceOf(recipients[i]);
-
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
             assertTrue(
@@ -516,14 +515,14 @@ contract PP_StreamingV1Test is ModuleTest {
 
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
-
+            console.log("check1");
             // Check recipient balance
             assertEq(
                 _token.balanceOf(recipients[i]),
                 (uint(amounts[i]) / 2 + balanceBefore),
                 "Vested tokens not received by the paymentReceiver"
             );
-
+            console.log("check2");
             assertEq(
                 paymentProcessor.releasableForSpecificStream(
                     address(paymentClient),
