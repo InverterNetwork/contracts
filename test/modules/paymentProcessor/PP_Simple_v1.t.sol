@@ -402,25 +402,11 @@ contract PP_SimpleV1Test is ModuleTest {
             order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
         );
 
-        // Decode start and cliff from flags and data
-        bool hasStart = (uint128(order.flags) & (1 << 0)) != 0;
-        bool hasCliff = (uint128(order.flags) & (1 << 2)) != 0;
-        uint start = hasStart ? uint(order.data[0]) : 0;
-        uint cliff = hasCliff ? uint(order.data[2]) : 0;
-
-        bytes32[] memory data = new bytes32[](3);
-        data[0] = bytes32(bound(start, 0, type(uint).max / 2));
-        data[2] = bytes32(bound(cliff, 0, type(uint).max / 2));
-
-        order.data = data;
-
         vm.startPrank(sender);
-
         bool expectedValue = paymentProcessor.original_validPaymentReceiver(
             order.recipient
         ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
             && paymentProcessor.original__validTotal(order.amount);
-
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
         vm.stopPrank();
