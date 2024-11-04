@@ -653,7 +653,6 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(orders[0].flags, 0);
         assertEq(orders[0].data.length, 0);
 
-
         // Make sure payment Processor was triggered
         assertEq(1, _paymentProcessor.processPaymentsTriggered());
     }

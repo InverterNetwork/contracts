@@ -298,7 +298,7 @@ contract LM_PC_RecurringPayments_v1 is
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
                     // create flags
-                    // set start, end and cliff to true 
+                    // set start, end and cliff to true
                     // and convert to bytes16
                     uint128 flags = 0;
                     flags |= (1 << 0);

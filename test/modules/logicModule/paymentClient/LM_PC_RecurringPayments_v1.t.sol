@@ -30,7 +30,8 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
     uint private constant _SENTINEL = type(uint).max;
-    bytes16 private constant _FLAGS_SET = bytes16(0x00000000000000000000000000000007);
+    bytes16 private constant _FLAGS_SET =
+        bytes16(0x00000000000000000000000000000007);
 
     event RecurringPaymentAdded(
         uint indexed recurringPaymentId,
@@ -765,7 +766,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         assertEq(order.amount, amount);
         // if first three flags are set the flags array is 0x07
         assertEq(order.flags, _FLAGS_SET);
-        
+
         uint decodedStart = uint(order.data[0]);
         uint decodedEnd = uint(order.data[2]);
 

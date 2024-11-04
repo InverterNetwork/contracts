@@ -64,10 +64,7 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         address indexed paymentClient,
         address indexed recipient,
         address indexed token,
-        uint amount,
-        uint start,
-        uint cliff,
-        uint end
+        uint amount
     );
 
     function setUp() public virtual {
@@ -318,9 +315,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             );
         }
         vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(
-            address(0), address(0), address(0), 0, 0, 0, 0
-        ); // since we are using a mock.
+        emit PaymentOrderProcessed(address(0), address(0), address(0), 0); // since we are using a mock.
 
         paymentRouter.pushPaymentBatched(
             _numOfOrders,

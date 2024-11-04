@@ -1984,7 +1984,8 @@ contract PP_StreamingV1Test is ModuleTest {
         uint cliff,
         uint end
     )
-        internal view
+        internal
+        view
         returns (IERC20PaymentClientBase_v1.PaymentOrder memory paymentOrder)
     {
         uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits

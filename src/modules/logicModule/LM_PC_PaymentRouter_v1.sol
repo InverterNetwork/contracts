@@ -72,19 +72,8 @@ contract LM_PC_PaymentRouter_v1 is
         uint cliff,
         uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
-        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
-        if (start != 0) {
-            flags |= (1 << 0); // Set bit 0 for start
-        }
-        if (end != 0) {
-            flags |= (1 << 1); // Set bit 1 for end
-        }
-        if (cliff != 0) {
-            flags |= (1 << 2); // Set bit 2 for cliff
-        }
-
-        // Convert flags to bytes16
-        bytes16 flagsBytes = bytes16(flags);
+        (bytes16 flagsBytes, bytes32[] memory data) =
+            _assemblePaymentConfig(start, cliff, end);
 
         PaymentOrder memory order = PaymentOrder({
             recipient: recipient,
@@ -93,7 +82,7 @@ contract LM_PC_PaymentRouter_v1 is
             originChainId: block.chainid,
             targetChainId: block.chainid,
             flags: flagsBytes,
-            data: new bytes32[](0) // Initialize with an empty array
+            data: data
         });
 
         _addPaymentOrder(order);
@@ -123,19 +112,8 @@ contract LM_PC_PaymentRouter_v1 is
             revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
         }
 
-        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
-        if (start != 0) {
-            flags |= (1 << 0); // Set bit 0 for start
-        }
-        if (end != 0) {
-            flags |= (1 << 1); // Set bit 1 for end
-        }
-        if (cliff != 0) {
-            flags |= (1 << 2); // Set bit 2 for cliff
-        }
-
-        // Convert flags to bytes16
-        bytes16 flagsBytes = bytes16(flags);
+        (bytes16 flagsBytes, bytes32[] memory data) =
+            _assemblePaymentConfig(start, cliff, end);
 
         // Loop through the arrays and add Payments
         for (uint8 i = 0; i < numOfOrders; i++) {
@@ -147,7 +125,7 @@ contract LM_PC_PaymentRouter_v1 is
                     originChainId: block.chainid,
                     targetChainId: block.chainid,
                     flags: flagsBytes,
-                    data: new bytes32[](0)
+                    data: data
                 })
             );
         }
@@ -156,5 +134,40 @@ contract LM_PC_PaymentRouter_v1 is
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClientBase_v1(address(this))
         );
+    }
+
+    function _assemblePaymentConfig(uint start, uint cliff, uint end)
+        internal
+        pure
+        returns (bytes16 flagsBytes, bytes32[] memory data)
+    {
+        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        uint128 length = 0;
+
+        if (start != 0) {
+            flags |= (1 << 0); // Set bit 0 for start
+            length++;
+        }
+        if (end != 0) {
+            flags |= (1 << 1); // Set bit 1 for end
+            length++;
+        }
+        if (cliff != 0) {
+            flags |= (1 << 2); // Set bit 2 for cliff
+            length++;
+        }
+
+        data = new bytes32[](length);
+        if (start != 0) {
+            data[0] = bytes32(start);
+        }
+        if (end != 0) {
+            data[1] = bytes32(end);
+        }
+        if (cliff != 0) {
+            data[2] = bytes32(cliff);
+        }
+
+        flagsBytes = bytes16(flags);
     }
 }
