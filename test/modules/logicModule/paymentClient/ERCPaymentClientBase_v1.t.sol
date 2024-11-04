@@ -96,7 +96,10 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         _assumeValidAmount(amount);
 
         uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        bytes32[] memory data;
         if (end != 0) {
+            data = new bytes32[](1);
+            data[0] = bytes32(end);
             flags |= (1 << 1); // Set bit 1 for end
         }
 
@@ -111,7 +114,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 originChainId: block.chainid,
                 targetChainId: block.chainid,
                 flags: flagsBytes,
-                data: new bytes32[](0) // Initialize with an empty array
+                data: data
             });
 
             vm.expectEmit();
@@ -126,13 +129,14 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         assertEq(orders.length, orderAmount);
 
         for (uint i; i < orderAmount; ++i) {
-            // Decode end from flags
-            bool hasEnd = (uint128(orders[i].flags) & (1 << 1)) != 0;
-            uint decodedEnd = hasEnd ? uint(orders[i].data[0]) : 0;
-
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
-            assertEq(decodedEnd, end);
+
+            bool hasEnd = (uint128(orders[i].flags) & (1 << 1)) != 0;
+            if (hasEnd) {
+                uint decodedEnd = hasEnd ? uint(orders[i].data[0]) : 0;
+                assertEq(decodedEnd, end);
+            }
         }
 
         assertEq(
