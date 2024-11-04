@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -515,14 +514,12 @@ contract PP_StreamingV1Test is ModuleTest {
 
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
-            console.log("check1");
             // Check recipient balance
             assertEq(
                 _token.balanceOf(recipients[i]),
                 (uint(amounts[i]) / 2 + balanceBefore),
                 "Vested tokens not received by the paymentReceiver"
             );
-            console.log("check2");
             assertEq(
                 paymentProcessor.releasableForSpecificStream(
                     address(paymentClient),
