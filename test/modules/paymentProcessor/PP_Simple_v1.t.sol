@@ -115,17 +115,6 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(recipient != address(0));
         vm.assume(amount != 0);
 
-        // TODO: use new format of PaymentOrder
-        // struct PaymentOrder {
-        //     address recipient;
-        //     address paymentToken; // token should be always on the local chain_id?
-        //     uint amount;
-        //     uint originChainId; // for futerproofing, not sure if it makes sense at this point
-        //     uint targetChainId;
-        //     bytes16 flags; // 0-127
-        //     bytes32[] data; //
-        // }
-
         // Add payment order to client.
         paymentClient.addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
