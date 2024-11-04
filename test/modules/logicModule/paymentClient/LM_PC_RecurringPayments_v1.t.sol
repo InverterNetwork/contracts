@@ -762,8 +762,14 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         assertEq(order.recipient, recipient);
 
         assertEq(order.amount, amount);
-        assertEq(order.start, start);
 
-        assertEq(order.end, end);
+        // Decode start and end from flags and data
+        bool hasStart = (uint128(order.flags) & (1 << 0)) != 0;
+        bool hasEnd = (uint128(order.flags) & (1 << 1)) != 0;
+        uint decodedStart = hasStart ? uint(order.data[0]) : 0;
+        uint decodedEnd = hasEnd ? uint(order.data[1]) : 0;
+
+        assertEq(decodedStart, start);
+        assertEq(decodedEnd, end);
     }
 }

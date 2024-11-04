@@ -149,13 +149,7 @@ contract PP_SimpleV1Test is ModuleTest {
 
         vm.expectEmit(true, true, true, true);
         emit PaymentOrderProcessed(
-            address(paymentClient),
-            recipient,
-            address(_token),
-            amount,
-            block.timestamp,
-            0,
-            block.timestamp
+            address(paymentClient), recipient, address(_token), amount
         );
         if (!paymentsFail) {
             vm.expectEmit(true, true, true, true);
@@ -311,14 +305,24 @@ contract PP_SimpleV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
+            uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+            flags |= (1 << 0); // Set bit 0 for start
+            flags |= (1 << 1); // Set bit 1 for end
+
+            bytes16 flagsBytes = bytes16(flags);
+            bytes32[] memory data = new bytes32[](2);
+            data[0] = bytes32(block.timestamp);
+            data[1] = bytes32(block.timestamp);
+
             paymentClient.addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 1,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp
+                    originChainId: block.chainid,
+                    targetChainId: block.chainid,
+                    flags: flagsBytes,
+                    data: data
                 })
             );
         }
@@ -398,8 +402,17 @@ contract PP_SimpleV1Test is ModuleTest {
             order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
         );
 
-        order.start = bound(order.start, 0, type(uint).max / 2);
-        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+        // Decode start and cliff from flags and data
+        bool hasStart = (uint128(order.flags) & (1 << 0)) != 0;
+        bool hasCliff = (uint128(order.flags) & (1 << 2)) != 0;
+        uint start = hasStart ? uint(order.data[0]) : 0;
+        uint cliff = hasCliff ? uint(order.data[2]) : 0;
+
+        bytes32[] memory data = new bytes32[](3);
+        data[0] = bytes32(bound(start, 0, type(uint).max / 2));
+        data[2] = bytes32(bound(cliff, 0, type(uint).max / 2));
+
+        order.data = data;
 
         vm.startPrank(sender);
 
