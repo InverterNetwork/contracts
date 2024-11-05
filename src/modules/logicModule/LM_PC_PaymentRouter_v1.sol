@@ -136,6 +136,10 @@ contract LM_PC_PaymentRouter_v1 is
         );
     }
 
+    /// @dev	Creates the flags and data for a payment order.
+    /// @param  start The start date of the streaming period (optional).
+    /// @param  cliff The duration of the cliff period.
+    /// @param  end The ending of the streaming period.
     function _assemblePaymentConfig(uint start, uint cliff, uint end)
         internal
         pure
@@ -152,10 +156,10 @@ contract LM_PC_PaymentRouter_v1 is
             flags |= (1 << 1);
             length++;
         }
-        if (cliff != 0) {
-            flags |= (1 << 2);
-            length++;
-        }
+
+        // Note: cliff is always present cause zero is a valid value
+        flags |= (1 << 2);
+        length++;
 
         bytes32[] memory data = new bytes32[](length);
         uint dataIndex = 0;
@@ -167,9 +171,7 @@ contract LM_PC_PaymentRouter_v1 is
             data[dataIndex] = bytes32(end);
             dataIndex++;
         }
-        if (cliff != 0) {
-            data[dataIndex] = bytes32(cliff);
-        }
+        data[dataIndex] = bytes32(cliff);
 
         return (bytes16(flags), data);
     }

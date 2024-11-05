@@ -340,41 +340,31 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
     function test_AssemblePaymentConfig(uint start, uint cliff, uint end)
         external
     {
-        console.log("start", start);
-        console.log("cliff", cliff);
-        console.log("end", end);
         vm.assume(start <= type(uint).max / 2);
         vm.assume(cliff <= type(uint).max / 2);
         vm.assume(end <= type(uint).max / 2);
-        console.log("Pooooh");
         (bytes16 flags, bytes32[] memory data) =
             paymentRouter.direct__assemblePaymentConfig(start, cliff, end);
-        console.log("piiip");
         // Ensure data array is properly sized based on non-zero values
         uint expectedLength = 0;
         if (start != 0) expectedLength++;
         if (end != 0) expectedLength++;
-        if (cliff != 0) expectedLength++;
+        expectedLength++;
         assertEq(data.length, expectedLength);
 
         uint dataIndex = 0;
         if (start != 0) {
-            console.log("hi1");
             assertEq(uint128(flags) & (1 << 0), 1 << 0); // Check start flag is set
             assertEq(data[dataIndex], bytes32(start));
             dataIndex++;
         }
         if (end != 0) {
-            console.log("hi2");
             assertEq(uint128(flags) & (1 << 1), 1 << 1); // Check end flag is set
             assertEq(data[dataIndex], bytes32(end));
             dataIndex++;
         }
-        if (cliff != 0) {
-            console.log("hi3");
-            assertEq(uint128(flags) & (1 << 2), 1 << 2); // Check cliff flag is set
-            assertEq(data[dataIndex], bytes32(cliff));
-        }
+        assertEq(uint128(flags) & (1 << 2), 1 << 2); 
+        assertEq(data[dataIndex], bytes32(cliff));
     }
 
     //--------------------------------------------------------------------------
