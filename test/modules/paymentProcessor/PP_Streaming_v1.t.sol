@@ -38,6 +38,9 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 contract PP_StreamingV1Test is ModuleTest {
     bytes16 internal constant _START_END_CLIFF_FLAG =
         0x00000000000000000000000000000007;
+    uint internal constant defaultStart = 69;
+    uint internal constant defaultCliff = 13;
+    uint internal constant defaultEnd = 420;
 
     // SuT
     PP_Streaming_v1AccessMock paymentProcessor;
@@ -92,7 +95,10 @@ contract PP_StreamingV1Test is ModuleTest {
 
         _setUpOrchestrator(paymentProcessor);
 
-        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
+        bytes memory configData =
+            abi.encode(defaultStart, defaultCliff, defaultEnd);
+
+        paymentProcessor.init(_orchestrator, _METADATA, configData);
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -1823,33 +1829,48 @@ contract PP_StreamingV1Test is ModuleTest {
         assertEq(result, resultShouldBe);
     }
 
-    // function test_ValidPaymentOrder(
-    //     IERC20PaymentClientBase_v1.PaymentOrder memory order,
-    //     address sender
-    // ) public {
-    //     // The randomToken can't be the address of the Create2Deployer
-    //     // as that one uses a fallback funciton to deploy contracts, it will
-    //     // pass the test here
-    //     vm.assume(
-    //         order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
-    //     );
+    function test_ValidPaymentOrder(
+        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        address sender,
+        uint start,
+        uint cliff,
+        uint end
+    ) public {
+        // The randomToken can't be the address of the Create2Deployer
+        // as that one uses a fallback function to deploy contracts, it will
+        // pass the test here
+        vm.assume(
+            order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
+        );
 
-    //     order.start = bound(order.start, 0, type(uint).max / 2);
-    //     order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+        start = bound(start, 0, type(uint).max / 2);
+        cliff = bound(cliff, 0, type(uint).max / 2);
+        end = bound(end, 0, type(uint).max / 2);
 
-    //     vm.startPrank(sender);
+        bytes32[] memory data = new bytes32[](3);
+        data[0] = bytes32(start);
+        data[1] = bytes32(cliff);
+        data[2] = bytes32(end);
 
-    //     bool expectedValue = paymentProcessor.original_validPaymentReceiver(
-    //         order.recipient
-    //     ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
-    //         && paymentProcessor.original_validTimes(
-    //             order.start, order.cliff, order.end
-    //         ) && paymentProcessor.original__validTotal(order.amount);
+        // Set up data array before accessing it
+        order.data = data;
 
-    //     assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+        // Set flags to indicate all values are present
+        order.flags = bytes16(uint128(7)); // 7 = 0b111 to set first 3 bits
 
-    //     vm.stopPrank();
-    // }
+        vm.startPrank(sender);
+
+        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+            order.recipient
+        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
+            && paymentProcessor.original_validTimes(
+                uint(order.data[0]), uint(order.data[1]), uint(order.data[2])
+            ) && paymentProcessor.original__validTotal(order.amount);
+
+        assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
+
+        vm.stopPrank();
+    }
 
     function test__validPaymentReceiver(address addr, address sender) public {
         bool expectedValue = true;
@@ -1923,6 +1944,48 @@ contract PP_StreamingV1Test is ModuleTest {
         assertEq(
             paymentProcessor.original_validPaymentToken(address(_token)), true
         );
+    }
+
+    function test__getStreamingDetails(bytes16 flags, bytes32[] memory data)
+        public
+    {
+        bool hasStart = false;
+        bool hasCliff = false;
+        bool hasEnd = false;
+
+        uint8 numOnes = 0;
+        if ((uint128(flags) & (1 << 0)) != 0) {
+            hasStart = true;
+            numOnes++;
+        }
+        if ((uint128(flags) & (1 << 1)) != 0) {
+            hasCliff = true;
+            numOnes++;
+        }
+        if ((uint128(flags) & (1 << 2)) != 0) {
+            hasEnd = true;
+            numOnes++;
+        }
+
+        // Bound data length to match number of flags set
+        vm.assume(data.length >= numOnes);
+        if (data.length > numOnes) {
+            bytes32[] memory newData = new bytes32[](numOnes);
+            for (uint i = 0; i < numOnes; i++) {
+                newData[i] = data[i];
+            }
+            data = newData;
+        }
+
+        (uint start, uint cliff, uint end) =
+            paymentProcessor.original_getStreamingDetails(flags, data);
+
+        uint idx = 0;
+        assertEq(start, hasStart ? uint(data[idx]) : defaultStart);
+        if (hasStart) idx++;
+        assertEq(cliff, hasCliff ? uint(data[idx]) : defaultCliff);
+        if (hasCliff) idx++;
+        assertEq(end, hasEnd ? uint(data[idx]) : defaultEnd);
     }
 
     //--------------------------------------------------------------------------

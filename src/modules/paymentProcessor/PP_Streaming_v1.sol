@@ -101,8 +101,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///         client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[]).
     mapping(address => mapping(address => uint[])) private activeStreams;
 
+    /// @dev    Default start, cliff and end times for new payment orders.
+    uint private defaultStart;
+    uint private defaultCliff;
+    uint private defaultEnd;
+
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[53] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -140,9 +145,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configData*/
+        bytes memory configData
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
+
+        (uint _defaultStart, uint _defaultCliff, uint _defaultEnd) =
+            abi.decode(configData, (uint, uint, uint));
+
+        defaultStart = _defaultStart;
+        defaultCliff = _defaultCliff;
+        defaultEnd = _defaultEnd;
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -224,9 +236,6 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     orders[i],
                     numStreams[address(client)][orders[i].recipient] + 1
                 );
-
-                (uint start, uint cliff, uint end) =
-                    _decodeParams(orders[i].data);
 
                 emit IPaymentProcessor_v1.PaymentOrderProcessed(
                     address(client),
@@ -410,7 +419,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
-        (uint start, uint cliff, uint end) = _decodeParams(order.data);
+        (uint start, uint cliff, uint end) =
+            _getStreamingDetails(order.flags, order.data);
 
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount) && _validTimes(start, cliff, end)
@@ -668,7 +678,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal {
         ++numStreams[_client][_order.recipient];
 
-        (uint start, uint cliff, uint end) = _decodeParams(_order.data);
+        (uint start, uint cliff, uint end) =
+            _getStreamingDetails(_order.flags, _order.data);
 
         streams[_client][_order.recipient][_streamId] = Stream(
             _order.paymentToken, _streamId, _order.amount, 0, start, cliff, end
@@ -917,13 +928,22 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return (success && data.length != 0 && _token.code.length != 0);
     }
 
-    function _decodeParams(bytes32[] memory data)
+    function _getStreamingDetails(bytes16 flags, bytes32[] memory data)
         internal
-        pure
+        view
         returns (uint start, uint cliff, uint end)
     {
-        start = uint(data[0]);
-        cliff = uint(data[1]);
-        end = uint(data[2]);
+        uint dataIdx = 0;
+
+        bool hasStart = (uint128(flags) & (1 << 0)) != 0;
+        start = hasStart ? uint(data[dataIdx]) : defaultStart;
+        if (hasStart) dataIdx += 1;
+
+        bool hasCliff = (uint128(flags) & (1 << 1)) != 0;
+        cliff = hasCliff ? uint(data[dataIdx]) : defaultCliff;
+        if (hasCliff) dataIdx += 1;
+
+        bool hasEnd = (uint128(flags) & (1 << 2)) != 0;
+        end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
     }
 }
