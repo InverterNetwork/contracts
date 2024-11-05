@@ -18,10 +18,9 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
-import {
-    ILM_PC_PaymentRouter_v1,
-    LM_PC_PaymentRouter_v1
-} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {ILM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v1AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_PaymentRouter_v1AccessMock.sol";
 import {
     IERC20PaymentClientBase_v1,
     ERC20PaymentClientBase_v1
@@ -43,7 +42,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
     // SuT
-    LM_PC_PaymentRouter_v1 paymentRouter;
+    LM_PC_PaymentRouter_v1AccessMock paymentRouter;
 
     address paymentPusher_user = makeAddr("paymentPusher_user");
 
@@ -60,17 +59,10 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         address indexed recipient, address indexed token, uint amount
     );
 
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
-        address indexed recipient,
-        address indexed token,
-        uint amount
-    );
-
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_PaymentRouter_v1());
-        paymentRouter = LM_PC_PaymentRouter_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_PaymentRouter_v1AccessMock());
+        paymentRouter = LM_PC_PaymentRouter_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentRouter);
 
@@ -315,7 +307,16 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             );
         }
         vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(address(0), address(0), address(0), 0); // since we are using a mock.
+        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+            address(0),
+            address(0),
+            address(0),
+            0,
+            0,
+            0,
+            bytes16(0),
+            new bytes32[](0)
+        ); // since we are using a mock.
 
         paymentRouter.pushPaymentBatched(
             _numOfOrders,
@@ -332,6 +333,52 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             paymentsTriggeredBefore + 1
         );
     }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function test_AssemblePaymentConfig(uint start, uint cliff, uint end)
+        external
+    {
+        console.log("start", start);
+        console.log("cliff", cliff);
+        console.log("end", end);
+        vm.assume(start <= type(uint).max / 2);
+        vm.assume(cliff <= type(uint).max / 2);
+        vm.assume(end <= type(uint).max / 2);
+        console.log("Pooooh");
+        (bytes16 flags, bytes32[] memory data) =
+            paymentRouter.direct__assemblePaymentConfig(start, cliff, end);
+        console.log("piiip");
+        // Ensure data array is properly sized based on non-zero values
+        uint expectedLength = 0;
+        if (start != 0) expectedLength++;
+        if (end != 0) expectedLength++;
+        if (cliff != 0) expectedLength++;
+        assertEq(data.length, expectedLength);
+
+        uint dataIndex = 0;
+        if (start != 0) {
+            console.log("hi1");
+            assertEq(uint128(flags) & (1 << 0), 1 << 0); // Check start flag is set
+            assertEq(data[dataIndex], bytes32(start));
+            dataIndex++;
+        }
+        if (end != 0) {
+            console.log("hi2");
+            assertEq(uint128(flags) & (1 << 1), 1 << 1); // Check end flag is set
+            assertEq(data[dataIndex], bytes32(end));
+            dataIndex++;
+        }
+        if (cliff != 0) {
+            console.log("hi3");
+            assertEq(uint128(flags) & (1 << 2), 1 << 2); // Check cliff flag is set
+            assertEq(data[dataIndex], bytes32(cliff));
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Utils
 
     function _generateRandomValidOrders(uint8 _numOfOrders)
         internal

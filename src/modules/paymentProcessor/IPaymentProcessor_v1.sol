@@ -31,11 +31,19 @@ interface IPaymentProcessor_v1 {
     /// @param  recipient The address that will receive the payment.
     /// @param  paymentToken The address of the token that will be used for the payment.
     /// @param  amount The amount of tokens the payment consists of.
+    /// @param  originChainId The chain id of the origin.
+    /// @param  targetChainId The chain id on which to find the recipient address.
+    /// @param  flags Flags that contain information on the information contained in the data array.
+    /// @param  data Array of bytes32 that contain information on the payment order.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
-        uint amount
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes16 flags,
+        bytes32[] data
     );
 
     /// @notice Emitted when an amount of ERC20 tokens gets sent out of the contract.

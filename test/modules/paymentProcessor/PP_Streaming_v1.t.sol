@@ -36,6 +36,9 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
+    bytes16 internal constant _START_END_CLIFF_FLAG =
+        0x00000000000000000000000000000007;
+
     // SuT
     PP_Streaming_v1AccessMock paymentProcessor;
 
@@ -59,16 +62,6 @@ contract PP_StreamingV1Test is ModuleTest {
         address indexed paymentClient, address indexed recipient, uint streamId
     );
     event InvalidStreamingOrderDiscarded(
-        address indexed recipient,
-        address indexed paymentToken,
-        uint amount,
-        uint start,
-        uint cliff,
-        uint end
-    );
-
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
         address indexed recipient,
         address indexed paymentToken,
         uint amount,
@@ -182,6 +175,11 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
 
         for (uint i; i < recipients.length; i++) {
+            bytes32[] memory data = new bytes32[](3);
+            data[0] = bytes32(block.timestamp);
+            data[1] = bytes32(0);
+            data[2] = bytes32(block.timestamp + durations[i]);
+
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
                 address(paymentClient),
@@ -193,14 +191,15 @@ contract PP_StreamingV1Test is ModuleTest {
                 0,
                 block.timestamp + durations[i]
             );
-            emit IPP_Streaming_v1.PaymentOrderProcessed(
+            emit IPaymentProcessor_v1.PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
                 amounts[i],
-                block.timestamp,
-                0,
-                block.timestamp + durations[i]
+                block.chainid,
+                block.chainid,
+                _START_END_CLIFF_FLAG,
+                data
             );
         }
 
@@ -1140,6 +1139,11 @@ contract PP_StreamingV1Test is ModuleTest {
         }
         // Expect the correct number and sequence of emits
         for (uint i = 0; i < length; ++i) {
+            bytes32[] memory data = new bytes32[](3);
+            data[0] = bytes32(block.timestamp);
+            data[1] = bytes32(0);
+            data[2] = bytes32(duration + block.timestamp);
+
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
                 address(paymentClient),
@@ -1151,14 +1155,15 @@ contract PP_StreamingV1Test is ModuleTest {
                 0,
                 duration + block.timestamp
             );
-            emit PaymentOrderProcessed(
+            emit IPaymentProcessor_v1.PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
                 amounts[i],
-                block.timestamp,
-                0,
-                duration + block.timestamp
+                block.chainid,
+                block.chainid,
+                _START_END_CLIFF_FLAG,
+                data
             );
         }
 
@@ -1988,12 +1993,7 @@ contract PP_StreamingV1Test is ModuleTest {
         view
         returns (IERC20PaymentClientBase_v1.PaymentOrder memory paymentOrder)
     {
-        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
-        flags |= (1 << 0); // Set bit 0 for start
-        flags |= (1 << 1); // Set bit 1 for end
-        flags |= (1 << 2); // Set bit 2 for cliff
-        bytes16 flagsBytes = bytes16(flags);
-
+        bytes16 flagsBytes = bytes16(uint128(7));
         bytes32[] memory data = new bytes32[](3);
         data[0] = bytes32(start);
         data[1] = bytes32(cliff);

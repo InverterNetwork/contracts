@@ -228,14 +228,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                 (uint start, uint cliff, uint end) =
                     _decodeParams(orders[i].data);
 
-                emit PaymentOrderProcessed(
+                emit IPaymentProcessor_v1.PaymentOrderProcessed(
                     address(client),
                     orders[i].recipient,
                     orders[i].paymentToken,
                     orders[i].amount,
-                    start,
-                    cliff,
-                    end
+                    orders[i].originChainId,
+                    orders[i].targetChainId,
+                    orders[i].flags,
+                    orders[i].data
                 );
 
                 unchecked {

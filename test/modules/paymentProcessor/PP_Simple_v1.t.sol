@@ -42,12 +42,6 @@ contract PP_SimpleV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
-        address indexed recipient,
-        address indexed paymentToken,
-        uint amount
-    );
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
     );
@@ -137,8 +131,15 @@ contract PP_SimpleV1Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit PaymentOrderProcessed(
-            address(paymentClient), recipient, address(_token), amount
+        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+            address(paymentClient),
+            recipient,
+            address(_token),
+            amount,
+            1,
+            1,
+            bytes16(0),
+            new bytes32[](0)
         );
         if (!paymentsFail) {
             vm.expectEmit(true, true, true, true);

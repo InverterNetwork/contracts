@@ -115,7 +115,14 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             amount = orders[i].amount;
 
             emit PaymentOrderProcessed(
-                address(client), recipient, address(token_), amount
+                address(client),
+                recipient,
+                address(token_),
+                amount,
+                orders[i].originChainId,
+                orders[i].targetChainId,
+                orders[i].flags,
+                orders[i].data
             );
 
             (bool success, bytes memory data) = token_.call(

@@ -96,6 +96,9 @@ contract LM_PC_RecurringPayments_v1 is
 
     /// @dev	Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
+    /// @dev	Flag config for payment processor indicates presence of start, end and cliff.
+    bytes16 internal constant _START_END_CLIFF_FLAG =
+        0x00000000000000000000000000000007;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -297,16 +300,9 @@ contract LM_PC_RecurringPayments_v1 is
                     currentEpoch - currentPayment.lastTriggeredEpoch;
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
-                    // create flags
-                    // set start, end and cliff to true
-                    // and convert to bytes16
-                    uint128 flags = 0;
-                    flags |= (1 << 0);
-                    flags |= (1 << 1);
-                    flags |= (1 << 2);
-                    bytes16 flagsBytes = bytes16(flags);
                     // assemble data array
                     bytes32[] memory data = new bytes32[](3);
+
                     data[0] = bytes32(block.timestamp);
                     data[1] = bytes32(0);
                     data[2] = bytes32((currentEpoch + 1) * epochLength);
@@ -321,7 +317,7 @@ contract LM_PC_RecurringPayments_v1 is
                             amount: currentPayment.amount,
                             originChainId: block.chainid,
                             targetChainId: block.chainid,
-                            flags: flagsBytes,
+                            flags: _START_END_CLIFF_FLAG,
                             data: data
                         })
                     );
@@ -339,7 +335,7 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 originChainId: block.chainid,
                                 targetChainId: block.chainid,
-                                flags: flagsBytes,
+                                flags: _START_END_CLIFF_FLAG,
                                 data: data
                             })
                         );

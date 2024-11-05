@@ -72,7 +72,7 @@ contract LM_PC_PaymentRouter_v1 is
         uint cliff,
         uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
-        (bytes16 flagsBytes, bytes32[] memory data) =
+        (bytes16 flags, bytes32[] memory data) =
             _assemblePaymentConfig(start, cliff, end);
 
         PaymentOrder memory order = PaymentOrder({
@@ -81,7 +81,7 @@ contract LM_PC_PaymentRouter_v1 is
             amount: amount,
             originChainId: block.chainid,
             targetChainId: block.chainid,
-            flags: flagsBytes,
+            flags: flags,
             data: data
         });
 
@@ -112,7 +112,7 @@ contract LM_PC_PaymentRouter_v1 is
             revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
         }
 
-        (bytes16 flagsBytes, bytes32[] memory data) =
+        (bytes16 flags, bytes32[] memory data) =
             _assemblePaymentConfig(start, cliff, end);
 
         // Loop through the arrays and add Payments
@@ -124,7 +124,7 @@ contract LM_PC_PaymentRouter_v1 is
                     amount: amounts[i],
                     originChainId: block.chainid,
                     targetChainId: block.chainid,
-                    flags: flagsBytes,
+                    flags: flags,
                     data: data
                 })
             );
@@ -139,35 +139,38 @@ contract LM_PC_PaymentRouter_v1 is
     function _assemblePaymentConfig(uint start, uint cliff, uint end)
         internal
         pure
-        returns (bytes16 flagsBytes, bytes32[] memory data)
+        returns (bytes16, bytes32[] memory)
     {
-        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        uint128 flags = 0;
         uint128 length = 0;
 
         if (start != 0) {
-            flags |= (1 << 0); // Set bit 0 for start
+            flags |= (1 << 0);
             length++;
         }
         if (end != 0) {
-            flags |= (1 << 1); // Set bit 1 for end
+            flags |= (1 << 1);
             length++;
         }
         if (cliff != 0) {
-            flags |= (1 << 2); // Set bit 2 for cliff
+            flags |= (1 << 2);
             length++;
         }
 
-        data = new bytes32[](length);
+        bytes32[] memory data = new bytes32[](length);
+        uint dataIndex = 0;
         if (start != 0) {
-            data[0] = bytes32(start);
+            data[dataIndex] = bytes32(start);
+            dataIndex++;
         }
         if (end != 0) {
-            data[1] = bytes32(end);
+            data[dataIndex] = bytes32(end);
+            dataIndex++;
         }
         if (cliff != 0) {
-            data[2] = bytes32(cliff);
+            data[dataIndex] = bytes32(cliff);
         }
 
-        flagsBytes = bytes16(flags);
+        return (bytes16(flags), data);
     }
 }
