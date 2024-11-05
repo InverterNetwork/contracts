@@ -115,8 +115,8 @@ contract PP_SimpleV1Test is ModuleTest {
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
-                originChainId: 1,
-                targetChainId: 1,
+                originChainId: block.chainid,
+                targetChainId: block.chainid,
                 flags: bytes16(0),
                 data: new bytes32[](0)
             })
@@ -136,8 +136,8 @@ contract PP_SimpleV1Test is ModuleTest {
             recipient,
             address(_token),
             amount,
-            1,
-            1,
+            block.chainid,
+            block.chainid,
             bytes16(0),
             new bytes32[](0)
         );

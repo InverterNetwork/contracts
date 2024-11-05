@@ -958,11 +958,13 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             // Decode start and end from flags and data
             bool hasStart = (uint128(orders[i].flags) & (1 << 0)) != 0;
             bool hasEnd = (uint128(orders[i].flags) & (1 << 1)) != 0;
-            uint decodedStart = hasStart ? uint(orders[i].data[0]) : 0;
-            uint decodedEnd = hasEnd ? uint(orders[i].data[1]) : 0;
 
-            assertEq(decodedStart, 0); // No start time set in verifyClaim
-            assertEq(decodedEnd, 0); // No end time set in verifyClaim
+            if (hasStart) {
+                assertEq(uint(orders[i].data[0]), 0);
+            }
+            if (hasEnd) {
+                assertEq(uint(orders[i].data[2]), 0);
+            }
         }
 
         assertEqualClaim(claimId, bountyId, contribs, details, true);

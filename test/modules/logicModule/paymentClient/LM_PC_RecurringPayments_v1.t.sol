@@ -626,7 +626,6 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint growingSequenceBefore;
         uint growingSequenceCurrent;
         for (uint i; i < length; i++) {
-            console.log(receiver[i]);
             // This is a way to introduce randomness and grow the startEpoch in reasonable steps
             growingSequenceCurrent = growingSequenceBefore + i;
 
