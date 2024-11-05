@@ -9,8 +9,6 @@ interface IERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
-    // TODO: change struct
-
     /// @notice Struct used to store information about a payment order.
     /// @param  recipient The recipient of the payment.
     /// @param  paymentToken The token in which to pay. Assumed to always be on the local chain_id.

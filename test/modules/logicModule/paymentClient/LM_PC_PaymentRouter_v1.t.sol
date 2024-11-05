@@ -363,7 +363,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             assertEq(data[dataIndex], bytes32(end));
             dataIndex++;
         }
-        assertEq(uint128(flags) & (1 << 2), 1 << 2); 
+        assertEq(uint128(flags) & (1 << 2), 1 << 2);
         assertEq(data[dataIndex], bytes32(cliff));
     }
 
