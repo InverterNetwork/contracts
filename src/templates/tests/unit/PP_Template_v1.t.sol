@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-// Internal Dependencies
+// Internal
 import {
     ModuleTest,
     IModule_v1,
@@ -9,7 +9,7 @@ import {
 } from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-// External Dependencies
+// External
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // Tests and Mocks
@@ -21,28 +21,29 @@ import {
     ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
-// System under test (SuT)
+// System under Test (SuT)
 import {
     IPP_Template_v1,
     IPaymentProcessor_v1
 } from "src/templates/modules/PP_Template_v1.sol";
 
 /**
- * @title   Inverter Template Payment Processor
+ * @title   Inverter Template Payment Processor Tests
  *
- * @notice  Basic template payment processor used to showcase the unit testing setup
+ * @notice  Basic template payment processor used to showcase the unit testing
+ *          setup
  *
- * @dev     Not all functions are tested in this template. Placeholders of the functions that are not tested are added
- *          into the contract. This test showcases the following:
- *          - Inherit from the ModuleTest contract to enable interaction with the Inverter workflow.
+ * @dev     Not all functions are tested in this template. Placeholders of the
+ *          functions that are not tested are added into the contract. This test
+ *          showcases the following:
+ *          - Inherit from the ModuleTest contract to enable interaction with
+ *            the Inverter workflow.
  *          - Showcases the setup of the workflow, uses in test unit tests.
  *          - Pre-defined layout for all setup and functions to be tested.
- *          - Shows the use of Gherkin for documenting the testing. VS Code extension used for formatting is recommended.
- *          - Shows the use of the modifierInPlace pattern to test the modifier placement.
- *
- * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *          - Shows the use of Gherkin for documenting the testing. VS Code
+ *            extension used for formatting is recommended.
+ *          - Shows the use of the modifierInPlace pattern to test the modifier
+ *            placement.
  *
  * @author  Inverter Network
  */
@@ -137,7 +138,7 @@ contract PP_Template_v1_Test is ModuleTest {
             new ERC20PaymentClientBaseV1Mock();
 
         vm.expectRevert(
-            IPP_Template_v1.Module__PP_Template__NotValidClient.selector
+            IPP_Template_v1.Module__PP_Template__ClientNotValid.selector
         );
         paymentProcessor.processPayments(nonRegisteredClient);
     }
