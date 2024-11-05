@@ -98,28 +98,28 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     // Mutating Functions
 
     /// @notice Sets a new liquidity valut controller address
-    /// @param _lp Address of the liquidity vault controller
-    function setLiquidityVaultControllerContract(ILiquidityVaultController _lp)
+    /// @param lp_ Address of the liquidity vault controller
+    function setLiquidityVaultControllerContract(ILiquidityVaultController lp_)
         external;
 
     /// @notice Adjust the seize percentage, which is seizable from the contract
-    /// @param _seize The seize in percentage, expressed as BPS
-    function adjustSeize(uint64 _seize) external;
+    /// @param seize_ The seize in percentage, expressed as BPS
+    function adjustSeize(uint64 seize_) external;
 
     /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
     /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max
     /// seizable percentage has been added
-    /// @param _amount Number of tokens to be removed from the pool
-    function seize(uint _amount) external;
+    /// @param amount_ Number of tokens to be removed from the pool
+    function seize(uint amount_) external;
 
     /// @notice Burn amount of tokens from message sender
-    /// @param _amount Amount token to be burned
-    function burnIssuanceToken(uint _amount) external;
+    /// @param amount_ Amount token to be burned
+    function burnIssuanceToken(uint amount_) external;
 
     /// @notice Burn `amount` tokens belonging to `owner`
-    /// @param _owner Address whose tokens will be burnt
-    /// @param _amount Burn amount
-    function burnIssuanceTokenFor(address _owner, uint _amount) external;
+    /// @param owner_ Address whose tokens will be burnt
+    /// @param amount_ Burn amount
+    function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
     /// @notice Restricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
@@ -131,6 +131,6 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
 
     /// @notice Sets the token vault address.
     /// @dev    Only callable by OrchestratorAdmin
-    /// @param _tokenVault The address of the token vault.
-    function setTokenVault(address _tokenVault) external;
+    /// @param tokenVault_ The address of the token vault.
+    function setTokenVault(address tokenVault_) external;
 }

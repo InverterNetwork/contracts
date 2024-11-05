@@ -67,17 +67,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     FM_BC_BondingSurface_Redeeming_v1
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
         override(FM_BC_BondingSurface_Redeeming_v1)
         returns (bool)
     {
-        return interfaceId
+        return interfaceId_
             == type(IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1)
-                .interfaceId || interfaceId == type(IRepayer_v1).interfaceId
-            || super.supportsInterface(interfaceId);
+                .interfaceId || interfaceId_ == type(IRepayer_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     using SafeERC20 for IERC20;
@@ -128,40 +128,40 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
-        Metadata memory metadata,
-        bytes memory configData
+        Metadata memory metadata_,
+        bytes memory configData_
     ) external override(FM_BC_BondingSurface_Redeeming_v1) initializer {
-        __Module_init(orchestrator_, metadata);
+        __Module_init(orchestrator_, metadata_);
 
-        address _issuanceToken;
-        address _acceptedToken;
+        address issuanceToken;
+        address acceptedToken;
         address liquidityVaultController;
         BondingCurveProperties memory bondingCurveProperties;
-        uint64 _seize;
+        uint64 seize;
         // The indicator used for restrict/unrestrict buying and selling
         // functionalities to the CURVE_INTERACTION_ROLE
         bool buyAndSellIsRestricted;
 
         (
-            _issuanceToken,
-            _acceptedToken,
+            issuanceToken,
+            acceptedToken,
             liquidityVaultController,
             bondingCurveProperties,
-            _seize,
+            seize,
             buyAndSellIsRestricted
         ) = abi.decode(
-            configData,
+            configData_,
             (address, address, address, BondingCurveProperties, uint64, bool)
         );
 
         // Set accepted token
-        _token = IERC20(_acceptedToken);
+        _token = IERC20(acceptedToken);
 
         // MIN_RESERVE is in relational to the decimals of the workflow collateral token
         MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
-        _setIssuanceToken(address(_issuanceToken));
+        _setIssuanceToken(address(issuanceToken));
 
         // Set liquidity vault controller address
         _liquidityVaultController =
@@ -198,10 +198,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _buyAndSellIsRestricted = buyAndSellIsRestricted;
 
         // Set currentSeize
-        _setSeize(_seize);
+        _setSeize(seize);
 
         emit OrchestratorTokenSet(
-            _acceptedToken, IERC20Metadata(address(_token)).decimals()
+            acceptedToken, IERC20Metadata(address(_token)).decimals()
         );
     }
 
@@ -271,7 +271,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IRepayer_v1
-    function getRepayableAmount() external view returns (uint) {
+    function getRepayableAmount()
+        external
+        view
+        returns (uint repayableAmount)
+    {
         return _getRepayableAmount();
     }
 
@@ -280,97 +284,95 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Buy tokens on behalf of a specified receiver address.
     /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  _receiver The address that will receive the bought tokens.
-    /// @param  _depositAmount The amount of collateral token depoisited.
-    /// @param  _minAmountOut The minimum acceptable amount the user expects to
+    /// @param  receiver_ The address that will receive the bought tokens.
+    /// @param  depositAmount_ The amount of collateral token depoisited.
+    /// @param  minAmountOut_ The minimum acceptable amount the user expects to
     ///         receive from the transaction.
-    function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
+    function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
         override(BondingCurveBase_v1)
         checkBuyAndSellRestrictions
     {
-        super.buyFor(_receiver, _depositAmount, _minAmountOut);
+        super.buyFor(receiver_, depositAmount_, minAmountOut_);
     }
 
     /// @notice Buy tokens for the sender's address.
     /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  _depositAmount The amount of collateral token depoisited.
-    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive
+    /// @param  depositAmount_ The amount of collateral token depoisited.
+    /// @param  minAmountOut_ The minimum acceptable amount the user expects to receive
     ///         from the transaction.
-    function buy(uint _depositAmount, uint _minAmountOut)
+    function buy(uint depositAmount_, uint minAmountOut_)
         public
         virtual
         override(BondingCurveBase_v1)
     {
-        buyFor(_msgSender(), _depositAmount, _minAmountOut);
+        buyFor(_msgSender(), depositAmount_, minAmountOut_);
     }
 
     /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
     /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  _receiver The address that will receive the redeemed tokens.
-    /// @param  _depositAmount The amount of tokens to be sold.
-    /// @param  _minAmountOut The minimum acceptable amount of proceeds that the receiver
+    /// @param  receiver_ The address that will receive the redeemed tokens.
+    /// @param  depositAmount_ The amount of tokens to be sold.
+    /// @param  minAmountOut_ The minimum acceptable amount of proceeds that the receiver
     ///         should receive from the sale.
-    function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
+    function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
         checkBuyAndSellRestrictions
     {
-        super.sellTo(_receiver, _depositAmount, _minAmountOut);
+        super.sellTo(receiver_, depositAmount_, minAmountOut_);
     }
 
     /// @notice Redeem collateral for the sender's address.
     /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  _depositAmount The amount of issued token depoisited.
-    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive
+    /// @param  depositAmount_ The amount of issued token depoisited.
+    /// @param  minAmountOut_ The minimum acceptable amount the user expects to receive
     ///         from the transaction.
-    /// @param  _minAmountOut The minimum acceptable amount the user expects to receive
-    ///         from the transaction.
-    function sell(uint _depositAmount, uint _minAmountOut)
+    function sell(uint depositAmount_, uint minAmountOut_)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
     {
-        sellTo(_msgSender(), _depositAmount, _minAmountOut);
+        sellTo(_msgSender(), depositAmount_, minAmountOut_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function burnIssuanceToken(uint _amount) external {
-        _burn(_msgSender(), _amount);
+    function burnIssuanceToken(uint amount_) external {
+        _burn(_msgSender(), amount_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function burnIssuanceTokenFor(address _owner, uint _amount) external {
-        if (_owner != _msgSender()) {
+    function burnIssuanceTokenFor(address owner_, uint amount_) external {
+        if (owner_ != _msgSender()) {
             // Does not update allowance if set to infinite
-            _spendAllowance(_owner, _msgSender(), _amount);
+            _spendAllowance(owner_, _msgSender(), amount_);
         }
         // Will revert if balance < amount
-        _burn(_owner, _amount);
+        _burn(owner_, amount_);
     }
 
     //--------------------------------------------------------------------------
     // OnlyLiquidityVaultController Functions
 
     /// @inheritdoc IRepayer_v1
-    function transferRepayment(address _to, uint _amount)
+    function transferRepayment(address to_, uint amount_)
         external
-        validReceiver(_to)
+        validReceiver(to_)
         onlyLiquidityVaultController
     {
-        if (_amount > _getRepayableAmount()) {
+        if (amount_ > _getRepayableAmount()) {
             revert Repayer__InsufficientCollateralForRepayerTransfer();
         }
         __Module_orchestrator.fundingManager().token().safeTransfer(
-            _to, _amount
+            to_, amount_
         );
         if (MIN_RESERVE > token().balanceOf(address(this))) {
             revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
 
-        emit RepaymentTransfer(_to, _amount);
+        emit RepaymentTransfer(to_, amount_);
     }
 
     //--------------------------------------------------------------------------

@@ -14,14 +14,15 @@ interface IBondingSurface {
     /// @dev Compute spot price for a given capital available and capital required
     /// p = f(C_a, C_r) = B * (C_a^2 / C_r)
     ///
-    /// @param _capitalAvailable Capital pool to base the spot price on.
-    /// @param _capitalRequirements Capital requirements to base the spot price on.
-    /// @param _basePriceMultiplier Base Price Multiplier
+    /// @param capitalAvailable_ Capital pool to base the spot price on.
+    /// @param capitalRequirements_ Capital requirements to base the spot price on.
+    /// @param basePriceMultiplier_ Base Price Multiplier
+    /// @return spotPrice The spot price
     function spotPrice(
-        uint _capitalAvailable,
-        uint _capitalRequirements,
-        uint _basePriceMultiplier
-    ) external view returns (uint);
+        uint capitalAvailable_,
+        uint capitalRequirements_,
+        uint basePriceMultiplier_
+    ) external view returns (uint spotPrice);
 
     /// @dev To get the number of tokens we have the following formula:
     ///
@@ -32,14 +33,15 @@ interface IBondingSurface {
     /// _ca must be > 0
     /// @notice Calculate number of tokens to mint based on `_in` tokens supplied
     ///         and `_ca` of capital available.
-    /// @param _in Assets added to the pool.
-    /// @param _capitalAvailable Capital available to use for bonding curve mint.
-    /// @param _basePriceToCapitalRatio Precomputed factor which combines the base price multiplier with capital required
+    /// @param in_ Assets added to the pool.
+    /// @param capitalAvailable_ Capital available to use for bonding curve mint.
+    /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
+    /// @return amount The amount of tokens to mint //@todo is this the correct natspec?
     function tokenOut(
-        uint _in,
-        uint _capitalAvailable,
-        uint _basePriceToCapitalRatio
-    ) external view returns (uint);
+        uint in_,
+        uint capitalAvailable_,
+        uint basePriceToCapitalRatio_
+    ) external view returns (uint amount);
 
     /// @dev To get the change in assests when burning tokens
     ///
@@ -51,12 +53,13 @@ interface IBondingSurface {
     /// _ca must be > 0
     /// @notice Calculate number of assets to return based on `_out` tokens being burnt,
     ///         `_ca` of capital available and `_supply` TPG minted.
-    /// @param _out TPG to burn
-    /// @param _capitalAvailable Capital available to use for bonding curve burn.
-    /// @param _basePriceToCapitalRatio Precomputed factor which combines the base price multiplier with capital required
+    /// @param out_ TPG to burn
+    /// @param capitalAvailable_ Capital available to use for bonding curve burn.
+    /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
+    /// @return amount The amount of assets to return //@todo is this the correct natspec?
     function tokenIn(
-        uint _out,
-        uint _capitalAvailable,
-        uint _basePriceToCapitalRatio
-    ) external view returns (uint);
+        uint out_,
+        uint capitalAvailable_,
+        uint basePriceToCapitalRatio_
+    ) external view returns (uint amount);
 }

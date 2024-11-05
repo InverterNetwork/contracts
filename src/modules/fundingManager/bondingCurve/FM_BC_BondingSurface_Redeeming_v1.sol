@@ -60,17 +60,17 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     RedeemingBondingCurveBase_v1
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
         override(RedeemingBondingCurveBase_v1)
         returns (bool)
     {
-        return interfaceId
+        return interfaceId_
             == type(IFM_BC_BondingSurface_Redeeming_v1).interfaceId
-            || interfaceId == type(IFundingManager_v1).interfaceId
-            || super.supportsInterface(interfaceId);
+            || interfaceId_ == type(IFundingManager_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     using SafeERC20 for IERC20;
@@ -105,26 +105,26 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
-        Metadata memory metadata,
-        bytes memory configData
+        Metadata memory metadata_,
+        bytes memory configData_
     ) external virtual override(Module_v1) initializer {
-        __Module_init(orchestrator_, metadata);
+        __Module_init(orchestrator_, metadata_);
 
-        address _issuanceToken;
-        address _acceptedToken;
+        address issuanceToken;
+        address acceptedToken;
         BondingCurveProperties memory bondingCurveProperties;
 
-        (_issuanceToken, _acceptedToken, bondingCurveProperties) =
-            abi.decode(configData, (address, address, BondingCurveProperties));
+        (issuanceToken, acceptedToken, bondingCurveProperties) =
+            abi.decode(configData_, (address, address, BondingCurveProperties));
 
         // Set accepted token
-        _token = IERC20(_acceptedToken);
+        _token = IERC20(acceptedToken);
 
         // MIN_RESERVE is in relational to the decimals of the workflow collateral token
         MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
-        _setIssuanceToken(address(_issuanceToken));
+        _setIssuanceToken(address(issuanceToken));
 
         // Check for valid Bonding Surface formula contract
         if (
@@ -153,7 +153,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         sellIsOpen = bondingCurveProperties.sellIsOpen;
 
         emit OrchestratorTokenSet(
-            _acceptedToken, IERC20Metadata(address(_token)).decimals()
+            acceptedToken, IERC20Metadata(address(_token)).decimals()
         );
     }
 
@@ -185,12 +185,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     /// @notice Calculates and returns the static price for selling the issuance token.
     ///         The return value is formatted in PPM.
-    /// @return uint The static price for selling the issuance token.
+    /// @return staticPrice The static price for selling the issuance token.
     function getStaticPriceForSelling()
         external
         view
         override(RedeemingBondingCurveBase_v1)
-        returns (uint)
+        returns (uint staticPrice)
     {
         return _formula.spotPrice(
             _getCapitalAvailable(), _capitalRequired, _basePriceMultiplier
@@ -255,12 +255,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function setBasePriceMultiplier(uint _newBasePriceMultiplier)
+    function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
         virtual
         onlyOrchestratorAdmin
     {
-        _setBasePriceMultiplier(_newBasePriceMultiplier);
+        _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
 
     //--------------------------------------------------------------------------
@@ -268,9 +268,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     /// @dev Calculates the amount of tokens to mint for a given deposit amount using the formula contract.
     /// This internal function is an override of BondingCurveBase_v1's abstract function.
-    /// @param _depositAmount The amount of collateral deposited to purchase tokens.
+    /// @param depositAmount_ The amount of collateral deposited to purchase tokens.
     /// @return mintAmount The amount of tokens that will be minted.
-    function _issueTokensFormulaWrapper(uint _depositAmount)
+    function _issueTokensFormulaWrapper(uint depositAmount_)
         internal
         view
         override(BondingCurveBase_v1)
@@ -282,15 +282,15 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         }
 
         mintAmount = _formula.tokenOut(
-            _depositAmount, capitalAvailable, _basePriceToCapitalRatio
+            depositAmount_, capitalAvailable, _basePriceToCapitalRatio
         );
     }
 
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
-    /// @param _depositAmount The amount of tokens to be redeemed for collateral.
+    /// @param depositAmount_ The amount of tokens to be redeemed for collateral.
     /// @return redeemAmount The amount of collateral that will be received.
-    function _redeemTokensFormulaWrapper(uint _depositAmount)
+    function _redeemTokensFormulaWrapper(uint depositAmount_)
         internal
         view
         override(RedeemingBondingCurveBase_v1)
@@ -302,7 +302,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
         redeemAmount = _formula.tokenIn(
-            _depositAmount, capitalAvailable, _basePriceToCapitalRatio
+            depositAmount_, capitalAvailable, _basePriceToCapitalRatio
         );
 
         // The asset pool must never be empty.
@@ -315,33 +315,37 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // OnlyPaymentClient Functions
 
     /// @inheritdoc IFundingManager_v1
-    function transferOrchestratorToken(address to, uint amount)
+    function transferOrchestratorToken(address to_, uint amount_)
         external
         virtual
         onlyPaymentClient
     {
         if (
-            amount
+            amount_
                 > token().balanceOf(address(this)) - projectCollateralFeeCollected
         ) {
             revert InvalidOrchestratorTokenWithdrawAmount();
         }
 
-        token().safeTransfer(to, amount);
+        token().safeTransfer(to_, amount_);
 
         if (MIN_RESERVE > token().balanceOf(address(this))) {
             revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
 
-        emit TransferOrchestratorToken(to, amount);
+        emit TransferOrchestratorToken(to_, amount_);
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
-    /// @return uint Capital available in contract
-    function _getCapitalAvailable() internal view returns (uint) {
+    /// @return capitalAvailable Capital available in contract
+    function _getCapitalAvailable()
+        internal
+        view
+        returns (uint capitalAvailable)
+    {
         return _token.balanceOf(address(this)) - projectCollateralFeeCollected;
     }
 
@@ -357,15 +361,15 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     /// @dev    Sets the base price multiplier and emits an event. Reverts if the input is zero.
-    /// @param  _newBasePriceMultiplier The new base price multiplier.
-    function _setBasePriceMultiplier(uint _newBasePriceMultiplier) internal {
-        if (_newBasePriceMultiplier == 0) {
+    /// @param  newBasePriceMultiplier_ The new base price multiplier.
+    function _setBasePriceMultiplier(uint newBasePriceMultiplier_) internal {
+        if (newBasePriceMultiplier_ == 0) {
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
         emit BasePriceMultiplierChanged(
-            _basePriceMultiplier, _newBasePriceMultiplier
+            _basePriceMultiplier, newBasePriceMultiplier_
         );
-        _basePriceMultiplier = _newBasePriceMultiplier;
+        _basePriceMultiplier = newBasePriceMultiplier_;
         _updateVariables();
     }
 
@@ -381,14 +385,19 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     }
 
     /// @dev Internal function which calculates the price multiplier to capital ratio
-    function _calculateBasePriceToCapitalRatio(
-        uint _capitalRequired,
-        uint _basePriceMultiplier
-    ) internal pure returns (uint _basePriceToCapitalRatio) {
-        _basePriceToCapitalRatio = FixedPointMathLib.fdiv(
-            _basePriceMultiplier, _capitalRequired, FixedPointMathLib.WAD
+    /// @param capitalRequired_ The capital required.
+    /// @param basePriceMultiplier_ The base price multiplier.
+    /// @return basePriceToCapitalRatio The calculated price to capital ratio.
+    function _calculateBasePriceToCapitalRatio( //@note this function is just a pure function right?
+    uint capitalRequired_, uint basePriceMultiplier_)
+        internal
+        pure
+        returns (uint basePriceToCapitalRatio)
+    {
+        basePriceToCapitalRatio = FixedPointMathLib.fdiv(
+            basePriceMultiplier_, capitalRequired_, FixedPointMathLib.WAD
         );
-        if (_basePriceToCapitalRatio > 1e36) {
+        if (basePriceToCapitalRatio > 1e36) {
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
     }

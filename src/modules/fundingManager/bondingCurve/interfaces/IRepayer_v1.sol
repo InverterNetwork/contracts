@@ -25,14 +25,15 @@ interface IRepayer_v1 {
     // Functions
 
     /// @notice Returns the max repayable amount set in the contract
-    function getRepayableAmount() external returns (uint);
+    /// @return repayableAmount The max repayable amount
+    function getRepayableAmount() external returns (uint repayableAmount);
 
     /// @notice Sets the repayable amount
-    /// @param _amount Max repayable amount
-    function setRepayableAmount(uint _amount) external;
+    /// @param amount_ Max repayable amount
+    function setRepayableAmount(uint amount_) external;
 
     /// @notice Transfers the repayable amount to the liquidity provider
-    /// @param _amount the amount to repay
-    /// @param _to the address of liquidity provider
-    function transferRepayment(address _to, uint _amount) external;
+    /// @param amount_ the amount to repay
+    /// @param to_ the address of liquidity provider
+    function transferRepayment(address to_, uint amount_) external;
 }

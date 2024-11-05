@@ -28,15 +28,15 @@ import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 /// on update.
 contract BondingSurface is IBondingSurface, ERC165 {
     /// @inheritdoc ERC165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
         override(ERC165)
         returns (bool)
     {
-        return interfaceId == type(IBondingSurface).interfaceId
-            || super.supportsInterface(interfaceId);
+        return interfaceId_ == type(IBondingSurface).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     /// @dev constructor
@@ -47,56 +47,56 @@ contract BondingSurface is IBondingSurface, ERC165 {
 
     /// @inheritdoc IBondingSurface
     function spotPrice(
-        uint _capitalAvailable,
-        uint _capitalRequirements,
-        uint _basePriceMultiplier
-    ) public pure returns (uint) {
+        uint capitalAvailable_,
+        uint capitalRequirements_,
+        uint basePriceMultiplier_
+    ) public pure returns (uint spotPrice) {
         uint caSq = FixedPointMathLib.fmul(
-            _capitalAvailable, _capitalAvailable, FixedPointMathLib.WAD
+            capitalAvailable_, capitalAvailable_, FixedPointMathLib.WAD
         ); // C_a^2
         uint caSqCr = FixedPointMathLib.fdiv(
-            caSq, _capitalRequirements, FixedPointMathLib.WAD
+            caSq, capitalRequirements_, FixedPointMathLib.WAD
         );
         return FixedPointMathLib.fmul(
-            caSqCr, _basePriceMultiplier, FixedPointMathLib.WAD
+            caSqCr, basePriceMultiplier_, FixedPointMathLib.WAD
         ); // C_a^2 * B / C_r
     }
 
     /// @inheritdoc IBondingSurface
     function tokenOut(
-        uint _in,
-        uint _capitalAvailable,
-        uint _basePriceToCapitalRatio
-    ) public pure returns (uint) {
+        uint in_,
+        uint capitalAvailable_,
+        uint basePriceToCapitalRatio_
+    ) public pure returns (uint amount) {
         // If the input is bigger inverse will give us 0.
         if (
-            _capitalAvailable > 1e36 || _capitalAvailable + _in > 1e36
-                || _capitalAvailable == 0
+            capitalAvailable_ > 1e36 || capitalAvailable_ + in_ > 1e36
+                || capitalAvailable_ == 0
         ) revert BondingSurface__InvalidInputAmount();
 
-        uint inv1 = _inverse(_capitalAvailable);
-        uint inv2 = _inverse(_capitalAvailable + _in);
+        uint inv1 = _inverse(capitalAvailable_);
+        uint inv2 = _inverse(capitalAvailable_ + in_);
         uint inner = inv1 - inv2;
 
         return FixedPointMathLib.fmul(
-            _inverse(_basePriceToCapitalRatio), inner, FixedPointMathLib.WAD
+            _inverse(basePriceToCapitalRatio_), inner, FixedPointMathLib.WAD
         );
     }
 
     /// @inheritdoc IBondingSurface
     function tokenIn(
-        uint _out,
-        uint _capitalAvailable,
-        uint _basePriceToCapitalRatio
-    ) public pure returns (uint) {
+        uint out_,
+        uint capitalAvailable_,
+        uint basePriceToCapitalRatio_
+    ) public pure returns (uint amount) {
         // m * (B / C_r)
         uint BCrM = FixedPointMathLib.fmul(
-            _basePriceToCapitalRatio, _out, FixedPointMathLib.WAD
+            basePriceToCapitalRatio_, out_, FixedPointMathLib.WAD
         );
         // 1 / C_a_2
-        uint ca2inv = _inverse(_capitalAvailable);
+        uint ca2inv = _inverse(capitalAvailable_);
 
-        return _capitalAvailable - _inverse(BCrM + ca2inv);
+        return capitalAvailable_ - _inverse(BCrM + ca2inv);
     }
 
     //--------------------------------------------------------------------------
@@ -104,10 +104,10 @@ contract BondingSurface is IBondingSurface, ERC165 {
 
     /// @dev Computes the inverse based on
     /// https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
-    /// @param x 18 decimal fixed point number to inverse. 0 < x <= 1e36
-    function _inverse(uint x) internal pure returns (uint res) {
+    /// @param x_ 18 decimal fixed point number to inverse. 0 < x <= 1e36
+    function _inverse(uint x_) internal pure returns (uint res) {
         unchecked {
-            res = 1e36 / x;
+            res = 1e36 / x_;
         }
     }
 }
