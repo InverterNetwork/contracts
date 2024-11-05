@@ -145,7 +145,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             abi.encode(
                 address(issuanceToken),
                 address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                address(tokenVault),
                 liquidityVaultController,
                 bc_properties,
                 MAX_SEIZE,
@@ -231,13 +230,13 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
         // Liquidity Vault Controller
         assertEq(
-            address(bondingCurveFundingManager.liquidityVaultController()),
+            address(bondingCurveFundingManager.getLiquidityVaultController()),
             liquidityVaultController,
             "Initial liquidity vault controller has not been set correctly"
         );
         // Reserve Pool
         assertEq(
-            address(bondingCurveFundingManager.tokenVault()),
+            address(bondingCurveFundingManager.getTokenVault()),
             address(0),
             "Initial reserve pool has not been set correctly"
         );
@@ -297,7 +296,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             abi.encode(
                 address(issuanceToken),
                 address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                address(tokenVault),
                 liquidityVaultController,
                 bc_properties,
                 MAX_SEIZE,
@@ -387,7 +385,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             abi.encode(
                 address(issuanceToken),
                 address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                address(tokenVault),
                 liquidityVaultController,
                 bc_properties,
                 MAX_SEIZE,
@@ -433,7 +430,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     function testBuy_modifierInPlace() public {
         // Set buyAndSellIsRestricted to true
         bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.buyAndSellIsRestricted(), true);
+        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
 
         // Check for modifier
         vm.expectRevert(
@@ -450,7 +447,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     function testBuyFor_modifierInPlace() public {
         // Set buyAndSellIsRestricted to true
         bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.buyAndSellIsRestricted(), true);
+        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
 
         // Check for modifier
         vm.expectRevert(
@@ -495,7 +492,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     {
         // Setup
         bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.buyAndSellIsRestricted(), true);
+        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
 
         // Test condition
         vm.expectEmit(
@@ -537,7 +534,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     {
         // Setup
         bondingCurveFundingManager.unrestrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.buyAndSellIsRestricted(), false);
+        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), false);
 
         // Test condition
         vm.expectEmit(
@@ -559,7 +556,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     ) public {
         // Setup
         bondingCurveFundingManager.restrictBuyAndSell();
-        assertEq(bondingCurveFundingManager.buyAndSellIsRestricted(), true);
+        assertEq(bondingCurveFundingManager.isBuyAndSellRestricted(), true);
 
         // Test condition
         vm.expectRevert(
@@ -1073,7 +1070,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
         // Check Seize timestamp before calling function
         uint seizeTimestampBefore =
-            bondingCurveFundingManager.lastSeizeTimestamp();
+            bondingCurveFundingManager.getLastSeizeTimestamp();
 
         // Assert expected fail. block.timestamp == 1 without setting it in vm.warp
         assertGt((seizeTimestampBefore + SEIZE_DELAY), block.timestamp);
@@ -1181,13 +1178,13 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     function testAdjustSeize_worksGivenCallerHasCoverManagerRole(uint64 _seize)
         public
     {
-        vm.assume(_seize != bondingCurveFundingManager.currentSeize());
+        vm.assume(_seize != bondingCurveFundingManager.getCurrentSeize());
         _seize = uint64(bound(_seize, 1, MAX_SEIZE));
 
         // Execute Tx
         bondingCurveFundingManager.adjustSeize(_seize);
 
-        assertEq(bondingCurveFundingManager.currentSeize(), _seize);
+        assertEq(bondingCurveFundingManager.getCurrentSeize(), _seize);
     }
 
     /*  Test setSellFee()
@@ -1472,7 +1469,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         vm.assume(_tokenVault != address(0));
         bondingCurveFundingManager.setTokenVault(_tokenVault);
 
-        assertEq(_tokenVault, bondingCurveFundingManager.tokenVault());
+        assertEq(_tokenVault, bondingCurveFundingManager.getTokenVault());
     }
 
     /* Test: withdrawProjectCollateralFee
@@ -1542,9 +1539,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     function testInternalSetSeize_worksGivenSeizeIsValid(uint64 _seize)
         public
     {
-        vm.assume(_seize != bondingCurveFundingManager.currentSeize());
+        vm.assume(_seize != bondingCurveFundingManager.getCurrentSeize());
         _seize = uint64(bound(_seize, 1, MAX_SEIZE));
-        uint64 currentSeize = bondingCurveFundingManager.currentSeize();
+        uint64 currentSeize = bondingCurveFundingManager.getCurrentSeize();
 
         // Execute Tx
         vm.expectEmit(
@@ -1554,7 +1551,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             .SeizeChanged(currentSeize, _seize);
         bondingCurveFundingManager.adjustSeize(_seize);
 
-        // assertEq(bondingCurveFundingManager.currentSeize(), _seize);
+        // assertEq(bondingCurveFundingManager.currentSeize(), _seize); //@note check missing?
     }
 
     /*    Test _setTokenVault()
@@ -1589,7 +1586,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Execute Tx
         bondingCurveFundingManager.exposed_setTokenVault(newVault);
         // Assert that the token vault address has been set to the given address
-        assertEq(bondingCurveFundingManager.tokenVault(), newVault);
+        assertEq(bondingCurveFundingManager.getTokenVault(), newVault);
     }
 
     /*  Test _getSmallerCaCr()

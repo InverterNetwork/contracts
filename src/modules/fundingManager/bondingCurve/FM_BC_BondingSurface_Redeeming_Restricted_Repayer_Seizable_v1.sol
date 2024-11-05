@@ -106,18 +106,18 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     ///         contract by the liquidity vault controller
     uint internal _repayableAmount;
     /// @dev The current seize percentage expressed in BPS
-    uint64 public currentSeize; //@todo internal
+    uint64 internal _currentSeize;
     /// @dev Address of the liquidity vault controller who has access to the
     ///      collateral held by the funding manager through the Repayer
     /// through the Repayer functionality
-    ILiquidityVaultController public liquidityVaultController; //@todo internal
+    ILiquidityVaultController internal _liquidityVaultController;
     /// @dev Tracks last seize timestamp to determine eligibility for
     ///      subsequent seizures based on SEIZE_DELAY
-    uint public lastSeizeTimestamp; //@todo internal
+    uint internal _lastSeizeTimestamp;
     /// @dev Address of the reserve pool.
-    address public tokenVault; //@todo internal
+    address internal _tokenVault;
     /// @dev Restricts buying and selling functionalities to specific role.
-    bool public buyAndSellIsRestricted; //@todo internal
+    bool internal _buyAndSellIsRestricted;
 
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
@@ -135,33 +135,23 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
         address _issuanceToken;
         address _acceptedToken;
-        address _tokenVault;
-        address _liquidityVaultController;
+        address liquidityVaultController;
         BondingCurveProperties memory bondingCurveProperties;
         uint64 _seize;
         // The indicator used for restrict/unrestrict buying and selling
         // functionalities to the CURVE_INTERACTION_ROLE
-        bool _buyAndSellIsRestricted;
+        bool buyAndSellIsRestricted;
 
         (
             _issuanceToken,
             _acceptedToken,
-            _tokenVault,
-            _liquidityVaultController,
+            liquidityVaultController,
             bondingCurveProperties,
             _seize,
-            _buyAndSellIsRestricted
+            buyAndSellIsRestricted
         ) = abi.decode(
             configData,
-            (
-                address,
-                address,
-                address,
-                address,
-                BondingCurveProperties,
-                uint64,
-                bool
-            )
+            (address, address, address, BondingCurveProperties, uint64, bool)
         );
 
         // Set accepted token
@@ -174,8 +164,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setIssuanceToken(address(_issuanceToken));
 
         // Set liquidity vault controller address
-        liquidityVaultController =
-            ILiquidityVaultController(_liquidityVaultController);
+        _liquidityVaultController =
+            ILiquidityVaultController(liquidityVaultController);
 
         // Check for valid Bonding Surface formula contract
         if (
@@ -205,7 +195,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         sellIsOpen = bondingCurveProperties.sellIsOpen;
         // Set buy and sell restriction to restricted if true. By default buy and
         // sell is unrestricted
-        buyAndSellIsRestricted = _buyAndSellIsRestricted;
+        _buyAndSellIsRestricted = buyAndSellIsRestricted;
 
         // Set currentSeize
         _setSeize(_seize);
@@ -224,13 +214,65 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     modifier onlyLiquidityVaultController() {
-        if (_msgSender() != address(liquidityVaultController)) {
+        if (_msgSender() != address(_liquidityVaultController)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
                 _msgSender()
             );
         }
         _;
+    }
+
+    //--------------------------------------------------------------------------
+    // Getter Functions
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    function getSeizableAmount() public view returns (uint amount) {
+        uint currentBalance = _getCapitalAvailable();
+
+        return (currentBalance * _currentSeize) / BPS;
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    function getCurrentSeize() public view returns (uint64 currentSeize) {
+        return _currentSeize;
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    function getLiquidityVaultController()
+        public
+        view
+        returns (address liquidityVaultController)
+    {
+        return address(_liquidityVaultController);
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    function getLastSeizeTimestamp()
+        public
+        view
+        returns (uint lastSeizeTimestamp)
+    {
+        return _lastSeizeTimestamp;
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    function getTokenVault() public view returns (address tokenVault) {
+        return address(_tokenVault);
+    }
+
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+    function isBuyAndSellRestricted()
+        public
+        view
+        returns (bool buyAndSellIsRestricted)
+    {
+        return _buyAndSellIsRestricted;
+    }
+
+    /// @inheritdoc IRepayer_v1
+    function getRepayableAmount() external view returns (uint) {
+        return _getRepayableAmount();
     }
 
     //--------------------------------------------------------------------------
@@ -309,18 +351,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _burn(_owner, _amount);
     }
 
-    /// @inheritdoc IRepayer_v1
-    function getRepayableAmount() external view returns (uint) {
-        return _getRepayableAmount();
-    }
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function getSeizableAmount() public view returns (uint amount) {
-        uint currentBalance = _getCapitalAvailable();
-
-        return (currentBalance * currentSeize) / BPS;
-    }
-
     //--------------------------------------------------------------------------
     // OnlyLiquidityVaultController Functions
 
@@ -348,7 +378,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function restrictBuyAndSell() external onlyModuleRole(COVER_MANAGER_ROLE) {
-        buyAndSellIsRestricted = true;
+        _buyAndSellIsRestricted = true;
         emit BuyAndSellIsRestricted();
     }
 
@@ -357,7 +387,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        buyAndSellIsRestricted = false;
+        _buyAndSellIsRestricted = false;
         emit BuyAndSellIsUnrestricted();
     }
 
@@ -371,10 +401,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             );
         }
         // solhint-disable-next-line not-rely-on-time
-        else if (lastSeizeTimestamp + SEIZE_DELAY > block.timestamp) {
+        else if (_lastSeizeTimestamp + SEIZE_DELAY > block.timestamp) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout(
-                lastSeizeTimestamp + SEIZE_DELAY
+                _lastSeizeTimestamp + SEIZE_DELAY
             );
         }
 
@@ -385,7 +415,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         }
 
         // solhint-disable-next-line not-rely-on-time
-        lastSeizeTimestamp = block.timestamp;
+        _lastSeizeTimestamp = block.timestamp;
         _token.transfer(_msgSender(), _amount);
         emit CollateralSeized(_amount);
     }
@@ -423,21 +453,21 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function setLiquidityVaultControllerContract(ILiquidityVaultController _lvc)
+    function setLiquidityVaultControllerContract(ILiquidityVaultController lvc_)
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
         // @update-info When upgrading to Topos next version, we need to add an
         //              interface check here.
-        if (address(_lvc) == address(0) || address(_lvc) == address(this)) {
+        if (address(lvc_) == address(0) || address(lvc_) == address(this)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress(
             );
         }
         emit LiquidityVaultControllerChanged(
-            address(_lvc), address(liquidityVaultController)
+            address(lvc_), address(_liquidityVaultController)
         );
-        liquidityVaultController = _lvc;
+        _liquidityVaultController = lvc_;
     }
 
     //--------------------------------------------------------------------------
@@ -465,11 +495,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // OnlyOrchestratorAdmin Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function setTokenVault(address _tokenVault)
+    function setTokenVault(address tokenVault_)
         external
         onlyOrchestratorAdmin
     {
-        _setTokenVault(_tokenVault);
+        _setTokenVault(tokenVault_);
     }
 
     function withdrawProjectCollateralFee(
@@ -485,13 +515,13 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Internal Functions
 
     /// @dev Sets the token vault address.
-    /// @param _tokenVault The address of the token vault.
-    function _setTokenVault(address _tokenVault)
+    /// @param tokenVault_ The address of the token vault.
+    function _setTokenVault(address tokenVault_)
         internal
-        validAddress(_tokenVault)
+        validAddress(tokenVault_)
     {
-        tokenVault = _tokenVault;
-        emit TokenVaultSet(_tokenVault);
+        _tokenVault = tokenVault_;
+        emit TokenVaultSet(tokenVault_);
     }
 
     /// @dev Set the current seize state, which defines the percentage of seizable amount
@@ -502,8 +532,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
                 _seize
             );
         }
-        emit SeizeChanged(currentSeize, _seize);
-        currentSeize = _seize;
+        emit SeizeChanged(_currentSeize, _seize);
+        _currentSeize = _seize;
     }
 
     /// @notice If the repayable amount was not defined, it is automatically set to the smaller between the Ca and the Cr value
@@ -537,15 +567,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev    Validate if buy and sell is restricted, and if so
     ///         check if the caller has the CURVE_INTERACTION_ROLE
     function _checkBuyAndSellRestrictionsModifier() internal view {
-        if (buyAndSellIsRestricted) {
+        if (_buyAndSellIsRestricted) {
             _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }
     }
 
     /// @dev    Processes project fee by transfer
-    /// @param _workflowFeeAmount The amount of project fee to transfer
-    function _projectFeeCollected(uint _workflowFeeAmount) internal override {
-        _token.safeTransfer(tokenVault, _workflowFeeAmount);
-        emit ProjectCollateralFeeWithdrawn(tokenVault, _workflowFeeAmount);
+    /// @param workflowFeeAmount_ The amount of project fee to transfer
+    function _projectFeeCollected(uint workflowFeeAmount_) internal override {
+        _token.safeTransfer(_tokenVault, workflowFeeAmount_);
+        emit ProjectCollateralFeeWithdrawn(_tokenVault, workflowFeeAmount_);
     }
 }

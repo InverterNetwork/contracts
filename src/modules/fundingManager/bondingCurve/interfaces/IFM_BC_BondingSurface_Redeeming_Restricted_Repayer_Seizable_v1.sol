@@ -66,6 +66,34 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     /// @return amount Maximum number of tokens that can be seized
     function getSeizableAmount() external view returns (uint amount);
 
+    /// @notice Returns the current seize percentage, which is seizable from the contract
+    /// @return currentSeize The current seize percentage
+    function getCurrentSeize() external view returns (uint64 currentSeize);
+
+    /// @notice Returns the address of the liquidity vault controller
+    /// @return liquidityVaultController The address of the liquidity vault controller
+    function getLiquidityVaultController()
+        external
+        view
+        returns (address liquidityVaultController);
+
+    /// @notice Returns the last timestamp when the seize percentage was updated
+    /// @return lastSeizeTimestamp The last timestamp when the seize percentage was updated
+    function getLastSeizeTimestamp()
+        external
+        view
+        returns (uint lastSeizeTimestamp);
+
+    /// @notice Returns the address of the token vault
+    /// @return tokenVault The address of the token vault
+    function getTokenVault() external view returns (address tokenVault);
+
+    /// @notice Returns whether buy and sell is restricted
+    /// @return buyAndSellIsRestricted Whether buy and sell is restricted
+    function isBuyAndSellRestricted()
+        external
+        view
+        returns (bool buyAndSellIsRestricted);
     //--------------------------------------------------------------------------
     // Mutating Functions
 
