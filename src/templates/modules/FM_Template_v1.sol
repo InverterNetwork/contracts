@@ -1,0 +1,174 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
+
+// Internal
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {IFM_Template_v1} from "./IFM_Template_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+/**
+ * @title   Inverter Template Funding Manager
+ *
+ * @notice  Basic template funding manager used as base for developing new
+ *          funding managers.
+ *
+ * @dev     This contract is used to showcase a basic setup for a funding
+ *          manager. The contract showcases the following:
+ *          - Inherit from the Module_v1 contract to enable interaction with
+ *            the Inverter workflow.
+ *          - Use of the IFundingManager_v1 interface to facilitate
+ *            interaction as a Funding Manager.
+ *          - Implement custom interface which has all the public facing
+ *            functions, errors, events and structs.
+ *          - Pre-defined layout for all contract functions, modifiers, state
+ *            variables etc.
+ *          - Use of the ERC165Upgradeable contract to check for interface
+ *            support.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.0.0
+ *
+ * @author  Inverter Network
+ */
+contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
+    //--------------------------------------------------------------------------
+    // Libraries
+
+    // Add library usage here
+
+    //--------------------------------------------------------------------------
+    // ERC165
+
+    /// @inheritdoc ERC165Upgradeable
+    function supportsInterface(bytes4 interfaceId_)
+        public
+        view
+        virtual
+        override(Module_v1)
+        returns (bool)
+    {
+        return interfaceId_ == type(IFM_Template_v1).interfaceId
+            || interfaceId_ == type(IFundingManager_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
+    }
+
+    //--------------------------------------------------------------------------
+    // Constants
+
+    // Add constants here
+
+    //--------------------------------------------------------------------------
+    // State
+
+    /// @dev    Mapping of user addresses to their deposited token amounts.
+    mapping(address => uint) private _depositedAmounts;
+
+    IERC20 private _orchestratorToken;
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    // Add modifiers here
+
+    //--------------------------------------------------------------------------
+    // Constructor & Init
+
+    /// @inheritdoc Module_v1
+    function init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata_,
+        bytes memory configData_
+    ) external override(Module_v1) initializer {
+        __Module_init(orchestrator_, metadata_);
+
+        // Decode module specific init data through use of configData bytes.
+        // This value is an example value used to showcase the setters/getters
+        // and internal functions/state formatting style.
+        (address orchestratorTokenAddress) = abi.decode(configData_, (address));
+
+        // Set init state.
+        _orchestratorToken = IERC20(orchestratorTokenAddress);
+    }
+
+    //--------------------------------------------------------------------------
+    // Public (Getters)
+
+    /// @inheritdoc IFM_Template_v1
+    function getDepositedAmount(address user_)
+        external
+        view
+        override
+        returns (uint)
+    {
+        return _depositedAmounts[user_];
+    }
+
+    /// @inheritdoc IFundingManager_v1
+    function token() external view override returns (IERC20) {
+        return _orchestratorToken;
+    }
+
+    //--------------------------------------------------------------------------
+    // Public (Mutating)
+
+    /// @inheritdoc IFM_Template_v1
+    function deposit(uint amount_) external override {
+        if (amount_ == 0) {
+            revert Module__FM_Template_InvalidAmount();
+        }
+
+        emit Deposited(_msgSender(), amount_);
+
+        _depositedAmounts[_msgSender()] += amount_;
+
+        _orchestratorToken.transferFrom(_msgSender(), address(this), amount_);
+    }
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to, uint amount)
+        external
+        override
+    {
+        _validateOrchestratorTokenTransfer(to, amount);
+
+        emit TransferOrchestratorToken(to, amount);
+
+        _depositedAmounts[_msgSender()] -= amount;
+
+        _orchestratorToken.transfer(to, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal
+
+    // Add internal functions here
+
+    /// @notice Validates the transfer of orchestrator token.
+    /// @param  amount_ Amount to transfer.
+    function _validateOrchestratorTokenTransfer(address to_, uint amount_)
+        internal
+        view
+    {
+        if (to_ == address(0)) {
+            revert Module__FM_Template__ReceiverNotValid();
+        }
+
+        if (amount_ == 0) {
+            revert Module__FM_Template_InvalidAmount();
+        }
+
+        if (_depositedAmounts[_msgSender()] < amount_) {
+            revert Module__FM_Template_InvalidAmount();
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal override
+}
