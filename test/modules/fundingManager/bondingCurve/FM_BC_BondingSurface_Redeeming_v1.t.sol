@@ -44,8 +44,8 @@ import {ERC20PaymentClientBaseV1Mock} from
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Mocks
-import {FM_BC_BondingSurface_RedeemingV1_exposed} from
-    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_exposed.sol";
+import {FM_BC_BondingSurface_RedeemingV1_Exposed} from
+    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_Exposed.sol";
 
 contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     string private constant NAME = "Bonding Surface Token";
@@ -63,7 +63,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     uint private MIN_RESERVE = 10 ** _token.decimals();
     uint private constant BASE_PRICE_MULTIPLIER = 0.000001 ether;
 
-    FM_BC_BondingSurface_RedeemingV1_exposed bondingCurveFundingManager;
+    FM_BC_BondingSurface_RedeemingV1_Exposed bondingCurveFundingManager;
     address formula;
     ERC20Issuance_v1 issuanceToken;
     ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
@@ -98,10 +98,10 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
 
-        address impl = address(new FM_BC_BondingSurface_RedeemingV1_exposed());
+        address impl = address(new FM_BC_BondingSurface_RedeemingV1_Exposed());
 
         bondingCurveFundingManager =
-            FM_BC_BondingSurface_RedeemingV1_exposed(Clones.clone(impl));
+            FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(bondingCurveFundingManager);
         _authorizer.setIsAuthorized(address(this), true);
@@ -205,10 +205,10 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
             bc_properties;
         bc_properties.formula = address(new FM_BC_BondingSurface_Redeeming_v1());
 
-        address impl = address(new FM_BC_BondingSurface_RedeemingV1_exposed());
+        address impl = address(new FM_BC_BondingSurface_RedeemingV1_Exposed());
 
         bondingCurveFundingManager =
-            FM_BC_BondingSurface_RedeemingV1_exposed(Clones.clone(impl));
+            FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -262,10 +262,10 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
 
-        address impl = address(new FM_BC_BondingSurface_RedeemingV1_exposed());
+        address impl = address(new FM_BC_BondingSurface_RedeemingV1_Exposed());
 
         bondingCurveFundingManager =
-            FM_BC_BondingSurface_RedeemingV1_exposed(Clones.clone(impl));
+            FM_BC_BondingSurface_RedeemingV1_Exposed(Clones.clone(impl));
 
         bondingCurveFundingManager.init(
             _orchestrator,

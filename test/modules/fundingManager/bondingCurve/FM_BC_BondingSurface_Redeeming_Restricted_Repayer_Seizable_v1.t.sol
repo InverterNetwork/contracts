@@ -48,9 +48,9 @@ import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // Mocks
-import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed}
+import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed}
     from
-    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed.sol";
+    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed.sol";
 
 /*     
     PLEASE NOTE: The following tests have been tested in other test contracts 
@@ -82,7 +82,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     uint private constant BASE_PRICE_MULTIPLIER = 0.000001 ether;
     uint64 private constant SEIZE_DELAY = 7 days;
 
-    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed
+    FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed
         bondingCurveFundingManager;
     address formula;
     ERC20Issuance_v1 issuanceToken;
@@ -123,12 +123,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         bc_properties.sellFee = SELL_FEE;
 
         address impl = address(
-            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             )
         );
 
         bondingCurveFundingManager =
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             Clones.clone(impl)
         );
 
@@ -281,12 +281,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         bc_properties.sellFee = SELL_FEE;
 
         address impl = address(
-            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             )
         );
 
         bondingCurveFundingManager =
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             Clones.clone(impl)
         );
 
@@ -357,17 +357,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
             bc_properties;
         bc_properties.formula = address(
-            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             )
         );
 
         address impl = address(
-            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+            new FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             )
         );
 
         bondingCurveFundingManager =
-        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed(
+        FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed(
             Clones.clone(impl)
         );
 

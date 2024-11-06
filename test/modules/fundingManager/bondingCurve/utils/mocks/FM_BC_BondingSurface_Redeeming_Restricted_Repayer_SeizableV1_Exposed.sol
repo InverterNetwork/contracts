@@ -15,7 +15,7 @@ import {
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_exposed is
+contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
     FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
 {
     //--------------------------------------------------------------------------

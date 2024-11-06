@@ -12,7 +12,7 @@ import {FM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-contract FM_BC_BondingSurface_RedeemingV1_exposed is
+contract FM_BC_BondingSurface_RedeemingV1_Exposed is
     FM_BC_BondingSurface_Redeeming_v1
 {
     //--------------------------------------------------------------------------
