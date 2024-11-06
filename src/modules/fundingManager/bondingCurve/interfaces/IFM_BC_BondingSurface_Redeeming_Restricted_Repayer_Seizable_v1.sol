@@ -94,23 +94,11 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
         external
         view
         returns (bool buyAndSellIsRestricted);
+
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @notice Sets a new liquidity valut controller address
-    /// @param lp_ Address of the liquidity vault controller
-    function setLiquidityVaultControllerContract(ILiquidityVaultController lp_)
-        external;
-
-    /// @notice Adjust the seize percentage, which is seizable from the contract
-    /// @param seize_ The seize in percentage, expressed as BPS
-    function adjustSeize(uint64 seize_) external;
-
-    /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
-    /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max
-    /// seizable percentage has been added
-    /// @param amount_ Number of tokens to be removed from the pool
-    function seize(uint amount_) external;
+    // Token Manipulation Functions
 
     /// @notice Burn amount of tokens from message sender
     /// @param amount_ Amount token to be burned
@@ -121,6 +109,9 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     /// @param amount_ Burn amount
     function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
+    //--------------------------------------------------------------------------
+    // OnlyCoverManager Functions
+
     /// @notice Restricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
     function restrictBuyAndSell() external;
@@ -128,6 +119,24 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     /// @notice Unrestricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
     function unrestrictBuyAndSell() external;
+
+    /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
+    /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max
+    /// seizable percentage has been added
+    /// @param amount_ Number of tokens to be removed from the pool
+    function seize(uint amount_) external;
+
+    /// @notice Adjust the seize percentage, which is seizable from the contract
+    /// @param seize_ The seize in percentage, expressed as BPS
+    function adjustSeize(uint64 seize_) external;
+
+    /// @notice Sets a new liquidity valut controller address
+    /// @param lp_ Address of the liquidity vault controller
+    function setLiquidityVaultControllerContract(ILiquidityVaultController lp_)
+        external;
+
+    //--------------------------------------------------------------------------
+    // OnlyOrchestratorAdmin Functions
 
     /// @notice Sets the token vault address.
     /// @dev    Only callable by OrchestratorAdmin

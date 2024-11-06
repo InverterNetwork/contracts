@@ -52,6 +52,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
+ * @custom:version v1.0.0
+ *
  * @author  Inverter Network
  */
 contract FM_BC_BondingSurface_Redeeming_v1 is
@@ -96,7 +98,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev (basePriceMultiplier / capitalRequired)
     uint internal _basePriceToCapitalRatio;
 
-    /// @dev    Storage gap for future upgrades.
+    /// @dev Storage gap for future upgrades.
     uint[50] private __gap;
 
     //--------------------------------------------------------------------------
@@ -160,15 +162,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function calculateBasePriceToCapitalRatio(
-        uint capitalRequired_,
-        uint basePriceMultiplier_
-    ) external pure returns (uint) {
-        return _calculateBasePriceToCapitalRatio(
-            capitalRequired_, basePriceMultiplier_
-        );
-    }
+    //-------------------------------------------------------------------------- //@note Is this sectioning appropriate?
+    // Getter Functions
 
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// @return uint The static price for buying the issuance token.
@@ -233,14 +228,26 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return _basePriceToCapitalRatio;
     }
 
-    //--------------------------------------------------------------------------
-    // Public IFundingManager Functions
+    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
+    function calculateBasePriceToCapitalRatio(
+        uint capitalRequired_,
+        uint basePriceMultiplier_
+    ) external pure returns (uint) {
+        return _calculateBasePriceToCapitalRatio(
+            capitalRequired_, basePriceMultiplier_
+        );
+    }
+
+    // IFundingManager Functions
 
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
         //@note should this be getToken?
         return _token;
     }
+
+    //--------------------------------------------------------------------------
+    // Mutating Functions
 
     //--------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
@@ -261,6 +268,31 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         onlyOrchestratorAdmin
     {
         _setBasePriceMultiplier(newBasePriceMultiplier_);
+    }
+
+    //--------------------------------------------------------------------------
+    // OnlyPaymentClient Functions
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to_, uint amount_)
+        external
+        virtual
+        onlyPaymentClient
+    {
+        if (
+            amount_
+                > token().balanceOf(address(this)) - projectCollateralFeeCollected
+        ) {
+            revert InvalidOrchestratorTokenWithdrawAmount();
+        }
+
+        token().safeTransfer(to_, amount_);
+
+        if (MIN_RESERVE > token().balanceOf(address(this))) {
+            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
+        }
+
+        emit TransferOrchestratorToken(to_, amount_);
     }
 
     //--------------------------------------------------------------------------
@@ -309,31 +341,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         if (capitalAvailable - redeemAmount < MIN_RESERVE) {
             revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
-    }
-
-    //--------------------------------------------------------------------------
-    // OnlyPaymentClient Functions
-
-    /// @inheritdoc IFundingManager_v1
-    function transferOrchestratorToken(address to_, uint amount_)
-        external
-        virtual
-        onlyPaymentClient
-    {
-        if (
-            amount_
-                > token().balanceOf(address(this)) - projectCollateralFeeCollected
-        ) {
-            revert InvalidOrchestratorTokenWithdrawAmount();
-        }
-
-        token().safeTransfer(to_, amount_);
-
-        if (MIN_RESERVE > token().balanceOf(address(this))) {
-            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
-        }
-
-        emit TransferOrchestratorToken(to_, amount_);
     }
 
     //--------------------------------------------------------------------------
@@ -388,12 +395,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param capitalRequired_ The capital required.
     /// @param basePriceMultiplier_ The base price multiplier.
     /// @return basePriceToCapitalRatio The calculated price to capital ratio.
-    function _calculateBasePriceToCapitalRatio( //@note this function is just a pure function right?
-    uint capitalRequired_, uint basePriceMultiplier_)
-        internal
-        pure
-        returns (uint basePriceToCapitalRatio)
-    {
+    function _calculateBasePriceToCapitalRatio(
+        uint capitalRequired_,
+        uint basePriceMultiplier_
+    ) internal pure returns (uint basePriceToCapitalRatio) {
         basePriceToCapitalRatio = FixedPointMathLib.fdiv(
             basePriceMultiplier_, capitalRequired_, FixedPointMathLib.WAD
         );

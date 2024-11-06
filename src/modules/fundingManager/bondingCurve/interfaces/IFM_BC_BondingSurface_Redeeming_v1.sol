@@ -86,17 +86,6 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         view
         returns (uint basePriceToCapitalRatio);
 
-    //--------------------------------------------------------------------------
-    // Mutating Functions
-
-    /// @dev Update the base price multiplier used for the bonding curve
-    /// @param newBasePriceMultiplier_ The new base price multiplier.
-    function setBasePriceMultiplier(uint newBasePriceMultiplier_) external;
-
-    /// @dev Update the capital required used for the bonding curve
-    /// @param newCapitalRequired_ The new capital required.
-    function setCapitalRequired(uint newCapitalRequired_) external;
-
     /// @notice Calculates the ratio of base price multiplier to capital required.
     /// @dev Calls `_calculateBasePriceToCapitalRatio` internally. Reverts if ratio exceeds 1e36.
     /// @param capitalRequired_ The capital required.
@@ -106,4 +95,18 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         uint capitalRequired_,
         uint basePriceMultiplier_
     ) external view returns (uint basePriceToCapitalRatio);
+
+    //--------------------------------------------------------------------------
+    // Mutating Functions
+
+    //--------------------------------------------------------------------------
+    // OnlyOrchestratorAdmin Functions
+
+    /// @dev Update the capital required used for the bonding curve
+    /// @param newCapitalRequired_ The new capital required.
+    function setCapitalRequired(uint newCapitalRequired_) external;
+
+    /// @dev Update the base price multiplier used for the bonding curve
+    /// @param newBasePriceMultiplier_ The new base price multiplier.
+    function setBasePriceMultiplier(uint newBasePriceMultiplier_) external;
 }

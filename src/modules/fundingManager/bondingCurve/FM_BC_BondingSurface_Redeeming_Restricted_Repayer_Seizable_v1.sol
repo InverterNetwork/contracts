@@ -59,6 +59,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
+ * @custom:version v1.0.0
+ *
  * @author  Inverter Network
  */
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
@@ -66,6 +68,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
     FM_BC_BondingSurface_Redeeming_v1
 {
+    using SafeERC20 for IERC20;
+
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -79,8 +83,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
                 .interfaceId || interfaceId_ == type(IRepayer_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
-
-    using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Constants
@@ -121,6 +123,24 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    modifier checkBuyAndSellRestrictions() {
+        _checkBuyAndSellRestrictionsModifier();
+        _;
+    }
+
+    modifier onlyLiquidityVaultController() {
+        if (_msgSender() != address(_liquidityVaultController)) {
+            revert
+                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
+                _msgSender()
+            );
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Init Function
@@ -205,23 +225,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
-    //--------------------------------------------------------------------------
-    // Modifiers
-
-    modifier checkBuyAndSellRestrictions() {
-        _checkBuyAndSellRestrictionsModifier();
-        _;
-    }
-
-    modifier onlyLiquidityVaultController() {
-        if (_msgSender() != address(_liquidityVaultController)) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
-                _msgSender()
-            );
-        }
-        _;
-    }
+    //-------------------------------------------------------------------------- //@note Is this sectioning appropriate?
+    // Public Functions
 
     //--------------------------------------------------------------------------
     // Getter Functions
@@ -280,7 +285,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Public Functions
+    // Mutating Functions
+
+    // Token Manipulation Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address.
     /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
@@ -430,30 +437,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setSeize(_seize);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint _fee)
-        external
-        virtual
-        override(RedeemingBondingCurveBase_v1)
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
-        _setSellFee(_fee);
-    }
-
-    /// @inheritdoc IRepayer_v1
-    function setRepayableAmount(uint _amount)
-        external
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
-        if (_amount > _getSmallerCaCr()) {
-            revert
-                IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
-        }
-        emit RepayableAmountChanged(_amount, _repayableAmount);
-        _repayableAmount = _amount;
-    }
-
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function setLiquidityVaultControllerContract(ILiquidityVaultController lvc_)
         external
@@ -470,6 +453,32 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             address(lvc_), address(_liquidityVaultController)
         );
         _liquidityVaultController = lvc_;
+    }
+
+    /// @inheritdoc IRepayer_v1
+    function setRepayableAmount(uint _amount)
+        external
+        onlyModuleRole(COVER_MANAGER_ROLE)
+    {
+        if (_amount > _getSmallerCaCr()) {
+            revert
+                IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+        }
+        emit RepayableAmountChanged(_amount, _repayableAmount);
+        _repayableAmount = _amount;
+    }
+
+    // RedeemingBondingCurveBase_v1 Overrides
+
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    function setSellFee(uint _fee)
+        external
+        virtual
+        override(RedeemingBondingCurveBase_v1)
+        onlyModuleRole(COVER_MANAGER_ROLE)
+    {
+        _setSellFee(_fee);
     }
 
     //--------------------------------------------------------------------------
@@ -527,20 +536,25 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @dev Set the current seize state, which defines the percentage of seizable amount
-    function _setSeize(uint64 _seize) internal {
-        if (_seize > MAX_SEIZE) {
+    function _setSeize(uint64 seize_) internal {
+        if (seize_ > MAX_SEIZE) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeize(
-                _seize
+                seize_
             );
         }
-        emit SeizeChanged(_currentSeize, _seize);
-        _currentSeize = _seize;
+        emit SeizeChanged(_currentSeize, seize_);
+        _currentSeize = seize_;
     }
 
     /// @notice If the repayable amount was not defined, it is automatically set to the smaller between the Ca and the Cr value
     /// @notice The repayable amount as maximum is applied when is gt 0 and is lt the smallest between Cr and Ca
-    function _getRepayableAmount() internal view returns (uint) {
+    /// @return repayableAmount The repayable amount
+    function _getRepayableAmount()
+        internal
+        view
+        returns (uint repayableAmount)
+    {
         uint _repayable = _getSmallerCaCr();
         return (_repayableAmount == 0 || _repayableAmount > _repayable)
             ? _repayable
@@ -549,21 +563,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Required (Cr), the repayable amount can be lte Cr
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
-    function _getSmallerCaCr() internal view returns (uint) {
+    /// @return smallerCaCr The smaller of the Capital Available (Ca) and Capital Required (Cr)
+    function _getSmallerCaCr() internal view returns (uint smallerCaCr) {
         uint _ca = _getCapitalAvailable();
         uint _cr = _capitalRequired;
         return _ca > _cr ? _cr : _ca;
-    }
-
-    /// @dev    Validates the workflow fee.
-    function _validateProjectFee(uint _projectFee)
-        internal
-        pure
-        override(BondingCurveBase_v1)
-    {
-        if (_projectFee > MAX_FEE) {
-            revert Module__BondingCurveBase__InvalidFeePercentage();
-        }
     }
 
     /// @dev    Validate if buy and sell is restricted, and if so
@@ -579,5 +583,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function _projectFeeCollected(uint workflowFeeAmount_) internal override {
         _token.safeTransfer(_tokenVault, workflowFeeAmount_);
         emit ProjectCollateralFeeWithdrawn(_tokenVault, workflowFeeAmount_);
+    }
+
+    //--------------------------------------------------------------------------
+    // BondingCurveBase_v1 Overrides
+
+    /// @dev    Validates the workflow fee.
+    function _validateProjectFee(uint projectFee_)
+        internal
+        pure
+        override(BondingCurveBase_v1)
+    {
+        if (projectFee_ > MAX_FEE) {
+            revert Module__BondingCurveBase__InvalidFeePercentage();
+        }
     }
 }

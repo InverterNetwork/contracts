@@ -7,7 +7,7 @@ import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 
-/// @title Bonding surface formulas
+/// @title Bonding surface formulas //@todo adapt contract overview Docs
 /// @dev
 ///                        (C_a)^n
 /// p = f(C_a, C_r) = B -------------
@@ -38,9 +38,6 @@ contract BondingSurface is IBondingSurface, ERC165 {
         return interfaceId_ == type(IBondingSurface).interfaceId
             || super.supportsInterface(interfaceId_);
     }
-
-    /// @dev constructor
-    constructor() {}
 
     //--------------------------------------------------------------------------
     // Public Functions

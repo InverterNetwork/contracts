@@ -9,7 +9,7 @@ interface IBondingSurface {
     error BondingSurface__InvalidInputAmount();
 
     //--------------------------------------------------------------------------
-    // Functions
+    // View Functions
 
     /// @dev Compute spot price for a given capital available and capital required
     /// p = f(C_a, C_r) = B * (C_a^2 / C_r)
@@ -36,7 +36,7 @@ interface IBondingSurface {
     /// @param in_ Assets added to the pool.
     /// @param capitalAvailable_ Capital available to use for bonding curve mint.
     /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
-    /// @return amount The amount of tokens to mint //@todo is this the correct natspec?
+    /// @return amount The amount of tokens to mint
     function tokenOut(
         uint in_,
         uint capitalAvailable_,
@@ -56,7 +56,7 @@ interface IBondingSurface {
     /// @param out_ TPG to burn
     /// @param capitalAvailable_ Capital available to use for bonding curve burn.
     /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
-    /// @return amount The amount of assets to return //@todo is this the correct natspec?
+    /// @return amount The amount of assets to return
     function tokenIn(
         uint out_,
         uint capitalAvailable_,
