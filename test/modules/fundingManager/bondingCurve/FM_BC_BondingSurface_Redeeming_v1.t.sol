@@ -528,7 +528,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
                     │       └── then it should revert
                     ├── and FM collateral token balance < MIN_RESERVE
                     │   └── when the function transferOrchestratorToken() gets called
-                    │       └── then it should revert with FM_BC_BondingSurface_Redeeming_v1__MinReserveReached //@todo 
+                    │       └── then it should revert with FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
                     └── and the FM has enough collateral token for amount to be transferred
                             when the function transferOrchestratorToken() gets called
                             └── then is should send the funds to the specified address

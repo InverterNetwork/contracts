@@ -10,7 +10,7 @@ import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 /**
  * @title   Bonding Surface Formula
  *
- * @notice  Formular to calculate the price of a token in the bonding curve. //@note More specific?
+ * @notice  Bonding Surface Formular to calculate the price of a token in the bonding curve.
  *
  * @dev
  *                                (C_a)^n

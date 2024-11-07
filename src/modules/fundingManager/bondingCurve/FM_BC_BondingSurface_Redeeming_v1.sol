@@ -242,7 +242,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     /// @inheritdoc IFundingManager_v1
     function token() public view returns (IERC20) {
-        //@note should this be getToken?
         return _token;
     }
 

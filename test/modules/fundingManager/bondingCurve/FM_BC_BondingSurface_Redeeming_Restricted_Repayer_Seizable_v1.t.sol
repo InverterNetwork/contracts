@@ -1551,7 +1551,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             .SeizeChanged(currentSeize, seize_);
         bondingCurveFundingManager.adjustSeize(seize_);
 
-        // assertEq(bondingCurveFundingManager.currentSeize(), seize_); //@note check missing?
+        assertEq(bondingCurveFundingManager.getCurrentSeize(), seize_);
     }
 
     /*    Test _setTokenVault()

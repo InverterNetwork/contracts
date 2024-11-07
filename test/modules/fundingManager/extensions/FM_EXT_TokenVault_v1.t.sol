@@ -114,7 +114,6 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    // @todo Add Gherkin
     /* Test withdraw() function
        └── Given token address is valid
            └── And the amount is valid
