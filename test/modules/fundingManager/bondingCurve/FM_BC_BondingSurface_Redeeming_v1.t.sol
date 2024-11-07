@@ -125,11 +125,11 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
             bondingCurveFundingManager.MIN_RESERVE()
         );
     }
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Test: Initialization
 
     //This function also tests all the getters
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Initialization
     function testInit() public override {
         // Issuance Token
@@ -285,7 +285,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Supports Interface
 
     function testSupportsInterface() public {
@@ -301,7 +301,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /*  Test calculateBasePriceToCapitalRatio
@@ -401,7 +401,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         assertEq(functionReturnValue, expectedReturnValue);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
     /*  Test setCapitalRequired()
@@ -513,7 +513,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         assertEq(stateValue, _newBaseMultiplier);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyPaymentClient Functions
 
     /* Test transferOrchestratorToken 
@@ -650,7 +650,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /*  Test _issueTokensFormulaWrapper()
@@ -1063,7 +1063,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         assertEq(setStateValue, expectedReturnValue);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Test Helper Functions
 
     function _mintIssuanceTokenToAddressHelper(address _account, uint _amount)

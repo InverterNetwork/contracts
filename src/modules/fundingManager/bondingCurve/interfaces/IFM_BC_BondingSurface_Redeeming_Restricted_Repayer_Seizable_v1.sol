@@ -1,11 +1,27 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+//Internal Dependencies
 import {ILiquidityVaultController} from
     "@lm/interfaces/ILiquidityVaultController.sol";
 
-interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
-    //--------------------------------------------------------------------------
+/**
+ * @title   Inverter Redeeming Restriced Repayer Seizable Bonding Surface Bonding Curve Funding Manager Interface
+ *
+ * @notice  This interface enables the fetching and setting of Bonding Surface relevant data
+ *          with the added functionalities Restricted and Seizable
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version v1.0.0
+ *
+ * @author  Inverter Network
+ */
+interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@note Should this maybe be IFM_BC_BondingSurface_Redeeming_Restricted_Seizable_v1 ? repayer is included in different Interface right?
+    // -------------------------------------------------------------------------
     // Errors
 
     /// @notice Invalid address passed as argument
@@ -36,7 +52,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
         uint allowedTimestamp
     );
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Events
 
     /// @notice Emits when the collateral has been seized, with the amount
@@ -59,7 +75,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     /// @notice Emits when buy and sell restriction is removed.
     event BuyAndSellIsUnrestricted();
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Getter Functions
 
     /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
@@ -95,7 +111,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
         view
         returns (bool buyAndSellIsRestricted);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mutating Functions
 
     // Token Manipulation Functions
@@ -109,7 +125,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     /// @param amount_ Burn amount
     function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyCoverManager Functions
 
     /// @notice Restricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
@@ -135,7 +151,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 {
     function setLiquidityVaultControllerContract(ILiquidityVaultController lp_)
         external;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
     /// @notice Sets the token vault address.

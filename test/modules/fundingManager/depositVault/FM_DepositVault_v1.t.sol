@@ -62,7 +62,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Initialization
 
     function testInit() public override(ModuleTest) {
@@ -74,14 +74,14 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vault.init(_orchestrator, _METADATA, abi.encode());
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Public View Functions
 
     function testToken() public {
         assertEq(address(vault.token()), address(_token));
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Mutating Functions
 
     function testDeposit_Works(address user, uint amount, uint fee) public {
@@ -127,7 +127,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         assertEq(_token.balanceOf(user), 0);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Mutating Functions
 
     function testTransferOrchestratorToken(address to, uint amount) public {
@@ -154,7 +154,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vault.transferOrchestratorToken(address(0), 0);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     function testProcessProtocolFeeViaTransfer(address treasury, uint amount)

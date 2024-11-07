@@ -15,10 +15,10 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
 contract FM_BC_BondingSurface_RedeemingV1_Exposed is
     FM_BC_BondingSurface_Redeeming_v1
 {
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mock access for internal functions
 
     function exposed_calculateBasePriceToCapitalRatio(

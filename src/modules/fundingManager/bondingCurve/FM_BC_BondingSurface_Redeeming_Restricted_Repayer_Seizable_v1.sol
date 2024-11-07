@@ -84,7 +84,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             || super.supportsInterface(interfaceId_);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Constants
 
     /// @dev Max seizable amount is 1% expressed in BPS
@@ -101,7 +101,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev Minter/Burner Role.
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev Repayable amount collateral which can be pulled from the
@@ -124,7 +124,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     modifier checkBuyAndSellRestrictions() {
@@ -142,7 +142,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -225,10 +225,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
-    //-------------------------------------------------------------------------- //@note Is this sectioning appropriate?
+    // =========================================================================
     // Public Functions
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Getter Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -284,10 +284,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return _getRepayableAmount();
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Mutating Functions
 
-    // Token Manipulation Functions
+    // -------------------------------------------------------------------------
+    // Mutating - Token Manipulation Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address.
     /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
@@ -360,8 +361,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _burn(owner_, amount_);
     }
 
-    //--------------------------------------------------------------------------
-    // OnlyLiquidityVaultController Functions
+    // -------------------------------------------------------------------------
+    // Mutating - OnlyLiquidityVaultController Functions
 
     /// @inheritdoc IRepayer_v1
     function transferRepayment(address to_, uint amount_)
@@ -382,8 +383,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         emit RepaymentTransfer(to_, amount_);
     }
 
-    //--------------------------------------------------------------------------
-    // OnlyCoverManager Functions
+    // -------------------------------------------------------------------------
+    // Mutating - OnlyCoverManager Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function restrictBuyAndSell() external onlyModuleRole(COVER_MANAGER_ROLE) {
@@ -469,7 +470,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _repayableAmount = _amount;
     }
 
-    // RedeemingBondingCurveBase_v1 Overrides
+    // -------------------------------------------------------------------------
+    // Mutating - RedeemingBondingCurveBase_v1 Overrides
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function setSellFee(uint _fee)
@@ -481,8 +483,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setSellFee(_fee);
     }
 
-    //--------------------------------------------------------------------------
-    // OnlyRiskManager Functions
+    // -------------------------------------------------------------------------
+    // Mutating - OnlyRiskManager Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setCapitalRequired(uint _newCapitalRequired)
@@ -502,8 +504,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setBasePriceMultiplier(_newBasePriceMultiplier);
     }
 
-    //--------------------------------------------------------------------------
-    // OnlyOrchestratorAdmin Functions
+    // -------------------------------------------------------------------------
+    // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function setTokenVault(address tokenVault_)
@@ -522,7 +524,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Internal Functions
 
     /// @dev Sets the token vault address.
@@ -585,8 +587,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         emit ProjectCollateralFeeWithdrawn(_tokenVault, workflowFeeAmount_);
     }
 
-    //--------------------------------------------------------------------------
-    // BondingCurveBase_v1 Overrides
+    // -------------------------------------------------------------------------
+    // Internal - BondingCurveBase_v1 Overrides
 
     /// @dev    Validates the workflow fee.
     function _validateProjectFee(uint projectFee_)

@@ -166,11 +166,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Test: Initialization
 
     //This function also tests all the getters
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Initialization
     function testInit() public override {
         // Issuance Token
@@ -311,7 +311,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     /*
@@ -344,7 +344,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /*
@@ -393,7 +393,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Supports Interface
 
     function testSupportsInterface() public {
@@ -411,7 +411,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /*  Test buy() & buyFor() functions
@@ -758,7 +758,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - _amount);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Implementation Specific Public Functions
 
     /*  Test seizable()
@@ -809,7 +809,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         assertEq(internalFunctionResult, publicFunctionResult);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // onlyLiquidityVaultController Functions
 
     /*  Test transferRepayment()
@@ -997,7 +997,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         assertEq(_token.balanceOf(_to), _amount);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyCoverManager Functions
 
     /*  Test seize()
@@ -1385,7 +1385,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyCoverManager Functions
 
     /*  Test setCapitalRequired()
@@ -1439,7 +1439,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         }
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
     /* Test: setTokenVault() modifier in position
@@ -1506,7 +1506,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /*    Test _setSeize()
@@ -1776,7 +1776,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             _token.balanceOf(address(bondingCurveFundingManager)), MIN_RESERVE
         );
     }
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Test Helper Functions
 
     function _mintIssuanceTokenToAddressHelper(address _account, uint _amount)

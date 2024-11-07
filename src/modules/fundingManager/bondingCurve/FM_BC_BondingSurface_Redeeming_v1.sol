@@ -77,13 +77,13 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Constants
 
     /// @dev Minimum collateral reserve
     uint public MIN_RESERVE;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev The interface of the Formula used to calculate the issuance and redeeming amount.
@@ -101,7 +101,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -159,10 +159,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Public Functions
 
-    //-------------------------------------------------------------------------- //@note Is this sectioning appropriate?
+    // -------------------------------------------------------------------------
     // Getter Functions
 
     /// @notice Calculates and returns the static price for buying the issuance token.
@@ -246,11 +246,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return _token;
     }
 
-    //--------------------------------------------------------------------------
-    // Mutating Functions
-
-    //--------------------------------------------------------------------------
-    // OnlyOrchestratorAdmin Functions
+    // -------------------------------------------------------------------------
+    // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setCapitalRequired(uint newCapitalRequired_)
@@ -270,8 +267,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
 
-    //--------------------------------------------------------------------------
-    // OnlyPaymentClient Functions
+    // -------------------------------------------------------------------------
+    // Mutating - OnlyPaymentClient Functions
 
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to_, uint amount_)
@@ -295,8 +292,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    //--------------------------------------------------------------------------
-    // Upstream Function Implementations
+    // -------------------------------------------------------------------------
+    // Mutating - Upstream Function Implementations
 
     /// @dev Calculates the amount of tokens to mint for a given deposit amount using the formula contract.
     /// This internal function is an override of BondingCurveBase_v1's abstract function.
@@ -343,7 +340,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         }
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Internal Functions
 
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected

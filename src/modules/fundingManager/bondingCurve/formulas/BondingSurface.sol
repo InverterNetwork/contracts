@@ -7,25 +7,39 @@ import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 
-/// @title Bonding surface formulas //@todo adapt contract overview Docs
-/// @dev
-///                        (C_a)^n
-/// p = f(C_a, C_r) = B -------------
-///                      (C_r)^(n-1)
-///
-/// TPG price per unit, p. The independent variables in the bonding function are the
-/// capital available, C_a, and the capital required, C_r. C_a describes the amount of
-/// value stored in the network at any given point in time. C_r  describes the amount
-/// of value that is needed to operate the protocol according to market size
-/// and conditions, the regulatory requirements, as well as the chosen risk appetite,
-/// and allows for considering these three factors in the determination of p
-/// Initial:
-///   B := 10e-7
-///   1 < n <= 2
-///   n := 2
-///
-/// We assume n to be constant. Otherwise we would have to change the burn/mint derivations
-/// on update.
+/**
+ * @title   Bonding Surface Formula
+ *
+ * @notice  Formular to calculate the price of a token in the bonding curve. //@note More specific?
+ *
+ * @dev
+ *                                (C_a)^n
+ *          p = f(C_a, C_r) = B -------------
+ *                              (C_r)^(n-1)
+ *
+ *          TPG price per unit, p. The independent variables in the bonding function are the
+ *          capital available, C_a, and the capital required, C_r. C_a describes the amount of
+ *          value stored in the network at any given point in time. C_r  describes the amount
+ *          of value that is needed to operate the protocol according to market size
+ *          and conditions, the regulatory requirements, as well as the chosen risk appetite,
+ *          and allows for considering these three factors in the determination of p
+ *          Initial:
+ *            B := 10e-7
+ *            1 < n <= 2
+ *            n := 2
+ *
+ *          We assume n to be constant. Otherwise we would have to change the burn/mint derivations
+ *          on update.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version v1.0.0
+ *
+ * @author  Inverter Network
+ */
 contract BondingSurface is IBondingSurface, ERC165 {
     /// @inheritdoc ERC165
     function supportsInterface(bytes4 interfaceId_)
@@ -39,7 +53,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
             || super.supportsInterface(interfaceId_);
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Public Functions
 
     /// @inheritdoc IBondingSurface
@@ -96,7 +110,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         return capitalAvailable_ - _inverse(BCrM + ca2inv);
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Internal Functions
 
     /// @dev Computes the inverse based on
