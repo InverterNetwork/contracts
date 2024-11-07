@@ -22,66 +22,66 @@ contract FM_BC_BondingSurface_RedeemingV1_Exposed is
     // Mock access for internal functions
 
     function exposed_calculateBasePriceToCapitalRatio(
-        uint _capitalRequired,
-        uint _basePriceMultiplier
+        uint capitalRequired_,
+        uint basePriceMultiplier_
     ) external pure returns (uint) {
         return _calculateBasePriceToCapitalRatio(
-            _capitalRequired, _basePriceMultiplier
+            capitalRequired_, basePriceMultiplier_
         );
     }
 
-    function exposed_issueTokensFormulaWrapper(uint _depositAmount)
+    function exposed_issueTokensFormulaWrapper(uint depositAmount_)
         external
         view
         returns (uint)
     {
-        return _issueTokensFormulaWrapper(_depositAmount);
+        return _issueTokensFormulaWrapper(depositAmount_);
     }
 
     function exposed_getCapitalAvailable() external view returns (uint) {
         return _getCapitalAvailable();
     }
 
-    function exposed_redeemTokensFormulaWrapper(uint _depositAmount)
+    function exposed_redeemTokensFormulaWrapper(uint depositAmount_)
         external
         view
         returns (uint)
     {
-        return _redeemTokensFormulaWrapper(_depositAmount);
+        return _redeemTokensFormulaWrapper(depositAmount_);
     }
 
-    function exposed_setBasePriceMultiplier(uint _newBasePriceMultiplier)
+    function exposed_setBasePriceMultiplier(uint newBasePriceMultiplier_)
         external
     {
-        _setBasePriceMultiplier(_newBasePriceMultiplier);
+        _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
 
-    function exposed_setCapitalRequired(uint _newCapitalRequired) external {
-        _setCapitalRequired(_newCapitalRequired);
+    function exposed_setCapitalRequired(uint newCapitalRequired_) external {
+        _setCapitalRequired(newCapitalRequired_);
     }
 
     function exposed_updateVariables() external {
         _updateVariables();
     }
 
-    function exposed_mint(address _account, uint _amount) external {
-        _mint(_account, _amount);
+    function exposed_mint(address account_, uint amount_) external {
+        _mint(account_, amount_);
     }
 
-    function exposed_projectCollateralFeeCollected(uint _amount)
+    function exposed_projectCollateralFeeCollected(uint amount_)
         external
         returns (uint)
     {
-        return projectCollateralFeeCollected = _amount;
+        return projectCollateralFeeCollected = amount_;
     }
 
     function exposed_formulaTokenIn(
-        uint _depositAmount,
-        uint _capitalAvailable,
-        uint _basePriceToCapitalRatio
-    ) external view returns (uint _redeemAmount) {
+        uint depositAmount_,
+        uint capitalAvailable_,
+        uint basePriceToCapitalRatio_
+    ) external view returns (uint) {
         return _formula.tokenIn(
-            _depositAmount, _capitalAvailable, _basePriceToCapitalRatio
+            depositAmount_, capitalAvailable_, basePriceToCapitalRatio_
         );
     }
 }

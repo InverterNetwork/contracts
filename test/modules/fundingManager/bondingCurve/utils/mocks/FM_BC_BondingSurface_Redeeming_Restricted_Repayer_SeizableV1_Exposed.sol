@@ -44,30 +44,30 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
         return _getCapitalAvailable();
     }
 
-    function exposed_setSeize(uint64 _seize) external {
-        _setSeize(_seize);
+    function exposed_setSeize(uint64 seize_) external {
+        _setSeize(seize_);
     }
 
-    function exposed_setTokenVault(address _tokenVault) external {
-        _setTokenVault(_tokenVault);
+    function exposed_setTokenVault(address tokenVault_) external {
+        _setTokenVault(tokenVault_);
     }
 
     function exposed_getSmallerCaCr() external view returns (uint) {
         return _getSmallerCaCr();
     }
 
-    function exposed_mint(address _account, uint _amount) external {
-        _mint(_account, _amount);
+    function exposed_mint(address account_, uint amount_) external {
+        _mint(account_, amount_);
     }
 
-    function exposed_projectCollateralFeeCollected(uint _amount)
+    function exposed_projectCollateralFeeCollected(uint amount_)
         external
         returns (uint)
     {
-        return projectCollateralFeeCollected = _amount;
+        return projectCollateralFeeCollected = amount_;
     }
 
-    function exposed_projectFeeCollected(uint _workflowFeeAmount) external {
-        _projectFeeCollected(_workflowFeeAmount);
+    function exposed_projectFeeCollected(uint workflowFeeAmount_) external {
+        _projectFeeCollected(workflowFeeAmount_);
     }
 }

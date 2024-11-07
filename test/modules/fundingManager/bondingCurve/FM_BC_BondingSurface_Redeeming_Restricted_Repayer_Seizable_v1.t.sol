@@ -249,17 +249,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
     /*
     Test: Init
-    └── Given: decimals are not 18
+    └── Given: decimals_ are not 18
         └── When: the function init is called
             └── Then: it should adapt the MIN_RESERVE accordingly
     */
 
-    function testInit_GivenDecimalsAreNot18(uint8 decimals) public {
+    function testInit_GivenDecimalsAreNot18(uint8 decimals_) public {
         //uint 256 only has 77 Decimals
-        if (decimals == 1 || decimals > 77) decimals = 1;
+        if (decimals_ == 1 || decimals_ > 77) decimals_ = 1;
 
         // set new decimals
-        _token.setDecimals(decimals);
+        _token.setDecimals(decimals_);
 
         // Setup bondingCurve properties
         IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
@@ -306,7 +306,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         //assert that MIN_RESERVE is set correctly
         assertEq(
             bondingCurveFundingManager.MIN_RESERVE(),
-            10 ** decimals,
+            10 ** decimals_,
             "MIN_RESERVE has not been set correctly"
         );
     }
@@ -316,30 +316,30 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
     /*
     Test: OnlyLiquidityVaultController Modifier
-    └── Given: the caller is not the liquidityVaultController
+    └── Given: the caller_ is not the liquidityVaultController
         └── When: the function buy() is called
             └── Then: it should revert
      */
 
     function testOnlyLiquidityVaultControllerModifier(
-        address caller,
-        bool isLiquidityVaultController
+        address caller_,
+        bool isLiquidityVaultController_
     ) public {
-        vm.assume(caller != liquidityVaultController);
-        if (isLiquidityVaultController) {
-            caller = liquidityVaultController;
+        vm.assume(caller_ != liquidityVaultController);
+        if (isLiquidityVaultController_) {
+            caller_ = liquidityVaultController;
         } else {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
                         .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController
                         .selector,
-                    caller
+                    caller_
                 )
             );
         }
 
-        vm.prank(caller);
+        vm.prank(caller_);
         bondingCurveFundingManager.exposed_onlyLiquidityVaultControllerModifier(
         );
     }
@@ -571,21 +571,21 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     /*  Test burnIssuanceToken()
-        ├── Given: _amount > msg.sender balance of issuance token
+        ├── Given: amount_ > msg.sender balance of issuance token
         │   └── When: the function burnIssuanceToken() gets called
         │       └── Then: it should revert
-        └── Given: _amount <= msg.sender balance of issuance token
+        └── Given: amount_ <= msg.sender balance of issuance token
             └── When: the function burnIssuanceToken() gets called
-                └── Then: it should burn _amount from msg.sender's balance
+                └── Then: it should burn amount_ from msg.sender's balance
     */
 
     function testBurnIssuanceToken_revertGivenAmountBiggerThanMsgSenderBalance(
-        uint _amount
+        uint amount_
     ) public {
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // balance of the burner
-        uint burnerTokenBalance = _amount - 1;
+        uint burnerTokenBalance = amount_ - 1;
         // mint issuance token to user for burning
         _mintIssuanceTokenToAddressHelper(burner, burnerTokenBalance);
         // Validate minting success
@@ -596,17 +596,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         {
             // Revert when balance lower than amount
             vm.expectRevert();
-            bondingCurveFundingManager.burnIssuanceToken(_amount);
+            bondingCurveFundingManager.burnIssuanceToken(amount_);
         }
     }
 
     function testBurnIssuanceToken_worksGivenAmountLowerThanMsgSenderBalance(
-        uint _amount
+        uint amount_
     ) public {
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // balance of the burner
-        uint burnerTokenBalance = _amount + 1;
+        uint burnerTokenBalance = amount_ + 1;
         // mint issuance token to user for burning
         _mintIssuanceTokenToAddressHelper(burner, burnerTokenBalance);
         // Assert right amount has been minted
@@ -614,66 +614,66 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
         // Execute tx
         vm.startPrank(burner);
-        bondingCurveFundingManager.burnIssuanceToken(_amount);
+        bondingCurveFundingManager.burnIssuanceToken(amount_);
 
         // Assert right amount has been burned
-        assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - _amount);
+        assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - amount_);
     }
 
     /*  Test burnIssuanceTokenFor()
         ├── Given: _owner != msg.sender
-        │   ├── And: the allowance < _amount
+        │   ├── And: the allowance < amount_
         │   │   └── When: the function burnIssuanceTokenFor() gets called
         │   │       └── Then: it should revert
-        │   └── And: msg.sender allowance > _amount
-        │       ├── And: _owner balance < _amount
+        │   └── And: msg.sender allowance > amount_
+        │       ├── And: _owner balance < amount_
         │       │   └── When: the function burnIssuanceTokenFor() gets called
         │       │       └── Then: it should revert
-        │       └── And: _owner balance > _amount
+        │       └── And: _owner balance > amount_
         │           └── When: the function burnIssuanceTokenFor() gets called
-        │                └── Then: it should burn _amount tokens from the _owner
+        │                └── Then: it should burn amount_ tokens from the _owner
         └── Given: _owner == msg.sender
-            ├── And: _amount > _owner balance of issuance token
+            ├── And: amount_ > _owner balance of issuance token
             │   └── When: the function burnIssuanceToken() gets called
             │       └── Then: it should revert
-            └── And: _amount <= _owner balance of issuance token
+            └── And: amount_ <= _owner balance of issuance token
                 └── When: the function burnIssuanceToken() gets called
-                    └── Then: it should burn _amount from _owner's balance
+                    └── Then: it should burn amount_ from _owner's balance
     */
 
     function testBurnIssuanceTokenFor_revertGivenAmountHigherThanOwnerAllowance(
-        uint _amount
+        uint amount_
     ) public {
         address tokenOwner = makeAddr("tokenOwner");
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // Balance of tokenOwner
-        uint ownerTokenBalance = _amount;
+        uint ownerTokenBalance = amount_;
         // mint issuance token to tokenOwner for burning
         _mintIssuanceTokenToAddressHelper(tokenOwner, ownerTokenBalance);
         // Validate minting success
         assertEq(issuanceToken.balanceOf(tokenOwner), ownerTokenBalance);
         // Approve less than amount to burner address
         vm.prank(tokenOwner);
-        issuanceToken.approve(burner, _amount - 1);
+        issuanceToken.approve(burner, amount_ - 1);
 
         // Execute tx
         vm.startPrank(burner);
         {
             // Revert when allowance lower than amount
             vm.expectRevert();
-            bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, _amount);
+            bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, amount_);
         }
     }
 
     function testBurnIssuanceTokenFor_revertGivenAmountBiggerThanOwnerBalance(
-        uint _amount
+        uint amount_
     ) public {
         address tokenOwner = makeAddr("tokenOwner");
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // Balance of tokenOwner
-        uint ownerTokenBalance = _amount - 1;
+        uint ownerTokenBalance = amount_ - 1;
         // mint issuance token to tokenOwner for burning
         _mintIssuanceTokenToAddressHelper(tokenOwner, ownerTokenBalance);
         // Validate minting success
@@ -687,18 +687,18 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         {
             // Revert when allowance lower than amount
             vm.expectRevert();
-            bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, _amount);
+            bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, amount_);
         }
     }
 
     function testBurnIssuanceTokenFor_worksGivenOwnerIsNotMsgSender(
-        uint _amount
+        uint amount_
     ) public {
         address tokenOwner = makeAddr("tokenOwner");
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // Balance of tokenOwner
-        uint ownerTokenBalance = _amount + 1;
+        uint ownerTokenBalance = amount_ + 1;
         // mint issuance token to tokenOwner for burning
         _mintIssuanceTokenToAddressHelper(tokenOwner, ownerTokenBalance);
         // Validate minting success
@@ -709,21 +709,21 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
         // Execute tx
         vm.startPrank(burner);
-        bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, _amount);
+        bondingCurveFundingManager.burnIssuanceTokenFor(tokenOwner, amount_);
 
         // Assert right amount has been burned
         assertEq(
-            issuanceToken.balanceOf(tokenOwner), ownerTokenBalance - _amount
+            issuanceToken.balanceOf(tokenOwner), ownerTokenBalance - amount_
         );
     }
 
     function testBurnIssuanceTokenFor_revertGivenAmountBiggerThanMsgSenderBalance(
-        uint _amount
+        uint amount_
     ) public {
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // balance of burner
-        uint burnerTokenBalance = _amount - 1;
+        uint burnerTokenBalance = amount_ - 1;
         // mint issuance token to burner for burning
         _mintIssuanceTokenToAddressHelper(burner, burnerTokenBalance);
         // validate minting success
@@ -734,17 +734,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         {
             // Revert when balance lower than amount
             vm.expectRevert();
-            bondingCurveFundingManager.burnIssuanceTokenFor(burner, _amount);
+            bondingCurveFundingManager.burnIssuanceTokenFor(burner, amount_);
         }
     }
 
     function testBurnIssuanceTokenFor_worksGivenMsgSenderIsNotOwner(
-        uint _amount
+        uint amount_
     ) public {
         // bound value to max uint - 1
-        _amount = bound(_amount, 1, UINT256_MAX - 1);
+        amount_ = bound(amount_, 1, UINT256_MAX - 1);
         // Balance of burner
-        uint burnerTokenBalance = _amount + 1;
+        uint burnerTokenBalance = amount_ + 1;
         // mint issuance token to burner for burning
         _mintIssuanceTokenToAddressHelper(burner, burnerTokenBalance);
         // Validate minting success
@@ -752,10 +752,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
         // Execute tx
         vm.startPrank(burner);
-        bondingCurveFundingManager.burnIssuanceTokenFor(burner, _amount);
+        bondingCurveFundingManager.burnIssuanceTokenFor(burner, amount_);
 
         // Assert right amount has been burned
-        assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - _amount);
+        assertEq(issuanceToken.balanceOf(burner), burnerTokenBalance - amount_);
     }
 
     // -------------------------------------------------------------------------
@@ -766,25 +766,25 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             └── Then: it should return the correct seizable amount
     */
 
-    function testSeizable_works(uint _tokenBalance, uint64 _seize) public {
-        _tokenBalance =
-            bound(_tokenBalance, 1, (UINT256_MAX - MIN_RESERVE) / 1000); // to protect agains overflow if max balance * max seize
-        _seize =
-            uint64(bound(_seize, 1, bondingCurveFundingManager.MAX_SEIZE()));
+    function testSeizable_works(uint tokenBalance_, uint64 seize_) public {
+        tokenBalance_ =
+            bound(tokenBalance_, 1, (UINT256_MAX - MIN_RESERVE) / 1000); // to protect agains overflow if max balance * max seize
+        seize_ =
+            uint64(bound(seize_, 1, bondingCurveFundingManager.MAX_SEIZE()));
         // Setup
         // Get balance before test
         uint tokenBalanceFundingMangerBaseline =
             _token.balanceOf(address(bondingCurveFundingManager));
         // mint collateral to funding manager
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _tokenBalance
+            address(bondingCurveFundingManager), tokenBalance_
         );
         // set seize in contract
-        bondingCurveFundingManager.adjustSeize(_seize);
+        bondingCurveFundingManager.adjustSeize(seize_);
 
         // calculate return value
         uint expectedReturnValue =
-            ((_tokenBalance + tokenBalanceFundingMangerBaseline) * _seize) / BPS;
+            ((tokenBalance_ + tokenBalanceFundingMangerBaseline) * seize_) / BPS;
 
         // Execute tx
         uint returnValue = bondingCurveFundingManager.getSeizableAmount();
@@ -813,34 +813,34 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     // onlyLiquidityVaultController Functions
 
     /*  Test transferRepayment()
-        ├── Given the caller is not the liquidityVaultController
+        ├── Given the caller_ is not the liquidityVaultController
         │   └── When the function transferRepayment() is called
         │       └── Then it should revert
-        ├── Given modifier validReceiver(_to) is in place: Please Note: Modifier test can be found in BondingCurveBase_v1.t
+        ├── Given modifier validReceiver(to_) is in place: Please Note: Modifier test can be found in BondingCurveBase_v1.t
         │   └── When the function transferRepayment() is called
         │       └── Then it should revert if receiver is invalid
-        └── Given: the caller is the liquidityVaultController
-            └── And: the _to address is valid
-                ├── And: the _amount > the repayable amount available
+        └── Given: the caller_ is the liquidityVaultController
+            └── And: the to_ address is valid
+                ├── And: the amount_ > the repayable amount available
                 │   └── When: the function transferRepayment() gets called
                 │       └── Then: it should revert
-                ├── And: the _amount > the repayable amount available
+                ├── And: the amount_ > the repayable amount available
                 │   └── When: the function transferRepayment() gets called
                 │       └── Then: it should revert
-                └── And: _amount <= repayable amount available
+                └── And: amount_ <= repayable amount available
                     └── When: the function transferRepayment() gets called
-                        └── Then: it should transfer _amount to the _to address
+                        └── Then: it should transfer amount_ to the to_ address
                             └── And: it should emit an event
     */
 
     function testTransferPayment_revertGivenCallerIsNotLiquidityVaultController(
-        address _to,
-        uint _amount
+        address to_,
+        uint amount_
     ) public {
-        // Valid _to address
+        // Valid to_ address
         vm.assume(
-            _to != liquidityVaultController
-                && _to != address(bondingCurveFundingManager) && _to != address(0)
+            to_ != liquidityVaultController
+                && to_ != address(bondingCurveFundingManager) && to_ != address(0)
         );
         // Execute Tx
         vm.startPrank(seller);
@@ -853,13 +853,13 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     seller
                 )
             );
-            bondingCurveFundingManager.transferRepayment(_to, _amount);
+            bondingCurveFundingManager.transferRepayment(to_, amount_);
         }
     }
 
-    function testTransferPayment_modifierInPlace(uint _amount) public {
+    function testTransferPayment_modifierInPlace(uint amount_) public {
         address to = address(0);
-        _amount = bound(_amount, 2, UINT256_MAX - 1);
+        amount_ = bound(amount_, 2, UINT256_MAX - 1);
 
         // Execute Tx
         vm.startPrank(liquidityVaultController);
@@ -869,34 +869,34 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     .Module__BondingCurveBase__InvalidRecipient
                     .selector
             );
-            bondingCurveFundingManager.transferRepayment(to, _amount);
+            bondingCurveFundingManager.transferRepayment(to, amount_);
         }
     }
 
     function testTransferPayment_revertGivenAmounBiggerThanRepayableAmount(
-        address _to,
-        uint _amount
+        address to_,
+        uint amount_
     ) public {
-        // Valid _to address
+        // Valid to_ address
         vm.assume(
-            _to != liquidityVaultController
-                && _to != address(bondingCurveFundingManager) && _to != address(0)
+            to_ != liquidityVaultController
+                && to_ != address(bondingCurveFundingManager) && to_ != address(0)
         );
-        _amount = bound(_amount, 2, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        amount_ = bound(amount_, 2, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
 
         // Setup
         // Get balance before test
         uint tokenBalanceFundingMangerBaseline =
             _token.balanceOf(address(bondingCurveFundingManager));
         // set capital available in funding manager
-        uint tokenBalanceFundingManager = _amount;
+        uint tokenBalanceFundingManager = amount_;
         _mintCollateralTokenToAddressHelper(
             address(bondingCurveFundingManager), tokenBalanceFundingManager
         );
         // Set capital requirement
-        bondingCurveFundingManager.setCapitalRequired(_amount);
-        // Set repayable amount < _amount
-        bondingCurveFundingManager.setRepayableAmount(_amount - 1);
+        bondingCurveFundingManager.setCapitalRequired(amount_);
+        // Set repayable amount < amount_
+        bondingCurveFundingManager.setRepayableAmount(amount_ - 1);
 
         // Assert that right amount tokens have been minted to funding manager
         assertEq(
@@ -907,36 +907,36 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Execute Tx
         vm.startPrank(liquidityVaultController);
         {
-            // Revert when _amount > repayableAmount
+            // Revert when amount_ > repayableAmount
             vm.expectRevert(
                 IRepayer_v1
                     .Repayer__InsufficientCollateralForRepayerTransfer
                     .selector
             );
-            bondingCurveFundingManager.transferRepayment(_to, _amount);
+            bondingCurveFundingManager.transferRepayment(to_, amount_);
         }
     }
 
     function testTransferPayment_revertGivenMinReserveIsReached(
-        address _to,
-        uint _amount
+        address to_,
+        uint amount_
     ) public {
-        // Valid _to address
+        // Valid to_ address
         vm.assume(
-            _to != liquidityVaultController
-                && _to != address(bondingCurveFundingManager) && _to != address(0)
+            to_ != liquidityVaultController
+                && to_ != address(bondingCurveFundingManager) && to_ != address(0)
         );
-        _amount = bound(_amount, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        amount_ = bound(amount_, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
 
         // Setup
         // set and mint the amount needed for this test.
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _amount
+            address(bondingCurveFundingManager), amount_
         );
         // Set capital requirement
-        bondingCurveFundingManager.setCapitalRequired(_amount + MIN_RESERVE);
+        bondingCurveFundingManager.setCapitalRequired(amount_ + MIN_RESERVE);
         // Set repayable amount
-        bondingCurveFundingManager.setRepayableAmount(_amount + MIN_RESERVE);
+        bondingCurveFundingManager.setRepayableAmount(amount_ + MIN_RESERVE);
 
         // Execute Tx
         vm.prank(liquidityVaultController);
@@ -945,33 +945,33 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                 .FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
                 .selector
         );
-        bondingCurveFundingManager.transferRepayment(_to, _amount + MIN_RESERVE);
+        bondingCurveFundingManager.transferRepayment(to_, amount_ + MIN_RESERVE);
     }
 
     function testTransferPayment_worksGivenCallerIsLvcAndAmountIsValid(
-        address _to,
-        uint _amount
+        address to_,
+        uint amount_
     ) public {
-        // Valid _to address
+        // Valid to_ address
         vm.assume(
-            _to != liquidityVaultController
-                && _to != address(bondingCurveFundingManager) && _to != address(0)
+            to_ != liquidityVaultController
+                && to_ != address(bondingCurveFundingManager) && to_ != address(0)
         );
-        _amount = bound(_amount, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        amount_ = bound(amount_, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
 
         // Setup
         // Get balance before test
         uint tokenBalanceFundingMangerBaseline =
             _token.balanceOf(address(bondingCurveFundingManager));
         // set and mint the amount needed for this test.
-        uint mintAmountForFundingManager = _amount;
+        uint mintAmountForFundingManager = amount_;
         _mintCollateralTokenToAddressHelper(
             address(bondingCurveFundingManager), mintAmountForFundingManager
         );
         // Set capital requirement
-        bondingCurveFundingManager.setCapitalRequired(_amount);
+        bondingCurveFundingManager.setCapitalRequired(amount_);
         // Set repayable amount
-        bondingCurveFundingManager.setRepayableAmount(_amount);
+        bondingCurveFundingManager.setRepayableAmount(amount_);
 
         // Assert that right amount tokens have been minted to funding manager, i.e. mintAmountForFundingManager + MIN_RESERVE
         assertEq(
@@ -979,53 +979,53 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             mintAmountForFundingManager + tokenBalanceFundingMangerBaseline
         );
         // Assert that receiver address does not have tokens
-        assertEq(_token.balanceOf(_to), 0);
+        assertEq(_token.balanceOf(to_), 0);
 
         // Execute Tx
         vm.prank(liquidityVaultController);
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit IRepayer_v1.RepaymentTransfer(_to, _amount);
-        bondingCurveFundingManager.transferRepayment(_to, _amount);
+        emit IRepayer_v1.RepaymentTransfer(to_, amount_);
+        bondingCurveFundingManager.transferRepayment(to_, amount_);
 
-        // Assert that _amount tokens have been withdrawn from funding manager
+        // Assert that amount_ tokens have been withdrawn from funding manager
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
             tokenBalanceFundingMangerBaseline + mintAmountForFundingManager
-                - _amount
+                - amount_
         );
-        // Assert that receiver has _amount token
-        assertEq(_token.balanceOf(_to), _amount);
+        // Assert that receiver has amount_ token
+        assertEq(_token.balanceOf(to_), amount_);
     }
 
     // -------------------------------------------------------------------------
     // OnlyCoverManager Functions
 
     /*  Test seize()
-        ├── Given: the caller has not the COVER_MANAGER_ROLE
+        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
         │   └── When: the function seize() gets called
         │       └── Then: it should revert
-        └── Given: the caller has the COVER_MANAGER_ROLE
-            ├── And: the parameter _amount > the seizable amount
+        └── Given: the caller_ has the COVER_MANAGER_ROLE
+            ├── And: the parameter amount_ > the seizable amount
             │   └── When: the function seize() gets called
             │       └── Then: it should revert
             ├── And: the lastSeizeTimestamp + SEIZE_DELAY > block.timestamp
             │   └── When: the function seize() gets called
             │       └── Then: it should revert
-            ├── And: the capital available - _amount < MIN_RESERVE
+            ├── And: the capital available - amount_ < MIN_RESERVE
             │   └── When: the function seize() gets called
             │       └── Then: it should transfer the value of capitalAvailable - MIN_RESERVE tokens to the msg.sender
             │           ├── And: it should set the current timeStamp to lastSeizeTimestamp
             │           └── And: it should emit an event
-            └── And: the capital available - _amount > MIN_RESERVE
+            └── And: the capital available - amount_ > MIN_RESERVE
                 └── And: the lastSeizeTimestamp + SEIZE_DELAY < block.timestamp
                     └── When: the function seize() gets called
-                        └── Then: it should transfer the value of _amount tokens to the msg.sender
+                        └── Then: it should transfer the value of amount_ tokens to the msg.sender
                             ├── And: it should set the current timeStamp to lastSeizeTimestamp
                             └── And: it should emit an event
     */
 
     function testSeize_revertGivenCallerHasNotCoverManagerRole() public {
-        uint _amount = 1;
+        uint amount_ = 1;
 
         // Execute Tx
         vm.startPrank(seller);
@@ -1040,15 +1040,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     seller
                 )
             );
-            bondingCurveFundingManager.seize(_amount);
+            bondingCurveFundingManager.seize(amount_);
         }
     }
 
-    function testSeize_revertGivenAmountBiggerThanSeizableAmount(uint _amount)
+    function testSeize_revertGivenAmountBiggerThanSeizableAmount(uint amount_)
         public
     {
         uint currentSeizable = bondingCurveFundingManager.getSeizableAmount();
-        vm.assume(_amount > currentSeizable);
+        vm.assume(amount_ > currentSeizable);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1058,7 +1058,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                 currentSeizable
             )
         );
-        bondingCurveFundingManager.seize(_amount);
+        bondingCurveFundingManager.seize(amount_);
     }
 
     function testSeize_revertGivenLastSeizeTimerNotReset() public {
@@ -1119,15 +1119,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         assertEq(balanceBeforeBuy, balanceBeforeBuy);
     }
 
-    function testSeize_worksGivenCapitalAmountIsReturnd(uint _amount) public {
+    function testSeize_worksGivenCapitalAmountIsReturnd(uint amount_) public {
         // Setup
         // Set block.timestamp to valid time
         vm.warp(SEIZE_DELAY + 1);
         // Bound seizable value
-        _amount = bound(_amount, 1, type(uint128).max);
+        amount_ = bound(amount_, 1, type(uint128).max);
         // Mint enough surplus so seizing can happen
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _amount * 10_000
+            address(bondingCurveFundingManager), amount_ * 10_000
         );
         //Get balance before seize
         uint balanceBeforeBuy = _token.balanceOf(address(this));
@@ -1137,26 +1137,26 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .CollateralSeized(_amount);
-        bondingCurveFundingManager.seize(_amount);
+            .CollateralSeized(amount_);
+        bondingCurveFundingManager.seize(amount_);
 
         // Get balance after buying
         uint balanceAfterBuy = _token.balanceOf(address(this));
         // Assert that no tokens have been sent
-        assertEq(balanceAfterBuy, balanceBeforeBuy + _amount);
+        assertEq(balanceAfterBuy, balanceBeforeBuy + amount_);
     }
 
     /*    Test adjust
-        ├── Given: the caller has not the COVER_MANAGER_ROLE
+        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
         │   └── When: the function adjustSeize() gets called
         │       └── Then: it should revert
-        └── Given: the caller has the COVER_MANAGER_ROLE
+        └── Given: the caller_ has the COVER_MANAGER_ROLE
                 └── When: the function adjustSeize() gets called
                     └── Then: it should call the internal function and set the state
     */
 
     function testAdjustSeize_revertGivenCallerHasNotCoverManagerRole() public {
-        uint64 _seize = 10_000;
+        uint64 seize_ = 10_000;
 
         // Execute Tx
         vm.startPrank(seller);
@@ -1171,33 +1171,33 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     seller
                 )
             );
-            bondingCurveFundingManager.adjustSeize(_seize);
+            bondingCurveFundingManager.adjustSeize(seize_);
         }
     }
 
-    function testAdjustSeize_worksGivenCallerHasCoverManagerRole(uint64 _seize)
+    function testAdjustSeize_worksGivenCallerHasCoverManagerRole(uint64 seize_)
         public
     {
-        vm.assume(_seize != bondingCurveFundingManager.getCurrentSeize());
-        _seize = uint64(bound(_seize, 1, MAX_SEIZE));
+        vm.assume(seize_ != bondingCurveFundingManager.getCurrentSeize());
+        seize_ = uint64(bound(seize_, 1, MAX_SEIZE));
 
         // Execute Tx
-        bondingCurveFundingManager.adjustSeize(_seize);
+        bondingCurveFundingManager.adjustSeize(seize_);
 
-        assertEq(bondingCurveFundingManager.getCurrentSeize(), _seize);
+        assertEq(bondingCurveFundingManager.getCurrentSeize(), seize_);
     }
 
     /*  Test setSellFee()
-        ├── Given: the caller has not the COVER_MANAGER_ROLE
+        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
         │   └── When: the function setSellFee() gets called
         │       └── Then: it should revert
-        └── Given: the caller has the COVER_MANAGER_ROLE
-            ├── And: _fee > MAX_SELL_FEE
+        └── Given: the caller_ has the COVER_MANAGER_ROLE
+            ├── And: fee_ > MAX_SELL_FEE
             │   └── When: the function setSellFee() getrs called
             │       └── Then: it should revert
-            └── And: _fee <= MAX_SELL_FEE
+            └── And: fee_ <= MAX_SELL_FEE
                 └── When: the function setSellFee() gets called
-                    └── Then: it should set the state of sellFee to _fee
+                    └── Then: it should set the state of sellFee to fee_
     */
 
     function testSetSellFee_revertGivenCallerHasNotCoverManagerRole() public {
@@ -1220,10 +1220,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         }
     }
 
-    function testSetSellFee_revertGivenSeizeBiggerThanMaxSeize(uint _fee)
+    function testSetSellFee_revertGivenSeizeBiggerThanMaxSeize(uint fee_)
         public
     {
-        vm.assume(_fee > MAX_SELL_FEE);
+        vm.assume(fee_ > MAX_SELL_FEE);
 
         // Execute Tx
         vm.expectRevert(
@@ -1233,32 +1233,32 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     .selector
             )
         );
-        bondingCurveFundingManager.setSellFee(_fee);
+        bondingCurveFundingManager.setSellFee(fee_);
     }
 
-    function testAdjustSeize_worksGivenCallerHasRoleAndSeizeIsValid(uint _fee)
+    function testAdjustSeize_worksGivenCallerHasRoleAndSeizeIsValid(uint fee_)
         public
     {
-        vm.assume(_fee != bondingCurveFundingManager.sellFee());
-        _fee = bound(_fee, 1, MAX_SELL_FEE);
+        vm.assume(fee_ != bondingCurveFundingManager.sellFee());
+        fee_ = bound(fee_, 1, MAX_SELL_FEE);
 
         // Execute Tx
-        bondingCurveFundingManager.setSellFee(_fee);
+        bondingCurveFundingManager.setSellFee(fee_);
 
-        assertEq(bondingCurveFundingManager.sellFee(), _fee);
+        assertEq(bondingCurveFundingManager.sellFee(), fee_);
     }
 
     /*  Test setRepayableAmount()
-        ├── Given: the caller has not the COVER_MANAGER_ROLE
+        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
         │   └── When: the function setRepayableAmount() gets called
         │       └── Then: it should revert
-        └── Given: the caller has the COVER_MANAGER_ROLE
-            ├── And: _amount > either capitalAvailable or capitalRequirements
+        └── Given: the caller_ has the COVER_MANAGER_ROLE
+            ├── And: amount_ > either capitalAvailable or capitalRequirements
             │   └── When: the function setRepayableAmount() gets called
             │       └── Then: it should revert
-            └── And: _amount <= either capitalAvailable or capitalRequirements
+            └── And: amount_ <= either capitalAvailable or capitalRequirements
                 └── When: the function setRepayableAmount() gets called
-                    └── Then: it should set the state of repayableAmount to _amount
+                    └── Then: it should set the state of repayableAmount to amount_
                         └── And: it should emit an event
     */
 
@@ -1285,10 +1285,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     function testSetRepayableAmount_revertGivenCallerHasNotCoverManagerRole(
-        uint amount
+        uint amount_
     ) public {
-        amount = bound(
-            amount,
+        amount_ = bound(
+            amount_,
             bondingCurveFundingManager.exposed_getSmallerCaCr() + 1,
             type(uint).max
         );
@@ -1301,14 +1301,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     .selector
             )
         );
-        bondingCurveFundingManager.setRepayableAmount(amount);
+        bondingCurveFundingManager.setRepayableAmount(amount_);
     }
 
     /*  Test setliquidityVaultControllerContract()
-        ├── Given: the caller has not the COVER_MANAGER_ROLE
+        ├── Given: the caller_ has not the COVER_MANAGER_ROLE
         │   └── When: the function setliquidityVaultControllerContract() gets called
         │       └── Then: it should revert
-        └── Given: the caller has the COVER_MANAGER_ROLE
+        └── Given: the caller_ has the COVER_MANAGER_ROLE
             ├── And: _lp == address(0)
             │   └── When: the function setliquidityVaultController() gets called
             │       └── Then: it should revert
@@ -1319,7 +1319,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     */
 
     function testSetliquidityVaultControllerContract_revertGivenCallerHasNotCoverManagerRole(
-        ILiquidityVaultController _lvc
+        ILiquidityVaultController lvc_
     ) public {
         // Execute Tx
         vm.startPrank(seller);
@@ -1334,14 +1334,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     seller
                 )
             );
-            bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
+            bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
         }
     }
 
     function testSetliquidityVaultControllerContract_revertGivenAddressIsZero()
         public
     {
-        ILiquidityVaultController _lvc = ILiquidityVaultController(address(0));
+        ILiquidityVaultController lvc_ = ILiquidityVaultController(address(0));
 
         // Expect Revert
         vm.expectRevert(
@@ -1349,12 +1349,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                 .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress
                 .selector
         );
-        bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
     }
 
     function testSetliquidityVaultControllerContract_revertGivenAddressIsEqualToFM(
     ) public {
-        ILiquidityVaultController _lvc =
+        ILiquidityVaultController lvc =
             ILiquidityVaultController(address(bondingCurveFundingManager));
 
         // Expect Revert
@@ -1363,15 +1363,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                 .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress
                 .selector
         );
-        bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc);
     }
 
     function testSetliquidityVaultControllerContract_worksGivenCallerHasRoleAndAddressValid(
-        ILiquidityVaultController _lvc
+        ILiquidityVaultController lvc_
     ) public {
         vm.assume(
-            _lvc != ILiquidityVaultController(address(0))
-                && _lvc
+            lvc_ != ILiquidityVaultController(address(0))
+                && lvc_
                     != ILiquidityVaultController(address(bondingCurveFundingManager))
         );
 
@@ -1380,16 +1380,16 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
         emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
             .LiquidityVaultControllerChanged(
-            address(_lvc), liquidityVaultController
+            address(lvc_), liquidityVaultController
         );
-        bondingCurveFundingManager.setLiquidityVaultControllerContract(_lvc);
+        bondingCurveFundingManager.setLiquidityVaultControllerContract(lvc_);
     }
 
     // -------------------------------------------------------------------------
     // OnlyCoverManager Functions
 
     /*  Test setCapitalRequired()
-        ├── Given: the caller has not the RISK_MANAGER_ROLE
+        ├── Given: the caller_ has not the RISK_MANAGER_ROLE
         │   └── When: the function setCapitalRequired() is called
         │       └── Then: it should revert
     */
@@ -1414,7 +1414,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     /*  Test setBaseMultiplier() 
-        ├── Given: the caller has not the RISK_MANAGER_ROLE
+        ├── Given: the caller_ has not the RISK_MANAGER_ROLE
         │   └── When: the function setBaseMultiplier() is called
         │       └── Then: it should revert
     */
@@ -1443,10 +1443,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     // OnlyOrchestratorAdmin Functions
 
     /* Test: setTokenVault() modifier in position
-        └── Given: the caller is not the OrchestratorAdmin
+        └── Given: the caller_ is not the OrchestratorAdmin
             └── When: the function setTokenVault() gets called
                 └── Then: it should revert
-        └── Given: the caller is the OrchestratorAdmin
+        └── Given: the caller_ is the OrchestratorAdmin
             └── When: the function setTokenVault() gets called
                 └── Then: it should change the _tokenVault address to the given address
     */
@@ -1473,10 +1473,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     /* Test: withdrawProjectCollateralFee
-         └── Given: the caller is not the OrchestratorAdmin
+         └── Given: the caller_ is not the OrchestratorAdmin
             └── When: the function withdrawProjectCollateralFee() gets called
                 └── Then: it should revert
-        └── Given: the caller is the OrchestratorAdmin
+        └── Given: the caller_ is the OrchestratorAdmin
             └── When: the function withdrawProjectCollateralFee() gets called
                 └── Then: it should revert
     */
@@ -1510,19 +1510,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     // Internal Functions
 
     /*    Test _setSeize()
-        ├── Given: the parameter _seize > MAX_SEIZE
+        ├── Given: the parameter seize_ > MAX_SEIZE
         │   └── When: the function _setSeize() gets called
         │       └── Then: it should revert
-        └── Given: the parameter _seize <= MAX_SEIZE
+        └── Given: the parameter seize_ <= MAX_SEIZE
             └── When: the function _setSeize() gets called
                 └── Then: it should emit an event
                     └── And: it should succeed in writing a new value to state
     */
 
     function testInternalSetSeize_revertGivenSeizeBiggerThanMaxSeize(
-        uint64 _seize
+        uint64 seize_
     ) public {
-        vm.assume(_seize > MAX_SEIZE);
+        vm.assume(seize_ > MAX_SEIZE);
 
         // Execute Tx
         vm.expectRevert(
@@ -1530,17 +1530,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                 IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
                     .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeize
                     .selector,
-                _seize
+                seize_
             )
         );
-        bondingCurveFundingManager.exposed_setSeize(_seize);
+        bondingCurveFundingManager.exposed_setSeize(seize_);
     }
 
-    function testInternalSetSeize_worksGivenSeizeIsValid(uint64 _seize)
+    function testInternalSetSeize_worksGivenSeizeIsValid(uint64 seize_)
         public
     {
-        vm.assume(_seize != bondingCurveFundingManager.getCurrentSeize());
-        _seize = uint64(bound(_seize, 1, MAX_SEIZE));
+        vm.assume(seize_ != bondingCurveFundingManager.getCurrentSeize());
+        seize_ = uint64(bound(seize_, 1, MAX_SEIZE));
         uint64 currentSeize = bondingCurveFundingManager.getCurrentSeize();
 
         // Execute Tx
@@ -1548,10 +1548,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             true, true, true, true, address(bondingCurveFundingManager)
         );
         emit IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-            .SeizeChanged(currentSeize, _seize);
-        bondingCurveFundingManager.adjustSeize(_seize);
+            .SeizeChanged(currentSeize, seize_);
+        bondingCurveFundingManager.adjustSeize(seize_);
 
-        // assertEq(bondingCurveFundingManager.currentSeize(), _seize); //@note check missing?
+        // assertEq(bondingCurveFundingManager.currentSeize(), seize_); //@note check missing?
     }
 
     /*    Test _setTokenVault()
@@ -1576,17 +1576,17 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
     }
 
-    function testSetTokenVault_worksGivenAddressIsNotInvalid(address newVault)
+    function testSetTokenVault_worksGivenAddressIsNotInvalid(address newVault_)
         public
     {
         vm.assume(
-            newVault != address(0)
-                && newVault != address(bondingCurveFundingManager)
+            newVault_ != address(0)
+                && newVault_ != address(bondingCurveFundingManager)
         );
         // Execute Tx
-        bondingCurveFundingManager.exposed_setTokenVault(newVault);
+        bondingCurveFundingManager.exposed_setTokenVault(newVault_);
         // Assert that the token vault address has been set to the given address
-        assertEq(bondingCurveFundingManager.getTokenVault(), newVault);
+        assertEq(bondingCurveFundingManager.getTokenVault(), newVault_);
     }
 
     /*  Test _getSmallerCaCr()
@@ -1599,49 +1599,49 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     */
 
     function testGetSmallerCaCr_worksGivenCapitalAvailableIsBiggerThanCapitalRequirements(
-        uint _capitalAvailable,
-        uint _capitalRequirements
+        uint capitalAvailable_,
+        uint capitalRequirements_
     ) public {
-        _capitalAvailable =
-            bound(_capitalAvailable, 1, UINT256_MAX - MIN_RESERVE); // protect agains overflow
-        _capitalRequirements = bound(_capitalRequirements, 1, _capitalAvailable); // make capital requirements < capital available
+        capitalAvailable_ =
+            bound(capitalAvailable_, 1, UINT256_MAX - MIN_RESERVE); // protect agains overflow
+        capitalRequirements_ = bound(capitalRequirements_, 1, capitalAvailable_); // make capital requirements < capital available
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _capitalAvailable
+            address(bondingCurveFundingManager), capitalAvailable_
         );
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
+        bondingCurveFundingManager.setCapitalRequired(capitalRequirements_);
 
         uint returnValue = bondingCurveFundingManager.exposed_getSmallerCaCr();
 
         // Assert that the smaller value got returned
-        assertEq(returnValue, _capitalRequirements);
+        assertEq(returnValue, capitalRequirements_);
     }
 
     function testGetSmallerCaCr_worksGivenCapitalRequirementsIsBiggerThanCapitalAvailable(
-        uint _capitalAvailable,
-        uint _capitalRequirements
+        uint capitalAvailable_,
+        uint capitalRequirements_
     ) public {
         // Set capital requirement above MIN_RESERVE, which is the capital already available
-        _capitalRequirements = bound(
-            _capitalRequirements, MIN_RESERVE + 1, UINT256_MAX - MIN_RESERVE
+        capitalRequirements_ = bound(
+            capitalRequirements_, MIN_RESERVE + 1, UINT256_MAX - MIN_RESERVE
         ); // make capital requirements > capital available
         // set capital available, i.e the to be minted amount for the the test
-        _capitalAvailable =
-            bound(_capitalAvailable, MIN_RESERVE, _capitalRequirements);
+        capitalAvailable_ =
+            bound(capitalAvailable_, MIN_RESERVE, capitalRequirements_);
         // Setup
         _mintCollateralTokenToAddressHelper(
             address(bondingCurveFundingManager),
             (
-                _capitalAvailable
+                capitalAvailable_
                     - _token.balanceOf(address(bondingCurveFundingManager))
             )
         );
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
+        bondingCurveFundingManager.setCapitalRequired(capitalRequirements_);
 
         uint returnValue = bondingCurveFundingManager.exposed_getSmallerCaCr();
 
         // Assert that the smaller value got returned
-        assertEq(returnValue, _capitalAvailable);
+        assertEq(returnValue, capitalAvailable_);
     }
 
     /*  Test _getRepayableAmount()
@@ -1657,53 +1657,53 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     */
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountBiggerReturnGetSmallerCaCr(
-        uint _repayableAmount,
-        uint _capitalAvailable,
-        uint _capitalRequirements
+        uint repayableAmount_,
+        uint capitalAvailable_,
+        uint capitalRequirements_
     ) public {
         // Bound values
-        _capitalAvailable =
-            bound(_capitalAvailable, 2, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
-        _capitalRequirements = bound(_capitalRequirements, 2, _capitalAvailable);
-        _repayableAmount = bound(_repayableAmount, 2, _capitalRequirements);
+        capitalAvailable_ =
+            bound(capitalAvailable_, 2, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        capitalRequirements_ = bound(capitalRequirements_, 2, capitalAvailable_);
+        repayableAmount_ = bound(repayableAmount_, 2, capitalRequirements_);
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _capitalAvailable
+            address(bondingCurveFundingManager), capitalAvailable_
         );
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
-        bondingCurveFundingManager.setRepayableAmount(_repayableAmount);
+        bondingCurveFundingManager.setCapitalRequired(capitalRequirements_);
+        bondingCurveFundingManager.setRepayableAmount(repayableAmount_);
         // Set capital requirement < repayableAmount, which can only be done after
         // repayableAmount is set
-        _capitalRequirements = _repayableAmount - 1;
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
+        capitalRequirements_ = repayableAmount_ - 1;
+        bondingCurveFundingManager.setCapitalRequired(capitalRequirements_);
 
         // Get expected return value
         uint returnValueInternalFunction =
             bondingCurveFundingManager.exposed_getRepayableAmount();
 
         // Expected return value
-        uint expectedReturnValue = _capitalAvailable > _capitalRequirements
-            ? _capitalRequirements
-            : _capitalAvailable;
+        uint expectedReturnValue = capitalAvailable_ > capitalRequirements_
+            ? capitalRequirements_
+            : capitalAvailable_;
 
         // Assert return value == as repayableAmount
         assertEq(returnValueInternalFunction, expectedReturnValue);
     }
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountIsZero(
-        uint _capitalAvailable,
-        uint _capitalRequirements
+        uint capitalAvailable_,
+        uint capitalRequirements_
     ) public {
         // Bound values
-        _capitalAvailable =
-            bound(_capitalAvailable, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
-        _capitalRequirements = bound(_capitalRequirements, 1, _capitalAvailable);
+        capitalAvailable_ =
+            bound(capitalAvailable_, 1, UINT256_MAX - MIN_RESERVE); // Protect agains overflow
+        capitalRequirements_ = bound(capitalRequirements_, 1, capitalAvailable_);
         uint repayableAmount = 0;
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _capitalAvailable
+            address(bondingCurveFundingManager), capitalAvailable_
         );
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
+        bondingCurveFundingManager.setCapitalRequired(capitalRequirements_);
         bondingCurveFundingManager.setRepayableAmount(repayableAmount);
 
         // Get return value
@@ -1711,37 +1711,37 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             bondingCurveFundingManager.exposed_getRepayableAmount();
 
         // Get expected return value
-        uint expectedReturnValue = _capitalAvailable > _capitalRequirements
-            ? _capitalRequirements
-            : _capitalAvailable;
+        uint expectedReturnValue = capitalAvailable_ > capitalRequirements_
+            ? capitalRequirements_
+            : capitalAvailable_;
 
         // Assert return value == as repayableAmount
         assertEq(returnValueInternalFunction, expectedReturnValue);
     }
 
     function testInternalGetRepayableAmount_worksGivenRepayableAmountIsReturned(
-        uint _repayableAmount,
-        uint _capitalAvailable,
-        uint _capitalRequirements
+        uint repayableAmount_,
+        uint capitalAvailable_,
+        uint capitalRequirements_
     ) public {
         // Bound values
-        _capitalAvailable =
-            bound(_capitalAvailable, 1, UINT256_MAX - MIN_RESERVE);
-        _capitalRequirements = bound(_capitalRequirements, 1, _capitalAvailable);
-        _repayableAmount = bound(_repayableAmount, 1, _capitalRequirements);
+        capitalAvailable_ =
+            bound(capitalAvailable_, 1, UINT256_MAX - MIN_RESERVE);
+        capitalRequirements_ = bound(capitalRequirements_, 1, capitalAvailable_);
+        repayableAmount_ = bound(repayableAmount_, 1, capitalRequirements_);
         // Setup
         _mintCollateralTokenToAddressHelper(
-            address(bondingCurveFundingManager), _capitalAvailable
+            address(bondingCurveFundingManager), capitalAvailable_
         );
-        bondingCurveFundingManager.setCapitalRequired(_capitalRequirements);
-        bondingCurveFundingManager.setRepayableAmount(_repayableAmount);
+        bondingCurveFundingManager.setCapitalRequired(capitalRequirements_);
+        bondingCurveFundingManager.setRepayableAmount(repayableAmount_);
 
         // Get return value
         uint returnValueInternalFunction =
             bondingCurveFundingManager.exposed_getRepayableAmount();
 
         // Assert return value == as repayableAmount
-        assertEq(returnValueInternalFunction, _repayableAmount);
+        assertEq(returnValueInternalFunction, repayableAmount_);
     }
 
     /*  Test _projectFeeCollected()
@@ -1753,25 +1753,25 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     */
 
     function testInternalProjectFeeCollected_worksGivenTokenVaultIsSetAndTokensAreAvailableToBeCollected(
-        uint amount
+        uint amount_
     ) public {
-        amount = bound(amount, 1, type(uint128).max);
+        amount_ = bound(amount_, 1, type(uint128).max);
 
         // Set tokenVault
         bondingCurveFundingManager.setTokenVault(tokenVault);
 
         //mint tokens to fundingManager
-        _token.mint(address(bondingCurveFundingManager), amount);
+        _token.mint(address(bondingCurveFundingManager), amount_);
 
         vm.expectEmit(true, true, true, true);
         emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
-            tokenVault, amount
+            tokenVault, amount_
         );
 
         //call exposed function
-        bondingCurveFundingManager.exposed_projectFeeCollected(amount);
+        bondingCurveFundingManager.exposed_projectFeeCollected(amount_);
 
-        assertEq(_token.balanceOf(tokenVault), amount);
+        assertEq(_token.balanceOf(tokenVault), amount_);
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)), MIN_RESERVE
         );
@@ -1779,42 +1779,42 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     // -------------------------------------------------------------------------
     // Test Helper Functions
 
-    function _mintIssuanceTokenToAddressHelper(address _account, uint _amount)
+    function _mintIssuanceTokenToAddressHelper(address account_, uint amount_)
         internal
     {
-        bondingCurveFundingManager.exposed_mint(_account, _amount);
+        bondingCurveFundingManager.exposed_mint(account_, amount_);
     }
 
-    function _mintCollateralTokenToAddressHelper(address _account, uint _amount)
+    function _mintCollateralTokenToAddressHelper(address account_, uint amount_)
         internal
     {
         vm.prank(owner_address);
-        _token.mint(_account, _amount);
+        _token.mint(account_, amount_);
     }
 
-    function _buyTokensForSetupHelper(address _buyer, uint _amount) internal {
-        vm.startPrank(_buyer);
+    function _buyTokensForSetupHelper(address buyer_, uint amount_) internal {
+        vm.startPrank(buyer_);
         {
-            _token.approve(address(bondingCurveFundingManager), _amount);
-            bondingCurveFundingManager.buy(_amount, 0); // Not testing actual return values here, so minAmount out can be 0
+            _token.approve(address(bondingCurveFundingManager), amount_);
+            bondingCurveFundingManager.buy(amount_, 0); // Not testing actual return values here, so minAmount out can be 0
         }
         vm.stopPrank();
     }
 
-    function _sellTokensForSetupHelper(address _seller, uint _amount)
+    function _sellTokensForSetupHelper(address seller_, uint amount_)
         internal
     {
-        vm.startPrank(_seller);
+        vm.startPrank(seller_);
         {
-            issuanceToken.approve(address(bondingCurveFundingManager), _amount);
-            bondingCurveFundingManager.sell(_amount, 0); // Not testing actual return values here, so minAmount out can be 0
+            issuanceToken.approve(address(bondingCurveFundingManager), amount_);
+            bondingCurveFundingManager.sell(amount_, 0); // Not testing actual return values here, so minAmount out can be 0
         }
         vm.stopPrank();
     }
 
-    function _setProjectCollateralFeeCollectedHelper(uint _amount) internal {
+    function _setProjectCollateralFeeCollectedHelper(uint amount_) internal {
         bondingCurveFundingManager.exposed_projectCollateralFeeCollected(
-            _amount
+            amount_
         );
     }
 }
