@@ -1,14 +1,29 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+/**
+ * @title Bonding Surface Formula Interface
+ *
+ * @notice Interface for the Bonding Surface Formula. Enables calculation of the
+ *         bonding surface of a given set of tokens.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version v1.0.0
+ *
+ * @author  Inverter Network
+ */
 interface IBondingSurface {
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Errors
 
     /// @dev Input amount is invalid
     error BondingSurface__InvalidInputAmount();
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // View Functions
 
     /// @dev Compute spot price for a given capital available and capital required

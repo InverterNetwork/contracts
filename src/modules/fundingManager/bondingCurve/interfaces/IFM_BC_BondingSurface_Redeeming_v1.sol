@@ -1,8 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+/**
+ * @title   Inverter Redeeming Bonding Surface Bonding Curve Funding Manager Interface
+ *
+ * @notice  This interface enables the fetching and setting of Bonding Surface relevant data.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version v1.0.0
+ *
+ * @author  Inverter Network
+ */
 interface IFM_BC_BondingSurface_Redeeming_v1 {
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Errors
 
     /// @notice Invalid Bonding Surface Formula contract
@@ -17,7 +31,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
     /// @notice The minimum reserve has been reached.
     error FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Events
 
     /// @notice Emits when the capital required gets updated
@@ -35,7 +49,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
     );
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Structs
 
     /// @notice The bonding curve properties.
@@ -55,7 +69,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         bool buyIsOpen;
         bool sellIsOpen;
     }
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Getter Functions
 
     /// @notice Returns the formula contract used to calculate the issuance and redemption rate.
@@ -96,10 +110,10 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         uint basePriceMultiplier_
     ) external view returns (uint basePriceToCapitalRatio);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mutating Functions
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions
 
     /// @dev Update the capital required used for the bonding curve
