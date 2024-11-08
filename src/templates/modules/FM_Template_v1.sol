@@ -108,6 +108,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     function getDepositedAmount(address user_)
         external
         view
+        virtual
         override
         returns (uint)
     {
@@ -123,7 +124,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     // Public (Mutating)
 
     /// @inheritdoc IFM_Template_v1
-    function deposit(uint amount_) external override {
+    function deposit(uint amount_) external virtual override {
         // Validate parameters.
         if (amount_ == 0) {
             revert Module__FM_Template_InvalidAmount();
@@ -144,6 +145,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to, uint amount)
         external
+        virtual
         override
         onlyPaymentClient
     {
@@ -170,6 +172,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     function _validateOrchestratorTokenTransfer(address to_, uint amount_)
         internal
         view
+        virtual
     {
         if (to_ == address(0)) {
             revert Module__FM_Template__ReceiverNotValid();
