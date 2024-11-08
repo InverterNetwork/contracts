@@ -62,8 +62,6 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
             || super.supportsInterface(interfaceId_);
     }
 
-    using SafeERC20 for IERC20;
-
     //--------------------------------------------------------------------------
     // Constants
 
@@ -73,9 +71,10 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     // State
 
     /// @dev    Mapping of user addresses to their deposited token amounts.
-    mapping(address => uint) private _depositedAmounts;
+    mapping(address => uint) internal _depositedAmounts;
 
-    IERC20 private _orchestratorToken;
+    /// @dev    The orchestrator token.
+    IERC20 internal _orchestratorToken;
 
     //--------------------------------------------------------------------------
     // Modifiers
