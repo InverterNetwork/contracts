@@ -76,6 +76,9 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     /// @dev    The orchestrator token.
     IERC20 internal _orchestratorToken;
 
+    /// @dev    Storage gap for future upgrades.
+    uint[50] private __gap;
+
     //==========================================================================
     // Modifiers
 
