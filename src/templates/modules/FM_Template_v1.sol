@@ -42,7 +42,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     //==========================================================================
-    // Libraries
+    // External Libraries
 
     using SafeERC20 for IERC20;
 
