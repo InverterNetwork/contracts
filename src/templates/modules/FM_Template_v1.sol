@@ -165,6 +165,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     // Add internal functions here
 
     /// @notice Validates the transfer of orchestrator token.
+    /// @param  to_     Address to transfer to.
     /// @param  amount_ Amount to transfer.
     function _validateOrchestratorTokenTransfer(address to_, uint amount_)
         internal
