@@ -44,7 +44,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Libraries
 
-    // Add library usage here
+    using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // ERC165
