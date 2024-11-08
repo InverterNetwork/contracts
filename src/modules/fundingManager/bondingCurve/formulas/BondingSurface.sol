@@ -118,7 +118,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
     /// @param x_ 18 decimal fixed point number to inverse. 0 < x <= 1e36
     function _inverse(uint x_) internal pure returns (uint res_) {
         unchecked {
-            res = 1e36 / x_;
+            res_ = 1e36 / x_;
         }
     }
 }
