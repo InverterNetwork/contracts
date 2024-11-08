@@ -61,6 +61,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     uint32 private constant BPS = 10_000;
 
     uint private MIN_RESERVE = 10 ** _token.decimals();
+    uint private MIN_RESERVE = 10 ** _token.decimals();
     uint private constant BASE_PRICE_MULTIPLIER = 0.000001 ether;
 
     FM_BC_BondingSurface_RedeemingV1_Exposed bondingCurveFundingManager;
@@ -148,6 +149,12 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
             address(bondingCurveFundingManager.token()),
             address(_token),
             "Collateral token not set correctly"
+        );
+        // MIN_RESERVE
+        assertEq(
+            bondingCurveFundingManager.MIN_RESERVE(),
+            MIN_RESERVE,
+            "MIN_RESERVE has not been set correctly"
         );
         // MIN_RESERVE
         assertEq(
@@ -445,6 +452,14 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
             )
         );
         bondingCurveFundingManager.setCapitalRequired(0);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_v1
+                    .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.setCapitalRequired(0);
     }
 
     function testSetCapitalRequired_worksGivenCallerHasRiskManagerRole(
@@ -719,6 +734,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         ├── Given: (capitalAvailable - redeemAmount) < MIN_RESERVE
         │   └── When: the function _redeemTokensFormulaWrapper() gets called
         │       └── Then: it should revert with FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
+        │       └── Then: it should revert with FM_BC_BondingSurface_Redeeming_v1__MinReserveReached
         └── Given: (capitalAvailable - redeemAmount) >= MIN_RESERVE
             └── When: the function _redeemTokensFormulaWrapper() gets called
                 └── Then: it should return redeemAmount
@@ -790,6 +806,18 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
         );
 
         uint _redeemAmount = bondingCurveFundingManager.exposed_formulaTokenIn(
+            depositAmount_,
+            bondingCurveFundingManager.exposed_getCapitalAvailable(),
+            bondingCurveFundingManager.getBasePriceToCapitalRatio()
+        );
+
+        vm.assume(
+            bondingCurveFundingManager.exposed_getCapitalAvailable()
+                - _redeemAmount >= MIN_RESERVE
+        );
+
+        // Get expected return value
+        uint redeemAmount = IBondingSurface(formula).tokenIn(
             depositAmount_,
             bondingCurveFundingManager.exposed_getCapitalAvailable(),
             bondingCurveFundingManager.getBasePriceToCapitalRatio()

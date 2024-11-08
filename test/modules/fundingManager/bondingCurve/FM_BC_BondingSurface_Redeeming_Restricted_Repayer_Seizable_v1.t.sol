@@ -67,6 +67,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     uint private constant CAPITAL_REQUIREMENT = 1_000_000 * 1e18; // Taken from Topos repo test case
 
     uint private constant BUY_FEE = 100;
+    uint private constant BUY_FEE = 100;
     uint private constant SELL_FEE = 100;
     bool private constant BUY_IS_OPEN = true;
     bool private constant SELL_IS_OPEN = true;
@@ -76,6 +77,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     bytes32 private constant RISK_MANAGER_ROLE = "RISK_MANAGER";
     bytes32 private constant COVER_MANAGER_ROLE = "COVER_MANAGER";
 
+    uint private MIN_RESERVE = 10 ** _token.decimals();
     uint private MIN_RESERVE = 10 ** _token.decimals();
     uint64 private constant MAX_SEIZE = 100;
     uint64 private constant MAX_SELL_FEE = 100;
@@ -119,6 +121,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Set pAMM properties
         bc_properties.buyIsOpen = BUY_IS_OPEN;
         bc_properties.sellIsOpen = SELL_IS_OPEN;
+        bc_properties.buyFee = BUY_FEE;
         bc_properties.buyFee = BUY_FEE;
         bc_properties.sellFee = SELL_FEE;
 
@@ -196,6 +199,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             MIN_RESERVE,
             "MIN_RESERVE has not been set correctly"
         );
+        // MIN_RESERVE
+        assertEq(
+            bondingCurveFundingManager.MIN_RESERVE(),
+            MIN_RESERVE,
+            "MIN_RESERVE has not been set correctly"
+        );
         // Buy/Sell conditions
         assertEq(
             bondingCurveFundingManager.sellFee(),
@@ -204,6 +213,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
         assertEq(
             bondingCurveFundingManager.buyFee(),
+            BUY_FEE,
             BUY_FEE,
             "Buy fee has not been set correctly"
         );
@@ -418,9 +428,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         Please Note: The functions have been extensively tested in the BondingCurveBase_v1.t contract. These
         tests only check for the placement of the checkBuyAndSellRestrictions() modifier
         ├── Given the modifier checkBuyAndSellRestrictions() is in place
+        tests only check for the placement of the checkBuyAndSellRestrictions() modifier
+        ├── Given the modifier checkBuyAndSellRestrictions() is in place
         │   └── And the modifier condition isn't met
         │       ├── When the function buy() is called
         │       └── Then it should revert
+        └── Given the modifier checkBuyAndSellRestrictions() is in place
         └── Given the modifier checkBuyAndSellRestrictions() is in place
             └── And the modifier condition isn't met
                 └── When the function buyFor() is called
@@ -546,12 +559,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     /*  Test internal _checkBuyAndSellRestrictionsModifier() function
+    /*  Test internal _checkBuyAndSellRestrictionsModifier() function
         └── Given buy and selling is restricted
             └── And the msg.sender does not have the CURVE_INTERACTION_ROLE
+                └── When the function _checkBuyAndSellRestrictionsModifier() is called
                 └── When the function _checkBuyAndSellRestrictionsModifier() is called
                     └── Then it should revert
     */
 
+    function testInternalcheckBuyAndSellRestrictionsModifier_revertGivenCallerHasNotCoverManagerRole(
     function testInternalcheckBuyAndSellRestrictionsModifier_revertGivenCallerHasNotCoverManagerRole(
     ) public {
         // Setup
@@ -567,6 +583,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             )
         );
         vm.prank(nonAuthorizedBuyer);
+        bondingCurveFundingManager.exposed_checkBuyAndSellRestrictionsModifier();
         bondingCurveFundingManager.exposed_checkBuyAndSellRestrictionsModifier();
     }
 

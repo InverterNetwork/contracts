@@ -29,8 +29,11 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @dev     Implements {IFundingManager_v1} interface.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.1.0
  *
  * @author  Inverter Network
  */
@@ -57,7 +60,8 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Storage
 
-    /// @dev	Base Points used for percentage calculation. This value represents 100%.
+    /// @dev	Base Points used for percentage calculation.
+    ///         This value represents 100%.
     uint internal constant BPS = 10_000;
 
     /// @dev    The token that is deposited.
@@ -130,23 +134,23 @@ contract FM_DepositVault_v1 is
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev	Internal function to transfer protocol fees to the treasury.
-    /// @param  _treasury The address of the protocol treasury.
-    /// @param  _token The token to transfer the fees from.
-    /// @param  _feeAmount The amount of fees to transfer.
+    /// @dev	Transfer protocol fees to the treasury.
+    /// @param  treasury_ The address of the protocol treasury.
+    /// @param  token_ The token to transfer the fees from.
+    /// @param  feeAmount_ The amount of fees to transfer.
     function _processProtocolFeeViaTransfer(
-        address _treasury,
-        IERC20 _token,
-        uint _feeAmount
+        address treasury_,
+        IERC20 token_,
+        uint feeAmount_
     ) internal {
         // skip protocol fee collection if fee is 0
-        if (_feeAmount > 0) {
-            _validateRecipient(_treasury);
+        if (feeAmount_ > 0) {
+            _validateRecipient(treasury_);
 
             // transfer fee amount
-            _token.safeTransfer(_treasury, _feeAmount);
+            token_.safeTransfer(treasury_, feeAmount_);
             emit IModule_v1.ProtocolFeeTransferred(
-                address(_token), _treasury, _feeAmount
+                address(token_), treasury_, feeAmount_
             );
         }
     }

@@ -118,16 +118,6 @@ contract BondingCurveFundingManagerE2E is E2ETest {
 
         issuanceToken.setMinter(address(fundingManager), true);
 
-        // IMPORTANT
-        // =========
-        // Due to how the underlying rebase mechanism works, it is necessary
-        // to always have some amount of tokens in the fundingmanager.
-        // It's best, if the owner deposits them right after deployment.
-        // uint initialDeposit = 10e18;
-        // token.mint(address(this), initialDeposit);
-        // token.approve(address(fundingManager), initialDeposit);
-        // fundingManager.deposit(initialDeposit);
-
         // Mint some tokens to alice and bob in order to fund the fundingmanager.
 
         // Alice will perform a very big initial buy.
