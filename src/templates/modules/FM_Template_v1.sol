@@ -8,7 +8,7 @@ import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 import {IFM_Template_v1} from "./IFM_Template_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
-// External Libraries
+// External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
@@ -42,7 +42,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     //==========================================================================
-    // External Libraries
+    // Libraries
 
     using SafeERC20 for IERC20;
 
