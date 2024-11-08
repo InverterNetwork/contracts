@@ -112,10 +112,9 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         external
         view
         virtual
-        override
         returns (uint amount_)
     {
-        uint amount_ = _depositedAmounts[user_];
+        amount_ = _depositedAmounts[user_];
         return amount_;
     }
 
@@ -128,7 +127,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     // Public (Mutating)
 
     /// @inheritdoc IFM_Template_v1
-    function deposit(uint amount_) external virtual override {
+    function deposit(uint amount_) external virtual {
         // Validate parameters.
         if (amount_ == 0) {
             revert Module__FM_Template_InvalidAmount();
