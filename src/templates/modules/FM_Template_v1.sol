@@ -105,7 +105,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     }
 
     // ========================================================================
-    // Public (Getters)
+    // Public - Getters
 
     /// @inheritdoc IFM_Template_v1
     function getDepositedAmount(address user_)
@@ -124,7 +124,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     }
 
     // ========================================================================
-    // Public (Mutating)
+    // Public - Mutating
 
     /// @inheritdoc IFM_Template_v1
     function deposit(uint amount_) external virtual {
@@ -133,9 +133,6 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
             revert Module__FM_Template_InvalidAmount();
         }
 
-        // Emit event.
-        emit Deposited(_msgSender(), amount_);
-
         // Update state.
         _depositedAmounts[_msgSender()] += amount_;
 
@@ -143,25 +140,27 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         _orchestratorToken.safeTransferFrom(
             _msgSender(), address(this), amount_
         );
+
+        // Emit event.
+        emit Deposited(_msgSender(), amount_);
     }
 
     /// @inheritdoc IFundingManager_v1
+    /// @dev Only the payment client can call this function.
     function transferOrchestratorToken(address to, uint amount)
         external
         virtual
         override
         onlyPaymentClient
     {
-        // Only the payment client can call this function.
-
         // Validate parameters.
         _validateOrchestratorTokenTransfer(to, amount);
 
-        // Emit event.
-        emit TransferOrchestratorToken(to, amount);
-
         // Transfer tokens.
         _orchestratorToken.safeTransfer(to, amount);
+
+        // Emit event.
+        emit TransferOrchestratorToken(to, amount);
     }
 
     // ========================================================================
