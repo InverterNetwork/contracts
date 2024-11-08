@@ -7,7 +7,10 @@ import {IOrchestrator_v1} from
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 import {IFM_Template_v1} from "./IFM_Template_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+
+// External Libraries
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title   Inverter Template Funding Manager
@@ -58,6 +61,8 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
             || interfaceId_ == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
+
+    using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
     // Constants
@@ -120,29 +125,42 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
 
     /// @inheritdoc IFM_Template_v1
     function deposit(uint amount_) external override {
+        // Validate parameters.
         if (amount_ == 0) {
             revert Module__FM_Template_InvalidAmount();
         }
 
+        // Emit event.
         emit Deposited(_msgSender(), amount_);
 
+        // Update state.
         _depositedAmounts[_msgSender()] += amount_;
 
-        _orchestratorToken.transferFrom(_msgSender(), address(this), amount_);
+        // Transfer tokens.
+        _orchestratorToken.safeTransferFrom(
+            _msgSender(), address(this), amount_
+        );
     }
 
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to, uint amount)
         external
         override
+        onlyPaymentClient
     {
+        // Only the payment client can call this function.
+
+        // Validate parameters.
         _validateOrchestratorTokenTransfer(to, amount);
 
+        // Emit event.
         emit TransferOrchestratorToken(to, amount);
 
+        // Update state.
         _depositedAmounts[_msgSender()] -= amount;
 
-        _orchestratorToken.transfer(to, amount);
+        // Transfer tokens.
+        _orchestratorToken.safeTransfer(to, amount);
     }
 
     //--------------------------------------------------------------------------

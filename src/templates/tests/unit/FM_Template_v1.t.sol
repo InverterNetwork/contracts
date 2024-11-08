@@ -17,6 +17,10 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {FM_Template_v1_Exposed} from
     "src/templates/tests/unit/FM_Template_v1_Exposed.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {
+    IERC20PaymentClientBase_v1,
+    ERC20PaymentClientBaseV1Mock
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
 
 // System under Test (SuT)
 import {IFM_Template_v1} from "src/templates/modules/IFM_Template_v1.sol";
@@ -48,8 +52,10 @@ contract FM_Template_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // State
     FM_Template_v1_Exposed fundingManager;
+
     // Mocks
     ERC20Mock orchestratorToken;
+    ERC20PaymentClientBaseV1Mock paymentClient;
 
     //--------------------------------------------------------------------------
     // Setup
@@ -71,13 +77,18 @@ contract FM_Template_v1_Test is ModuleTest {
         fundingManager.init(
             _orchestrator, _METADATA, abi.encode(address(orchestratorToken))
         );
+
+        // Setup other modules needed in the unit tests.
+        // In this case a payment client is needed to test the FM_Template_v1.
+        paymentClient = new ERC20PaymentClientBaseV1Mock();
+        _addLogicModuleToOrchestrator(address(paymentClient));
     }
 
     //--------------------------------------------------------------------------
     // Test: Initialization
 
     // Test if the orchestrator is correctly set up after initialization
-    function testInit() public view override(ModuleTest) {
+    function testInit() public override(ModuleTest) {
         assertEq(address(fundingManager.orchestrator()), address(_orchestrator));
     }
 
@@ -90,7 +101,7 @@ contract FM_Template_v1_Test is ModuleTest {
     }
 
     // Test the interface support
-    function testSupportsInterface() public view {
+    function testSupportsInterface() public {
         assertTrue(
             fundingManager.supportsInterface(
                 type(IFundingManager_v1).interfaceId
@@ -150,10 +161,13 @@ contract FM_Template_v1_Test is ModuleTest {
     function testInternalValidateOrchestratorTokenTransfer_FailsNotEnoughBalance(
     ) public {
         orchestratorToken.mint(address(1), 1 ether);
-        vm.prank(address(1));
-        orchestratorToken.approve(address(fundingManager), 1 ether);
-        vm.prank(address(1));
-        fundingManager.deposit(1 ether);
+
+        vm.startPrank(address(1));
+        {
+            orchestratorToken.approve(address(fundingManager), 1 ether);
+            fundingManager.deposit(1 ether);
+        }
+        vm.stopPrank();
 
         vm.expectRevert(
             IFM_Template_v1.Module__FM_Template_InvalidAmount.selector
