@@ -115,7 +115,6 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         returns (uint amount_)
     {
         amount_ = _depositedAmounts[user_];
-        return amount_;
     }
 
     /// @inheritdoc IFundingManager_v1
@@ -126,7 +125,6 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         returns (IERC20 orchestratorToken_)
     {
         orchestratorToken_ = _orchestratorToken;
-        return orchestratorToken_;
     }
 
     // ========================================================================
