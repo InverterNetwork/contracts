@@ -32,10 +32,10 @@ import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
  * @author  Inverter Network
  */
 interface IFM_Template_v1 is IFundingManager_v1 {
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Structs
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Events
 
     /// @notice Emit when the token amount has been deposited.
@@ -43,7 +43,7 @@ interface IFM_Template_v1 is IFundingManager_v1 {
     /// @param  amount_ The amount of tokens deposited.
     event Deposited(address indexed sender_, uint amount_);
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Errors
 
     /// @notice Amount can not be zero.
@@ -52,7 +52,7 @@ interface IFM_Template_v1 is IFundingManager_v1 {
     /// @notice Token receiver is not valid.
     error Module__FM_Template__ReceiverNotValid();
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Public (Getter)
 
     /// @notice Returns the deposited balance of a specific address.
@@ -60,7 +60,7 @@ interface IFM_Template_v1 is IFundingManager_v1 {
     /// @return user Address of the user.
     function getDepositedAmount(address user_) external view returns (uint);
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Public (Mutating)
 
     /// @notice Deposits tokens to the funding manager.
