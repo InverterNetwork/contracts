@@ -67,7 +67,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     uint private constant CAPITAL_REQUIREMENT = 1_000_000 * 1e18; // Taken from Topos repo test case
 
     uint private constant BUY_FEE = 100;
-    uint private constant BUY_FEE = 100;
     uint private constant SELL_FEE = 100;
     bool private constant BUY_IS_OPEN = true;
     bool private constant SELL_IS_OPEN = true;
@@ -77,7 +76,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     bytes32 private constant RISK_MANAGER_ROLE = "RISK_MANAGER";
     bytes32 private constant COVER_MANAGER_ROLE = "COVER_MANAGER";
 
-    uint private MIN_RESERVE = 10 ** _token.decimals();
     uint private MIN_RESERVE = 10 ** _token.decimals();
     uint64 private constant MAX_SEIZE = 100;
     uint64 private constant MAX_SELL_FEE = 100;
@@ -213,7 +211,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         );
         assertEq(
             bondingCurveFundingManager.buyFee(),
-            BUY_FEE,
             BUY_FEE,
             "Buy fee has not been set correctly"
         );
@@ -567,7 +564,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
                     └── Then it should revert
     */
 
-    function testInternalcheckBuyAndSellRestrictionsModifier_revertGivenCallerHasNotCoverManagerRole(
     function testInternalcheckBuyAndSellRestrictionsModifier_revertGivenCallerHasNotCoverManagerRole(
     ) public {
         // Setup

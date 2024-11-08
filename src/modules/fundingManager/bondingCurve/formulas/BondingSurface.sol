@@ -61,7 +61,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         uint capitalAvailable_,
         uint capitalRequirements_,
         uint basePriceMultiplier_
-    ) public pure returns (uint spotPrice) {
+    ) public pure returns (uint spotPrice_) {
         uint caSq = FixedPointMathLib.fmul(
             capitalAvailable_, capitalAvailable_, FixedPointMathLib.WAD
         ); // C_a^2
@@ -78,7 +78,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         uint in_,
         uint capitalAvailable_,
         uint basePriceToCapitalRatio_
-    ) public pure returns (uint amount) {
+    ) public pure returns (uint amount_) {
         // If the input is bigger inverse will give us 0.
         if (
             capitalAvailable_ > 1e36 || capitalAvailable_ + in_ > 1e36
@@ -99,7 +99,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         uint out_,
         uint capitalAvailable_,
         uint basePriceToCapitalRatio_
-    ) public pure returns (uint amount) {
+    ) public pure returns (uint amount_) {
         // m * (B / C_r)
         uint BCrM = FixedPointMathLib.fmul(
             basePriceToCapitalRatio_, out_, FixedPointMathLib.WAD
@@ -116,7 +116,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
     /// @dev Computes the inverse based on
     /// https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
     /// @param x_ 18 decimal fixed point number to inverse. 0 < x <= 1e36
-    function _inverse(uint x_) internal pure returns (uint res) {
+    function _inverse(uint x_) internal pure returns (uint res_) {
         unchecked {
             res = 1e36 / x_;
         }
