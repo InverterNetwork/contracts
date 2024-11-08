@@ -70,13 +70,13 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     // ========================================================================
     // State
 
-    /// @dev    Mapping of user addresses to their deposited token amounts.
+    /// @notice    Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
 
-    /// @dev    The orchestrator token.
+    /// @notice    The orchestrator token.
     IERC20 internal _orchestratorToken;
 
-    /// @dev    Storage gap for future upgrades.
+    /// @notice    Storage gap for future upgrades.
     uint[50] private __gap;
 
     // ========================================================================
