@@ -113,9 +113,10 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         view
         virtual
         override
-        returns (uint)
+        returns (uint amount_)
     {
-        return _depositedAmounts[user_];
+        uint amount_ = _depositedAmounts[user_];
+        return amount_;
     }
 
     /// @inheritdoc IFundingManager_v1

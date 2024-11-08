@@ -57,8 +57,11 @@ interface IFM_Template_v1 is IFundingManager_v1 {
 
     /// @notice Returns the deposited balance of a specific address.
     /// @param  user_ The address of the user.
-    /// @return user Address of the user.
-    function getDepositedAmount(address user_) external view returns (uint);
+    /// @return amount_ Deposited amount of the user.
+    function getDepositedAmount(address user_)
+        external
+        view
+        returns (uint amount_);
 
     //==========================================================================
     // Public (Mutating)
