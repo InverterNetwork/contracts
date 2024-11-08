@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 /**
- * @title   Inverter Template Funding Manager
+ * @title   Inverter Template Funding Manager Inteface
  *
- * @notice  Basic template funding manager used as base for developing new
+ * @notice  Basic template for funding manager inteface used as base for developing new
  *          funding managers.
  *
  * @dev     This contract is used to showcase a basic setup for a funding
