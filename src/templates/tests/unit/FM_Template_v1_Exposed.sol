@@ -5,7 +5,7 @@ import {FM_Template_v1} from "src/templates/modules/FM_Template_v1.sol";
 
 // Access Mock of the FM_Template_v1 contract for Testing.
 contract FM_Template_v1_Exposed is FM_Template_v1 {
-    // Use the `exposed_` prefix for functions to expose internal contract for testing purposes only.
+    // Use the `exposed_` prefix for functions to expose internal functions for testing purposes only.
 
     function exposed_validateOrchestratorTokenTransfer(
         address to_,
