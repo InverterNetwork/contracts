@@ -53,7 +53,7 @@ interface IFM_Template_v1 is IFundingManager_v1 {
     error Module__FM_Template__ReceiverNotValid();
 
     // ========================================================================
-    // Public (Getter)
+    // Public - Getters
 
     /// @notice Returns the deposited balance of a specific address.
     /// @param  user_ The address of the user.
@@ -64,7 +64,7 @@ interface IFM_Template_v1 is IFundingManager_v1 {
         returns (uint amount_);
 
     // ========================================================================
-    // Public (Mutating)
+    // Public - Mutating
 
     /// @notice Deposits tokens to the funding manager.
     /// @param  amount_ The amount of tokens to deposit.
