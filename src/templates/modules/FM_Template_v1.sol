@@ -156,9 +156,6 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         // Emit event.
         emit TransferOrchestratorToken(to, amount);
 
-        // Update state.
-        _depositedAmounts[_msgSender()] -= amount;
-
         // Transfer tokens.
         _orchestratorToken.safeTransfer(to, amount);
     }
