@@ -41,12 +41,12 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @author  Inverter Network
  */
 contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
-    // ========================================================================
+    // =========================================================================
     // Libraries
 
     using SafeERC20 for IERC20;
 
-    // ========================================================================
+    // =========================================================================
     // ERC165
 
     /// @inheritdoc ERC165Upgradeable
@@ -62,12 +62,12 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
             || super.supportsInterface(interfaceId_);
     }
 
-    // ========================================================================
+    // =========================================================================
     // Constants
 
     // Add constants here
 
-    // ========================================================================
+    // =========================================================================
     // State
 
     /// @notice    Mapping of user addresses to their deposited token amounts.
@@ -79,12 +79,12 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     /// @notice    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    // ========================================================================
+    // =========================================================================
     // Modifiers
 
     // Add modifiers here
 
-    // ========================================================================
+    // =========================================================================
     // Constructor & Init
 
     /// @inheritdoc Module_v1
@@ -104,7 +104,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         _orchestratorToken = IERC20(orchestratorTokenAddress);
     }
 
-    // ========================================================================
+    // =========================================================================
     // Public - Getters
 
     /// @inheritdoc IFM_Template_v1
@@ -127,7 +127,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         orchestratorToken_ = _orchestratorToken;
     }
 
-    // ========================================================================
+    // =========================================================================
     // Public - Mutating
 
     /// @inheritdoc IFM_Template_v1
@@ -167,7 +167,7 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         emit TransferOrchestratorToken(to, amount);
     }
 
-    // ========================================================================
+    // =========================================================================
     // Internal
 
     /// @notice Validates the transfer of orchestrator token.
@@ -191,6 +191,6 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
         }
     }
 
-    // ========================================================================
+    // =========================================================================
     // Overridden Internal Functions
 }

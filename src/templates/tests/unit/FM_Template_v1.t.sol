@@ -46,10 +46,10 @@ import {IFM_Template_v1} from "src/templates/modules/IFM_Template_v1.sol";
  * @author  Inverter Network
  */
 contract FM_Template_v1_Test is ModuleTest {
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Constants
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // State
     FM_Template_v1_Exposed fundingManager;
 
@@ -57,7 +57,7 @@ contract FM_Template_v1_Test is ModuleTest {
     ERC20Mock orchestratorToken;
     ERC20PaymentClientBaseV1Mock paymentClient;
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Setup
     function setUp() public {
         // This function is used to setup the unit test
@@ -84,7 +84,7 @@ contract FM_Template_v1_Test is ModuleTest {
         _addLogicModuleToOrchestrator(address(paymentClient));
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Test: Initialization
 
     // Test if the orchestrator is correctly set up after initialization
@@ -112,7 +112,7 @@ contract FM_Template_v1_Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Test: External (public & external) functions
 
     // Test external deposit function
@@ -123,7 +123,7 @@ contract FM_Template_v1_Test is ModuleTest {
 
     // Test external token function
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Test: Internal (tested through exposed_ functions)
 
     /* test internal _validateOrchestratorTokenTransfer()
