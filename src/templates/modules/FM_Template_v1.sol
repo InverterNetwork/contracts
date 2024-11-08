@@ -119,8 +119,14 @@ contract FM_Template_v1 is IFM_Template_v1, Module_v1 {
     }
 
     /// @inheritdoc IFundingManager_v1
-    function token() external view override returns (IERC20) {
-        return _orchestratorToken;
+    function token()
+        external
+        view
+        override
+        returns (IERC20 orchestratorToken_)
+    {
+        orchestratorToken_ = _orchestratorToken;
+        return orchestratorToken_;
     }
 
     // ========================================================================
