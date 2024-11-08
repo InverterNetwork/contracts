@@ -56,6 +56,7 @@ interface IFM_Template_v1 is IFundingManager_v1 {
     // Public (Getter)
 
     /// @notice Returns the deposited balance of a specific address.
+    /// @param  user_ The address of the user.
     /// @return user Address of the user.
     function getDepositedAmount(address user_) external view returns (uint);
 
@@ -63,5 +64,6 @@ interface IFM_Template_v1 is IFundingManager_v1 {
     // Public (Mutating)
 
     /// @notice Deposits tokens to the funding manager.
+    /// @param  amount_ The amount of tokens to deposit.
     function deposit(uint amount_) external;
 }
