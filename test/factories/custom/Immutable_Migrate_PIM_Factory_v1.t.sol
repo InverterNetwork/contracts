@@ -33,6 +33,17 @@ import {uniswapV2Router02Bytecode} from
     "test/e2e/lib/uniswap/uniswapV2Router02Bytecode.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
+
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+
+interface IExtendedBondingCurve is
+    IBondingCurveBase_v1,
+    IRedeemingBondingCurveBase_v1
+{}
 
 contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     // SuT
@@ -298,5 +309,91 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
         );
         vm.prank(alice);
         factory.withdrawPimFee(fundingManager, alice);
+    }
+
+    function testMigrateLiquidity() public {
+        // Create workflow and get orchestrator
+        IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
+
+        // Get addresses from orchestrator
+        address fundingManager = address(orchestrator.fundingManager());
+        address issuanceTokenAddress =
+            address(IBondingCurveBase_v1(fundingManager).getIssuanceToken());
+
+        // Buy from funding manager to reach migration threshold
+        vm.startPrank(workflowAdmin);
+        token.mint(workflowAdmin, BUY_FROM_FUNDING_MANAGER_AMOUNT);
+        token.approve(fundingManager, BUY_FROM_FUNDING_MANAGER_AMOUNT);
+        IBondingCurveBase_v1(fundingManager).buy(
+            BUY_FROM_FUNDING_MANAGER_AMOUNT,
+            1 // min amount out
+        );
+        vm.stopPrank();
+
+        // Verify no pool exists yet
+        address lpTokenAddress =
+            uniswapFactory.getPair(address(token), issuanceTokenAddress);
+        assertEq(lpTokenAddress, address(0), "Pool should not exist yet");
+
+        // Execute migration
+        ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
+            result = factory.executeMigration();
+
+        // Verify pool creation and liquidity
+        lpTokenAddress =
+            uniswapFactory.getPair(address(token), issuanceTokenAddress);
+        assertTrue(lpTokenAddress != address(0), "Pool should exist");
+
+        // Get pair and verify reserves
+        IUniswapV2Pair pair = IUniswapV2Pair(lpTokenAddress);
+        (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
+
+        if (pair.token0() == address(token)) {
+            assertGt(reserve0, 0, "Token reserves should be positive");
+            assertGt(reserve1, 0, "IssuanceToken reserves should be positive");
+        } else {
+            assertGt(reserve0, 0, "IssuanceToken reserves should be positive");
+            assertGt(reserve1, 0, "Token reserves should be positive");
+        }
+
+        // Verify LP tokens are received
+        assertGt(
+            IERC20(result.lpTokenAddress).balanceOf(address(this)),
+            0,
+            "Should have received LP tokens"
+        );
+
+        // Verify bonding curve is closed
+        IExtendedBondingCurve bc = IExtendedBondingCurve(fundingManager);
+        assertFalse(bc.buyIsOpen(), "Buy should be closed");
+        assertFalse(bc.sellIsOpen(), "Sell should be closed");
+
+        // Try to execute again
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Module_v1
+                    .Module__LM_PC_MigrateLiquidity__AlreadyExecuted
+                    .selector
+            )
+        );
+        factory.executeMigration();
+
+        // Try to execute migration without reaching threshold
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Module_v1
+                    .Module__LM_PC_MigrateLiquidity__ThresholdNotReached
+                    .selector
+            )
+        );
+        factory.executeMigration();
     }
 }
