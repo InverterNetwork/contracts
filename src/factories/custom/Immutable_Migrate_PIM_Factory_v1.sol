@@ -1,51 +1,45 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// Internal Interfaces
+// OpenZeppelin Imports
+import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
+// Core Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IImmutable_Migrate_PIM_Factory_v1} from
     "src/factories/interfaces/IImmutable_Migrate_PIM_Factory_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {ILM_PC_MigrateLiquidity_UniswapV2_v1} from
-    "@lm/LM_PC_MigrateLiquidity_UniswapV2_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+
+// Bonding Curve Interfaces
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
-// Internal Implementations
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+// Migration Interfaces
+import {ILM_PC_MigrateLiquidity_UniswapV2_v1} from
+    "@lm/LM_PC_MigrateLiquidity_UniswapV2_v1.sol";
 
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-
-// External Implementations
+// Implementation Contracts
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
-// External Dependencies
-import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
-
-interface IExtendedBondingCurve is
-    IBondingCurveBase_v1,
-    IRedeemingBondingCurveBase_v1
-{}
-
 /**
- * @title   Inverter Immutable PIM Factory
+ * @title   Inverter Immutable Migrate PIM Factory
  *
  * @notice  Used to deploy a PIM workflow with an unrestricted bonding curve and a mechanism to
- *          ensure immutability of the workflow while still enabling the claiming of fees.
+ *          ensure immutability of the workflow while still enabling the claiming of fees. Also
+ *          provides a function to execute the migration of liquidity from the Bonding Curve Uniswap V2.
  *
  * @dev     More user-friendly way to deploy a PIM workflow with an unrestricted bonding curve.
  *          Acts as wrapper for workflow to make it "unruggable" while exposing fee claiming functionality.
@@ -72,6 +66,15 @@ contract Immutable_Migrate_PIM_Factory_v1 is
 
     /// @dev    Stores the orchestrator address for this workflow
     address private _orchestrator;
+
+    /// @dev    Stores the issuance token address for this workflow
+    address private _issuanceToken;
+
+    /// @dev    Stores the funding manager address for this workflow
+    address private _fundingManager;
+
+    /// @dev    Stores the logic module address for this workflow
+    address private _logicModule;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -155,7 +158,7 @@ contract Immutable_Migrate_PIM_Factory_v1 is
             ,
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
                 memory bcProperties,
-            address collateralToken
+            address collateralTokenAddress
         ) = abi.decode(
             fundingManagerConfigData,
             (
@@ -164,8 +167,9 @@ contract Immutable_Migrate_PIM_Factory_v1 is
                 address
             )
         );
-        fundingManagerConfigData =
-            abi.encode(address(issuanceToken), bcProperties, collateralToken);
+        fundingManagerConfigData = abi.encode(
+            address(issuanceToken), bcProperties, collateralTokenAddress
+        );
         fundingManagerConfig.configData = fundingManagerConfigData;
 
         // deploy workflow
@@ -178,11 +182,15 @@ contract Immutable_Migrate_PIM_Factory_v1 is
             moduleConfigs
         );
 
+        // set orchestrator
         _orchestrator = address(orchestrator);
 
-        // get bonding curve / funding manager
-        address fundingManager = address(orchestrator.fundingManager());
-        // get uniswap v2 migrate / logic module
+        // get and set funding manager
+        _fundingManager = address(orchestrator.fundingManager());
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1(_fundingManager);
+
+        // get and set logic module
         ILM_PC_MigrateLiquidity_UniswapV2_v1 logicModule =
         ILM_PC_MigrateLiquidity_UniswapV2_v1(
             _getModuleAddressByTitle(
@@ -190,33 +198,34 @@ contract Immutable_Migrate_PIM_Factory_v1 is
                 "LM_PC_MigrateLiquidity_UniswapV2_v1"
             )
         );
+        _logicModule = address(logicModule);
 
+        // get the authorizer
         IAuthorizer_v1 authorizer = IAuthorizer_v1(orchestrator.authorizer());
 
         // grant owner role to logic module
-        authorizer.grantRole(bytes32(0), address(logicModule));
+        authorizer.grantRole(bytes32(0), _logicModule);
+
+        // get collateral token
+        IERC20 collateralToken = IERC20(collateralTokenAddress);
 
         // enable bonding curve to mint issuance token and disable minting from factory
-        issuanceToken.setMinter(fundingManager, true);
-        issuanceToken.setMinter(address(logicModule), true);
+        issuanceToken.setMinter(_fundingManager, true);
+        issuanceToken.setMinter(_logicModule, true);
         issuanceToken.setMinter(address(this), false);
 
         // if initial purchase amount is set (> 0) execute first purchase from curve
         // recipient: initiator
         if (initialPurchaseAmount > 0) {
-            IERC20(collateralToken).transferFrom(
+            collateralToken.transferFrom(
                 _msgSender(), address(this), initialPurchaseAmount
             );
-            IERC20(collateralToken).approve(
-                fundingManager, initialPurchaseAmount
-            );
-            IBondingCurveBase_v1(fundingManager).buyFor(
-                initiator, initialPurchaseAmount, 1
-            );
+            collateralToken.approve(_fundingManager, initialPurchaseAmount);
+            fundingManager.buyFor(initiator, initialPurchaseAmount, 1);
         }
 
         // set fee recipient (initiator)
-        _pimFeeRecipients[fundingManager] = initiator;
+        _pimFeeRecipients[_fundingManager] = initiator;
 
         // renounce token ownership
         issuanceToken.renounceOwnership();
@@ -266,19 +275,15 @@ contract Immutable_Migrate_PIM_Factory_v1 is
             ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
         )
     {
-        IOrchestrator_v1 orchestrator = IOrchestrator_v1(_orchestrator);
-
+        // get logic module
         ILM_PC_MigrateLiquidity_UniswapV2_v1 logicModule =
-        ILM_PC_MigrateLiquidity_UniswapV2_v1(
-            _getModuleAddressByTitle(
-                orchestrator.listModules(),
-                "LM_PC_MigrateLiquidity_UniswapV2_v1"
-            )
-        );
+            ILM_PC_MigrateLiquidity_UniswapV2_v1(_logicModule);
 
-        IExtendedBondingCurve fundingManager =
-            IExtendedBondingCurve(address(orchestrator.fundingManager()));
+        // get funding manager
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1(_fundingManager);
 
+        // execute migration
         ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
             result = logicModule.executeMigration();
 

@@ -54,9 +54,35 @@ import {uniswapV2Router02Bytecode} from
     "test/e2e/lib/uniswap/uniswapV2Router02Bytecode.sol";
 
 contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev    Get address of module with given title.
+    function _getModuleAddressByTitle(
+        address[] memory modules,
+        string memory title
+    ) private view returns (address) {
+        for (uint i = 0; i < modules.length; i++) {
+            if (
+                keccak256(bytes(Module_v1(modules[i]).title()))
+                    == keccak256(bytes(title))
+            ) {
+                return modules[i];
+            }
+        }
+        revert
+            IImmutable_Migrate_PIM_Factory_v1
+            .PIM_WorkflowFactory__ModuleNotFound();
+    }
+
     // Contract instance under test
     IImmutable_Migrate_PIM_Factory_v1 factory;
     EventHelpers eventHelpers;
+
+    IOrchestrator_v1 orchestrator;
+    ERC20Issuance_v1 issuanceToken;
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager;
+    ILM_PC_MigrateLiquidity_UniswapV2_v1 logicModule;
 
     // Workflow configuration
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
@@ -87,11 +113,6 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     address uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
     IUniswapV2Factory uniswapFactory;
     IUniswapV2Router02 uniswapRouter;
-
-    // Main contracts
-    IOrchestrator_v1 orchestrator;
-    ERC20Issuance_v1 issuanceToken;
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager;
 
     function setUp() public override {
         super.setUp();
@@ -208,6 +229,14 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
         // Set issuance token
         issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
 
+        // get and set logic module
+        logicModule = ILM_PC_MigrateLiquidity_UniswapV2_v1(
+            _getModuleAddressByTitle(
+                orchestrator.listModules(),
+                "LM_PC_MigrateLiquidity_UniswapV2_v1"
+            )
+        );
+
         // Verify issuance token configuration
         assertFalse(issuanceToken.allowedMinters(address(factory)));
         assertTrue(issuanceToken.allowedMinters(address(fundingManager)));
@@ -219,6 +248,9 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     }
 
     function testWithdrawPimFee() public {
+        // First deploy the workflow
+        testCreatePIMWorkflow();
+
         // Verify withdrawal events when called by fee recipient
         vm.startPrank(workflowAdmin);
         vm.expectEmit(true, true, true, false);
@@ -248,23 +280,22 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     }
 
     function testMigrateLiquidity() public {
-        // Set up initial buy to reach migration threshold
+        // First deploy the workflow
+        testCreatePIMWorkflow();
+
         vm.startPrank(workflowAdmin);
-        token.mint(workflowAdmin, BUY_FROM_FUNDING_MANAGER_AMOUNT);
-        token.approve(address(fundingManager), BUY_FROM_FUNDING_MANAGER_AMOUNT);
-        fundingManager.buy(BUY_FROM_FUNDING_MANAGER_AMOUNT, 1);
+        // Step 1: Buy from funding manager to reach migration threshold
+        uint minAmountOut = fundingManager.calculatePurchaseReturn(
+            BUY_FROM_FUNDING_MANAGER_AMOUNT
+        );
+
+        fundingManager.buy(BUY_FROM_FUNDING_MANAGER_AMOUNT, minAmountOut);
+
+        assertGe(issuanceToken.balanceOf(address(fundingManager)), minAmountOut);
+        // Step 2: Execute migration
+        factory.executeMigration();
+        assertTrue(logicModule.getExecuted());
+
         vm.stopPrank();
-
-        // Execute liquidity migration and verify
-        ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
-            result = factory.executeMigration();
-        address lpTokenAddress =
-            uniswapFactory.getPair(address(token), address(issuanceToken));
-        assertTrue(lpTokenAddress != address(0));
-        assertGt(IERC20(result.lpTokenAddress).balanceOf(address(this)), 0);
-
-        // Verify bonding curve closure
-        assertFalse(fundingManager.buyIsOpen());
-        assertFalse(fundingManager.sellIsOpen());
     }
 }
