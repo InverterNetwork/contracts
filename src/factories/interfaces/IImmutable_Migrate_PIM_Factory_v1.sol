@@ -39,6 +39,9 @@ interface IImmutable_Migrate_PIM_Factory_v1 {
     /// @notice Error thrown when a zero address is passed as initiator.
     error PIM_WorkflowFactory__InvalidZeroAddress();
 
+    /// @notice Error thrown when a module is not found.
+    error PIM_WorkflowFactory__ModuleNotFound();
+
     //--------------------------------------------------------------------------
     // Events
 

@@ -15,6 +15,13 @@ import {IImmutable_Migrate_PIM_Factory_v1} from
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {ILM_PC_MigrateLiquidity_UniswapV2_v1} from
+    "@lm/LM_PC_MigrateLiquidity_UniswapV2_v1.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
 // Internal Implementations
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
@@ -28,6 +35,11 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
+
+interface IExtendedBondingCurve is
+    IBondingCurveBase_v1,
+    IRedeemingBondingCurveBase_v1
+{}
 
 /**
  * @title   Inverter Immutable PIM Factory
@@ -44,7 +56,7 @@ import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
  *
  * @author  Inverter Network
  */
-contract Immutable_PIM_Factory_v1 is
+contract Immutable_Migrate_PIM_Factory_v1 is
     ERC2771Context,
     IImmutable_Migrate_PIM_Factory_v1
 {
@@ -58,6 +70,9 @@ contract Immutable_PIM_Factory_v1 is
     mapping(address fundingManager => address feeRecipient) private
         _pimFeeRecipients;
 
+    /// @dev    Stores the orchestrator address for this workflow
+    address private _orchestrator;
+
     //--------------------------------------------------------------------------
     // Modifiers
 
@@ -67,6 +82,24 @@ contract Immutable_PIM_Factory_v1 is
             revert PIM_WorkflowFactory__OnlyPimFeeRecipient();
         }
         _;
+    }
+
+    /// @dev    Get address of module with given title.
+    function _getModuleAddressByTitle(
+        address[] memory modules,
+        string memory title
+    ) private view returns (address) {
+        for (uint i = 0; i < modules.length; i++) {
+            if (
+                keccak256(bytes(IModule_v1(modules[i]).title()))
+                    == keccak256(bytes(title))
+            ) {
+                return modules[i];
+            }
+        }
+        revert
+            IImmutable_Migrate_PIM_Factory_v1
+            .PIM_WorkflowFactory__ModuleNotFound();
     }
 
     //--------------------------------------------------------------------------
@@ -145,11 +178,27 @@ contract Immutable_PIM_Factory_v1 is
             moduleConfigs
         );
 
+        _orchestrator = address(orchestrator);
+
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
+        // get uniswap v2 migrate / logic module
+        ILM_PC_MigrateLiquidity_UniswapV2_v1 logicModule =
+        ILM_PC_MigrateLiquidity_UniswapV2_v1(
+            _getModuleAddressByTitle(
+                orchestrator.listModules(),
+                "LM_PC_MigrateLiquidity_UniswapV2_v1"
+            )
+        );
+
+        IAuthorizer_v1 authorizer = IAuthorizer_v1(orchestrator.authorizer());
+
+        // grant owner role to logic module
+        authorizer.grantRole(bytes32(0), address(logicModule));
 
         // enable bonding curve to mint issuance token and disable minting from factory
         issuanceToken.setMinter(fundingManager, true);
+        issuanceToken.setMinter(address(logicModule), true);
         issuanceToken.setMinter(address(this), false);
 
         // if initial purchase amount is set (> 0) execute first purchase from curve
@@ -206,5 +255,37 @@ contract Immutable_PIM_Factory_v1 is
         emit IImmutable_Migrate_PIM_Factory_v1.PimFeeRecipientUpdated(
             fundingManager, _msgSender(), to
         );
+    }
+
+    //--------------------------------------------------------------------------
+    // Permissionless Functions
+    /// @inheritdoc IImmutable_Migrate_PIM_Factory_v1
+    function executeMigration()
+        external
+        returns (
+            ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
+        )
+    {
+        IOrchestrator_v1 orchestrator = IOrchestrator_v1(_orchestrator);
+
+        ILM_PC_MigrateLiquidity_UniswapV2_v1 logicModule =
+        ILM_PC_MigrateLiquidity_UniswapV2_v1(
+            _getModuleAddressByTitle(
+                orchestrator.listModules(),
+                "LM_PC_MigrateLiquidity_UniswapV2_v1"
+            )
+        );
+
+        IExtendedBondingCurve fundingManager =
+            IExtendedBondingCurve(address(orchestrator.fundingManager()));
+
+        ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
+            result = logicModule.executeMigration();
+
+        // close buy and sell of the bonding curve
+        fundingManager.closeBuy();
+        fundingManager.closeSell();
+
+        return result;
     }
 }

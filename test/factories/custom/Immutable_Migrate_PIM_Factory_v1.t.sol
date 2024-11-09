@@ -8,25 +8,35 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IImmutable_PIM_Factory_v1} from
-    "src/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
+import {IImmutable_Migrate_PIM_Factory_v1} from
+    "src/factories/interfaces/IImmutable_Migrate_PIM_Factory_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {Immutable_PIM_Factory_v1} from
-    "src/factories/custom/Immutable_PIM_Factory_v1.sol";
+import {Immutable_Migrate_PIM_Factory_v1} from
+    "src/factories/custom/Immutable_Migrate_PIM_Factory_v1.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
+import {ILM_PC_MigrateLiquidity_UniswapV2_v1} from
+    "@lm/LM_PC_MigrateLiquidity_UniswapV2_v1.sol";
+// Uniswap Dependencies
+import {IUniswapV2Pair} from "@ex/interfaces/uniswap/IUniswapV2Pair.sol";
+import {IUniswapV2Factory} from "@ex/interfaces/uniswap/IUniswapV2Factory.sol";
+import {IUniswapV2Router02} from "@ex/interfaces/uniswap/IUniswapV2Router02.sol";
+import {uniswapV2FactoryBytecode} from
+    "test/e2e/lib/uniswap/uniswapV2FactoryBytecode.sol";
+import {uniswapV2Router02Bytecode} from
+    "test/e2e/lib/uniswap/uniswapV2Router02Bytecode.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
-contract Immutable_PIM_Factory_v1Test is E2ETest {
+contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     // SuT
-    Immutable_PIM_Factory_v1 factory;
+    IImmutable_Migrate_PIM_Factory_v1 factory;
 
     // helpers
     EventHelpers eventHelpers;
@@ -53,11 +63,28 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
     uint initialCollateralSupply = 3_163_408_614_166_851_161;
     uint32 reserveRatio = 160_000;
 
+    // Migrate Liquidity
+    uint constant COLLATERAL_MIGRATION_THRESHOLD = 1000e18;
+    uint constant COLLATERAL_MIGRATION_AMOUNT = 1000e18;
+    uint constant BUY_FROM_FUNDING_MANAGER_AMOUNT = 1000e18;
+    // Uniswap
+    address uniswapFactoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+    address uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+    IUniswapV2Factory uniswapFactory;
+    IUniswapV2Router02 uniswapRouter;
+
     function setUp() public override {
         super.setUp();
 
+        // Step 1: Deploy Uniswap Contracts
+        vm.etch(uniswapFactoryAddress, uniswapV2FactoryBytecode);
+        vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
+
+        uniswapFactory = IUniswapV2Factory(uniswapFactoryAddress);
+        uniswapRouter = IUniswapV2Router02(uniswapRouterAddress);
+
         // deploy new factory
-        factory = new Immutable_PIM_Factory_v1(
+        factory = new Immutable_Migrate_PIM_Factory_v1(
             address(orchestratorFactory), mockTrustedForwarder
         );
 
@@ -81,11 +108,20 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
             simplePaymentProcessorMetadata, bytes("")
         );
 
-        // Additional Logic Modules: bounty manager
-        setUpBountyManager();
+        // Logic Modules: Migrate Liquidity
+        setUpLM_PC_MigrateLiquidity_UniswapV2_v1();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata, bytes("")
+                LM_PC_MigrateLiquidity_UniswapV2_v1Metadata,
+                abi.encode(
+                    ILM_PC_MigrateLiquidity_UniswapV2_v1
+                        .LiquidityMigrationConfig({
+                        collateralMigrationAmount: COLLATERAL_MIGRATION_AMOUNT,
+                        collateralMigrateThreshold: COLLATERAL_MIGRATION_THRESHOLD,
+                        dexRouterAddress: address(uniswapRouter),
+                        lpTokenRecipientAddress: address(this)
+                    })
+                )
             )
         );
 
@@ -153,7 +189,9 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         Vm.Log[] memory logs = vm.getRecordedLogs();
         // get issuance token address from event
         (bool emitted, bytes32 eventTopic) = eventHelpers.getEventTopic(
-            IImmutable_PIM_Factory_v1.PIMWorkflowCreated.selector, logs, 2
+            IImmutable_Migrate_PIM_Factory_v1.PIMWorkflowCreated.selector,
+            logs,
+            2
         );
         address issuanceTokenAddress =
             eventHelpers.getAddressFromTopic(eventTopic);
@@ -187,7 +225,7 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         );
 
         vm.expectRevert(
-            IImmutable_PIM_Factory_v1
+            IImmutable_Migrate_PIM_Factory_v1
                 .PIM_WorkflowFactory__InvalidZeroAddress
                 .selector
         );
@@ -231,7 +269,7 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         uint claimableFees =
             IBondingCurveBase_v1(fundingManager).projectCollateralFeeCollected();
         vm.expectEmit(true, false, false, false);
-        emit IImmutable_PIM_Factory_v1.PimFeeClaimed(
+        emit IImmutable_Migrate_PIM_Factory_v1.PimFeeClaimed(
             fundingManager, address(this), alice, claimableFees
         );
         factory.withdrawPimFee(fundingManager, alice);
@@ -253,7 +291,7 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         // CHECK: withdrawal REVERTS if caller IS NOT the fee recipient
         vm.expectRevert(
             abi.encodeWithSelector(
-                IImmutable_PIM_Factory_v1
+                IImmutable_Migrate_PIM_Factory_v1
                     .PIM_WorkflowFactory__OnlyPimFeeRecipient
                     .selector
             )
