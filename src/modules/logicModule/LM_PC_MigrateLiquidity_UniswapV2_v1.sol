@@ -146,32 +146,6 @@ contract LM_PC_MigrateLiquidity_UniswapV2_v1 is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    function configureMigration(LiquidityMigrationConfig calldata migration)
-        private
-        returns (bool)
-    {
-        if (
-            migration.collateralMigrateThreshold == 0
-                || migration.dexRouterAddress == address(0)
-                || migration.collateralMigrationAmount == 0
-        ) {
-            revert Module__LM_PC_MigrateLiquidity__InvalidParameters();
-        }
-
-        _currentMigration.collateralMigrateThreshold =
-            migration.collateralMigrateThreshold;
-        _currentMigration.collateralMigrationAmount =
-            migration.collateralMigrationAmount;
-        _currentMigration.dexRouterAddress = migration.dexRouterAddress;
-
-        emit MigrationConfigured(
-            migration.collateralMigrationAmount,
-            migration.collateralMigrateThreshold
-        );
-
-        return true;
-    }
-
     /// @inheritdoc ILM_PC_MigrateLiquidity_UniswapV2_v1
     function executeMigration()
         external
