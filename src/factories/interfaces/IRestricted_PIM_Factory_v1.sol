@@ -70,7 +70,7 @@ interface IRestricted_PIM_Factory_v1 {
     /// @param  sponsor The address of the sponsor.
     struct Funding {
         uint amount;
-        address sponsor;
+        mapping(address sponsor => uint amount) sponsorships;
     }
 
     //--------------------------------------------------------------------------
@@ -136,19 +136,33 @@ interface IRestricted_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Returns an existing Funding.
-    /// @param  deployer The address of the deployer.
-    /// @param  beneficiary The address of the beneficiary (who receives benefits of deployment).
-    /// @param  admin The address of the admin.
-    /// @param  token The address of the token used for funding.
-    /// @return amount The amount of funding.
-    /// @return sponsor The address of the sponsor.
-    function fundings(
+    /// @notice Gets the amount of funding available for a specific deployment configuration.
+    /// @param deployer The address that can do the deployment.
+    /// @param beneficiary The address that can use the funding.
+    /// @param admin The address that controls the workflow.
+    /// @param token The token used for funding.
+    /// @return amount The amount of funding available.
+    function getFundingAmount(
         address deployer,
         address beneficiary,
         address admin,
         address token
-    ) external view returns (uint amount, address sponsor);
+    ) external view returns (uint amount);
+
+    /// @notice Gets the amount of funding provided by a specific sponsor for a deployment configuration.
+    /// @param deployer The address that can do the deployment.
+    /// @param beneficiary The address that can use the funding.
+    /// @param admin The address that controls the workflow.
+    /// @param token The token used for funding.
+    /// @param sponsor The address of the sponsor to check.
+    /// @return amount The amount sponsored by this address.
+    function getFundingSponsorship(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token,
+        address sponsor
+    ) external view returns (uint amount);
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
     /// @dev Requires the deployment to have been funded previously via `addFunding`.

@@ -81,7 +81,7 @@ contract Restricted_PIM_Factory_v1 is
                             => mapping(address token => Funding funding)
                     )
             )
-    ) public fundings;
+    ) private fundings;
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -139,15 +139,11 @@ contract Restricted_PIM_Factory_v1 is
         uint amount
     ) external {
         Funding storage funding = fundings[deployer][beneficiary][admin][token];
-        if (funding.sponsor != address(0) && funding.sponsor != _msgSender()) {
-            revert
-                IRestricted_PIM_Factory_v1
-                .FundingAlreadyAddedByDifferentSponsor();
-        }
 
         // records funding amount
         funding.amount += amount;
-        funding.sponsor = _msgSender();
+        funding.sponsorships[_msgSender()] += amount;
+
         // sends amount from msg.sender to factory
         IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
 
@@ -167,23 +163,15 @@ contract Restricted_PIM_Factory_v1 is
         // checks if the requested amount is available
         Funding storage funding = fundings[deployer][beneficiary][admin][token];
 
-        if (amount > funding.amount) {
+        if (amount > funding.sponsorships[_msgSender()]) {
             revert IRestricted_PIM_Factory_v1.InsufficientFunding(
-                funding.amount
+                funding.sponsorships[_msgSender()]
             );
-        }
-
-        if (_msgSender() != funding.sponsor) {
-            revert IRestricted_PIM_Factory_v1.NotAuthorized();
         }
 
         // if so adjusts internal balancing
         funding.amount -= amount;
-
-        // if complete withdrawal, reset sponsor
-        if (funding.amount == 0) {
-            funding.sponsor = address(0);
-        }
+        funding.sponsorships[_msgSender()] -= amount;
 
         // and sends amount to msg sender
         IERC20(token).safeTransfer(_msgSender(), amount);
@@ -191,6 +179,26 @@ contract Restricted_PIM_Factory_v1 is
         emit IRestricted_PIM_Factory_v1.FundingRemoved(
             _msgSender(), deployer, beneficiary, admin, token, amount
         );
+    }
+
+    function getFundingAmount(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token
+    ) external view returns (uint amount) {
+        return fundings[deployer][beneficiary][admin][token].amount;
+    }
+
+    function getFundingSponsorship(
+        address deployer,
+        address beneficiary,
+        address admin,
+        address token,
+        address sponsor
+    ) external view returns (uint amount) {
+        return
+            fundings[deployer][beneficiary][admin][token].sponsorships[sponsor];
     }
 
     //--------------------------------------------------------------------------
@@ -361,9 +369,6 @@ contract Restricted_PIM_Factory_v1 is
         }
 
         funding.amount -= initialCollateralSupply;
-        if (funding.amount == 0) {
-            funding.sponsor = address(0);
-        }
 
         // collateral token funding needs to be sponsored beforehand
         collateralToken.safeTransfer(

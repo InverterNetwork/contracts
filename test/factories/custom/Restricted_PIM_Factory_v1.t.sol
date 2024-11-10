@@ -57,7 +57,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
     // bc params
     uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
-    uint initialCollateralSupply = 3_163_408_614_166_851_161;
+    uint initialCollateralSupply = 3_163_408_614_166_851_162;
     uint32 reserveRatio = 160_000;
 
     function setUp() public override {
@@ -163,10 +163,14 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         );
 
         // CHECK: funding amount is recorded
-        (uint amount, address recordedSponsor) =
-            factory.fundings(deployer, beneficiary, admin, address(token));
+        uint amount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
         assertEq(amount, initialCollateralSupply);
-        assertEq(recordedSponsor, sponsor);
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, initialCollateralSupply);
         // CHECK: factory HOLDS collateral tokens
         assertEq(token.balanceOf(address(factory)), initialCollateralSupply);
         vm.stopPrank();
@@ -203,9 +207,14 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         );
 
         // CHECK: total funding amount is recorded correctly
-        (uint amount,) =
-            factory.fundings(deployer, beneficiary, admin, address(token));
+        uint amount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
         assertEq(amount, firstAmount + secondAmount);
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, firstAmount + secondAmount);
 
         // CHECK: factory HOLDS total collateral tokens
         assertEq(token.balanceOf(address(factory)), firstAmount + secondAmount);
@@ -231,11 +240,6 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         deal(address(token), differentSponsor, initialCollateralSupply / 2);
         token.approve(address(factory), initialCollateralSupply / 2);
 
-        vm.expectRevert(
-            IRestricted_PIM_Factory_v1
-                .FundingAlreadyAddedByDifferentSponsor
-                .selector
-        );
         factory.addFunding(
             deployer,
             beneficiary,
@@ -244,6 +248,22 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             initialCollateralSupply / 2
         );
         vm.stopPrank();
+
+        // CHECK: funding amount is added
+        uint amount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
+        assertEq(amount, initialCollateralSupply);
+
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, initialCollateralSupply / 2);
+
+        uint differentSponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), differentSponsor
+        );
+        assertEq(differentSponsorAmount, initialCollateralSupply / 2);
     }
 
     /* Test withdrawFunding
@@ -290,12 +310,15 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         assertEq(token.balanceOf(address(factory)), 0);
 
         // CHECK: funding amount is adjusted on contract
-        (uint amount, address recordedSponsor) =
-            factory.fundings(deployer, beneficiary, admin, address(token));
+        uint amount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
         assertEq(amount, 0);
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, 0);
 
-        // CHECK: sponsor is set to zero
-        assertEq(recordedSponsor, address(0));
         vm.stopPrank();
     }
 
@@ -339,14 +362,16 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         );
 
         // CHECK: funding amount is adjusted on contract
-        (uint remainingAmount, address recordedSponsor) =
-            factory.fundings(deployer, beneficiary, admin, address(token));
+        uint remainingAmount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
         assertEq(
             remainingAmount, initialCollateralSupply - partialWithdrawalAmount
         );
-
-        // CHECK: sponsor is still set
-        assertEq(recordedSponsor, sponsor);
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, partialWithdrawalAmount);
 
         vm.stopPrank();
     }
@@ -366,7 +391,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         // Attempt to withdraw as non-sponsor
         vm.startPrank(deployer);
-        vm.expectRevert(IRestricted_PIM_Factory_v1.NotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 
+                0 // Pass the parameter value here
+            )
+        );
         factory.withdrawFunding(
             deployer,
             beneficiary,
@@ -378,7 +408,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         // Attempt to withdraw as beneficiary
         vm.startPrank(beneficiary);
-        vm.expectRevert(IRestricted_PIM_Factory_v1.NotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 
+                0 // Pass the parameter value here
+            )
+        );
         factory.withdrawFunding(
             deployer,
             beneficiary,
@@ -390,7 +425,12 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
         // Attempt to withdraw as admin
         vm.startPrank(admin);
-        vm.expectRevert(IRestricted_PIM_Factory_v1.NotAuthorized.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 
+                0 // Pass the parameter value here
+            )
+        );
         factory.withdrawFunding(
             deployer,
             beneficiary,
@@ -412,11 +452,14 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         vm.stopPrank();
 
         // CHECK: Funding is completely withdrawn
-        (uint remainingAmount, address recordedSponsor) =
-            factory.fundings(deployer, beneficiary, admin, address(token));
+        uint remainingAmount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
         assertEq(remainingAmount, 0);
-        // CHECK: sponsor is reset
-        assertEq(recordedSponsor, address(0));
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, 0);
     }
 
     /* Test createPIMWorkflow
@@ -551,11 +594,15 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             orchestrator.authorizer().hasRole(adminRole, address(factory))
         );
         // CHECK: available funding is removed from factory
-        (uint amount, address recordedSponsor) =
-            factory.fundings(deployer, beneficiary, admin, address(token));
+        uint amount = factory.getFundingAmount(
+            deployer, beneficiary, admin, address(token)
+        );
         assertEq(amount, 0);
-        // CHECK: sponsor is reset
-        assertEq(recordedSponsor, address(0));
+        // CHECK: sponsor's funding record is NOT removed from factory
+        uint sponsorAmount = factory.getFundingSponsorship(
+            deployer, beneficiary, admin, address(token), sponsor
+        );
+        assertEq(sponsorAmount, initialCollateralSupply);
     }
 
     function testCreatePIMWorkflow_WithoutFunding() public {
