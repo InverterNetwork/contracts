@@ -393,7 +393,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         vm.startPrank(deployer);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector,
                 0 // Pass the parameter value here
             )
         );
@@ -410,7 +410,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         vm.startPrank(beneficiary);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector,
                 0 // Pass the parameter value here
             )
         );
@@ -427,7 +427,7 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         vm.startPrank(admin);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IRestricted_PIM_Factory_v1.InsufficientFunding.selector, 
+                IRestricted_PIM_Factory_v1.InsufficientFunding.selector,
                 0 // Pass the parameter value here
             )
         );
