@@ -58,7 +58,7 @@ contract CustomFactoryDeploymentScript is Script {
         if (_isEqual(factoryType_, "RESTRICTED")) {
             {
                 console2.log(
-                    "\Immutable_Migrate_PIM_Factory_v1: %s",
+                    "\tImmutable_Migrate_PIM_Factory_v1: %s",
                     address(
                         new Immutable_Migrate_PIM_Factory_v1(
                             orchestratorFactory, trustedForwarder
