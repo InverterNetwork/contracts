@@ -67,9 +67,7 @@ contract LM_PC_Staking_v1 is
     /// @dev	modifier to check if the duration is valid.
     /// @param  duration duration of the reward period.
     modifier validDuration(uint duration) {
-        if (duration == 0) {
-            revert Module__LM_PC_Staking_v1__InvalidDuration();
-        }
+        _ensureValidDuration(duration);
         _;
     }
 
@@ -429,5 +427,13 @@ contract LM_PC_Staking_v1 is
         }
         stakingToken = _token;
         emit StakingTokenSet(_token);
+    }
+
+    /// @dev	Ensures that the duration in seconds is larger than 0.
+    /// @param  duration The duration of the reward period.
+    function _ensureValidDuration(uint duration) internal view {
+        if (duration == 0) {
+            revert Module__LM_PC_Staking_v1__InvalidDuration();
+        }
     }
 }
