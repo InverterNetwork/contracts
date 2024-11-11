@@ -13,7 +13,6 @@ import {IOrchestrator_v1} from
 import {IImmutable_Migrate_PIM_Factory_v1} from
     "src/factories/interfaces/IImmutable_Migrate_PIM_Factory_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
 // Bonding Curve Interfaces
 import {IBondingCurveBase_v1} from
@@ -199,12 +198,6 @@ contract Immutable_Migrate_PIM_Factory_v1 is
             )
         );
         _logicModule = address(logicModule);
-
-        // get the authorizer
-        IAuthorizer_v1 authorizer = IAuthorizer_v1(orchestrator.authorizer());
-
-        // grant owner role to deployer
-        authorizer.grantRole(bytes32(0), _msgSender());
 
         // get collateral token
         IERC20 collateralToken = IERC20(collateralTokenAddress);
