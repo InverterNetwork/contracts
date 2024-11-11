@@ -24,6 +24,8 @@ import {IBondingCurveBase_v1} from
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {LM_ImmutableMigration_v1} from
+    "src/modules/logicModule/LM_ImmutableMigration_v1.sol";
 
 contract Immutable_PIM_Factory_v1Test is E2ETest {
     // SuT
@@ -54,6 +56,9 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
     uint initialCollateralSupply = 3_163_408_614_166_851_161;
     uint32 reserveRatio = 160_000;
 
+    // Add constant for migration threshold
+    uint constant COLLATERAL_MIGRATION_THRESHOLD = 1000e18;
+
     function setUp() public override {
         super.setUp();
 
@@ -82,11 +87,12 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
             simplePaymentProcessorMetadata, bytes("")
         );
 
-        // Additional Logic Modules: bounty manager
-        setUpBountyManager();
+        // Replace bounty manager setup with ImmutableMigration setup
+        setUpLM_ImmutableMigration_v1();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                bountyManagerMetadata, bytes("")
+                LM_ImmutableMigration_v1Metadata,
+                abi.encode(COLLATERAL_MIGRATION_THRESHOLD)
             )
         );
 
@@ -176,5 +182,44 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         // CHECK: initial purchase was executed
         assertGt(issuanceToken.balanceOf(workflowAdmin), 0);
         assertEq(token.balanceOf(fundingManager), initialPurchaseAmount);
+
+        // CHECK: migration module has admin role
+        assertMigrationModuleHasAdminRole(orchestrator);
+    }
+
+    //--------------------------------------------------------------------------
+    // Custom Asserts
+    //--------------------------------------------------------------------------
+
+    function assertMigrationModuleHasAdminRole(IOrchestrator_v1 orchestrator)
+        internal
+    {
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+        address[] memory modules = orchestrator.listModules();
+        address migrationModule;
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_ImmutableMigration_v1(modules[i]).migrationThreshold()
+            returns (uint threshold) {
+                if (threshold == COLLATERAL_MIGRATION_THRESHOLD) {
+                    migrationModule = modules[i];
+                    break;
+                }
+            } catch {}
+        }
+        assertTrue(migrationModule != address(0), "Migration module not found");
+        assertTrue(
+            orchestrator.authorizer().hasRole(adminRole, migrationModule),
+            "Migration module should have admin role"
+        );
+
+        // Add test to verify module can use admin powers
+        vm.startPrank(migrationModule);
+        orchestrator.authorizer().grantRole(adminRole, alice);
+        assertTrue(
+            orchestrator.authorizer().hasRole(adminRole, alice),
+            "Migration module should be able to grant admin role"
+        );
+        orchestrator.authorizer().revokeRole(adminRole, migrationModule);
+        vm.stopPrank();
     }
 }

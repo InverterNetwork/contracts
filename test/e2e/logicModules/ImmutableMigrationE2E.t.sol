@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
+import "forge-std/Vm.sol"; // Add this import statement
 
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -10,6 +11,14 @@ import {
     IOrchestratorFactory_v1,
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {Immutable_PIM_Factory_v1} from
+    "src/factories/custom/Immutable_PIM_Factory_v1.sol";
+import {IImmutable_PIM_Factory_v1} from
+    "src/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
+
 // Uniswap Dependencies
 
 // SuT
@@ -17,109 +26,183 @@ import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {LM_ImmutableMigration_v1} from
+    "src/modules/logicModule/LM_ImmutableMigration_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract LM_Immutable_Migration_v1Test is E2ETest {
-    // Module Configurations
-    IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
+contract LM_ImmutableMigration_v1E2E is E2ETest {
+    // Immutable PIM Factory
+    Immutable_PIM_Factory_v1 factory;
+
+    // Orchestrator Configurations
+    IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
+    IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig;
+    IOrchestratorFactory_v1.ModuleConfig authorizerConfig;
+    IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig;
+    IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
+    IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
+    IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
+    uint initialPurchaseAmount = 0 ether;
+
+    // Bonding Curve Parameters
+    uint initialIssuanceSupply = 122_727_272_727_272_727_272_727;
+    uint initialCollateralSupply = 3_163_408_614_166_851_161;
+    uint32 reserveRatio = 160_000;
 
     // Constants
     uint constant COLLATERAL_MIGRATION_THRESHOLD = 1000e18;
     uint constant COLLATERAL_MIGRATION_AMOUNT = 1000e18;
     uint constant BUY_FROM_FUNDING_MANAGER_AMOUNT = 1000e18;
+
+    // Test variables
+    IOrchestrator_v1 orchestrator;
+    LM_ImmutableMigration_v1 migrationModule;
     ERC20Issuance_v1 issuanceToken;
-    
-    // Uniswap
-    // address uniswapFactoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
-    // address uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
-    // IUniswapV2Factory uniswapFactory;
-    // IUniswapV2Router02 uniswapRouter;
 
     function setUp() public override {
-        //--------------------------------------------------------------------------
-        // Setup
-        //--------------------------------------------------------------------------
         super.setUp();
 
-        // Step 1: Deploy Uniswap Contracts
-
-        // vm.etch(uniswapFactoryAddress, uniswapV2FactoryBytecode);
-        // vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
-
-        // uniswapFactory = IUniswapV2Factory(uniswapFactoryAddress);
-        // uniswapRouter = IUniswapV2Router02(uniswapRouterAddress);
-
-        // Set Up Modules
-
-        // FundingManager
-        setUpBancorVirtualSupplyBondingCurveFundingManager();
-
-        // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
-
-        issuanceToken = new ERC20Issuance_v1(
-            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
+        // deploy new factory
+        factory = new Immutable_PIM_Factory_v1(
+            address(orchestratorFactory), address(0)
         );
 
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                .BondingCurveProperties({
-                formula: address(formula),
-                reserveRatioForBuying: 333_333,
-                reserveRatioForSelling: 333_333,
-                buyFee: 0,
-                sellFee: 0,
-                buyIsOpen: true,
-                sellIsOpen: true,
-                initialIssuanceSupply: 10,
-                initialCollateralSupply: 30
-            });
-
-        moduleConfigurations.push(
-            IOrchestratorFactory_v1.ModuleConfig(
-                bancorVirtualSupplyBondingCurveFundingManagerMetadata,
-                abi.encode(address(issuanceToken), bc_properties, token)
-            )
-        );
+        // Orchestrator/Workflow config
+        workflowConfig = IOrchestratorFactory_v1.WorkflowConfig({
+            independentUpdates: false,
+            independentUpdateAdmin: address(0)
+        });
 
         // Authorizer
         setUpRoleAuthorizer();
-        moduleConfigurations.push(
-            IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata, abi.encode(address(this))
-            )
+        authorizerConfig = IOrchestratorFactory_v1.ModuleConfig(
+            roleAuthorizerMetadata, abi.encode(address(0x420))
         );
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
-        moduleConfigurations.push(
+        paymentProcessorConfig = IOrchestratorFactory_v1.ModuleConfig(
+            simplePaymentProcessorMetadata, bytes("")
+        );
+
+        // Funding Manager: Bancor Virtual Supply
+        setUpBancorVirtualSupplyBondingCurveFundingManager();
+        bcProperties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+            .BondingCurveProperties({
+            formula: address(formula),
+            reserveRatioForBuying: reserveRatio,
+            reserveRatioForSelling: reserveRatio,
+            buyFee: 0,
+            sellFee: 0,
+            buyIsOpen: true,
+            sellIsOpen: true,
+            initialIssuanceSupply: initialIssuanceSupply,
+            initialCollateralSupply: initialCollateralSupply
+        });
+
+        fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
+            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            abi.encode(address(0), bcProperties, token)
+        );
+
+        // Logic Module: Immutable Migration
+        setUpLM_ImmutableMigration_v1();
+        logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                simplePaymentProcessorMetadata, bytes("")
+                LM_ImmutableMigration_v1Metadata,
+                abi.encode(COLLATERAL_MIGRATION_THRESHOLD)
             )
         );
 
-        // Migration Module
-        // setUpLM_PC_MigrateLiquidity_UniswapV2_v1();
-        // moduleConfigurations.push(
-        //     IOrchestratorFactory_v1.ModuleConfig(
-        //         LM_PC_MigrateLiquidity_UniswapV2_v1Metadata,
-        //         abi.encode(
-        //             ILM_PC_MigrateLiquidity_UniswapV2_v1
-        //                 .LiquidityMigrationConfig({
-        //                 collateralMigrationAmount: COLLATERAL_MIGRATION_AMOUNT,
-        //                 collateralMigrateThreshold: COLLATERAL_MIGRATION_THRESHOLD,
-        //                 dexRouterAddress: address(uniswapRouter),
-        //                 lpTokenRecipientAddress: address(this)
-        //             })
-        //         )
-        //     )
-        // );
+        // Put issuance token params in storage
+        issuanceTokenParams = IBondingCurveBase_v1.IssuanceToken({
+            name: "Bonding Curve Token",
+            symbol: "BCT",
+            decimals: 18,
+            maxSupply: type(uint).max - 1
+        });
+
+        // start recording logs
+        vm.recordLogs();
+
+        orchestrator = factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
+
+        issuanceToken = ERC20Issuance_v1(
+            IBondingCurveBase_v1(address(orchestrator.fundingManager()))
+                .getIssuanceToken()
+        );
+
+        // Get address of migration module and issuance token
+        address[] memory modules = orchestrator.listModules();
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_ImmutableMigration_v1(modules[i]).migrationThreshold() {
+                migrationModule = LM_ImmutableMigration_v1(modules[i]);
+                break;
+            } catch {}
+        }
+
+        console.log("migrationModule: %s", address(migrationModule));
     }
 
-    function test_mock() public {
-        console.log("mock");
+    function test_buyForUpTo_BelowThreshold(uint amountIn) public {
+        if (amountIn == 0) return;
+
+        // Bound input to range below threshold
+        amountIn = bound(amountIn, 1, COLLATERAL_MIGRATION_THRESHOLD - 1);
+
+        mintAndApprove(amountIn);
+
+        // Record balances before
+        uint buyerTokenBalanceBefore = token.balanceOf(address(this));
+        uint buyerIssuanceBalanceBefore = issuanceToken.balanceOf(address(this));
+
+        // Execute buy
+        migrationModule.buyForUpTo(amountIn, address(this));
+
+        // Verify balances changed correctly
+        assertLt(
+            token.balanceOf(address(this)),
+            buyerTokenBalanceBefore,
+            "Token balance should decrease"
+        );
+        assertGt(
+            issuanceToken.balanceOf(address(this)),
+            buyerIssuanceBalanceBefore,
+            "Issuance balance should increase"
+        );
+    }
+
+    function test_buyForUpTo_AtAboveThreshold(uint amountIn) public {
+        // Bound input to be at or above threshold
+        amountIn = bound(
+            amountIn,
+            COLLATERAL_MIGRATION_THRESHOLD + 1,
+            10_000_000_000_000 ether
+        );
+        mintAndApprove(amountIn);
+
+        vm.expectEmit(true, true, true, true);
+        emit IBondingCurveBase_v1.BuyingDisabled();
+        migrationModule.buyForUpTo(amountIn, address(this));
+
+        // assertFalse(
+        //     FM_BC_Bancor_Redeeming_VirtualSupply_v1(address(orchestrator.fundingManager()))
+        //         .buyIsOpen(),
+        //     "Buying should be closed"
+        // );
     }
 
     // // Test
@@ -247,4 +330,13 @@ contract LM_Immutable_Migration_v1Test is E2ETest {
     //         "Script should have received LP tokens"
     //     );
     // }
+
+    //--------------------------------------------------------------------------
+    // Utils
+    //--------------------------------------------------------------------------
+
+    function mintAndApprove(uint amount) internal {
+        token.mint(address(this), amount);
+        token.approve(address(migrationModule), amount);
+    }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+import "forge-std/console.sol";
+
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -15,6 +17,9 @@ import {IImmutable_PIM_Factory_v1} from
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+
+import {LM_ImmutableMigration_v1} from
+    "src/modules/logicModule/LM_ImmutableMigration_v1.sol";
 
 // Internal Implementations
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
@@ -125,6 +130,19 @@ contract Immutable_PIM_Factory_v1 is
 
         // renounce token ownership
         issuanceToken.renounceOwnership();
+
+        // After orchestrator deployment, find migration module and grant admin role
+        address[] memory modules = orchestrator.listModules();
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+
+        for (uint i = 0; i < modules.length; i++) {
+            // Try to access migrationThreshold() to identify the migration module
+            try LM_ImmutableMigration_v1(modules[i]).migrationThreshold()
+            returns (uint) {
+                orchestrator.authorizer().grantRole(adminRole, modules[i]);
+                break;
+            } catch {}
+        }
 
         emit IImmutable_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator), address(issuanceToken), _msgSender()

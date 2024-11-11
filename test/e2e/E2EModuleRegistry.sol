@@ -27,6 +27,7 @@ import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
 import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
+import {LM_ImmutableMigration_v1} from "@lm/LM_ImmutableMigration_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v1} from
@@ -659,6 +660,42 @@ contract E2EModuleRegistry is Test {
         gov.registerMetadataInModuleFactory(
             LM_PC_PaymentRouter_v1Metadata,
             IInverterBeacon_v1(LM_PC_PaymentRouter_v1Beacon)
+        );
+    }
+
+    // LM_ImmutableMigration_v1
+
+    LM_ImmutableMigration_v1 LM_ImmutableMigration_v1Impl;
+
+    InverterBeacon_v1 LM_ImmutableMigration_v1Beacon;
+
+    IModule_v1.Metadata LM_ImmutableMigration_v1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_ImmutableMigration_v1"
+    );
+
+    function setUpLM_ImmutableMigration_v1() internal {
+        // Deploy module implementations.
+        LM_ImmutableMigration_v1Impl = new LM_ImmutableMigration_v1();
+
+        // Deploy module beacons.
+        LM_ImmutableMigration_v1Beacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            LM_ImmutableMigration_v1Metadata.majorVersion,
+            address(LM_ImmutableMigration_v1Impl),
+            LM_ImmutableMigration_v1Metadata.minorVersion,
+            LM_ImmutableMigration_v1Metadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            LM_ImmutableMigration_v1Metadata,
+            IInverterBeacon_v1(LM_ImmutableMigration_v1Beacon)
         );
     }
 
