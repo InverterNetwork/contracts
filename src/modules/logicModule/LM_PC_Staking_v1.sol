@@ -90,13 +90,13 @@ contract LM_PC_Staking_v1 is
     uint internal lastUpdate;
 
     /// @dev	mapping of balances of each user in the staking token address => balance.
-    mapping(address => uint) internal _balances;
+    mapping(address => uint) internal balances;
     /// @dev	mapping of reward Values that are needed to calculate the rewards that a user should receive.
     /// @dev	should change everytime the user stakes or unstakes funds
     ///         address => rewardValue.
-    mapping(address => uint) internal userRewardValue;
+    mapping(address => uint) internal userRewardValues;
     /// @dev	mapping of how many reward tokens the user accumulated address => earned.
-    mapping(address => uint) internal rewards;
+    mapping(address => uint) internal userRewards;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -130,17 +130,17 @@ contract LM_PC_Staking_v1 is
     // Getter Functions
 
     /// @inheritdoc ILM_PC_Staking_v1
-    function balanceOf(address user) external view returns (uint) {
-        return _balances[user];
+    function getBalance(address user) external view returns (uint) {
+        return balances[user];
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
-    function earned(address user) external view returns (uint) {
+    function getEarned(address user) external view returns (uint) {
         return _earned(user, _calculateRewardValue());
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
-    function estimateReward(uint amount, uint duration)
+    function getEstimatedReward(uint amount, uint duration)
         external
         view
         validAmount(amount)
@@ -225,7 +225,7 @@ contract LM_PC_Staking_v1 is
         _update(sender);
 
         // Reduce balances accordingly
-        _balances[sender] -= amount;
+        balances[sender] -= amount;
         // Total supply too
         totalSupply -= amount;
 
@@ -233,7 +233,7 @@ contract LM_PC_Staking_v1 is
         IERC20(stakingToken).safeTransfer(sender, amount);
 
         // If the user has earned something
-        if (rewards[sender] != 0) {
+        if (userRewards[sender] != 0) {
             // distribute rewards
             _distributeRewards(sender);
         }
@@ -267,13 +267,13 @@ contract LM_PC_Staking_v1 is
         _update(depositFor);
 
         // If the user has already earned something
-        if (rewards[depositFor] != 0) {
+        if (userRewards[depositFor] != 0) {
             // distribute rewards for previous reward period
             _distributeRewards(depositFor);
         }
 
         // Increase balance accordingly
-        _balances[depositFor] += amount;
+        balances[depositFor] += amount;
         // Total supply too
         totalSupply += amount;
 
@@ -296,8 +296,8 @@ contract LM_PC_Staking_v1 is
         uint earnedAmount;
         if (triggerAddress != address(0)) {
             earnedAmount = _earned(triggerAddress, rewardValue);
-            rewards[triggerAddress] = earnedAmount;
-            userRewardValue[triggerAddress] = rewardValue;
+            userRewards[triggerAddress] = earnedAmount;
+            userRewardValues[triggerAddress] = rewardValue;
         }
         emit Updated(
             triggerAddress, newRewardValue, newLastUpdate, earnedAmount
@@ -349,10 +349,10 @@ contract LM_PC_Staking_v1 is
         view
         returns (uint)
     {
-        return (providedRewardValue - userRewardValue[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
-            * _balances[user] // multiply by users balance of tokens to get their share of the token rewards
+        return (providedRewardValue - userRewardValues[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
+            * balances[user] // multiply by users balance of tokens to get their share of the token rewards
             / 1e36 // See comment in _calculateRewardValue();
-            + rewards[user];
+            + userRewards[user];
     }
 
     /// @dev	Distributes earned rewards via the payment processor.
@@ -360,9 +360,9 @@ contract LM_PC_Staking_v1 is
     /// @param  recipient The address of the user.
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
-        uint amount = rewards[recipient];
+        uint amount = userRewards[recipient];
         // Set rewards to zero
-        rewards[recipient] = 0;
+        userRewards[recipient] = 0;
 
         _addPaymentOrder(
             PaymentOrder({

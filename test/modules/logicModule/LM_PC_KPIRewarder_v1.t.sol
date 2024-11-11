@@ -872,7 +872,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
             stakingToken.balanceOf(address(kpiManager)),
             contractBalanceBefore + amount
         );
-        assertEq(kpiManager.balanceOf(USER_1), amount);
+        assertEq(kpiManager.getBalance(USER_1), amount);
         assertEq(kpiManager.getTotalSupply(), contractBalanceBefore + amount);
     }
 }
@@ -987,7 +987,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         // check earned rewards are correct
         for (uint i; i < length; i++) {
-            assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
+            assertEq(kpiManager.getBalance(users[i]), amounts[i]);
 
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
@@ -999,7 +999,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
             assertApproxEqAbs(
-                kpiManager.earned(users[i]),
+                kpiManager.getEarned(users[i]),
                 userReward,
                 1e8 // Below this it reverts due to precision error
             );
@@ -1007,7 +1007,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         for (uint i; i < length; i++) {
             vm.startPrank(users[i]);
-            uint earnedReward = kpiManager.earned(users[i]);
+            uint earnedReward = kpiManager.getEarned(users[i]);
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
@@ -1016,8 +1016,8 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             kpiManager.unstake(amounts[i]);
 
-            assertEq(kpiManager.balanceOf(users[i]), 0);
-            assertEq(kpiManager.earned(users[i]), 0);
+            assertEq(kpiManager.getBalance(users[i]), 0);
+            assertEq(kpiManager.getEarned(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
 
             vm.stopPrank();
@@ -1070,7 +1070,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         // check earned rewards are correct
         for (uint i; i < length; i++) {
-            assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
+            assertEq(kpiManager.getBalance(users[i]), amounts[i]);
 
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
@@ -1082,7 +1082,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
             assertApproxEqAbs(
-                kpiManager.earned(users[i]),
+                kpiManager.getEarned(users[i]),
                 userReward,
                 1e8 // Below this it reverts due to precision error
             );
@@ -1090,7 +1090,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         for (uint i; i < length; i++) {
             vm.startPrank(users[i]);
-            uint earnedReward = kpiManager.earned(users[i]);
+            uint earnedReward = kpiManager.getEarned(users[i]);
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
@@ -1099,8 +1099,8 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             kpiManager.unstake(amounts[i]);
 
-            assertEq(kpiManager.balanceOf(users[i]), 0);
-            assertEq(kpiManager.earned(users[i]), 0);
+            assertEq(kpiManager.getBalance(users[i]), 0);
+            assertEq(kpiManager.getEarned(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
 
             vm.stopPrank();

@@ -298,12 +298,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             vm.prank(users[i]);
             kpiRewarder.unstake(amounts[i]);
 
-            /*console.log(
-                "Current staking Balance:",
-                stakingToken.balanceOf(address(kpiRewarder))
-            );*/
-
-            assertEq(kpiRewarder.balanceOf(users[i]), 0);
+            assertEq(kpiRewarder.getBalance(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
             assertEq(rewardToken.balanceOf(users[i]), accumulatedRewards[i]);
         }
@@ -372,12 +367,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
         for (uint i; i < TOTAL_USERS; i++) {
             uint currentUserBalance = rewardToken.balanceOf(users[i]);
-            uint reward = kpiRewarder.earned(users[i]);
-            /*console.log(
-                    "User %s has a pre-balance of %s",
-                    users[i],
-                    rewardToken.balanceOf(users[i])
-                );*/
+            uint reward = kpiRewarder.getEarned(users[i]);
             if (reward > 0) {
                 vm.prank(users[i]);
                 kpiRewarder.claimRewards();
@@ -389,7 +379,6 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
                     rewardToken.balanceOf(users[i])
                 );
             }
-            // console.log("User %s has a reward of %s", users[i], reward);
         }
 
         uint rewardBalanceAfter = rewardToken.balanceOf(address(fundingManager));

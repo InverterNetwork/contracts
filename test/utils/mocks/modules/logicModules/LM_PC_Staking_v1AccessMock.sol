@@ -9,11 +9,11 @@ contract LM_PC_Staking_v1AccessMock is LM_PC_Staking_v1 {
     // Getter Functions
 
     function getUserRewardValue(address user) external view returns (uint) {
-        return userRewardValue[user];
+        return userRewardValues[user];
     }
 
-    function getRewards(address user) external view returns (uint) {
-        return rewards[user];
+    function getUserRewards(address user) external view returns (uint) {
+        return userRewards[user];
     }
 
     //--------------------------------------------------------------------------
@@ -32,7 +32,7 @@ contract LM_PC_Staking_v1AccessMock is LM_PC_Staking_v1 {
     }
 
     function setUserRewardValue(address user, uint rV) external {
-        userRewardValue[user] = rV;
+        userRewardValues[user] = rV;
     }
 
     function setRewardsEnd(uint newRewardsEnd) external {

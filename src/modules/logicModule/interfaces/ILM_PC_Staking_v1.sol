@@ -77,12 +77,12 @@ interface ILM_PC_Staking_v1 {
 
     /// @notice Returns the amount of tokens a user staked in this contract.
     /// @param  user The address of a user that staked.
-    function balanceOf(address user) external view returns (uint);
+    function getBalance(address user) external view returns (uint);
 
     /// @notice Returns the amount of tokens earned up until now by the current stake of a user.
     /// @param  user The address of a user that staked.
     /// @return The amount of tokens earned.
-    function earned(address user) external view returns (uint);
+    function getEarned(address user) external view returns (uint);
 
     /// @notice Returns a estimation of how much rewards will be earned with the current state of the staking contract.
     /// @dev	This calculation uses the current reward rate and the current totalSupply to calculate the rewards.
@@ -90,7 +90,7 @@ interface ILM_PC_Staking_v1 {
     /// @param  amount How much token are staked.
     /// @param  duration How long the tokens will be staked.
     /// @return The estimated amount of tokens earned.
-    function estimateReward(uint amount, uint duration)
+    function getEstimatedReward(uint amount, uint duration)
         external
         view
         returns (uint);
