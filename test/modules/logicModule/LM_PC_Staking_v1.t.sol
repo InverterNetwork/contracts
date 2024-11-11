@@ -354,7 +354,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         }
 
         assertEq(prevBalance - unstakeAmount, stakingManager.getBalance(staker));
-        assertEq(prevTotalAmount - unstakeAmount, stakingManager.getTotalSupply());
+        assertEq(
+            prevTotalAmount - unstakeAmount, stakingManager.getTotalSupply()
+        );
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
             stakingManager.getTotalSupply()

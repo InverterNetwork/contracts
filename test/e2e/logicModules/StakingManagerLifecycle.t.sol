@@ -250,7 +250,9 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         // Staker 4: 5   |   Staker 4: 1/8 amount2               |   Staker 4:
 
         // Check if values are accurate
-        assertEq(amount1 / 2 + amount2 * 3 / 4, stakingManager.getEarned(staker1));
+        assertEq(
+            amount1 / 2 + amount2 * 3 / 4, stakingManager.getEarned(staker1)
+        );
         assertEq(amount2 * 1 / 8, rewardToken.balanceOf(staker3));
         assertEq(amount2 * 1 / 8, stakingManager.getEarned(staker4));
 

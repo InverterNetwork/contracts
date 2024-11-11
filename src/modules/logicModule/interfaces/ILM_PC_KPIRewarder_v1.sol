@@ -151,7 +151,6 @@ interface ILM_PC_KPIRewarder_v1 {
     /// @param  assertionId The id of the assertion to delete.
     function deleteStuckAssertion(bytes32 assertionId) external;
 
-
     /// @notice Returns the current KPI counter.
     /// @return The KPI counter.
     function getKPICounter() external view returns (uint);
