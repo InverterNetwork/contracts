@@ -1825,7 +1825,7 @@ contract PP_StreamingV1Test is ModuleTest {
             resultShouldBe = false;
         }
 
-        bool result = paymentProcessor.original_validTimes(start, cliff, end);
+        bool result = paymentProcessor.exposed_validTimes(start, cliff, end);
         assertEq(result, resultShouldBe);
     }
 
@@ -1860,12 +1860,12 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.startPrank(sender);
 
-        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+        bool expectedValue = paymentProcessor.exposed_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
-            && paymentProcessor.original_validTimes(
+        ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
+            && paymentProcessor.exposed_validTimes(
                 uint(order.data[0]), uint(order.data[1]), uint(order.data[2])
-            ) && paymentProcessor.original__validTotal(order.amount);
+            ) && paymentProcessor.exposed__validTotal(order.amount);
 
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
@@ -1886,7 +1886,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+            paymentProcessor.exposed_validPaymentReceiver(addr), expectedValue
         );
     }
 
@@ -1896,7 +1896,7 @@ contract PP_StreamingV1Test is ModuleTest {
             expectedValue = false;
         }
 
-        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
+        assertEq(paymentProcessor.exposed__validTotal(_total), expectedValue);
     }
 
     function test__validTimes(uint _start, uint _cliff, uint _end) public {
@@ -1909,7 +1909,7 @@ contract PP_StreamingV1Test is ModuleTest {
         }
 
         assertEq(
-            paymentProcessor.original_validTimes(_start, _cliff, _end),
+            paymentProcessor.exposed_validTimes(_start, _cliff, _end),
             expectedValue
         );
     }
@@ -1928,7 +1928,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentToken(randomToken), false
+            paymentProcessor.exposed_validPaymentToken(randomToken), false
         );
 
         // ERC20 addresses are valid
@@ -1936,13 +1936,13 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            paymentProcessor.exposed_validPaymentToken(address(actualToken)),
             true
         );
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(_token)), true
+            paymentProcessor.exposed_validPaymentToken(address(_token)), true
         );
     }
 
@@ -1978,7 +1978,7 @@ contract PP_StreamingV1Test is ModuleTest {
         }
 
         (uint start, uint cliff, uint end) =
-            paymentProcessor.original_getStreamingDetails(flags, data);
+            paymentProcessor.exposed_getStreamingDetails(flags, data);
 
         uint idx = 0;
         assertEq(start, hasStart ? uint(data[idx]) : defaultStart);

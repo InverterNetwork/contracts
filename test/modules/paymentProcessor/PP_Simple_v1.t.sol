@@ -393,10 +393,10 @@ contract PP_SimpleV1Test is ModuleTest {
         );
 
         vm.startPrank(sender);
-        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+        bool expectedValue = paymentProcessor.exposed_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
-            && paymentProcessor.original__validTotal(order.amount);
+        ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
+            && paymentProcessor.exposed__validTotal(order.amount);
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
         vm.stopPrank();
@@ -416,7 +416,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+            paymentProcessor.exposed_validPaymentReceiver(addr), expectedValue
         );
     }
 
@@ -426,7 +426,7 @@ contract PP_SimpleV1Test is ModuleTest {
             expectedValue = false;
         }
 
-        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
+        assertEq(paymentProcessor.exposed__validTotal(_total), expectedValue);
     }
 
     function test__validPaymentToken(address randomToken, address sender)
@@ -443,7 +443,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentToken(randomToken), false
+            paymentProcessor.exposed_validPaymentToken(randomToken), false
         );
 
         // ERC20 addresses are valid
@@ -451,13 +451,13 @@ contract PP_SimpleV1Test is ModuleTest {
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            paymentProcessor.exposed_validPaymentToken(address(actualToken)),
             true
         );
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(_token)), true
+            paymentProcessor.exposed_validPaymentToken(address(_token)), true
         );
     }
 }
