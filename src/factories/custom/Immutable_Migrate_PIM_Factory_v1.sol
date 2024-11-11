@@ -200,12 +200,6 @@ contract Immutable_Migrate_PIM_Factory_v1 is
         );
         _logicModule = address(logicModule);
 
-        // get the authorizer
-        IAuthorizer_v1 authorizer = IAuthorizer_v1(orchestrator.authorizer());
-
-        // grant owner role to logic module
-        authorizer.grantRole(bytes32(0), _logicModule);
-
         // get collateral token
         IERC20 collateralToken = IERC20(collateralTokenAddress);
 

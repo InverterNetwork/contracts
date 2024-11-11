@@ -94,7 +94,10 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     // Bonding Curve properties
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
-    uint initialPurchaseAmount = 100 ether;
+    uint initialPurchaseAmount = 1000e18;
+    uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
+    uint initialCollateralSupply = 3_163_408_614_166_851_161;
+    uint32 reserveRatio = 160_000;
 
     // Addresses for testing
     address workflowAdmin = vm.addr(420);
@@ -104,9 +107,9 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     address alice = vm.addr(0xA11CE);
 
     // Parameters for liquidity migration
-    uint constant COLLATERAL_MIGRATION_THRESHOLD = 1000e18;
-    uint constant COLLATERAL_MIGRATION_AMOUNT = 1000e18;
-    uint constant BUY_FROM_FUNDING_MANAGER_AMOUNT = 1000e18;
+    uint constant COLLATERAL_MIGRATION_THRESHOLD = 2000e18;
+    uint constant COLLATERAL_MIGRATION_AMOUNT = 2000e18;
+    uint constant BUY_FROM_FUNDING_MANAGER_AMOUNT = 2000e18;
 
     // Uniswap
     address uniswapFactoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
@@ -117,25 +120,25 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     function setUp() public override {
         super.setUp();
 
-        // Deploy Uniswap contracts
+        // Step 1: Deploy Uniswap contracts
         vm.etch(uniswapFactoryAddress, uniswapV2FactoryBytecode);
         vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
         uniswapFactory = IUniswapV2Factory(uniswapFactoryAddress);
         uniswapRouter = IUniswapV2Router02(uniswapRouterAddress);
 
-        // Deploy factory and event helpers
+        // Step 2: Deploy factory and event helpers
         factory = new Immutable_Migrate_PIM_Factory_v1(
             address(orchestratorFactory), mockTrustedForwarder
         );
         eventHelpers = new EventHelpers();
 
-        // Configure Orchestrator Workflow
+        // Step 3: Configure Orchestrator Workflow
         workflowConfig = IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
             independentUpdateAdmin: address(0)
         });
 
-        // Set up authorizer and payment processor modules
+        // Step 4: Set up authorizer and payment processor modules
         setUpRoleAuthorizer();
         authorizerConfig = IOrchestratorFactory_v1.ModuleConfig(
             roleAuthorizerMetadata, abi.encode(address(workflowAdmin))
@@ -145,7 +148,7 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
             simplePaymentProcessorMetadata, bytes("")
         );
 
-        // Set up logic module for liquidity migration
+        // Step 5: Set up logic module for liquidity migration
         setUpLM_PC_MigrateLiquidity_UniswapV2_v1();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
@@ -156,25 +159,25 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
                         collateralMigrationAmount: COLLATERAL_MIGRATION_AMOUNT,
                         collateralMigrateThreshold: COLLATERAL_MIGRATION_THRESHOLD,
                         dexRouterAddress: address(uniswapRouter),
-                        lpTokenRecipientAddress: address(this)
+                        lpTokenRecipientAddress: alice
                     })
                 )
             )
         );
 
-        // Set up bonding curve properties for Funding Manager
+        // Step 6: Set up bonding curve properties for Funding Manager
         setUpBancorVirtualSupplyBondingCurveFundingManager();
         bcProperties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
             .BondingCurveProperties({
             formula: address(formula),
-            reserveRatioForBuying: 160_000,
-            reserveRatioForSelling: 160_000,
+            reserveRatioForBuying: reserveRatio,
+            reserveRatioForSelling: reserveRatio,
             buyFee: 0,
             sellFee: 0,
             buyIsOpen: true,
             sellIsOpen: true,
-            initialIssuanceSupply: 122_727_272_727_272_727_272_727,
-            initialCollateralSupply: 3_163_408_614_166_851_161
+            initialIssuanceSupply: initialIssuuanceSupply,
+            initialCollateralSupply: initialCollateralSupply
         });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
@@ -182,7 +185,7 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
             abi.encode(address(0), bcProperties, token)
         );
 
-        // Set issuance token parameters and approve tokens for factory
+        // Step 7: Set issuance token parameters and approve tokens for factory
         issuanceTokenParams = IBondingCurveBase_v1.IssuanceToken({
             name: "Bonding Curve Token",
             symbol: "BCT",
@@ -190,14 +193,20 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
             maxSupply: type(uint).max - 1
         });
 
-        token.mint(address(this), type(uint).max);
-        token.approve(address(factory), type(uint).max);
+        // Step 8: Mint and approve tokens for factory
+        uint mintAmount = 1_000_000_000_000e18; // 1 trillion tokens
+
+        token.mint(address(this), mintAmount);
+        token.approve(address(factory), mintAmount);
+
+        // Step 9: Mint tokens for Alice
+        token.mint(alice, mintAmount);
     }
 
     function testCreatePIMWorkflow() public {
         vm.recordLogs();
 
-        // Deploy orchestrator
+        // Step 1: Deploy orchestrator
         orchestrator = factory.createPIMWorkflow(
             workflowConfig,
             fundingManagerConfig,
@@ -208,12 +217,12 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
             initialPurchaseAmount
         );
 
-        // Set up funding manager
+        // Step 2: Set up funding manager
         fundingManager = FM_BC_Bancor_Redeeming_VirtualSupply_v1(
             address(orchestrator.fundingManager())
         );
 
-        // Verify PIMWorkflowCreated event is emitted
+        // Step 3: Verify PIMWorkflowCreated event is emitted
         Vm.Log[] memory logs = vm.getRecordedLogs();
         (bool emitted, bytes32 eventTopic) = eventHelpers.getEventTopic(
             IImmutable_Migrate_PIM_Factory_v1.PIMWorkflowCreated.selector,
@@ -222,14 +231,14 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
         );
         assertTrue(emitted);
 
-        // Get issuance token address from event and verify configuration
+        // Step 4: Get issuance token address from event and verify configuration
         address issuanceTokenAddress =
             eventHelpers.getAddressFromTopic(eventTopic);
 
-        // Set issuance token
+        // Step 5: Set issuance token
         issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
 
-        // get and set logic module
+        // Step 6: Get and set logic module
         logicModule = ILM_PC_MigrateLiquidity_UniswapV2_v1(
             _getModuleAddressByTitle(
                 orchestrator.listModules(),
@@ -237,7 +246,7 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
             )
         );
 
-        // Verify issuance token configuration
+        // Step 7: Verify issuance token configuration
         assertFalse(issuanceToken.allowedMinters(address(factory)));
         assertTrue(issuanceToken.allowedMinters(address(fundingManager)));
         assertEq(issuanceToken.owner(), address(0));
@@ -248,26 +257,30 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
     }
 
     function testWithdrawPimFee() public {
-        // First deploy the workflow
+        // Step 1: First deploy the workflow
         testCreatePIMWorkflow();
 
-        // Verify withdrawal events when called by fee recipient
+        // Step 2: Verify withdrawal events when called by fee recipient
         vm.startPrank(workflowAdmin);
         vm.expectEmit(true, true, true, false);
+        // Step 3: Expect ProjectCollateralFeeWithdrawn event
         emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
             address(this), 0
         );
+        // Step 4: Verify claimable fees
         uint claimableFees = fundingManager.projectCollateralFeeCollected();
         vm.expectEmit(true, false, false, false);
+        // Step 5: Expect PimFeeClaimed event
         emit IImmutable_Migrate_PIM_Factory_v1.PimFeeClaimed(
             address(fundingManager), address(this), alice, claimableFees
         );
+        // Step 6: Withdraw fee
         factory.withdrawPimFee(address(fundingManager), alice);
         vm.stopPrank();
     }
 
     function testWithdrawPimFee__FailsIfCallerIsNotPimFeeRecipient() public {
-        // Check that non-recipient address cannot withdraw fee
+        // Step 1: Check that non-recipient address cannot withdraw fee
         vm.expectRevert(
             abi.encodeWithSelector(
                 IImmutable_Migrate_PIM_Factory_v1
@@ -275,27 +288,44 @@ contract Immutable_Migrate_PIM_Factory_v1Test is E2ETest {
                     .selector
             )
         );
+        // Step 2: Attempt to withdraw fee
         vm.prank(alice);
         factory.withdrawPimFee(address(fundingManager), alice);
     }
 
     function testMigrateLiquidity() public {
-        // First deploy the workflow
+        // Step 1: First deploy the workflow
         testCreatePIMWorkflow();
 
-        vm.startPrank(workflowAdmin);
-        // Step 1: Buy from funding manager to reach migration threshold
+        vm.startPrank(alice);
+        // Step 2: Approve funding manager to spend tokens
+        token.approve(address(fundingManager), BUY_FROM_FUNDING_MANAGER_AMOUNT);
+
+        // Step 3: Buy from funding manager to reach migration threshold
         uint minAmountOut = fundingManager.calculatePurchaseReturn(
             BUY_FROM_FUNDING_MANAGER_AMOUNT
         );
-
         fundingManager.buy(BUY_FROM_FUNDING_MANAGER_AMOUNT, minAmountOut);
 
-        assertGe(issuanceToken.balanceOf(address(fundingManager)), minAmountOut);
-        // Step 2: Execute migration
-        factory.executeMigration();
-        assertTrue(logicModule.getExecuted());
+        // Step 4: Verify that the migration threshold has been reached
+        assertTrue(logicModule.isMigrationReady(), "Migration should be ready");
+
+        // Step 5: Execute migration
+        ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
+            migrationResult = factory.executeMigration();
+        assertTrue(logicModule.getExecuted(), "Migration should be executed");
 
         vm.stopPrank();
+
+        // Step 5: Verify that the migration was successful
+        assertEq(
+            IERC20(migrationResult.lpTokenAddress).balanceOf(alice),
+            migrationResult.lpTokenAmount,
+            "LP token balance mismatch"
+        );
+
+        // Step 6: Verify the curve buy and sell are closed
+        assertFalse(fundingManager.buyIsOpen(), "Buy should be closed");
+        assertFalse(fundingManager.sellIsOpen(), "Sell should be closed");
     }
 }
