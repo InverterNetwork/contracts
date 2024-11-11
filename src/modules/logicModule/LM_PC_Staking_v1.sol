@@ -76,15 +76,15 @@ contract LM_PC_Staking_v1 is
     //--------------------------------------------------------------------------
     // Storage
     /// @dev	address of the token that can be staked here.
-    address public stakingToken;
+    address internal stakingToken;
     /// @dev	total supply of the token that is staked here.
-    uint public totalSupply;
+    uint internal totalSupply;
     /// @dev	rate of how many reward tokens are distributed from the fundingmanager to the whole staking
     ///         pool in seconds.
-    uint public rewardRate;
+    uint internal rewardRate;
     /// @dev	timestamp of when the reward period will end.
-    uint public rewardsEnd;
-    /// @dev	internal value that is needed to calculate the reard each user will receive.
+    uint internal rewardsEnd;
+    /// @dev	internal value that is needed to calculate the reward each user will receive.
     uint internal rewardValue;
     /// @dev	timestamp of when the rewardValue was last updated.
     uint internal lastUpdate;
@@ -162,6 +162,36 @@ contract LM_PC_Staking_v1 is
             return amount * duration * rewardRate;
         }
         return (amount * duration * rewardRate) / totalSupply;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getStakingToken() external view returns (address) {
+        return stakingToken;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getTotalSupply() external view returns (uint) {
+        return totalSupply;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getRewardRate() external view returns (uint) {
+        return rewardRate;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getRewardsEnd() external view returns (uint) {
+        return rewardsEnd;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getRewardValue() external view returns (uint) {
+        return rewardValue;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getLastUpdate() external view returns (uint) {
+        return lastUpdate;
     }
 
     //--------------------------------------------------------------------------

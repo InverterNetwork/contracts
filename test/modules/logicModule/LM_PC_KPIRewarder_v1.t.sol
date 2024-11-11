@@ -484,7 +484,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         );
 
         // state after
-        assertEq(kpiManager.assertionPending(), true);
+        assertEq(kpiManager.getAssertionPending(), true);
 
         // Posting another assertion should now fail
         vm.expectRevert(
@@ -501,7 +501,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         );
 
         // created one is still pending
-        assertEq(kpiManager.assertionPending(), true);
+        assertEq(kpiManager.getAssertionPending(), true);
     }
 
     function test_SuccessfulAssertion(
@@ -826,7 +826,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
             MOCK_ASSERTER_ADDRESS,
             0
         );
-        assertEq(kpiManager.assertionPending(), true);
+        assertEq(kpiManager.getAssertionPending(), true);
 
         // Staking should now fail
 
@@ -873,7 +873,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
             contractBalanceBefore + amount
         );
         assertEq(kpiManager.balanceOf(USER_1), amount);
-        assertEq(kpiManager.totalSupply(), contractBalanceBefore + amount);
+        assertEq(kpiManager.getTotalSupply(), contractBalanceBefore + amount);
     }
 }
 
@@ -994,7 +994,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             //=========================================================
 
             uint userReward =
-                amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
+                amounts[i] * kpiManager.getRewardRate() / totalStakedFunds;
             console.log(userReward);
 
             // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
@@ -1077,7 +1077,7 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
             //=========================================================
 
             uint userReward =
-                amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
+                amounts[i] * kpiManager.getRewardRate() / totalStakedFunds;
             console.log(userReward);
 
             // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%

@@ -75,7 +75,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
     // This function also tests all the getters
     function testInit() public override(ModuleTest) {
-        assertEq(address(stakingToken), stakingManager.stakingToken());
+        assertEq(address(stakingToken), stakingManager.getStakingToken());
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -158,19 +158,19 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // There is a chance that the warp is higher than the reward period
         vm.warp(bound(warp, 0, 35 days));
 
-        uint rewardRate = stakingManager.rewardRate();
-        uint totalSupply = stakingManager.totalSupply();
+        uint rewardRate = stakingManager.getRewardRate();
+        uint totalSupply = stakingManager.getTotalSupply();
 
-        if (block.timestamp > stakingManager.rewardsEnd()) {
+        if (block.timestamp > stakingManager.getRewardsEnd()) {
             // Assume that calculated reward is 0
             assertEq(0, stakingManager.estimateReward(amount, duration));
         } else {
             uint calculatedEstimation;
 
             // If duration went over rewardsend
-            if (block.timestamp + duration > stakingManager.rewardsEnd()) {
+            if (block.timestamp + duration > stakingManager.getRewardsEnd()) {
                 // Change duration so that it goes until rewardsend
-                duration = stakingManager.rewardsEnd() - block.timestamp;
+                duration = stakingManager.getRewardsEnd() - block.timestamp;
             }
 
             if (totalSupply == 0) {
@@ -240,7 +240,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.prank(staker);
         stakingToken.approve(address(stakingManager), stakeAmount);
 
-        uint prevTotalAmount = stakingManager.totalSupply();
+        uint prevTotalAmount = stakingManager.getTotalSupply();
         uint prevBalance = stakingManager.balanceOf(staker);
         uint expectedEarnings = stakingManager.earned(staker);
 
@@ -256,10 +256,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         }
 
         assertEq(prevBalance + stakeAmount, stakingManager.balanceOf(staker));
-        assertEq(prevTotalAmount + stakeAmount, stakingManager.totalSupply());
+        assertEq(prevTotalAmount + stakeAmount, stakingManager.getTotalSupply());
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
-            stakingManager.totalSupply()
+            stakingManager.getTotalSupply()
         );
     }
 
@@ -337,7 +337,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
-        uint prevTotalAmount = stakingManager.totalSupply();
+        uint prevTotalAmount = stakingManager.getTotalSupply();
         uint prevBalance = stakingManager.balanceOf(staker);
         uint expectedEarnings = stakingManager.earned(staker);
 
@@ -354,10 +354,10 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         }
 
         assertEq(prevBalance - unstakeAmount, stakingManager.balanceOf(staker));
-        assertEq(prevTotalAmount - unstakeAmount, stakingManager.totalSupply());
+        assertEq(prevTotalAmount - unstakeAmount, stakingManager.getTotalSupply());
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
-            stakingManager.totalSupply()
+            stakingManager.getTotalSupply()
         );
     }
 
@@ -453,8 +453,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.setRewards(amount, duration);
 
-        assertEq(expectedRewardRate, stakingManager.rewardRate());
-        assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
+        assertEq(expectedRewardRate, stakingManager.getRewardRate());
+        assertEq(expectedRewardsEnd, stakingManager.getRewardsEnd());
 
         // Test when rewards were already set
 
@@ -484,8 +484,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.setRewards(secondAmount, secondDuration);
 
-        assertEq(expectedRewardRate, stakingManager.rewardRate());
-        assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
+        assertEq(expectedRewardRate, stakingManager.getRewardRate());
+        assertEq(expectedRewardsEnd, stakingManager.getRewardsEnd());
     }
 
     function testSetRewardsModifierInPosition() public {
@@ -568,8 +568,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         uint rewardDistributionTimestamp =
             stakingManager.direct_getRewardDistributionTimestamp();
         uint lastUpdate = stakingManager.getLastUpdate();
-        uint rewardRate = stakingManager.rewardRate();
-        uint totalSupply = stakingManager.totalSupply();
+        uint rewardRate = stakingManager.getRewardRate();
+        uint totalSupply = stakingManager.getTotalSupply();
         uint rewardValue = stakingManager.getRewardValue();
 
         uint calculatedRewardValue = calculateRewardValue(

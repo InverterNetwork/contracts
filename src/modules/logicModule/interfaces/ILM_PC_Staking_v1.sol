@@ -61,19 +61,19 @@ interface ILM_PC_Staking_v1 {
 
     /// @notice Returns address of the token users can stake.
     /// @return The address of the token.
-    function stakingToken() external view returns (address);
+    function getStakingToken() external view returns (address);
 
     /// @notice Returns the total supply of staked tokens of this contract.
     /// @return The total supply of staked tokens.
-    function totalSupply() external view returns (uint);
+    function getTotalSupply() external view returns (uint);
 
     /// @notice Returns how much Tokens will be distributed per second to all users that staked in this contract.
     /// @return The reward rate.
-    function rewardRate() external view returns (uint);
+    function getRewardRate() external view returns (uint);
 
     /// @notice Returns when the rewards will not be distributed anymore.
     /// @return The timestamp of when the rewards will end.
-    function rewardsEnd() external view returns (uint);
+    function getRewardsEnd() external view returns (uint);
 
     /// @notice Returns the amount of tokens a user staked in this contract.
     /// @param  user The address of a user that staked.
@@ -94,6 +94,14 @@ interface ILM_PC_Staking_v1 {
         external
         view
         returns (uint);
+
+    /// @notice Returns the reward value.
+    /// @return The reward value.
+    function getRewardValue() external view returns (uint);
+
+    /// @notice Returns the timestamp of last state change.
+    /// @return The timestamp of last state change.
+    function getLastUpdate() external view returns (uint);
 
     //--------------------------------------------------------------------------
     // Mutating Functions

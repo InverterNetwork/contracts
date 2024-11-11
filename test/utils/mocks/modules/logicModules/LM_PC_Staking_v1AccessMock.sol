@@ -8,14 +8,6 @@ contract LM_PC_Staking_v1AccessMock is LM_PC_Staking_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    function getRewardValue() external view returns (uint) {
-        return rewardValue;
-    }
-
-    function getLastUpdate() external view returns (uint) {
-        return lastUpdate;
-    }
-
     function getUserRewardValue(address user) external view returns (uint) {
         return userRewardValue[user];
     }
