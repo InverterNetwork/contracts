@@ -152,6 +152,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         (uint _defaultStart, uint _defaultCliff, uint _defaultEnd) =
             abi.decode(configData, (uint, uint, uint));
 
+        _validTimes(_defaultStart, _defaultCliff, _defaultEnd);
+
         _setDefaultStart(_defaultStart);
         _setDefaultCliff(_defaultCliff);
         _setDefaultEnd(_defaultEnd);
