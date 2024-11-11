@@ -152,9 +152,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         (uint _defaultStart, uint _defaultCliff, uint _defaultEnd) =
             abi.decode(configData, (uint, uint, uint));
 
-        defaultStart = _defaultStart;
-        defaultCliff = _defaultCliff;
-        defaultEnd = _defaultEnd;
+        _setDefaultStart(_defaultStart);
+        _setDefaultCliff(_defaultCliff);
+        _setDefaultEnd(_defaultEnd);
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -945,5 +945,23 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         bool hasEnd = (uint128(flags) & (1 << 2)) != 0;
         end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
+    }
+
+    /// @dev Sets the default start time for new payment orders
+    /// @param _defaultStart The new default start time
+    function _setDefaultStart(uint _defaultStart) internal {
+        defaultStart = _defaultStart;
+    }
+
+    /// @dev Sets the default cliff time for new payment orders  
+    /// @param _defaultCliff The new default cliff time
+    function _setDefaultCliff(uint _defaultCliff) internal {
+        defaultCliff = _defaultCliff;
+    }
+
+    /// @dev Sets the default end time for new payment orders
+    /// @param _defaultEnd The new default end time
+    function _setDefaultEnd(uint _defaultEnd) internal {
+        defaultEnd = _defaultEnd;
     }
 }
