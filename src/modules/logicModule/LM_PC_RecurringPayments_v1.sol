@@ -96,9 +96,6 @@ contract LM_PC_RecurringPayments_v1 is
 
     /// @dev	Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
-    /// @dev	Flag config for payment processor indicates presence of start, end and cliff.
-    bytes16 internal constant _START_END_CLIFF_FLAG =
-        0x00000000000000000000000000000007;
 
     //--------------------------------------------------------------------------
     // Storage
@@ -114,6 +111,9 @@ contract LM_PC_RecurringPayments_v1 is
 
     /// @dev	List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
+
+    /// @dev    Payment processor flags.
+    bytes16 private _flags;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -138,6 +138,12 @@ contract LM_PC_RecurringPayments_v1 is
         if (epochLength < 1 weeks || epochLength > 52 weeks) {
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
+
+        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        flags |= (1 << 0); // Set bit 0 for start
+        flags |= (1 << 1); // Set bit 1 for end
+        flags |= (1 << 2); // Set bit 2 for cliff
+        _flags = bytes16(flags);
 
         emit EpochLengthSet(newEpochLength);
     }
@@ -317,7 +323,7 @@ contract LM_PC_RecurringPayments_v1 is
                             amount: currentPayment.amount,
                             originChainId: block.chainid,
                             targetChainId: block.chainid,
-                            flags: _START_END_CLIFF_FLAG,
+                            flags: _flags,
                             data: data
                         })
                     );
@@ -335,7 +341,7 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 originChainId: block.chainid,
                                 targetChainId: block.chainid,
-                                flags: _START_END_CLIFF_FLAG,
+                                flags: _flags,
                                 data: data
                             })
                         );
