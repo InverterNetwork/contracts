@@ -70,31 +70,30 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
         // Approve funding manager to spend collateral tokens
         collateralToken.approve(fundingManager, amountIn);
 
-        // Buy tokens from funding manager for recipient
-        IBondingCurveBase_v1(fundingManager).buyFor(recipient, amountIn, 1);
-
         // Check if buy would exceed threshold
-        uint excess = _checkBuyExceedsThreshold(amountIn);
+        (uint excessAmountIn, uint validAmountIn) =
+            _checkBuyExceedsThreshold(amountIn);
 
-        console.log("Excess1: %s", excess);
+        if (validAmountIn > 0) {
+            console.log("Buying valid amount");
+            // Buy valid amount for recipient
+            IBondingCurveBase_v1(fundingManager).buyFor(
+                recipient, validAmountIn, 1
+            );
+        }
 
-        if (excess > 0) {
-            console.log("Excess2: %s", excess);
+        if (excessAmountIn > 0) {
+            console.log("Returning excess amount");
+            collateralToken.transfer(_msgSender(), excessAmountIn);
             // Close buying on the funding manager
             IBondingCurveBase_v1(fundingManager).closeBuy();
         }
     }
 
-    /**
-     * //  * @notice Internal function to check if a buy would exceed the migration threshold
-     * //  * @param amountIn The amount of collateral tokens to be added
-     * //  * @return excessAmount The amount by which the threshold would be exceeded, or 0 if no excess
-     * //
-     */
     function _checkBuyExceedsThreshold(uint amountIn)
         internal
         view
-        returns (uint excessAmount)
+        returns (uint excessAmountIn, uint validAmountIn)
     {
         // Get funding manager and collateral token
         FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
@@ -106,10 +105,23 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
         // Get current virtual collateral supply
         uint currentCollateral = fundingManager.getVirtualCollateralSupply();
 
-        // Calculate new total after buy
-        uint newTotal = currentCollateral + amountIn;
+        console.log("currentCollateral", currentCollateral);
 
-        // Return excess amount if threshold exceeded, otherwise 0
-        return newTotal > migrationThreshold ? newTotal - migrationThreshold : 0;
+        uint totalCollateralAfterBuy = currentCollateral + amountIn;
+
+        // Check if total would exceed threshold
+        if (totalCollateralAfterBuy > migrationThreshold) {
+            // Calculate how much can be validly bought before hitting threshold
+            validAmountIn = migrationThreshold > currentCollateral ? 
+                migrationThreshold - currentCollateral : 
+                0;
+            
+            // Remaining amount is excess
+            excessAmountIn = amountIn - validAmountIn;
+        } else {
+            // Entire amount is valid if under threshold
+            validAmountIn = amountIn;
+            excessAmountIn = 0;
+        }
     }
 }

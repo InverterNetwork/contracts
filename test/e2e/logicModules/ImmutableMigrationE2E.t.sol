@@ -50,12 +50,12 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
     uint initialPurchaseAmount = 0 ether;
 
     // Bonding Curve Parameters
-    uint initialIssuanceSupply = 122_727_272_727_272_727_272_727;
-    uint initialCollateralSupply = 3_163_408_614_166_851_161;
+    uint initialIssuanceSupply = 122_727 ether;
+    uint initialCollateralSupply = 3.1 ether;
     uint32 reserveRatio = 160_000;
 
     // Constants
-    uint constant COLLATERAL_MIGRATION_THRESHOLD = 1000e18;
+    uint constant COLLATERAL_MIGRATION_THRESHOLD = 100_000 ether;
     uint constant COLLATERAL_MIGRATION_AMOUNT = 1000e18;
     uint constant BUY_FROM_FUNDING_MANAGER_AMOUNT = 1000e18;
 
@@ -153,8 +153,6 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
                 break;
             } catch {}
         }
-
-        console.log("migrationModule: %s", address(migrationModule));
     }
 
     function test_buyForUpTo_BelowThreshold(uint amountIn) public {
@@ -190,7 +188,7 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
         amountIn = bound(
             amountIn,
             COLLATERAL_MIGRATION_THRESHOLD + 1,
-            10_000_000_000_000 ether
+            1_000_000_000_000 ether
         );
         mintAndApprove(amountIn);
 
@@ -198,11 +196,23 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
         emit IBondingCurveBase_v1.BuyingDisabled();
         migrationModule.buyForUpTo(amountIn, address(this));
 
-        // assertFalse(
-        //     FM_BC_Bancor_Redeeming_VirtualSupply_v1(address(orchestrator.fundingManager()))
-        //         .buyIsOpen(),
-        //     "Buying should be closed"
-        // );
+        assertFalse(
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1(address(orchestrator.fundingManager()))
+                .buyIsOpen(),
+            "Buying should be closed"
+        );
+
+        assertEq(
+            token.balanceOf(address(this)),
+            amountIn - COLLATERAL_MIGRATION_THRESHOLD + initialCollateralSupply,
+            "Excess collateral should be returned"
+        );
+
+        assertGt(
+            issuanceToken.balanceOf(address(this)),
+            0,
+            "Buyer should receive issuance tokens"
+        );
     }
 
     // // Test
