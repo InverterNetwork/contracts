@@ -955,7 +955,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         defaultStart = _defaultStart;
     }
 
-    /// @dev Sets the default cliff time for new payment orders  
+    /// @dev Sets the default cliff time for new payment orders
     /// @param _defaultCliff The new default cliff time
     function _setDefaultCliff(uint _defaultCliff) internal {
         defaultCliff = _defaultCliff;

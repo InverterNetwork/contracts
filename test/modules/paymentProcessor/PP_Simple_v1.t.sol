@@ -442,9 +442,7 @@ contract PP_SimpleV1Test is ModuleTest {
 
         vm.prank(sender);
 
-        assertEq(
-            paymentProcessor.exposed_validPaymentToken(randomToken), false
-        );
+        assertEq(paymentProcessor.exposed_validPaymentToken(randomToken), false);
 
         // ERC20 addresses are valid
         ERC20Mock actualToken = new ERC20Mock("Test", "TST");
