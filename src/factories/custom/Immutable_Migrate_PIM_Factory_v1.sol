@@ -13,6 +13,7 @@ import {IOrchestrator_v1} from
 import {IImmutable_Migrate_PIM_Factory_v1} from
     "src/factories/interfaces/IImmutable_Migrate_PIM_Factory_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
 // Bonding Curve Interfaces
 import {IBondingCurveBase_v1} from
@@ -138,10 +139,10 @@ contract Immutable_Migrate_PIM_Factory_v1 is
         // MODIFY AUTHORIZER CONFIG
         // decode configData of authorizer
         // set (own) factory as orchestrator admin
-        // reinterpret the `initialAdmin` field as the `initiator` address
+        // reinterpret the `initialAdmin` field as the `initialAdmin` address
         bytes memory authorizerConfigData = authorizerConfig.configData;
-        (address initiator) = abi.decode(authorizerConfigData, (address));
-        if (initiator == address(0)) {
+        (address initialAdmin) = abi.decode(authorizerConfigData, (address));
+        if (initialAdmin == address(0)) {
             revert
                 IImmutable_Migrate_PIM_Factory_v1
                 .PIM_WorkflowFactory__InvalidZeroAddress();
@@ -199,26 +200,31 @@ contract Immutable_Migrate_PIM_Factory_v1 is
         );
         _logicModule = address(logicModule);
 
+        // get the authorizer
+        IAuthorizer_v1 authorizer = IAuthorizer_v1(orchestrator.authorizer());
+
         // get collateral token
         IERC20 collateralToken = IERC20(collateralTokenAddress);
 
+        // grant owner role to initial admin
+        authorizer.grantRole(bytes32(0), initialAdmin);
         // enable bonding curve to mint issuance token and disable minting from factory
         issuanceToken.setMinter(_fundingManager, true);
         issuanceToken.setMinter(_logicModule, true);
         issuanceToken.setMinter(address(this), false);
 
         // if initial purchase amount is set (> 0) execute first purchase from curve
-        // recipient: initiator
+        // recipient: initial admin
         if (initialPurchaseAmount > 0) {
             collateralToken.transferFrom(
                 _msgSender(), address(this), initialPurchaseAmount
             );
             collateralToken.approve(_fundingManager, initialPurchaseAmount);
-            fundingManager.buyFor(initiator, initialPurchaseAmount, 1);
+            fundingManager.buyFor(initialAdmin, initialPurchaseAmount, 1);
         }
 
-        // set fee recipient (initiator)
-        _pimFeeRecipients[_fundingManager] = initiator;
+        // set fee recipient (initial admin)
+        _pimFeeRecipients[_fundingManager] = initialAdmin;
 
         // renounce token ownership
         issuanceToken.renounceOwnership();
