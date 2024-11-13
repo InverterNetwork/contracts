@@ -36,7 +36,8 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
-    bytes16 internal constant _START_END_CLIFF_FLAG = 0x0000000000000000000000000000000e;
+    bytes16 internal constant _START_END_CLIFF_FLAG =
+        0x0000000000000000000000000000000e;
     uint internal constant defaultStart = 69;
     uint internal constant defaultCliff = 13;
     uint internal constant defaultEnd = 420;
