@@ -16,6 +16,11 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 // Internal Dependencies
 import {Module_v1} from "../base/Module_v1.sol";
 
+// Uniswap
+
+// import {UniswapV2Factory} from "@univ2core/contracts/UniswapV2Factory.sol";
+// import {UniswapV2Router02} from "@univ2peri/contracts/UniswapV2Router02.sol";
+
 /**
  * @title   Immutable Migration Logic Module
  *
@@ -112,10 +117,10 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
         // Check if total would exceed threshold
         if (totalCollateralAfterBuy > migrationThreshold) {
             // Calculate how much can be validly bought before hitting threshold
-            validAmountIn = migrationThreshold > currentCollateral ? 
-                migrationThreshold - currentCollateral : 
-                0;
-            
+            validAmountIn = migrationThreshold > currentCollateral
+                ? migrationThreshold - currentCollateral
+                : 0;
+
             // Remaining amount is excess
             excessAmountIn = amountIn - validAmountIn;
         } else {
@@ -123,5 +128,11 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
             validAmountIn = amountIn;
             excessAmountIn = 0;
         }
+    }
+
+    function _graduate() internal {
+        // Get the UniswapV2 Router
+        // IUniswapV2Router router =
+        //     IUniswapV2Router(_currentMigration.dexRouterAddress);
     }
 }

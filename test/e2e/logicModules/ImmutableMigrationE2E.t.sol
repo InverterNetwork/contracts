@@ -20,6 +20,8 @@ import {IImmutable_PIM_Factory_v1} from
     "src/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
 
 // Uniswap Dependencies
+// import {UniswapV2Factory} from "@univ2core/contracts/UniswapV2Factory.sol";
+// import {UniswapV2Router02} from "@univ2peri/contracts/UniswapV2Router02.sol";
 
 // SuT
 import {
@@ -65,6 +67,11 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
     ERC20Issuance_v1 issuanceToken;
 
     function setUp() public override {
+        vm.createSelectFork(
+            "https://mainnet.infura.io/v3/f68c18ab72e848bf8a2f12e25d5b4097",
+            21_167_821
+        );
+
         super.setUp();
 
         // deploy new factory
@@ -197,8 +204,9 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
         migrationModule.buyForUpTo(amountIn, address(this));
 
         assertFalse(
-            FM_BC_Bancor_Redeeming_VirtualSupply_v1(address(orchestrator.fundingManager()))
-                .buyIsOpen(),
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+                address(orchestrator.fundingManager())
+            ).buyIsOpen(),
             "Buying should be closed"
         );
 

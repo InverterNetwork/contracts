@@ -8,3 +8,5 @@
 @lm/=src/modules/logicModule/
 @lm_pc/=src/modules/logicModule/paymentClient/
 @aut/=src/modules/authorizer/
+@univ2core/=lib/v2-core/contracts/
+@univ2peri/=lib/v2-periphery/contracts/
