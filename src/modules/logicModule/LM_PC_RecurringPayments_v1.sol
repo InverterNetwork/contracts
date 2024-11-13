@@ -139,10 +139,10 @@ contract LM_PC_RecurringPayments_v1 is
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
 
-        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
-        flags |= (1 << 0); // Set bit 0 for start
-        flags |= (1 << 1); // Set bit 1 for end
-        flags |= (1 << 2); // Set bit 2 for cliff
+        uint128 flags = 0;
+        flags |= (1 << 1); // start
+        flags |= (1 << 2); // cliff
+        flags |= (1 << 3); // end
         _flags = bytes16(flags);
 
         emit EpochLengthSet(newEpochLength);

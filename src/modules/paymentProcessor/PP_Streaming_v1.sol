@@ -107,7 +107,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     uint private defaultEnd;
 
     /// @dev	Storage gap for future upgrades.
-    uint[53] private __gap;
+    uint[47] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -937,15 +937,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     {
         uint dataIdx = 0;
 
-        bool hasStart = (uint128(flags) & (1 << 0)) != 0;
+        bool hasStart = (uint128(flags) & (1 << 1)) != 0;
         start = hasStart ? uint(data[dataIdx]) : defaultStart;
         if (hasStart) dataIdx += 1;
 
-        bool hasCliff = (uint128(flags) & (1 << 1)) != 0;
+        bool hasCliff = (uint128(flags) & (1 << 2)) != 0;
         cliff = hasCliff ? uint(data[dataIdx]) : defaultCliff;
         if (hasCliff) dataIdx += 1;
 
-        bool hasEnd = (uint128(flags) & (1 << 2)) != 0;
+        bool hasEnd = (uint128(flags) & (1 << 3)) != 0;
         end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
     }
 

@@ -956,8 +956,8 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             assertEq(orders[i].amount, claimAmount);
 
             // Decode start and end from flags and data
-            bool hasStart = (uint128(orders[i].flags) & (1 << 0)) != 0;
-            bool hasEnd = (uint128(orders[i].flags) & (1 << 1)) != 0;
+            bool hasStart = (uint128(orders[i].flags) & (1 << 1)) != 0;
+            bool hasEnd = (uint128(orders[i].flags) & (1 << 3)) != 0;
 
             if (hasStart) {
                 assertEq(uint(orders[i].data[0]), 0);

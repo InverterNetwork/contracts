@@ -296,8 +296,8 @@ contract PP_SimpleV1Test is ModuleTest {
 
         for (uint i = 0; i < recipients.length; i++) {
             uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
-            flags |= (1 << 0); // Set bit 0 for start
-            flags |= (1 << 1); // Set bit 1 for end
+            flags |= (1 << 1); // Set bit 0 for start
+            flags |= (1 << 3); // Set bit 3 for end
 
             bytes16 flagsBytes = bytes16(flags);
             bytes32[] memory data = new bytes32[](2);

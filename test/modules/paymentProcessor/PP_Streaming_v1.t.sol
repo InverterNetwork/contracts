@@ -36,8 +36,7 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
-    bytes16 internal constant _START_END_CLIFF_FLAG =
-        0x00000000000000000000000000000007;
+    bytes16 internal constant _START_END_CLIFF_FLAG = 0x0000000000000000000000000000000e;
     uint internal constant defaultStart = 69;
     uint internal constant defaultCliff = 13;
     uint internal constant defaultEnd = 420;
@@ -1952,15 +1951,15 @@ contract PP_StreamingV1Test is ModuleTest {
         bool hasEnd = false;
 
         uint8 numOnes = 0;
-        if ((uint128(flags) & (1 << 0)) != 0) {
+        if ((uint128(flags) & (1 << 1)) != 0) {
             hasStart = true;
             numOnes++;
         }
-        if ((uint128(flags) & (1 << 1)) != 0) {
+        if ((uint128(flags) & (1 << 2)) != 0) {
             hasCliff = true;
             numOnes++;
         }
-        if ((uint128(flags) & (1 << 2)) != 0) {
+        if ((uint128(flags) & (1 << 3)) != 0) {
             hasEnd = true;
             numOnes++;
         }
@@ -2054,7 +2053,7 @@ contract PP_StreamingV1Test is ModuleTest {
         view
         returns (IERC20PaymentClientBase_v1.PaymentOrder memory paymentOrder)
     {
-        bytes16 flagsBytes = bytes16(uint128(7));
+        bytes16 flagsBytes = 0x0000000000000000000000000000000e;
         bytes32[] memory data = new bytes32[](3);
         data[0] = bytes32(start);
         data[1] = bytes32(cliff);
