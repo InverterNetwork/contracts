@@ -24,6 +24,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     IBancorFormula public formula;
 
+    //--------------------------------------------------------------------------
+    // Override Functions
+
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
@@ -72,12 +75,14 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         return _depositAmount;
     }
 
-    function call_calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint)
+    uint public issueTokensFunctionCalled;
+
+    function _issueTokens(address _receiver, uint _amount)
+        internal
+        virtual
+        override
     {
-        return calculateSaleReturn(_depositAmount);
+        issueTokensFunctionCalled++;
     }
 
     function getStaticPriceForSelling()
@@ -96,6 +101,14 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     //--------------------------------------------------------------------------
     // Mock access for internal functions
+
+    function call_calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        returns (uint)
+    {
+        return calculateSaleReturn(_depositAmount);
+    }
 
     function call_BPS() external pure returns (uint) {
         return BPS;

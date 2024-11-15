@@ -63,6 +63,19 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
     {}
 
     //--------------------------------------------------------------------------
+    // Override Functions
+
+    uint public issueTokensFunctionCalled;
+
+    function _issueTokens(address _receiver, uint _amount)
+        internal
+        virtual
+        override
+    {
+        issueTokensFunctionCalled++;
+    }
+
+    //--------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_calculatePurchaseReturn(uint _depositAmount)

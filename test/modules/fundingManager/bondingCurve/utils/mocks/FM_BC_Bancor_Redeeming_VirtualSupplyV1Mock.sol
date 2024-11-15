@@ -24,6 +24,27 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
     //--------------------------------------------------------------------------
+    // Override Functions
+
+    uint public issueTokensFunctionCalled;
+
+    function _issueTokens(address _receiver, uint _amount)
+        internal
+        virtual
+        override
+    {
+        issueTokensFunctionCalled++;
+    }
+
+    function call_calculateSaleReturn(uint _depositAmount)
+        external
+        view
+        returns (uint)
+    {
+        return calculateSaleReturn(_depositAmount);
+    }
+
+    //--------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_BPS() external pure returns (uint) {
