@@ -598,13 +598,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @dev    Distributes issuance tokens by minting them to the receiver.
     /// @param  _receiver The address that will receive the bought tokens.
-    /// @param  issuanceMintAmount The amount of issuance tokens to distribute.
-    function _issueTokens(address _receiver, uint issuanceMintAmount)
-        internal
-        virtual
-        override
-    {
+    /// @param  _issuanceMintAmount The amount of issuance tokens to distribute.
+    function _issueTokens(
+        address _receiver,
+        uint _issuanceMintAmount //@todo test
+    ) internal virtual override {
         // Mint tokens to address
-        _mint(_receiver, issuanceMintAmount);
+        _mint(_receiver, _issuanceMintAmount);
     }
 }

@@ -108,6 +108,13 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         return decimalConvertedVirtualCollateralSupply;
     }
 
+    function call_issueTokens(address _receiver, uint _amount) external {
+        _issueTokens(_receiver, _amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Helper Functions
+
     function setProjectCollateralFeeCollectedHelper(uint _amount) external {
         projectCollateralFeeCollected = _amount;
     }

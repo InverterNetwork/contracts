@@ -232,7 +232,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(receiver), amount);
+        assertEq(bondingCurveFundingManager.issueTokensFunctionCalled(), 1);
     }
 
     /* Test buy and _buyOrder function
@@ -315,7 +315,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), amount);
+        assertEq(bondingCurveFundingManager.issueTokensFunctionCalled(), 1);
     }
 
     function test_buyOrder(
@@ -400,10 +400,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        (uint totalIssuanceTokenMinted, uint collateralFeeAmount) =
+        (, uint collateralFeeAmount) =
             bondingCurveFundingManager.call_buyOrder(buyer, amount, finalAmount);
 
-        assertEq(totalIssuanceTokenMinted, issuanceToken.totalSupply());
+        assertEq(issuanceToken.balanceOf(treasury), issuanceToken.totalSupply());
 
         assertEq(
             collateralFeeAmount,
@@ -416,7 +416,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
             (balanceBefore + amount - protocolCollateralFeeAmount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), finalAmount);
+
+        assertEq(bondingCurveFundingManager.issueTokensFunctionCalled(), 1);
     }
 
     /* Test _getBuyFeesAndTreasuryAddresses() function

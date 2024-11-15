@@ -1800,6 +1800,31 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualIssuanceSupply(virtualSupply);
     }
 
+    // -------------------------------------------------------------------------
+    // Internal Functions
+
+    /*
+    Test: _issueTokens
+    └── When: the function init is called
+        └── Then: it should mint the correct amount of tokens to the receiver address
+    */
+
+    function test_issueTokens(address _receiver, uint _issuanceMintAmount)
+        public
+    {
+        // Setup
+        vm.assume(_receiver != address(0));
+        vm.assume(_issuanceMintAmount > 0);
+
+        // Execute
+        bondingCurveFundingManager.call_issueTokens(
+            _receiver, _issuanceMintAmount
+        );
+
+        // Assert
+        assertEq(issuanceToken.balanceOf(_receiver), _issuanceMintAmount);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
