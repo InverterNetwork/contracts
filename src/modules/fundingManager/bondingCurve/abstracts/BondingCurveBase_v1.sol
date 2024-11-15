@@ -289,13 +289,22 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         if (issuanceMintAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
-        // Mint tokens to address
-        _mint(_receiver, issuanceMintAmount);
+
+        // Use abstract function to distribute issuance tokens
+        _issueTokens(_receiver, issuanceMintAmount);
+
         // Emit event
         emit TokensBought(
             _receiver, _depositAmount, issuanceMintAmount, _msgSender()
         );
     }
+
+    /// @dev    Abstract function to distribute issuance tokens.
+    /// @param  _receiver The address that will receive the bought tokens.
+    /// @param  issuanceMintAmount The amount of issuance tokens to distribute.
+    function _issueTokens(address _receiver, uint issuanceMintAmount)
+        internal
+        virtual;
 
     /// @dev	Sets the buy transaction fee, expressed in BPS.
     /// @param  _fee The fee percentage to set for buy transactions.
