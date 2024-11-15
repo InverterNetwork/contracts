@@ -291,7 +291,9 @@ contract ModuleFactory_v1 is
     ///         nonce is an increasing number for each user.
     function _createSalt() internal returns (bytes32) {
         return keccak256(
-            abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
+            abi.encodePacked(
+                _msgSender(), block.chainid, _deploymentNonces[_msgSender()]++
+            )
         );
     }
 
