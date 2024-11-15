@@ -26,15 +26,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     //--------------------------------------------------------------------------
     // Override Functions
 
-    uint public issueTokensFunctionCalled;
-
-    function _issueTokens(address _receiver, uint _amount)
-        internal
-        virtual
-        override
-    {
-        issueTokensFunctionCalled++;
-    }
+    //--------------------------------------------------------------------------
+    // Mock access for internal functions
 
     function call_calculateSaleReturn(uint _depositAmount)
         external
@@ -43,9 +36,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     {
         return calculateSaleReturn(_depositAmount);
     }
-
-    //--------------------------------------------------------------------------
-    // Mock access for internal functions
 
     function call_BPS() external pure returns (uint) {
         return BPS;
