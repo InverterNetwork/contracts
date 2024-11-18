@@ -12,6 +12,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IDexAdapter_v1} from "./interfaces/IDexAdapter_v1.sol";
 
 // Internal Dependencies
 import {Module_v1} from "../base/Module_v1.sol";
@@ -33,8 +34,12 @@ import {Module_v1} from "../base/Module_v1.sol";
  * @author  Inverter Network
  */
 contract LM_ImmutableMigration_v1 is Module_v1 {
+    /// @notice The initial virtual issuance supply of the funding manager
+    uint public initialVirtualIssuanceSupply;
     /// @notice The threshold for the migration to be triggered
     uint public migrationThreshold;
+    /// @notice Address of the DEX adapter.
+    IDexAdapter_v1 public dexAdapter;
 
     /// @inheritdoc Module_v1
     function init(
@@ -43,7 +48,16 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
         bytes memory configData
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
-        migrationThreshold = abi.decode(configData, (uint));
+        (uint threshold, address dexAdapterAddress) =
+            abi.decode(configData, (uint, address));
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+            address(__Module_orchestrator.fundingManager())
+        );
+        initialVirtualIssuanceSupply = fundingManager.getVirtualIssuanceSupply();
+        migrationThreshold =
+            threshold - fundingManager.getVirtualCollateralSupply();
+        dexAdapter = IDexAdapter_v1(dexAdapterAddress);
     }
 
     /// @inheritdoc Module_v1
@@ -131,8 +145,13 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
     }
 
     function _graduate() internal {
-        // Get the UniswapV2 Router
-        // IUniswapV2Router router =
-        //     IUniswapV2Router(_currentMigration.dexRouterAddress);
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+            address(__Module_orchestrator.fundingManager())
+        );
+
+        fundingManager.transferOrchestratorToken(
+            address(this), migrationThreshold
+        );
     }
 }
