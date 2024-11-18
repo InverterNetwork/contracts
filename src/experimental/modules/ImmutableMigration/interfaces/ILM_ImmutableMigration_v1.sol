@@ -4,4 +4,6 @@ pragma solidity ^0.8.0;
 import {IERC20PaymentClientBase_v1} from
     "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
-interface ILM_ImmutableMigration_v1 is IERC20PaymentClientBase_v1 {}
+interface ILM_ImmutableMigration_v1 {
+    function buyForUpTo(uint amountIn, address recipient) external;
+}

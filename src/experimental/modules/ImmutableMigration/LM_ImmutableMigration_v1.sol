@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -46,7 +44,10 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-contract LM_ImmutableMigration_v1 is ERC20PaymentClientBase_v1 {
+contract LM_ImmutableMigration_v1 is
+    ILM_ImmutableMigration_v1,
+    ERC20PaymentClientBase_v1
+{
     /// @notice The initial virtual issuance supply of the funding manager
     uint public initialVirtualIssuanceSupply;
     uint public initialVirtualCollateralSupply;
@@ -123,9 +124,6 @@ contract LM_ImmutableMigration_v1 is ERC20PaymentClientBase_v1 {
             collateralToken.transfer(_msgSender(), excessAmountIn);
         }
 
-        console.log(collateralToken.balanceOf(fundingManager));
-        console.log(migrationThreshold);
-
         // If threshold has been reached, close curve and initiate graduation
         if (
             collateralToken.balanceOf(fundingManager)
@@ -149,17 +147,13 @@ contract LM_ImmutableMigration_v1 is ERC20PaymentClientBase_v1 {
         FM_BC_Bancor_Redeeming_VirtualSupply_v1(
             address(__Module_orchestrator.fundingManager())
         );
-        IERC20 collateralToken = fundingManager.token();
 
-        // Get current virtual collateral supply
+        // Get virtual collateral supply before and after buy
         uint currentCollateral = fundingManager.getVirtualCollateralSupply();
-
-        console.log("currentCollateral", currentCollateral);
-
-        uint totalCollateralAfterBuy = currentCollateral + amountIn;
+        uint collateralAfterBuy = currentCollateral + amountIn;
 
         // Check if total would exceed threshold
-        if (totalCollateralAfterBuy > migrationThreshold) {
+        if (collateralAfterBuy > migrationThreshold) {
             // Calculate how much can be validly bought before hitting threshold
             validAmountIn = migrationThreshold > currentCollateral
                 ? migrationThreshold - currentCollateral
@@ -191,7 +185,9 @@ contract LM_ImmutableMigration_v1 is ERC20PaymentClientBase_v1 {
 
         // Mint initial liquidity to dex adapter
         issuanceToken.mint(
-            address(dexAdapter), fundingManager.getVirtualIssuanceSupply()
+            address(dexAdapter),
+            fundingManager.getVirtualIssuanceSupply()
+                - initialVirtualIssuanceSupply
         );
 
         // Call migration on adapter

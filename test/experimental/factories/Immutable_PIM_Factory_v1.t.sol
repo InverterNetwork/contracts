@@ -92,7 +92,7 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
                 LM_ImmutableMigration_v1Metadata,
-                abi.encode(COLLATERAL_MIGRATION_THRESHOLD)
+                abi.encode(COLLATERAL_MIGRATION_THRESHOLD, address(420))
             )
         );
 
@@ -200,7 +200,7 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         for (uint i = 0; i < modules.length; i++) {
             try LM_ImmutableMigration_v1(modules[i]).migrationThreshold()
             returns (uint threshold) {
-                if (threshold == COLLATERAL_MIGRATION_THRESHOLD) {
+                if (threshold == COLLATERAL_MIGRATION_THRESHOLD + initialCollateralSupply) {
                     migrationModule = modules[i];
                     break;
                 }

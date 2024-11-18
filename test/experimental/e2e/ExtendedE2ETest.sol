@@ -58,5 +58,10 @@ contract ExtendedE2ETest is E2ETest {
             LM_ImmutableMigration_v1Metadata,
             IInverterBeacon_v1(LM_ImmutableMigration_v1Beacon)
         );
+
+        console.log(
+            "LM_ImmutableMigration_v1Beacon",
+            address(LM_ImmutableMigration_v1Beacon)
+        );
     }
 }
