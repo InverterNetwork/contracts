@@ -12,10 +12,23 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IDexAdapter_v1} from "./interfaces/IDexAdapter_v1.sol";
+import {IDexAdapter_v1} from
+    "src/experimental/modules/ImmutableMigration/interfaces/IDexAdapter_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
+import {IERC20PaymentClientBase_v1} from
+    "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+import {ILM_ImmutableMigration_v1} from
+    "./interfaces/ILM_ImmutableMigration_v1.sol";
 
 // Internal Dependencies
-import {Module_v1} from "../base/Module_v1.sol";
+import {
+    ERC20PaymentClientBase_v1,
+    Module_v1
+} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+
+// External Dependencies
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Uniswap
 
@@ -33,9 +46,10 @@ import {Module_v1} from "../base/Module_v1.sol";
  *
  * @author  Inverter Network
  */
-contract LM_ImmutableMigration_v1 is Module_v1 {
+contract LM_ImmutableMigration_v1 is ERC20PaymentClientBase_v1 {
     /// @notice The initial virtual issuance supply of the funding manager
     uint public initialVirtualIssuanceSupply;
+    uint public initialVirtualCollateralSupply;
     /// @notice The threshold for the migration to be triggered
     uint public migrationThreshold;
     /// @notice Address of the DEX adapter.
@@ -55,20 +69,23 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
             address(__Module_orchestrator.fundingManager())
         );
         initialVirtualIssuanceSupply = fundingManager.getVirtualIssuanceSupply();
+        initialVirtualCollateralSupply =
+            fundingManager.getVirtualCollateralSupply();
         migrationThreshold =
-            threshold - fundingManager.getVirtualCollateralSupply();
+            threshold + fundingManager.getVirtualCollateralSupply();
         dexAdapter = IDexAdapter_v1(dexAdapterAddress);
     }
 
-    /// @inheritdoc Module_v1
+    /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(Module_v1)
+        override(ERC20PaymentClientBase_v1)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return interfaceId == type(ILM_ImmutableMigration_v1).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     /// @dev Storage gap for future upgrades
@@ -89,23 +106,36 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
         // Approve funding manager to spend collateral tokens
         collateralToken.approve(fundingManager, amountIn);
 
-        // Check if buy would exceed threshold
+        // Check if buy would exceed threshold by calculating how much of amountIn
+        // is valid (can be used for buying) and how much is excess (is reimbursed)
         (uint excessAmountIn, uint validAmountIn) =
             _checkBuyExceedsThreshold(amountIn);
 
+        // Use valid amount to buy from curve
         if (validAmountIn > 0) {
-            console.log("Buying valid amount");
-            // Buy valid amount for recipient
             IBondingCurveBase_v1(fundingManager).buyFor(
                 recipient, validAmountIn, 1
             );
         }
 
+        // Reimburse potential
         if (excessAmountIn > 0) {
-            console.log("Returning excess amount");
             collateralToken.transfer(_msgSender(), excessAmountIn);
+        }
+
+        console.log(collateralToken.balanceOf(fundingManager));
+        console.log(migrationThreshold);
+
+        // If threshold has been reached, close curve and initiate graduation
+        if (
+            collateralToken.balanceOf(fundingManager)
+                == migrationThreshold - initialVirtualCollateralSupply
+        ) {
             // Close buying on the funding manager
             IBondingCurveBase_v1(fundingManager).closeBuy();
+
+            // Initiate graduation
+            _graduate();
         }
     }
 
@@ -149,9 +179,24 @@ contract LM_ImmutableMigration_v1 is Module_v1 {
         FM_BC_Bancor_Redeeming_VirtualSupply_v1(
             address(__Module_orchestrator.fundingManager())
         );
+        IERC20 collateralToken = fundingManager.token();
+        IERC20Issuance_v1 issuanceToken =
+            IERC20Issuance_v1(fundingManager.getIssuanceToken());
 
+        // Transfer collateral reserve into adapter
         fundingManager.transferOrchestratorToken(
-            address(this), migrationThreshold
+            address(dexAdapter),
+            collateralToken.balanceOf(address(fundingManager))
+        );
+
+        // Mint initial liquidity to dex adapter
+        issuanceToken.mint(
+            address(dexAdapter), fundingManager.getVirtualIssuanceSupply()
+        );
+
+        // Call migration on adapter
+        dexAdapter.createLiquidity(
+            address(collateralToken), address(issuanceToken), address(this)
         );
     }
 }

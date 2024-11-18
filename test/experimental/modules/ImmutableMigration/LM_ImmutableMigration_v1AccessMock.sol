@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {LM_ImmutableMigration_v1} from "@lm/LM_ImmutableMigration_v1.sol";
+import {LM_ImmutableMigration_v1} from
+    "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
 
 contract LM_ImmutableMigration_v1AccessMock is LM_ImmutableMigration_v1 {
     //--------------------------------------------------------------------------

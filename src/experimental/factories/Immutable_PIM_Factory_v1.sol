@@ -12,14 +12,14 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IImmutable_PIM_Factory_v1} from
-    "src/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
+import {IImmutable_PIM_Factory_v1} from
+    "src/experimental/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
 import {LM_ImmutableMigration_v1} from
-    "src/modules/logicModule/LM_ImmutableMigration_v1.sol";
+    "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
 
 // Internal Implementations
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
@@ -128,9 +128,6 @@ contract Immutable_PIM_Factory_v1 is
             );
         }
 
-        // renounce token ownership
-        issuanceToken.renounceOwnership();
-
         // After orchestrator deployment, find migration module and grant admin role
         address[] memory modules = orchestrator.listModules();
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
@@ -140,9 +137,13 @@ contract Immutable_PIM_Factory_v1 is
             try LM_ImmutableMigration_v1(modules[i]).migrationThreshold()
             returns (uint) {
                 orchestrator.authorizer().grantRole(adminRole, modules[i]);
+                issuanceToken.setMinter(modules[i], true);
                 break;
             } catch {}
         }
+
+        // renounce token ownership
+        issuanceToken.renounceOwnership();
 
         emit IImmutable_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator), address(issuanceToken), _msgSender()

@@ -10,24 +10,24 @@ import {IOrchestrator_v1} from
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IImmutable_PIM_Factory_v1} from
-    "src/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
+    "src/experimental/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {Immutable_PIM_Factory_v1} from
-    "src/factories/custom/Immutable_PIM_Factory_v1.sol";
-import {E2ETest} from "test/e2e/E2ETest.sol";
+    "src/experimental/factories/Immutable_PIM_Factory_v1.sol";
+import {ExtendedE2ETest} from "test/experimental/e2e/ExtendedE2ETest.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {LM_ImmutableMigration_v1} from
-    "src/modules/logicModule/LM_ImmutableMigration_v1.sol";
+    "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
 
-contract Immutable_PIM_Factory_v1Test is E2ETest {
+contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
     // SuT
     Immutable_PIM_Factory_v1 factory;
 

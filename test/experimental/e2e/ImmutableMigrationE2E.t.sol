@@ -7,17 +7,20 @@ import "forge-std/Vm.sol"; // Add this import statement
 // Internal Dependencies
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {
-    E2ETest,
     IOrchestratorFactory_v1,
-    IOrchestrator_v1
+    IOrchestrator_v1,
+    E2ETest
 } from "test/e2e/E2ETest.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+
+// Experimental Dependencies
+import {ExtendedE2ETest} from "test/experimental/e2e/ExtendedE2ETest.sol";
 import {Immutable_PIM_Factory_v1} from
-    "src/factories/custom/Immutable_PIM_Factory_v1.sol";
+    "src/experimental/factories/Immutable_PIM_Factory_v1.sol";
 import {IImmutable_PIM_Factory_v1} from
-    "src/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
+    "src/experimental/factories/interfaces/IImmutable_PIM_Factory_v1.sol";
 
 // Uniswap Dependencies
 import {IUniswapV2Factory} from "@univ2core/interfaces/IUniswapV2Factory.sol";
@@ -29,19 +32,19 @@ import {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {LM_ImmutableMigration_v1} from
-    "src/modules/logicModule/LM_ImmutableMigration_v1.sol";
+    "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {UniswapV2Adapter} from
-    "src/modules/logicModule/adapters/UniswapV2Adapter.sol";
+    "src/experimental/modules/ImmutableMigration/UniswapV2Adapter.sol";
 import {IDexAdapter_v1} from
-    "src/modules/logicModule/interfaces/IDexAdapter_v1.sol";
+    "src/experimental/modules/ImmutableMigration/interfaces/IDexAdapter_v1.sol";
 
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract LM_ImmutableMigration_v1E2E is E2ETest {
+contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
     // Immutable PIM Factory
     Immutable_PIM_Factory_v1 factory;
 
@@ -66,8 +69,8 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
     uint constant BUY_FROM_FUNDING_MANAGER_AMOUNT = 1000e18;
 
     // Uniswap addresses
-    address uniswapFactoryAddress = address(420);
-    address uniswapRouterAddress = address(69);
+    address uniswapFactoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+    address uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
     // Contracts
     IOrchestrator_v1 orchestrator;
@@ -123,8 +126,10 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
             abi.encode(address(0), bcProperties, token)
         );
 
-        // Logic Module: Immutable Migration
+        // Deploy Uniswap Contracts and Adapter
         address adapter = deployUniswapAdapter();
+
+        // Logic Module: Immutable Migration
         setUpLM_ImmutableMigration_v1();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
@@ -216,14 +221,11 @@ contract LM_ImmutableMigration_v1E2E is E2ETest {
             ).buyIsOpen(),
             "Buying should be closed"
         );
-
-
         assertEq(
             token.balanceOf(address(this)),
-            amountIn - COLLATERAL_MIGRATION_THRESHOLD - initialCollateralSupply,
-            "Excess collateral should be returned"
+            amountIn - COLLATERAL_MIGRATION_THRESHOLD,
+            "Buyer should be reimbursed the excess payment"
         );
-
         assertGt(
             issuanceToken.balanceOf(address(this)),
             0,
