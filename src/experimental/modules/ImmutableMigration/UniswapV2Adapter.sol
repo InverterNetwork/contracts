@@ -36,14 +36,7 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
         override
         returns (uint liquidity)
     {
-        // Create the pair if it doesn't exist
-        // if (factory.getPair(tokenA, tokenB) == address(0)) {
-        // }
-
-        console.log("creating pair");
         factory.createPair(tokenA, tokenB);
-
-        console.log("pair: ", factory.getPair(tokenA, tokenB));
 
         uint amountA = IERC20(tokenA).balanceOf(address(this));
         uint amountB = IERC20(tokenB).balanceOf(address(this));
@@ -62,8 +55,6 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
             to,
             block.timestamp + 10 minutes
         );
-
-        console.log("liquidity: ", liquidity);
     }
 
     //     function createPoolAndAddLiquidity(
