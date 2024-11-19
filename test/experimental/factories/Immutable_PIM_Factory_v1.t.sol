@@ -169,19 +169,38 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         address fundingManager = address(orchestrator.fundingManager());
 
         // CHECK: factory DOES NOT have minting rights on token anymore
-        assertFalse(issuanceToken.allowedMinters(address(factory)));
+        assertFalse(
+            issuanceToken.allowedMinters(address(factory)),
+            "Factory should not have minting rights on token"
+        );
         // CHECK: bonding curve module HAS minting rights on token
-        assertTrue(issuanceToken.allowedMinters(fundingManager));
+        assertTrue(
+            issuanceToken.allowedMinters(fundingManager),
+            "Bonding curve module should have minting rights on token"
+        );
         // CHECK: issuance token is renounced
-        assertEq(issuanceToken.owner(), address(0));
+        assertEq(
+            issuanceToken.owner(),
+            address(0),
+            "Issuance token should be renounced"
+        );
         // CHECK: factory HAS admin rights over workflow
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
         assertTrue(
-            orchestrator.authorizer().hasRole(adminRole, address(factory))
+            orchestrator.authorizer().hasRole(adminRole, address(factory)),
+            "Factory should have admin rights over workflow"
         );
         // CHECK: initial purchase was executed
-        assertGt(issuanceToken.balanceOf(workflowAdmin), 0);
-        assertEq(token.balanceOf(fundingManager), initialPurchaseAmount);
+        assertGt(
+            issuanceToken.balanceOf(workflowAdmin),
+            0,
+            "Workflow admin should have received issuance tokens"
+        );
+        assertEq(
+            token.balanceOf(fundingManager),
+            initialPurchaseAmount,
+            "Bonding curve module should have received collateral tokens"
+        );
 
         // CHECK: migration module has admin role
         assertMigrationModuleHasAdminRole(orchestrator);
@@ -200,7 +219,10 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         for (uint i = 0; i < modules.length; i++) {
             try LM_ImmutableMigration_v1(modules[i]).migrationThreshold()
             returns (uint threshold) {
-                if (threshold == COLLATERAL_MIGRATION_THRESHOLD + initialCollateralSupply) {
+                if (
+                    threshold
+                        == COLLATERAL_MIGRATION_THRESHOLD + initialCollateralSupply
+                ) {
                     migrationModule = modules[i];
                     break;
                 }

@@ -113,7 +113,6 @@ contract Immutable_PIM_Factory_v1 is
         address fundingManager = address(orchestrator.fundingManager());
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
-        issuanceToken.setMinter(address(this), false);
 
         // if initial purchase amount set execute first purchase from curve
         if (initialPurchaseAmount > 0) {
@@ -142,6 +141,8 @@ contract Immutable_PIM_Factory_v1 is
             } catch {}
         }
 
+        // remove factory as minter
+        issuanceToken.setMinter(address(this), false);
         // renounce token ownership
         issuanceToken.renounceOwnership();
 

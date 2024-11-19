@@ -33,7 +33,6 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
 
     function createLiquidity(address tokenA, address tokenB, address to)
         external
-        override
         returns (uint liquidity)
     {
         factory.createPair(tokenA, tokenB);
@@ -45,7 +44,7 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
         IERC20(tokenB).approve(address(router), amountB);
 
         // Add liquidity through the router
-        (,, liquidity) = router.addLiquidity(
+        router.addLiquidity(
             tokenA,
             tokenB,
             amountA,
@@ -56,33 +55,4 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
             block.timestamp + 10 minutes
         );
     }
-
-    //     function createPoolAndAddLiquidity(
-    //     address tokenA,
-    //     address tokenB,
-    //     uint amountADesired,
-    //     uint amountBDesired,
-    //     uint amountAMin,
-    //     uint amountBMin,
-    //     address to
-    // ) external override returns (uint liquidity) {
-    //     // Create the pair if it doesn't exist
-    //     if (factory.getPair(tokenA, tokenB) == address(0)) {
-    //         factory.createPair(tokenA, tokenB);
-    //     }
-
-    //     //
-
-    //     // Add liquidity through the router
-    //     (,, liquidity) = router.addLiquidity(
-    //         tokenA,
-    //         tokenB,
-    //         amountADesired,
-    //         amountBDesired,
-    //         amountAMin,
-    //         amountBMin,
-    //         to,
-    //         block.timestamp
-    //     );
-    // }
 }

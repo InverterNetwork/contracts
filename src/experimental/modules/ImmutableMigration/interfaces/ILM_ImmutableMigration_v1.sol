@@ -5,5 +5,6 @@ import {IERC20PaymentClientBase_v1} from
     "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 
 interface ILM_ImmutableMigration_v1 {
-    function buyForUpTo(uint amountIn, address recipient) external;
+    function buyForUpTo(address recipient, uint amountIn, uint minAmountOut)
+        external;
 }

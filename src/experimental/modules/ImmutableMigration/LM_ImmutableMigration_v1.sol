@@ -6,6 +6,8 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
@@ -97,7 +99,9 @@ contract LM_ImmutableMigration_v1 is
      * @param amountIn The maximum amount of collateral tokens to spend
      * @param recipient The address to receive the purchased tokens
      */
-    function buyForUpTo(uint amountIn, address recipient) external {
+    function buyForUpTo(address recipient, uint amountIn, uint minAmountOut)
+        external
+    {
         address fundingManager = address(__Module_orchestrator.fundingManager());
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
@@ -115,7 +119,7 @@ contract LM_ImmutableMigration_v1 is
         // Use valid amount to buy from curve
         if (validAmountIn > 0) {
             IBondingCurveBase_v1(fundingManager).buyFor(
-                recipient, validAmountIn, 1
+                recipient, validAmountIn, minAmountOut
             );
         }
 
@@ -129,12 +133,33 @@ contract LM_ImmutableMigration_v1 is
             collateralToken.balanceOf(fundingManager)
                 == migrationThreshold - initialVirtualCollateralSupply
         ) {
-            // Close buying on the funding manager
+            // Close buying & selling on the funding manager
             IBondingCurveBase_v1(fundingManager).closeBuy();
+            IRedeemingBondingCurveBase_v1(fundingManager).closeSell();
 
             // Initiate graduation
             _graduate();
         }
+    }
+
+    function sellFor(address recipient, uint amountIn, uint minAmountOut)
+        external
+    {
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+            address(__Module_orchestrator.fundingManager())
+        );
+        IERC20Issuance_v1 issuanceToken =
+            IERC20Issuance_v1(fundingManager.getIssuanceToken());
+
+        // Transfer issuance tokens from sender to this contract
+        issuanceToken.transferFrom(msg.sender, address(this), amountIn);
+
+        // Approve funding manager to spend issuance token
+        issuanceToken.approve(address(fundingManager), amountIn);
+
+        // Make sell order
+        fundingManager.sellTo(recipient, amountIn, minAmountOut);
     }
 
     function _checkBuyExceedsThreshold(uint amountIn)

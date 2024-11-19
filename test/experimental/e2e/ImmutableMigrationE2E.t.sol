@@ -178,7 +178,7 @@ contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
         if (amountIn == 0) return;
 
         // Bound input to range below threshold
-        amountIn = bound(amountIn, 1, COLLATERAL_MIGRATION_THRESHOLD - 1);
+        amountIn = bound(amountIn, 1 ether, COLLATERAL_MIGRATION_THRESHOLD - 1);
 
         mintAndApprove(amountIn);
 
@@ -187,7 +187,7 @@ contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
         uint buyerIssuanceBalanceBefore = issuanceToken.balanceOf(address(this));
 
         // Execute buy
-        migrationModule.buyForUpTo(amountIn, address(this));
+        migrationModule.buyForUpTo(address(this), amountIn, 1);
 
         // Verify balances changed correctly
         assertLt(
@@ -213,13 +213,19 @@ contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
 
         vm.expectEmit(true, true, true, true);
         emit IBondingCurveBase_v1.BuyingDisabled();
-        migrationModule.buyForUpTo(amountIn, address(this));
+        migrationModule.buyForUpTo(address(this), amountIn, 1);
 
         assertFalse(
             FM_BC_Bancor_Redeeming_VirtualSupply_v1(
                 address(orchestrator.fundingManager())
             ).buyIsOpen(),
             "Buying should be closed"
+        );
+        assertFalse(
+            FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+                address(orchestrator.fundingManager())
+            ).sellIsOpen(),
+            "Selling should be closed"
         );
         assertEq(
             token.balanceOf(address(this)),
@@ -233,131 +239,37 @@ contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
         );
     }
 
-    // // Test
-    // function test_e2e_MigrateLiquidityLifecycle() public {
-    //     //--------------------------------------------------------------------------
-    //     // Orchestrator Initialization
-    //     //--------------------------------------------------------------------------
+    function test_sellFor(uint amountIn) public {
+        // Bound input to range below threshold
+        amountIn = bound(amountIn, 1 ether, COLLATERAL_MIGRATION_THRESHOLD - 1);
+        mintAndApprove(amountIn);
 
-    //     // Set WorkflowConfig
-    //     IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
-    //     IOrchestratorFactory_v1.WorkflowConfig({
-    //         independentUpdates: false,
-    //         independentUpdateAdmin: address(0)
-    //     });
+        assertEq(
+            issuanceToken.balanceOf(address(this)),
+            0,
+            "Buyer should not hold issuance tokens initially"
+        );
 
-    //     // Set Orchestrator
-    //     IOrchestrator_v1 orchestrator =
-    //         _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
+        migrationModule.buyForUpTo(address(this), amountIn, 1);
 
-    //     // Set FundingManager
-    //     FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-    //     FM_BC_Bancor_Redeeming_VirtualSupply_v1(
-    //         address(orchestrator.fundingManager())
-    //     );
+        uint issuanceBalanceBeforeSale = issuanceToken.balanceOf(address(this));
+        assertGt(
+            issuanceBalanceBeforeSale,
+            0,
+            "Buyer should have received issuance tokens"
+        );
+        issuanceToken.approve(
+            address(migrationModule), issuanceBalanceBeforeSale
+        );
 
-    //     // Find and Set Migration Manager
-    //     LM_PC_MigrateLiquidity_UniswapV2_v1 migrationManager;
-    //     address[] memory modulesList = orchestrator.listModules();
-    //     for (uint i; i < modulesList.length; ++i) {
-    //         if (
-    //             ERC165Upgradeable(modulesList[i]).supportsInterface(
-    //                 type(ILM_PC_MigrateLiquidity_UniswapV2_v1).interfaceId
-    //             )
-    //         ) {
-    //             migrationManager =
-    //                 LM_PC_MigrateLiquidity_UniswapV2_v1(modulesList[i]);
-    //             break;
-    //         }
-    //     }
-
-    //     // Test Lifecycle
-    //     //--------------------------------------------------------------------------
-
-    //     // 1. Set FundingManager as Minter
-    //     issuanceToken.setMinter(address(fundingManager), true);
-
-    //     // 1.1. Set Migration Manager As Minter
-    //     issuanceToken.setMinter(address(migrationManager), true);
-
-    //     // 2. Mint Collateral To Buy From the FundingManager
-    //     token.mint(address(this), BUY_FROM_FUNDING_MANAGER_AMOUNT);
-
-    //     // 3. Calculate Minimum Amount Out
-    //     uint buf_minAmountOut = fundingManager.calculatePurchaseReturn(
-    //         BUY_FROM_FUNDING_MANAGER_AMOUNT
-    //     ); // buffer variable to store the minimum amount out on calls to the buy and sell functions
-
-    //     // 4. Buy from the FundingManager
-    //     vm.startPrank(address(this));
-    //     {
-    //         // 4.1. Approve tokens to fundingManager.
-    //         token.approve(
-    //             address(fundingManager), BUY_FROM_FUNDING_MANAGER_AMOUNT
-    //         );
-    //         // 4.2. Deposit tokens, i.e. fund the fundingmanager.
-    //         fundingManager.buy(
-    //             BUY_FROM_FUNDING_MANAGER_AMOUNT, buf_minAmountOut
-    //         );
-    //         // 4.3. After the deposit, check that the user has received them
-    //         assertTrue(
-    //             issuanceToken.balanceOf(address(this)) > 0,
-    //             "User should have received issuance tokens after deposit"
-    //         );
-    //     }
-    //     vm.stopPrank();
-
-    //     // 5. Check no pool exists yet
-    //     address lpTokenAddress =
-    //         uniswapFactory.getPair(address(token), address(issuanceToken));
-
-    //     assertEq(lpTokenAddress, address(0), "Pool should not exist yet");
-
-    //     // 6. Set migration manager instance
-    //     ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationConfig memory
-    //         migration = migrationManager.getMigrationConfig();
-
-    //     ILM_PC_MigrateLiquidity_UniswapV2_v1.LiquidityMigrationResult memory
-    //         migrationResult;
-
-    //     // 7. Execute migration
-    //     vm.startPrank(address(this));
-    //     migrationResult = migrationManager.executeMigration();
-    //     vm.stopPrank();
-
-    //     bool executed = migrationManager.getExecuted();
-
-    //     // 8. Verify pool creation and liquidity
-    //     lpTokenAddress =
-    //         uniswapFactory.getPair(address(token), address(issuanceToken));
-    //     assertTrue(lpTokenAddress != address(0), "Pool should exist");
-
-    //     // 9.1. Get pair
-    //     IUniswapV2Pair pair = IUniswapV2Pair(lpTokenAddress);
-
-    //     // 9.2. Get reserves
-    //     (uint112 reserve0, uint112 reserve1,) = pair.getReserves();
-
-    //     // 9.3. Verify reserves based on token ordering
-    //     if (pair.token0() == address(token)) {
-    //         assertGt(reserve0, 0, "Token reserves should be positive");
-    //         assertGt(reserve1, 0, "IssuanceToken reserves should be positive");
-    //     } else {
-    //         assertGt(reserve0, 0, "IssuanceToken reserves should be positive");
-    //         assertGt(reserve1, 0, "Token reserves should be positive");
-    //     }
-
-    //     // 10. Verify migration completion
-    //     migration = migrationManager.getMigrationConfig();
-    //     assertTrue(executed, "Migration should be marked as executed");
-
-    //     // 11. Verify LP tokens are received by the migration manager
-    //     assertGt(
-    //         IERC20(migrationResult.lpTokenAddress).balanceOf(address(this)),
-    //         0,
-    //         "Script should have received LP tokens"
-    //     );
-    // }
+        migrationModule.sellFor(address(this), issuanceBalanceBeforeSale, 1);
+        uint issuanceBalanceAfterSale = issuanceToken.balanceOf(address(this));
+        assertEq(
+            issuanceBalanceAfterSale,
+            0,
+            "Buyer should not hold issuance tokens after sale"
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Custom Assertions
