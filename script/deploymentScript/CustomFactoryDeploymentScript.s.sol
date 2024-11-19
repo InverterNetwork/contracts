@@ -5,6 +5,8 @@ import "forge-std/Script.sol";
 
 import {Restricted_PIM_Factory_v1} from
     "src/factories/custom/Restricted_PIM_Factory_v1.sol";
+import {Immutable_PIM_Factory_v1} from
+    "src/experimental/factories/Immutable_PIM_Factory_v1.sol";
 
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 
@@ -61,6 +63,17 @@ contract CustomFactoryDeploymentScript is Script {
                     "\tRestricted_PIM_Factory_v1: %s",
                     address(
                         new Restricted_PIM_Factory_v1(
+                            orchestratorFactory, trustedForwarder
+                        )
+                    )
+                );
+            }
+        } else if (_isEqual(factoryType_, "IMMUTABLE")) {
+            {
+                console2.log(
+                    "\tImmutable_PIM_Factory_v1: %s",
+                    address(
+                        new Immutable_PIM_Factory_v1(
                             orchestratorFactory, trustedForwarder
                         )
                     )
