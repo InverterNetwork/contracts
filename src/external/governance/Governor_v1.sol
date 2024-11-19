@@ -581,7 +581,7 @@ contract Governor_v1 is
     }
 
     /// @dev	Internal function that adds a beacon to the linked beacons array.
-    /// @param  beacon the beacon to add.
+    /// @param  beacon The beacon to add.
     function _addBeaconToLinkedBeacons(IInverterBeacon_v1 beacon)
         internal
         accessibleBeacon(address(beacon))

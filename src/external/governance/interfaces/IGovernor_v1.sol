@@ -271,7 +271,7 @@ interface IGovernor_v1 {
         IInverterBeacon_v1 beacon
     ) external;
 
-    /// @notice Registers a {IInverterBeacon_v1} as a linked beacon that is not a module.
+    /// @notice Registers an {IInverterBeacon_v1} as a linked beacon that is not a module.
     /// @dev	Can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
     /// @param  beacon The {IInverterBeacon_v1} that will be registered.
     function registerNonModuleBeacons(IInverterBeacon_v1 beacon) external;
