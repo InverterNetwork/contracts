@@ -212,7 +212,6 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
     }
 
     function test_buyForUpTo_BelowThreshold(uint amountIn) public {
-        console.log("check00");
         IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
             workflowConfig,
             fundingManagerConfig,
@@ -222,7 +221,6 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             issuanceTokenParams,
             initialPurchaseAmount
         );
-        console.log("check01");
 
         if (amountIn == 0) return;
 
@@ -254,6 +252,57 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             ERC20(issuanceToken).balanceOf(address(this)),
             buyerIssuanceBalanceBefore,
             "Issuance balance should increase"
+        );
+    }
+
+    function test_buyForUpTo_AtAboveThreshold(uint amountIn) public {
+        IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
+
+        // Bound input to be at or above threshold
+        amountIn = bound(
+            amountIn,
+            COLLATERAL_MIGRATION_THRESHOLD + 1,
+            1_000_000_000_000 ether
+        );
+        token.mint(address(this), amountIn);
+        token.approve(address(factory), amountIn);
+
+        address fundingManager = address(orchestrator.fundingManager());
+        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(
+            IBondingCurveBase_v1(fundingManager).getIssuanceToken()
+        );
+
+        vm.expectEmit(true, true, true, true);
+        emit IBondingCurveBase_v1.BuyingDisabled();
+        factory.buyForUpTo(address(issuanceToken), address(this), amountIn, 1);
+
+        assertFalse(
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
+                .buyIsOpen(),
+            "Buying should be closed"
+        );
+        assertFalse(
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
+                .sellIsOpen(),
+            "Selling should be closed"
+        );
+        assertEq(
+            token.balanceOf(address(this)),
+            amountIn - COLLATERAL_MIGRATION_THRESHOLD + initialPurchaseAmount,
+            "Buyer should be reimbursed the excess payment"
+        );
+        assertGt(
+            issuanceToken.balanceOf(address(this)),
+            0,
+            "Buyer should receive issuance tokens"
         );
     }
 }

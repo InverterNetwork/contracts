@@ -178,11 +178,8 @@ contract Immutable_PIM_Factory_v1 is
         address fundingManager = address(pim.orchestrator.fundingManager());
         IERC20 collateralToken = pim.orchestrator.fundingManager().token();
 
-        console.log("check1");
-
         // Transfer collateral tokens from sender to this contract
         collateralToken.transferFrom(msg.sender, address(this), amountIn);
-        console.log("check2");
         // Approve funding manager to spend collateral tokens
         collateralToken.approve(fundingManager, amountIn);
 
@@ -190,6 +187,8 @@ contract Immutable_PIM_Factory_v1 is
         // is valid (can be used for buying) and how much is excess (is reimbursed)
         (uint excessAmountIn, uint validAmountIn) =
             _checkBuyExceedsThreshold(token, amountIn);
+        console.log("validAmountIn", validAmountIn);
+        console.log("excessAmountIn", excessAmountIn);
 
         // Use valid amount to buy from curve
         if (validAmountIn > 0) {
@@ -198,18 +197,16 @@ contract Immutable_PIM_Factory_v1 is
             );
         }
 
-        console.log("check3");
-
-        // Reimburse potential
+        // Reimburse potential excess collateral
         if (excessAmountIn > 0) {
             collateralToken.transfer(_msgSender(), excessAmountIn);
         }
-
+        console.log("collateralToken.balanceOf(fundingManager)", collateralToken.balanceOf(fundingManager));
+        console.log("COLLATERAL_MIGRATION_THRESHOLD", COLLATERAL_MIGRATION_THRESHOLD);
         // If threshold has been reached, close curve and initiate graduation
         if (
             collateralToken.balanceOf(fundingManager)
-                == COLLATERAL_MIGRATION_THRESHOLD
-                    - pim.initialVirtualCollateralSupply
+                >= COLLATERAL_MIGRATION_THRESHOLD
         ) {
             // Close buying & selling on the funding manager
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
@@ -255,8 +252,10 @@ contract Immutable_PIM_Factory_v1 is
             address(pim.orchestrator.fundingManager())
         );
 
-        // Get virtual collateral supply before and after buy
-        uint currentCollateral = fundingManager.getVirtualCollateralSupply();
+        IERC20 collateralToken = pim.orchestrator.fundingManager().token();
+
+        // Get actual collateral supply before and after buy
+        uint currentCollateral = collateralToken.balanceOf(address(fundingManager));
         uint collateralAfterBuy = currentCollateral + amountIn;
 
         // Check if total would exceed threshold
