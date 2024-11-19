@@ -59,7 +59,7 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
     uint32 reserveRatio = 160_000;
 
     // Add constant for migration threshold
-    uint constant COLLATERAL_MIGRATION_THRESHOLD = 1000e18;
+    uint COLLATERAL_MIGRATION_THRESHOLD = 10_000 ether;
 
     function setUp() public override {
         super.setUp();
@@ -90,11 +90,10 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         );
 
         // Replace bounty manager setup with ImmutableMigration setup
-        setUpLM_ImmutableMigration_v1();
+        setUpPaymentRouter();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_ImmutableMigration_v1Metadata,
-                abi.encode(COLLATERAL_MIGRATION_THRESHOLD, address(420))
+                paymentRouterMetadata, bytes("")
             )
         );
 
@@ -126,9 +125,8 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             maxSupply: type(uint).max - 1
         });
 
-        // mint collateral token to deployer and approve to factory
-        token.mint(address(this), type(uint).max);
-        token.approve(address(factory), type(uint).max);
+        token.mint(address(this), initialPurchaseAmount);
+        token.approve(address(factory), initialPurchaseAmount);
     }
 
     /* Test createPIMWorkflow
@@ -171,29 +169,20 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
         address fundingManager = address(orchestrator.fundingManager());
 
-        // CHECK: factory DOES NOT have minting rights on token anymore
-        assertFalse(
-            issuanceToken.allowedMinters(address(factory)),
-            "Factory should not have minting rights on token"
-        );
-        // CHECK: bonding curve module HAS minting rights on token
         assertTrue(
             issuanceToken.allowedMinters(fundingManager),
             "Bonding curve module should have minting rights on token"
         );
-        // CHECK: issuance token is renounced
         assertEq(
             issuanceToken.owner(),
             address(0),
             "Issuance token should be renounced"
         );
-        // CHECK: factory HAS admin rights over workflow
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
         assertTrue(
             orchestrator.authorizer().hasRole(adminRole, address(factory)),
             "Factory should have admin rights over workflow"
         );
-        // CHECK: initial purchase was executed
         assertGt(
             issuanceToken.balanceOf(workflowAdmin),
             0,
@@ -204,59 +193,6 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             initialPurchaseAmount,
             "Bonding curve module should have received collateral tokens"
         );
-
-        // CHECK: migration module has admin role
-        assertMigrationModuleHasPrivileges(orchestrator);
-    }
-
-    //--------------------------------------------------------------------------
-    // Custom Asserts
-    //--------------------------------------------------------------------------
-
-    function assertMigrationModuleHasPrivileges(IOrchestrator_v1 orchestrator)
-        internal
-    {
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        address[] memory modules = orchestrator.listModules();
-        address migrationModule;
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_ImmutableMigration_v1(modules[i]).migrationThreshold()
-            returns (uint threshold) {
-                if (
-                    threshold
-                        == COLLATERAL_MIGRATION_THRESHOLD + initialCollateralSupply
-                ) {
-                    migrationModule = modules[i];
-                    break;
-                }
-            } catch {}
-        }
-        assertTrue(migrationModule != address(0), "Migration module not found");
-        assertTrue(
-            orchestrator.authorizer().hasRole(adminRole, migrationModule),
-            "Migration module should have admin role"
-        );
-
-        // Add test to verify module can use admin powers
-        vm.startPrank(migrationModule);
-        orchestrator.authorizer().grantRole(adminRole, alice);
-        assertTrue(
-            orchestrator.authorizer().hasRole(adminRole, alice),
-            "Migration module should be able to grant admin role"
-        );
-        orchestrator.authorizer().revokeRole(adminRole, migrationModule);
-        vm.stopPrank();
-
-        address fundingManager = address(orchestrator.fundingManager());
-        address issuanceTokenAddress =
-            IBondingCurveBase_v1(fundingManager).getIssuanceToken();
-        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
-
-        assertTrue(
-            issuanceToken.allowedMinters(migrationModule),
-            "Migration module should be set as minter"
-        );
-
         bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
             fundingManager
         ).CURVE_INTERACTION_ROLE();
@@ -264,9 +200,60 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             .generateRoleId(fundingManager, curveAccess);
         assertTrue(
             orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, address(migrationModule)
+                curveInteractionRoleId, address(factory)
             ),
-            "Migration module should have curve interaction role"
+            "Factory should have curve interaction role"
+        );
+        // CHECK: factory is allowed minter
+        assertTrue(
+            issuanceToken.allowedMinters(address(factory)),
+            "Factory should be allowed minter"
+        );
+    }
+
+    function test_buyForUpTo_BelowThreshold(uint amountIn) public {
+        console.log("check00");
+        IOrchestrator_v1 orchestrator = factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            initialPurchaseAmount
+        );
+        console.log("check01");
+
+        if (amountIn == 0) return;
+
+        // Bound input to range below threshold
+        amountIn = bound(amountIn, 1 ether, COLLATERAL_MIGRATION_THRESHOLD - 1);
+        address fundingManager = address(orchestrator.fundingManager());
+        token.mint(address(this), amountIn);
+        token.approve(address(factory), amountIn);
+
+        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(
+            IBondingCurveBase_v1(fundingManager).getIssuanceToken()
+        );
+
+        // Record balances before
+        uint buyerTokenBalanceBefore = token.balanceOf(address(this));
+        uint buyerIssuanceBalanceBefore =
+            ERC20(issuanceToken).balanceOf(address(this));
+
+        // Execute buy
+        factory.buyForUpTo(address(issuanceToken), address(this), amountIn, 1);
+
+        // Verify balances changed correctly
+        assertLt(
+            token.balanceOf(address(this)),
+            buyerTokenBalanceBefore,
+            "Token balance should decrease"
+        );
+        assertGt(
+            ERC20(issuanceToken).balanceOf(address(this)),
+            buyerIssuanceBalanceBefore,
+            "Issuance balance should increase"
         );
     }
 }

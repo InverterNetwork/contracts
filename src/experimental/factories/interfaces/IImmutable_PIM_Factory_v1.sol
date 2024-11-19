@@ -55,6 +55,15 @@ interface IImmutable_PIM_Factory_v1 {
     );
 
     //--------------------------------------------------------------------------
+    // Structs
+
+    struct PIM {
+        IOrchestrator_v1 orchestrator;
+        uint initialVirtualIssuanceSupply;
+        uint initialVirtualCollateralSupply;
+    }
+
+    //--------------------------------------------------------------------------
     // Functions
 
     /// @notice Deploys a new issuance token and uses that to deploy a workflow with restricted bonding curve.
