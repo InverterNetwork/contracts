@@ -348,7 +348,7 @@ contract Governor_v1 is
     }
 
     /// @inheritdoc IGovernor_v1
-    function registerNonModuleBeacons(IInverterBeacon_v1 beacon)
+    function registerNonModuleBeacon(IInverterBeacon_v1 beacon)
         external
         onlyCommunityOrTeamMultisig
     {

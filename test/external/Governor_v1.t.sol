@@ -650,31 +650,31 @@ contract GovernorV1Test is Test {
     }
 
     /*
-    Test: registerNonModuleBeacons
+    Test: registerNonModuleBeacon
     ├── Given: caller is neither the community multisig nor the team multisig
-    │   └── When: registerNonModuleBeacons is called
+    │   └── When: registerNonModuleBeacon is called
     │       └── Then: revert with error
     └── Given: caller is the community multisig or the team multisig
-        └── When: registerNonModuleBeacons is called
-            └── Then: The internal function _registerNonModuleBeacons is called
+        └── When: registerNonModuleBeacon is called
+            └── Then: The internal function _registerNonModuleBeacon is called
      */
 
-    function testRegisterNonModuleBeacons_ModifierInPosition() public {
+    function testregisterNonModuleBeacon_ModifierInPosition() public {
         // onlyCommunityOrTeamMultisig
         vm.expectRevert(
             abi.encodeWithSelector(
                 IGovernor_v1.Governor__OnlyCommunityOrTeamMultisig.selector
             )
         );
-        gov.registerNonModuleBeacons(IInverterBeacon_v1(ownedBeaconMock));
+        gov.registerNonModuleBeacon(IInverterBeacon_v1(ownedBeaconMock));
     }
 
-    function testRegisternonModuleBeacons_internalFunctionCalled() public {
+    function testregisterNonModuleBeacon_internalFunctionCalled() public {
         vm.expectEmit(true, true, true, true);
         emit IGovernor_v1.BeaconAddedToLinkedBeacons(address(ownedBeaconMock));
 
         vm.prank(communityMultisig);
-        gov.registerNonModuleBeacons(IInverterBeacon_v1(ownedBeaconMock));
+        gov.registerNonModuleBeacon(IInverterBeacon_v1(ownedBeaconMock));
     }
 
     //--------------------------------------------------------------------------
