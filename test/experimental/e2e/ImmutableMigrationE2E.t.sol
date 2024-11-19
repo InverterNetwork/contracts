@@ -122,7 +122,7 @@ contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
         });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
             abi.encode(address(0), bcProperties, token)
         );
 

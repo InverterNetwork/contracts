@@ -33,7 +33,6 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
 
     function createLiquidity(address tokenA, address tokenB, address to)
         external
-        returns (uint liquidity)
     {
         factory.createPair(tokenA, tokenB);
 

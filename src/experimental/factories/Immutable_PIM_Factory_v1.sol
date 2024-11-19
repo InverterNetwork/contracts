@@ -114,6 +114,10 @@ contract Immutable_PIM_Factory_v1 is
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
 
+        bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            fundingManager
+        ).CURVE_INTERACTION_ROLE();
+
         // if initial purchase amount set execute first purchase from curve
         if (initialPurchaseAmount > 0) {
             IERC20(collateralToken).transferFrom(
@@ -122,9 +126,14 @@ contract Immutable_PIM_Factory_v1 is
             IERC20(collateralToken).approve(
                 fundingManager, initialPurchaseAmount
             );
+            // assign curve interaction role to self, make buy and revoke role
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
+                .grantModuleRole(curveAccess, address(this));
             IBondingCurveBase_v1(fundingManager).buyFor(
                 initiator, initialPurchaseAmount, 1
             );
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
+                .revokeModuleRole(curveAccess, address(this));
         }
 
         // After orchestrator deployment, find migration module and grant admin role
@@ -137,6 +146,9 @@ contract Immutable_PIM_Factory_v1 is
             returns (uint) {
                 orchestrator.authorizer().grantRole(adminRole, modules[i]);
                 issuanceToken.setMinter(modules[i], true);
+                FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                    fundingManager
+                ).grantModuleRole(curveAccess, modules[i]);
                 break;
             } catch {}
         }

@@ -26,6 +26,8 @@ import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {LM_ImmutableMigration_v1} from
     "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
     // SuT
@@ -96,7 +98,7 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             )
         );
 
-        // Funding Manager: Bancor Virtual Supply
+        // Funding Manager: Restricted Bancor Virtual Supply
         setUpBancorVirtualSupplyBondingCurveFundingManager();
         bcProperties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
             .BondingCurveProperties({
@@ -112,7 +114,7 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            bancorVirtualSupplyBondingCurveFundingManagerMetadata,
+            restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
             abi.encode(address(0), bcProperties, token)
         );
 
@@ -130,14 +132,15 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
     }
 
     /* Test createPIMWorkflow
-        └── given an unrestricted bonding curve
+        └── given a restricted bonding curve
             └── when called
                 └── then it deploys an issuance token and a workflow
-                └── then it executes initial purchase
+                └── then it executes initial purchase if initialPurchaseAmount > 0
                 └── then it grants issuanceToken minting rights to bonding curve
+                └── then it revokes factory minting rights
                 └── then it renounces ownership over issuance token
-                └── then it revokes orchestrator admin rights and transfers them to factory
-                └── then it emits a PIMWorkflowCreated event YES
+                └── then it grants admin rights to the migration module
+                └── then it emits a PIMWorkflowCreated event
     */
 
     function testCreatePIMWorkflow() public {
@@ -203,14 +206,14 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         );
 
         // CHECK: migration module has admin role
-        assertMigrationModuleHasAdminRole(orchestrator);
+        assertMigrationModuleHasPrivileges(orchestrator);
     }
 
     //--------------------------------------------------------------------------
     // Custom Asserts
     //--------------------------------------------------------------------------
 
-    function assertMigrationModuleHasAdminRole(IOrchestrator_v1 orchestrator)
+    function assertMigrationModuleHasPrivileges(IOrchestrator_v1 orchestrator)
         internal
     {
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
@@ -243,5 +246,27 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         );
         orchestrator.authorizer().revokeRole(adminRole, migrationModule);
         vm.stopPrank();
+
+        address fundingManager = address(orchestrator.fundingManager());
+        address issuanceTokenAddress =
+            IBondingCurveBase_v1(fundingManager).getIssuanceToken();
+        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
+
+        assertTrue(
+            issuanceToken.allowedMinters(migrationModule),
+            "Migration module should be set as minter"
+        );
+
+        bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            fundingManager
+        ).CURVE_INTERACTION_ROLE();
+        bytes32 curveInteractionRoleId = orchestrator.authorizer()
+            .generateRoleId(fundingManager, curveAccess);
+        assertTrue(
+            orchestrator.authorizer().checkForRole(
+                curveInteractionRoleId, address(migrationModule)
+            ),
+            "Migration module should have curve interaction role"
+        );
     }
 }
