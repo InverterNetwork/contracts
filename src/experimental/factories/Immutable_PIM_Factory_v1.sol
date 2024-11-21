@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import "forge-std/console.sol";
-
 // Internal Interfaces
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
@@ -210,8 +208,6 @@ contract Immutable_PIM_Factory_v1 is
         // is valid (can be used for buying) and how much is excess (is reimbursed)
         (uint excessAmountIn, uint validAmountIn) =
             _checkBuyExceedsThreshold(issuanceToken, amountIn);
-        console.log("validAmountIn", validAmountIn);
-        console.log("excessAmountIn", excessAmountIn);
 
         // Use valid amount to buy from curve
         if (validAmountIn > 0) {
@@ -224,20 +220,12 @@ contract Immutable_PIM_Factory_v1 is
         if (excessAmountIn > 0) {
             collateralToken.transfer(_msgSender(), excessAmountIn);
         }
-        console.log(
-            "collateralToken.balanceOf(fundingManager)",
-            collateralToken.balanceOf(fundingManager)
-        );
-        console.log(
-            "COLLATERAL_MIGRATION_THRESHOLD", COLLATERAL_MIGRATION_THRESHOLD
-        );
+
         // If threshold has been reached, close curve and initiate graduation
         if (
             collateralToken.balanceOf(fundingManager)
                 >= COLLATERAL_MIGRATION_THRESHOLD
         ) {
-            console.log("A: ", collateralToken.balanceOf(fundingManager));
-            console.log("B: ", COLLATERAL_MIGRATION_THRESHOLD);
             // Close buying & selling on the funding manager
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
                 .closeBuy();
@@ -311,21 +299,18 @@ contract Immutable_PIM_Factory_v1 is
         }
     }
 
-    function _graduate(address token) internal {
-        PIM memory pim = pims[token];
+    function _graduate(address issuanceToken) internal {
+        PIM memory pim = pims[issuanceToken];
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
             address(pim.orchestrator.fundingManager())
         );
         IERC20 collateralToken = fundingManager.token();
-        ERC20Issuance_v1 issuanceToken =
-            ERC20Issuance_v1(fundingManager.getIssuanceToken());
 
-        // Transfer collateral reserve into adapter
-        // fundingManager.transferOrchestratorToken(
-        //     address(dexAdapter),
-        //     collateralToken.balanceOf(address(fundingManager))
-        // );
+        uint collateralLiquidity =
+            collateralToken.balanceOf(address(fundingManager));
+        uint issuanceLiquidity = fundingManager.getVirtualIssuanceSupply()
+            - pim.initialVirtualIssuanceSupply;
 
         address[] memory modules = pim.orchestrator.listModules();
         for (uint i = 0; i < modules.length; i++) {
@@ -333,7 +318,7 @@ contract Immutable_PIM_Factory_v1 is
                 LM_PC_PaymentRouter_v1(modules[i]).pushPayment(
                     address(dexAdapter),
                     address(collateralToken),
-                    collateralToken.balanceOf(address(fundingManager)),
+                    collateralLiquidity,
                     0,
                     0,
                     0
@@ -341,18 +326,26 @@ contract Immutable_PIM_Factory_v1 is
                 break;
             } catch {}
         }
-        // pim.orchestrator.close(
 
-        // // Mint initial liquidity to dex adapter
-        // issuanceToken.mint(
-        //     address(dexAdapter),
-        //     fundingManager.getVirtualIssuanceSupply()
-        //         - pim.initialVirtualIssuanceSupply
-        // );
+        fundingManager.closeBuy();
+        fundingManager.closeSell();
 
-        // // Call migration on adapter
-        // dexAdapter.createLiquidity(
-        //     address(collateralToken), address(issuanceToken), address(this)
-        // );
+        // Mint initial liquidity to dex adapter
+        ERC20Issuance_v1(issuanceToken).mint(
+            address(dexAdapter), issuanceLiquidity
+        );
+
+        // Call migration on adapter
+        address pool = dexAdapter.createLiquidity(
+            address(collateralToken), address(issuanceToken), address(this)
+        );
+
+        emit Graduation(
+            issuanceToken,
+            address(collateralToken),
+            pool,
+            issuanceLiquidity,
+            collateralLiquidity
+        );
     }
 }

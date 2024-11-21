@@ -234,7 +234,11 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         if (amountIn == 0) return;
 
         // Bound input to range below threshold
-        amountIn = bound(amountIn, 1 ether, COLLATERAL_MIGRATION_THRESHOLD - initialPurchaseAmount -1);
+        amountIn = bound(
+            amountIn,
+            1 ether,
+            COLLATERAL_MIGRATION_THRESHOLD - initialPurchaseAmount - 1
+        );
         address fundingManager = address(orchestrator.fundingManager());
         token.mint(address(this), amountIn);
         token.approve(address(factory), amountIn);
@@ -342,7 +346,11 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
         address issuanceToken = fundingManager.getIssuanceToken();
 
         // Bound input to range below threshold
-        amountIn = bound(amountIn, 1 ether, COLLATERAL_MIGRATION_THRESHOLD - initialPurchaseAmount - 1);
+        amountIn = bound(
+            amountIn,
+            1 ether,
+            COLLATERAL_MIGRATION_THRESHOLD - initialPurchaseAmount - 1
+        );
         token.mint(address(this), amountIn);
         token.approve(address(factory), amountIn);
 

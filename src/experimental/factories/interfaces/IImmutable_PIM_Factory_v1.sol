@@ -54,6 +54,20 @@ interface IImmutable_PIM_Factory_v1 {
         uint amount
     );
 
+    /// @notice Event emitted when collateral liquidity is migrated to the dex.
+    /// @param issuanceToken The address of the issuance token.
+    /// @param collateralToken The address of the collateral token.
+    /// @param pool The address of the pool.
+    /// @param issuanceTokenAmount The amount of issuance tokens added as liquidity.
+    /// @param collateralTokenAmount The amount of collateral tokens added as liquidity.
+    event Graduation(
+        address indexed issuanceToken,
+        address indexed collateralToken,
+        address indexed pool,
+        uint issuanceTokenAmount,
+        uint collateralTokenAmount
+    );
+
     //--------------------------------------------------------------------------
     // Structs
 

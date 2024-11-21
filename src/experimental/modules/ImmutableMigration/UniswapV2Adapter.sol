@@ -33,8 +33,9 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
 
     function createLiquidity(address tokenA, address tokenB, address to)
         external
+        returns (address pool)
     {
-        factory.createPair(tokenA, tokenB);
+        pool = factory.createPair(tokenA, tokenB);
 
         uint amountA = IERC20(tokenA).balanceOf(address(this));
         uint amountB = IERC20(tokenB).balanceOf(address(this));
@@ -53,5 +54,7 @@ contract UniswapV2Adapter is IDexAdapter_v1 {
             to,
             block.timestamp + 10 minutes
         );
+
+        return pool;
     }
 }
