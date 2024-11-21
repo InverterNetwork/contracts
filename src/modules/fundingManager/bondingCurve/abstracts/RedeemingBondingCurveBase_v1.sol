@@ -266,13 +266,23 @@ abstract contract RedeemingBondingCurveBase_v1 is
         if (collateralRedeemAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
-        // Transfer tokens to receiver
-        collateralToken.safeTransfer(_receiver, collateralRedeemAmount);
+
+        // Use abstract function to distribute collateral tokens
+        _distributeCollateralTokens(_receiver, collateralRedeemAmount);
+
         // Emit event
         emit TokensSold(
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
         );
     }
+
+    /// @dev    Abstract function to distribute collateral tokens.
+    /// @param  _receiver The address that will receive the collateral tokens.
+    /// @param  collateralAmount The amount of collateral tokens to distribute.
+    function _distributeCollateralTokens(
+        address _receiver,
+        uint _collateralAmount
+    ) internal virtual;
 
     ///  @dev    Checks if the sell functionality is enabled.
     function _sellingIsEnabledModifier() internal view {
