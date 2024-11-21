@@ -1838,7 +1838,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Setup
         vm.assume(
             _receiver != address(0)
-                || _receiver != address(bondingCurveFundingManager)
+                && _receiver != address(bondingCurveFundingManager)
         );
         vm.assume(_amount > 0);
 
