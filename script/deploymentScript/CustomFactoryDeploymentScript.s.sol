@@ -74,7 +74,9 @@ contract CustomFactoryDeploymentScript is Script {
                     "\tImmutable_PIM_Factory_v1: %s",
                     address(
                         new Immutable_PIM_Factory_v1(
-                            orchestratorFactory, trustedForwarder
+                            orchestratorFactory,
+                            trustedForwarder,
+                            vm.envAddress("DEX_ADAPTER")
                         )
                     )
                 );

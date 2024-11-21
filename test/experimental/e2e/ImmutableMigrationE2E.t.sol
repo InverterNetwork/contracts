@@ -85,7 +85,7 @@ contract LM_ImmutableMigration_v1E2E is ExtendedE2ETest {
 
         // deploy new factory
         factory = new Immutable_PIM_Factory_v1(
-            address(orchestratorFactory), address(0)
+            address(orchestratorFactory), address(0), address(0)
         );
 
         // Orchestrator/Workflow config
