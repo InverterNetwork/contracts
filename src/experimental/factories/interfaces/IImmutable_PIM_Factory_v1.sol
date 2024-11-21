@@ -88,6 +88,7 @@ interface IImmutable_PIM_Factory_v1 {
     /// @param moduleConfigs Variable length set of optional module's config data.
     /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
     /// @param initialPurchaseAmount The volume of the first purchase in terms of collateral token.
+    /// @param isImmutable Whether the admin rights are transferred to the factory or to the deployer.
     /// @return CreatedOrchestrator Returns the created orchestrator instance.
     function createPIMWorkflow(
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
@@ -96,6 +97,7 @@ interface IImmutable_PIM_Factory_v1 {
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
-        uint initialPurchaseAmount
+        uint initialPurchaseAmount,
+        bool isImmutable
     ) external returns (IOrchestrator_v1);
 }

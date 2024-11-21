@@ -18,21 +18,19 @@ import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {Immutable_PIM_Factory_v1} from
     "src/experimental/factories/Immutable_PIM_Factory_v1.sol";
-import {ExtendedE2ETest} from "test/experimental/e2e/ExtendedE2ETest.sol";
+import {E2ETest} from "test/e2e/E2ETest.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
 
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {LM_ImmutableMigration_v1} from
-    "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 import {UniswapV2Adapter} from
     "src/experimental/modules/ImmutableMigration/UniswapV2Adapter.sol";
 
-contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
+contract Immutable_PIM_Factory_v1Test is E2ETest {
     // SuT
     Immutable_PIM_Factory_v1 factory;
     address uniswapAdapter;
@@ -53,6 +51,8 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
     uint initialPurchaseAmount = 100 ether;
+    bool isImmutable = true;
+    bool isMutable = false;
 
     // addresses
     address workflowAdmin = vm.addr(420);
@@ -162,7 +162,8 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
-            initialPurchaseAmount
+            initialPurchaseAmount,
+            isImmutable
         );
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
@@ -183,26 +184,32 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             issuanceToken.allowedMinters(fundingManager),
             "Bonding curve module should have minting rights on token"
         );
+
         assertEq(
             issuanceToken.owner(),
             address(0),
             "Issuance token should be renounced"
         );
+
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+
         assertTrue(
             orchestrator.authorizer().hasRole(adminRole, address(factory)),
             "Factory should have admin rights over workflow"
         );
+
         assertGt(
             issuanceToken.balanceOf(workflowAdmin),
             0,
             "Workflow admin should have received issuance tokens"
         );
+
         assertEq(
             token.balanceOf(fundingManager),
             initialPurchaseAmount,
             "Bonding curve module should have received collateral tokens"
         );
+
         bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
             fundingManager
         ).CURVE_INTERACTION_ROLE();
@@ -214,10 +221,11 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             ),
             "Factory should have curve interaction role"
         );
+
         assertTrue(
             issuanceToken.allowedMinters(address(factory)),
             "Factory should be allowed minter"
-        );
+            );
     }
 
     function test_buyForUpTo_BelowThreshold(uint amountIn) public {
@@ -228,7 +236,8 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
-            initialPurchaseAmount
+            initialPurchaseAmount,
+            isImmutable
         );
 
         if (amountIn == 0) return;
@@ -286,7 +295,8 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
-            initialPurchaseAmount
+            initialPurchaseAmount,
+            isImmutable
         );
 
         // Bound input to be at or above threshold
@@ -337,7 +347,8 @@ contract Immutable_PIM_Factory_v1Test is ExtendedE2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
-            initialPurchaseAmount
+            initialPurchaseAmount,
+            isImmutable
         );
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(

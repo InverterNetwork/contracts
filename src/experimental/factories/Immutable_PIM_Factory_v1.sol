@@ -22,8 +22,6 @@ import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
 // Internal Implementations
-import {LM_ImmutableMigration_v1} from
-    "src/experimental/modules/ImmutableMigration/LM_ImmutableMigration_v1.sol";
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {LM_PC_PaymentRouter_v1} from
@@ -79,8 +77,9 @@ contract Immutable_PIM_Factory_v1 is
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
-        uint initialPurchaseAmount
-    ) external returns (IOrchestrator_v1 orchestrator) {
+        uint initialPurchaseAmount,
+        bool isImmutable
+    ) external returns (IOrchestrator_v1) {
         // deploy issuance token
         ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
             issuanceTokenParams.name,
@@ -89,45 +88,22 @@ contract Immutable_PIM_Factory_v1 is
             issuanceTokenParams.maxSupply,
             address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
-        // MODIFY AUTHORIZER CONFIG
-        // decode configData of authorizer
-        // set (own) factory as orchestrator admin
-        bytes memory authorizerConfigData = authorizerConfig.configData;
-        (address initiator) = abi.decode(authorizerConfigData, (address));
-        authorizerConfigData = abi.encode(address(this));
-        authorizerConfig.configData = authorizerConfigData;
-        // MODIFY FUNDING MANAGER CONFIG
-        // decode configData of fundingManager
-        // set newly deployed token as issuance token
-        bytes memory fundingManagerConfigData = fundingManagerConfig.configData;
+
         (
-            ,
-            IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
-                memory bcProperties,
+            IOrchestrator_v1 orchestrator,
+            address initiator,
             address collateralToken
-        ) = abi.decode(
-            fundingManagerConfigData,
-            (
-                address,
-                IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties,
-                address
-            )
-        );
-        fundingManagerConfigData =
-            abi.encode(address(issuanceToken), bcProperties, collateralToken);
-        fundingManagerConfig.configData = fundingManagerConfigData;
-        orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
-            .createOrchestrator(
+        ) = _deployOrchestrator(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
-            moduleConfigs
+            moduleConfigs,
+            address(issuanceToken)
         );
 
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
-
         // store orchestrator for issuance token
         pims[address(issuanceToken)] = PIM(
             orchestrator,
@@ -140,40 +116,11 @@ contract Immutable_PIM_Factory_v1 is
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
 
-        // grant privileges to factory
-        orchestrator.authorizer().grantRole(
-            orchestrator.authorizer().getAdminRole(), address(this)
-        );
-        issuanceToken.setMinter(address(this), true);
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-            .grantModuleRole(
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-                .CURVE_INTERACTION_ROLE(),
-            address(this)
-        );
-        address[] memory modules = orchestrator.listModules();
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
-                LM_PC_PaymentRouter_v1(modules[i]).grantModuleRole(
-                    LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE(),
-                    address(this)
-                );
-                break;
-            } catch {}
-        }
+        _handleWorkflowPrivileges(address(issuanceToken), isImmutable);
 
-        // if initial purchase amount set execute first purchase from curve
-        if (initialPurchaseAmount > 0) {
-            IERC20(collateralToken).transferFrom(
-                _msgSender(), address(this), initialPurchaseAmount
-            );
-            IERC20(collateralToken).approve(
-                fundingManager, initialPurchaseAmount
-            );
-            IBondingCurveBase_v1(fundingManager).buyFor(
-                initiator, initialPurchaseAmount, 1
-            );
-        }
+        _handleInitialPurchase(
+            fundingManager, collateralToken, initialPurchaseAmount, initiator
+        );
 
         // renounce token ownership
         issuanceToken.renounceOwnership();
@@ -181,6 +128,8 @@ contract Immutable_PIM_Factory_v1 is
         emit IImmutable_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator), address(issuanceToken), _msgSender()
         );
+
+        return orchestrator;
     }
 
     /**
@@ -347,5 +296,108 @@ contract Immutable_PIM_Factory_v1 is
             issuanceLiquidity,
             collateralLiquidity
         );
+    }
+
+    function _handleWorkflowPrivileges(address issuanceToken, bool isImmutable)
+        internal
+    {
+        PIM memory pim = pims[issuanceToken];
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+            address(pim.orchestrator.fundingManager())
+        );
+        // grant admin role to factory (immutable) or to deployer address (mutable)
+        pim.orchestrator.authorizer().grantRole(
+            pim.orchestrator.authorizer().getAdminRole(),
+            isImmutable ? address(this) : _msgSender()
+        );
+        // set factory as minter to be able to mint initial liquidity upon graduation
+        ERC20Issuance_v1(issuanceToken).setMinter(address(this), true);
+        // grant curve interaction role to factory to be able to buy and sell
+        fundingManager.grantModuleRole(
+            fundingManager.CURVE_INTERACTION_ROLE(), address(this)
+        );
+        // grant payment pusher role to factory to be able to transfer collateral to dex
+        address[] memory modules = pim.orchestrator.listModules();
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
+                LM_PC_PaymentRouter_v1(modules[i]).grantModuleRole(
+                    LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE(),
+                    address(this)
+                );
+                break;
+            } catch {}
+        }
+    }
+
+    function _handleInitialPurchase(
+        address fundingManager,
+        address collateralToken,
+        uint initialPurchaseAmount,
+        address recipient
+    ) internal {
+        // if initial purchase amount set execute first purchase from curve
+        if (initialPurchaseAmount > 0) {
+            IERC20(collateralToken).transferFrom(
+                _msgSender(), address(this), initialPurchaseAmount
+            );
+            IERC20(collateralToken).approve(
+                fundingManager, initialPurchaseAmount
+            );
+            IBondingCurveBase_v1(fundingManager).buyFor(
+                recipient, initialPurchaseAmount, 1
+            );
+        }
+    }
+
+    function _deployOrchestrator(
+        IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory authorizerConfig,
+        IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
+        address issuanceToken
+    )
+        internal
+        returns (
+            IOrchestrator_v1 orchestrator,
+            address initiator,
+            address collateralToken
+        )
+    {
+        // MODIFY AUTHORIZER CONFIG
+        // decode configData of authorizer
+        // set (own) factory as orchestrator admin
+        bytes memory authorizerConfigData = authorizerConfig.configData;
+        (initiator) = abi.decode(authorizerConfigData, (address));
+        authorizerConfigData = abi.encode(address(this));
+        authorizerConfig.configData = authorizerConfigData;
+        // MODIFY FUNDING MANAGER CONFIG
+        // decode configData of fundingManager
+        // set newly deployed token as issuance token
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
+            bcProperties;
+        bytes memory fundingManagerConfigData = fundingManagerConfig.configData;
+        (, bcProperties, collateralToken) = abi.decode(
+            fundingManagerConfigData,
+            (
+                address,
+                IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties,
+                address
+            )
+        );
+        fundingManagerConfigData =
+            abi.encode(address(issuanceToken), bcProperties, collateralToken);
+        fundingManagerConfig.configData = fundingManagerConfigData;
+        orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
+            .createOrchestrator(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            moduleConfigs
+        );
+
+        return (orchestrator, initiator, collateralToken);
     }
 }

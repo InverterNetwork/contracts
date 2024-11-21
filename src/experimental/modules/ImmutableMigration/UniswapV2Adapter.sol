@@ -12,7 +12,6 @@ import {IDexAdapter_v1} from
 /**
  * @title UniswapV2Adapter
  * @notice Helper contract for creating Uniswap V2 pools and adding initial liquidity
- * @dev This contract is used by the LM_ImmutableMigration_v1 contract
  */
 contract UniswapV2Adapter is IDexAdapter_v1 {
     /// @notice The Uniswap V2 Factory contract
