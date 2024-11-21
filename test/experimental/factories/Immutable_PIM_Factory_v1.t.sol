@@ -225,7 +225,7 @@ contract Immutable_PIM_Factory_v1Test is E2ETest {
         assertTrue(
             issuanceToken.allowedMinters(address(factory)),
             "Factory should be allowed minter"
-            );
+        );
     }
 
     function test_buyForUpTo_BelowThreshold(uint amountIn) public {
