@@ -291,7 +291,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
 
         // Use abstract function to distribute issuance tokens
-        _distibuteIssuanceToken(_receiver, issuanceMintAmount);
+        _distributeIssuanceToken(_receiver, issuanceMintAmount);
 
         // Emit event
         emit TokensBought(
@@ -302,9 +302,10 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev    Abstract function to distribute issuance tokens.
     /// @param  _receiver The address that will receive the bought tokens.
     /// @param  issuanceMintAmount The amount of issuance tokens to distribute.
-    function _distibuteIssuanceToken(address _receiver, uint issuanceMintAmount)
-        internal
-        virtual;
+    function _distributeIssuanceToken(
+        address _receiver,
+        uint issuanceMintAmount
+    ) internal virtual;
 
     /// @dev	Sets the buy transaction fee, expressed in BPS.
     /// @param  _fee The fee percentage to set for buy transactions.
