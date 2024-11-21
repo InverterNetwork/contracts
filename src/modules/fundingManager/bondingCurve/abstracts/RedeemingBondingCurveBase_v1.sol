@@ -268,7 +268,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         }
 
         // Use abstract function to distribute collateral tokens
-        _distributeCollateralTokens(_receiver, collateralRedeemAmount);
+        _distributeCollateralToken(_receiver, collateralRedeemAmount);
 
         // Emit event
         emit TokensSold(
@@ -279,7 +279,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev    Abstract function to distribute collateral tokens.
     /// @param  _receiver The address that will receive the collateral tokens.
     /// @param  collateralAmount The amount of collateral tokens to distribute.
-    function _distributeCollateralTokens(
+    function _distributeCollateralToken(
         address _receiver,
         uint _collateralAmount
     ) internal virtual;
