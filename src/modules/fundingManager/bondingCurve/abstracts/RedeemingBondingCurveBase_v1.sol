@@ -278,7 +278,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @dev    Abstract function to distribute collateral tokens.
     /// @param  _receiver The address that will receive the collateral tokens.
-    /// @param  collateralAmount The amount of collateral tokens to distribute.
+    /// @param  _collateralAmount The amount of collateral tokens to distribute.
     function _distributeCollateralToken(
         address _receiver,
         uint _collateralAmount
