@@ -1804,7 +1804,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Internal Functions
 
     /*
-    Test: _issueTokens
+    Test: _distibuteIssuanceToken
     └── When: the function init is called
         └── Then: it should mint the correct amount of tokens to the receiver address
     */

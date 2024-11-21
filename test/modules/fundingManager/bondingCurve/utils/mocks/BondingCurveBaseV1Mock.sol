@@ -67,7 +67,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
 
     uint public issueTokensFunctionCalled;
 
-    function _issueTokens(address _receiver, uint _amount)
+    function _distibuteIssuanceToken(address _receiver, uint _amount)
         internal
         virtual
         override

@@ -109,7 +109,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
     }
 
     function call_issueTokens(address _receiver, uint _amount) external {
-        _issueTokens(_receiver, _amount);
+        _distibuteIssuanceToken(_receiver, _amount);
     }
 
     //--------------------------------------------------------------------------

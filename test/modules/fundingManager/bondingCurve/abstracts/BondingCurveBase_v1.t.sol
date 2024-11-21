@@ -1203,7 +1203,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
     }
 
-    // Test _issueTokens function
+    // Test _distibuteIssuanceToken function
     // this is tested in the buy tests
 
     //--------------------------------------------------------------------------
