@@ -378,10 +378,14 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
-            protocolIssuanceFeeAmount + projectCollateralFeeAmount
+            protocolIssuanceFeeAmount + projectCollateralFeeAmount + finalAmount
         );
 
-        assertEq(_token.balanceOf(seller), finalAmount);
+        assertEq(_token.balanceOf(seller), 0);
+        assertEq(
+            1,
+            bondingCurveFundingManager.distributeCollateralTokenFunctionCalled()
+        );
 
         assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(issuanceToken.totalSupply(), protocolIssuanceFeeAmount);

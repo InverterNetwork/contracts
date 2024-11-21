@@ -114,6 +114,12 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         _distributeIssuanceToken(_receiver, _amount);
     }
 
+    function call_distributeCollateralToken(address _receiver, uint _amount)
+        external
+    {
+        _distributeCollateralToken(_receiver, _amount);
+    }
+
     //--------------------------------------------------------------------------
     // Helper Functions
 

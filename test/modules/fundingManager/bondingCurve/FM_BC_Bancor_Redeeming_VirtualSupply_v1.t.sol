@@ -1826,6 +1826,34 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(issuanceToken.balanceOf(_receiver), _issuanceMintAmount);
     }
 
+    /*
+    Test: _distributeCollateralToken
+    └── When: the function _distributeCollateralToken is called
+        └── Then: it should transfer the correct amount of tokens to the receiver address
+    */
+
+    function test_distributeCollateralToken(address _receiver, uint _amount)
+        public
+    {
+        // Setup
+        vm.assume(
+            _receiver != address(0)
+                || _receiver != address(bondingCurveFundingManager)
+        );
+        vm.assume(_amount > 0);
+
+        _token.mint(address(bondingCurveFundingManager), _amount);
+
+        // Execute
+        bondingCurveFundingManager.call_distributeCollateralToken(
+            _receiver, _amount
+        );
+
+        // Assert
+        assertEq(_token.balanceOf(_receiver), _amount);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
