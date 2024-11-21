@@ -232,7 +232,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.issueTokensFunctionCalled(), 1);
+        assertEq(
+            bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
     }
 
     /* Test buy and _buyOrder function
@@ -315,7 +318,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
             (balanceBefore + amount)
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(bondingCurveFundingManager.issueTokensFunctionCalled(), 1);
+        assertEq(
+            bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
     }
 
     function test_buyOrder(
@@ -417,7 +423,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
         assertEq(_token.balanceOf(buyer), 0);
 
-        assertEq(bondingCurveFundingManager.issueTokensFunctionCalled(), 1);
+        assertEq(
+            bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
     }
 
     /* Test _getBuyFeesAndTreasuryAddresses() function

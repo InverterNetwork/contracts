@@ -75,7 +75,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         return _depositAmount;
     }
 
-    uint public issueTokensFunctionCalled;
+    uint public distributeIssuanceTokenFunctionCalled;
 
     function _distibuteIssuanceToken(
         address _receiver,
@@ -83,7 +83,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     ) internal virtual override {
         // Mint tokens to address
         _mint(_receiver, _issuanceMintAmount);
-        issueTokensFunctionCalled++;
+        distributeIssuanceTokenFunctionCalled++;
     }
 
     function getStaticPriceForSelling()
