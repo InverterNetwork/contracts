@@ -594,16 +594,15 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Overriden Internal Functions
+    // Overridden Internal Functions
 
-    /// @dev    Distributes issuance tokens by minting them to the receiver.
+    /// @notice    Distributes issuance tokens by minting them to the receiver.
     /// @param  _receiver The address that will receive the bought tokens.
     /// @param  _issuanceMintAmount The amount of issuance tokens to distribute.
     function _distributeIssuanceToken(
         address _receiver,
-        uint _issuanceMintAmount //@todo test
+        uint _issuanceMintAmount
     ) internal virtual override {
-        // Mint tokens to address
         _mint(_receiver, _issuanceMintAmount);
     }
 
@@ -614,7 +613,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         address _receiver,
         uint _collateralAmount
     ) internal virtual override {
-        // Transfer tokens to receiver
         token().safeTransfer(_receiver, _collateralAmount);
     }
 }

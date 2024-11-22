@@ -81,7 +81,6 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         address _receiver,
         uint _issuanceMintAmount
     ) internal virtual override {
-        // Mint tokens to address
         _mint(_receiver, _issuanceMintAmount);
         distributeIssuanceTokenFunctionCalled++;
     }

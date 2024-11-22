@@ -290,7 +290,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
 
-        // Use abstract function to distribute issuance tokens
+        // Use virtual function to distribute issuance tokens
         _distributeIssuanceToken(_receiver, issuanceMintAmount);
 
         // Emit event
@@ -299,7 +299,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
     }
 
-    /// @dev    Abstract function to distribute issuance tokens.
+    /// @notice    Virtual function to distribute issuance tokens.
     /// @param  _receiver The address that will receive the bought tokens.
     /// @param  issuanceMintAmount The amount of issuance tokens to distribute.
     function _distributeIssuanceToken(

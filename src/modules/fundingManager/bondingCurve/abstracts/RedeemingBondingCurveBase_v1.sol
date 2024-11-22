@@ -267,7 +267,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
 
-        // Use abstract function to distribute collateral tokens
+        // Use virtual function to distribute collateral tokens
         _distributeCollateralToken(_receiver, collateralRedeemAmount);
 
         // Emit event
@@ -276,7 +276,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
     }
 
-    /// @dev    Abstract function to distribute collateral tokens.
+    /// @notice Virtual function to distribute collateral tokens.
     /// @param  _receiver The address that will receive the collateral tokens.
     /// @param  _collateralAmount The amount of collateral tokens to distribute.
     function _distributeCollateralToken(
