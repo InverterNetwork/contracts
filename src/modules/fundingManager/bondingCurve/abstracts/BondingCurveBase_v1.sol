@@ -161,9 +161,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             issuanceBuyFeePercentage,
             0
         );
-
-        // Return expected purchase return amount
-        // return mintAmount;
     }
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -272,39 +269,39 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             emit ProjectCollateralFeeAdded(projectFeeAmount);
         }
 
-        // Calculate mint amount based on upstream formula
-        uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);
-        totalIssuanceTokenMinted = issuanceMintAmount;
+        // Calculate token amount based on upstream formula
+        uint issuanceTokenAmount = _issueTokensFormulaWrapper(netDeposit);
+        totalIssuanceTokenMinted = issuanceTokenAmount;
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (issuanceMintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
+        (issuanceTokenAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(
-            issuanceMintAmount, issuanceBuyFeePercentage, 0
+            issuanceTokenAmount, issuanceBuyFeePercentage, 0
         );
         // collect protocol fee on outgoing issuance token
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
-        // Revert when the mint amount is lower than minimum amount the user expects
-        if (issuanceMintAmount < _minAmountOut) {
+        // Revert when the token amount is lower than minimum amount the user expects
+        if (issuanceTokenAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
 
         // Use virtual function to distribute issuance tokens
-        _distributeIssuanceToken(_receiver, issuanceMintAmount);
+        _handleIssuanceTokenAfterBuy(_receiver, issuanceTokenAmount);
 
         // Emit event
         emit TokensBought(
-            _receiver, _depositAmount, issuanceMintAmount, _msgSender()
+            _receiver, _depositAmount, issuanceTokenAmount, _msgSender()
         );
     }
 
-    /// @notice    Virtual function to distribute issuance tokens.
-    /// @param  _receiver The address that will receive the bought tokens.
-    /// @param  issuanceMintAmount The amount of issuance tokens to distribute.
-    function _distributeIssuanceToken(
+    /// @notice    Virtual function to handle issuance tokens after a successful buy.
+    /// @param  _receiver The address that used the buy function.
+    /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
+    function _handleIssuanceTokenAfterBuy(
         address _receiver,
-        uint issuanceMintAmount
+        uint _issuanceTokenAmount
     ) internal virtual;
 
     /// @dev	Sets the buy transaction fee, expressed in BPS.

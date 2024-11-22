@@ -1212,7 +1212,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
     }
 
-    // Test _distributeIssuanceToken function
+    // Test _handleIssuanceTokenAfterBuy function
     // this is tested in the buy tests
 
     //--------------------------------------------------------------------------

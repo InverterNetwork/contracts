@@ -1804,12 +1804,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Internal Functions
 
     /*
-    Test: _distributeIssuanceToken
-    └── When: the function _distributeIssuanceToken is called
+    Test: _handleIssuanceTokenAfterBuy
+    └── When: the function _handleIssuanceTokenAfterBuy is called
         └── Then: it should mint the correct amount of tokens to the receiver address
     */
 
-    function test_distributeIssuanceToken(
+    function test_handleIssuanceTokenAfterBuy(
         address _receiver,
         uint _issuanceMintAmount
     ) public {
@@ -1818,7 +1818,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.assume(_issuanceMintAmount > 0);
 
         // Execute
-        bondingCurveFundingManager.call_distributeIssuanceToken(
+        bondingCurveFundingManager.call_handleIssuanceTokenAfterBuy(
             _receiver, _issuanceMintAmount
         );
 

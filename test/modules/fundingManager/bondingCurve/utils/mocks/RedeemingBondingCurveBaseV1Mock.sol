@@ -77,7 +77,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     uint public distributeIssuanceTokenFunctionCalled;
 
-    function _distributeIssuanceToken(
+    function _handleIssuanceTokenAfterBuy(
         address _receiver,
         uint _issuanceMintAmount
     ) internal virtual override {
@@ -111,14 +111,6 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     //--------------------------------------------------------------------------
     // Mock access for internal functions
-
-    function call_calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint)
-    {
-        return calculateSaleReturn(_depositAmount);
-    }
 
     function call_BPS() external pure returns (uint) {
         return BPS;
