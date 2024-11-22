@@ -29,14 +29,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
     //--------------------------------------------------------------------------
     // Mock access for internal functions
 
-    function call_calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint)
-    {
-        return calculateSaleReturn(_depositAmount);
-    }
-
     function call_BPS() external pure returns (uint) {
         return BPS;
     }
