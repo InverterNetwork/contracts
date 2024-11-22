@@ -268,7 +268,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         }
 
         // Use virtual function to distribute collateral tokens
-        _distributeCollateralToken(_receiver, collateralRedeemAmount);
+        _handleCollateralTokenAfterSell(_receiver, collateralRedeemAmount);
 
         // Emit event
         emit TokensSold(
@@ -276,10 +276,10 @@ abstract contract RedeemingBondingCurveBase_v1 is
         );
     }
 
-    /// @notice Virtual function to distribute collateral tokens.
-    /// @param  _receiver The address that will receive the collateral tokens.
+    /// @notice Virtual function to handle collateral tokens after a successful sell.
+    /// @param  _receiver The address that used the sell function.
     /// @param  _collateralAmount The amount of collateral tokens to distribute.
-    function _distributeCollateralToken(
+    function _handleCollateralTokenAfterSell(
         address _receiver,
         uint _collateralAmount
     ) internal virtual;
