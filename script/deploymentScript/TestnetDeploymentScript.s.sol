@@ -1,25 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "forge-std/Script.sol";
+import 'forge-std/Script.sol';
 
 // Scripts
-import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
-import {CustomFactoryDeploymentScript} from
-    "script/deploymentScript/CustomFactoryDeploymentScript.s.sol";
+import {DeploymentScript} from 'script/deploymentScript/DeploymentScript.s.sol';
+import {CustomFactoryDeploymentScript} from 'script/deploymentScript/CustomFactoryDeploymentScript.s.sol';
 
 // Contracts
-import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
+import {DeterministicFactory_v1} from '@df/DeterministicFactory_v1.sol';
 
 // Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IERC20} from '@oz/token/ERC20/IERC20.sol';
 
 // Mocks
-import {
-    OptimisticOracleV3Mock,
-    OptimisticOracleV3Interface
-} from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {OptimisticOracleV3Mock, OptimisticOracleV3Interface} from 'test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol';
+import {ERC20Mock} from 'test/utils/mocks/ERC20Mock.sol';
+import {uniswapFactoryAddress, uniswapRouterAddress, uniswapFactoryBytecode, uniswapRouterBytecode} from 'test/experimental/factories/Immutable_PIM_Factory_v1.t.sol';
+import {UniswapV2Adapter} from 'src/experimental/modules/ImmutableMigration/UniswapV2Adapter.sol';
 
 /**
  * @title Inverter Testnet Deployment Script
@@ -38,11 +36,11 @@ contract TestnetDeploymentScript is DeploymentScript {
     function run() public virtual override(DeploymentScript) {
         console2.log();
         console2.log(
-            "================================================================================"
+            '================================================================================'
         );
-        console2.log("Start Testnet Deployment Script");
+        console2.log('Start Testnet Deployment Script');
         console2.log(
-            "================================================================================"
+            '================================================================================'
         );
 
         // Set required parameters to testnet values
@@ -60,27 +58,34 @@ contract TestnetDeploymentScript is DeploymentScript {
 
         vm.startBroadcast(deployerPrivateKey);
         {
-            console2.log(" Set up dependency contracts ");
+            console2.log(' Set up dependency contracts ');
 
             // Deploy and setup DeterministicFactory
-            deterministicFactory =
-                address(new DeterministicFactory_v1(deployer));
+            deterministicFactory = address(
+                new DeterministicFactory_v1(deployer)
+            );
             DeterministicFactory_v1(deterministicFactory).setAllowedDeployer(
                 deployer
             );
-            console2.log("\tDeterministic Factory: %s", deterministicFactory);
+            console2.log('\tDeterministic Factory: %s', deterministicFactory);
 
-            console2.log(" Set up mocks");
+            console2.log(' Set up mocks');
 
             // Deploy and setup UMA's OptimisticOracleV3Mock
             ooV3 = new OptimisticOracleV3Mock(
-                IERC20(address(mockCollateralToken)), DEFAULT_LIVENESS
+                IERC20(address(mockCollateralToken)),
+                DEFAULT_LIVENESS
             ); // @note FeeToken?
-            console2.log("\tOptimisticOracleV3Mock: %s", address(ooV3));
+            console2.log('\tOptimisticOracleV3Mock: %s', address(ooV3));
 
             // Deploy and setup Mock Collateral Token
-            mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD");
-            console2.log("\tERC20Mock iUSD: %s", address(mockCollateralToken));
+            mockCollateralToken = new ERC20Mock('Inverter USD', 'iUSD');
+            console2.log('\tERC20Mock iUSD: %s', address(mockCollateralToken));
+
+            // Deploy uniswap v2 adapter
+            address uniswapV2Adapter = deployUniswapAdapter();
+            vm.setEnv('DEX_ADAPTER', vm.toString(uniswapV2Adapter));
+            console2.log('\tUniswapV2Adapter: %s', uniswapV2Adapter);
         }
         vm.stopBroadcast();
 
@@ -91,8 +96,25 @@ contract TestnetDeploymentScript is DeploymentScript {
 
         super.run();
 
-        CustomFactoryDeploymentScript customFactoryDeploymentScript =
-            new CustomFactoryDeploymentScript();
+        CustomFactoryDeploymentScript customFactoryDeploymentScript = new CustomFactoryDeploymentScript();
         customFactoryDeploymentScript.deploy(orchestratorFactory);
+    }
+
+    //--------------------------------------------------------------------------
+    // Utils
+    //--------------------------------------------------------------------------
+
+    function deployUniswapAdapter() internal returns (address) {
+        vm.etch(uniswapFactoryAddress, uniswapFactoryBytecode);
+        vm.etch(uniswapRouterAddress, uniswapRouterBytecode);
+
+        // Deploy UniswapV2Adapter
+        return
+            address(
+                new UniswapV2Adapter(
+                    uniswapFactoryAddress,
+                    uniswapRouterAddress
+                )
+            );
     }
 }
