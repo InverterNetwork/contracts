@@ -194,9 +194,12 @@ contract Governor_v1 is
         // grant COMMUNITY_MULTISIG_ROLE to specified address
         _grantRole(TEAM_MULTISIG_ROLE, _teamMultisig);
 
+        // set timelock period
         _setTimelockPeriod(_timelockPeriod);
 
+        // set fee manager
         _setFeeManager(_feeManager);
+        // set module factory
         _setModuleFactory(_moduleFactory);
     }
 
@@ -333,15 +336,23 @@ contract Governor_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Factory Functions
+    // Register Beacons
 
     /// @inheritdoc IGovernor_v1
     function registerMetadataInModuleFactory(
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
-    ) external onlyCommunityOrTeamMultisig accessibleBeacon(address(beacon)) {
-        linkedBeacons.push(beacon);
+    ) external onlyCommunityOrTeamMultisig {
+        _addBeaconToLinkedBeacons(beacon);
         moduleFactory.registerMetadata(metadata, beacon);
+    }
+
+    /// @inheritdoc IGovernor_v1
+    function registerNonModuleBeacon(IInverterBeacon_v1 beacon)
+        external
+        onlyCommunityOrTeamMultisig
+    {
+        _addBeaconToLinkedBeacons(beacon);
     }
 
     //--------------------------------------------------------------------------
@@ -567,5 +578,15 @@ contract Governor_v1 is
 
         // we are here, that means target is owned by this address and inverter beacon
         return true;
+    }
+
+    /// @dev	Internal function that adds a beacon to the linked beacons array.
+    /// @param  beacon The beacon to add.
+    function _addBeaconToLinkedBeacons(IInverterBeacon_v1 beacon)
+        internal
+        accessibleBeacon(address(beacon))
+    {
+        linkedBeacons.push(beacon);
+        emit BeaconAddedToLinkedBeacons(address(beacon));
     }
 }

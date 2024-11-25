@@ -46,21 +46,27 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 /**
  * @title   Inverter Bancor Virtual Supply Bonding Curve Funding Manager
  *
- * @notice  This contract enables the issuance and redeeming of tokens on a bonding curve, using
- *          a virtual supply for both the issuance and the collateral as input. It integrates
- *          Aragon's {BancorFormula} to manage the calculations for token issuance and redemption
- *          rates based on specified reserve ratios.
+ * @notice  This contract enables the issuance and redeeming of tokens on a
+ *          bonding curve, using a virtual supply for both the issuance and
+ *          the collateral as input. It integrates Aragon's {BancorFormula}
+ *          to manage the calculations for token issuance and redemption rates
+ *          based on specified reserve ratios.
  *
- * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v1}, {VirtualIssuanceSupplyBase_v1},
- *          and {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper functions for bonding curve
- *          calculations using the {BancorFormula}. {Orchestrator_v1} Admin manages
- *          configuration such as virtual supplies and reserve ratios. Ensure interaction adheres to
- *          defined transactional limits and decimal precision requirements to prevent computational
- *          overflows or underflows.
+ * @dev     Inherits {BondingCurveBase_v1}, {RedeemingBondingCurveBase_v1},
+ *          {VirtualIssuanceSupplyBase_v1}, and
+ *          {VirtualCollateralSupplyBase_v1}. Implements formulaWrapper
+ *          functions for bonding curve calculations using the {BancorFormula}.
+ *          {Orchestrator_v1} Admin manages configuration such as virtual
+ *          supplies and reserve ratios. Ensure interaction adheres to defined
+ *          transactional limits and decimal precision requirements to prevent
+ *          computational overflows or underflows.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.1.0
  *
  * @author  Inverter Network
  */

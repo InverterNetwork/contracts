@@ -31,8 +31,11 @@ import {ERC165Upgradeable} from
  *          implemented in derived contracts.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.1.0
  *
  * @author  Inverter Network
  */
