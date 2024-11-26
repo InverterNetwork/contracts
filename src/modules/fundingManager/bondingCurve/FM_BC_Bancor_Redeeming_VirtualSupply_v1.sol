@@ -599,12 +599,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         }
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Overridden Internal Functions
 
-    /// @notice    Distributes issuance tokens by minting them to the receiver.
+    /// @notice Handles issuance tokens by minting them to the receiver.
     /// @param  _receiver The address that will receive the bought tokens.
-    /// @param  _issuanceMintAmount The amount of issuance tokens to distribute.
+    /// @param  _issuanceMintAmount The amount of issuance tokens to handle.
     function _handleIssuanceTokenAfterBuy(
         address _receiver,
         uint _issuanceMintAmount
@@ -612,9 +612,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _mint(_receiver, _issuanceMintAmount);
     }
 
-    /// @dev    Distributes collateral tokens by transferring them to the receiver.
+    /// @notice Handles collateral tokens by transferring them to the receiver.
     /// @param  _receiver The address that will receive the collateral tokens.
-    /// @param  _collateralAmount The amount of collateral tokens to distribute.
+    /// @param  _collateralAmount The amount of collateral tokens to handle.
     function _handleCollateralTokenAfterSell(
         address _receiver,
         uint _collateralAmount
