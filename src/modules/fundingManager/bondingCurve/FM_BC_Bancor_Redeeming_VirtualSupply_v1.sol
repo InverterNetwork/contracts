@@ -615,7 +615,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @notice Handles collateral tokens by transferring them to the receiver.
     /// @param  _receiver The address that will receive the collateral tokens.
     /// @param  _collateralAmount The amount of collateral tokens to handle.
-    function _handleCollateralTokenAfterSell(
+    function _handleCollateralTokensAfterSell(
         address _receiver,
         uint _collateralAmount
     ) internal virtual override {

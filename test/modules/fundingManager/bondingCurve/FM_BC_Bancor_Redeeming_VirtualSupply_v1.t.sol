@@ -1827,12 +1827,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /*
-    Test: _handleCollateralTokenAfterSell
-    └── When: the function _handleCollateralTokenAfterSell is called
+    Test: _handleCollateralTokensAfterSell
+    └── When: the function _handleCollateralTokensAfterSell is called
         └── Then: it should transfer the correct amount of tokens to the receiver address
     */
 
-    function test_handleCollateralTokenAfterSell(
+    function test_handleCollateralTokensAfterSell(
         address _receiver,
         uint _amount
     ) public {
@@ -1846,7 +1846,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         _token.mint(address(bondingCurveFundingManager), _amount);
 
         // Execute
-        bondingCurveFundingManager.call_handleCollateralTokenAfterSell(
+        bondingCurveFundingManager.call_handleCollateralTokensAfterSell(
             _receiver, _amount
         );
 

@@ -114,11 +114,11 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         _handleIssuanceTokenAfterBuy(_receiver, _amount);
     }
 
-    function call_handleCollateralTokenAfterSell(
+    function call_handleCollateralTokensAfterSell(
         address _receiver,
         uint _amount
     ) external {
-        _handleCollateralTokenAfterSell(_receiver, _amount);
+        _handleCollateralTokensAfterSell(_receiver, _amount);
     }
 
     //--------------------------------------------------------------------------

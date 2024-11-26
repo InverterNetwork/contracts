@@ -270,8 +270,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
 
-        // Use virtual function to distribute collateral tokens
-        _handleCollateralTokenAfterSell(_receiver, collateralRedeemAmount);
+        // Use virtual function to handle collateral tokens
+        _handleCollateralTokensAfterSell(_receiver, collateralRedeemAmount);
 
         // Emit event
         emit TokensSold(
@@ -281,8 +281,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @notice Virtual function to handle collateral tokens after a successful sell.
     /// @param  _receiver The address that used the sell function.
-    /// @param  _collateralAmount The amount of collateral tokens to distribute.
-    function _handleCollateralTokenAfterSell(
+    /// @param  _collateralAmount The amount of collateral tokens to handle.
+    function _handleCollateralTokensAfterSell(
         address _receiver,
         uint _collateralAmount
     ) internal virtual;
