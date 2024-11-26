@@ -290,16 +290,15 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
 
-        // Use virtual function to distribute issuance tokens
+        // Use virtual function to handle issuance tokens
         _handleIssuanceTokenAfterBuy(_receiver, issuanceTokenAmount);
 
-        // Emit event
         emit TokensBought(
             _receiver, _depositAmount, issuanceTokenAmount, _msgSender()
         );
     }
 
-    /// @notice    Virtual function to handle issuance tokens after a successful buy.
+    /// @notice Virtual function to handle issuance tokens after a successful buy.
     /// @param  _receiver The address that used the buy function.
     /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
     function _handleIssuanceTokenAfterBuy(
