@@ -57,7 +57,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev	Indicates whether the sell functionality is open or not.
@@ -69,7 +69,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     /// @dev	Modifier to guarantee the selling functionality is enabled.
@@ -78,7 +78,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -96,7 +96,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         sellTo(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -155,13 +155,13 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // return redeemAmount;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function getStaticPriceForSelling() external view virtual returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev    Function used for wrapping the call to the external contract responsible for
@@ -175,7 +175,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         virtual
         returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Executes a sell order by transferring tokens from the receiver to the contract,.

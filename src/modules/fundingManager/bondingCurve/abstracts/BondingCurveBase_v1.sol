@@ -55,7 +55,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     using SafeERC20 for IERC20Issuance_v1;
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev	Base Points used for percentage calculation. This value represents 100%.
@@ -77,7 +77,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     /// @dev	Modifier to guarantee the buying functionality is enabled.
@@ -92,7 +92,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -110,7 +110,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -186,7 +186,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -194,13 +194,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         return address(issuanceToken);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IBondingCurveBase_v1
     function getStaticPriceForBuying() external view virtual returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev    Function used for wrapping the call to the external contract responsible for
@@ -214,7 +214,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Internal function to handle the buying of tokens.
@@ -464,7 +464,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Calls to the external ERC20 contract
 
     /// @dev	Mints new tokens.

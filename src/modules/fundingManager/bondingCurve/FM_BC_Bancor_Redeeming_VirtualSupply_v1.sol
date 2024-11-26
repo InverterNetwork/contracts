@@ -97,7 +97,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev    The interface of the Bancor Formula used to calculate the issuance and redeeming amount.
@@ -128,7 +128,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     /// @dev    Modifier to guarantee the buying and selling functionalities are closed.
@@ -137,7 +137,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -199,7 +199,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         emit OrchestratorTokenSet(_acceptedToken, collateralTokenDecimals);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Mutating Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address. This function is subject
@@ -285,7 +285,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         sellTo(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Data Query Functions
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -357,7 +357,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         return _token;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IFundingManager_v1
@@ -421,7 +421,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         _setReserveRatioForSelling(_reserveRatio);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Upstream Function Implementations
 
     /// @dev    Calculates the amount of tokens to mint for a given deposit amount using the {BancorFormula}.
@@ -498,7 +498,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Sets the issuance token for the Bonding Curve Funding Manager.
