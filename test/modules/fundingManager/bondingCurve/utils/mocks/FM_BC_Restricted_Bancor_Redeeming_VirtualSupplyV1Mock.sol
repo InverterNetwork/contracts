@@ -22,11 +22,11 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
 contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
     FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
 {
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // The FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is not abstract, so all the necessary functions are already implemented
     // The goal of this mock is to provide direct access to internal functions for testing purposes.
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_BPS() external pure returns (uint) {
@@ -121,7 +121,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock is
         _handleCollateralTokensAfterSell(_receiver, _amount);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Helper Functions
 
     function setProjectCollateralFeeCollectedHelper(uint _amount) external {

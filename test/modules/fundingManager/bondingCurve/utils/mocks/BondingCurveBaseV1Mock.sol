@@ -62,7 +62,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         returns (uint)
     {}
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Override Functions
 
     uint public distributeIssuanceTokenFunctionCalled;
@@ -75,7 +75,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         distributeIssuanceTokenFunctionCalled++;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_calculatePurchaseReturn(uint _depositAmount)
@@ -155,7 +155,7 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         _setIssuanceToken(_newIssuanceToken);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Helper function
 
     function setProjectCollateralFeeCollectedHelper(uint _amount) external {

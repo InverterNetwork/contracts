@@ -24,7 +24,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     IBancorFormula public formula;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Override Functions
 
     function init(
@@ -109,7 +109,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         returns (uint)
     {}
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_BPS() external pure returns (uint) {
