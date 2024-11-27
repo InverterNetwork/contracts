@@ -285,7 +285,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // collect protocol fee on outgoing issuance token
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
-        // Revert if the token amount is lower than minimum amount the user expects
+        // Revert if the token amount is lower than the minimum amount the user expects
         if (issuanceTokenAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
