@@ -280,7 +280,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @notice Virtual function to handle collateral tokens after a successful sell.
-    /// @param  _receiver  The address for which the collateralF tokens will be handled.
+    /// @param  _receiver  The address for which the collateral tokens will be handled.
     /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
     function _handleCollateralTokensAfterSell(
         address _receiver,
