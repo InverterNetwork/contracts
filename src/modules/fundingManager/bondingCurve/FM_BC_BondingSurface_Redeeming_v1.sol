@@ -110,8 +110,6 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         Metadata memory metadata_,
         bytes memory configData_
     ) external virtual override(Module_v1) initializer {
-        __Module_init(orchestrator_, metadata_);
-
         address issuanceToken;
         address acceptedToken;
         BondingCurveProperties memory bondingCurveProperties;
@@ -119,10 +117,21 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         (issuanceToken, acceptedToken, bondingCurveProperties) =
             abi.decode(configData_, (address, address, BondingCurveProperties));
 
-        // Set accepted token
+        __Module_init(orchestrator_, metadata_);
+        __FM_BC_BondingSurface_Redeeming_v1_Init(
+            issuanceToken, acceptedToken, bondingCurveProperties
+        );
+    }
+
+    function __FM_BC_BondingSurface_Redeeming_v1_Init(
+        address issuanceToken,
+        address acceptedToken,
+        BondingCurveProperties memory bondingCurveProperties
+    ) internal onlyInitializing {
+        // Set collateral token
         _token = IERC20(acceptedToken);
 
-        // MIN_RESERVE is in relational to the decimals of the workflow collateral token
+        // MIN_RESERVE is in relation to the decimals of the workflow's collateral token
         MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
@@ -135,20 +144,18 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             )
         ) {
             revert
-                FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
+                IFM_BC_BondingSurface_Redeeming_v1
+                .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
         // Set formula contract
         _formula = IBondingSurface(bondingCurveProperties.formula);
 
         // Set Bonding Curve Properties
-        // Set capital required
         _setCapitalRequired(bondingCurveProperties.capitalRequired);
-        // Set base price multiplier
         _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
-        // Set buy fee
         _setBuyFee(bondingCurveProperties.buyFee);
-        // Set sell fee
         _setSellFee(bondingCurveProperties.sellFee);
+
         // Set buying functionality to open if true. By default buying is false
         buyIsOpen = bondingCurveProperties.buyIsOpen;
         // Set selling functionality to open if true. By default selling is false

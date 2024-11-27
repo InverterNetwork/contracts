@@ -146,8 +146,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             abi.encode(
                 address(issuanceToken),
                 address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                liquidityVaultController,
                 bc_properties,
+                liquidityVaultController,
                 MAX_SEIZE,
                 BUY_AND_SELL_IS_RESTRICTED
             )
@@ -303,8 +303,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             abi.encode(
                 address(issuanceToken),
                 address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                liquidityVaultController,
                 bc_properties,
+                liquidityVaultController,
                 MAX_SEIZE,
                 BUY_AND_SELL_IS_RESTRICTED
             )
@@ -392,8 +392,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             abi.encode(
                 address(issuanceToken),
                 address(_token), // fetching from ModuleTest.sol (specifically after the _setUpOrchestrator function call)
-                liquidityVaultController,
                 bc_properties,
+                liquidityVaultController,
                 MAX_SEIZE,
                 BUY_AND_SELL_IS_RESTRICTED
             )

@@ -155,8 +155,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
         address issuanceToken;
         address acceptedToken;
-        address liquidityVaultController;
         BondingCurveProperties memory bondingCurveProperties;
+        address liquidityVaultController;
         uint64 newSeize;
         // Indicates whether buying and selling is restricted to the
         // CURVE_INTERACTION_ROLE or open to anyone.
@@ -165,57 +165,36 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         (
             issuanceToken,
             acceptedToken,
-            liquidityVaultController,
             bondingCurveProperties,
+            liquidityVaultController,
             newSeize,
             buyAndSellIsRestricted
         ) = abi.decode(
             configData_,
-            (address, address, address, BondingCurveProperties, uint64, bool)
+            (address, address, BondingCurveProperties, address, uint64, bool)
         );
+        __Module_init(orchestrator_, metadata_);
+        __FM_BC_BondingSurface_Redeeming_v1_Init(
+            issuanceToken, acceptedToken, bondingCurveProperties
+        );
+        __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
+            liquidityVaultController, newSeize, buyAndSellIsRestricted
+        );
+    }
 
-        // Set collateral token
-        _token = IERC20(acceptedToken);
-
-        // MIN_RESERVE is in relation to the decimals of the workflow's collateral token
-        MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
-
-        // Set issuance token. This also caches the decimals
-        _setIssuanceToken(address(issuanceToken));
-
+    function __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
+        address liquidityVaultController,
+        uint64 newSeize,
+        bool buyAndSellIsRestricted
+    ) internal onlyInitializing {
         _liquidityVaultController =
             ILiquidityVaultController(liquidityVaultController);
 
-        // Check for valid Bonding Surface formula contract
-        if (
-            !ERC165Upgradeable(bondingCurveProperties.formula).supportsInterface(
-                type(IBondingSurface).interfaceId
-            )
-        ) {
-            revert
-                IFM_BC_BondingSurface_Redeeming_v1
-                .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
-        }
-        // Set formula contract
-        _formula = IBondingSurface(bondingCurveProperties.formula);
-
-        // Set Bonding Curve Properties
-        _setCapitalRequired(bondingCurveProperties.capitalRequired);
-        _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
-        _setBuyFee(bondingCurveProperties.buyFee);
-        _setSellFee(bondingCurveProperties.sellFee);
-        _setSeize(newSeize);
-        // Set buying functionality to open if true. By default buying is false
-        buyIsOpen = bondingCurveProperties.buyIsOpen;
-        // Set selling functionality to open if true. By default selling is false
-        sellIsOpen = bondingCurveProperties.sellIsOpen;
         // Set buy and sell restriction to restricted if true. By default buy and
         // sell is unrestricted
         _buyAndSellIsRestricted = buyAndSellIsRestricted;
 
-        emit OrchestratorTokenSet(
-            acceptedToken, IERC20Metadata(address(_token)).decimals()
-        );
+        _setSeize(newSeize);
     }
 
     // =========================================================================
