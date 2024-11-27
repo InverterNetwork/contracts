@@ -77,7 +77,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     uint public distributeIssuanceTokenFunctionCalled;
 
-    function _handleIssuanceTokenAfterBuy(
+    function _handleIssuanceTokensAfterBuy(
         address _receiver,
         uint _issuanceMintAmount
     ) internal virtual override {

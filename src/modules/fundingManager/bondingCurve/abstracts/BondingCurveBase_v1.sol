@@ -291,7 +291,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
 
         // Use virtual function to handle issuance tokens
-        _handleIssuanceTokenAfterBuy(_receiver, issuanceTokenAmount);
+        _handleIssuanceTokensAfterBuy(_receiver, issuanceTokenAmount);
 
         emit TokensBought(
             _receiver, _depositAmount, issuanceTokenAmount, _msgSender()
@@ -301,7 +301,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @notice Virtual function to handle issuance tokens after a successful buy.
     /// @param  _receiver The address that used the buy function.
     /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
-    function _handleIssuanceTokenAfterBuy(
+    function _handleIssuanceTokensAfterBuy(
         address _receiver,
         uint _issuanceTokenAmount
     ) internal virtual;

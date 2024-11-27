@@ -107,10 +107,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock is
             _calculateNetAndSplitFees(_totalAmount, _protocolFee, _workflowFee);
     }
 
-    function call_handleIssuanceTokenAfterBuy(address _receiver, uint _amount)
+    function call_handleIssuanceTokensAfterBuy(address _receiver, uint _amount)
         external
     {
-        _handleIssuanceTokenAfterBuy(_receiver, _amount);
+        _handleIssuanceTokensAfterBuy(_receiver, _amount);
     }
 
     function call_handleCollateralTokensAfterSell(
