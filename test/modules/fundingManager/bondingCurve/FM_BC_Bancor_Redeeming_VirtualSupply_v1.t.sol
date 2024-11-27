@@ -1811,19 +1811,19 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     function test_handleIssuanceTokensAfterBuy(
         address _receiver,
-        uint _issuanceMintAmount
+        uint _issuanceTokenAmount
     ) public {
         // Setup
         vm.assume(_receiver != address(0));
-        vm.assume(_issuanceMintAmount > 0);
+        vm.assume(_issuanceTokenAmount > 0);
 
         // Execute
         bondingCurveFundingManager.call_handleIssuanceTokensAfterBuy(
-            _receiver, _issuanceMintAmount
+            _receiver, _issuanceTokenAmount
         );
 
         // Assert
-        assertEq(issuanceToken.balanceOf(_receiver), _issuanceMintAmount);
+        assertEq(issuanceToken.balanceOf(_receiver), _issuanceTokenAmount);
     }
 
     /*

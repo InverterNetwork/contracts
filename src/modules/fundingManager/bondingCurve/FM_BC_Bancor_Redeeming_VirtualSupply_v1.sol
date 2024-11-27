@@ -604,12 +604,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     /// @notice Handles issuance tokens by minting them to the receiver.
     /// @param  _receiver The address that will receive the bought tokens.
-    /// @param  _issuanceMintAmount The amount of issuance tokens to handle.
+    /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
     function _handleIssuanceTokensAfterBuy(
         address _receiver,
-        uint _issuanceMintAmount
+        uint _issuanceTokenAmount
     ) internal virtual override {
-        _mint(_receiver, _issuanceMintAmount);
+        _mint(_receiver, _issuanceTokenAmount);
     }
 
     /// @notice Handles collateral tokens by transferring them to the receiver.

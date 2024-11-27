@@ -79,9 +79,9 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     function _handleIssuanceTokensAfterBuy(
         address _receiver,
-        uint _issuanceMintAmount
+        uint _issuanceTokenAmount
     ) internal virtual override {
-        _mint(_receiver, _issuanceMintAmount);
+        _mint(_receiver, _issuanceTokenAmount);
         distributeIssuanceTokenFunctionCalled++;
     }
 
