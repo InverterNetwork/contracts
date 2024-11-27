@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.0
+ * @custom:version 1.1.1
  *
  * @author  Inverter Network
  */
@@ -55,7 +55,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     using SafeERC20 for IERC20Issuance_v1;
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev	Base Points used for percentage calculation. This value represents 100%.
@@ -77,7 +77,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     /// @dev	Modifier to guarantee the buying functionality is enabled.
@@ -92,7 +92,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -110,7 +110,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -164,9 +164,6 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             issuanceBuyFeePercentage,
             0
         );
-
-        // Return expected purchase return amount
-        // return mintAmount;
     }
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -189,7 +186,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         emit ProjectCollateralFeeWithdrawn(_receiver, _amount);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IBondingCurveBase_v1
@@ -197,13 +194,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         return address(issuanceToken);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IBondingCurveBase_v1
     function getStaticPriceForBuying() external view virtual returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev    Function used for wrapping the call to the external contract responsible for
@@ -217,7 +214,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Internal function to handle the buying of tokens.
@@ -275,30 +272,39 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
             emit ProjectCollateralFeeAdded(projectFeeAmount);
         }
 
-        // Calculate mint amount based on upstream formula
-        uint issuanceMintAmount = _issueTokensFormulaWrapper(netDeposit);
-        totalIssuanceTokenMinted = issuanceMintAmount;
+        // Calculate token amount based on upstream formula
+        uint issuanceTokenAmount = _issueTokensFormulaWrapper(netDeposit);
+        totalIssuanceTokenMinted = issuanceTokenAmount;
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (issuanceMintAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
+        (issuanceTokenAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(
-            issuanceMintAmount, issuanceBuyFeePercentage, 0
+            issuanceTokenAmount, issuanceBuyFeePercentage, 0
         );
         // collect protocol fee on outgoing issuance token
         _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
-        // Revert when the mint amount is lower than minimum amount the user expects
-        if (issuanceMintAmount < _minAmountOut) {
+        // Revert if the token amount is lower than the minimum amount the user expects
+        if (issuanceTokenAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
-        // Mint tokens to address
-        _mint(_receiver, issuanceMintAmount);
-        // Emit event
+
+        // Use virtual function to handle issuance tokens
+        _handleIssuanceTokensAfterBuy(_receiver, issuanceTokenAmount);
+
         emit TokensBought(
-            _receiver, _depositAmount, issuanceMintAmount, _msgSender()
+            _receiver, _depositAmount, issuanceTokenAmount, _msgSender()
         );
     }
+
+    /// @notice Virtual function to handle issuance tokens after a successful buy.
+    /// @param  _receiver The address for which the issuance tokens will be handled.
+    /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
+    function _handleIssuanceTokensAfterBuy(
+        address _receiver,
+        uint _issuanceTokenAmount
+    ) internal virtual;
 
     /// @dev	Sets the buy transaction fee, expressed in BPS.
     /// @param  _fee The fee percentage to set for buy transactions.
@@ -458,7 +464,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         }
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Calls to the external ERC20 contract
 
     /// @dev	Mints new tokens.

@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.0
+ * @custom:version 1.1.1
  *
  * @author  Inverter Network
  */
@@ -57,7 +57,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev	Indicates whether the sell functionality is open or not.
@@ -69,7 +69,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Modifiers
 
     /// @dev	Modifier to guarantee the selling functionality is enabled.
@@ -78,7 +78,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -96,7 +96,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         sellTo(_msgSender(), _depositAmount, _minAmountOut);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -155,13 +155,13 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // return redeemAmount;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function getStaticPriceForSelling() external view virtual returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions Implemented in Downstream Contract
 
     /// @dev    Function used for wrapping the call to the external contract responsible for
@@ -175,7 +175,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         virtual
         returns (uint);
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Executes a sell order by transferring tokens from the receiver to the contract,.
@@ -269,13 +269,23 @@ abstract contract RedeemingBondingCurveBase_v1 is
         if (collateralRedeemAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
-        // Transfer tokens to receiver
-        collateralToken.safeTransfer(_receiver, collateralRedeemAmount);
+
+        // Use virtual function to handle collateral tokens
+        _handleCollateralTokensAfterSell(_receiver, collateralRedeemAmount);
+
         // Emit event
         emit TokensSold(
             _receiver, _depositAmount, collateralRedeemAmount, _msgSender()
         );
     }
+
+    /// @notice Virtual function to handle collateral tokens after a successful sell.
+    /// @param  _receiver  The address for which the collateral tokens will be handled.
+    /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
+    function _handleCollateralTokensAfterSell(
+        address _receiver,
+        uint _collateralTokenAmount
+    ) internal virtual;
 
     ///  @dev    Checks if the sell functionality is enabled.
     function _sellingIsEnabledModifier() internal view {

@@ -378,10 +378,14 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         // Post-checks
         assertEq(
             _token.balanceOf(address(bondingCurveFundingManager)),
-            protocolIssuanceFeeAmount + projectCollateralFeeAmount
+            protocolIssuanceFeeAmount + projectCollateralFeeAmount + finalAmount
         );
 
-        assertEq(_token.balanceOf(seller), finalAmount);
+        assertEq(_token.balanceOf(seller), 0);
+        assertEq(
+            1,
+            bondingCurveFundingManager.distributeCollateralTokenFunctionCalled()
+        );
 
         assertEq(issuanceToken.balanceOf(seller), 0);
         assertEq(issuanceToken.totalSupply(), protocolIssuanceFeeAmount);
@@ -523,7 +527,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                 .Module__BondingCurveBase__InvalidDepositAmount
                 .selector
         );
-        bondingCurveFundingManager.call_calculateSaleReturn(depositAmount);
+        bondingCurveFundingManager.calculateSaleReturn(depositAmount);
     }
 
     function testInternalCalculateSaleReturnWithZeroFee(uint _depositAmount)
@@ -534,7 +538,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         // As the implementation is a mock, we return the deposit amount in a 1:1 ratio
         uint functionReturn =
-            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
         assertEq(functionReturn, _depositAmount);
     }
 
@@ -643,7 +647,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         // Get return value from function
         uint functionReturn =
-            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
 
         assertEq(functionReturn, netCollateralRedeemAmount);
     }
@@ -658,7 +662,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         _depositAmount = bound(_depositAmount, 1, 1e38);
 
         uint internalFunctionReturnValue =
-            bondingCurveFundingManager.call_calculateSaleReturn(_depositAmount);
+            bondingCurveFundingManager.calculateSaleReturn(_depositAmount);
 
         uint functionReturnValue =
             bondingCurveFundingManager.calculateSaleReturn(_depositAmount);

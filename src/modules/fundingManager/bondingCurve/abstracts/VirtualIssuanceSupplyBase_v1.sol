@@ -42,7 +42,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
             || super.supportsInterface(interfaceId);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev	The internal state variable to keep track of the virtual issuance supply.
@@ -53,7 +53,7 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
@@ -61,13 +61,13 @@ abstract contract VirtualIssuanceSupplyBase_v1 is
         return virtualIssuanceSupply;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
     function setVirtualIssuanceSupply(uint _virtualSupply) external virtual;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Adds a specified amount to the virtual issuance supply.

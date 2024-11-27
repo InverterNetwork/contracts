@@ -37,21 +37,21 @@ import {
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.0
+ * @custom:version 1.1.1
  *
  * @author  Inverter Network
  */
 contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     FM_BC_Bancor_Redeeming_VirtualSupply_v1
 {
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Errors
 
     /// @notice The feature is deactivated in this implementation.
     error Module__FM_BC_Restricted_Bancor_Redeeming_VirtualSupply__FeatureDeactivated(
     );
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev    Minter/Burner Role.
@@ -60,7 +60,7 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
 
     /// @inheritdoc FM_BC_Bancor_Redeeming_VirtualSupply_v1

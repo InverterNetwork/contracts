@@ -42,7 +42,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
             || super.supportsInterface(interfaceId);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Storage
 
     /// @dev	The internal state variable to keep track of the virtual collateral supply.
@@ -53,7 +53,7 @@ abstract contract VirtualCollateralSupplyBase_v1 is
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions
     /// @inheritdoc IVirtualCollateralSupplyBase_v1
     function getVirtualCollateralSupply()
@@ -65,13 +65,13 @@ abstract contract VirtualCollateralSupplyBase_v1 is
         return virtualCollateralSupply;
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Functions Implemented in Downstream Contract
 
     /// @inheritdoc IVirtualCollateralSupplyBase_v1
     function setVirtualCollateralSupply(uint _virtualSupply) external virtual;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @dev    Adds a specified amount to the virtual collateral supply.
