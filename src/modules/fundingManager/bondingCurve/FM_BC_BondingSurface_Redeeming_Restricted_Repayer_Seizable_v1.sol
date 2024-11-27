@@ -47,12 +47,12 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *              - BondingCurveBase_v1
  *              - RedeemingBondingCurveBase_v1
  *              - Repayer
- *          The contract should be used by the orchestrator admin or manager
- *          to manage all the configuration for the bonding curve as well as the
- *          opening and closing of the issuance and redeeming functionalities.
- *          The contract implements the formulaWrapper functions enforced by the
+ *          The contract should be used by the orchestrator admin to manage all
+ *          the configuration for the bonding curve as well as the opening and
+ *          closing of the issuance and redemption functionalities.
+ *          The contract implements the formulaWrapper functions enforced by
  *          using the Bonding Surface formula to calculate the issuance/
- *          redeeming rate.
+ *          redemption rate.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -158,8 +158,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         address liquidityVaultController;
         BondingCurveProperties memory bondingCurveProperties;
         uint64 newSeize;
-        // The indicator used for restrict/unrestrict buying and selling
-        // functionalities to the CURVE_INTERACTION_ROLE
+        // Indicates whether buying and selling is restricted to the
+        // CURVE_INTERACTION_ROLE or open to anyone.
         bool buyAndSellIsRestricted;
 
         (
@@ -174,16 +174,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             (address, address, address, BondingCurveProperties, uint64, bool)
         );
 
-        // Set accepted token
+        // Set collateral token
         _token = IERC20(acceptedToken);
 
-        // MIN_RESERVE is in relational to the decimals of the workflow collateral token
+        // MIN_RESERVE is in relation to the decimals of the workflow's collateral token
         MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
         _setIssuanceToken(address(issuanceToken));
 
-        // Set liquidity vault controller address
         _liquidityVaultController =
             ILiquidityVaultController(liquidityVaultController);
 
@@ -201,14 +200,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _formula = IBondingSurface(bondingCurveProperties.formula);
 
         // Set Bonding Curve Properties
-        // Set capital required
         _setCapitalRequired(bondingCurveProperties.capitalRequired);
-        // Set base price multiplier
         _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
-        // Set buy fee
         _setBuyFee(bondingCurveProperties.buyFee);
-        // Set sell fee
         _setSellFee(bondingCurveProperties.sellFee);
+        _setSeize(newSeize);
         // Set buying functionality to open if true. By default buying is false
         buyIsOpen = bondingCurveProperties.buyIsOpen;
         // Set selling functionality to open if true. By default selling is false
@@ -216,9 +212,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         // Set buy and sell restriction to restricted if true. By default buy and
         // sell is unrestricted
         _buyAndSellIsRestricted = buyAndSellIsRestricted;
-
-        // Set currentSeize
-        _setSeize(newSeize);
 
         emit OrchestratorTokenSet(
             acceptedToken, IERC20Metadata(address(_token)).decimals()
