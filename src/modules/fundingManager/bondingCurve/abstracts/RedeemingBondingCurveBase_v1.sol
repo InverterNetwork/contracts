@@ -281,10 +281,10 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
     /// @notice Virtual function to handle collateral tokens after a successful sell.
     /// @param  _receiver  The address for which the collateralF tokens will be handled.
-    /// @param  _collateralAmount The amount of collateral tokens to handle.
+    /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
     function _handleCollateralTokensAfterSell(
         address _receiver,
-        uint _collateralAmount
+        uint _collateralTokenAmount
     ) internal virtual;
 
     ///  @dev    Checks if the sell functionality is enabled.
