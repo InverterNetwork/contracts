@@ -384,7 +384,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(_token.balanceOf(seller), 0);
         assertEq(
             1,
-            bondingCurveFundingManager.distributeCollateralTokenFunctionCalled()
+            bondingCurveFundingManager.distributeCollateralTokenAfterSellFunctionCalled()
         );
 
         assertEq(issuanceToken.balanceOf(seller), 0);

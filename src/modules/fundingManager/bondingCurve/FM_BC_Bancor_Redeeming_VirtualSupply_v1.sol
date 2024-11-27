@@ -621,4 +621,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ) internal virtual override {
         token().safeTransfer(_receiver, _collateralTokenAmount);
     }
+
+    /// @notice Handles incoming collateral tokens by transferring them to the receiver.
+    /// @param  _sender The address from which the collateral tokens will be send.
+    /// @param  _receiver The address to which the collateral tokens will be receive.
+    /// @param  _amount The amount of collateral tokens to handle.
+    function _handleCollateralTokensBeforeBuy(
+        address _sender,
+        address _receiver,
+        uint _amount
+    ) internal virtual override {
+        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
+        collateralToken.safeTransferFrom(_sender, _receiver, _amount);
+    }
 }

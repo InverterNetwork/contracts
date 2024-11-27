@@ -238,8 +238,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
-        // Transfer collateral, confirming that correct amount == allowance
-        collateralToken.safeTransferFrom(
+        // Handle collateral transfer
+        _handleCollateralTokensBeforeBuy(
             _msgSender(), address(this), _depositAmount
         );
         // Get protocol fee percentages and treasury addresses
@@ -304,6 +304,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _handleIssuanceTokensAfterBuy(
         address _receiver,
         uint _issuanceTokenAmount
+    ) internal virtual;
+
+    /// @notice Virtual function to handle collateral tokens before a buy.
+    /// @param  _sender The address from which the collateral tokens will be send.
+    /// @param  _receiver The address to which the collateral tokens will be receive.
+    /// @param  _amount The amount of collateral tokens to handle.
+    function _handleCollateralTokensBeforeBuy(
+        address _sender,
+        address _receiver,
+        uint _amount
     ) internal virtual;
 
     /// @dev	Sets the buy transaction fee, expressed in BPS.
