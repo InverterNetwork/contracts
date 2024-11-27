@@ -61,6 +61,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @custom:version v1.0.0
  *
+ * @custom:inverter-standard-version 0.1.0
+ *
  * @author  Inverter Network
  */
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is

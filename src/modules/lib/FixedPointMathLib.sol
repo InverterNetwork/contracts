@@ -1,8 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity >=0.8.0;
 
-/// @notice Arithmetic library with operations for fixed-point numbers.
-/// @author Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/utils/FixedPointMathLib.sol)
+/**
+ * @title   Inverter Metadata Library
+ *
+ * @dev     Arithmetic library with operations for fixed-point numbers..
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version v1.0.0
+ *
+ * @custom:inverter-standard-version 0.1.0
+ *
+ * @author  Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/utils/FixedPointMathLib.sol)
+ */
 library FixedPointMathLib {
     /*///////////////////////////////////////////////////////////////
                             COMMON BASE UNITS

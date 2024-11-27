@@ -18,6 +18,8 @@ import {ILiquidityVaultController} from
  *
  * @custom:version v1.0.0
  *
+ * @custom:inverter-standard-version 0.1.0
+ *
  * @author  Inverter Network
  */
 interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@note Should this maybe be IFM_BC_BondingSurface_Redeeming_Restricted_Seizable_v1 ? repayer is included in different Interface right?

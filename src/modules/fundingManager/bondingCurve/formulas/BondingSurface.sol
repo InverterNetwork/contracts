@@ -38,6 +38,8 @@ import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
  *
  * @custom:version v1.0.0
  *
+ * @custom:inverter-standard-version 0.1.0
+ *
  * @author  Inverter Network
  */
 contract BondingSurface is IBondingSurface, ERC165 {

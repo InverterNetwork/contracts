@@ -24,6 +24,10 @@ import {ERC165Upgradeable} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
+ * @custom:version v1.0.0
+ *
+ * @custom:inverter-standard-version 0.1.0
+ *
  * @author  Inverter Network
  */
 contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {

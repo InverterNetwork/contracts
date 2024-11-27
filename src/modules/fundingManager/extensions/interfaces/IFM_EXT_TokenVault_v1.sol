@@ -13,6 +13,10 @@ pragma solidity ^0.8.0;
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
+ * @custom:version v1.0.0
+ *
+ * @custom:inverter-standard-version 0.1.0
+ *
  * @author  Inverter Network
  */
 interface IFM_EXT_TokenVault_v1 {
