@@ -9,7 +9,7 @@ import {RedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 import {BondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
-import {FixedPointMathLib} from "@lib/FixedPointMathLib.sol";
+import {FixedPointMathLib} from "@modLib/FixedPointMathLib.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IBondingCurveBase_v1} from
