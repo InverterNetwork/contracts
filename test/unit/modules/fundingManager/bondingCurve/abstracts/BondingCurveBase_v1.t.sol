@@ -890,11 +890,15 @@ contract BondingCurveBaseV1Test is ModuleTest {
             ERC20Issuance_v1(actualIssuanceToken).balanceOf(address(this)), 100
         );
 
-        // Create the wrapper and set it as the new issuance token
+        // Create the wrapper
         IssuanceTokenWrapperMock wrapper =
             new IssuanceTokenWrapperMock(actualIssuanceToken);
         assertEq(wrapper.issuanceToken(), actualIssuanceToken);
+
+        // Set the wrapper as the new issuance token
+        // and verify that it's set
         bondingCurveFundingManager.call_setIssuanceToken(address(wrapper));
+        assertEq(bondingCurveFundingManager.exposed_issuanceToken(), address(wrapper));
 
         // Obtain the issuance token again
         address issuanceTokenAfterWrapper =

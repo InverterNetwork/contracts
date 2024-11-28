@@ -167,6 +167,10 @@ contract BondingCurveBaseV1Mock is BondingCurveBase_v1 {
         _projectFeeCollected(_workflowFeeAmount);
     }
 
+    // Returns the internal variable of the issuance token storage
+    function exposed_issuanceToken() external view returns (address) {
+        return address(issuanceToken);
+    }
     // -------------------------------------------------------------------------
     // Helper function
 
