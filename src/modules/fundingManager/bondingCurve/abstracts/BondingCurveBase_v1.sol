@@ -190,8 +190,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Public Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    /// @dev        Always returns the address of the issuance token, even
-    //              if the issuance token is wrapped.
+    /// @dev    Always returns the address of the issuance token, even if the
+    //          issuance token is wrapped.
     function getIssuanceToken() external view virtual returns (address) {
         // We attempt to call the issuance tokens "issuanceToken" function,
         // which will succeed if the issuance token is wrapped, in which
