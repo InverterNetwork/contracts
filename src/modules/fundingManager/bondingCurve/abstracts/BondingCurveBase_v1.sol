@@ -190,7 +190,28 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Public Functions
 
     /// @inheritdoc IBondingCurveBase_v1
+    /// @dev        Always returns the address of the issuance token, even
+    //              if the issuance token is wrapped.
     function getIssuanceToken() external view virtual returns (address) {
+        // We attempt to call the issuance tokens "issuanceToken" function,
+        // which will succeed if the issuance token is wrapped, in which
+        // case we want to return the actual token address.
+        (bool success, bytes memory returnData) = address(issuanceToken)
+            .staticcall(
+            abi.encodeWithSelector(bytes4(keccak256("issuanceToken()")))
+        );
+
+        // If the call was successful and the return data is 32 bytes long
+        // (i.e. an address), we decode the return data and return the result.
+        // We further check that the address is not zero, as this would indicate
+        // that the issuance token is not wrapped.
+        if (success && returnData.length == 32) {
+            address result = abi.decode(returnData, (address));
+            if (result != address(0)) {
+                return result;
+            }
+        }
+
         return address(issuanceToken);
     }
 
