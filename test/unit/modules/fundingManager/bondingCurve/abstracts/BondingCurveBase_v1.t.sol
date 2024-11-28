@@ -883,7 +883,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address actualIssuanceToken =
             bondingCurveFundingManager.getIssuanceToken();
 
-        // Verify that the returned token is the actual token (i.e. works as expected)
+        // Verify that the returned token is the actual token (i.e. works as 
+        // expected)
         ERC20Issuance_v1(actualIssuanceToken).mint(address(this), 100);
         assertEq(
             ERC20Issuance_v1(actualIssuanceToken).balanceOf(address(this)), 100
