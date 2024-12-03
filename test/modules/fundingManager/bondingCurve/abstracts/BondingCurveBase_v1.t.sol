@@ -261,8 +261,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
         address buyer = makeAddr("buyer");
 
         // Pre-checks
-        uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
