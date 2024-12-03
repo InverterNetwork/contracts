@@ -97,9 +97,8 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
 
     uint public distributeCollateralTokenBeforeBuyFunctionCalled;
 
-        function _handleCollateralTokensBeforeBuy(
-        address, /*_sender*/
-        address, /*_receiver*/
+    function _handleCollateralTokensBeforeBuy(
+        address, /*_provder*/
         uint /*_amount*/
     ) internal virtual override {
         distributeCollateralTokenBeforeBuyFunctionCalled++;
