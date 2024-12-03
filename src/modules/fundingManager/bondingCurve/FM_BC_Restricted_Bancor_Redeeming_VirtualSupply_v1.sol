@@ -37,7 +37,7 @@ import {
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.2
  *
  * @author  Inverter Network
  */
