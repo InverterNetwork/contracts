@@ -1804,6 +1804,36 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Internal Functions
 
     /*
+    Test: _handleIssuanceTokensBeforeBuy
+    └── When: the function _handleCollateralTokensBeforeBuy is called
+        └── Then: it should transfer the correct amount of collateral tokens from the provider address to the bonding curve contract
+    */
+
+    function test_handleCollateralTokensBeforeBuy(
+        address _provider,
+        uint _amount
+    ) public {
+        // Setup
+        vm.assume(
+            _provider != address(0)
+                && _provider != address(bondingCurveFundingManager)
+        );
+        vm.assume(_amount > 0);
+
+        _token.mint(_provider, _amount);
+        vm.prank(_provider);
+        _token.approve(address(bondingCurveFundingManager), _amount);
+
+        // Execute
+        bondingCurveFundingManager.call_handleCollateralTokensBeforeBuy(
+            _provider, _amount
+        );
+
+        // Assert
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), _amount);
+    }
+
+    /*
     Test: _handleIssuanceTokensAfterBuy
     └── When: the function _handleIssuanceTokensAfterBuy is called
         └── Then: it should mint the correct amount of tokens to the receiver address
