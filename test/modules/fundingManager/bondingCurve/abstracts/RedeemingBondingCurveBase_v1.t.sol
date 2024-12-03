@@ -384,7 +384,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(_token.balanceOf(seller), 0);
         assertEq(
             1,
-            bondingCurveFundingManager.distributeCollateralTokenAfterSellFunctionCalled()
+            bondingCurveFundingManager
+                .distributeCollateralTokenAfterSellFunctionCalled()
         );
 
         assertEq(issuanceToken.balanceOf(seller), 0);
@@ -686,15 +687,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     //      - Approves the BondingCurve contract to spend the receipt tokens
     // This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount) internal {
-        _token.mint(seller, amount);
+        _token.mint(address(bondingCurveFundingManager), amount);
+        issuanceToken.mint(seller, amount);
 
-        vm.startPrank(seller);
-        {
-            _token.approve(address(bondingCurveFundingManager), amount);
-            bondingCurveFundingManager.buy(amount, amount);
-
-            issuanceToken.approve(address(bondingCurveFundingManager), amount);
-        }
-        vm.stopPrank();
+        issuanceToken.approve(address(bondingCurveFundingManager), amount);
     }
 }
