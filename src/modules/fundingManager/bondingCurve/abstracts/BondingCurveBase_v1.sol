@@ -306,8 +306,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @notice Virtual function to handle collateral tokens before a buy.
     /// @param  _provider The address from which the collateral tokens
-    ///                   will be sent.
-    /// @param  _amount   The amount of collateral tokens to handle.
+    ///         will be sent.
+    /// @param  _amount The amount of collateral tokens to handle.
     function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
         internal
         virtual;
