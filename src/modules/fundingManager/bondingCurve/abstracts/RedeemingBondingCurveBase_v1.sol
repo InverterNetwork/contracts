@@ -280,8 +280,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @notice Virtual function to handle collateral tokens after a successful sell.
-    /// @dev    The downstream contract is responsible for implementing checks to ensure the contract
-    ///         has the right balance.
+    /// @dev    The downstream contract is responsible for implementing checks
+    ///         to ensure the contract has the right balance.
     /// @param  _receiver  The address for which the collateral tokens will be handled.
     /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
     function _handleCollateralTokensAfterSell(
