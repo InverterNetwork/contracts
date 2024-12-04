@@ -8,4 +8,4 @@ import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 
-contract BondingSurfaceTest is Test {}
+contract BondingSurface_Test is Test {}

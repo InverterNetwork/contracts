@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.23;
+pragma solidity ^0.8.0;
 
 /**
- * @title   Liquidity Vault Provider Whitelist Interface
+ * @title   Liquidity Vault Controller Interface
  *
- * @notice  Interface for the Liquidity Vault Provider Whitelist.
+ * @notice  Interface for the Liquidity Vault Controller.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -15,4 +15,6 @@ pragma solidity 0.8.23;
  *
  * @author  Inverter Network
  */
-interface ILiquidityVaultProviderWhitelist {}
+interface ILiquidityVaultController_v1 { //@note are these contracts LM and do we even need these anymore?
+// This interface is a placeholder for the Liquidity Vault Controller, which will be implemented in the future
+}

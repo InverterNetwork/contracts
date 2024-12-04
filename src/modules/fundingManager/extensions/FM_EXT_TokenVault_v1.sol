@@ -32,15 +32,15 @@ import {ERC165Upgradeable} from
  */
 contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IFM_EXT_TokenVault_v1).interfaceId
-            || super.supportsInterface(interfaceId);
+        return interfaceId_ == type(IFM_EXT_TokenVault_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     using SafeERC20 for IERC20;
