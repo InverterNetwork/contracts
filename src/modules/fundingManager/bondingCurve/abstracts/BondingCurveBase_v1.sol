@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.2
  *
  * @author  Inverter Network
  */
@@ -268,8 +268,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         // Add project fee if applicable
         if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
+            _projectFeeCollected(projectFeeAmount);
         }
 
         // Calculate token amount based on upstream formula
@@ -443,10 +442,17 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev    Validates the project fee.
-    function _validateProjectFee(uint _projectFee) internal pure {
+    function _validateProjectFee(uint _projectFee) internal pure virtual {
         if (_projectFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
+    }
+
+    /// @dev    Internal function to add project fee collected to the state variable
+    /// @param  _projectFeeAmount The amount of fee collected
+    function _projectFeeCollected(uint _projectFeeAmount) internal virtual {
+        projectCollateralFeeCollected += _projectFeeAmount;
+        emit ProjectCollateralFeeAdded(_projectFeeAmount);
     }
 
     /// @dev    Ensures that the deposit amount and min amount out are not zero.
