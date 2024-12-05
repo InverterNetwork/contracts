@@ -251,9 +251,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Add project fee if applicable
         if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
-        } // Add fee amount to total collected fee
+            _projectFeeCollected(projectFeeAmount);
+        }
 
         // Require that enough collateral token is held to cover the project collateral fee
         if (
