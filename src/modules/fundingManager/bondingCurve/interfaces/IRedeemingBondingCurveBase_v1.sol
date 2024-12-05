@@ -17,7 +17,6 @@ pragma solidity ^0.8.0;
  *
  * @author  Inverter Network
  */
-
 interface IRedeemingBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
