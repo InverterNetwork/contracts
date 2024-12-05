@@ -17,7 +17,6 @@ pragma solidity ^0.8.0;
  *
  * @author  Inverter Network
  */
-
 interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     //--------------------------------------------------------------------------
     // Errors
