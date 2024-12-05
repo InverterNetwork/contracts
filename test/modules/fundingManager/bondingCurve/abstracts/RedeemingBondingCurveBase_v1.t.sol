@@ -252,30 +252,6 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testSellOrder_FailsIfNotEnoughCollateralInContract(uint amount)
-        public
-    {
-        // Setup
-        vm.assume(amount > 0);
-
-        address seller = makeAddr("seller");
-        _prepareSellConditions(seller, amount);
-
-        // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
-        _token.burn(address(bondingCurveFundingManager), 1);
-
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                IRedeemingBondingCurveBase_v1
-                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption
-                    .selector
-            );
-            bondingCurveFundingManager.sell(amount, amount);
-        }
-        vm.stopPrank();
-    }
-
     function testSellOrder_FailsIfReturnAmountIsLowerThanMinAmount(uint amount)
         public
     {

@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.2
  *
  * @author  Inverter Network
  */
@@ -238,16 +238,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
-
-        // Require that enough collateral token is held to be redeemable
-        if (
-            (collateralRedeemAmount + projectCollateralFeeCollected)
-                > collateralToken.balanceOf(address(this))
-        ) {
-            revert
-                Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
-            );
-        }
 
         // Get net amount, protocol and project fee amounts
         (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
