@@ -255,6 +255,16 @@ abstract contract RedeemingBondingCurveBase_v1 is
             emit ProjectCollateralFeeAdded(projectFeeAmount);
         } // Add fee amount to total collected fee
 
+        // Require that enough collateral token is held to cover the project collateral fee
+        if (
+            projectCollateralFeeCollected
+                > collateralToken.balanceOf(address(this))
+        ) {
+            revert
+                Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectCollateralFee(
+            );
+        }
+
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();

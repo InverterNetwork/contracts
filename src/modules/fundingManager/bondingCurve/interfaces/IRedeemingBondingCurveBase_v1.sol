@@ -24,6 +24,9 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Selling functionalities are set to closed.
     error Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
 
+    /// @notice Insufficient collateral token is held to cover the project collateral fee.
+    error Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectCollateralFee();
+
     //--------------------------------------------------------------------------
     // Events
 

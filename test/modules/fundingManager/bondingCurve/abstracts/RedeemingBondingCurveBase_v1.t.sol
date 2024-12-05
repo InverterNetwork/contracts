@@ -272,6 +272,40 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.sell(amount, minAmountOut);
     }
 
+    function testSellOrder_FailsIfNotEnoughCollateralToCoverCollateralProjectFee(uint amount)
+        public
+    {
+        // Setup
+        amount= bound(amount, 10, type(uint128).max);
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount);
+
+        uint sellFee=1000;
+        bondingCurveFundingManager.setSellFee(sellFee);
+
+        //Calculate fee amount
+        uint projectCollateralFeeAmount;
+         (,, projectCollateralFeeAmount) = bondingCurveFundingManager
+            .call_calculateNetAndSplitFees(
+            amount, 0, sellFee
+        );
+
+        // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
+        _token.burn(address(bondingCurveFundingManager), amount-projectCollateralFeeAmount+1); 
+
+        vm.startPrank(seller);
+        {
+            vm.expectRevert(
+                IRedeemingBondingCurveBase_v1
+                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectCollateralFee
+                    .selector
+            );
+            bondingCurveFundingManager.sell(amount, 1);
+        }
+        vm.stopPrank();
+    }
+
     function test_sellOrder(
         uint amount,
         uint _collateralFee,
