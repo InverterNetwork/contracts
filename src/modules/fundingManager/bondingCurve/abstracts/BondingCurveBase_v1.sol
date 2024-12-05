@@ -70,11 +70,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @dev	Buy fee expressed in base points, i.e. 0% = 0; 1% = 100; 10% = 1000.
     uint public buyFee;
 
-    /// @notice Accumulated project trading fees collected from deposits made
-    ///         by users when engaging with the bonding curve-based
-    ///         funding manager. Collected in collateral.
-    /// @dev	The balance of this contract in collateral token is not allowed
-    ///         to be less than the projectCollateralFeeCollected.
+    /// @notice Accumulated project trading fees collected from deposits made by users
+    ///         when engaging with the bonding curve-based funding manager. Collected in collateral.
     uint public projectCollateralFeeCollected;
 
     /// @dev	Storage gap for future upgrades.

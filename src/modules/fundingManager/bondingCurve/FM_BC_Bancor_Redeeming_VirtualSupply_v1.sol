@@ -66,7 +66,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.2
+ * @custom:version 1.1.1
  *
  * @author  Inverter Network
  */
@@ -619,12 +619,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         address _receiver,
         uint _collateralTokenAmount
     ) internal virtual override {
-        
-        IERC20 _collateralToken = token();
-        //If the rest of the collateral tokens are less than the project collateral fee collected, transfer the rest to the receiver
-        if((_collateralToken.balanceOf(address(this)) - _collateralTokenAmount)<projectCollateralFeeCollected) {
-            revert Module__FM_BC_Bancor_Redeeming_VirtualSupply__InsufficientCollateralForRedemption();
-        } 
-        _collateralToken.safeTransfer(_receiver, _collateralTokenAmount);
+        token().safeTransfer(_receiver, _collateralTokenAmount);
     }
 }

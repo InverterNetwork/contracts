@@ -1,23 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-/**
- * @title   Inverter Bancor Virtual Supply Bonding Curve Funding Manager Interface
- *
- * @notice  This contract enables the issuance and redeeming of tokens on a
- *          bonding curve, using a virtual supply for both the issuance and
- *          the collateral as input.
- *
- * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer
- *                          to our Security Policy at security.inverter.network
- *                          or email us directly!
- *
- * @custom:version 1.0.1
- *
- * @author  Inverter Network
- */
-
 interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     //--------------------------------------------------------------------------
     // Errors
@@ -39,10 +22,6 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     );
     /// @notice Funding manager does not hold the amount of collateral the payment client tries to transfer.
     error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidOrchestratorTokenWithdrawAmount(
-    );
-
-     /// @notice Not enough collateral in contract for redemption.
-    error Module__FM_BC_Bancor_Redeeming_VirtualSupply__InsufficientCollateralForRedemption(
     );
 
     //--------------------------------------------------------------------------
