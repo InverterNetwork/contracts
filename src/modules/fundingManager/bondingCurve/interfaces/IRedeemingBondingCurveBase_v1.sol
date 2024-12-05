@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /**
  * @title   Inverter Redeeming Bonding Curve Funding Manager Base Interface
  *
- * @notice  Interface that should allow the managment of the the redemption of
+ * @notice  Interface that enables the management of the the redemption of
  *          issuance for collateral along a bonding curve in the
  *          Inverter Network, including fee handling and sell functionality control.
  *
