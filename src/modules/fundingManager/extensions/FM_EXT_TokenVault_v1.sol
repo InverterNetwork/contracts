@@ -50,7 +50,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
 
     /// @dev    Modifier to guarantee the amount is valid.
     modifier validAmount(uint amount_) {
-        _onlyValidAmount(amount_);
+        _validAmount(amount_);
         _;
     }
 
@@ -76,7 +76,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     /// @notice Ensure that the amount is valid.
     /// @dev    Reverts if the amount is invalid, i.e. zero.
     /// @param  amount_ The amount to validate.
-    function _onlyValidAmount(uint amount_) internal pure {
+    function _validAmount(uint amount_) internal pure {
         if (amount_ == 0) {
             revert Module__FM_EXT_TokenVault__InvalidAmount();
         }

@@ -135,12 +135,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     modifier onlyLiquidityVaultController() {
-        if (_msgSender() != address(_liquidityVaultController)) {
-            revert
-                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
-                _msgSender()
-            );
-        }
+        _onlyLiquidityVaultController();
         _;
     }
 
