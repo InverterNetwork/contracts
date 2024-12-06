@@ -605,7 +605,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     /// @notice Handles incoming collateral tokens by transferring them
     ///         from the provider.
     /// @param  _provider The address that provides the collateral tokens.
-    ///         will be receive.
     /// @param  _amount The amount of collateral tokens to handle.
     function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
         internal
