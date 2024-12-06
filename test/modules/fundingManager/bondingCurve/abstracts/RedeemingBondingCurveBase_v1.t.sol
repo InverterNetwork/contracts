@@ -299,7 +299,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         {
             vm.expectRevert(
                 IRedeemingBondingCurveBase_v1
-                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectCollateralFee
+                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee
                     .selector
             );
             bondingCurveFundingManager.sell(amount, 1);

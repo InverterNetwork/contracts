@@ -260,7 +260,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
                 > collateralToken.balanceOf(address(this))
         ) {
             revert
-                Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectCollateralFee(
+                Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee(
             );
         }
 
