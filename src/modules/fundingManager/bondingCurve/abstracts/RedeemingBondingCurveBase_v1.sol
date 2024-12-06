@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.2
  *
  * @author  Inverter Network
  */
@@ -261,9 +261,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
 
         // Add project fee if applicable
         if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
-        } // Add fee amount to total collected fee
+            _projectFeeCollected(projectFeeAmount);
+        }
 
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
