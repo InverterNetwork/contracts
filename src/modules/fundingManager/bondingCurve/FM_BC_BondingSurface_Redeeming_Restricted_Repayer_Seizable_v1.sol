@@ -21,8 +21,8 @@ import {IFM_BC_BondingSurface_Redeeming_v1} from
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
-import {ILiquidityVaultController} from
-    "@lm/interfaces/ILiquidityVaultController.sol";
+import {ILiquidityVaultController_v1} from
+    "@lm/interfaces/ILiquidityVaultController_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -114,7 +114,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev Address of the liquidity vault controller who has access to the
     ///      collateral held by the funding manager through the Repayer
     /// through the Repayer functionality
-    ILiquidityVaultController internal _liquidityVaultController;
+    ILiquidityVaultController_v1 internal _liquidityVaultController;
     /// @dev Tracks last seize timestamp to determine eligibility for
     ///      subsequent seizures based on SEIZE_DELAY
     uint internal _lastSeizeTimestamp;
