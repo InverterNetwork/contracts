@@ -2013,6 +2013,8 @@ contract PP_StreamingV1Test is ModuleTest {
     ) public {
         vm.assume(defaultStart < 1e24); //upper bounds to avoid overflow
         vm.assume(defaultCliff < 1e24);
+        vm.assume(defaultStart + defaultCliff != 0);
+
         defaultEnd = bound(defaultEnd, 0, (defaultStart + defaultCliff - 1));
 
         vm.expectRevert(
