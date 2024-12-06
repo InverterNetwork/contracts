@@ -13,3 +13,6 @@
 [submodule "lib/uma-protocol"]
 	path = lib/uma-protocol
 	url = https://github.com/UMAprotocol/protocol
+[submodule "lib/hyperlane-monorepo"]
+	path = lib/hyperlane-monorepo
+	url = https://github.com/hyperlane-xyz/hyperlane-monorepo
