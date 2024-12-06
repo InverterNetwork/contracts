@@ -155,7 +155,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
             amount_,
             block.chainid,
             block.chainid,
-            bytes16(0),
+            bytes32(0),
             new bytes32[](0)
         );
 

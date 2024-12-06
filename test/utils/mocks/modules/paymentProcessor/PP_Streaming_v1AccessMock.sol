@@ -55,7 +55,7 @@ contract PP_Streaming_v1AccessMock is PP_Streaming_v1 {
         return _validPaymentToken(_token);
     }
 
-    function exposed_getStreamingDetails(bytes16 flags, bytes32[] memory data)
+    function exposed_getStreamingDetails(bytes32 flags, bytes32[] memory data)
         external
         view
         returns (uint start, uint cliff, uint end)

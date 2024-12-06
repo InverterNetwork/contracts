@@ -30,7 +30,8 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
     uint private constant _SENTINEL = type(uint).max;
-    bytes16 private constant _FLAGS_SET = 0x0000000000000000000000000000000e;
+    bytes32 private constant _FLAGS_SET =
+        0x000000000000000000000000000000000000000000000000000000000000000e;
 
     event RecurringPaymentAdded(
         uint indexed recurringPaymentId,

@@ -41,7 +41,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
             0,
             0,
             0,
-            bytes16(0),
+            bytes32(0),
             new bytes32[](0)
         );
         processPaymentsTriggered += 1;

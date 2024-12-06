@@ -23,7 +23,7 @@ interface IERC20PaymentClientBase_v1 {
         uint amount;
         uint originChainId;
         uint targetChainId;
-        bytes16 flags;
+        bytes32 flags;
         bytes32[] data;
     }
 

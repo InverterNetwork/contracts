@@ -36,8 +36,8 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
-    bytes16 internal constant _START_END_CLIFF_FLAG =
-        0x0000000000000000000000000000000e;
+    bytes32 internal constant _START_END_CLIFF_FLAG =
+        0x000000000000000000000000000000000000000000000000000000000000000e;
     uint internal constant defaultStart = 69;
     uint internal constant defaultCliff = 13;
     uint internal constant defaultEnd = 420;
@@ -1856,7 +1856,7 @@ contract PP_StreamingV1Test is ModuleTest {
         order.data = data;
 
         // Set flags to indicate all values are present
-        order.flags = bytes16(uint128(7)); // 7 = 0b111 to set first 3 bits
+        order.flags = bytes32(uint(7)); // 7 = 0b111 to set first 3 bits
 
         vm.startPrank(sender);
 
@@ -1944,7 +1944,7 @@ contract PP_StreamingV1Test is ModuleTest {
         );
     }
 
-    function test__getStreamingDetails(bytes16 flags, bytes32[] memory data)
+    function test__getStreamingDetails(bytes32 flags, bytes32[] memory data)
         public
     {
         bool hasStart = false;
@@ -1952,15 +1952,15 @@ contract PP_StreamingV1Test is ModuleTest {
         bool hasEnd = false;
 
         uint8 numOnes = 0;
-        if ((uint128(flags) & (1 << 1)) != 0) {
+        if ((uint(flags) & (1 << 1)) != 0) {
             hasStart = true;
             numOnes++;
         }
-        if ((uint128(flags) & (1 << 2)) != 0) {
+        if ((uint(flags) & (1 << 2)) != 0) {
             hasCliff = true;
             numOnes++;
         }
-        if ((uint128(flags) & (1 << 3)) != 0) {
+        if ((uint(flags) & (1 << 3)) != 0) {
             hasEnd = true;
             numOnes++;
         }
@@ -2054,7 +2054,8 @@ contract PP_StreamingV1Test is ModuleTest {
         view
         returns (IERC20PaymentClientBase_v1.PaymentOrder memory paymentOrder)
     {
-        bytes16 flagsBytes = 0x0000000000000000000000000000000e;
+        bytes32 flagsBytes =
+            0x000000000000000000000000000000000000000000000000000000000000000e;
         bytes32[] memory data = new bytes32[](3);
         data[0] = bytes32(start);
         data[1] = bytes32(cliff);

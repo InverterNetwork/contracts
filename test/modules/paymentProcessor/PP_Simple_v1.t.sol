@@ -117,7 +117,7 @@ contract PP_SimpleV1Test is ModuleTest {
                 amount: amount,
                 originChainId: block.chainid,
                 targetChainId: block.chainid,
-                flags: bytes16(0),
+                flags: bytes32(0),
                 data: new bytes32[](0)
             })
         );
@@ -138,7 +138,7 @@ contract PP_SimpleV1Test is ModuleTest {
             amount,
             block.chainid,
             block.chainid,
-            bytes16(0),
+            bytes32(0),
             new bytes32[](0)
         );
         if (!paymentsFail) {
@@ -295,11 +295,11 @@ contract PP_SimpleV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
-            uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+            uint flags = 0; // Initialize flags as uint128 to accumulate the bits
             flags |= (1 << 1); // Set bit 0 for start
             flags |= (1 << 3); // Set bit 3 for end
 
-            bytes16 flagsBytes = bytes16(flags);
+            bytes32 flagsBytes = bytes32(flags);
             bytes32[] memory data = new bytes32[](2);
             data[0] = bytes32(block.timestamp);
             data[1] = bytes32(block.timestamp);

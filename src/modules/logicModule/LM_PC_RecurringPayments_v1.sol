@@ -113,7 +113,7 @@ contract LM_PC_RecurringPayments_v1 is
     LinkedIdList.List _paymentList;
 
     /// @dev    Payment processor flags.
-    bytes16 private _flags;
+    bytes32 private _flags;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -139,11 +139,11 @@ contract LM_PC_RecurringPayments_v1 is
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
 
-        uint128 flags = 0;
+        uint flags = 0;
         flags |= (1 << 1); // start
         flags |= (1 << 2); // cliff
         flags |= (1 << 3); // end
-        _flags = bytes16(flags);
+        _flags = bytes32(flags);
 
         emit EpochLengthSet(newEpochLength);
     }

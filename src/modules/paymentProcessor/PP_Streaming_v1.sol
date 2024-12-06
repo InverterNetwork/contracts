@@ -930,22 +930,22 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return (success && data.length != 0 && _token.code.length != 0);
     }
 
-    function _getStreamingDetails(bytes16 flags, bytes32[] memory data)
+    function _getStreamingDetails(bytes32 flags, bytes32[] memory data)
         internal
         view
         returns (uint start, uint cliff, uint end)
     {
         uint dataIdx = 0;
 
-        bool hasStart = (uint128(flags) & (1 << 1)) != 0;
+        bool hasStart = (uint(flags) & (1 << 1)) != 0;
         start = hasStart ? uint(data[dataIdx]) : defaultStart;
         if (hasStart) dataIdx += 1;
 
-        bool hasCliff = (uint128(flags) & (1 << 2)) != 0;
+        bool hasCliff = (uint(flags) & (1 << 2)) != 0;
         cliff = hasCliff ? uint(data[dataIdx]) : defaultCliff;
         if (hasCliff) dataIdx += 1;
 
-        bool hasEnd = (uint128(flags) & (1 << 3)) != 0;
+        bool hasEnd = (uint(flags) & (1 << 3)) != 0;
         end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
     }
 

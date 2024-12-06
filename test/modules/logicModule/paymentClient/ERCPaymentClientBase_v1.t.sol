@@ -36,8 +36,8 @@ import {
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientBaseV1Test is ModuleTest {
-    bytes16 internal constant _START_END_CLIFF_FLAG =
-        0x00000000000000000000000000000007;
+    bytes32 internal constant _START_END_CLIFF_FLAG =
+        0x0000000000000000000000000000000000000000000000000000000000000007;
 
     // SuT
     ERC20PaymentClientBaseV1AccessMock paymentClient;
@@ -144,7 +144,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 amount: 1,
                 originChainId: block.chainid,
                 targetChainId: block.chainid,
-                flags: bytes16(0),
+                flags: bytes32(0),
                 data: new bytes32[](0)
             })
         );
@@ -163,14 +163,14 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             amount: 100e18,
             originChainId: block.chainid,
             targetChainId: block.chainid,
-            flags: bytes16(0),
+            flags: bytes32(0),
             data: new bytes32[](0)
         });
 
-        uint128 flags = 0; // Initialize flags as uint128 to accumulate the bits
+        uint flags = 0; // Initialize flags as uint128 to accumulate the bits
         flags |= (1 << 0); // Set bit 0 for start
         flags |= (1 << 1); // Set bit 1 for end
-        bytes16 flagsBytes = bytes16(flags);
+        bytes32 flagsBytes = bytes32(flags);
         bytes32[] memory data = new bytes32[](2);
         data[0] = bytes32(block.timestamp);
         data[1] = bytes32(block.timestamp + 1);

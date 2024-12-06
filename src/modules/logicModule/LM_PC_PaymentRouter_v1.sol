@@ -72,7 +72,7 @@ contract LM_PC_PaymentRouter_v1 is
         uint cliff,
         uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
-        (bytes16 flags, bytes32[] memory data) =
+        (bytes32 flags, bytes32[] memory data) =
             _assemblePaymentConfig(start, cliff, end);
 
         PaymentOrder memory order = PaymentOrder({
@@ -112,7 +112,7 @@ contract LM_PC_PaymentRouter_v1 is
             revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
         }
 
-        (bytes16 flags, bytes32[] memory data) =
+        (bytes32 flags, bytes32[] memory data) =
             _assemblePaymentConfig(start, cliff, end);
 
         // Loop through the arrays and add Payments
@@ -143,10 +143,10 @@ contract LM_PC_PaymentRouter_v1 is
     function _assemblePaymentConfig(uint start, uint cliff, uint end)
         internal
         pure
-        returns (bytes16, bytes32[] memory)
+        returns (bytes32, bytes32[] memory)
     {
-        uint128 flags = 0;
-        uint128 length = 0;
+        uint flags = 0;
+        uint length = 0;
 
         if (start != 0) {
             flags |= (1 << 0);
@@ -173,6 +173,6 @@ contract LM_PC_PaymentRouter_v1 is
         }
         data[dataIndex] = bytes32(cliff);
 
-        return (bytes16(flags), data);
+        return (bytes32(flags), data);
     }
 }
