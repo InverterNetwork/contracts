@@ -603,7 +603,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     // Overridden Internal Functions
 
     /// @notice Handles incoming collateral tokens by transferring them
-    ///         to the provider.
+    ///         from the provider.
     /// @param  _provider The address that provides the collateral tokens.
     ///         will be receive.
     /// @param  _amount The amount of collateral tokens to handle.
