@@ -144,12 +144,12 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /*  Test internal _onlyValidAmount() function 
+    /*  Test internal _validAmount() function 
         # Given the amount is 0
-        ## When the internal function _onlyValidAmount() is called
+        ## When the internal function _validAmount() is called
         ### Then it should revert
         # Given the amount is not 0
-        ## When the internal function _onlyValidAmount() is called
+        ## When the internal function _validAmount() is called
         ### Then it should work
     */
 
@@ -159,7 +159,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
                 .Module__FM_EXT_TokenVault__InvalidAmount
                 .selector
         );
-        vault.exposed_onlyValidAmount(0);
+        vault.exposed_validAmount(0);
     }
 
     function testInternalOnlyValidAmount_worksGivenNonZeroAmount(uint amount_)
@@ -167,6 +167,6 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
         view
     {
         vm.assume(amount_ != 0);
-        vault.exposed_onlyValidAmount(amount_);
+        vault.exposed_validAmount(amount_);
     }
 }
