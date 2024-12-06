@@ -1481,6 +1481,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         address _tokenVault
     ) public {
         vm.assume(_tokenVault != address(0));
+        vm.assume(_tokenVault != address(bondingCurveFundingManager));
         bondingCurveFundingManager.setTokenVault(_tokenVault);
 
         assertEq(_tokenVault, bondingCurveFundingManager.getTokenVault());
