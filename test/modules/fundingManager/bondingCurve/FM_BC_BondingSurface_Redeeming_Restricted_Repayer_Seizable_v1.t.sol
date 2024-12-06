@@ -34,8 +34,8 @@ import {
     IRedeemingBondingCurveBase_v1,
     IRedeemingBondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
-import {ILiquidityVaultController} from
-    "@lm/interfaces/ILiquidityVaultController.sol";
+import {ILiquidityVaultController_v1} from
+    "@lm/interfaces/ILiquidityVaultController_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IFM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
@@ -1332,7 +1332,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     */
 
     function testSetliquidityVaultControllerContract_revertGivenCallerHasNotCoverManagerRole(
-        ILiquidityVaultController lvc_
+        ILiquidityVaultController_v1 lvc_
     ) public {
         // Execute Tx
         vm.startPrank(seller);
@@ -1354,7 +1354,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     function testSetliquidityVaultControllerContract_revertGivenAddressIsZero()
         public
     {
-        ILiquidityVaultController lvc_ = ILiquidityVaultController(address(0));
+        ILiquidityVaultController_v1 lvc_ =
+            ILiquidityVaultController_v1(address(0));
 
         // Expect Revert
         vm.expectRevert(
@@ -1367,8 +1368,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
     function testSetliquidityVaultControllerContract_revertGivenAddressIsEqualToFM(
     ) public {
-        ILiquidityVaultController lvc =
-            ILiquidityVaultController(address(bondingCurveFundingManager));
+        ILiquidityVaultController_v1 lvc =
+            ILiquidityVaultController_v1(address(bondingCurveFundingManager));
 
         // Expect Revert
         vm.expectRevert(
@@ -1380,12 +1381,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
     }
 
     function testSetliquidityVaultControllerContract_worksGivenCallerHasRoleAndAddressValid(
-        ILiquidityVaultController lvc_
+        ILiquidityVaultController_v1 lvc_
     ) public {
         vm.assume(
-            lvc_ != ILiquidityVaultController(address(0))
+            lvc_ != ILiquidityVaultController_v1(address(0))
                 && lvc_
-                    != ILiquidityVaultController(address(bondingCurveFundingManager))
+                    != ILiquidityVaultController_v1(address(bondingCurveFundingManager))
         );
 
         vm.expectEmit(

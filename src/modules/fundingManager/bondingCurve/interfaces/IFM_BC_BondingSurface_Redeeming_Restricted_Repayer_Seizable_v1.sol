@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 //Internal Dependencies
-import {ILiquidityVaultController} from
-    "@lm/interfaces/ILiquidityVaultController.sol";
+import {ILiquidityVaultController_v1} from
+    "@lm/interfaces/ILiquidityVaultController_v1.sol";
 
 /**
  * @title   Inverter Redeeming Restriced Repayer Seizable Bonding Surface Bonding Curve Funding Manager Interface
@@ -150,8 +150,9 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@no
 
     /// @notice Sets a new liquidity valut controller address
     /// @param lp_ Address of the liquidity vault controller
-    function setLiquidityVaultControllerContract(ILiquidityVaultController lp_)
-        external;
+    function setLiquidityVaultControllerContract(
+        ILiquidityVaultController_v1 lp_
+    ) external;
 
     // -------------------------------------------------------------------------
     // OnlyOrchestratorAdmin Functions

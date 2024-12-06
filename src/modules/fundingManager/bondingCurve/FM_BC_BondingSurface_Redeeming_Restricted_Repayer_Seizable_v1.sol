@@ -190,7 +190,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         bool buyAndSellIsRestricted
     ) internal onlyInitializing {
         _liquidityVaultController =
-            ILiquidityVaultController(liquidityVaultController);
+            ILiquidityVaultController_v1(liquidityVaultController);
 
         // Set buy and sell restriction to restricted if true. By default buy and
         // sell is unrestricted
@@ -413,10 +413,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function setLiquidityVaultControllerContract(ILiquidityVaultController lvc_)
-        external
-        onlyModuleRole(COVER_MANAGER_ROLE)
-    {
+    function setLiquidityVaultControllerContract(
+        ILiquidityVaultController_v1 lvc_
+    ) external onlyModuleRole(COVER_MANAGER_ROLE) {
         // @update-info When upgrading to Topos next version, we need to add an
         //              interface check here.
         if (address(lvc_) == address(0) || address(lvc_) == address(this)) {
@@ -559,6 +558,18 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function _projectFeeCollected(uint workflowFeeAmount_) internal override {
         _token.safeTransfer(_tokenVault, workflowFeeAmount_);
         emit ProjectCollateralFeeWithdrawn(_tokenVault, workflowFeeAmount_);
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal - Modifier Functions
+
+    function _onlyLiquidityVaultController() internal view {
+        if (_msgSender() != address(_liquidityVaultController)) {
+            revert
+                FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
+                _msgSender()
+            );
+        }
     }
 
     // -------------------------------------------------------------------------
