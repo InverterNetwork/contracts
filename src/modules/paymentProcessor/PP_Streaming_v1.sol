@@ -152,11 +152,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         (uint _defaultStart, uint _defaultCliff, uint _defaultEnd) =
             abi.decode(configData, (uint, uint, uint));
 
-        _validTimes(_defaultStart, _defaultCliff, _defaultEnd);
-
-        _setDefaultStart(_defaultStart);
-        _setDefaultCliff(_defaultCliff);
-        _setDefaultEnd(_defaultEnd);
+        _setDefaultTimes(_defaultStart, _defaultCliff, _defaultEnd);
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -427,6 +423,17 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount) && _validTimes(start, cliff, end)
             && _validPaymentToken(order.paymentToken);
+    }
+
+    function setStreamingDefaults(uint newStart_, uint newCliff_, uint newEnd_)
+        external
+        onlyOrchestratorAdmin
+    {
+        _setDefaultTimes(newStart_, newCliff_, newEnd_);
+    }
+
+    function getStreamingDefaults() public view returns (uint, uint, uint) {
+        return (defaultStart, defaultCliff, defaultEnd);
     }
 
     //--------------------------------------------------------------------------
@@ -949,21 +956,21 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
     }
 
-    /// @dev Sets the default start time for new payment orders
-    /// @param _defaultStart The new default start time
-    function _setDefaultStart(uint _defaultStart) internal {
-        defaultStart = _defaultStart;
-    }
-
-    /// @dev Sets the default cliff time for new payment orders
-    /// @param _defaultCliff The new default cliff time
-    function _setDefaultCliff(uint _defaultCliff) internal {
-        defaultCliff = _defaultCliff;
-    }
-
-    /// @dev Sets the default end time for new payment orders
-    /// @param _defaultEnd The new default end time
-    function _setDefaultEnd(uint _defaultEnd) internal {
-        defaultEnd = _defaultEnd;
+    /// @dev Sets the default start time, cliff and end times for new payment orders
+    /// @param newStart_ The new default start time
+    /// @param newCliff_ The new default cliff time
+    /// @param newEnd_ The new default end time
+    function _setDefaultTimes(uint newStart_, uint newCliff_, uint newEnd_)
+        internal
+    {
+        if (_validTimes(newStart_, newCliff_, newEnd_)) {
+            defaultStart = newStart_;
+            defaultCliff = newCliff_;
+            defaultEnd = newEnd_;
+        } else {
+            revert Module__PP_Streaming__InvalidDefaultTimes(
+                newStart_, newCliff_, newEnd_
+            );
+        }
     }
 }

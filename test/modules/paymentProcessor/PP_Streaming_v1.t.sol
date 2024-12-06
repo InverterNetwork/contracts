@@ -1986,6 +1986,50 @@ contract PP_StreamingV1Test is ModuleTest {
         assertEq(end, hasEnd ? uint(data[idx]) : defaultEnd);
     }
 
+    function test_setStreamingDefaults(
+        uint defaultStart,
+        uint defaultCliff,
+        uint defaultEnd
+    ) public {
+        defaultStart = bound(defaultStart, 0, defaultEnd);
+        defaultCliff = bound(defaultCliff, 0, defaultEnd - defaultStart);
+
+        // Set default times
+        paymentProcessor.setStreamingDefaults(
+            defaultStart, defaultCliff, defaultEnd
+        );
+        // Check default times
+        (uint start, uint cliff, uint end) =
+            paymentProcessor.getStreamingDefaults();
+        assertEq(start, defaultStart);
+        assertEq(cliff, defaultCliff);
+        assertEq(end, defaultEnd);
+    }
+
+    function test_setStreamingDefaults_FailsIfInvalidTimes(
+        uint defaultStart,
+        uint defaultCliff,
+        uint defaultEnd
+    ) public {
+        vm.assume(defaultStart < 1e24); //upper bounds to avoid overflow
+        vm.assume(defaultCliff < 1e24);
+        defaultEnd = bound(defaultEnd, 0, (defaultStart + defaultCliff - 1));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPP_Streaming_v1
+                    .Module__PP_Streaming__InvalidDefaultTimes
+                    .selector,
+                defaultStart,
+                defaultCliff,
+                defaultEnd
+            )
+        );
+        paymentProcessor.setStreamingDefaults(
+            defaultStart, defaultCliff, defaultEnd
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 
