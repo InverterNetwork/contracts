@@ -160,26 +160,27 @@ contract LM_PC_PaymentRouter_v1 is
     /// @param  start The start date of the streaming period (optional).
     /// @param  cliff The duration of the cliff period.
     /// @param  end The ending of the streaming period.
-    function _assemblePaymentConfig(uint start, uint cliff, uint end)
+    function _assemblePaymentConfig(uint start_, uint cliff_, uint end_)
         internal
         view
-        returns (bytes32, bytes32[] memory)
+        returns (bytes32 flags_, bytes32[] memory data_)
     {
         // Get the flags and amount of parameters for the PaymentOrders
-        (uint8 numOfFlags, bytes32 flags) = super.getFlags();
+        uint8 numOfFlags;
+        (numOfFlags, flags_) = super.getFlags();
 
-        bytes32[] memory data = new bytes32[](numOfFlags);
+        bytes32[] memory data_ = new bytes32[](numOfFlags);
         uint dataIndex = 0;
-        if (start != 0) {
-            data[dataIndex] = bytes32(start);
+        if (start_ != 0) {
+            data_[dataIndex] = bytes32(start_);
             dataIndex++;
         }
-        if (end != 0) {
-            data[dataIndex] = bytes32(end);
+        if (end_ != 0) {
+            data_[dataIndex] = bytes32(end_);
             dataIndex++;
         }
-        data[dataIndex] = bytes32(cliff);
+        data_[dataIndex] = bytes32(cliff_);
 
-        return (flags, data);
+        return (flags_, data_);
     }
 }

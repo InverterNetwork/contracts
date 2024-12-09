@@ -65,8 +65,18 @@ interface IERC20PaymentClientBase_v1 {
     /// @param  recipient The address that will receive the payment.
     /// @param  token The token in which to pay.
     /// @param  amount The amount of tokens the payment consists of.
+    /// @param  originChainId The chain id the order originates from.
+    /// @param  targetChainId The chain id to which the payment order will be sent.
+    /// @param  flags List of flags that are employed by the payment order.
+    /// @param  data Array of bytes32 that contain the values for the payment order's used flags.
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     //--------------------------------------------------------------------------
@@ -77,31 +87,38 @@ interface IERC20PaymentClientBase_v1 {
     function paymentOrders() external view returns (PaymentOrder[] memory);
 
     /// @notice Returns the total outstanding token payment amount.
-    /// @param  token The token in which to pay.
+    /// @param  token_ The token in which to pay.
     /// @return total amount of token to pay.
-    function outstandingTokenAmount(address token)
+    function outstandingTokenAmount(address token_)
         external
         view
-        returns (uint);
+        returns (uint total_);
 
     /// @notice Collects outstanding payment orders.
     /// @dev	Marks the orders as completed for the client.
-    /// @return list of payment orders.
-    /// @return list of token addresses.
-    /// @return list of amounts.
+    /// @return paymentOrders_ list of payment orders.
+    /// @return tokens_ list of token addresses.
+    /// @return totalAmounts_ list of amounts.
     function collectPaymentOrders()
         external
-        returns (PaymentOrder[] memory, address[] memory, uint[] memory);
+        returns (
+            PaymentOrder[] memory paymentOrders_,
+            address[] memory tokens_,
+            uint[] memory totalAmounts_
+        );
 
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly.
     /// @dev	Payment Client will reduce the total amount of tokens it will stock up by the given amount.
     /// @dev	This has to be called by a paymentProcessor.
     /// @param  token The token in which the payment was made.
     /// @param  amount amount of tokens that have been paid out.
-    function amountPaid(address token, uint amount) external;
+    function amountPaid(address token_, uint amount_) external;
 
     /// @notice Returns the number of flags and the flags of the PaymentOrders this client will create.
-    /// @return numOfFlags The total number of active flags.
-    /// @return flags The flags this client will use.
-    function getFlags() external view returns (uint8, bytes32);
+    /// @return numOfFlags_ The total number of active flags.
+    /// @return flags_ The flags this client will use.
+    function getFlags()
+        external
+        view
+        returns (uint8 numOfFlags_, bytes32 flags_);
 }

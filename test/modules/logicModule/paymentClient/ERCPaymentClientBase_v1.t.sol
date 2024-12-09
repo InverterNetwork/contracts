@@ -49,11 +49,14 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Added a payment order.
-    /// @param  recipient The address that will receive the payment.
-    /// @param  amount The amount of tokens the payment consists of.
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     function setUp() public {

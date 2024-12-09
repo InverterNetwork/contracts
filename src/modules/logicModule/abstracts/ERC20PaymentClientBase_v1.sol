@@ -112,7 +112,13 @@ abstract contract ERC20PaymentClientBase_v1 is
         _orders.push(order);
 
         emit PaymentOrderAdded(
-            order.recipient, order.paymentToken, order.amount
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
         );
     }
 
@@ -146,20 +152,24 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function outstandingTokenAmount(address _token)
+    function outstandingTokenAmount(address token_)
         external
         view
         virtual
-        returns (uint)
+        returns (uint total_)
     {
-        return _outstandingTokenAmounts[_token];
+        return _outstandingTokenAmounts[token_];
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
     function collectPaymentOrders()
         external
         virtual
-        returns (PaymentOrder[] memory, address[] memory, uint[] memory)
+        returns (
+            PaymentOrder[] memory paymentOrders_,
+            address[] memory tokens_,
+            uint[] memory totalAmounts_
+        )
     {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
@@ -173,22 +183,22 @@ abstract contract ERC20PaymentClientBase_v1 is
 
         address[] memory tokens_buffer = new address[](ordersLength);
         uint[] memory amounts_buffer = new uint[](ordersLength);
-        PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
+        paymentOrders_ = new PaymentOrder[](ordersLength);
 
         for (uint i; i < ordersLength; ++i) {
-            copy[i] = _orders[i];
+            paymentOrders_[i] = _orders[i];
             bool found;
             for (uint j; j < tokenCount; ++j) {
-                if (tokens_buffer[j] == copy[i].paymentToken) {
+                if (tokens_buffer[j] == paymentOrders_[i].paymentToken) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
                 // if the token is not in the list, add it
-                tokens_buffer[tokenCount] = copy[i].paymentToken;
+                tokens_buffer[tokenCount] = paymentOrders_[i].paymentToken;
                 amounts_buffer[tokenCount] =
-                    _outstandingTokenAmounts[copy[i].paymentToken];
+                    _outstandingTokenAmounts[paymentOrders_[i].paymentToken];
                 tokenCount++;
             }
         }
@@ -197,30 +207,32 @@ abstract contract ERC20PaymentClientBase_v1 is
         delete _orders;
 
         // Prepare the arrays that will be sent back
-        address[] memory tokens = new address[](tokenCount);
-        uint[] memory amounts = new uint[](tokenCount);
+        tokens_ = new address[](tokenCount);
+        totalAmounts_ = new uint[](tokenCount);
 
         for (uint i; i < tokenCount; ++i) {
-            tokens[i] = tokens_buffer[i];
-            amounts[i] = amounts_buffer[i];
+            tokens_[i] = tokens_buffer[i];
+            totalAmounts_[i] = amounts_buffer[i];
 
             // Ensure payment processor is able to fetch the tokens from address(this).
-            _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
+            _ensureTokenAllowance(
+                IPaymentProcessor_v1(_msgSender()), tokens_[i]
+            );
 
             // Ensure that the Client will have sufficient funds.
             // Note that while we also control when adding a payment order, more complex payment systems with
             // f.ex. deferred payments may not guarantee that having enough balance available when adding the order
             // means it'll have enough balance when the order is processed.
-            _ensureTokenBalance(tokens[i]);
+            _ensureTokenBalance(tokens_[i]);
         }
 
         // Return copy of orders and orders' total token amount to payment
         // processor.
-        return (copy, tokens, amounts);
+        return (paymentOrders_, tokens_, totalAmounts_);
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function amountPaid(address token, uint amount) external virtual {
+    function amountPaid(address token_, uint amount_) external virtual {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
         {
@@ -228,11 +240,15 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
 
         // reduce outstanding token amount by the given amount
-        _outstandingTokenAmounts[token] -= amount;
+        _outstandingTokenAmounts[token_] -= amount_;
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function getFlags() public view returns (uint8, bytes32) {
+    function getFlags()
+        public
+        view
+        returns (uint8 numOfFlags_, bytes32 flags_)
+    {
         return (_numOfFlags, _flags);
     }
 
