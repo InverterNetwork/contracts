@@ -10,7 +10,7 @@ contract LM_PC_PaymentRouter_v1AccessMock is LM_PC_PaymentRouter_v1 {
 
     function direct__assemblePaymentConfig(uint start, uint cliff, uint end)
         external
-        pure
+        view
         returns (bytes32, bytes32[] memory)
     {
         return _assemblePaymentConfig(start, cliff, end);

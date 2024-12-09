@@ -86,8 +86,14 @@ abstract contract ERC20PaymentClientBase_v1 is
     /// @dev	The current cumulative amount of tokens outstanding.
     mapping(address => uint) internal _outstandingTokenAmounts;
 
+    /// @dev    Number of Payment Processor flags.
+    uint8 internal _numOfFlags;
+
+    /// @dev    Payment processor flags.
+    bytes32 internal _flags;
+
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[48] private __gap;
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
@@ -119,6 +125,11 @@ abstract contract ERC20PaymentClientBase_v1 is
         for (uint i; i < orderAmount; ++i) {
             _addPaymentOrder(orders[i]);
         }
+    }
+
+    function _setFlags(uint8 numOfFlags_, bytes32 flags_) internal virtual {
+        _numOfFlags = numOfFlags_;
+        _flags = flags_;
     }
 
     //--------------------------------------------------------------------------
@@ -218,6 +229,11 @@ abstract contract ERC20PaymentClientBase_v1 is
 
         // reduce outstanding token amount by the given amount
         _outstandingTokenAmounts[token] -= amount;
+    }
+
+    /// @inheritdoc IERC20PaymentClientBase_v1
+    function getFlags() public view returns (uint8, bytes32) {
+        return (_numOfFlags, _flags);
     }
 
     //--------------------------------------------------------------------------

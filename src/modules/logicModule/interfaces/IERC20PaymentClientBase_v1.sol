@@ -99,4 +99,9 @@ interface IERC20PaymentClientBase_v1 {
     /// @param  token The token in which the payment was made.
     /// @param  amount amount of tokens that have been paid out.
     function amountPaid(address token, uint amount) external;
+
+    /// @notice Returns the number of flags and the flags of the PaymentOrders this client will create.
+    /// @return numOfFlags The total number of active flags.
+    /// @return flags The flags this client will use.
+    function getFlags() external view returns (uint8, bytes32);
 }

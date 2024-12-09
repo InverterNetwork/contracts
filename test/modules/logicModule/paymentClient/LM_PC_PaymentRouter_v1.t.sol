@@ -345,25 +345,23 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.assume(end <= type(uint).max / 2);
         (bytes32 flags, bytes32[] memory data) =
             paymentRouter.direct__assemblePaymentConfig(start, cliff, end);
-        // Ensure data array is properly sized based on non-zero values
-        uint expectedLength = 0;
-        if (start != 0) expectedLength++;
-        if (end != 0) expectedLength++;
-        expectedLength++;
+ 
+ 
+        uint expectedLength = 3; // start, cliff, end
         assertEq(data.length, expectedLength);
 
         uint dataIndex = 0;
         if (start != 0) {
-            assertEq(uint(flags) & (1 << 0), 1 << 0); // Check start flag is set
+            assertEq(uint(flags) & (1 << 1), 1 << 1); // Check start flag is set
             assertEq(data[dataIndex], bytes32(start));
             dataIndex++;
         }
         if (end != 0) {
-            assertEq(uint(flags) & (1 << 1), 1 << 1); // Check end flag is set
+            assertEq(uint(flags) & (1 << 2), 1 << 2); // Check end flag is set
             assertEq(data[dataIndex], bytes32(end));
             dataIndex++;
         }
-        assertEq(uint(flags) & (1 << 2), 1 << 2);
+        assertEq(uint(flags) & (1 << 3), 1 << 3);
         assertEq(data[dataIndex], bytes32(cliff));
     }
 

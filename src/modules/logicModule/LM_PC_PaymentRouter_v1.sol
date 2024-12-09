@@ -61,6 +61,26 @@ contract LM_PC_PaymentRouter_v1 is
     bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER";
 
     //--------------------------------------------------------------------------
+    // Initializer
+    function init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
+    ) external override(Module_v1) initializer {
+        __Module_init(orchestrator_, metadata);
+
+        // Set the flags for the PaymentOrders
+        uint8 numOfFlags = 3; // The Module will use 3 flags
+        uint flags = 0;
+
+        flags |= (1 << 1); // start
+        flags |= (1 << 2); // cliff
+        flags |= (1 << 3); // end
+
+        super._setFlags(numOfFlags, bytes32(flags));
+    }
+
+    //--------------------------------------------------------------------------
     // Mutating Functions
 
     /// @inheritdoc ILM_PC_PaymentRouter_v1
@@ -142,26 +162,13 @@ contract LM_PC_PaymentRouter_v1 is
     /// @param  end The ending of the streaming period.
     function _assemblePaymentConfig(uint start, uint cliff, uint end)
         internal
-        pure
+        view
         returns (bytes32, bytes32[] memory)
     {
-        uint flags = 0;
-        uint length = 0;
+        // Get the flags and amount of parameters for the PaymentOrders
+        (uint8 numOfFlags, bytes32 flags) = super.getFlags();
 
-        if (start != 0) {
-            flags |= (1 << 0);
-            length++;
-        }
-        if (end != 0) {
-            flags |= (1 << 1);
-            length++;
-        }
-
-        // Note: cliff is always present cause zero is a valid value
-        flags |= (1 << 2);
-        length++;
-
-        bytes32[] memory data = new bytes32[](length);
+        bytes32[] memory data = new bytes32[](numOfFlags);
         uint dataIndex = 0;
         if (start != 0) {
             data[dataIndex] = bytes32(start);
@@ -173,6 +180,6 @@ contract LM_PC_PaymentRouter_v1 is
         }
         data[dataIndex] = bytes32(cliff);
 
-        return (bytes32(flags), data);
+        return (flags, data);
     }
 }

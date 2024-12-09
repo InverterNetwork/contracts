@@ -112,9 +112,6 @@ contract LM_PC_RecurringPayments_v1 is
     /// @dev	List of RecurringPayment id's.
     LinkedIdList.List _paymentList;
 
-    /// @dev    Payment processor flags.
-    bytes32 private _flags;
-
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -131,6 +128,7 @@ contract LM_PC_RecurringPayments_v1 is
         // Set empty list of RecurringPayment
         _paymentList.init();
 
+        // Set the epoch Data
         uint newEpochLength = abi.decode(configData, (uint));
         epochLength = newEpochLength;
 
@@ -139,13 +137,17 @@ contract LM_PC_RecurringPayments_v1 is
             revert Module__LM_PC_RecurringPayments__InvalidEpochLength();
         }
 
+        emit EpochLengthSet(newEpochLength);
+
+        // Set the flags for the PaymentOrders
+        uint8 numOfFlags = 3; // The Module will use 3 flags
         uint flags = 0;
+
         flags |= (1 << 1); // start
         flags |= (1 << 2); // cliff
         flags |= (1 << 3); // end
-        _flags = bytes32(flags);
 
-        emit EpochLengthSet(newEpochLength);
+        super._setFlags(numOfFlags, bytes32(flags));
     }
 
     //--------------------------------------------------------------------------
@@ -307,7 +309,9 @@ contract LM_PC_RecurringPayments_v1 is
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
                     // assemble data array
-                    bytes32[] memory data = new bytes32[](3);
+                    (uint8 numOfFlags, bytes32 flags) = super.getFlags();
+
+                    bytes32[] memory data = new bytes32[](numOfFlags);
 
                     data[0] = bytes32(block.timestamp);
                     data[1] = bytes32(0);
@@ -323,7 +327,7 @@ contract LM_PC_RecurringPayments_v1 is
                             amount: currentPayment.amount,
                             originChainId: block.chainid,
                             targetChainId: block.chainid,
-                            flags: _flags,
+                            flags: flags,
                             data: data
                         })
                     );
@@ -341,7 +345,7 @@ contract LM_PC_RecurringPayments_v1 is
                                     * (epochsNotTriggered - 1),
                                 originChainId: block.chainid,
                                 targetChainId: block.chainid,
-                                flags: _flags,
+                                flags: flags,
                                 data: data
                             })
                         );
