@@ -50,7 +50,13 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
         _orders.push(order);
 
         emit PaymentOrderAdded(
-            order.recipient, order.paymentToken, order.amount
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
         );
     }
 

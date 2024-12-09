@@ -56,7 +56,13 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
 
     // Events
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     function setUp() public virtual {
@@ -300,10 +306,19 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         uint paymentsTriggeredBefore =
             _paymentProcessor.processPaymentsTriggered();
 
+        (bytes32 flags, bytes32[] memory data) =
+            paymentRouter.direct__assemblePaymentConfig(_start, _cliff, _end);
+
         for (uint i = 0; i < _numOfOrders; i++) {
             vm.expectEmit(true, true, true, true);
             emit PaymentOrderAdded(
-                _recipients[i], _paymentTokens[i], _amounts[i]
+                _recipients[i],
+                _paymentTokens[i],
+                _amounts[i],
+                block.chainid,
+                block.chainid,
+                flags,
+                data
             );
         }
         vm.expectEmit(true, false, false, false);
@@ -345,8 +360,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.assume(end <= type(uint).max / 2);
         (bytes32 flags, bytes32[] memory data) =
             paymentRouter.direct__assemblePaymentConfig(start, cliff, end);
- 
- 
+
         uint expectedLength = 3; // start, cliff, end
         assertEq(data.length, expectedLength);
 

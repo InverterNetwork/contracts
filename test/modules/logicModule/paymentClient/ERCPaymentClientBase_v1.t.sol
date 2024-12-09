@@ -106,7 +106,15 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 _createPaymentOrder(address(_token), recipient, amount, end);
 
             vm.expectEmit();
-            emit PaymentOrderAdded(recipient, address(_token), amount);
+            emit PaymentOrderAdded(
+                recipient,
+                address(_token),
+                amount,
+                block.chainid,
+                block.chainid,
+                _START_END_CLIFF_FLAG,
+                order.data
+            );
 
             paymentClient.addPaymentOrder(order);
         }
@@ -203,9 +211,33 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         });
 
         vm.expectEmit();
-        emit PaymentOrderAdded(address(0xCAFE1), address(_token), 100e18);
-        emit PaymentOrderAdded(address(0xCAFE2), address(_token), 100e18);
-        emit PaymentOrderAdded(address(0xCAFE3), address(_token), 100e18);
+        emit PaymentOrderAdded(
+            address(0xCAFE1),
+            address(_token),
+            100e18,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
+        );
+        emit PaymentOrderAdded(
+            address(0xCAFE2),
+            address(_token),
+            100e18,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
+        );
+        emit PaymentOrderAdded(
+            address(0xCAFE3),
+            address(_token),
+            100e18,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
+        );
         paymentClient.addPaymentOrders(ordersToAdd);
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =

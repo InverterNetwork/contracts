@@ -101,7 +101,13 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     );
 
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     event DeletedStuckAssertion(bytes32 indexed assertionId);
@@ -1011,7 +1017,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(users[i], address(_token), earnedReward);
+                emit PaymentOrderAdded(
+                    users[i],
+                    address(_token),
+                    earnedReward,
+                    block.chainid,
+                    block.chainid,
+                    bytes32(0),
+                    new bytes32[](0)
+                );
             }
 
             kpiManager.unstake(amounts[i]);
@@ -1094,7 +1108,15 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(users[i], address(_token), earnedReward);
+                emit PaymentOrderAdded(
+                    users[i],
+                    address(_token),
+                    earnedReward,
+                    block.chainid,
+                    block.chainid,
+                    bytes32(0),
+                    new bytes32[](0)
+                );
             }
 
             kpiManager.unstake(amounts[i]);
