@@ -88,7 +88,7 @@ interface IERC20PaymentClientBase_v1 {
 
     /// @notice Returns the total outstanding token payment amount.
     /// @param  token_ The token in which to pay.
-    /// @return total amount of token to pay.
+    /// @return total_ amount of token to pay.
     function outstandingTokenAmount(address token_)
         external
         view
@@ -110,8 +110,8 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly.
     /// @dev	Payment Client will reduce the total amount of tokens it will stock up by the given amount.
     /// @dev	This has to be called by a paymentProcessor.
-    /// @param  token The token in which the payment was made.
-    /// @param  amount amount of tokens that have been paid out.
+    /// @param  token_ The token in which the payment was made.
+    /// @param  amount_ amount of tokens that have been paid out.
     function amountPaid(address token_, uint amount_) external;
 
     /// @notice Returns the number of flags and the flags of the PaymentOrders this client will create.
