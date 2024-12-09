@@ -5,7 +5,42 @@ pragma solidity ^0.8.0;
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
+/**
+ * @title   Inverter ERC20 Payment Client Base Interface
+ *
+ * @notice  Enables modules within the Inverter Network to create and manage payment orders
+ *          that can be processed by authorized payment processors, ensuring efficient
+ *          and secure transactions. Refer to the implementations contract for more details.
+ *
+ * @dev     STRUCTURING OF THE FLAGS AND DATA FIELDS
+ *          The PaymentOrder struct implements a flag system to manage the information payloads
+ *          received by the payment processor. It is comprised of a bytes32 value that indicates
+ *          the number of flags that are active, and a bytes32[] value that stores the corresponding values.
+ *          and an array of bytes32[], which stores the corresponding values.
+ *
+ *          For example:    If the value of 'flags' is '0xB, that would correspond to a bit representation of '0000 [...] 0000 1011'.
+ *                          This means that the order stores values for the paramters 0, 1 and 3 of the master list (seen below)
+ *                          If a module wants to set flags, it can use bit shifts, in this case 1 << 0, 1 << 1 and 1 << 3.
+ *                          Afterwards, to be correct, the following data variable should contain 3 elements of the type specified in the master list, each stored as bytes32 value.
+ *
+ *
+ *
+ *
+ * @author  Inverter Network
+ */
 interface IERC20PaymentClientBase_v1 {
+    //--------------------------------------------------------------------------
+    // MASTER LIST OF PAYMENT ORDER FLAGS
+
+    /*
+    | Flag | Variable type | Name       | Description                              |
+    |------|---------------|------------|------------------------------------------|
+    | 0    | bytes32       | orderID    | The ID of the order.                     |
+    | 1    | uint256       | start      | The start date of the streaming period.  | 
+    | 2    | uint256       | cliff      | The duration of the cliff period.        |
+    | 3    | uint256       | end        | The Due Date of the order                |
+    */
+
     //--------------------------------------------------------------------------
     // Structs
 
