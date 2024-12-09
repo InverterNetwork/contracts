@@ -157,9 +157,9 @@ contract LM_PC_PaymentRouter_v1 is
     }
 
     /// @dev	Creates the flags and data for a payment order.
-    /// @param  start The start date of the streaming period (optional).
-    /// @param  cliff The duration of the cliff period.
-    /// @param  end The ending of the streaming period.
+    /// @param  start_ The start date of the streaming period (optional).
+    /// @param  cliff_ The duration of the cliff period.
+    /// @param  end_ The ending of the streaming period.
     function _assemblePaymentConfig(uint start_, uint cliff_, uint end_)
         internal
         view
