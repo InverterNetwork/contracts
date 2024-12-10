@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {FM_EXT_TokenVault_v1} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
 
 contract FM_EXT_TokenVault_v1_Exposed is FM_EXT_TokenVault_v1 {
-    function exposed_validAmount(uint amt_) external pure {
-        _validAmount(amt_);
+    function exposed_amountIsValid(uint amt_) external pure {
+        _amountIsValid(amt_);
     }
 }
