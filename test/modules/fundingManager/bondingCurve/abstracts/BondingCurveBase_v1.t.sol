@@ -203,41 +203,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    //  Test modifiers on buyFor function
-
-    function testPassingModifiersOnBuyOrderFor(uint amount) public {
-        // Setup
-        vm.assume(amount > 0);
-
-        address buyer = makeAddr("buyer");
-        address receiver = makeAddr("receiver");
-
-        _prepareBuyConditions(buyer, amount);
-
-        // Pre-checks
-        uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
-        assertEq(issuanceToken.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(receiver), 0);
-
-        // Execution
-        vm.prank(buyer);
-        bondingCurveFundingManager.buyFor(receiver, amount, amount);
-
-        // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
-        );
-        assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), 0);
-        assertEq(
-            bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
-            1
-        );
-    }
-
     /* Test buy and _buyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
@@ -294,12 +259,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.assume(amount > 0);
 
         address buyer = makeAddr("buyer");
-        _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
-        uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Emit event
@@ -313,13 +275,16 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.buy(amount, amount);
 
         // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
-        );
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
         assertEq(_token.balanceOf(buyer), 0);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
         assertEq(
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
+        assertEq(
+            bondingCurveFundingManager
+                .distributeCollateralTokenBeforeBuyFunctionCalled(),
             1
         );
     }
@@ -360,12 +325,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         address buyer = makeAddr("buyer");
 
-        _prepareBuyConditions(buyer, amount);
-
         // Pre-checks
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Calculate receiving amount
@@ -386,6 +349,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
         (finalAmount,,) = bondingCurveFundingManager
             .call_calculateNetAndSplitFees(
             amountAfterFirstFeeCollection, _issuanceFee, 0
+        );
+
+        //Pepare fee amount that will betaken from bondingCurveManager
+        _token.mint(
+            address(bondingCurveFundingManager), protocolCollateralFeeAmount
         );
 
         if (projectCollateralFeeAmount != 0) {
@@ -418,13 +386,17 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount - protocolCollateralFeeAmount)
+            _token.balanceOf(address(bondingCurveFundingManager)), balanceBefore
         );
         assertEq(_token.balanceOf(buyer), 0);
 
         assertEq(
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
+        assertEq(
+            bondingCurveFundingManager
+                .distributeCollateralTokenBeforeBuyFunctionCalled(),
             1
         );
     }
