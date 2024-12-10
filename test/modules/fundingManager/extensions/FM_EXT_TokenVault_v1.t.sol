@@ -144,12 +144,12 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    /*  Test internal _amountIsValid() function 
+    /*  Test internal _ensureAmountIsValid() function 
         # Given the amount is 0
-        ## When the internal function _amountIsValid() is called
+        ## When the internal function _ensureAmountIsValid() is called
         ### Then it should revert
         # Given the amount is not 0
-        ## When the internal function _amountIsValid() is called
+        ## When the internal function _ensureAmountIsValid() is called
         ### Then it should work
     */
 

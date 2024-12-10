@@ -130,12 +130,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Modifiers
 
     modifier checkBuyAndSellRestrictions() {
+        //@note Naming? Naming Functions Contracts Modifier General
         _checkBuyAndSellRestrictionsModifier();
         _;
     }
 
     modifier onlyLiquidityVaultController() {
-        _onlyLiquidityVaultController();
+        //@note Naming?
+        _ensureOnlyLiquidityVaultController();
         _;
     }
 
@@ -540,14 +542,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return _ca > _cr ? _cr : _ca;
     }
 
-    /// @dev    Validate if buy and sell is restricted, and if so
-    ///         check if the caller has the CURVE_INTERACTION_ROLE
-    function _checkBuyAndSellRestrictionsModifier() internal view {
-        if (_buyAndSellIsRestricted) {
-            _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
-        }
-    }
-
     /// @dev    Processes project fee by transfer
     /// @param workflowFeeAmount_ The amount of project fee to transfer
     function _projectFeeCollected(uint workflowFeeAmount_) internal override {
@@ -558,12 +552,21 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // -------------------------------------------------------------------------
     // Internal - Modifier Functions
 
-    function _onlyLiquidityVaultController() internal view {
+    function _ensureOnlyLiquidityVaultController() internal view {
         if (_msgSender() != address(_liquidityVaultController)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
                 _msgSender()
             );
+        }
+    }
+
+    /// @dev    Validate if buy and sell is restricted, and if so
+    ///         check if the caller has the CURVE_INTERACTION_ROLE
+    function _checkBuyAndSellRestrictionsModifier() internal view {
+        //@note Naming? Naming Functions Contracts Modifier Internal functions
+        if (_buyAndSellIsRestricted) {
+            _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }
     }
 
