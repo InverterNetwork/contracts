@@ -9,9 +9,9 @@ pragma solidity ^0.8.0;
  * @dev     Funds can be withdrawn by the orchestrator admin.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to
- *                          our Security Policy at security.inverter.network or
- *                          email us directly!
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
  *
  * @custom:version v1.0.0
  *
@@ -20,13 +20,13 @@ pragma solidity ^0.8.0;
  * @author  Inverter Network
  */
 interface IFM_EXT_TokenVault_v1 {
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Errors
 
     /// @notice Error thrown when the amount is invalid.
     error Module__FM_EXT_TokenVault__InvalidAmount();
 
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when tokens are withdrawn.
@@ -37,8 +37,8 @@ interface IFM_EXT_TokenVault_v1 {
         address indexed token, address indexed recipient, uint amount
     );
 
-    //--------------------------------------------------------------------------
-    // Mutating Functions
+    // ========================================================================
+    // Public Mutating Functions
 
     /// @notice Allows for withdrawal of reserve tokens.
     /// @dev    This function is only callable by the orchestrator admin.

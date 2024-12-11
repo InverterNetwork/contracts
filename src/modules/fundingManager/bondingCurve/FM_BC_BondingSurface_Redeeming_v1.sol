@@ -166,11 +166,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    // =========================================================================
-    // Public Functions
-
-    // -------------------------------------------------------------------------
-    // Getter Functions
+    // ========================================================================
+    // Public Getter Functions
 
     /// @notice Calculates and returns the static price for buying the issuance token.
     /// @return staticPriceForBuying_ The static price for buying the issuance token.
@@ -251,6 +248,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function token() public view returns (IERC20 token_) {
         return _token;
     }
+
+    // ========================================================================
+    // Mutating Functions
 
     // -------------------------------------------------------------------------
     // Mutating - OnlyOrchestratorAdmin Functions

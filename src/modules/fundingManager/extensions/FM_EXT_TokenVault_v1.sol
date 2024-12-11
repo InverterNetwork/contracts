@@ -45,7 +45,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
 
     using SafeERC20 for IERC20;
 
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Modifiers
 
     /// @dev    Modifier to guarantee the amount is valid.
@@ -54,8 +54,8 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
         _;
     }
 
-    //--------------------------------------------------------------------------
-    // Mutating Functions
+    // ========================================================================
+    // Public Mutating Functions
 
     /// @inheritdoc IFM_EXT_TokenVault_v1
     function withdraw(address token_, uint amount_, address recipient_)
@@ -70,7 +70,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
         emit TokensWithdrawn(token_, recipient_, amount_);
     }
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Internal Functions
 
     /// @notice Ensure that the amount is valid.

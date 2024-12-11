@@ -55,8 +55,8 @@ contract BondingSurface is IBondingSurface, ERC165 {
             || super.supportsInterface(interfaceId_);
     }
 
-    // =========================================================================
-    // Public Functions
+    // ========================================================================
+    // Public Getter Functions
 
     /// @inheritdoc IBondingSurface
     function spotPrice(
@@ -112,7 +112,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         return capitalAvailable_ - _inverse(BCrM + ca2inv);
     }
 
-    // =========================================================================
+    // ========================================================================
     // Internal Functions
 
     /// @dev Computes the inverse based on

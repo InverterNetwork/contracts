@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Errors
 
     /// @notice Reserve ratio can not be be bigger than 100% expressed in PPM.
@@ -21,7 +21,7 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     error Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
     );
 
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Events
 
     /// @notice Event emitted when the reserve ratio for buying is updated.
@@ -38,7 +38,7 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
         uint32 newSellReserveRatio, uint32 oldSellReserveRatio
     );
 
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Structs
 
     /// @notice Struct used to store information about the bonding curve properties.
@@ -63,18 +63,8 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
         uint initialCollateralSupply;
     }
 
-    //--------------------------------------------------------------------------
-    // Functions
-
-    /// @notice Set the reserve ratio used for issuing tokens on a bonding curve.
-    /// @dev	This function can only be called by the {Orchestrator_v1} admin.
-    /// @param  reserveRatio_ The new reserve ratio for buying, expressed in PPM.
-    function setReserveRatioForBuying(uint32 reserveRatio_) external;
-
-    /// @notice Set the reserve ratio used for redeeming tokens on a bonding curve.
-    /// @dev	This function can only be called by the {Orchestrator_v1} admin.
-    /// @param  reserveRatio_ The new reserve ratio for selling, expressed in PPM.
-    function setReserveRatioForSelling(uint32 reserveRatio_) external;
+    // ========================================================================
+    // Public-Getter Functions
 
     /// @notice Returns reserve ratio set for buying, used in the {BancorFormula} contract.
     /// @return reserveRatioForBuying_ Reserve Ratio for buying.
@@ -89,4 +79,17 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
         external
         view
         returns (uint32 reserveRatioForSelling_);
+
+    // ========================================================================
+    // Public Mutating Functions
+
+    /// @notice Set the reserve ratio used for issuing tokens on a bonding curve.
+    /// @dev	This function can only be called by the {Orchestrator_v1} admin.
+    /// @param  reserveRatio_ The new reserve ratio for buying, expressed in PPM.
+    function setReserveRatioForBuying(uint32 reserveRatio_) external;
+
+    /// @notice Set the reserve ratio used for redeeming tokens on a bonding curve.
+    /// @dev	This function can only be called by the {Orchestrator_v1} admin.
+    /// @param  reserveRatio_ The new reserve ratio for selling, expressed in PPM.
+    function setReserveRatioForSelling(uint32 reserveRatio_) external;
 }

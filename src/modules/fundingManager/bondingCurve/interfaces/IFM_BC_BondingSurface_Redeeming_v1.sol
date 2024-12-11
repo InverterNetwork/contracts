@@ -71,8 +71,9 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         bool buyIsOpen;
         bool sellIsOpen;
     }
-    // -------------------------------------------------------------------------
-    // Getter Functions
+
+    // ========================================================================
+    // Public Getter Functions
 
     /// @notice Returns the formula contract used to calculate the issuance and redemption rate.
     /// @return formula_ The formula contract address.
@@ -112,11 +113,11 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         uint basePriceMultiplier_
     ) external view returns (uint basePriceToCapitalRatio_);
 
-    // -------------------------------------------------------------------------
-    // Mutating Functions
+    // ========================================================================
+    // Public Mutating Functions
 
     // -------------------------------------------------------------------------
-    // OnlyOrchestratorAdmin Functions
+    // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @dev Update the capital required used for the bonding curve
     /// @param newCapitalRequired_ The new capital required.

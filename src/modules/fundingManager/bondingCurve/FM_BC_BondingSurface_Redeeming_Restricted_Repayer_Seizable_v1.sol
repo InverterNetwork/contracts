@@ -197,10 +197,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     // =========================================================================
-    // Public Functions
-
-    // -------------------------------------------------------------------------
-    // Getter Functions
+    // Public Getter Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function getSeizableAmount() public view returns (uint amount_) {
@@ -256,7 +253,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     // =========================================================================
-    // Mutating Functions
+    // Public Mutating Functions
 
     // -------------------------------------------------------------------------
     // Mutating - Token Manipulation Functions

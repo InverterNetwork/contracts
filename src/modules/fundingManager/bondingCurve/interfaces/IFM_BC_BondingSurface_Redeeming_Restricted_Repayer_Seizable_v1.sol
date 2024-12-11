@@ -77,8 +77,8 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@no
     /// @notice Emits when buy and sell restriction is removed.
     event BuyAndSellIsUnrestricted();
 
-    // -------------------------------------------------------------------------
-    // Getter Functions
+    // ========================================================================
+    // Public Getter Functions
 
     /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
     /// @return amount_ Maximum number of tokens that can be seized
@@ -113,10 +113,10 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@no
         view
         returns (bool buyAndSellIsRestricted_);
 
-    // -------------------------------------------------------------------------
-    // Mutating Functions
+    // ========================================================================
+    // Public Mutating Functions
 
-    // Token Manipulation Functions
+    // Mutating - Token Manipulation Functions
 
     /// @notice Burn amount of tokens from message sender
     /// @param amount_ Amount token to be burned
@@ -128,7 +128,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@no
     function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
     // -------------------------------------------------------------------------
-    // OnlyCoverManager Functions
+    // Mutating - OnlyCoverManager Functions
 
     /// @notice Restricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
@@ -155,7 +155,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@no
     ) external;
 
     // -------------------------------------------------------------------------
-    // OnlyOrchestratorAdmin Functions
+    // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @notice Sets the token vault address.
     /// @dev    Only callable by OrchestratorAdmin

@@ -25,8 +25,8 @@ interface IBondingSurface {
     /// @dev Input amount is invalid
     error BondingSurface__InvalidInputAmount();
 
-    // -------------------------------------------------------------------------
-    // View Functions
+    // ========================================================================
+    // Public Getter Functions
 
     /// @dev Compute spot price for a given capital available and capital required
     /// p = f(C_a, C_r) = B * (C_a^2 / C_r)
