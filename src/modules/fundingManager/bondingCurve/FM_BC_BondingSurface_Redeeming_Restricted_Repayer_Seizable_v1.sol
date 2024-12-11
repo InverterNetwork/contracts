@@ -374,11 +374,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function seize(uint amount_) public onlyModuleRole(COVER_MANAGER_ROLE) {
-        uint _seizableAmount = getSeizableAmount();
-        if (amount_ > _seizableAmount) {
+        uint seizableAmount = getSeizableAmount();
+        if (amount_ > seizableAmount) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount(
-                _seizableAmount
+                seizableAmount
             );
         }
         // solhint-disable-next-line not-rely-on-time
@@ -527,9 +527,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         view
         returns (uint repayableAmount_)
     {
-        uint _repayable = _getSmallerCaCr();
-        return (_repayableAmount == 0 || _repayableAmount > _repayable)
-            ? _repayable
+        uint repayable = _getSmallerCaCr();
+        return (_repayableAmount == 0 || _repayableAmount > repayable)
+            ? repayable
             : _repayableAmount;
     }
 
@@ -537,9 +537,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
     /// @return smallerCaCr_ The smaller of the Capital Available (Ca) and Capital Required (Cr)
     function _getSmallerCaCr() internal view returns (uint smallerCaCr_) {
-        uint _ca = _getCapitalAvailable();
-        uint _cr = _capitalRequired;
-        return _ca > _cr ? _cr : _ca;
+        uint ca = _getCapitalAvailable();
+        uint cr = _capitalRequired;
+        return ca > cr ? cr : ca;
     }
 
     /// @dev    Processes project fee by transfer
