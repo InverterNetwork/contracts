@@ -75,11 +75,11 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
     // Getter Functions
 
     /// @notice Returns the formula contract used to calculate the issuance and redemption rate.
-    /// @return formula The formula contract address.
+    /// @return formula_ The formula contract address.
     function getBondingSurfaceFormula()
         external
         view
-        returns (address formula);
+        returns (address formula_);
 
     /// @notice Returns the initial capital requirement for the formula contract.
     /// @return capitalRequired The capital required.
@@ -89,28 +89,28 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         returns (uint capitalRequired);
 
     /// @notice Returns the base price multiplier.
-    /// @return basePriceMultiplier The base price multiplier.
+    /// @return basePriceMultiplier_ The base price multiplier.
     function getBasePriceMultiplier()
         external
         view
-        returns (uint basePriceMultiplier);
+        returns (uint basePriceMultiplier_);
 
     /// @notice Returns the base price to capital ratio.
-    /// @return basePriceToCapitalRatio The base price to capital ratio.
+    /// @return basePriceToCapitalRatio_ The base price to capital ratio.
     function getBasePriceToCapitalRatio()
         external
         view
-        returns (uint basePriceToCapitalRatio);
+        returns (uint basePriceToCapitalRatio_);
 
     /// @notice Calculates the ratio of base price multiplier to capital required.
     /// @dev Calls `_calculateBasePriceToCapitalRatio` internally. Reverts if ratio exceeds 1e36.
     /// @param capitalRequired_ The capital required.
     /// @param basePriceMultiplier_ The base price multiplier.
-    /// @return basePriceToCapitalRatio The calculated price to capital ratio.
+    /// @return basePriceToCapitalRatio_ The calculated price to capital ratio.
     function calculateBasePriceToCapitalRatio(
         uint capitalRequired_,
         uint basePriceMultiplier_
-    ) external view returns (uint basePriceToCapitalRatio);
+    ) external view returns (uint basePriceToCapitalRatio_);
 
     // -------------------------------------------------------------------------
     // Mutating Functions

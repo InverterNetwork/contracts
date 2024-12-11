@@ -81,37 +81,37 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 { //@no
     // Getter Functions
 
     /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
-    /// @return amount Maximum number of tokens that can be seized
-    function getSeizableAmount() external view returns (uint amount);
+    /// @return amount_ Maximum number of tokens that can be seized
+    function getSeizableAmount() external view returns (uint amount_);
 
     /// @notice Returns the current seize percentage, which is seizable from the contract
-    /// @return currentSeize The current seize percentage
-    function getCurrentSeize() external view returns (uint64 currentSeize);
+    /// @return currentSeize_ The current seize percentage
+    function getCurrentSeize() external view returns (uint64 currentSeize_);
 
     /// @notice Returns the address of the liquidity vault controller
-    /// @return liquidityVaultController The address of the liquidity vault controller
+    /// @return liquidityVaultController_ The address of the liquidity vault controller
     function getLiquidityVaultController()
         external
         view
-        returns (address liquidityVaultController);
+        returns (address liquidityVaultController_);
 
     /// @notice Returns the last timestamp when the seize percentage was updated
-    /// @return lastSeizeTimestamp The last timestamp when the seize percentage was updated
+    /// @return lastSeizeTimestamp_ The last timestamp when the seize percentage was updated
     function getLastSeizeTimestamp()
         external
         view
-        returns (uint lastSeizeTimestamp);
+        returns (uint lastSeizeTimestamp_);
 
     /// @notice Returns the address of the token vault
-    /// @return tokenVault The address of the token vault
-    function getTokenVault() external view returns (address tokenVault);
+    /// @return tokenVault_ The address of the token vault
+    function getTokenVault() external view returns (address tokenVault_);
 
     /// @notice Returns whether buy and sell is restricted
-    /// @return buyAndSellIsRestricted Whether buy and sell is restricted
+    /// @return buyAndSellIsRestricted_ Whether buy and sell is restricted
     function isBuyAndSellRestricted()
         external
         view
-        returns (bool buyAndSellIsRestricted);
+        returns (bool buyAndSellIsRestricted_);
 
     // -------------------------------------------------------------------------
     // Mutating Functions

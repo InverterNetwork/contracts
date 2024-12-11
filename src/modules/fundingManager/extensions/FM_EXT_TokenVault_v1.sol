@@ -37,7 +37,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
         view
         virtual
         override(Module_v1)
-        returns (bool)
+        returns (bool supportsInterface_)
     {
         return interfaceId_ == type(IFM_EXT_TokenVault_v1).interfaceId
             || super.supportsInterface(interfaceId_);

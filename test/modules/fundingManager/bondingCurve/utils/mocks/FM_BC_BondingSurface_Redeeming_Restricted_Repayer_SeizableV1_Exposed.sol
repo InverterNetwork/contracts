@@ -36,11 +36,19 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
         _checkBuyAndSellRestrictionsModifier();
     }
 
-    function exposed_getRepayableAmount() external view returns (uint) {
+    function exposed_getRepayableAmount()
+        external
+        view
+        returns (uint repayableAmount_)
+    {
         return _getRepayableAmount();
     }
 
-    function exposed_getCapitalAvailable() external view returns (uint) {
+    function exposed_getCapitalAvailable()
+        external
+        view
+        returns (uint capitalAvailable_)
+    {
         return _getCapitalAvailable();
     }
 
@@ -52,7 +60,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
         _setTokenVault(tokenVault_);
     }
 
-    function exposed_getSmallerCaCr() external view returns (uint) {
+    function exposed_getSmallerCaCr()
+        external
+        view
+        returns (uint smallerCaCr_)
+    {
         return _getSmallerCaCr();
     }
 
@@ -62,7 +74,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed is
 
     function exposed_projectCollateralFeeCollected(uint amount_)
         external
-        returns (uint)
+        returns (uint projectCollateralFeeCollected_)
     {
         return projectCollateralFeeCollected = amount_;
     }

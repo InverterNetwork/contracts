@@ -33,19 +33,23 @@ contract FM_BC_BondingSurface_RedeemingV1_Exposed is
     function exposed_issueTokensFormulaWrapper(uint depositAmount_)
         external
         view
-        returns (uint)
+        returns (uint mintAmount_)
     {
         return _issueTokensFormulaWrapper(depositAmount_);
     }
 
-    function exposed_getCapitalAvailable() external view returns (uint) {
+    function exposed_getCapitalAvailable()
+        external
+        view
+        returns (uint capitalAvailable_)
+    {
         return _getCapitalAvailable();
     }
 
     function exposed_redeemTokensFormulaWrapper(uint depositAmount_)
         external
         view
-        returns (uint)
+        returns (uint redeemAmount_)
     {
         return _redeemTokensFormulaWrapper(depositAmount_);
     }
@@ -70,7 +74,7 @@ contract FM_BC_BondingSurface_RedeemingV1_Exposed is
 
     function exposed_projectCollateralFeeCollected(uint amount_)
         external
-        returns (uint)
+        returns (uint projectCollateralFeeCollected_)
     {
         return projectCollateralFeeCollected = amount_;
     }
@@ -79,7 +83,7 @@ contract FM_BC_BondingSurface_RedeemingV1_Exposed is
         uint depositAmount_,
         uint capitalAvailable_,
         uint basePriceToCapitalRatio_
-    ) external view returns (uint) {
+    ) external view returns (uint amount_) {
         return _formula.tokenIn(
             depositAmount_, capitalAvailable_, basePriceToCapitalRatio_
         );

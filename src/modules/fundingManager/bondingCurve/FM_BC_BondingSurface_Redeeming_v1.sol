@@ -67,7 +67,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         view
         virtual
         override(RedeemingBondingCurveBase_v1)
-        returns (bool)
+        returns (bool supportsInterface_)
     {
         return interfaceId_
             == type(IFM_BC_BondingSurface_Redeeming_v1).interfaceId
@@ -173,12 +173,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // Getter Functions
 
     /// @notice Calculates and returns the static price for buying the issuance token.
-    /// @return uint The static price for buying the issuance token.
+    /// @return staticPriceForBuying_ The static price for buying the issuance token.
     function getStaticPriceForBuying()
         external
         view
         override(BondingCurveBase_v1)
-        returns (uint)
+        returns (uint staticPriceForBuying_)
     {
         return _formula.spotPrice(
             _getCapitalAvailable(), _capitalRequired, _basePriceMultiplier
@@ -187,12 +187,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     /// @notice Calculates and returns the static price for selling the issuance token.
     ///         The return value is formatted in PPM.
-    /// @return staticPrice The static price for selling the issuance token.
+    /// @return staticPriceForSelling_ The static price for selling the issuance token.
     function getStaticPriceForSelling()
         external
         view
         override(RedeemingBondingCurveBase_v1)
-        returns (uint staticPrice)
+        returns (uint staticPriceForSelling_)
     {
         return _formula.spotPrice(
             _getCapitalAvailable(), _capitalRequired, _basePriceMultiplier
@@ -203,7 +203,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function getBondingSurfaceFormula()
         external
         view
-        returns (address formula)
+        returns (address formula_)
     {
         return address(_formula);
     }
@@ -212,7 +212,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function getCapitalRequired()
         external
         view
-        returns (uint capitalRequired)
+        returns (uint capitalRequired_)
     {
         return _capitalRequired;
     }
@@ -221,7 +221,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function getBasePriceMultiplier()
         external
         view
-        returns (uint basePriceMultiplier)
+        returns (uint basePriceMultiplier_)
     {
         return _basePriceMultiplier;
     }
@@ -230,7 +230,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function getBasePriceToCapitalRatio()
         external
         view
-        returns (uint basePriceToCapitalRatio)
+        returns (uint basePriceToCapitalRatio_)
     {
         return _basePriceToCapitalRatio;
     }
@@ -239,7 +239,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function calculateBasePriceToCapitalRatio(
         uint capitalRequired_,
         uint basePriceMultiplier_
-    ) external pure returns (uint) {
+    ) external pure returns (uint basePriceTocaptialRatio_) {
         return _calculateBasePriceToCapitalRatio(
             capitalRequired_, basePriceMultiplier_
         );
@@ -248,7 +248,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // IFundingManager Functions
 
     /// @inheritdoc IFundingManager_v1
-    function token() public view returns (IERC20) {
+    function token() public view returns (IERC20 token_) {
         return _token;
     }
 
@@ -304,19 +304,19 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev Calculates the amount of tokens to mint for a given deposit amount using the formula contract.
     /// This internal function is an override of BondingCurveBase_v1's abstract function.
     /// @param depositAmount_ The amount of collateral deposited to purchase tokens.
-    /// @return mintAmount The amount of tokens that will be minted.
+    /// @return mintAmount_ The amount of tokens that will be minted.
     function _issueTokensFormulaWrapper(uint depositAmount_)
         internal
         view
         override(BondingCurveBase_v1)
-        returns (uint mintAmount)
+        returns (uint mintAmount_)
     {
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
             revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
 
-        mintAmount = _formula.tokenOut(
+        mintAmount_ = _formula.tokenOut(
             depositAmount_, capitalAvailable, _basePriceToCapitalRatio
         );
     }
@@ -324,24 +324,24 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
     /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
     /// @param depositAmount_ The amount of tokens to be redeemed for collateral.
-    /// @return redeemAmount The amount of collateral that will be received.
+    /// @return redeemAmount_ The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint depositAmount_)
         internal
         view
         override(RedeemingBondingCurveBase_v1)
-        returns (uint redeemAmount)
+        returns (uint redeemAmount_)
     {
         // Subtract fee collected from capital held by contract
         uint capitalAvailable = _getCapitalAvailable();
         if (capitalAvailable == 0) {
             revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
         }
-        redeemAmount = _formula.tokenIn(
+        redeemAmount_ = _formula.tokenIn(
             depositAmount_, capitalAvailable, _basePriceToCapitalRatio
         );
 
         // The asset pool must never be empty.
-        if (capitalAvailable - redeemAmount < MIN_RESERVE) {
+        if (capitalAvailable - redeemAmount_ < MIN_RESERVE) {
             revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
     }
@@ -350,11 +350,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // Internal Functions
 
     /// @dev Returns the collateral available in this contract, subtracted by the fee collected
-    /// @return capitalAvailable Capital available in contract
+    /// @return capitalAvailable_ Capital available in contract
     function _getCapitalAvailable()
         internal
         view
-        returns (uint capitalAvailable)
+        returns (uint capitalAvailable_)
     {
         return _token.balanceOf(address(this)) - projectCollateralFeeCollected;
     }
@@ -397,15 +397,15 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev Internal function which calculates the price multiplier to capital ratio
     /// @param capitalRequired_ The capital required.
     /// @param basePriceMultiplier_ The base price multiplier.
-    /// @return basePriceToCapitalRatio The calculated price to capital ratio.
+    /// @return basePriceToCapitalRatio_ The calculated price to capital ratio.
     function _calculateBasePriceToCapitalRatio(
         uint capitalRequired_,
         uint basePriceMultiplier_
-    ) internal pure returns (uint basePriceToCapitalRatio) {
-        basePriceToCapitalRatio = FixedPointMathLib.fdiv(
+    ) internal pure returns (uint basePriceToCapitalRatio_) {
+        basePriceToCapitalRatio_ = FixedPointMathLib.fdiv(
             basePriceMultiplier_, capitalRequired_, FixedPointMathLib.WAD
         );
-        if (basePriceToCapitalRatio > 1e36) {
+        if (basePriceToCapitalRatio_ > 1e36) {
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
     }

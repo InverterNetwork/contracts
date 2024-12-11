@@ -34,12 +34,12 @@ interface IBondingSurface {
     /// @param capitalAvailable_ Capital pool to base the spot price on.
     /// @param capitalRequirements_ Capital requirements to base the spot price on.
     /// @param basePriceMultiplier_ Base Price Multiplier
-    /// @return spotPrice The spot price
+    /// @return spotPrice_ The spot price
     function spotPrice(
         uint capitalAvailable_,
         uint capitalRequirements_,
         uint basePriceMultiplier_
-    ) external view returns (uint spotPrice);
+    ) external view returns (uint spotPrice_);
 
     /// @dev To get the number of tokens we have the following formula:
     ///
@@ -53,12 +53,12 @@ interface IBondingSurface {
     /// @param in_ Assets added to the pool.
     /// @param capitalAvailable_ Capital available to use for bonding curve mint.
     /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
-    /// @return amount The amount of tokens to mint
+    /// @return amount_ The amount of tokens to mint
     function tokenOut(
         uint in_,
         uint capitalAvailable_,
         uint basePriceToCapitalRatio_
-    ) external view returns (uint amount);
+    ) external view returns (uint amount_);
 
     /// @dev To get the change in assests when burning tokens
     ///
@@ -73,10 +73,10 @@ interface IBondingSurface {
     /// @param out_ TPG to burn
     /// @param capitalAvailable_ Capital available to use for bonding curve burn.
     /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
-    /// @return amount The amount of assets to return
+    /// @return amount_ The amount of assets to return
     function tokenIn(
         uint out_,
         uint capitalAvailable_,
         uint basePriceToCapitalRatio_
-    ) external view returns (uint amount);
+    ) external view returns (uint amount_);
 }

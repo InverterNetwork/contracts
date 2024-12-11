@@ -49,7 +49,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
         view
         virtual
         override(ERC165)
-        returns (bool)
+        returns (bool supportsInterface_)
     {
         return interfaceId_ == type(IBondingSurface).interfaceId
             || super.supportsInterface(interfaceId_);

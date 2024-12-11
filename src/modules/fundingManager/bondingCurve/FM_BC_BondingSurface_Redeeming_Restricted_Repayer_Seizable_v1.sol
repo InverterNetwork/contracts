@@ -78,7 +78,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         view
         virtual
         override(FM_BC_BondingSurface_Redeeming_v1)
-        returns (bool)
+        returns (bool supportsInterface_)
     {
         return interfaceId_
             == type(IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1)
@@ -203,14 +203,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Getter Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function getSeizableAmount() public view returns (uint amount) {
+    function getSeizableAmount() public view returns (uint amount_) {
         uint currentBalance = _getCapitalAvailable();
 
         return (currentBalance * _currentSeize) / BPS;
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function getCurrentSeize() public view returns (uint64 currentSeize) {
+    function getCurrentSeize() public view returns (uint64 currentSeize_) {
         return _currentSeize;
     }
 
@@ -218,7 +218,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function getLiquidityVaultController()
         public
         view
-        returns (address liquidityVaultController)
+        returns (address liquidityVaultController_)
     {
         return address(_liquidityVaultController);
     }
@@ -227,13 +227,13 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function getLastSeizeTimestamp()
         public
         view
-        returns (uint lastSeizeTimestamp)
+        returns (uint lastSeizeTimestamp_)
     {
         return _lastSeizeTimestamp;
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function getTokenVault() public view returns (address tokenVault) {
+    function getTokenVault() public view returns (address tokenVault_) {
         return address(_tokenVault);
     }
 
@@ -241,7 +241,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function isBuyAndSellRestricted()
         public
         view
-        returns (bool buyAndSellIsRestricted)
+        returns (bool buyAndSellIsRestricted_)
     {
         return _buyAndSellIsRestricted;
     }
@@ -250,7 +250,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function getRepayableAmount()
         external
         view
-        returns (uint repayableAmount)
+        returns (uint repayableAmount_)
     {
         return _getRepayableAmount();
     }
@@ -373,9 +373,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function seize(uint _amount) public onlyModuleRole(COVER_MANAGER_ROLE) {
+    function seize(uint amount_) public onlyModuleRole(COVER_MANAGER_ROLE) {
         uint _seizableAmount = getSeizableAmount();
-        if (_amount > _seizableAmount) {
+        if (amount_ > _seizableAmount) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount(
                 _seizableAmount
@@ -391,22 +391,22 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
         uint capitalAvailable = _getCapitalAvailable();
         // The asset pool must never be empty.
-        if (capitalAvailable - _amount < MIN_RESERVE) {
-            _amount = capitalAvailable - MIN_RESERVE;
+        if (capitalAvailable - amount_ < MIN_RESERVE) {
+            amount_ = capitalAvailable - MIN_RESERVE;
         }
 
         // solhint-disable-next-line not-rely-on-time
         _lastSeizeTimestamp = block.timestamp;
-        _token.transfer(_msgSender(), _amount);
-        emit CollateralSeized(_amount);
+        _token.transfer(_msgSender(), amount_);
+        emit CollateralSeized(amount_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function adjustSeize(uint64 _seize)
+    function adjustSeize(uint64 seize_)
         public
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        _setSeize(_seize);
+        _setSeize(seize_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -427,51 +427,51 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IRepayer_v1
-    function setRepayableAmount(uint _amount)
+    function setRepayableAmount(uint amount_)
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        if (_amount > _getSmallerCaCr()) {
+        if (amount_ > _getSmallerCaCr()) {
             revert
                 IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
         }
-        emit RepayableAmountChanged(_amount, _repayableAmount);
-        _repayableAmount = _amount;
+        emit RepayableAmountChanged(amount_, _repayableAmount);
+        _repayableAmount = amount_;
     }
 
     // -------------------------------------------------------------------------
     // Mutating - RedeemingBondingCurveBase_v1 Overrides
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint _fee)
+    function setSellFee(uint fee_)
         external
         virtual
         override(RedeemingBondingCurveBase_v1)
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        _setSellFee(_fee);
+        _setSellFee(fee_);
     }
 
     // -------------------------------------------------------------------------
     // Mutating - OnlyRiskManager Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function setCapitalRequired(uint _newCapitalRequired)
+    function setCapitalRequired(uint newCapitalRequired_)
         public
         override(FM_BC_BondingSurface_Redeeming_v1)
         onlyModuleRole(RISK_MANAGER_ROLE)
     {
-        _setCapitalRequired(_newCapitalRequired);
+        _setCapitalRequired(newCapitalRequired_);
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
-    function setBasePriceMultiplier(uint _newBasePriceMultiplier)
+    function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
         override(FM_BC_BondingSurface_Redeeming_v1)
         onlyModuleRole(RISK_MANAGER_ROLE)
     {
-        _setBasePriceMultiplier(_newBasePriceMultiplier);
+        _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
 
     // -------------------------------------------------------------------------
@@ -487,7 +487,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     function withdrawProjectCollateralFee(
         address, /* _receiver */
-        uint /* _amount */
+        uint /* amount_ */
     ) public view override onlyOrchestratorAdmin {
         revert
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
@@ -521,11 +521,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice If the repayable amount was not defined, it is automatically set to the smaller between the Ca and the Cr value
     /// @notice The repayable amount as maximum is applied when is gt 0 and is lt the smallest between Cr and Ca
-    /// @return repayableAmount The repayable amount
+    /// @return repayableAmount_ The repayable amount
     function _getRepayableAmount()
         internal
         view
-        returns (uint repayableAmount)
+        returns (uint repayableAmount_)
     {
         uint _repayable = _getSmallerCaCr();
         return (_repayableAmount == 0 || _repayableAmount > _repayable)
@@ -535,8 +535,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Required (Cr), the repayable amount can be lte Cr
     /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
-    /// @return smallerCaCr The smaller of the Capital Available (Ca) and Capital Required (Cr)
-    function _getSmallerCaCr() internal view returns (uint smallerCaCr) {
+    /// @return smallerCaCr_ The smaller of the Capital Available (Ca) and Capital Required (Cr)
+    function _getSmallerCaCr() internal view returns (uint smallerCaCr_) {
         uint _ca = _getCapitalAvailable();
         uint _cr = _capitalRequired;
         return _ca > _cr ? _cr : _ca;
