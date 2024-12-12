@@ -4,15 +4,7 @@ pragma solidity >=0.8.0;
 /**
  * @title   Inverter Metadata Library
  *
- * @dev     Arithmetic library with operations for fixed-point numbers..
- *
- * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
- *
- * @custom:version v1.0.0
- *
- * @custom:inverter-standard-version 0.1.0 //@note should I adapt this contract to the new standard?
+ * @dev     Arithmetic library with operations for fixed-point numbers.
  *
  * @author  Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/utils/FixedPointMathLib.sol)
  */
