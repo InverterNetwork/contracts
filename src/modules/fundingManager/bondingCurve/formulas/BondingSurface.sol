@@ -10,26 +10,29 @@ import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 /**
  * @title   Bonding Surface Formula
  *
- * @notice  Bonding Surface Formular to calculate the price of a token in the bonding curve.
+ * @notice  Bonding Surface Formular to calculate the price of a token in the
+ *          bonding curve.
  *
  * @dev
  *                                (C_a)^n
  *          p = f(C_a, C_r) = B -------------
  *                              (C_r)^(n-1)
  *
- *          TPG price per unit, p. The independent variables in the bonding function are the
- *          capital available, C_a, and the capital required, C_r. C_a describes the amount of
- *          value stored in the network at any given point in time. C_r  describes the amount
- *          of value that is needed to operate the protocol according to market size
- *          and conditions, the regulatory requirements, as well as the chosen risk appetite,
- *          and allows for considering these three factors in the determination of p
+ *          TPG price per unit, p. The independent variables in the bonding
+ *          function are the capital available, C_a, and the capital required,
+ *          C_r. C_a describes the amount of value stored in the network at any
+ *          given point in time. C_r  describes the amount of value that is
+ *          needed to operate the protocol according to market size and
+ *          conditions, the regulatory requirements, as well as the chosen risk
+ *          appetite, and allows for considering these three factors in the
+ *          determination of p
  *          Initial:
  *            B := 10e-7
  *            1 < n <= 2
  *            n := 2
  *
- *          We assume n to be constant. Otherwise we would have to change the burn/mint derivations
- *          on update.
+ *          We assume n to be constant. Otherwise we would have to change the
+ *          burn/mint derivations on update.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -115,8 +118,8 @@ contract BondingSurface is IBondingSurface, ERC165 {
     // ========================================================================
     // Internal Functions
 
-    /// @dev Computes the inverse based on
-    /// https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
+    /// @notice Computes the inverse based on
+    /// @dev    https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
     /// @param x_ 18 decimal fixed point number to inverse. 0 < x <= 1e36
     function _inverse(uint x_) internal pure returns (uint res_) {
         unchecked {

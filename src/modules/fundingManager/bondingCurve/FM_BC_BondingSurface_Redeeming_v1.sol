@@ -77,13 +77,13 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     using SafeERC20 for IERC20;
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Constants
 
     /// @dev Minimum collateral reserve
     uint public MIN_RESERVE;
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Storage
 
     /// @dev The interface of the Formula used to calculate the issuance and redeeming amount.
@@ -101,7 +101,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @dev Storage gap for future upgrades.
     uint[50] private __gap;
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -123,6 +123,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
+    /// @notice Initializes the Redeeming Bonding Surface Contract.
+    /// @dev    Only callable during the initialization.
+    /// @param  issuanceToken_ The token that is used to issue bonds.
+    /// @param  acceptedToken_ The token that is accepted as collateral.
+    /// @param  bondingCurveProperties_ The properties of the bonding curve.
     function __FM_BC_BondingSurface_Redeeming_v1_Init(
         address issuanceToken,
         address acceptedToken,
@@ -131,7 +136,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         // Set collateral token
         _token = IERC20(acceptedToken);
 
-        // MIN_RESERVE is in relation to the decimals of the workflow's collateral token
+        // MIN_RESERVE is in relation to the decimals of the
+        //workflow's collateral token
         MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
@@ -156,9 +162,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _setBuyFee(bondingCurveProperties.buyFee);
         _setSellFee(bondingCurveProperties.sellFee);
 
-        // Set buying functionality to open if true. By default buying is false
+        // Set buying functionality to open if true.
+        // By default buying is false
         buyIsOpen = bondingCurveProperties.buyIsOpen;
-        // Set selling functionality to open if true. By default selling is false
+        // Set selling functionality to open if true.
+        // By default selling is false
         sellIsOpen = bondingCurveProperties.sellIsOpen;
 
         emit OrchestratorTokenSet(
@@ -169,8 +177,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ========================================================================
     // Public Getter Functions
 
-    /// @notice Calculates and returns the static price for buying the issuance token.
-    /// @return staticPriceForBuying_ The static price for buying the issuance token.
+    /// @notice Calculates and returns the static price for buying
+    ///         the issuance token.
+    /// @return staticPriceForBuying_ The static price for buying
+    ///                               the issuance token.
     function getStaticPriceForBuying()
         external
         view
@@ -182,9 +192,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    /// @notice Calculates and returns the static price for selling the issuance token.
-    ///         The return value is formatted in PPM.
-    /// @return staticPriceForSelling_ The static price for selling the issuance token.
+    /// @notice Calculates and returns the static price for selling
+    ///         the issuance token.
+    /// @dev    The return value is formatted in PPM.
+    /// @return staticPriceForSelling_  The static price for selling
+    ///                                 the issuance token.
     function getStaticPriceForSelling()
         external
         view
@@ -242,7 +254,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    // IFundingManager Functions
+    // ------------------------------------------------------------------------
+    // Getter -  IFundingManager Functions
 
     /// @inheritdoc IFundingManager_v1
     function token()
@@ -257,7 +270,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ========================================================================
     // Mutating Functions
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
@@ -278,7 +291,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - OnlyPaymentClient Functions
 
     /// @inheritdoc IFundingManager_v1
@@ -304,12 +317,15 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - Upstream Function Implementations
 
-    /// @dev Calculates the amount of tokens to mint for a given deposit amount using the formula contract.
-    /// This internal function is an override of BondingCurveBase_v1's abstract function.
-    /// @param depositAmount_ The amount of collateral deposited to purchase tokens.
+    /// @notice Calculates the amount of tokens to mint for a given deposit
+    ///         amount using the formula contract.
+    /// @dev This internal function is an override of BondingCurveBase_v1's
+    ///      abstract function.
+    /// @param depositAmount_   The amount of collateral deposited to
+    ///                         purchase tokens.
     /// @return mintAmount_ The amount of tokens that will be minted.
     function _issueTokensFormulaWrapper(uint depositAmount_)
         internal
@@ -327,10 +343,13 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    /// @dev Calculates the amount of collateral to be received when redeeming a given amount of tokens.
-    /// This internal function is an override of RedeemingBondingCurveBase_v1's abstract function.
-    /// @param depositAmount_ The amount of tokens to be redeemed for collateral.
-    /// @return redeemAmount_ The amount of collateral that will be received.
+    /// @notice Calculates the amount of collateral to be received when
+    ///         redeeming a given amount of tokens.
+    /// @dev    This internal function is an override of
+    ///         RedeemingBondingCurveBase_v1's abstract function.
+    /// @param depositAmount_   The amount of tokens to be redeemed for
+    ///                         collateral.
+    /// @return redeemAmount_   The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint depositAmount_)
         internal
         view
@@ -352,10 +371,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         }
     }
 
-    // =========================================================================
+    // ------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Returns the collateral available in this contract, subtracted by the fee collected
+    /// @notice Returns the collateral available in this contract,
+    ///         subtracted by the fee collected
     /// @return capitalAvailable_ Capital available in contract
     function _getCapitalAvailable()
         internal
@@ -365,8 +385,10 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         return _token.balanceOf(address(this)) - projectCollateralFeeCollected;
     }
 
-    /// @dev Set the capital required state used in the bonding curve calculations.
-    /// newCapitalRequired_ cannot be zero
+    /// @notice Set the capital required state used in the bonding curve
+    ///         calculations.
+    /// @dev    newCapitalRequired_ cannot be zero
+    /// @param newCapitalRequired_ the new captial that is required
     function _setCapitalRequired(uint newCapitalRequired_) internal {
         if (newCapitalRequired_ == 0) {
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
@@ -376,7 +398,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _updateVariables();
     }
 
-    /// @dev    Sets the base price multiplier and emits an event. Reverts if the input is zero.
+    /// @notice Sets the base price multiplier
+    /// @dev    Reverts if newBasePriceMultiplier_ is zero.
     /// @param  newBasePriceMultiplier_ The new base price multiplier.
     function _setBasePriceMultiplier(uint newBasePriceMultiplier_) internal {
         if (newBasePriceMultiplier_ == 0) {
@@ -389,7 +412,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _updateVariables();
     }
 
-    /// @dev Precomputes and sets the price multiplier to capital ratio
+    /// @notice Precomputes and sets the price multiplier to capital ratio
     function _updateVariables() internal {
         uint newBasePriceToCapitalRatio = _calculateBasePriceToCapitalRatio(
             _capitalRequired, _basePriceMultiplier
@@ -400,7 +423,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         _basePriceToCapitalRatio = newBasePriceToCapitalRatio;
     }
 
-    /// @dev Internal function which calculates the price multiplier to capital ratio
+    /// @notice Internal function which calculates the price multiplier to
+    ///         capital ratio.
+    /// @dev    Reverts if the ratio is higher than 1e36
     /// @param capitalRequired_ The capital required.
     /// @param basePriceMultiplier_ The base price multiplier.
     /// @return basePriceToCapitalRatio_ The calculated price to capital ratio.

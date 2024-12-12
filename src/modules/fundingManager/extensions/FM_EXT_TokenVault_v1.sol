@@ -48,7 +48,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     // ------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev    Modifier to guarantee the amount is valid.
+    /// @notice Modifier to guarantee the amount is valid.
     modifier amountIsValid(uint amount_) {
         _ensureAmountIsValid(amount_);
         _;

@@ -85,7 +85,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             || super.supportsInterface(interfaceId_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Constants
 
     /// @dev Max seizable amount is 1% expressed in BPS
@@ -102,7 +102,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev Minter/Burner Role.
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Storage
 
     /// @dev Repayable amount collateral which can be pulled from the
@@ -125,22 +125,25 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Modifiers
 
+    /// @notice Modifier to ensure buy and sell restrictions are met
     modifier checkBuyAndSellRestrictions() {
         //@note Naming? Naming Functions Contracts Modifier General
         _checkBuyAndSellRestrictionsModifier();
         _;
     }
 
+    /// @notice Modifier to ensure only the LiquidityVaultController can
+    ///call the function
     modifier onlyLiquidityVaultController() {
         //@note Naming?
         _ensureOnlyLiquidityVaultController();
         _;
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -180,6 +183,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
+    /// @notice Initializes the Restricted Redeeming Bonding Surface Contract.
+    /// @dev    Only callable during the initialization.
+    /// @param  liquidityVaultController The address of the
+    ///                                  LiquidityVaultController.
+    /// @param  newSeize The new seize value.
+    /// @param  buyAndSellIsRestricted Whether buy and sell is restricted.
     function __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
         address liquidityVaultController,
         uint64 newSeize,
@@ -195,7 +204,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setSeize(newSeize);
     }
 
-    // =========================================================================
+    // ------------------------------------------------------------------------
     // Public Getter Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -251,14 +260,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return _getRepayableAmount();
     }
 
-    // =========================================================================
+    // ------------------------------------------------------------------------
     // Public Mutating Functions
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - Token Manipulation Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address.
-    /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
+    /// @dev    The buy functionality can be restircted to the
+    ///         CURVE_INTERACTION_ROLE.
     /// @param  receiver_ The address that will receive the bought tokens.
     /// @param  depositAmount_ The amount of collateral token depoisited.
     /// @param  minAmountOut_ The minimum acceptable amount the user expects to
@@ -273,10 +283,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @notice Buy tokens for the sender's address.
-    /// @dev    The buy functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  depositAmount_ The amount of collateral token depoisited.
-    /// @param  minAmountOut_ The minimum acceptable amount the user expects to receive
-    ///         from the transaction.
+    /// @dev    The buy functionality can be restircted to the
+    ///         CURVE_INTERACTION_ROLE.
+    /// @param  depositAmount_  The amount of collateral token depoisited.
+    /// @param  minAmountOut_   The minimum acceptable amount the user expects
+    ///                         to receive from the transaction.
     function buy(uint depositAmount_, uint minAmountOut_)
         public
         virtual
@@ -285,12 +296,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         buyFor(_msgSender(), depositAmount_, minAmountOut_);
     }
 
-    /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
-    /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  receiver_ The address that will receive the redeemed tokens.
-    /// @param  depositAmount_ The amount of tokens to be sold.
-    /// @param  minAmountOut_ The minimum acceptable amount of proceeds that the receiver
-    ///         should receive from the sale.
+    /// @notice Redeem tokens and directs the proceeds to a specified receiver
+    ///         address.
+    /// @dev    The sell functionality can be restircted to the
+    ///         CURVE_INTERACTION_ROLE.
+    /// @param  receiver_       The address that will receive the redeemed
+    ///                         tokens.
+    /// @param  depositAmount_  The amount of tokens to be sold.
+    /// @param  minAmountOut_   The minimum acceptable amount of proceeds that
+    ///                         the receiver should receive from the sale.
     function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
@@ -301,10 +315,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @notice Redeem collateral for the sender's address.
-    /// @dev    The sell functionality can be restircted to the CURVE_INTERACTION_ROLE.
-    /// @param  depositAmount_ The amount of issued token depoisited.
-    /// @param  minAmountOut_ The minimum acceptable amount the user expects to receive
-    ///         from the transaction.
+    /// @dev    The sell functionality can be restircted to the
+    ///         CURVE_INTERACTION_ROLE.
+    /// @param  depositAmount_  The amount of issued token depoisited.
+    /// @param  minAmountOut_   The minimum acceptable amount the user
+    ///                         expects to receive from the transaction.
     function sell(uint depositAmount_, uint minAmountOut_)
         public
         virtual
@@ -328,7 +343,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _burn(owner_, amount_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - OnlyLiquidityVaultController Functions
 
     /// @inheritdoc IRepayer_v1
@@ -350,7 +365,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         emit RepaymentTransfer(to_, amount_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - OnlyCoverManager Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -436,7 +451,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _repayableAmount = amount_;
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - RedeemingBondingCurveBase_v1 Overrides
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -449,7 +464,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setSellFee(fee_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - OnlyRiskManager Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
@@ -474,7 +489,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -485,6 +500,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setTokenVault(tokenVault_);
     }
 
+    /// @inheritdoc IBondingCurveBase_v1
     function withdrawProjectCollateralFee(
         address, /* _receiver */
         uint /* amount_ */
@@ -499,10 +515,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
-    // =========================================================================
+    // ------------------------------------------------------------------------
     // Internal Functions
 
-    /// @dev Sets the token vault address.
+    /// @notice Sets the token vault address.
     /// @param tokenVault_ The address of the token vault.
     function _setTokenVault(address tokenVault_)
         internal
@@ -512,7 +528,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         emit TokenVaultSet(tokenVault_);
     }
 
-    /// @dev Set the current seize state, which defines the percentage of seizable amount
+    /// @notice Set the current seize state, which defines the percentage
+    ///         of seizable amount
+    /// @dev    Reverts if the seize is greater than the MAX_SEIZE.
+    /// @param seize_ The new seize value.
     function _setSeize(uint64 seize_) internal {
         if (seize_ > MAX_SEIZE) {
             revert
@@ -524,8 +543,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _currentSeize = seize_;
     }
 
-    /// @notice If the repayable amount was not defined, it is automatically set to the smaller between the Ca and the Cr value
-    /// @notice The repayable amount as maximum is applied when is gt 0 and is lt the smallest between Cr and Ca
+    /// @notice Returns the repayable amount.
+    /// @dev    If the repayable amount was not defined, it is automatically set
+    ///         to the smaller between the Ca and the Cr value
+    /// @dev    The repayable amount as maximum is applied when is gt 0 and is lt
+    ///         the smallest between Cr and Ca
     /// @return repayableAmount_ The repayable amount
     function _getRepayableAmount()
         internal
@@ -538,9 +560,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             : _repayableAmount;
     }
 
-    /// @notice If the balance of the Capital Available (Ca) is larger than the Capital Required (Cr), the repayable amount can be lte Cr
-    /// @notice If the Ca is lt Cr, the max repayable amount is the Ca
-    /// @return smallerCaCr_ The smaller of the Capital Available (Ca) and Capital Required (Cr)
+    /// @notice Returns the smaller of the Capital Available (Ca) and Capital
+    /// @dev    If the balance of the Capital Available (Ca) is larger than
+    ///         the Capital Required (Cr), the repayable amount can be lte Cr
+    /// @dev    If the Ca is lt Cr, the max repayable amount is the Ca
+    /// @return smallerCaCr_    The smaller of the Capital Available (Ca)
+    ///                         and Capital Required (Cr)
     function _getSmallerCaCr() internal view returns (uint smallerCaCr_) {
         uint ca = _getCapitalAvailable();
         uint cr = _capitalRequired;
@@ -554,9 +579,11 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         emit ProjectCollateralFeeWithdrawn(_tokenVault, workflowFeeAmount_);
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Internal - Modifier Functions
 
+    /// @notice Ensures that only the Liquidity Vault Controller can call the
+    ///         function.
     function _ensureOnlyLiquidityVaultController() internal view {
         if (_msgSender() != address(_liquidityVaultController)) {
             revert
@@ -566,7 +593,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         }
     }
 
-    /// @dev    Validate if buy and sell is restricted, and if so
+    /// @notice Validate if buy and sell is restricted, and if so
     ///         check if the caller has the CURVE_INTERACTION_ROLE
     function _checkBuyAndSellRestrictionsModifier() internal view {
         //@note Naming? Naming Functions Contracts Modifier Internal functions
@@ -575,10 +602,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         }
     }
 
-    // -------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // Internal - BondingCurveBase_v1 Overrides
 
-    /// @dev    Validates the workflow fee.
+    /// @notice Validates the project fee.
+    /// @dev    Reverts if the project fee is greater than the maximum fee.
+    /// @param  projectFee_ The project fee.
     function _validateProjectFee(uint projectFee_)
         internal
         pure
