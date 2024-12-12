@@ -13,3 +13,6 @@
 [submodule "lib/uma-protocol"]
 	path = lib/uma-protocol
 	url = https://github.com/UMAprotocol/protocol
+[submodule "lib/solmate"]
+	path = lib/solmate
+	url = https://github.com/transmissions11/solmate
