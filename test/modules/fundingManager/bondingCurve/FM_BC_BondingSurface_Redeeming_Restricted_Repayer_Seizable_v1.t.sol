@@ -421,15 +421,15 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
     /*  Test buy() & buyFor() functions
         Please Note: The functions have been extensively tested in the BondingCurveBase_v1.t contract. These
-        tests only check for the placement of the checkBuyAndSellRestrictions() modifier
-        ├── Given the modifier checkBuyAndSellRestrictions() is in place
-        tests only check for the placement of the checkBuyAndSellRestrictions() modifier
-        ├── Given the modifier checkBuyAndSellRestrictions() is in place
+        tests only check for the placement of the onlyIfNotBuyAndSellRestricted() modifier
+        ├── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
+        tests only check for the placement of the onlyIfNotBuyAndSellRestricted() modifier
+        ├── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
         │   └── And the modifier condition isn't met
         │       ├── When the function buy() is called
         │       └── Then it should revert
-        └── Given the modifier checkBuyAndSellRestrictions() is in place
-        └── Given the modifier checkBuyAndSellRestrictions() is in place
+        └── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
+        └── Given the modifier onlyIfNotBuyAndSellRestricted() is in place
             └── And the modifier condition isn't met
                 └── When the function buyFor() is called
                     └── Then it should revert
@@ -553,16 +553,16 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         bondingCurveFundingManager.restrictBuyAndSell();
     }
 
-    /*  Test internal _checkBuyAndSellRestrictionsModifier() function
-    /*  Test internal _checkBuyAndSellRestrictionsModifier() function
+    /*  Test internal _onlyIfNotBuyAndSellRestrictedModifier() function
+    /*  Test internal _onlyIfNotBuyAndSellRestrictedModifier() function
         └── Given buy and selling is restricted
             └── And the msg.sender does not have the CURVE_INTERACTION_ROLE
-                └── When the function _checkBuyAndSellRestrictionsModifier() is called
-                └── When the function _checkBuyAndSellRestrictionsModifier() is called
+                └── When the function _onlyIfNotBuyAndSellRestrictedModifier() is called
+                └── When the function _onlyIfNotBuyAndSellRestrictedModifier() is called
                     └── Then it should revert
     */
 
-    function testInternalcheckBuyAndSellRestrictionsModifier_revertGivenCallerHasNotCoverManagerRole(
+    function testInternalonlyIfNotBuyAndSellRestrictedModifier_revertGivenCallerHasNotCoverManagerRole(
     ) public {
         // Setup
         bondingCurveFundingManager.restrictBuyAndSell();
@@ -577,8 +577,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
             )
         );
         vm.prank(nonAuthorizedBuyer);
-        bondingCurveFundingManager.exposed_checkBuyAndSellRestrictionsModifier();
-        bondingCurveFundingManager.exposed_checkBuyAndSellRestrictionsModifier();
+        bondingCurveFundingManager.exposed_onlyIfNotBuyAndSellRestrictedModifier(
+        );
+        bondingCurveFundingManager.exposed_onlyIfNotBuyAndSellRestrictedModifier(
+        );
     }
 
     /*  Test burnIssuanceToken()

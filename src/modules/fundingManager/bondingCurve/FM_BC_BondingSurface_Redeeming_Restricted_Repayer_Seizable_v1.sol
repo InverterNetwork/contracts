@@ -128,16 +128,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Modifiers
 
     /// @notice Modifier to ensure buy and sell restrictions are met
-    modifier checkBuyAndSellRestrictions() {
-        //@note @marvinkruse Naming? Naming Functions Contracts Modifier General
-        _checkBuyAndSellRestrictionsModifier();
+    modifier onlyIfNotBuyAndSellRestricted() {
+        _onlyIfNotBuyAndSellRestrictedModifier();
         _;
     }
 
     /// @notice Modifier to ensure only the LiquidityVaultController can
     ///call the function
     modifier onlyLiquidityVaultController() {
-        //@note @marvinkruse Naming?
         _ensureOnlyLiquidityVaultController();
         _;
     }
@@ -275,7 +273,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        checkBuyAndSellRestrictions
+        onlyIfNotBuyAndSellRestricted
     {
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
     }
@@ -307,7 +305,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        checkBuyAndSellRestrictions
+        onlyIfNotBuyAndSellRestricted
     {
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
     }
@@ -594,8 +592,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Validate if buy and sell is restricted, and if so
     ///         check if the caller has the CURVE_INTERACTION_ROLE
-    function _checkBuyAndSellRestrictionsModifier() internal view {
-        //@note @marvinkruse Naming? Naming Functions Contracts Modifier Internal functions
+    function _onlyIfNotBuyAndSellRestrictedModifier() internal view {
         if (_buyAndSellIsRestricted) {
             _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }
