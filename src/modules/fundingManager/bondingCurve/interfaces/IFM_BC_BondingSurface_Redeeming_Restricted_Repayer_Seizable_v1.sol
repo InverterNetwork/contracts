@@ -5,8 +5,6 @@ pragma solidity ^0.8.0;
 import {IFM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
-import {ILiquidityVaultController_v1} from
-    "@lm/interfaces/ILiquidityVaultController_v1.sol";
 
 /**
  * @title   Inverter Redeeming Restriced Repayer Seizable Bonding Surface Bonding Curve Funding Manager Interface
@@ -29,7 +27,6 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     IFM_BC_BondingSurface_Redeeming_v1,
     IRepayer_v1
 {
-    //@note Should this maybe be IFM_BC_BondingSurface_Redeeming_Restricted_Seizable_v1 ? repayer is included in different Interface right?
     // -------------------------------------------------------------------------
     // Errors
 
@@ -156,10 +153,8 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function adjustSeize(uint64 seize_) external;
 
     /// @notice Sets a new liquidity valut controller address
-    /// @param lp_ Address of the liquidity vault controller
-    function setLiquidityVaultControllerContract(
-        ILiquidityVaultController_v1 lp_
-    ) external;
+    /// @param lvc_ Address of the liquidity vault controller
+    function setLiquidityVaultControllerContract(address lvc_) external;
 
     // -------------------------------------------------------------------------
     // Mutating - OnlyOrchestratorAdmin Functions

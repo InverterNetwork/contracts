@@ -32,8 +32,7 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
-import {ILiquidityVaultController_v1} from
-    "@lm/interfaces/ILiquidityVaultController_v1.sol";
+
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IFM_BC_BondingSurface_Redeeming_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";

@@ -21,8 +21,7 @@ import {IFM_BC_BondingSurface_Redeeming_v1} from
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
-import {ILiquidityVaultController_v1} from
-    "@lm/interfaces/ILiquidityVaultController_v1.sol";
+
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -112,8 +111,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     uint64 internal _currentSeize;
     /// @dev Address of the liquidity vault controller who has access to the
     ///      collateral held by the funding manager through the Repayer
-    /// through the Repayer functionality
-    ILiquidityVaultController_v1 internal _liquidityVaultController;
+    ///      through the Repayer functionality
+    address internal _liquidityVaultController;
     /// @dev Tracks last seize timestamp to determine eligibility for
     ///      subsequent seizures based on SEIZE_DELAY
     uint internal _lastSeizeTimestamp;
@@ -130,7 +129,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Modifier to ensure buy and sell restrictions are met
     modifier checkBuyAndSellRestrictions() {
-        //@note Naming? Naming Functions Contracts Modifier General
+        //@note @marvinkruse Naming? Naming Functions Contracts Modifier General
         _checkBuyAndSellRestrictionsModifier();
         _;
     }
@@ -138,7 +137,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice Modifier to ensure only the LiquidityVaultController can
     ///call the function
     modifier onlyLiquidityVaultController() {
-        //@note Naming?
+        //@note @marvinkruse Naming?
         _ensureOnlyLiquidityVaultController();
         _;
     }
@@ -194,8 +193,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         uint64 newSeize,
         bool buyAndSellIsRestricted
     ) internal onlyInitializing {
-        _liquidityVaultController =
-            ILiquidityVaultController_v1(liquidityVaultController);
+        _liquidityVaultController = liquidityVaultController;
 
         // Set buy and sell restriction to restricted if true. By default buy and
         // sell is unrestricted
@@ -421,9 +419,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function setLiquidityVaultControllerContract(
-        ILiquidityVaultController_v1 lvc_
-    ) external onlyModuleRole(COVER_MANAGER_ROLE) {
+    function setLiquidityVaultControllerContract(address lvc_)
+        external
+        onlyModuleRole(COVER_MANAGER_ROLE)
+    {
         // @update-info When upgrading to Topos next version, we need to add an
         //              interface check here.
         if (address(lvc_) == address(0) || address(lvc_) == address(this)) {
@@ -596,7 +595,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice Validate if buy and sell is restricted, and if so
     ///         check if the caller has the CURVE_INTERACTION_ROLE
     function _checkBuyAndSellRestrictionsModifier() internal view {
-        //@note Naming? Naming Functions Contracts Modifier Internal functions
+        //@note @marvinkruse Naming? Naming Functions Contracts Modifier Internal functions
         if (_buyAndSellIsRestricted) {
             _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
         }
