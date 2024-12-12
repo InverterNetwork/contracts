@@ -129,23 +129,23 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @param  acceptedToken_ The token that is accepted as collateral.
     /// @param  bondingCurveProperties_ The properties of the bonding curve.
     function __FM_BC_BondingSurface_Redeeming_v1_Init(
-        address issuanceToken,
-        address acceptedToken,
-        BondingCurveProperties memory bondingCurveProperties
+        address issuanceToken_,
+        address acceptedToken_,
+        BondingCurveProperties memory bondingCurveProperties_
     ) internal onlyInitializing {
         // Set collateral token
-        _token = IERC20(acceptedToken);
+        _token = IERC20(acceptedToken_);
 
         // MIN_RESERVE is in relation to the decimals of the
         //workflow's collateral token
         MIN_RESERVE = 10 ** IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
-        _setIssuanceToken(address(issuanceToken));
+        _setIssuanceToken(address(issuanceToken_));
 
         // Check for valid Bonding Surface formula contract
         if (
-            !ERC165Upgradeable(bondingCurveProperties.formula).supportsInterface(
+            !ERC165Upgradeable(bondingCurveProperties_.formula).supportsInterface(
                 type(IBondingSurface).interfaceId
             )
         ) {
@@ -154,23 +154,23 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
                 .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
         // Set formula contract
-        _formula = IBondingSurface(bondingCurveProperties.formula);
+        _formula = IBondingSurface(bondingCurveProperties_.formula);
 
         // Set Bonding Curve Properties
-        _setCapitalRequired(bondingCurveProperties.capitalRequired);
-        _setBasePriceMultiplier(bondingCurveProperties.basePriceMultiplier);
-        _setBuyFee(bondingCurveProperties.buyFee);
-        _setSellFee(bondingCurveProperties.sellFee);
+        _setCapitalRequired(bondingCurveProperties_.capitalRequired);
+        _setBasePriceMultiplier(bondingCurveProperties_.basePriceMultiplier);
+        _setBuyFee(bondingCurveProperties_.buyFee);
+        _setSellFee(bondingCurveProperties_.sellFee);
 
         // Set buying functionality to open if true.
         // By default buying is false
-        buyIsOpen = bondingCurveProperties.buyIsOpen;
+        buyIsOpen = bondingCurveProperties_.buyIsOpen;
         // Set selling functionality to open if true.
         // By default selling is false
-        sellIsOpen = bondingCurveProperties.sellIsOpen;
+        sellIsOpen = bondingCurveProperties_.sellIsOpen;
 
         emit OrchestratorTokenSet(
-            acceptedToken, IERC20Metadata(address(_token)).decimals()
+            acceptedToken_, IERC20Metadata(address(_token)).decimals()
         );
     }
 
