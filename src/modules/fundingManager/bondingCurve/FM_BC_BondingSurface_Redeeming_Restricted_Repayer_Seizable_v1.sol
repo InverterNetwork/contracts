@@ -66,7 +66,6 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @author  Inverter Network
  */
 contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
-    IRepayer_v1,
     IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
     FM_BC_BondingSurface_Redeeming_v1
 {
@@ -267,7 +266,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         checkBuyAndSellRestrictions
     {
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
@@ -281,7 +280,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function buy(uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
     {
         buyFor(_msgSender(), depositAmount_, minAmountOut_);
     }
@@ -295,7 +294,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
         checkBuyAndSellRestrictions
     {
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
@@ -309,7 +308,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function sell(uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
     {
         sellTo(_msgSender(), depositAmount_, minAmountOut_);
     }
@@ -444,7 +443,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function setSellFee(uint fee_)
         external
         virtual
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
         _setSellFee(fee_);
@@ -456,7 +455,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setCapitalRequired(uint newCapitalRequired_)
         public
-        override(FM_BC_BondingSurface_Redeeming_v1)
+        override(
+            FM_BC_BondingSurface_Redeeming_v1, IFM_BC_BondingSurface_Redeeming_v1
+        )
         onlyModuleRole(RISK_MANAGER_ROLE)
     {
         _setCapitalRequired(newCapitalRequired_);
@@ -465,7 +466,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
-        override(FM_BC_BondingSurface_Redeeming_v1)
+        override(
+            FM_BC_BondingSurface_Redeeming_v1, IFM_BC_BondingSurface_Redeeming_v1
+        )
         onlyModuleRole(RISK_MANAGER_ROLE)
     {
         _setBasePriceMultiplier(newBasePriceMultiplier_);
@@ -485,7 +488,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function withdrawProjectCollateralFee(
         address, /* _receiver */
         uint /* amount_ */
-    ) public view override onlyOrchestratorAdmin {
+    )
+        public
+        view
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        onlyOrchestratorAdmin
+    {
         revert
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
         );

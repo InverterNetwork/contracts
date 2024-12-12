@@ -210,7 +210,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         validReceiver(_receiver)
         buyingIsEnabled
     {
@@ -232,7 +232,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         buyingIsEnabled
     {
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
@@ -312,7 +312,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         returns (uint staticPriceForBuying_)
     {
         return (

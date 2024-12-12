@@ -7,12 +7,13 @@ import "forge-std/console.sol";
 import {
     IFM_BC_BondingSurface_Redeeming_v1,
     FM_BC_BondingSurface_Redeeming_v1,
-    IFundingManager_v1,
     IBondingCurveBase_v1
 } from "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_v1.sol";
 
-import {IFM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+import {
+    IFM_BC_BondingSurface_Redeeming_v1,
+    IFundingManager_v1
+} from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

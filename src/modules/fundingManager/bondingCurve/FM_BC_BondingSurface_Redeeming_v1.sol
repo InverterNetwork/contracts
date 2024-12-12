@@ -12,12 +12,13 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
-import {IFM_BC_BondingSurface_Redeeming_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
+import {
+    IFM_BC_BondingSurface_Redeeming_v1,
+    IFundingManager_v1
+} from "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingSurface} from "@fm/bondingCurve/interfaces/IBondingSurface.sol";
 import {IAuthorizer_v1} from "src/modules/authorizer/IAuthorizer_v1.sol";
 
@@ -57,9 +58,8 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @author  Inverter Network
  */
 contract FM_BC_BondingSurface_Redeeming_v1 is
-    IFM_BC_BondingSurface_Redeeming_v1,
-    IFundingManager_v1,
-    RedeemingBondingCurveBase_v1
+    RedeemingBondingCurveBase_v1,
+    IFM_BC_BondingSurface_Redeeming_v1
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
@@ -174,7 +174,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         returns (uint staticPriceForBuying_)
     {
         return _formula.spotPrice(
@@ -188,7 +188,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function getStaticPriceForSelling()
         external
         view
-        override(RedeemingBondingCurveBase_v1)
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
         returns (uint staticPriceForSelling_)
     {
         return _formula.spotPrice(
@@ -245,7 +245,12 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // IFundingManager Functions
 
     /// @inheritdoc IFundingManager_v1
-    function token() public view returns (IERC20 token_) {
+    function token()
+        public
+        view
+        override(IFundingManager_v1)
+        returns (IERC20 token_)
+    {
         return _token;
     }
 
@@ -280,6 +285,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function transferOrchestratorToken(address to_, uint amount_)
         external
         virtual
+        override(IFundingManager_v1)
         onlyPaymentClient
     {
         if (
