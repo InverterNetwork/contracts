@@ -177,10 +177,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ========================================================================
     // Public Getter Functions
 
-    /// @notice Calculates and returns the static price for buying
-    ///         the issuance token.
-    /// @return staticPriceForBuying_ The static price for buying
-    ///                               the issuance token.
+    /// @inheritdoc IBondingCurveBase_v1
     function getStaticPriceForBuying()
         external
         view
@@ -192,11 +189,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
     }
 
-    /// @notice Calculates and returns the static price for selling
-    ///         the issuance token.
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
     /// @dev    The return value is formatted in PPM.
-    /// @return staticPriceForSelling_  The static price for selling
-    ///                                 the issuance token.
     function getStaticPriceForSelling()
         external
         view

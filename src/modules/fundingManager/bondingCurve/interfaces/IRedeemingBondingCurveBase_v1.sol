@@ -60,8 +60,7 @@ interface IRedeemingBondingCurveBase_v1 is IBondingCurveBase_v1 {
     // Functions
 
     /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
-    /// @dev    Executes a sell order, with the proceeds being sent directly to the _receiver's address.
-    ///         This function wraps the `_sellOrder` internal function with specified parameters to handle
+    /// @dev    This function wraps the `_sellOrder` internal function with specified parameters to handle
     ///         the transaction and direct the proceeds.
     /// @param  _receiver The address that will receive the redeemed tokens.
     /// @param  _depositAmount The amount of tokens to be sold.

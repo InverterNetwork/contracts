@@ -262,13 +262,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ------------------------------------------------------------------------
     // Mutating - Token Manipulation Functions
 
-    /// @notice Buy tokens on behalf of a specified receiver address.
-    /// @dev    The buy functionality can be restircted to the
+    /// @inheritdoc IBondingCurveBase_v1
+    /// @dev    The buy functionality can be restricted to the
     ///         CURVE_INTERACTION_ROLE.
-    /// @param  receiver_ The address that will receive the bought tokens.
-    /// @param  depositAmount_ The amount of collateral token depoisited.
-    /// @param  minAmountOut_ The minimum acceptable amount the user expects to
-    ///         receive from the transaction.
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
@@ -278,12 +274,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
     }
 
-    /// @notice Buy tokens for the sender's address.
-    /// @dev    The buy functionality can be restircted to the
+    /// @inheritdoc IBondingCurveBase_v1
+    /// @dev    The buy functionality can be restricted to the
     ///         CURVE_INTERACTION_ROLE.
-    /// @param  depositAmount_  The amount of collateral token depoisited.
-    /// @param  minAmountOut_   The minimum acceptable amount the user expects
-    ///                         to receive from the transaction.
     function buy(uint depositAmount_, uint minAmountOut_)
         public
         virtual
@@ -292,15 +285,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         buyFor(_msgSender(), depositAmount_, minAmountOut_);
     }
 
-    /// @notice Redeem tokens and directs the proceeds to a specified receiver
-    ///         address.
-    /// @dev    The sell functionality can be restircted to the
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @dev    The sell functionality can be restricted to the
     ///         CURVE_INTERACTION_ROLE.
-    /// @param  receiver_       The address that will receive the redeemed
-    ///                         tokens.
-    /// @param  depositAmount_  The amount of tokens to be sold.
-    /// @param  minAmountOut_   The minimum acceptable amount of proceeds that
-    ///                         the receiver should receive from the sale.
     function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
@@ -310,12 +297,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
     }
 
-    /// @notice Redeem collateral for the sender's address.
-    /// @dev    The sell functionality can be restircted to the
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @dev    The sell functionality can be restricted to the
     ///         CURVE_INTERACTION_ROLE.
-    /// @param  depositAmount_  The amount of issued token depoisited.
-    /// @param  minAmountOut_   The minimum acceptable amount the user
-    ///                         expects to receive from the transaction.
     function sell(uint depositAmount_, uint minAmountOut_)
         public
         virtual
