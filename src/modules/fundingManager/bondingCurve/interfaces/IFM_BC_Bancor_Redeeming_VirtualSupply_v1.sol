@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Errors
 
     /// @notice Reserve ratio can not be be bigger than 100% expressed in PPM.
@@ -22,7 +22,7 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     error Module__FM_BC_Bancor_Redeeming_VirtualSupply__CurveInteractionsMustBeClosed(
     );
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Events
 
     /// @notice Event emitted when the reserve ratio for buying is updated.
@@ -39,7 +39,7 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
         uint32 newSellReserveRatio, uint32 oldSellReserveRatio
     );
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Structs
 
     /// @notice Struct used to store information about the bonding curve

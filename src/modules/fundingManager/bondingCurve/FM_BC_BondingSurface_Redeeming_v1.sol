@@ -77,7 +77,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     using SafeERC20 for IERC20;
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Storage
 
     /// @notice Minimum collateral reserve.
@@ -101,7 +101,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -311,61 +311,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    // ------------------------------------------------------------------------
-    // Mutating - Upstream Function Implementations
-
-    /// @notice Calculates the amount of tokens to mint for a given deposit
-    ///         amount using the formula contract.
-    /// @dev    This internal function is an override of BondingCurveBase_v1's
-    ///         virtual function.
-    /// @param  depositAmount_ The amount of collateral deposited to
-    ///         purchase tokens.
-    /// @return mintAmount_ The amount of tokens that will be minted.
-    function _issueTokensFormulaWrapper(uint depositAmount_)
-        internal
-        view
-        override(BondingCurveBase_v1)
-        returns (uint mintAmount_)
-    {
-        uint capitalAvailable = _getCapitalAvailable();
-        if (capitalAvailable == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
-        }
-
-        mintAmount_ = _formula.tokenOut(
-            depositAmount_, capitalAvailable, _basePriceToCapitalRatio
-        );
-    }
-
-    /// @notice Calculates the amount of collateral to be received when
-    ///         redeeming a given amount of tokens.
-    /// @dev    This internal function is an override of
-    ///         RedeemingBondingCurveBase_v1's virtual function.
-    /// @param  depositAmount_ The amount of tokens to be redeemed for
-    ///         collateral.
-    /// @return redeemAmount_ The amount of collateral that will be received.
-    function _redeemTokensFormulaWrapper(uint depositAmount_)
-        internal
-        view
-        override(RedeemingBondingCurveBase_v1)
-        returns (uint redeemAmount_)
-    {
-        // Subtract fee collected from capital held by contract.
-        uint capitalAvailable = _getCapitalAvailable();
-        if (capitalAvailable == 0) {
-            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
-        }
-        redeemAmount_ = _formula.tokenIn(
-            depositAmount_, capitalAvailable, _basePriceToCapitalRatio
-        );
-
-        // The asset pool must never be empty.
-        if (capitalAvailable - redeemAmount_ < MIN_RESERVE) {
-            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
-        }
-    }
-
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Internal Functions
 
     /// @notice Returns the collateral available in this contract,
@@ -432,6 +378,60 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         );
         if (basePriceToCapitalRatio_ > 1e36) {
             revert FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Upstream Function Implementations
+
+    /// @notice Calculates the amount of tokens to mint for a given deposit
+    ///         amount using the formula contract.
+    /// @dev    This internal function is an override of BondingCurveBase_v1's
+    ///         virtual function.
+    /// @param  depositAmount_ The amount of collateral deposited to
+    ///         purchase tokens.
+    /// @return mintAmount_ The amount of tokens that will be minted.
+    function _issueTokensFormulaWrapper(uint depositAmount_)
+        internal
+        view
+        override(BondingCurveBase_v1)
+        returns (uint mintAmount_)
+    {
+        uint capitalAvailable = _getCapitalAvailable();
+        if (capitalAvailable == 0) {
+            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
+        }
+
+        mintAmount_ = _formula.tokenOut(
+            depositAmount_, capitalAvailable, _basePriceToCapitalRatio
+        );
+    }
+
+    /// @notice Calculates the amount of collateral to be received when
+    ///         redeeming a given amount of tokens.
+    /// @dev    This internal function is an override of
+    ///         RedeemingBondingCurveBase_v1's virtual function.
+    /// @param  depositAmount_ The amount of tokens to be redeemed for
+    ///         collateral.
+    /// @return redeemAmount_ The amount of collateral that will be received.
+    function _redeemTokensFormulaWrapper(uint depositAmount_)
+        internal
+        view
+        override(RedeemingBondingCurveBase_v1)
+        returns (uint redeemAmount_)
+    {
+        // Subtract fee collected from capital held by contract.
+        uint capitalAvailable = _getCapitalAvailable();
+        if (capitalAvailable == 0) {
+            revert FM_BC_BondingSurface_Redeeming_v1__NoCapitalAvailable();
+        }
+        redeemAmount_ = _formula.tokenIn(
+            depositAmount_, capitalAvailable, _basePriceToCapitalRatio
+        );
+
+        // The asset pool must never be empty.
+        if (capitalAvailable - redeemAmount_ < MIN_RESERVE) {
+            revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
     }
 }

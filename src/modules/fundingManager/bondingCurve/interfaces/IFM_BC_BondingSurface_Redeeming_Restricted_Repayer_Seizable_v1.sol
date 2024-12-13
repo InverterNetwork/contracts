@@ -29,7 +29,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     IFM_BC_BondingSurface_Redeeming_v1,
     IRepayer_v1
 {
-    // -------------------------------------------------------------------------
+    // ========================================================================
     // Errors
 
     /// @notice Invalid address passed as argument.
@@ -61,7 +61,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         uint allowedTimestamp
     );
 
-    // -------------------------------------------------------------------------
+    // ========================================================================
     // Events
 
     /// @notice Emits when the collateral has been seized, with the amount.

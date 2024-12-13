@@ -27,7 +27,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     IFundingManager_v1,
     IRedeemingBondingCurveBase_v1
 {
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Errors
 
     /// @notice Invalid Bonding Surface Formula contract.
@@ -42,7 +42,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     /// @notice The minimum reserve has been reached.
     error FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Events
 
     /// @notice Emits when the capital required gets updated.
@@ -60,7 +60,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
         uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
     );
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Structs
 
     /// @notice The bonding curve properties.

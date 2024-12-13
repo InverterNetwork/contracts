@@ -20,13 +20,13 @@ pragma solidity ^0.8.0;
  * @author  Inverter Network
  */
 interface IFM_EXT_TokenVault_v1 {
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Errors
 
     /// @notice Error thrown when the amount is invalid.
     error Module__FM_EXT_TokenVault__InvalidAmount();
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Events
 
     /// @notice Event emitted when tokens are withdrawn.

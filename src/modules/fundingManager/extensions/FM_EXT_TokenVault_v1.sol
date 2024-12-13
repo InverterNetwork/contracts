@@ -45,7 +45,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
 
     using SafeERC20 for IERC20;
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Modifiers
 
     /// @notice Modifier to guarantee the amount is valid.
