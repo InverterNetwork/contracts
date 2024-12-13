@@ -17,9 +17,9 @@ import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version v1.0.0
+ * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version 0.1.0
+ * @custom:inverter-standard-version    0.1.0
  *
  * @author  Inverter Network
  */
@@ -84,7 +84,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ========================================================================
     // Public Getter Functions
 
-    /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
+    /// @notice Compute how many tokens can be seized based on `currentSeize` and token balance.
     /// @return amount_ Maximum number of tokens that can be seized.
     function getSeizableAmount() external view returns (uint amount_);
 
@@ -123,12 +123,12 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Mutating - Token Manipulation Functions
 
     /// @notice Burn amount of tokens from message sender.
-    /// @param amount_ Amount token to be burned.
+    /// @param  amount_ Amount token to be burned.
     function burnIssuanceToken(uint amount_) external;
 
     /// @notice Burn `amount` tokens belonging to `owner`.
-    /// @param owner_ Address whose tokens will be burnt.
-    /// @param amount_ Burn amount.
+    /// @param  owner_ Address whose tokens will be burnt.
+    /// @param  amount_ Burn amount.
     function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
     // -------------------------------------------------------------------------
@@ -143,17 +143,17 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function unrestrictBuyAndSell() external;
 
     /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
-    /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max.
-    /// seizable percentage has been added.
-    /// @param amount_ Number of tokens to be removed from the pool.
+    /// @dev    As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max.
+    ///         seizable percentage has been added.
+    /// @param  amount_ Number of tokens to be removed from the pool.
     function seize(uint amount_) external;
 
     /// @notice Adjust the seize percentage, which is seizable from the contract.
-    /// @param seize_ The seize in percentage, expressed as BPS.
+    /// @param  seize_ The seize in percentage, expressed as BPS.
     function adjustSeize(uint64 seize_) external;
 
     /// @notice Sets a new liquidity valut controller address.
-    /// @param lvc_ Address of the liquidity vault controller.
+    /// @param  lvc_ Address of the liquidity vault controller.
     function setLiquidityVaultControllerContract(address lvc_) external;
 
     // -------------------------------------------------------------------------
@@ -161,6 +161,6 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Sets the token vault address.
     /// @dev    Only callable by OrchestratorAdmin.
-    /// @param tokenVault_ The address of the token vault.
+    /// @param  tokenVault_ The address of the token vault.
     function setTokenVault(address tokenVault_) external;
 }

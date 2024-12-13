@@ -13,9 +13,9 @@ pragma solidity ^0.8.0;
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version v1.0.0
+ * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version 0.1.0
+ * @custom:inverter-standard-version    0.1.0
  *
  * @author  Inverter Network
  */
@@ -30,9 +30,9 @@ interface IFM_EXT_TokenVault_v1 {
     // Events
 
     /// @notice Event emitted when tokens are withdrawn.
-    /// @param token The token to withdraw.
-    /// @param recipient The address to send the tokens to.
-    /// @param amount The amount of tokens withdrawn.
+    /// @param  token The token to withdraw.
+    /// @param  recipient The address to send the tokens to.
+    /// @param  amount The amount of tokens withdrawn.
     event TokensWithdrawn(
         address indexed token, address indexed recipient, uint amount
     );

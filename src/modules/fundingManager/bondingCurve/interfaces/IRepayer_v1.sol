@@ -5,16 +5,16 @@ pragma solidity ^0.8.0;
 /**
  * @title   Inverter Repayer Interface
  *
- * @notice  This interface enables Repayer functionality. @note This enough? Do we have Documentation where we can get this?
+ * @notice  This interface enables Repayer functionality.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version v1.0.0
+ * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version 0.1.0
+ * @custom:inverter-standard-version    0.1.0
  *
  * @author  Inverter Network
  */
@@ -45,11 +45,11 @@ interface IRepayer_v1 {
     function getRepayableAmount() external returns (uint repayableAmount);
 
     /// @notice Sets the repayable amount.
-    /// @param amount_ Max repayable amount.
+    /// @param  amount_ Max repayable amount.
     function setRepayableAmount(uint amount_) external;
 
     /// @notice Transfers the repayable amount to the liquidity provider.
-    /// @param amount_ the amount to repay.
-    /// @param to_ the address of liquidity provider.
+    /// @param  amount_ the amount to repay.
+    /// @param  to_ the address of liquidity provider.
     function transferRepayment(address to_, uint amount_) external;
 }

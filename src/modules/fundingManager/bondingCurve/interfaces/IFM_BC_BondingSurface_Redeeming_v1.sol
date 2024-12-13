@@ -17,9 +17,9 @@ import {IRedeemingBondingCurveBase_v1} from
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version v1.0.0
+ * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version 0.1.0
+ * @custom:inverter-standard-version    0.1.0
  *
  * @author  Inverter Network
  */
@@ -64,18 +64,18 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // Structs
 
     /// @notice The bonding curve properties.
-    /// @param formula  The formula contract used to calculate the issucance
-    ///                 and redemption rate.
-    /// @param capitalRequired  The initial capital requirement for the
-    ///                         formula contract.
-    /// @param basePriceMultiplier  Base price multiplier in the bonding curve
-    ///                             formula.
-    /// @param buyFee       The buy fee expressed in base points.
-    /// @param sellFee      The sell fee expressed in base points.
-    /// @param buyIsOpen    The indicator used for enabling/disabling
-    ///                     the buying functionalities on deployment.
-    /// @param sellIsOpen   The indicator used for enabling/disabling
-    ///                     the selling functionalties on deployment.
+    /// @param  formula  The formula contract used to calculate the issucance
+    ///         and redemption rate.
+    /// @param  capitalRequired  The initial capital requirement for the
+    ///         formula contract.
+    /// @param  basePriceMultiplier  Base price multiplier in the bonding curve
+    ///         formula.
+    /// @param  buyFee       The buy fee expressed in base points.
+    /// @param  sellFee      The sell fee expressed in base points.
+    /// @param  buyIsOpen    The indicator used for enabling/disabling
+    ///         the buying functionalities on deployment.
+    /// @param  sellIsOpen   The indicator used for enabling/disabling
+    ///         the selling functionalties on deployment.
     struct BondingCurveProperties {
         address formula;
         uint capitalRequired;
@@ -123,8 +123,8 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     ///         required.
     /// @dev    Calls _calculateBasePriceToCapitalRatio internally.
     ///         Reverts if ratio exceeds 1e36.
-    /// @param capitalRequired_ The capital required.
-    /// @param basePriceMultiplier_ The base price multiplier.
+    /// @param  capitalRequired_ The capital required.
+    /// @param  basePriceMultiplier_ The base price multiplier.
     /// @return basePriceToCapitalRatio_ The calculated price to capital ratio.
     function calculateBasePriceToCapitalRatio(
         uint capitalRequired_,
@@ -138,10 +138,10 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @notice Update the capital required used for the bonding curve.
-    /// @param newCapitalRequired_ The new capital required.
+    /// @param  newCapitalRequired_ The new capital required.
     function setCapitalRequired(uint newCapitalRequired_) external;
 
     /// @notice Update the base price multiplier used for the bonding curve.
-    /// @param newBasePriceMultiplier_ The new base price multiplier.
+    /// @param  newBasePriceMultiplier_ The new base price multiplier.
     function setBasePriceMultiplier(uint newBasePriceMultiplier_) external;
 }

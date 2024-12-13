@@ -51,9 +51,9 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version v1.0.0
+ * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version 0.1.0
+ * @custom:inverter-standard-version    0.1.0
  *
  * @author  Inverter Network
  */
@@ -80,25 +80,26 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Constants
 
-    /// @dev Minimum collateral reserve.
+    /// @notice Minimum collateral reserve.
     uint public MIN_RESERVE;
 
     // ------------------------------------------------------------------------
     // Storage
 
-    /// @dev The interface of the Formula used to calculate the issuance and redeeming amount.
+    /// @notice The interface of the Formula used to calculate the issuance and redeeming amount.
     IBondingSurface internal _formula;
-    /// @dev Token that is accepted by this funding manager for deposits.
+    /// @notice Token that is accepted by this funding manager for deposits.
     IERC20 internal _token;
     /// @notice The amount of capital that is needed to operate the protocol
     ///         according to market size and conditions.
     uint internal _capitalRequired;
-    /// @dev Base price multiplier in the bonding curve formula.
+    /// @notice Base price multiplier in the bonding curve formula.
     uint internal _basePriceMultiplier;
-    /// @dev (basePriceMultiplier / capitalRequired).
+    /// @notice The base price to capital ratio.
+    /// @dev    (basePriceMultiplier / capitalRequired).
     uint internal _basePriceToCapitalRatio;
 
-    /// @dev    Storage gap for future upgrades.
+    /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
     // ------------------------------------------------------------------------
