@@ -223,7 +223,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -234,7 +234,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -251,7 +251,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -262,7 +262,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -368,13 +368,13 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         if (start != 0) {
             assertEq(uint(flags) & (1 << 1), 1 << 1); // Check start flag is set
             assertEq(data[dataIndex], bytes32(start));
-            dataIndex++;
         }
+        dataIndex++;
         if (end != 0) {
             assertEq(uint(flags) & (1 << 2), 1 << 2); // Check end flag is set
             assertEq(data[dataIndex], bytes32(end));
-            dataIndex++;
         }
+        dataIndex++;
         assertEq(uint(flags) & (1 << 3), 1 << 3);
         assertEq(data[dataIndex], bytes32(cliff));
     }

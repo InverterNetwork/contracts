@@ -129,7 +129,7 @@ contract LM_PC_PaymentRouter_v1 is
                 || paymentTokens.length != numOfOrders
                 || amounts.length != numOfOrders
         ) {
-            revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
+            revert Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch();
         }
 
         (bytes32 flags, bytes32[] memory data) =
@@ -173,12 +173,12 @@ contract LM_PC_PaymentRouter_v1 is
         uint dataIndex = 0;
         if (start_ != 0) {
             data_[dataIndex] = bytes32(start_);
-            dataIndex++;
         }
+        dataIndex++;
         if (end_ != 0) {
             data_[dataIndex] = bytes32(end_);
-            dataIndex++;
         }
+        dataIndex++;
         data_[dataIndex] = bytes32(cliff_);
 
         return (flags_, data_);

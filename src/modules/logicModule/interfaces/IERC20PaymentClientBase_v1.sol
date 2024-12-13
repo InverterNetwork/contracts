@@ -87,12 +87,6 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given paymentOrder is invalid.
     error Module__ERC20PaymentClientBase__InvalidPaymentOrder();
 
-    /// @notice Given end invalid.
-    error Module__ERC20PaymentClientBase__Invalidend();
-
-    /// @notice Given arrays' length mismatch.
-    error Module__ERC20PaymentClientBase__ArrayLengthMismatch();
-
     //--------------------------------------------------------------------------
     // Events
 
