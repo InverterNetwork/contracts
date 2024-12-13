@@ -289,7 +289,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         (,, projectCollateralFeeAmount) = bondingCurveFundingManager
             .call_calculateNetAndSplitFees(amount, 0, sellFee);
 
-        // We simulate the fundingManager spending some funds. It can't cover full redemption anymore.
+        // We simulate the fundingManager spending some funds. 
+        // It can't cover full redemption anymore.
         _token.burn(
             address(bondingCurveFundingManager),
             amount - projectCollateralFeeAmount + 1

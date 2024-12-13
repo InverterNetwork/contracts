@@ -254,7 +254,8 @@ abstract contract RedeemingBondingCurveBase_v1 is
             _projectFeeCollected(projectFeeAmount);
         }
 
-        // Require that enough collateral tokens are held to cover the project collateral fee
+        // Require that enough collateral tokens are held to cover the project
+        // collateral fee.
         if (
             projectCollateralFeeCollected
                 > collateralToken.balanceOf(address(this))
