@@ -7,10 +7,12 @@ import {IFM_BC_BondingSurface_Redeeming_v1} from
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 
 /**
- * @title   Inverter Redeeming Restriced Repayer Seizable Bonding Surface Bonding Curve Funding Manager Interface
+ * @title   Inverter Redeeming Restriced Repayer Seizable Bonding Surface
+ *     Bonding Curve Funding Manager Interface
  *
- * @notice  This interface enables the fetching and setting of Bonding Surface relevant data
- *          with the added functionalities Restricted and Seizable
+ * @notice  This interface enables the fetching and setting of Bonding Surface
+ *          relevant data with the added functionalities Restricted and
+ *          Seizable.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -48,7 +50,8 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         uint64 seize
     );
 
-    /// @notice Amount exeeds the seizable amount, defined by a percentage of total collateral.
+    /// @notice Amount exeeds the seizable amount, defined by a percentage of
+    ///         total collateral.
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount(
         uint amount
     );
@@ -84,23 +87,28 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ========================================================================
     // Public Getter Functions
 
-    /// @notice Compute how many tokens can be seized based on `currentSeize` and token balance.
+    /// @notice Compute how many tokens can be seized based on `currentSeize`
+    ///         and token balance.
     /// @return amount_ Maximum number of tokens that can be seized.
     function getSeizableAmount() external view returns (uint amount_);
 
-    /// @notice Returns the current seize percentage, which is seizable from the contract.
+    /// @notice Returns the current seize percentage, which is seizable from
+    ///         the contract.
     /// @return currentSeize_ The current seize percentage.
     function getCurrentSeize() external view returns (uint64 currentSeize_);
 
     /// @notice Returns the address of the liquidity vault controller.
-    /// @return liquidityVaultController_ The address of the liquidity vault controller.
+    /// @return liquidityVaultController_ The address of the liquidity vault
+    ///         controller.
     function getLiquidityVaultController()
         external
         view
         returns (address liquidityVaultController_);
 
-    /// @notice Returns the last timestamp when the seize percentage was updated.
-    /// @return lastSeizeTimestamp_ The last timestamp when the seize percentage was updated.
+    /// @notice Returns the last timestamp when the seize percentage was
+    ///         updated.
+    /// @return lastSeizeTimestamp_ The last timestamp when the seize
+    ///         percentage was updated.
     function getLastSeizeTimestamp()
         external
         view
@@ -134,21 +142,25 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // -------------------------------------------------------------------------
     // Mutating - OnlyCoverManager Functions
 
-    /// @notice Restricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
+    /// @notice Restricts buying and selling functionalities to the
+    ///         CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
     function restrictBuyAndSell() external;
 
-    /// @notice Unrestricts buying and selling functionalities to the CURVE_INTERACTION_ROLE.
+    /// @notice Unrestricts buying and selling functionalities to the
+    ///         CURVE_INTERACTION_ROLE.
     /// @dev    Only callable by the COVER_MANAGER_ROLE.
     function unrestrictBuyAndSell() external;
 
     /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
-    /// @dev    As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max.
+    /// @dev    As the COVER_MANAGER_ROLE has ability to basically rug
+    ///         the projects, a timelock and max.
     ///         seizable percentage has been added.
     /// @param  amount_ Number of tokens to be removed from the pool.
     function seize(uint amount_) external;
 
-    /// @notice Adjust the seize percentage, which is seizable from the contract.
+    /// @notice Adjust the seize percentage, which is seizable from the
+    ///         contract.
     /// @param  seize_ The seize in percentage, expressed as BPS.
     function adjustSeize(uint64 seize_) external;
 

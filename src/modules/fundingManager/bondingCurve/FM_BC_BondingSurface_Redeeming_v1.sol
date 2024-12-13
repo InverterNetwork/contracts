@@ -86,7 +86,8 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Storage
 
-    /// @notice The interface of the Formula used to calculate the issuance and redeeming amount.
+    /// @notice The interface of the Formula used to calculate the issuance and
+    ///         redeeming amount.
     IBondingSurface internal _formula;
     /// @notice Token that is accepted by this funding manager for deposits.
     IERC20 internal _token;

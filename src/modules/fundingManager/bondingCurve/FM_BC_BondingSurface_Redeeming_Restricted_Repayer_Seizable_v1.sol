@@ -193,8 +193,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     ) internal onlyInitializing {
         _liquidityVaultController = liquidityVaultController;
 
-        // Set buy and sell restriction to restricted if true. By default buy and
-        // sell are unrestricted.
+        // Set buy and sell restriction to restricted if true. By default buy
+        // and sell are unrestricted.
         _buyAndSellIsRestricted = buyAndSellIsRestricted;
 
         _setSeize(newSeize);
