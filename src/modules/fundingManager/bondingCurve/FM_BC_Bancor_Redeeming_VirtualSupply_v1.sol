@@ -143,21 +143,21 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
 
-        address issuanceToken_;
+        address issuanceToken;
         BondingCurveProperties memory bondingCurveProperties;
-        address _acceptedToken;
+        address acceptedToken;
 
-        (issuanceToken_, bondingCurveProperties, _acceptedToken) =
+        (issuanceToken, bondingCurveProperties, acceptedToken) =
             abi.decode(configData, (address, BondingCurveProperties, address));
 
         // Set accepted token
-        _token = IERC20(_acceptedToken);
+        _token = IERC20(acceptedToken);
 
         // Cache token decimals for collateral
         collateralTokenDecimals = IERC20Metadata(address(_token)).decimals();
 
         // Set issuance token. This also caches the decimals
-        _setIssuanceToken(address(issuanceToken_));
+        _setIssuanceToken(address(issuanceToken));
 
         // Check for valid Bancor Formula
         if (
@@ -191,7 +191,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         // Set selling functionality to open if true. By default selling is false
         sellIsOpen = bondingCurveProperties.sellIsOpen;
 
-        emit OrchestratorTokenSet(_acceptedToken, collateralTokenDecimals);
+        emit OrchestratorTokenSet(acceptedToken, collateralTokenDecimals);
     }
 
     // -------------------------------------------------------------------------
