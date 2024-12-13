@@ -97,8 +97,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice Role associated with the managing of setting withdraw addresses
     ///         and setting the fee.
     bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
-    /// @notice Role associated with the managing of the interactions with the
-    ///         of the state of the contract.
+    /// @notice Role that can use buy and sell regardless wether these
+    ///         functions are restricted or not
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     // ------------------------------------------------------------------------
@@ -180,7 +180,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
-    /// @notice Initializes the Restricted Redeeming Bonding Surface Contract.
+    /// @notice Initializes the  Redeeming Restricted Repayer Seizable Bonding
+    /// Surface Contract.
     /// @dev    Only callable during the initialization.
     /// @param  liquidityVaultController_ The address of the
     ///         LiquidityVaultController.
@@ -405,8 +406,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         external
         onlyModuleRole(COVER_MANAGER_ROLE)
     {
-        // @update-info When upgrading to Topos next version, we need to add an
-        //              interface check here.
         if (address(lvc_) == address(0) || address(lvc_) == address(this)) {
             revert
                 FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress(
