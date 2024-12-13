@@ -184,20 +184,20 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev    Only callable during the initialization.
     /// @param  liquidityVaultController_ The address of the
     ///         LiquidityVaultController.
-    /// @param  newSeize The new seize value.
-    /// @param  buyAndSellIsRestricted Whether buy and sell is restricted.
+    /// @param  newSeize_ The new seize value.
+    /// @param  buyAndSellIsRestricted_ Whether buy and sell is restricted.
     function __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
-        address liquidityVaultController,
-        uint64 newSeize,
-        bool buyAndSellIsRestricted
+        address liquidityVaultController_,
+        uint64 newSeize_,
+        bool buyAndSellIsRestricted_
     ) internal onlyInitializing {
-        _liquidityVaultController = liquidityVaultController;
+        _liquidityVaultController = liquidityVaultController_;
 
         // Set buy and sell restriction to restricted if true. By default buy
         // and sell are unrestricted.
-        _buyAndSellIsRestricted = buyAndSellIsRestricted;
+        _buyAndSellIsRestricted = buyAndSellIsRestricted_;
 
-        _setSeize(newSeize);
+        _setSeize(newSeize_);
     }
 
     // ------------------------------------------------------------------------
