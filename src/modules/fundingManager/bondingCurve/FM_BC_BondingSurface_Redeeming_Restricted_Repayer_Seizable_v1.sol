@@ -83,7 +83,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
             || super.supportsInterface(interfaceId_);
     }
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Constants
 
     /// @notice Max seizable amount is 1% expressed in BPS.
@@ -101,7 +101,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     ///         functions are restricted or not
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Storage
 
     /// @notice Repayable amount collateral which can be pulled from the
@@ -124,7 +124,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Modifiers
 
     /// @notice Modifier to ensure buy and sell restrictions are met.
@@ -140,7 +140,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _;
     }
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Init Function
 
     /// @inheritdoc Module_v1
@@ -201,7 +201,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _setSeize(newSeize_);
     }
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Public Getter Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
@@ -257,7 +257,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return _getRepayableAmount();
     }
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Public Mutating Functions
 
     // ------------------------------------------------------------------------
@@ -495,7 +495,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         );
     }
 
-    // ------------------------------------------------------------------------
+    // ========================================================================
     // Internal Functions
 
     /// @notice Sets the token vault address.
