@@ -80,7 +80,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Constants
 
-    /// @dev Minimum collateral reserve
+    /// @dev Minimum collateral reserve.
     uint public MIN_RESERVE;
 
     // ------------------------------------------------------------------------
@@ -93,9 +93,9 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     /// @notice The amount of capital that is needed to operate the protocol
     ///         according to market size and conditions.
     uint internal _capitalRequired;
-    /// @dev Base price multiplier in the bonding curve formula
+    /// @dev Base price multiplier in the bonding curve formula.
     uint internal _basePriceMultiplier;
-    /// @dev (basePriceMultiplier / capitalRequired)
+    /// @dev (basePriceMultiplier / capitalRequired).
     uint internal _basePriceToCapitalRatio;
 
     /// @dev    Storage gap for future upgrades.
@@ -133,7 +133,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         address acceptedToken_,
         BondingCurveProperties memory bondingCurveProperties_
     ) internal onlyInitializing {
-        // Set collateral token
+        // Set collateral token.
         _token = IERC20(acceptedToken_);
 
         // MIN_RESERVE is in relation to the decimals of the
@@ -143,7 +143,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
         // Set issuance token. This also caches the decimals.
         _setIssuanceToken(address(issuanceToken_));
 
-        // Check for valid Bonding Surface formula contract
+        // Check for valid Bonding Surface formula contract.
         if (
             !ERC165Upgradeable(bondingCurveProperties_.formula).supportsInterface(
                 type(IBondingSurface).interfaceId
@@ -153,20 +153,20 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
                 IFM_BC_BondingSurface_Redeeming_v1
                 .FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
         }
-        // Set formula contract
+        // Set formula contract.
         _formula = IBondingSurface(bondingCurveProperties_.formula);
 
-        // Set Bonding Curve Properties
+        // Set Bonding Curve Properties.
         _setCapitalRequired(bondingCurveProperties_.capitalRequired);
         _setBasePriceMultiplier(bondingCurveProperties_.basePriceMultiplier);
         _setBuyFee(bondingCurveProperties_.buyFee);
         _setSellFee(bondingCurveProperties_.sellFee);
 
         // Set buying functionality to open if true.
-        // By default buying is false
+        // By default buying is false.
         buyIsOpen = bondingCurveProperties_.buyIsOpen;
         // Set selling functionality to open if true.
-        // By default selling is false
+        // By default selling is false.
         sellIsOpen = bondingCurveProperties_.sellIsOpen;
 
         emit OrchestratorTokenSet(
@@ -419,7 +419,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
 
     /// @notice Internal function which calculates the price multiplier to
     ///         capital ratio.
-    /// @dev    Reverts if the ratio is higher than 1e36
+    /// @dev    Reverts if the ratio is higher than 1e36.
     /// @param  capitalRequired_ The capital required.
     /// @param  basePriceMultiplier_ The base price multiplier.
     /// @return basePriceToCapitalRatio_ The calculated price to capital ratio.

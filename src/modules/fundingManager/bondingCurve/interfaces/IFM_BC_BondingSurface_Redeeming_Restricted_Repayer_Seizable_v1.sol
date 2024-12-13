@@ -30,7 +30,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // -------------------------------------------------------------------------
     // Errors
 
-    /// @notice Invalid address passed as argument
+    /// @notice Invalid address passed as argument.
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidInputAddress(
     );
 
@@ -38,22 +38,22 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
     );
 
-    /// @notice Invalid Liquidity Vault Controller
+    /// @notice Invalid Liquidity Vault Controller.
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidLiquidityVaultController(
         address invalidLiquidityVaultController
     );
 
-    /// @notice Seize cannot be bigger than MAX_SEIZE = 1%
+    /// @notice Seize cannot be bigger than MAX_SEIZE = 1%.
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeize(
         uint64 seize
     );
 
-    /// @notice Amount exeeds the seizable amount, defined by a percentage of total collateral
+    /// @notice Amount exeeds the seizable amount, defined by a percentage of total collateral.
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidSeizeAmount(
         uint amount
     );
 
-    /// @notice Timestamp is still in the future, so a seize is not allowed
+    /// @notice Timestamp is still in the future, so a seize is not allowed.
     error FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout(
         uint allowedTimestamp
     );
@@ -61,18 +61,18 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // -------------------------------------------------------------------------
     // Events
 
-    /// @notice Emits when the collateral has been seized, with the amount
+    /// @notice Emits when the collateral has been seized, with the amount.
     event CollateralSeized(uint amount);
 
-    /// @notice Emits when seize percentage gets updated
+    /// @notice Emits when seize percentage gets updated.
     event SeizeChanged(uint64 currentSeize, uint64 newSeize);
 
-    /// @notice Emits when Liquidity Vault Controller gets updated
+    /// @notice Emits when Liquidity Vault Controller gets updated.
     event LiquidityVaultControllerChanged(
         address newLiquidityVaultController, address oldLiquidityVaultController
     );
 
-    /// @notice Emits when the token vault gets updated
+    /// @notice Emits when the token vault gets updated.
     event TokenVaultSet(address tokenVault);
 
     /// @notice Emits when buy and sell restriction is set.
@@ -85,33 +85,33 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Public Getter Functions
 
     /// @notice  Compute how many tokens can be seized based on `currentSeize` and token balance.
-    /// @return amount_ Maximum number of tokens that can be seized
+    /// @return amount_ Maximum number of tokens that can be seized.
     function getSeizableAmount() external view returns (uint amount_);
 
-    /// @notice Returns the current seize percentage, which is seizable from the contract
-    /// @return currentSeize_ The current seize percentage
+    /// @notice Returns the current seize percentage, which is seizable from the contract.
+    /// @return currentSeize_ The current seize percentage.
     function getCurrentSeize() external view returns (uint64 currentSeize_);
 
-    /// @notice Returns the address of the liquidity vault controller
-    /// @return liquidityVaultController_ The address of the liquidity vault controller
+    /// @notice Returns the address of the liquidity vault controller.
+    /// @return liquidityVaultController_ The address of the liquidity vault controller.
     function getLiquidityVaultController()
         external
         view
         returns (address liquidityVaultController_);
 
-    /// @notice Returns the last timestamp when the seize percentage was updated
-    /// @return lastSeizeTimestamp_ The last timestamp when the seize percentage was updated
+    /// @notice Returns the last timestamp when the seize percentage was updated.
+    /// @return lastSeizeTimestamp_ The last timestamp when the seize percentage was updated.
     function getLastSeizeTimestamp()
         external
         view
         returns (uint lastSeizeTimestamp_);
 
-    /// @notice Returns the address of the token vault
-    /// @return tokenVault_ The address of the token vault
+    /// @notice Returns the address of the token vault.
+    /// @return tokenVault_ The address of the token vault.
     function getTokenVault() external view returns (address tokenVault_);
 
-    /// @notice Returns whether buy and sell is restricted
-    /// @return buyAndSellIsRestricted_ Whether buy and sell is restricted
+    /// @notice Returns whether buy and sell is restricted.
+    /// @return buyAndSellIsRestricted_ Whether buy and sell is restricted.
     function isBuyAndSellRestricted()
         external
         view
@@ -122,13 +122,13 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     // Mutating - Token Manipulation Functions
 
-    /// @notice Burn amount of tokens from message sender
-    /// @param amount_ Amount token to be burned
+    /// @notice Burn amount of tokens from message sender.
+    /// @param amount_ Amount token to be burned.
     function burnIssuanceToken(uint amount_) external;
 
-    /// @notice Burn `amount` tokens belonging to `owner`
-    /// @param owner_ Address whose tokens will be burnt
-    /// @param amount_ Burn amount
+    /// @notice Burn `amount` tokens belonging to `owner`.
+    /// @param owner_ Address whose tokens will be burnt.
+    /// @param amount_ Burn amount.
     function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
     // -------------------------------------------------------------------------
@@ -143,24 +143,24 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function unrestrictBuyAndSell() external;
 
     /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
-    /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max
-    /// seizable percentage has been added
-    /// @param amount_ Number of tokens to be removed from the pool
+    /// @dev As the COVER_MANAGER_ROLE has ability to basically rug the projects, a timelock and max.
+    /// seizable percentage has been added.
+    /// @param amount_ Number of tokens to be removed from the pool.
     function seize(uint amount_) external;
 
-    /// @notice Adjust the seize percentage, which is seizable from the contract
-    /// @param seize_ The seize in percentage, expressed as BPS
+    /// @notice Adjust the seize percentage, which is seizable from the contract.
+    /// @param seize_ The seize in percentage, expressed as BPS.
     function adjustSeize(uint64 seize_) external;
 
-    /// @notice Sets a new liquidity valut controller address
-    /// @param lvc_ Address of the liquidity vault controller
+    /// @notice Sets a new liquidity valut controller address.
+    /// @param lvc_ Address of the liquidity vault controller.
     function setLiquidityVaultControllerContract(address lvc_) external;
 
     // -------------------------------------------------------------------------
     // Mutating - OnlyOrchestratorAdmin Functions
 
     /// @notice Sets the token vault address.
-    /// @dev    Only callable by OrchestratorAdmin
+    /// @dev    Only callable by OrchestratorAdmin.
     /// @param tokenVault_ The address of the token vault.
     function setTokenVault(address tokenVault_) external;
 }

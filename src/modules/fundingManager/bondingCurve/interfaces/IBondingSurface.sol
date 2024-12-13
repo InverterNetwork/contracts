@@ -22,7 +22,7 @@ interface IBondingSurface {
     // -------------------------------------------------------------------------
     // Errors
 
-    /// @dev Input amount is invalid
+    /// @dev Input amount is invalid.
     error BondingSurface__InvalidInputAmount();
 
     // ========================================================================
@@ -34,7 +34,7 @@ interface IBondingSurface {
     /// @param capitalAvailable_ Capital pool to base the spot price on.
     /// @param capitalRequirements_ Capital requirements to base the spot price on.
     /// @param basePriceMultiplier_ Base Price Multiplier.
-    /// @return spotPrice_ The spot price
+    /// @return spotPrice_ The spot price.
     function spotPrice(
         uint capitalAvailable_,
         uint capitalRequirements_,
@@ -61,7 +61,7 @@ interface IBondingSurface {
         uint basePriceToCapitalRatio_
     ) external view returns (uint amount_);
 
-    /// @dev To get the change in assests when burning tokens
+    /// @dev To get the change in assests when burning tokens:
     ///
     ///        B            1
     /// x = (----- * m + -------)^-1
@@ -71,7 +71,7 @@ interface IBondingSurface {
     /// _ca must be > 0
     /// @notice Calculate number of assets to return based on `_out` tokens being burnt,
     ///         `_ca` of capital available and `_supply` TPG minted.
-    /// @param out_ TPG to burn
+    /// @param out_ TPG to burn.
     /// @param capitalAvailable_ Capital available to use for bonding curve burn.
     /// @param basePriceToCapitalRatio_ Precomputed factor which combines the
     ///        base price multiplier with capital required.

@@ -30,10 +30,10 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Errors
 
-    /// @notice Invalid Bonding Surface Formula contract
+    /// @notice Invalid Bonding Surface Formula contract.
     error FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
 
-    /// @notice Amount does not match the requirements
+    /// @notice Amount does not match the requirements.
     error FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
 
     /// @notice No capital is available.
@@ -45,17 +45,17 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Events
 
-    /// @notice Emits when the capital required gets updated
+    /// @notice Emits when the capital required gets updated.
     event CapitalRequiredChanged(
         uint currentCapitalRequired, uint newCapitalRequired
     );
 
-    /// @notice Emits when the Base Price Multiplier gets updated
+    /// @notice Emits when the Base Price Multiplier gets updated.
     event BasePriceMultiplierChanged(
         uint currentBasePriceMultiplier, uint newBasePriceMultiplier
     );
 
-    /// @notice Emits when basePriceToCapitalRatio gets updated
+    /// @notice Emits when basePriceToCapitalRatio gets updated.
     event BasePriceToCapitalRatioChanged(
         uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
     );
@@ -65,17 +65,17 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
 
     /// @notice The bonding curve properties.
     /// @param formula  The formula contract used to calculate the issucance
-    ///                 and redemption rate
+    ///                 and redemption rate.
     /// @param capitalRequired  The initial capital requirement for the
-    ///                         formula contract
+    ///                         formula contract.
     /// @param basePriceMultiplier  Base price multiplier in the bonding curve
-    ///                             formula
-    /// @param buyFee       The buy fee expressed in base points
-    /// @param sellFee      The sell fee expressed in base points
+    ///                             formula.
+    /// @param buyFee       The buy fee expressed in base points.
+    /// @param sellFee      The sell fee expressed in base points.
     /// @param buyIsOpen    The indicator used for enabling/disabling
-    ///                     the buying functionalities on deployment
+    ///                     the buying functionalities on deployment.
     /// @param sellIsOpen   The indicator used for enabling/disabling
-    ///                     the selling functionalties on deployment
+    ///                     the selling functionalties on deployment.
     struct BondingCurveProperties {
         address formula;
         uint capitalRequired;
@@ -137,11 +137,11 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // ------------------------------------------------------------------------
     // Mutating - OnlyOrchestratorAdmin Functions
 
-    /// @notice Update the capital required used for the bonding curve
+    /// @notice Update the capital required used for the bonding curve.
     /// @param newCapitalRequired_ The new capital required.
     function setCapitalRequired(uint newCapitalRequired_) external;
 
-    /// @notice Update the base price multiplier used for the bonding curve
+    /// @notice Update the base price multiplier used for the bonding curve.
     /// @param newBasePriceMultiplier_ The new base price multiplier.
     function setBasePriceMultiplier(uint newBasePriceMultiplier_) external;
 }
