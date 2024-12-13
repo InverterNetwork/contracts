@@ -57,9 +57,9 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version v1.0.0
+ * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version 0.1.0
+ * @custom:inverter-standard-version    1.0.0
  *
  * @author  Inverter Network
  */
@@ -86,41 +86,42 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ------------------------------------------------------------------------
     // Constants
 
-    /// @dev Max seizable amount is 1% expressed in BPS
+    /// @notice Max seizable amount is 1% expressed in BPS.
     uint64 public constant MAX_SEIZE = 100;
-    /// @dev Max fee for selling is 1% expressed in BPS
+    /// @notice Max fee for selling is 1% expressed in BPS.
     uint64 public constant MAX_FEE = 100;
-    /// @dev Time interval between seizes
+    /// @notice Time interval between seizes.
     uint64 public constant SEIZE_DELAY = 7 days;
-    /// @dev Role associated with the managing of the bonding curve values
+    /// @notice Role associated with the managing of the bonding curve values.
     bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER";
-    /// @dev Role associated with the managing of setting withdraw addresses
-    ///      and setting the fee
+    /// @notice Role associated with the managing of setting withdraw addresses
+    ///         and setting the fee.
     bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER";
-    /// @dev Minter/Burner Role.
+    /// @notice Role associated with the managing of the interactions with the
+    ///         of the state of the contract.
     bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER";
 
     // ------------------------------------------------------------------------
     // Storage
 
-    /// @dev Repayable amount collateral which can be pulled from the
-    ///         contract by the liquidity vault controller
+    /// @notice Repayable amount collateral which can be pulled from the
+    ///         contract by the liquidity vault controller.
     uint internal _repayableAmount;
-    /// @dev The current seize percentage expressed in BPS
+    /// @notice The current seize percentage expressed in BPS.
     uint64 internal _currentSeize;
-    /// @dev Address of the liquidity vault controller who has access to the
-    ///      collateral held by the funding manager through the Repayer
-    ///      through the Repayer functionality
+    /// @notice Address of the liquidity vault controller who has access to the
+    ///         collateral held by the funding manager through the Repayer
+    ///         through the Repayer functionality.
     address internal _liquidityVaultController;
-    /// @dev Tracks last seize timestamp to determine eligibility for
-    ///      subsequent seizures based on SEIZE_DELAY
+    /// @notice Tracks last seize timestamp to determine eligibility for
+    ///         subsequent seizures based on SEIZE_DELAY.
     uint internal _lastSeizeTimestamp;
-    /// @dev Address of the reserve pool.
+    /// @notice Address of the reserve pool.
     address internal _tokenVault;
-    /// @dev Restricts buying and selling functionalities to specific role.
+    /// @notice Restricts buying and selling functionalities to specific role.
     bool internal _buyAndSellIsRestricted;
 
-    /// @dev    Storage gap for future upgrades.
+    /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
     // ------------------------------------------------------------------------
@@ -181,7 +182,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Initializes the Restricted Redeeming Bonding Surface Contract.
     /// @dev    Only callable during the initialization.
-    /// @param  liquidityVaultController The address of the 
+    /// @param  liquidityVaultController_ The address of the
     ///         LiquidityVaultController.
     /// @param  newSeize The new seize value.
     /// @param  buyAndSellIsRestricted Whether buy and sell is restricted.
@@ -315,10 +316,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
     function burnIssuanceTokenFor(address owner_, uint amount_) external {
         if (owner_ != _msgSender()) {
-            // Does not update allowance if set to infinite
+            // Does not update allowance if set to infinite.
             _spendAllowance(owner_, _msgSender(), amount_);
         }
-        // Will revert if balance < amount
+        // Will revert if balance < amount.
         _burn(owner_, amount_);
     }
 
@@ -509,7 +510,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @notice Set the current seize state, which defines the percentage
-    ///         of seizable amount
+    ///         of seizable amount.
     /// @dev    Reverts if the seize is greater than the MAX_SEIZE.
     /// @param  seize_ The new seize value.
     function _setSeize(uint64 seize_) internal {
