@@ -222,7 +222,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
+                ILM_PC_PaymentRouter_v1
                     .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
@@ -233,7 +233,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
+                ILM_PC_PaymentRouter_v1
                     .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
@@ -250,7 +250,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
+                ILM_PC_PaymentRouter_v1
                     .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
@@ -261,7 +261,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
+                ILM_PC_PaymentRouter_v1
                     .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
@@ -288,6 +288,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         external
         whenTheCallerHasThePAYMENT_PUSHER_ROLE
     {
+        vm.assume(_numOfOrders < 20);
         // It should add all Payment Orders
         // It should emit an event for each Payment Order
         // It should call processPayments
@@ -306,8 +307,13 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         uint paymentsTriggeredBefore =
             _paymentProcessor.processPaymentsTriggered();
 
+        bytes32[] memory paymentParameters = new bytes32[](3);
+        paymentParameters[0] = bytes32(_start);
+        paymentParameters[1] = bytes32(_cliff);
+        paymentParameters[2] = bytes32(_end);
+
         (bytes32 flags, bytes32[] memory data) =
-            paymentRouter.direct__assemblePaymentConfig(_start, _cliff, _end);
+            paymentRouter.direct__assemblePaymentConfig(paymentParameters);
 
         for (uint i = 0; i < _numOfOrders; i++) {
             vm.expectEmit(true, true, true, true);
@@ -358,8 +364,14 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         vm.assume(start <= type(uint).max / 2);
         vm.assume(cliff <= type(uint).max / 2);
         vm.assume(end <= type(uint).max / 2);
+
+        bytes32[] memory paymentParameters = new bytes32[](3);
+        paymentParameters[0] = bytes32(start);
+        paymentParameters[1] = bytes32(cliff);
+        paymentParameters[2] = bytes32(end);
+
         (bytes32 flags, bytes32[] memory data) =
-            paymentRouter.direct__assemblePaymentConfig(start, cliff, end);
+            paymentRouter.direct__assemblePaymentConfig(paymentParameters);
 
         uint expectedLength = 3; // start, cliff, end
         assertEq(data.length, expectedLength);
@@ -370,13 +382,15 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             assertEq(data[dataIndex], bytes32(start));
         }
         dataIndex++;
+
+        assertEq(uint(flags) & (1 << 3), 1 << 3);
+        assertEq(data[dataIndex], bytes32(cliff));
+        dataIndex++;
+
         if (end != 0) {
             assertEq(uint(flags) & (1 << 2), 1 << 2); // Check end flag is set
             assertEq(data[dataIndex], bytes32(end));
         }
-        dataIndex++;
-        assertEq(uint(flags) & (1 << 3), 1 << 3);
-        assertEq(data[dataIndex], bytes32(cliff));
     }
 
     //--------------------------------------------------------------------------

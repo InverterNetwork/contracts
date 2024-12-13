@@ -140,14 +140,13 @@ contract LM_PC_RecurringPayments_v1 is
         emit EpochLengthSet(newEpochLength);
 
         // Set the flags for the PaymentOrders
-        uint8 numOfFlags = 3; // The Module will use 3 flags
-        uint flags = 0;
+        // Set the flags for the PaymentOrders
+        uint8[] memory flags = new uint8[](3); // The Module will use 3 flags
+        flags[0] = 1; // start, flag_ID 1
+        flags[1] = 2; // cliff, flag_ID 2
+        flags[2] = 3; // end, flag_ID 3
 
-        flags |= (1 << 1); // start
-        flags |= (1 << 2); // cliff
-        flags |= (1 << 3); // end
-
-        super._setFlags(numOfFlags, bytes32(flags));
+        __ERC20PaymentClientBase_v1_init(flags);
     }
 
     //--------------------------------------------------------------------------
@@ -309,13 +308,20 @@ contract LM_PC_RecurringPayments_v1 is
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
                     // assemble data array
-                    (uint8 numOfFlags, bytes32 flags) = super.getFlags();
 
-                    bytes32[] memory data = new bytes32[](numOfFlags);
+                    bytes32 flags;
+                    bytes32[] memory data;
 
-                    data[0] = bytes32(block.timestamp);
-                    data[1] = bytes32(0);
-                    data[2] = bytes32((currentEpoch + 1) * epochLength);
+                    {
+                        bytes32[] memory paymentParameters = new bytes32[](3);
+                        paymentParameters[0] = bytes32(block.timestamp);
+                        paymentParameters[1] = bytes32(0);
+                        paymentParameters[2] =
+                            bytes32((currentEpoch + 1) * epochLength);
+
+                        (flags, data) =
+                            _assemblePaymentConfig(paymentParameters);
+                    }
 
                     // add paymentOrder for this epoch
                     _addPaymentOrder(

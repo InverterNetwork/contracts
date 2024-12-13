@@ -275,6 +275,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         bytes memory
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
+        __ERC20PaymentClientBase_v1_init(new uint8[](0)); // This module does not use any PaymentOrder flags
         // init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();
@@ -519,6 +520,9 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         for (uint i; i < length;) {
             contrib = contribs[i];
 
+            (bytes32 flags, bytes32[] memory data) =
+                _assemblePaymentConfig(new bytes32[](0)); // No additional payment data
+
             _addPaymentOrder(
                 PaymentOrder({
                     recipient: contrib.addr,
@@ -526,8 +530,8 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
                     amount: contrib.claimAmount,
                     originChainId: block.chainid,
                     targetChainId: block.chainid,
-                    flags: 0,
-                    data: new bytes32[](0)
+                    flags: flags,
+                    data: data
                 })
             );
             unchecked {

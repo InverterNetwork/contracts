@@ -113,6 +113,8 @@ contract LM_PC_Staking_v1 is
 
         address _stakingToken = abi.decode(configData, (address));
         __LM_PC_Staking_v1_init(_stakingToken);
+
+        __ERC20PaymentClientBase_v1_init(new uint8[](0)); // This module does not use any PaymentOrder flags
     }
 
     /// @dev	Initializes the staking contract.
@@ -362,6 +364,9 @@ contract LM_PC_Staking_v1 is
         // Set rewards to zero
         userRewards[recipient] = 0;
 
+        (bytes32 flags, bytes32[] memory data) =
+            _assemblePaymentConfig(new bytes32[](0)); // No additional payment data
+
         _addPaymentOrder(
             PaymentOrder({
                 recipient: recipient,
@@ -369,8 +374,8 @@ contract LM_PC_Staking_v1 is
                 amount: amount,
                 originChainId: block.chainid,
                 targetChainId: block.chainid,
-                flags: 0,
-                data: new bytes32[](0)
+                flags: flags,
+                data: data
             })
         );
 

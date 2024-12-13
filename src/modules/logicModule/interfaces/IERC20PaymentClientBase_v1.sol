@@ -39,6 +39,9 @@ interface IERC20PaymentClientBase_v1 {
     | 1    | uint256       | start      | The start date of the streaming period.  | 
     | 2    | uint256       | cliff      | The duration of the cliff period.        |
     | 3    | uint256       | end        | The Due Date of the order                |
+    | ...  | ...           | ...        | (yet unassigned)                        |
+    | 255  | .             | .          | (Max Value).                             | 
+    |------|---------------|------------|------------------------------------------|
     */
 
     //--------------------------------------------------------------------------
@@ -87,6 +90,14 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given paymentOrder is invalid.
     error Module__ERC20PaymentClientBase__InvalidPaymentOrder();
 
+    /// @notice Given mismatch between flag count and supplied array length.
+    error Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
+        uint8 numOfFlags, uint arrayLength
+    );
+
+    /// @notice Given number of flags exceeds limit
+    error Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -107,6 +118,11 @@ interface IERC20PaymentClientBase_v1 {
         bytes32 flags,
         bytes32[] data
     );
+
+    /// @notice Emitted when the flags are set.
+    /// @param numOfFlags The number of flags.
+    /// @param newFlags The flags.
+    event FlagsSet(uint8 numOfFlags, bytes32 newFlags);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -144,10 +160,10 @@ interface IERC20PaymentClientBase_v1 {
     function amountPaid(address token_, uint amount_) external;
 
     /// @notice Returns the number of flags and the flags of the PaymentOrders this client will create.
-    /// @return numOfFlags_ The total number of active flags.
     /// @return flags_ The flags this client will use.
-    function getFlags()
-        external
-        view
-        returns (uint8 numOfFlags_, bytes32 flags_);
+    function getFlags() external view returns (bytes32 flags_);
+
+    /// @notice Returns the number of flags this client uses for PaymentOrders.
+    /// @return numOfFlags_ The number of flags.
+    function getAmountOfFlags() external view returns (uint8 numOfFlags_);
 }

@@ -70,14 +70,12 @@ contract LM_PC_PaymentRouter_v1 is
         __Module_init(orchestrator_, metadata);
 
         // Set the flags for the PaymentOrders
-        uint8 numOfFlags = 3; // The Module will use 3 flags
-        uint flags = 0;
+        uint8[] memory flags = new uint8[](3); // The Module will use 3 flags
+        flags[0] = 1; // start, flag_ID 1
+        flags[1] = 2; // cliff, flag_ID 2
+        flags[2] = 3; // end, flag_ID 3
 
-        flags |= (1 << 1); // start
-        flags |= (1 << 2); // cliff
-        flags |= (1 << 3); // end
-
-        super._setFlags(numOfFlags, bytes32(flags));
+        __ERC20PaymentClientBase_v1_init(flags);
     }
 
     //--------------------------------------------------------------------------
@@ -92,8 +90,17 @@ contract LM_PC_PaymentRouter_v1 is
         uint cliff,
         uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
-        (bytes32 flags, bytes32[] memory data) =
-            _assemblePaymentConfig(start, cliff, end);
+        bytes32 flags;
+        bytes32[] memory data;
+
+        {
+            bytes32[] memory paymentParameters = new bytes32[](3);
+            paymentParameters[0] = bytes32(start);
+            paymentParameters[1] = bytes32(cliff);
+            paymentParameters[2] = bytes32(end);
+
+            (flags, data) = _assemblePaymentConfig(paymentParameters);
+        }
 
         PaymentOrder memory order = PaymentOrder({
             recipient: recipient,
@@ -132,8 +139,17 @@ contract LM_PC_PaymentRouter_v1 is
             revert Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch();
         }
 
-        (bytes32 flags, bytes32[] memory data) =
-            _assemblePaymentConfig(start, cliff, end);
+        bytes32 flags;
+        bytes32[] memory data;
+
+        {
+            bytes32[] memory paymentParameters = new bytes32[](3);
+            paymentParameters[0] = bytes32(start);
+            paymentParameters[1] = bytes32(cliff);
+            paymentParameters[2] = bytes32(end);
+
+            (flags, data) = _assemblePaymentConfig(paymentParameters);
+        }
 
         // Loop through the arrays and add Payments
         for (uint8 i = 0; i < numOfOrders; i++) {
@@ -154,33 +170,5 @@ contract LM_PC_PaymentRouter_v1 is
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClientBase_v1(address(this))
         );
-    }
-
-    /// @dev	Creates the flags and data for a payment order.
-    /// @param  start_ The start date of the streaming period (optional).
-    /// @param  cliff_ The duration of the cliff period.
-    /// @param  end_ The ending of the streaming period.
-    function _assemblePaymentConfig(uint start_, uint cliff_, uint end_)
-        internal
-        view
-        returns (bytes32 flags_, bytes32[] memory data_)
-    {
-        // Get the flags and amount of parameters for the PaymentOrders
-        uint8 numOfFlags;
-        (numOfFlags, flags_) = super.getFlags();
-
-        bytes32[] memory data_ = new bytes32[](numOfFlags);
-        uint dataIndex = 0;
-        if (start_ != 0) {
-            data_[dataIndex] = bytes32(start_);
-        }
-        dataIndex++;
-        if (end_ != 0) {
-            data_[dataIndex] = bytes32(end_);
-        }
-        dataIndex++;
-        data_[dataIndex] = bytes32(cliff_);
-
-        return (flags_, data_);
     }
 }

@@ -98,6 +98,19 @@ abstract contract ERC20PaymentClientBase_v1 is
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
 
+    /// @dev	Initializes the staking contract.
+    /// @param  flags_ The flags, represented as an array of uint8 containing the flag IDs between 0 and 255
+    function __ERC20PaymentClientBase_v1_init(uint8[] memory flags_)
+        internal
+        onlyInitializing
+    {
+        uint amountOfFlags = flags_.length;
+        if (amountOfFlags > type(uint8).max) {
+            revert Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
+        }
+        _setFlags(uint8(flags_.length), flags_);
+    }
+
     /// @dev	Adds a new {PaymentOrder} to the list of outstanding orders.
     /// @param  order The new payment order.
     function _addPaymentOrder(PaymentOrder memory order)
@@ -133,9 +146,28 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
     }
 
-    function _setFlags(uint8 numOfFlags_, bytes32 flags_) internal virtual {
+    /// @dev    Sets the flags for the PaymentOrders.
+    /// @param  numOfFlags_ The number of flags.
+    /// @param  flags_ The flags, represented as an array of uint8 containing the flag IDs between 0 and 255
+    function _setFlags(uint8 numOfFlags_, uint8[] memory flags_)
+        internal
+        virtual
+    {
+        if (numOfFlags_ != flags_.length) {
+            revert
+                Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
+                numOfFlags_, flags_.length
+            );
+        }
+
         _numOfFlags = numOfFlags_;
-        _flags = flags_;
+
+        _flags = 0;
+        for (uint8 i = 0; i < numOfFlags_; i++) {
+            _flags |= bytes32((1 << flags_[i]));
+        }
+
+        emit FlagsSet(_numOfFlags, _flags);
     }
 
     //--------------------------------------------------------------------------
@@ -244,12 +276,13 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function getFlags()
-        public
-        view
-        returns (uint8 numOfFlags_, bytes32 flags_)
-    {
-        return (_numOfFlags, _flags);
+    function getFlags() public view returns (bytes32 flags_) {
+        return (_flags);
+    }
+
+    /// @inheritdoc IERC20PaymentClientBase_v1
+    function getAmountOfFlags() public view returns (uint8 numOfFlags_) {
+        return _numOfFlags;
     }
 
     //--------------------------------------------------------------------------
@@ -332,5 +365,22 @@ abstract contract ERC20PaymentClientBase_v1 is
         returns (bool)
     {
         return __Module_orchestrator.paymentProcessor() == who;
+    }
+
+    // @dev	Returns the payment configuration from a list of supplied flag values. Can be overriden to add additional validation steps
+    function _assemblePaymentConfig(bytes32[] memory flagValues_)
+        internal
+        view
+        virtual
+        returns (bytes32 flags_, bytes32[] memory data_)
+    {
+        if (_numOfFlags != flagValues_.length) {
+            revert
+                Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
+                _numOfFlags, flagValues_.length
+            );
+        }
+
+        return (_flags, flagValues_);
     }
 }
