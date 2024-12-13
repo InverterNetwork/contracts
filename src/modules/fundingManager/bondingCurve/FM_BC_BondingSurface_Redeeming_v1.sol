@@ -78,13 +78,11 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     using SafeERC20 for IERC20;
 
     // ------------------------------------------------------------------------
-    // Constants
+    // Storage
 
     /// @notice Minimum collateral reserve.
+    /// @dev    Should not be changed after initialization.
     uint public MIN_RESERVE;
-
-    // ------------------------------------------------------------------------
-    // Storage
 
     /// @notice The interface of the Formula used to calculate the issuance and
     ///         redeeming amount.
