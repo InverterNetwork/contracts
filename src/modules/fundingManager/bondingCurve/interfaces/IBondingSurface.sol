@@ -22,14 +22,14 @@ interface IBondingSurface {
     // -------------------------------------------------------------------------
     // Errors
 
-    /// @dev    Input amount is invalid.
+    /// @notice    Input amount is invalid.
     error BondingSurface__InvalidInputAmount();
 
     // ========================================================================
     // Public Getter Functions
 
-    /// @dev    Compute spot price for a given capital available and capital required
-    ///         p = f(C_a, C_r) = B * (C_a^2 / C_r)
+    /// @notice    Compute spot price for a given capital available and capital required
+    /// @dev       p = f(C_a, C_r) = B * (C_a^2 / C_r)
     ///
     /// @param  capitalAvailable_ Capital pool to base the spot price on.
     /// @param  capitalRequirements_ Capital requirements to base the spot price on.
@@ -41,6 +41,8 @@ interface IBondingSurface {
         uint basePriceMultiplier_
     ) external view returns (uint spotPrice_);
 
+    /// @notice Calculate number of tokens to mint based on `_in` tokens supplied
+    ///         and `_ca` of capital available.
     /// @dev    To get the number of tokens we have the following formula:
     ///
     ///                1          1         1
@@ -48,8 +50,6 @@ interface IBondingSurface {
     ///              B/C_r      C_a_1     C_a_2
     ///
     ///         _ca must be > 0
-    /// @notice Calculate number of tokens to mint based on `_in` tokens supplied
-    ///         and `_ca` of capital available.
     /// @param  in_ Assets added to the pool.
     /// @param  capitalAvailable_ Capital available to use for bonding curve mint.
     /// @param  basePriceToCapitalRatio_ Precomputed factor which combines the
@@ -61,6 +61,8 @@ interface IBondingSurface {
         uint basePriceToCapitalRatio_
     ) external view returns (uint amount_);
 
+    /// @notice Calculate number of assets to return based on `_out` tokens being burnt,
+    ///         `_ca` of capital available and `_supply` TPG minted.
     /// @dev    To get the change in assests when burning tokens:
     ///
     ///                B            1
@@ -69,8 +71,6 @@ interface IBondingSurface {
     ///
     ///         m is the token burn amount and C_a_2 is the capitalAvailable before burn
     ///         _ca must be > 0
-    /// @notice Calculate number of assets to return based on `_out` tokens being burnt,
-    ///         `_ca` of capital available and `_supply` TPG minted.
     /// @param  out_ TPG to burn.
     /// @param  capitalAvailable_ Capital available to use for bonding curve burn.
     /// @param  basePriceToCapitalRatio_ Precomputed factor which combines the

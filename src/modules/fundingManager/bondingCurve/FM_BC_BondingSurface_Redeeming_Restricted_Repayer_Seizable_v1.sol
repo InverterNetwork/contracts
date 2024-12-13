@@ -555,7 +555,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return ca > cr ? cr : ca;
     }
 
-    /// @dev    Processes project fee by transfer.
+    /// @notice Processes project fee by transfer.
     /// @param  workflowFeeAmount_ The amount of project fee to transfer.
     function _projectFeeCollected(uint workflowFeeAmount_) internal override {
         _token.safeTransfer(_tokenVault, workflowFeeAmount_);
