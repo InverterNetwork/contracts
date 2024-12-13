@@ -14,7 +14,7 @@ pragma solidity ^0.8.0;
  *
  * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version    0.1.0
+ * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */

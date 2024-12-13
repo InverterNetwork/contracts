@@ -59,7 +59,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version    1.0.0
+ * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */

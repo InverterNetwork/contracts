@@ -53,7 +53,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @custom:version  v1.0.0
  *
- * @custom:inverter-standard-version    0.1.0
+ * @custom:inverter-standard-version    v0.1.0
  *
  * @author  Inverter Network
  */
@@ -345,7 +345,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     ///         RedeemingBondingCurveBase_v1's virtual function.
     /// @param  depositAmount_ The amount of tokens to be redeemed for
     ///         collateral.
-    /// @return redeemAmount_   The amount of collateral that will be received.
+    /// @return redeemAmount_ The amount of collateral that will be received.
     function _redeemTokensFormulaWrapper(uint depositAmount_)
         internal
         view
