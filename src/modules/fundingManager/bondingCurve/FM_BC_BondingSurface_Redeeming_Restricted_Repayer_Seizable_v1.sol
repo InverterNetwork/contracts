@@ -21,7 +21,6 @@ import {IFM_BC_BondingSurface_Redeeming_v1} from
 import {IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
-
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -127,14 +126,14 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ------------------------------------------------------------------------
     // Modifiers
 
-    /// @notice Modifier to ensure buy and sell restrictions are met
+    /// @notice Modifier to ensure buy and sell restrictions are met.
     modifier onlyIfNotBuyAndSellRestricted() {
         _onlyIfNotBuyAndSellRestrictedModifier();
         _;
     }
 
-    /// @notice Modifier to ensure only the LiquidityVaultController can
-    ///call the function
+    /// @notice Modifier to ensure only the LiquidityVaultController can call
+    ///         the function.
     modifier onlyLiquidityVaultController() {
         _ensureOnlyLiquidityVaultController();
         _;
@@ -182,8 +181,8 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Initializes the Restricted Redeeming Bonding Surface Contract.
     /// @dev    Only callable during the initialization.
-    /// @param  liquidityVaultController The address of the
-    ///                                  LiquidityVaultController.
+    /// @param  liquidityVaultController The address of the 
+    ///         LiquidityVaultController.
     /// @param  newSeize The new seize value.
     /// @param  buyAndSellIsRestricted Whether buy and sell is restricted.
     function __FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Init(
@@ -194,7 +193,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         _liquidityVaultController = liquidityVaultController;
 
         // Set buy and sell restriction to restricted if true. By default buy and
-        // sell is unrestricted
+        // sell are unrestricted.
         _buyAndSellIsRestricted = buyAndSellIsRestricted;
 
         _setSeize(newSeize);
@@ -483,7 +482,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @inheritdoc IBondingCurveBase_v1
     function withdrawProjectCollateralFee(
-        address, /* _receiver */
+        address, /* receiver_ */
         uint /* amount_ */
     )
         public
@@ -500,7 +499,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // Internal Functions
 
     /// @notice Sets the token vault address.
-    /// @param tokenVault_ The address of the token vault.
+    /// @param  tokenVault_ The address of the token vault.
     function _setTokenVault(address tokenVault_)
         internal
         validAddress(tokenVault_)
@@ -512,7 +511,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice Set the current seize state, which defines the percentage
     ///         of seizable amount
     /// @dev    Reverts if the seize is greater than the MAX_SEIZE.
-    /// @param seize_ The new seize value.
+    /// @param  seize_ The new seize value.
     function _setSeize(uint64 seize_) internal {
         if (seize_ > MAX_SEIZE) {
             revert
@@ -526,10 +525,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
 
     /// @notice Returns the repayable amount.
     /// @dev    If the repayable amount was not defined, it is automatically set
-    ///         to the smaller between the Ca and the Cr value
-    /// @dev    The repayable amount as maximum is applied when is gt 0 and is lt
-    ///         the smallest between Cr and Ca
-    /// @return repayableAmount_ The repayable amount
+    ///         to the smaller one between the Ca and the Cr value.
+    /// @dev    The repayable amount as maximum is applied when it is greater
+    ///         than 0 and is less than the smallest between Cr and Ca.
+    /// @return repayableAmount_ The repayable amount.
     function _getRepayableAmount()
         internal
         view
@@ -542,19 +541,21 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @notice Returns the smaller of the Capital Available (Ca) and Capital
+    ///         Required (Cr).
     /// @dev    If the balance of the Capital Available (Ca) is larger than
-    ///         the Capital Required (Cr), the repayable amount can be lte Cr
-    /// @dev    If the Ca is lt Cr, the max repayable amount is the Ca
+    ///         the Capital Required (Cr), the repayable amount can be less
+    ///         than or equal to Cr.
+    /// @dev    If the Ca is lt Cr, the max repayable amount is the Ca.
     /// @return smallerCaCr_    The smaller of the Capital Available (Ca)
-    ///                         and Capital Required (Cr)
+    ///                         and Capital Required (Cr).
     function _getSmallerCaCr() internal view returns (uint smallerCaCr_) {
         uint ca = _getCapitalAvailable();
         uint cr = _capitalRequired;
         return ca > cr ? cr : ca;
     }
 
-    /// @dev    Processes project fee by transfer
-    /// @param workflowFeeAmount_ The amount of project fee to transfer
+    /// @dev    Processes project fee by transfer.
+    /// @param  workflowFeeAmount_ The amount of project fee to transfer.
     function _projectFeeCollected(uint workflowFeeAmount_) internal override {
         _token.safeTransfer(_tokenVault, workflowFeeAmount_);
         emit ProjectCollateralFeeWithdrawn(_tokenVault, workflowFeeAmount_);
@@ -575,7 +576,7 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     }
 
     /// @notice Validate if buy and sell is restricted, and if so
-    ///         check if the caller has the CURVE_INTERACTION_ROLE
+    ///         check if the caller has the CURVE_INTERACTION_ROLE.
     function _onlyIfNotBuyAndSellRestrictedModifier() internal view {
         if (_buyAndSellIsRestricted) {
             _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());

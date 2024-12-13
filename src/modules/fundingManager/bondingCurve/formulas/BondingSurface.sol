@@ -120,7 +120,7 @@ contract BondingSurface is IBondingSurface, ERC165 {
 
     /// @notice Computes the inverse based on
     /// @dev    https://github.com/paulrberg/prb-math/blob/86c068e21f9ba229025a77b951bd3c4c4cf103da/contracts/PRBMathUD60x18.sol#L214
-    /// @param x_ 18 decimal fixed point number to inverse. 0 < x <= 1e36
+    /// @param  x_ 18 decimal fixed point number to inverse. 0 < x <= 1e36
     function _inverse(uint x_) internal pure returns (uint res_) {
         unchecked {
             res_ = 1e36 / x_;

@@ -61,7 +61,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
- * @custom:version v1.0.1
+ * @custom:version  v1.0.1
  *
  * @author  Inverter Network
  */

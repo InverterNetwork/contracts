@@ -66,14 +66,16 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     // ========================================================================
     // Public-Getter Functions
 
-    /// @notice Returns reserve ratio set for buying, used in the {BancorFormula} contract.
+    /// @notice Returns reserve ratio set for buying, used in the
+    ///         {BancorFormula} contract.
     /// @return reserveRatioForBuying_ Reserve Ratio for buying.
     function getReserveRatioForBuying()
         external
         view
         returns (uint32 reserveRatioForBuying_);
 
-    /// @notice Returns reserve ratio set for selling, used in the {BancorFormula} contract.
+    /// @notice Returns reserve ratio set for selling, used in the.
+    /// {BancorFormula} contract.
     /// @return reserveRatioForSelling_ Reserve Ratio for selling.
     function getReserveRatioForSelling()
         external

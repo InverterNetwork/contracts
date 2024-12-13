@@ -33,7 +33,7 @@ interface IBondingSurface {
     ///
     /// @param capitalAvailable_ Capital pool to base the spot price on.
     /// @param capitalRequirements_ Capital requirements to base the spot price on.
-    /// @param basePriceMultiplier_ Base Price Multiplier
+    /// @param basePriceMultiplier_ Base Price Multiplier.
     /// @return spotPrice_ The spot price
     function spotPrice(
         uint capitalAvailable_,
@@ -52,8 +52,9 @@ interface IBondingSurface {
     ///         and `_ca` of capital available.
     /// @param in_ Assets added to the pool.
     /// @param capitalAvailable_ Capital available to use for bonding curve mint.
-    /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
-    /// @return amount_ The amount of tokens to mint
+    /// @param basePriceToCapitalRatio_ Precomputed factor which combines the
+    ///        base price multiplier with capital required.
+    /// @return amount_ The amount of tokens to mint.
     function tokenOut(
         uint in_,
         uint capitalAvailable_,
@@ -72,8 +73,9 @@ interface IBondingSurface {
     ///         `_ca` of capital available and `_supply` TPG minted.
     /// @param out_ TPG to burn
     /// @param capitalAvailable_ Capital available to use for bonding curve burn.
-    /// @param basePriceToCapitalRatio_ Precomputed factor which combines the base price multiplier with capital required
-    /// @return amount_ The amount of assets to return
+    /// @param basePriceToCapitalRatio_ Precomputed factor which combines the
+    ///        base price multiplier with capital required.
+    /// @return amount_ The amount of assets to return.
     function tokenIn(
         uint out_,
         uint capitalAvailable_,
