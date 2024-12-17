@@ -94,6 +94,11 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         vm.startPrank(address(paymentRouter));
         assertEq(_authorizer.checkForRole(roleId, paymentPusher_user), true);
         vm.stopPrank();
+
+        assertEq(paymentRouter.getAmountOfFlags(), 3);
+        bytes32 _START_END_CLIFF_FLAG =
+            0x000000000000000000000000000000000000000000000000000000000000000e;
+        assertEq(paymentRouter.getFlags(), _START_END_CLIFF_FLAG);
     }
 
     function testReinitFails() public override(ModuleTest) {
