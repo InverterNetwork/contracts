@@ -434,4 +434,38 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
             revert FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
         }
     }
+
+    /// @notice Handles incoming collateral tokens by transferring them
+    ///         from the provider.
+    /// @param  _provider The address that provides the collateral tokens.
+    /// @param  _amount The amount of collateral tokens to handle.
+    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+        internal
+        virtual
+        override
+    {
+        __Module_orchestrator.fundingManager().token().safeTransferFrom(
+            _provider, address(this), _amount
+        );
+    }
+
+    /// @notice Handles issuance tokens by minting them to the receiver.
+    /// @param  _receiver The address that will receive the bought tokens.
+    /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
+    function _handleIssuanceTokensAfterBuy(
+        address _receiver,
+        uint _issuanceTokenAmount
+    ) internal virtual override {
+        _mint(_receiver, _issuanceTokenAmount);
+    }
+
+    /// @notice Handles collateral tokens by transferring them to the receiver.
+    /// @param  _receiver The address that will receive the collateral tokens.
+    /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
+    function _handleCollateralTokensAfterSell(
+        address _receiver,
+        uint _collateralTokenAmount
+    ) internal virtual override {
+        token().safeTransfer(_receiver, _collateralTokenAmount);
+    }
 }
