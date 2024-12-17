@@ -202,7 +202,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         vm.stopPrank();
     }
-    
+
     /* Test buy and _buyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
@@ -394,6 +394,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
             1
         );
+    }
 
     /* Test _getBuyFeesAndTreasuryAddresses() function
         └── When the function _getBuyFeesAndTreasuryAddresses() is called
