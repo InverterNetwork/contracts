@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.2
+ * @custom:version 1.1.3
  *
  * @author  Inverter Network
  */
@@ -239,16 +239,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
-        // Require that enough collateral token is held to be redeemable
-        if (
-            (collateralRedeemAmount + projectCollateralFeeCollected)
-                > collateralToken.balanceOf(address(this))
-        ) {
-            revert
-                Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
-            );
-        }
-
         // Get net amount, protocol and project fee amounts
         (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
         _calculateNetAndSplitFees(
@@ -262,6 +252,17 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Add project fee if applicable
         if (projectFeeAmount > 0) {
             _projectFeeCollected(projectFeeAmount);
+        }
+
+        // Require that enough collateral tokens are held to cover the project
+        // collateral fee.
+        if (
+            projectCollateralFeeCollected
+                > collateralToken.balanceOf(address(this))
+        ) {
+            revert
+                Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee(
+            );
         }
 
         // Revert when the redeem amount is lower than minimum amount the user expects
@@ -279,7 +280,9 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @notice Virtual function to handle collateral tokens after a successful sell.
-    /// @param  _receiver  The address for which the collateral tokens will be handled.
+    /// @dev    The downstream contract is responsible for implementing checks
+    ///         to ensure the contract has the right balance.
+    /// @param  _receiver The address for which the collateral tokens will be handled.
     /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
     function _handleCollateralTokensAfterSell(
         address _receiver,

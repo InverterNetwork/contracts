@@ -66,7 +66,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.2
  *
  * @author  Inverter Network
  */
@@ -601,6 +601,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
 
     // -------------------------------------------------------------------------
     // Overridden Internal Functions
+
+    /// @notice Handles incoming collateral tokens by transferring them
+    ///         from the provider.
+    /// @param  _provider The address that provides the collateral tokens.
+    /// @param  _amount The amount of collateral tokens to handle.
+    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+        internal
+        virtual
+        override
+    {
+        __Module_orchestrator.fundingManager().token().safeTransferFrom(
+            _provider, address(this), _amount
+        );
+    }
 
     /// @notice Handles issuance tokens by minting them to the receiver.
     /// @param  _receiver The address that will receive the bought tokens.
