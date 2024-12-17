@@ -59,6 +59,10 @@ interface IGovernor_v1 {
     //--------------------------------------------------------------------------
     // Events
 
+    /// @notice Event emitted when a new beacon is added to the linked beacons.
+    /// @param  beacon The address of the new beacon.
+    event BeaconAddedToLinkedBeacons(address beacon);
+
     /// @notice Event emitted when a new timelock period for a upgrade of a {IInverterBeacon_v1} is started.
     /// @param  beacon The address of the {IInverterBeacon_v1}.
     /// @param  newImplementation The address of the new Implementation.
@@ -256,7 +260,7 @@ interface IGovernor_v1 {
     ) external;
 
     //--------------------------------------------------------------------------
-    // Factory Functions
+    // Register Beacons
 
     /// @notice Registers a {IInverterBeacon_v1} with the provided `metadata` in the target {ModuleFactory_v1}.
     /// @dev	Can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
@@ -266,6 +270,11 @@ interface IGovernor_v1 {
         IModule_v1.Metadata memory metadata,
         IInverterBeacon_v1 beacon
     ) external;
+
+    /// @notice Registers an {IInverterBeacon_v1} as a linked beacon that is not a module.
+    /// @dev	Can only be accessed by either the `COMMUNITY_MULTISIG_ROLE` or the `TEAM_MULTISIG_ROLE`.
+    /// @param  beacon The {IInverterBeacon_v1} that will be registered.
+    function registerNonModuleBeacon(IInverterBeacon_v1 beacon) external;
 
     //--------------------------------------------------------------------------
     // Beacon Functions

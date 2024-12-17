@@ -36,18 +36,20 @@ build: # Build project
 .PHONY: list-size
 list-size: # Print the size of contracts
 	@{ \
-	trap 'mv .test/ test/; mv .script/ script/' EXIT; \
+	trap 'mv .test/ test/; mv .script/ script/; mv .templates/ src/templates/' EXIT; \
 	mv test/ .test/; \
 	mv script/ .script/; \
+	mv src/templates/ .templates/; \
 	forge build --sizes; \
 	}
 
 .PHONY: check-size
 check-size: # Checks the size of contracts
 	@{ \
-	trap 'mv .test/ test/; mv .script/ script/' EXIT; \
+	trap 'mv .test/ test/; mv .script/ script/; mv .templates/ src/templates/' EXIT; \
 	mv test/ .test/; \
 	mv script/ .script/; \
+	mv src/templates/ .templates/; \
 	forge build --sizes | awk '!/----/ && /-[0-9]+/ { print; FOUND=1} END { if (!FOUND) { print "All contracts within the limit."; exit 0 }; if (FOUND) { exit 1 } }'; \
 	}
 

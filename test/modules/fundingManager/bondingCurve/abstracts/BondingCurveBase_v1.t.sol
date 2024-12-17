@@ -203,38 +203,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    //  Test modifiers on buyFor function
-
-    function testPassingModifiersOnBuyOrderFor(uint amount) public {
-        // Setup
-        vm.assume(amount > 0);
-
-        address buyer = makeAddr("buyer");
-        address receiver = makeAddr("receiver");
-
-        _prepareBuyConditions(buyer, amount);
-
-        // Pre-checks
-        uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
-        assertEq(issuanceToken.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(receiver), 0);
-
-        // Execution
-        vm.prank(buyer);
-        bondingCurveFundingManager.buyFor(receiver, amount, amount);
-
-        // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
-        );
-        assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(receiver), amount);
-    }
-
     /* Test buy and _buyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
@@ -291,12 +259,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.assume(amount > 0);
 
         address buyer = makeAddr("buyer");
-        _prepareBuyConditions(buyer, amount);
 
         // Pre-checks
-        uint balanceBefore =
-            _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Emit event
@@ -310,12 +275,18 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.buy(amount, amount);
 
         // Post-checks
-        assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount)
-        );
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), amount);
+        assertEq(issuanceToken.balanceOf(buyer), 0);
+        assertEq(
+            bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
+        assertEq(
+            bondingCurveFundingManager
+                .distributeCollateralTokenBeforeBuyFunctionCalled(),
+            1
+        );
     }
 
     function test_buyOrder(
@@ -354,12 +325,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         address buyer = makeAddr("buyer");
 
-        _prepareBuyConditions(buyer, amount);
-
         // Pre-checks
         uint balanceBefore =
             _token.balanceOf(address(bondingCurveFundingManager));
-        assertEq(_token.balanceOf(buyer), amount);
+        assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
 
         // Calculate receiving amount
@@ -382,6 +351,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
             amountAfterFirstFeeCollection, _issuanceFee, 0
         );
 
+        //Pepare fee amount that will betaken from bondingCurveManager
+        _token.mint(
+            address(bondingCurveFundingManager), protocolCollateralFeeAmount
+        );
+
         if (projectCollateralFeeAmount != 0) {
             // Emit event
             vm.expectEmit(
@@ -400,10 +374,10 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Execution
         vm.prank(buyer);
-        (uint totalIssuanceTokenMinted, uint collateralFeeAmount) =
+        (, uint collateralFeeAmount) =
             bondingCurveFundingManager.call_buyOrder(buyer, amount, finalAmount);
 
-        assertEq(totalIssuanceTokenMinted, issuanceToken.totalSupply());
+        assertEq(issuanceToken.balanceOf(treasury), issuanceToken.totalSupply());
 
         assertEq(
             collateralFeeAmount,
@@ -412,11 +386,19 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         // Post-checks
         assertEq(
-            _token.balanceOf(address(bondingCurveFundingManager)),
-            (balanceBefore + amount - protocolCollateralFeeAmount)
+            _token.balanceOf(address(bondingCurveFundingManager)), balanceBefore
         );
         assertEq(_token.balanceOf(buyer), 0);
-        assertEq(issuanceToken.balanceOf(buyer), finalAmount);
+
+        assertEq(
+            bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
+            1
+        );
+        assertEq(
+            bondingCurveFundingManager
+                .distributeCollateralTokenBeforeBuyFunctionCalled(),
+            1
+        );
     }
 
     /* Test _getBuyFeesAndTreasuryAddresses() function
@@ -1204,27 +1186,31 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     /*  Test internal _projectFeeCollected()
         └── When the function _projectFeeCollected() gets called
+            └── Then the ProjectCollateralFeeAdded Event will be emitted
             └── Then the _workflowFeeAmount will be added to the projectCollateralFeeCollected
     */
-    function testInternalProjectFeeCollected_works(uint _workflowFeeAmount)
+    function testInternalProjectFeeCollected_works(uint _projectFeeAmount)
         public
     {
         uint currentFeeCollected =
             bondingCurveFundingManager.projectCollateralFeeCollected();
 
+        vm.expectEmit(true, true, true, true);
+        emit IBondingCurveBase_v1.ProjectCollateralFeeAdded(_projectFeeAmount);
+
         // Execute Tx
         bondingCurveFundingManager.exposed_projectFeeCollected(
-            _workflowFeeAmount
+            _projectFeeAmount
         );
 
         // Assert that the fee amount got added to the projectCollateralFeeCollected
         assertEq(
             bondingCurveFundingManager.projectCollateralFeeCollected(),
-            currentFeeCollected + _workflowFeeAmount
+            currentFeeCollected + _projectFeeAmount
         );
     }
 
-    // Test _issueTokens function
+    // Test _handleIssuanceTokensAfterBuy function
     // this is tested in the buy tests
 
     //--------------------------------------------------------------------------

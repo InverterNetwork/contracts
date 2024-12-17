@@ -8,6 +8,9 @@ import {
     Governor_v1, IGovernor_v1
 } from "src/external/governance/Governor_v1.sol";
 
+import {Governor_v1_Exposed} from
+    "test/utils/mocks/external/Governor_v1_Exposed.sol";
+
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
@@ -30,7 +33,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 contract GovernorV1Test is Test {
     // SuT
-    Governor_v1 gov;
+    Governor_v1_Exposed gov;
 
     ModuleFactoryV1Mock modFactory;
 
@@ -73,8 +76,8 @@ contract GovernorV1Test is Test {
     function setUp() public {
         modFactory = new ModuleFactoryV1Mock();
 
-        address impl = address(new Governor_v1());
-        gov = Governor_v1(Clones.clone(impl));
+        address impl = address(new Governor_v1_Exposed());
+        gov = Governor_v1_Exposed(Clones.clone(impl));
         gov.init(
             communityMultisig,
             teamMultisig,
@@ -300,8 +303,8 @@ contract GovernorV1Test is Test {
             address(modFactory)
         );
 
-        address impl = address(new Governor_v1());
-        gov = Governor_v1(Clones.clone(impl));
+        address impl = address(new Governor_v1_Exposed());
+        gov = Governor_v1_Exposed(Clones.clone(impl));
         // validAddress(newCommunityMultisig)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -604,7 +607,7 @@ contract GovernorV1Test is Test {
     }
 
     //--------------------------------------------------------------------------
-    // Test: Factory Functions
+    // Test: Register Beacons
 
     function testRegisterMetadataInModuleFactory() public {
         IModule_v1.Metadata memory metadata;
@@ -644,6 +647,34 @@ contract GovernorV1Test is Test {
         gov.registerMetadataInModuleFactory(
             metadata, IInverterBeacon_v1(address(0))
         );
+    }
+
+    /*
+    Test: registerNonModuleBeacon
+    ├── Given: caller is neither the community multisig nor the team multisig
+    │   └── When: registerNonModuleBeacon is called
+    │       └── Then: revert with error
+    └── Given: caller is the community multisig or the team multisig
+        └── When: registerNonModuleBeacon is called
+            └── Then: The internal function _registerNonModuleBeacon is called
+     */
+
+    function testregisterNonModuleBeacon_ModifierInPosition() public {
+        // onlyCommunityOrTeamMultisig
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__OnlyCommunityOrTeamMultisig.selector
+            )
+        );
+        gov.registerNonModuleBeacon(IInverterBeacon_v1(ownedBeaconMock));
+    }
+
+    function testregisterNonModuleBeacon_internalFunctionCalled() public {
+        vm.expectEmit(true, true, true, true);
+        emit IGovernor_v1.BeaconAddedToLinkedBeacons(address(ownedBeaconMock));
+
+        vm.prank(communityMultisig);
+        gov.registerNonModuleBeacon(IInverterBeacon_v1(ownedBeaconMock));
     }
 
     //--------------------------------------------------------------------------
@@ -1097,6 +1128,46 @@ contract GovernorV1Test is Test {
             )
         );
         gov.acceptOwnership(address(unownedBeaconMock));
+    }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    /*
+    Test: _addBeaconToLinkedBeacons
+    ├── Given: Beacon is not accessible
+    │   └── When: _addBeaconToLinkedBeacons is called
+    │       └── Then: revert with Governor__BeaconNotAccessible
+    └── Given: Beacon is accessible
+        └── When: _addBeaconToLinkedBeacons is called
+            └── Then: Beacon is added to linkedBeacons
+                └── And: emits BeaconLinked event
+     */
+
+    function test_addBeaconToLinkedBeacons_BeaconNotAccessible() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IGovernor_v1.Governor__BeaconNotAccessible.selector, address(0)
+            )
+        );
+        gov.exposed_addBeaconToLinkedBeacons(IInverterBeacon_v1(address(0)));
+    }
+
+    function test_addBeaconToLinkedBeacons_BeaconIsAccessible() public {
+        // Given: Beacon is accessible
+
+        // And: emits BeaconLinked event
+        vm.expectEmit(true, true, true, true);
+        emit IGovernor_v1.BeaconAddedToLinkedBeacons(address(ownedBeaconMock));
+        gov.exposed_addBeaconToLinkedBeacons(
+            IInverterBeacon_v1(ownedBeaconMock)
+        );
+
+        IInverterBeacon_v1[] memory beacons = gov.getLinkedBeacons();
+
+        // Then: Beacon is added to linkedBeacons
+        assertEq(beacons.length, 1);
+        assertEq(address(beacons[0]), address(ownedBeaconMock));
     }
 
     //--------------------------------------------------------------------------

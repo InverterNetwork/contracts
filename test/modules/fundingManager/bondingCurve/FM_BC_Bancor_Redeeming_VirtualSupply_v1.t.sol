@@ -1800,6 +1800,91 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         bondingCurveFundingManager.setVirtualIssuanceSupply(virtualSupply);
     }
 
+    // -------------------------------------------------------------------------
+    // Internal Functions
+
+    /*
+    Test: _handleIssuanceTokensBeforeBuy
+    └── When: the function _handleCollateralTokensBeforeBuy is called
+        └── Then: it should transfer the correct amount of collateral tokens from the provider address to the bonding curve contract
+    */
+
+    function test_handleCollateralTokensBeforeBuy(
+        address _provider,
+        uint _amount
+    ) public {
+        // Setup
+        vm.assume(
+            _provider != address(0)
+                && _provider != address(bondingCurveFundingManager)
+        );
+        vm.assume(_amount > 0);
+
+        _token.mint(_provider, _amount);
+        vm.prank(_provider);
+        _token.approve(address(bondingCurveFundingManager), _amount);
+
+        // Execute
+        bondingCurveFundingManager.call_handleCollateralTokensBeforeBuy(
+            _provider, _amount
+        );
+
+        // Assert
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), _amount);
+    }
+
+    /*
+    Test: _handleIssuanceTokensAfterBuy
+    └── When: the function _handleIssuanceTokensAfterBuy is called
+        └── Then: it should mint the correct amount of tokens to the receiver address
+    */
+
+    function test_handleIssuanceTokensAfterBuy(
+        address _receiver,
+        uint _issuanceTokenAmount
+    ) public {
+        // Setup
+        vm.assume(_receiver != address(0));
+        vm.assume(_issuanceTokenAmount > 0);
+
+        // Execute
+        bondingCurveFundingManager.call_handleIssuanceTokensAfterBuy(
+            _receiver, _issuanceTokenAmount
+        );
+
+        // Assert
+        assertEq(issuanceToken.balanceOf(_receiver), _issuanceTokenAmount);
+    }
+
+    /*
+    Test: _handleCollateralTokensAfterSell
+    └── When: the function _handleCollateralTokensAfterSell is called
+        └── Then: it should transfer the correct amount of tokens to the receiver address
+    */
+
+    function test_handleCollateralTokensAfterSell(
+        address _receiver,
+        uint _amount
+    ) public {
+        // Setup
+        vm.assume(
+            _receiver != address(0)
+                && _receiver != address(bondingCurveFundingManager)
+        );
+        vm.assume(_amount > 0);
+
+        _token.mint(address(bondingCurveFundingManager), _amount);
+
+        // Execute
+        bondingCurveFundingManager.call_handleCollateralTokensAfterSell(
+            _receiver, _amount
+        );
+
+        // Assert
+        assertEq(_token.balanceOf(_receiver), _amount);
+        assertEq(_token.balanceOf(address(bondingCurveFundingManager)), 0);
+    }
+
     //--------------------------------------------------------------------------
     // Helper functions
 

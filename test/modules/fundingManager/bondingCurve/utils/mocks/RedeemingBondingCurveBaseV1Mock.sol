@@ -26,6 +26,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     IBancorFormula public formula;
 
+    // -------------------------------------------------------------------------
+    // Override Functions
+
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
@@ -74,12 +77,33 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         return _depositAmount;
     }
 
-    function call_calculateSaleReturn(uint _depositAmount)
-        external
-        view
-        returns (uint)
+    uint public distributeIssuanceTokenFunctionCalled;
+
+    function _handleIssuanceTokensAfterBuy(
+        address _receiver,
+        uint _issuanceTokenAmount
+    ) internal virtual override {
+        _mint(_receiver, _issuanceTokenAmount);
+        distributeIssuanceTokenFunctionCalled++;
+    }
+
+    uint public distributeCollateralTokenAfterSellFunctionCalled;
+
+    function _handleCollateralTokensAfterSell(address, uint)
+        internal
+        virtual
+        override
     {
-        return calculateSaleReturn(_depositAmount);
+        distributeCollateralTokenAfterSellFunctionCalled++;
+    }
+
+    uint public distributeCollateralTokenBeforeBuyFunctionCalled;
+
+    function _handleCollateralTokensBeforeBuy(
+        address, /*_provder*/
+        uint /*_amount*/
+    ) internal virtual override {
+        distributeCollateralTokenBeforeBuyFunctionCalled++;
     }
 
     function getStaticPriceForSelling()
@@ -96,7 +120,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         returns (uint)
     {}
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Mock access for internal functions
 
     function call_BPS() external pure returns (uint) {
