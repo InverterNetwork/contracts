@@ -1,14 +1,39 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IFM_BC_BondingSurface_Redeeming_v1 {
-    //--------------------------------------------------------------------------
+// Internal Dependencies
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+
+/**
+ * @title   Inverter Redeeming Bonding Surface Funding Manager Interface
+ *
+ * @notice  This interface enables the fetching and setting of Bonding Surface
+ *          relevant data.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version  v1.0.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
+ *
+ * @author  Inverter Network
+ */
+interface IFM_BC_BondingSurface_Redeeming_v1 is
+    IFundingManager_v1,
+    IRedeemingBondingCurveBase_v1
+{
+    // ========================================================================
     // Errors
 
-    /// @notice Invalid Bonding Surface Formula contract
+    /// @notice Invalid Bonding Surface Formula contract.
     error FM_BC_BondingSurface_Redeeming_v1__InvalidBondingSurfaceFormula();
 
-    /// @notice Amount does not match the requirements
+    /// @notice Amount does not match the requirements.
     error FM_BC_BondingSurface_Redeeming_v1__InvalidInputAmount();
 
     /// @notice No capital is available.
@@ -17,35 +42,40 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
     /// @notice The minimum reserve has been reached.
     error FM_BC_BondingSurface_Redeeming_v1__MinReserveReached();
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Events
 
-    /// @notice Emits when the capital required gets updated
+    /// @notice Emits when the capital required gets updated.
     event CapitalRequiredChanged(
         uint currentCapitalRequired, uint newCapitalRequired
     );
 
-    /// @notice Emits when the Base Price Multiplier gets updated
+    /// @notice Emits when the Base Price Multiplier gets updated.
     event BasePriceMultiplierChanged(
         uint currentBasePriceMultiplier, uint newBasePriceMultiplier
     );
 
-    /// @notice Emits when basePriceToCapitalRatio gets updated
+    /// @notice Emits when basePriceToCapitalRatio gets updated.
     event BasePriceToCapitalRatioChanged(
         uint currentBasePriceToCapitalRatio, uint newBasePriceToCapitalRatio
     );
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Structs
 
     /// @notice The bonding curve properties.
-    /// @param formula The formula contract used to calculate the issucance and redemption rate
-    /// @param capitalRequired The initial capital requirement for the formula contract
-    /// @param basePriceMultiplier Base price multiplier in the bonding curve formula
-    /// @param buyFee The buy fee expressed in base points
-    /// @param sellFee The sell fee expressed in base points
-    /// @param buyIsOpen The indicator used for enabling/disabling the buying functionalities on deployment
-    /// @param sellIsOpen The indicator used for enabling/disabling the selling functionalties on deployment
+    /// @param  formula  The formula contract used to calculate the issucance
+    ///         and redemption rate.
+    /// @param  capitalRequired  The initial capital requirement for the
+    ///         formula contract.
+    /// @param  basePriceMultiplier  Base price multiplier in the bonding curve
+    ///         formula.
+    /// @param  buyFee       The buy fee expressed in base points.
+    /// @param  sellFee      The sell fee expressed in base points.
+    /// @param  buyIsOpen    The indicator used for enabling/disabling
+    ///         the buying functionalities on deployment.
+    /// @param  sellIsOpen   The indicator used for enabling/disabling
+    ///         the selling functionalties on deployment.
     struct BondingCurveProperties {
         address formula;
         uint capitalRequired;
@@ -56,24 +86,62 @@ interface IFM_BC_BondingSurface_Redeeming_v1 {
         bool sellIsOpen;
     }
 
-    //--------------------------------------------------------------------------
-    // Functions
+    // ========================================================================
+    // Public Getter Functions
 
-    /// @dev Update the base price multiplier used for the bonding curve
-    /// @param _newBasePriceMultiplier Base price multiplier used for price calculation
-    function setBasePriceMultiplier(uint _newBasePriceMultiplier) external;
+    /// @notice Returns the formula contract used to calculate the issuance and
+    ///         redemption rate.
+    /// @return formula_ The formula contract address.
+    function getBondingSurfaceFormula()
+        external
+        view
+        returns (address formula_);
 
-    /// @dev Update the capital required used for the bonding curve
-    /// @param _newCapitalRequired Capital required needed to operate the protocol
-    function setCapitalRequired(uint _newCapitalRequired) external;
+    /// @notice Returns the initial capital requirement for the formula
+    ///         contract.
+    /// @return capitalRequired The capital required.
+    function getCapitalRequired()
+        external
+        view
+        returns (uint capitalRequired);
 
-    /// @notice Calculates the ratio of base price multiplier to capital required.
-    /// @dev Calls `_calculateBasePriceToCapitalRatio` internally. Reverts if ratio exceeds 1e36.
-    /// @param _capitalRequired The capital required.
-    /// @param _basePriceMultiplier The base price multiplier.
-    /// @return _basePriceToCapitalRatio The calculated price to capital ratio.
+    /// @notice Returns the base price multiplier.
+    /// @return basePriceMultiplier_ The base price multiplier.
+    function getBasePriceMultiplier()
+        external
+        view
+        returns (uint basePriceMultiplier_);
+
+    /// @notice Returns the base price to capital ratio.
+    /// @return basePriceToCapitalRatio_ The base price to capital ratio.
+    function getBasePriceToCapitalRatio()
+        external
+        view
+        returns (uint basePriceToCapitalRatio_);
+
+    /// @notice Calculates the ratio of base price multiplier to capital
+    ///         required.
+    /// @dev    Calls _calculateBasePriceToCapitalRatio internally.
+    ///         Reverts if ratio exceeds 1e36.
+    /// @param  capitalRequired_ The capital required.
+    /// @param  basePriceMultiplier_ The base price multiplier.
+    /// @return basePriceToCapitalRatio_ The calculated price to capital ratio.
     function calculateBasePriceToCapitalRatio(
-        uint _capitalRequired,
-        uint _basePriceMultiplier
-    ) external view returns (uint _basePriceToCapitalRatio);
+        uint capitalRequired_,
+        uint basePriceMultiplier_
+    ) external view returns (uint basePriceToCapitalRatio_);
+
+    // ========================================================================
+    // Public Mutating Functions
+
+    // ------------------------------------------------------------------------
+    // Mutating - OnlyOrchestratorAdmin Functions
+
+    /// @notice Update the capital required used for the bonding curve.
+    /// @param  newCapitalRequired_ The new capital required.
+    function setCapitalRequired(uint newCapitalRequired_) external;
+
+    /// @notice Update the base price multiplier used for the bonding curve.
+    /// @param  newBasePriceMultiplier_ The new base price multiplier.
+    function setBasePriceMultiplier(uint newBasePriceMultiplier_) external;
 }

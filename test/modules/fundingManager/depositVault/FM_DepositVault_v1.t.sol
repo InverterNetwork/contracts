@@ -60,7 +60,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Initialization
 
     function testInit() public override(ModuleTest) {
@@ -72,39 +72,39 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vault.init(_orchestrator, _METADATA, abi.encode());
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Tests: Public View Functions
 
     function testToken() public {
         assertEq(address(vault.token()), address(_token));
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Public Mutating Functions
 
-    function testDeposit_Works(address user, uint amount, uint fee) public {
+    function testDeposit_Works(address user_, uint amount_, uint fee_) public {
         vm.assume(
-            user != address(0) && user != address(_token)
-                && user != address(vault) && user != vault.trustedForwarder()
-                && user != treasury
+            user_ != address(0) && user_ != address(_token)
+                && user_ != address(vault) && user_ != vault.trustedForwarder()
+                && user_ != treasury
         );
-        //Restrict to reasonable amounts
-        amount = bound(amount, 1, type(uint128).max);
-        fee = bound(fee, 0, BPS);
+        //Restrict to_ reasonable amounts
+        amount_ = bound(amount_, 1, type(uint128).max);
+        fee_ = bound(fee_, 0, BPS);
 
         // Setup
-        _token.mint(user, amount);
-        assertEq(_token.balanceOf(user), amount);
-        vm.prank(user);
-        _token.approve(address(vault), amount);
+        _token.mint(user_, amount_);
+        assertEq(_token.balanceOf(user_), amount_);
+        vm.prank(user_);
+        _token.approve(address(vault), amount_);
 
-        if (fee != 0) {
-            feeManager.setDefaultCollateralFee(fee);
+        if (fee_ != 0) {
+            feeManager.setDefaultCollateralFee(fee_);
         }
 
         //Expected Amounts
-        uint expectedFeeAmount = amount * fee / BPS;
-        uint expectedRestAmount = amount - expectedFeeAmount;
+        uint expectedFeeAmount = amount_ * fee_ / BPS;
+        uint expectedRestAmount = amount_ - expectedFeeAmount;
 
         // Deposit
         if (expectedFeeAmount != 0) {
@@ -116,30 +116,30 @@ contract FM_DepositVaultV1Test is ModuleTest {
             );
         }
         vm.expectEmit(true, true, true, true);
-        emit IFM_DepositVault_v1.Deposit(user, amount);
-        vm.prank(user);
-        vault.deposit(amount);
+        emit IFM_DepositVault_v1.Deposit(user_, amount_);
+        vm.prank(user_);
+        vault.deposit(amount_);
 
         // Assert balance
         assertEq(_token.balanceOf(address(vault)), expectedRestAmount);
-        assertEq(_token.balanceOf(user), 0);
+        assertEq(_token.balanceOf(user_), 0);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // OnlyOrchestrator Mutating Functions
 
-    function testTransferOrchestratorToken(address to, uint amount) public {
-        vm.assume(to != address(0) && to != address(vault));
+    function testTransferOrchestratorToken(address to_, uint amount_) public {
+        vm.assume(to_ != address(0) && to_ != address(vault));
 
-        _token.mint(address(vault), amount);
+        _token.mint(address(vault), amount_);
 
         vm.expectEmit(true, true, true, true);
-        emit IFundingManager_v1.TransferOrchestratorToken(to, amount);
+        emit IFundingManager_v1.TransferOrchestratorToken(to_, amount_);
 
         vm.prank(address(client));
-        vault.transferOrchestratorToken(to, amount);
+        vault.transferOrchestratorToken(to_, amount_);
 
-        assertEq(_token.balanceOf(to), amount);
+        assertEq(_token.balanceOf(to_), amount_);
         assertEq(_token.balanceOf(address(vault)), 0);
     }
 
@@ -152,27 +152,27 @@ contract FM_DepositVaultV1Test is ModuleTest {
         vault.transferOrchestratorToken(address(0), 0);
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal Functions
 
-    function testProcessProtocolFeeViaTransfer(address treasury, uint amount)
+    function testProcessProtocolFeeViaTransfer(address treasury_, uint amount_)
         public
     {
-        vm.assume(treasury != address(0) && treasury != address(vault));
-        amount = bound(amount, 1, type(uint).max);
+        vm.assume(treasury_ != address(0) && treasury_ != address(vault));
+        amount_ = bound(amount_, 1, type(uint).max);
 
         // Setup
-        _token.mint(address(vault), amount);
-        assertEq(_token.balanceOf(address(vault)), amount);
+        _token.mint(address(vault), amount_);
+        assertEq(_token.balanceOf(address(vault)), amount_);
 
         vm.expectEmit(true, true, true, true);
         emit IModule_v1.ProtocolFeeTransferred(
-            address(_token), treasury, amount
+            address(_token), treasury_, amount_
         );
 
-        vault.exposed_processProtocolFeeViaTransfer(treasury, _token, amount);
+        vault.exposed_processProtocolFeeViaTransfer(treasury_, _token, amount_);
 
-        assertEq(_token.balanceOf(treasury), amount);
+        assertEq(_token.balanceOf(treasury_), amount_);
         assertEq(_token.balanceOf(address(vault)), 0);
     }
 
@@ -188,14 +188,14 @@ contract FM_DepositVaultV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(vault)), 1);
     }
 
-    function testValidateRecipient(address receiver) public {
-        if (receiver == address(0) || receiver == address(vault)) {
+    function testValidateRecipient(address receiver_) public {
+        if (receiver_ == address(0) || receiver_ == address(vault)) {
             vm.expectRevert(
                 IFM_DepositVault_v1
                     .Module__DepositVault__InvalidRecipient
                     .selector
             );
         }
-        vault.exposed_validateRecipient(receiver);
+        vault.exposed_validateRecipient(receiver_);
     }
 }

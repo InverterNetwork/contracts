@@ -1,7 +1,25 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface IRedeemingBondingCurveBase_v1 {
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+
+/**
+ * @title   Inverter Redeeming Bonding Curve Funding Manager Base Interface
+ *
+ * @notice  Manages the redemption of issuance for collateral along a bonding curve in the
+ *          Inverter Network, including fee handling and sell functionality control.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version v1.0.1
+ *
+ * @author  Inverter Network
+ */
+interface IRedeemingBondingCurveBase_v1 is IBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
@@ -42,8 +60,7 @@ interface IRedeemingBondingCurveBase_v1 {
     // Functions
 
     /// @notice Redeem tokens and directs the proceeds to a specified receiver address.
-    /// @dev    Executes a sell order, with the proceeds being sent directly to the _receiver's address.
-    ///         This function wraps the `_sellOrder` internal function with specified parameters to handle
+    /// @dev    This function wraps the `_sellOrder` internal function with specified parameters to handle
     ///         the transaction and direct the proceeds.
     /// @param  _receiver The address that will receive the redeemed tokens.
     /// @param  _depositAmount The amount of tokens to be sold.
