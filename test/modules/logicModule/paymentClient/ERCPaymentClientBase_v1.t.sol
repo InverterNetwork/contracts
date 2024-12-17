@@ -496,6 +496,41 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         );
     }
 
+    function test_assemblePaymentConfig_FailsIfAmountOfFlagsIsIncorrect(
+        bytes32[] memory flagValues
+    ) public {
+        vm.assume(flagValues.length != paymentClient.getAmountOfFlags());
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20PaymentClientBase_v1
+                    .Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength
+                    .selector,
+                paymentClient.getAmountOfFlags(),
+                flagValues.length
+            )
+        );
+
+        paymentClient.direct_assemblePaymentConfig(flagValues);
+    }
+
+    function test_assemblePaymentConfig(bytes32[] memory randValues) public {
+        uint8 numOfFlags = paymentClient.getAmountOfFlags();
+        bytes32[] memory flagValues = new bytes32[](numOfFlags);
+        for (uint8 i; i < numOfFlags; ++i) {
+            flagValues[i] = randValues[randValues.length % i];
+        }
+
+        (bytes32 ret_flags, bytes32[] memory ret_FlagValues) =
+            paymentClient.direct_assemblePaymentConfig(flagValues);
+
+        assertEq(numOfFlags, ret_FlagValues.length);
+        assertEq(ret_flags, paymentClient.getFlags());
+        for (uint8 i; i < ret_FlagValues.length; ++i) {
+            assertEq(ret_FlagValues[i], flagValues[i]);
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Assume Helper Functions
 

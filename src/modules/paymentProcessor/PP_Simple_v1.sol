@@ -195,7 +195,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
-            && _validTotal(order.amount) && _validPaymentToken(order.paymentToken);
+            && _validTotal(order.amount) && _validPaymentToken(order.paymentToken)
+            && _validOriginAndDestinationChain(
+                order.originChainId, order.targetChainId
+            );
     }
 
     //--------------------------------------------------------------------------
@@ -258,5 +261,15 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             )
         );
         return (success && data.length != 0 && _token.code.length != 0);
+    }
+
+    function _validOriginAndDestinationChain(
+        uint originChainId_,
+        uint tartgetChainId_
+    ) internal view returns (bool) {
+        return (
+            (originChainId_ == tartgetChainId_)
+                && (originChainId_ == block.chainid)
+        );
     }
 }

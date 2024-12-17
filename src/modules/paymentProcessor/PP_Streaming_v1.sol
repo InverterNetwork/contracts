@@ -422,7 +422,10 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount) && _validTimes(start, cliff, end)
-            && _validPaymentToken(order.paymentToken);
+            && _validPaymentToken(order.paymentToken)
+            && _validOriginAndDestinationChain(
+                order.originChainId, order.targetChainId
+            );
     }
 
     function setStreamingDefaults(uint newStart_, uint newCliff_, uint newEnd_)
@@ -935,6 +938,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             )
         );
         return (success && data.length != 0 && _token.code.length != 0);
+    }
+
+    function _validOriginAndDestinationChain(
+        uint originChainId_,
+        uint tartgetChainId_
+    ) internal view returns (bool) {
+        return (
+            (originChainId_ == tartgetChainId_)
+                && (originChainId_ == block.chainid)
+        );
     }
 
     function _getStreamingDetails(bytes32 flags, bytes32[] memory data)

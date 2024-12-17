@@ -42,7 +42,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
     // Default values for the streaming payments
     uint defaultStart = 10;
-    uint defaultCliff = 5;
+    uint defaultCliff = 0;
     uint defaultEnd = 30;
 
     // Constants

@@ -141,10 +141,9 @@ contract LM_PC_RecurringPayments_v1 is
 
         // Set the flags for the PaymentOrders
         // Set the flags for the PaymentOrders
-        uint8[] memory flags = new uint8[](3); // The Module will use 3 flags
+        uint8[] memory flags = new uint8[](2); // The Module will use 2 flags
         flags[0] = 1; // start, flag_ID 1
-        flags[1] = 2; // cliff, flag_ID 2
-        flags[2] = 3; // end, flag_ID 3
+        flags[1] = 3; // end, flag_ID 3
 
         __ERC20PaymentClientBase_v1_init(flags);
     }
@@ -313,10 +312,9 @@ contract LM_PC_RecurringPayments_v1 is
                     bytes32[] memory data;
 
                     {
-                        bytes32[] memory paymentParameters = new bytes32[](3);
+                        bytes32[] memory paymentParameters = new bytes32[](2);
                         paymentParameters[0] = bytes32(block.timestamp);
-                        paymentParameters[1] = bytes32(0);
-                        paymentParameters[2] =
+                        paymentParameters[1] =
                             bytes32((currentEpoch + 1) * epochLength);
 
                         (flags, data) =
@@ -340,7 +338,7 @@ contract LM_PC_RecurringPayments_v1 is
 
                     // if past epochs have not been triggered
                     if (epochsNotTriggered > 1) {
-                        data[2] = bytes32(currentEpoch * epochLength);
+                        data[1] = bytes32(currentEpoch * epochLength);
                         _addPaymentOrder(
                             PaymentOrder({
                                 recipient: currentPayment.recipient,

@@ -92,4 +92,11 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
     {
         _setFlags(numOfFlags_, flags_);
     }
+
+    function direct_assemblePaymentConfig(bytes32[] memory flagValues_)
+        external
+        returns (bytes32 flags_, bytes32[] memory data_)
+    {
+        return _assemblePaymentConfig(flagValues_);
+    }
 }
