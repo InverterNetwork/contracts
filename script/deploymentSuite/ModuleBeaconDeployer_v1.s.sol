@@ -155,6 +155,46 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
+        // BondingSurfaceRedeemingFundingManager
+        initialMetadataRegistration.push(
+            bondingSurfaceRedeemingFundingManagerMetadata
+        );
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    bondingSurfaceRedeemingFundingManagerMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_BC_BondingSurface_Redeeming_v1,
+                    bondingSurfaceRedeemingFundingManagerMetadata.majorVersion,
+                    bondingSurfaceRedeemingFundingManagerMetadata.minorVersion,
+                    bondingSurfaceRedeemingFundingManagerMetadata.patchVersion
+                )
+            )
+        );
+
+        // BondingSurfaceRedeemingRestrictedRepayerSeizableFundingManager
+        initialMetadataRegistration.push(
+            bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+        );
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .majorVersion,
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .minorVersion,
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .patchVersion
+                )
+            )
+        );
+
         // DepositVaultFundingManager
         initialMetadataRegistration.push(depositVaultFundingManagerMetadata);
         initialBeaconRegistration.push(
@@ -167,6 +207,24 @@ contract ModuleBeaconDeployer_v1 is
                     depositVaultFundingManagerMetadata.majorVersion,
                     depositVaultFundingManagerMetadata.minorVersion,
                     depositVaultFundingManagerMetadata.patchVersion
+                )
+            )
+        );
+
+        // Funding Managers - Extensions
+
+        // TokenVault
+        initialMetadataRegistration.push(tokenVaultMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    tokenVaultMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_EXT_TokenVault_v1,
+                    tokenVaultMetadata.majorVersion,
+                    tokenVaultMetadata.minorVersion,
+                    tokenVaultMetadata.patchVersion
                 )
             )
         );
