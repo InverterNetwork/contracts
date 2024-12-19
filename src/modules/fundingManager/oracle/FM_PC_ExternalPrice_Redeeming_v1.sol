@@ -631,13 +631,12 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
     {
         // First convert deposit amount to required decimals.
         uint normalizedAmount_ = FM_BC_Tools._convertAmountToRequiredDecimal(
-            depositAmount_,
-            IERC20Metadata(address(token())).decimals(),
-            IERC20Metadata(address(issuanceToken)).decimals()
+            depositAmount_, _collateralTokenDecimals, _issuanceTokenDecimals
         );
 
         // Then calculate the token amount using the normalized amount.
-        mintAmount_ = _oracle.getPriceForIssuance() * normalizedAmount_;
+        mintAmount_ = _oracle.getPriceForIssuance() * normalizedAmount_
+            / _issuanceTokenDecimals;
     }
 
     /// @param  depositAmount_ The amount being redeemed.
@@ -653,8 +652,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
 
         // Convert redeem amount to collateral decimals.
         redeemAmount_ = FM_BC_Tools._convertAmountToRequiredDecimal(
-            tokenAmount_, EIGHTEEN_DECIMALS, _collateralTokenDecimals
-        );
+            tokenAmount_, _issuanceTokenDecimals, _collateralTokenDecimals
+        ) / _collateralTokenDecimals;
     }
 
     /// @dev    Sets the issuance token.
