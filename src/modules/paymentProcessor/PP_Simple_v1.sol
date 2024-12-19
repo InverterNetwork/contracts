@@ -196,9 +196,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount) && _validPaymentToken(order.paymentToken)
-            && _validOriginAndDestinationChain(
-                order.originChainId, order.targetChainId
-            );
+            && _validOriginAndTargetChain(order.originChainId, order.targetChainId);
     }
 
     //--------------------------------------------------------------------------
@@ -263,7 +261,7 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         return (success && data.length != 0 && _token.code.length != 0);
     }
 
-    function _validOriginAndDestinationChain(
+    function _validOriginAndTargetChain(
         uint originChainId_,
         uint targetChainId_
     ) internal view returns (bool) {
