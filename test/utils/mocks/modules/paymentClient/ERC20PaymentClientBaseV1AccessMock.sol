@@ -37,7 +37,7 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // IERC20PaymentClientBase_v1 Wrapper Functions
 
-    function addPaymentOrder(PaymentOrder memory order) external {
+    function exposed_addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
     }
 
@@ -60,40 +60,42 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
         );
     }
 
-    function addPaymentOrders(PaymentOrder[] memory orders) external {
+    function exposed_addPaymentOrders(PaymentOrder[] memory orders) external {
         _addPaymentOrders(orders);
     }
 
     // for testing the original functionality of the internal functions I created these placeholders
 
-    function originalEnsureTokenBalance(address token) external {
+    function exposed_ensureTokenBalance(address token) external {
         return _ensureTokenBalance(token);
     }
 
-    function originalEnsureTokenAllowance(
+    function exposed_ensureTokenAllowance(
         IPaymentProcessor_v1 spender,
         address token
     ) external {
         return _ensureTokenAllowance(spender, token);
     }
 
-    function originalIsAuthorizedPaymentProcessor(
+    function exposed_isAuthorizedPaymentProcessor(
         IPaymentProcessor_v1 processor
     ) external view returns (bool) {
         return _isAuthorizedPaymentProcessor(processor);
     }
 
-    function set_outstandingTokenAmount(address token, uint amount) external {
+    function exposed_outstandingTokenAmount(address token, uint amount)
+        external
+    {
         _outstandingTokenAmounts[token] = amount;
     }
 
-    function direct_setFlags(uint8 numOfFlags_, uint8[] memory flags_)
+    function exposed_setFlags(uint8 numOfFlags_, uint8[] memory flags_)
         external
     {
         _setFlags(numOfFlags_, flags_);
     }
 
-    function direct_assemblePaymentConfig(bytes32[] memory flagValues_)
+    function exposed_assemblePaymentConfig(bytes32[] memory flagValues_)
         external
         returns (bytes32 flags_, bytes32[] memory data_)
     {

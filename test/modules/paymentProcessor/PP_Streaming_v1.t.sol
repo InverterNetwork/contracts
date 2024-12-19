@@ -163,7 +163,7 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -257,7 +257,7 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -362,7 +362,7 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -464,7 +464,7 @@ contract PP_StreamingV1Test is ModuleTest {
             uint amount = uint(amounts[i]);
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -571,7 +571,7 @@ contract PP_StreamingV1Test is ModuleTest {
 
         for (uint i; i < length; i++) {
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -691,7 +691,7 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations_1[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipient,
                     address(_token),
@@ -734,7 +734,7 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations_2[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipient,
                     address(_token),
@@ -854,7 +854,7 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipient,
                     address(_token),
@@ -968,7 +968,7 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipient,
                     address(_token),
@@ -1132,7 +1132,7 @@ contract PP_StreamingV1Test is ModuleTest {
         uint duration = 4 weeks;
 
         for (uint i = 0; i < length; ++i) {
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -1303,7 +1303,7 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipient,
                     address(_token),
@@ -1386,7 +1386,7 @@ contract PP_StreamingV1Test is ModuleTest {
             uint amount = amounts[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipient,
                     address(_token),
@@ -1437,7 +1437,7 @@ contract PP_StreamingV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -1599,7 +1599,7 @@ contract PP_StreamingV1Test is ModuleTest {
         blockAddress(recipient);
 
         // Add payment order to client and call processPayments.
-        paymentClient.addPaymentOrder(
+        paymentClient.exposed_addPaymentOrder(
             createPaymentOrder(
                 recipient,
                 address(_token),
@@ -1676,7 +1676,7 @@ contract PP_StreamingV1Test is ModuleTest {
         uint duration = 10 days;
 
         // Add payment order to client and call processPayments.
-        paymentClient.addPaymentOrder(
+        paymentClient.exposed_addPaymentOrder(
             createPaymentOrder(
                 recipient,
                 address(_token),
@@ -1755,7 +1755,7 @@ contract PP_StreamingV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),
@@ -2052,7 +2052,7 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 createPaymentOrder(
                     recipients[i],
                     address(_token),

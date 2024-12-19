@@ -110,7 +110,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(amount != 0);
 
         // Add payment order to client.
-        paymentClient.addPaymentOrder(
+        paymentClient.exposed_addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
                 paymentToken: address(_token),
@@ -304,7 +304,7 @@ contract PP_SimpleV1Test is ModuleTest {
             data[0] = bytes32(block.timestamp);
             data[1] = bytes32(block.timestamp);
 
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
                     paymentToken: address(_token),

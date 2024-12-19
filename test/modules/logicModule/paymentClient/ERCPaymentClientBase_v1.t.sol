@@ -86,7 +86,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     //----------------------------------
-    // Test: addPaymentOrder()
+    // Test: exposed_addPaymentOrder()
 
     function testAddPaymentOrder(
         uint orderAmount,
@@ -116,7 +116,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 order.data
             );
 
-            paymentClient.addPaymentOrder(order);
+            paymentClient.exposed_addPaymentOrder(order);
         }
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -148,7 +148,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                 .selector
         );
-        paymentClient.addPaymentOrder(
+        paymentClient.exposed_addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: address(0),
                 paymentToken: address(_token),
@@ -238,7 +238,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             bytes32(0),
             new bytes32[](0)
         );
-        paymentClient.addPaymentOrders(ordersToAdd);
+        paymentClient.exposed_addPaymentOrders(ordersToAdd);
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
@@ -272,7 +272,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         _token.mint(address(_fundingManager), orderAmount * amount);
 
         for (uint i; i < orderAmount; ++i) {
-            paymentClient.addPaymentOrder(
+            paymentClient.exposed_addPaymentOrder(
                 _createPaymentOrder(address(_token), recipient, amount, end)
             );
         }
@@ -352,7 +352,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAmountPaid(uint preAmount, uint amount) public {
         vm.assume(preAmount >= amount);
 
-        paymentClient.set_outstandingTokenAmount(address(token), preAmount);
+        paymentClient.exposed_outstandingTokenAmount(address(token), preAmount);
 
         vm.prank(address(_paymentProcessor));
         paymentClient.amountPaid(address(token), amount);
@@ -366,7 +366,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAmountPaidModifierInPosition(address caller) public {
         address fundingManagerToken =
             address(_orchestrator.fundingManager().token());
-        paymentClient.set_outstandingTokenAmount(fundingManagerToken, 1);
+        paymentClient.exposed_outstandingTokenAmount(fundingManagerToken, 1);
 
         if (caller != address(_paymentProcessor)) {
             vm.expectRevert(
@@ -396,12 +396,12 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             address(_token), address(0xA11CE), amountRequired, block.timestamp
         );
 
-        paymentClient.addPaymentOrder(order);
+        paymentClient.exposed_addPaymentOrder(order);
 
         _orchestrator.setInterceptData(true);
 
         if (currentFunds > amountRequired) {
-            paymentClient.originalEnsureTokenBalance(address(_token));
+            paymentClient.exposed_ensureTokenBalance(address(_token));
         } else if (
             _token.balanceOf(address(_fundingManager))
                 < order.amount - _token.balanceOf(address(paymentClient))
@@ -415,7 +415,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     order.amount - _token.balanceOf(address(paymentClient))
                 )
             );
-            paymentClient.originalEnsureTokenBalance(address(_token));
+            paymentClient.exposed_ensureTokenBalance(address(_token));
         }
     }
 
@@ -437,10 +437,10 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         _createPaymentOrder(
             address(_token), address(0xA11CE), firstAmount, block.timestamp
         );
-        paymentClient.addPaymentOrder(order);
+        paymentClient.exposed_addPaymentOrder(order);
 
         // test ensureTokenAllowance
-        paymentClient.originalEnsureTokenAllowance(
+        paymentClient.exposed_ensureTokenAllowance(
             _paymentProcessor, address(_token)
         );
 
@@ -453,10 +453,10 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         order = _createPaymentOrder(
             address(_token), address(0xA11CE), secondAmount, block.timestamp
         );
-        paymentClient.addPaymentOrder(order);
+        paymentClient.exposed_addPaymentOrder(order);
 
         // test ensureTokenAllowance now accounts for both
-        paymentClient.originalEnsureTokenAllowance(
+        paymentClient.exposed_ensureTokenAllowance(
             _paymentProcessor, address(_token)
         );
 
@@ -467,7 +467,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     function testIsAuthorizedPaymentProcessor(address addr) public {
-        bool isAuthorized = paymentClient.originalIsAuthorizedPaymentProcessor(
+        bool isAuthorized = paymentClient.exposed_isAuthorizedPaymentProcessor(
             IPaymentProcessor_v1(addr)
         );
 
@@ -487,7 +487,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             flags[i] = uint8(i);
         }
 
-        paymentClient.direct_setFlags(numOfFlags_, flags);
+        paymentClient.exposed_setFlags(numOfFlags_, flags);
 
         assertEq(paymentClient.getAmountOfFlags(), numOfFlags_);
         assertEq(
@@ -511,7 +511,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             )
         );
 
-        paymentClient.direct_assemblePaymentConfig(flagValues);
+        paymentClient.exposed_assemblePaymentConfig(flagValues);
     }
 
     function test_assemblePaymentConfig(bytes32[] memory randValues) public {
@@ -522,7 +522,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         }
 
         (bytes32 ret_flags, bytes32[] memory ret_FlagValues) =
-            paymentClient.direct_assemblePaymentConfig(flagValues);
+            paymentClient.exposed_assemblePaymentConfig(flagValues);
 
         assertEq(numOfFlags, ret_FlagValues.length);
         assertEq(ret_flags, paymentClient.getFlags());
