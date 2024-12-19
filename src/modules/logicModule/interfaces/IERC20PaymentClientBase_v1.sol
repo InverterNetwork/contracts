@@ -49,12 +49,14 @@ interface IERC20PaymentClientBase_v1 {
 
     /// @notice Struct used to store information about a payment order.
     /// @param  recipient The recipient of the payment.
-    /// @param  paymentToken The token in which to pay. Assumed to always be on the local chain_id.
+    /// @param  paymentToken The token in which to pay. Assumed to always 
+    ///         be on the local chain.
     /// @param  amount The amount of tokens to pay.
-    /// @param  originChainId The chain id of the origin.
-    /// @param  targetChainId The chain id on which to find the recipient address.
-    /// @param  flags Flags that contain information on the information contained in the data array.
-    /// @param  data Array of bytes32 that contain information on the payment order.
+    /// @param  originChainId The id of the origin chain.
+    /// @param  targetChainId The id of the target chain.
+    /// @param  flags Flags that indicate which information the data array
+    ///         contains.
+    /// @param  data Array of additional data regarding the payment order.
     struct PaymentOrder {
         address recipient;
         address paymentToken;
@@ -95,7 +97,7 @@ interface IERC20PaymentClientBase_v1 {
         uint8 numOfFlags, uint arrayLength
     );
 
-    /// @notice Given number of flags exceeds limit
+    /// @notice Given number of flags exceeds the limit.
     error Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
 
     //--------------------------------------------------------------------------
@@ -105,10 +107,11 @@ interface IERC20PaymentClientBase_v1 {
     /// @param  recipient The address that will receive the payment.
     /// @param  token The token in which to pay.
     /// @param  amount The amount of tokens the payment consists of.
-    /// @param  originChainId The chain id the order originates from.
-    /// @param  targetChainId The chain id to which the payment order will be sent.
-    /// @param  flags List of flags that are employed by the payment order.
-    /// @param  data Array of bytes32 that contain the values for the payment order's used flags.
+    /// @param  originChainId The id of the origin chain.
+    /// @param  targetChainId The id of the target chain.
+    /// @param  flags Flags that indicate additional data used by the payment
+    ///         order.
+    /// @param  data Array of additional data regarding the payment order.
     event PaymentOrderAdded(
         address indexed recipient,
         address indexed token,
@@ -120,8 +123,8 @@ interface IERC20PaymentClientBase_v1 {
     );
 
     /// @notice Emitted when the flags are set.
-    /// @param numOfFlags The number of flags.
-    /// @param newFlags The flags.
+    /// @param  numOfFlags The number of flags set.
+    /// @param  newFlags The newly set flags.
     event FlagsSet(uint8 numOfFlags, bytes32 newFlags);
 
     //--------------------------------------------------------------------------
@@ -159,7 +162,8 @@ interface IERC20PaymentClientBase_v1 {
     /// @param  amount_ amount of tokens that have been paid out.
     function amountPaid(address token_, uint amount_) external;
 
-    /// @notice Returns the number of flags and the flags of the PaymentOrders this client will create.
+    /// @notice Returns the flags used when creating payment orders in this
+    ///         client.
     /// @return flags_ The flags this client will use.
     function getFlags() external view returns (bytes32 flags_);
 

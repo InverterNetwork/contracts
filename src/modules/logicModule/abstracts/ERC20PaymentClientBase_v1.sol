@@ -86,10 +86,11 @@ abstract contract ERC20PaymentClientBase_v1 is
     /// @dev	The current cumulative amount of tokens outstanding.
     mapping(address => uint) internal _outstandingTokenAmounts;
 
-    /// @dev    Number of Payment Processor flags.
+    /// @dev    The number of payment processor flags used by this payment
+    ///         client.
     uint8 internal _numOfFlags;
 
-    /// @dev    Payment processor flags.
+    /// @dev    The payment processor flags used by this payment client.
     bytes32 internal _flags;
 
     /// @dev	Storage gap for future upgrades.
@@ -99,7 +100,8 @@ abstract contract ERC20PaymentClientBase_v1 is
     // Internal Mutating Functions
 
     /// @dev	Initializes the staking contract.
-    /// @param  flags_ The flags, represented as an array of uint8 containing the flag IDs between 0 and 255
+    /// @param  flags_ The flags, represented as an array of uint8 containing
+    ///         the flag IDs between 0 and 255.
     function __ERC20PaymentClientBase_v1_init(uint8[] memory flags_)
         internal
         onlyInitializing
@@ -148,7 +150,8 @@ abstract contract ERC20PaymentClientBase_v1 is
 
     /// @dev    Sets the flags for the PaymentOrders.
     /// @param  numOfFlags_ The number of flags.
-    /// @param  flags_ The flags, represented as an array of uint8 containing the flag IDs between 0 and 255
+    /// @param  flags_ The flags, represented as an array of uint8 containing 
+    ///         the flag IDs between 0 and 255.
     function _setFlags(uint8 numOfFlags_, uint8[] memory flags_)
         internal
         virtual
@@ -367,7 +370,8 @@ abstract contract ERC20PaymentClientBase_v1 is
         return __Module_orchestrator.paymentProcessor() == who;
     }
 
-    // @dev	Returns the payment configuration from a list of supplied flag values. Can be overriden to add additional validation steps
+    /// @dev	Returns the payment configuration from a list of supplied flag
+    ///         values. Can be overriden to add additional validation steps.
     function _assemblePaymentConfig(bytes32[] memory flagValues_)
         internal
         view

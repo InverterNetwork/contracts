@@ -275,7 +275,8 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         bytes memory
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
-        __ERC20PaymentClientBase_v1_init(new uint8[](0)); // This module does not use any PaymentOrder flags
+        // This module does not use any PaymentOrder flags.
+        __ERC20PaymentClientBase_v1_init(new uint8[](0)); 
         // init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();

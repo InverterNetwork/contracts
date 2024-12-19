@@ -31,10 +31,11 @@ interface IPaymentProcessor_v1 {
     /// @param  recipient The address that will receive the payment.
     /// @param  paymentToken The address of the token that will be used for the payment.
     /// @param  amount The amount of tokens the payment consists of.
-    /// @param  originChainId The chain id of the origin.
-    /// @param  targetChainId The chain id on which to find the recipient address.
-    /// @param  flags Flags that contain information on the information contained in the data array.
-    /// @param  data Array of bytes32 that contain information on the payment order.
+    /// @param  originChainId The id of the origin chain.
+    /// @param  targetChainId The id of the target chain.
+    /// @param  flags Flags that indicate additional data used by the payment
+    ///         order.
+    /// @param  data Array of additional data regarding the payment order.
     event PaymentOrderProcessed(
         address indexed paymentClient,
         address indexed recipient,

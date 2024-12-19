@@ -265,10 +265,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
 
     function _validOriginAndDestinationChain(
         uint originChainId_,
-        uint tartgetChainId_
+        uint targetChainId_
     ) internal view returns (bool) {
         return (
-            (originChainId_ == tartgetChainId_)
+            (originChainId_ == targetChainId_)
                 && (originChainId_ == block.chainid)
         );
     }

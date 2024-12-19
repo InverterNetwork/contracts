@@ -132,9 +132,9 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         address paymentClient, address paymentReceiver
     );
 
-    /// @notice the default start, cliff and end times are invalid.
+    /// @notice The default start, cliff and end times are invalid.
     /// @param  start The start time.
-    /// @param  cliff The cliff time.
+    /// @param  cliff The cliff duration.
     /// @param  end The end time.
     error Module__PP_Streaming__InvalidDefaultTimes(
         uint start, uint cliff, uint end
