@@ -140,7 +140,6 @@ contract LM_PC_RecurringPayments_v1 is
         emit EpochLengthSet(newEpochLength);
 
         // Set the flags for the PaymentOrders
-        // Set the flags for the PaymentOrders
         uint8[] memory flags = new uint8[](2); // The Module will use 2 flags
         flags[0] = 1; // start, flag_ID 1
         flags[1] = 3; // end, flag_ID 3
