@@ -99,7 +99,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
     // This function also tests all the getters
     function testInit() public override(ModuleTest) {
-        assertEq(bountyManager.getAmountOfFlags(), 0);
+        assertEq(bountyManager.getFlagCount(), 0);
         assertEq(bountyManager.getFlags(), 0);
     }
 

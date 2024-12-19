@@ -98,7 +98,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
 
-        assertEq(recurringPaymentManager.getAmountOfFlags(), 2);
+        assertEq(recurringPaymentManager.getFlagCount(), 2);
         bytes32 _START_END_FLAG =
             0x000000000000000000000000000000000000000000000000000000000000000a;
         assertEq(recurringPaymentManager.getFlags(), _START_END_FLAG);

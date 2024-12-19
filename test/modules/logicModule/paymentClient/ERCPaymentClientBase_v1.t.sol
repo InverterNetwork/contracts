@@ -478,18 +478,18 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         }
     }
 
-    function test_setFlags(uint8 numOfFlags_) public {
+    function test_setFlags(uint8 flagCount_) public {
         bytes32 newFlags = 0;
-        uint8[] memory flags = new uint8[](numOfFlags_);
+        uint8[] memory flags = new uint8[](flagCount_);
 
-        for (uint i = 0; i < numOfFlags_; i++) {
+        for (uint i = 0; i < flagCount_; i++) {
             newFlags |= bytes32((1 << i));
             flags[i] = uint8(i);
         }
 
-        paymentClient.exposed_setFlags(numOfFlags_, flags);
+        paymentClient.exposed_setFlags(flagCount_, flags);
 
-        assertEq(paymentClient.getAmountOfFlags(), numOfFlags_);
+        assertEq(paymentClient.getFlagCount(), flagCount_);
         assertEq(
             abi.encodePacked(paymentClient.getFlags()),
             abi.encodePacked(newFlags)
@@ -499,14 +499,14 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function test_assemblePaymentConfig_FailsIfAmountOfFlagsIsIncorrect(
         bytes32[] memory flagValues
     ) public {
-        vm.assume(flagValues.length != paymentClient.getAmountOfFlags());
+        vm.assume(flagValues.length != paymentClient.getFlagCount());
 
         vm.expectRevert(
             abi.encodeWithSelector(
                 IERC20PaymentClientBase_v1
                     .Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength
                     .selector,
-                paymentClient.getAmountOfFlags(),
+                paymentClient.getFlagCount(),
                 flagValues.length
             )
         );
@@ -515,16 +515,16 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     function test_assemblePaymentConfig(bytes32[] memory randValues) public {
-        uint8 numOfFlags = paymentClient.getAmountOfFlags();
-        bytes32[] memory flagValues = new bytes32[](numOfFlags);
-        for (uint8 i; i < numOfFlags; ++i) {
+        uint8 flagCount = paymentClient.getFlagCount();
+        bytes32[] memory flagValues = new bytes32[](flagCount);
+        for (uint8 i; i < flagCount; ++i) {
             flagValues[i] = randValues[randValues.length % i];
         }
 
         (bytes32 ret_flags, bytes32[] memory ret_FlagValues) =
             paymentClient.exposed_assemblePaymentConfig(flagValues);
 
-        assertEq(numOfFlags, ret_FlagValues.length);
+        assertEq(flagCount, ret_FlagValues.length);
         assertEq(ret_flags, paymentClient.getFlags());
         for (uint8 i; i < ret_FlagValues.length; ++i) {
             assertEq(ret_FlagValues[i], flagValues[i]);

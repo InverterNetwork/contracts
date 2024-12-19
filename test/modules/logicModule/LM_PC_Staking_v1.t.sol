@@ -76,7 +76,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     // This function also tests all the getters
     function testInit() public override(ModuleTest) {
         assertEq(address(stakingToken), stakingManager.getStakingToken());
-        assertEq(stakingManager.getAmountOfFlags(), 0);
+        assertEq(stakingManager.getFlagCount(), 0);
         assertEq(stakingManager.getFlags(), 0);
     }
 

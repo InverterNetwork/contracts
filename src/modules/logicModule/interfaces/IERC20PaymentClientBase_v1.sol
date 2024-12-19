@@ -49,7 +49,7 @@ interface IERC20PaymentClientBase_v1 {
 
     /// @notice Struct used to store information about a payment order.
     /// @param  recipient The recipient of the payment.
-    /// @param  paymentToken The token in which to pay. Assumed to always 
+    /// @param  paymentToken The token in which to pay. Assumed to always
     ///         be on the local chain.
     /// @param  amount The amount of tokens to pay.
     /// @param  originChainId The id of the origin chain.
@@ -94,7 +94,7 @@ interface IERC20PaymentClientBase_v1 {
 
     /// @notice Given mismatch between flag count and supplied array length.
     error Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
-        uint8 numOfFlags, uint arrayLength
+        uint8 flagCount, uint arrayLength
     );
 
     /// @notice Given number of flags exceeds the limit.
@@ -123,9 +123,9 @@ interface IERC20PaymentClientBase_v1 {
     );
 
     /// @notice Emitted when the flags are set.
-    /// @param  numOfFlags The number of flags set.
+    /// @param  flagCount The number of flags set.
     /// @param  newFlags The newly set flags.
-    event FlagsSet(uint8 numOfFlags, bytes32 newFlags);
+    event FlagsSet(uint8 flagCount, bytes32 newFlags);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -168,6 +168,6 @@ interface IERC20PaymentClientBase_v1 {
     function getFlags() external view returns (bytes32 flags_);
 
     /// @notice Returns the number of flags this client uses for PaymentOrders.
-    /// @return numOfFlags_ The number of flags.
-    function getAmountOfFlags() external view returns (uint8 numOfFlags_);
+    /// @return flagCount_ The number of flags.
+    function getFlagCount() external view returns (uint8 flagCount_);
 }

@@ -88,7 +88,7 @@ abstract contract ERC20PaymentClientBase_v1 is
 
     /// @dev    The number of payment processor flags used by this payment
     ///         client.
-    uint8 internal _numOfFlags;
+    uint8 internal _flagCount;
 
     /// @dev    The payment processor flags used by this payment client.
     bytes32 internal _flags;
@@ -149,28 +149,28 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @dev    Sets the flags for the PaymentOrders.
-    /// @param  numOfFlags_ The number of flags.
-    /// @param  flags_ The flags, represented as an array of uint8 containing 
+    /// @param  flagCount_ The number of flags.
+    /// @param  flags_ The flags, represented as an array of uint8 containing
     ///         the flag IDs between 0 and 255.
-    function _setFlags(uint8 numOfFlags_, uint8[] memory flags_)
+    function _setFlags(uint8 flagCount_, uint8[] memory flags_)
         internal
         virtual
     {
-        if (numOfFlags_ != flags_.length) {
+        if (flagCount_ != flags_.length) {
             revert
                 Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
-                numOfFlags_, flags_.length
+                flagCount_, flags_.length
             );
         }
 
-        _numOfFlags = numOfFlags_;
+        _flagCount = flagCount_;
 
         _flags = 0;
-        for (uint8 i = 0; i < numOfFlags_; i++) {
+        for (uint8 i = 0; i < flagCount_; i++) {
             _flags |= bytes32((1 << flags_[i]));
         }
 
-        emit FlagsSet(_numOfFlags, _flags);
+        emit FlagsSet(flagCount_, _flags);
     }
 
     //--------------------------------------------------------------------------
@@ -284,8 +284,8 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function getAmountOfFlags() public view returns (uint8 numOfFlags_) {
-        return _numOfFlags;
+    function getFlagCount() public view returns (uint8 flagCount_) {
+        return _flagCount;
     }
 
     //--------------------------------------------------------------------------
@@ -378,10 +378,10 @@ abstract contract ERC20PaymentClientBase_v1 is
         virtual
         returns (bytes32 flags_, bytes32[] memory data_)
     {
-        if (_numOfFlags != flagValues_.length) {
+        if (_flagCount != flagValues_.length) {
             revert
                 Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
-                _numOfFlags, flagValues_.length
+                _flagCount, flagValues_.length
             );
         }
 
