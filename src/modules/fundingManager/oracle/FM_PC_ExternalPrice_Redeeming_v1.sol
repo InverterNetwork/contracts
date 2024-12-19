@@ -636,7 +636,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
 
         // Then calculate the token amount using the normalized amount.
         mintAmount_ = _oracle.getPriceForIssuance() * normalizedAmount_
-            / _issuanceTokenDecimals;
+            / (10 ** _issuanceTokenDecimals);
     }
 
     /// @param  depositAmount_ The amount being redeemed.
@@ -653,7 +653,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
         // Convert redeem amount to collateral decimals.
         redeemAmount_ = FM_BC_Tools._convertAmountToRequiredDecimal(
             tokenAmount_, _issuanceTokenDecimals, _collateralTokenDecimals
-        ) / _collateralTokenDecimals;
+        ) / (10 ** _collateralTokenDecimals);
     }
 
     /// @dev    Sets the issuance token.
