@@ -113,6 +113,13 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
         RedemptionState state_
     );
 
+    /// @notice	Emitted when the open redemption amount is updated.
+    /// @param  redemptionAmount The new open redemption amount.
+    /// @param	timestamp The timestamp when the update was made.
+    event RedemptionAmountUpdated(
+        uint indexed redemptionAmount, uint indexed timestamp
+    );
+
     // -------------------------------------------------------------------------
     // View Functions
 
@@ -177,4 +184,9 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @notice Toggles whether the contract only allows direct operations or not.
     /// @param  isDirectOperationsOnly_ The new value for the flag.
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_) external;
+
+    /// @notice Deducts the processed redeem amount from the open redemption amount.
+    /// @param  processedRedemptionAmount_ The amount of redemption tokens that were processed.
+    function deductProcessedRedeemptionAmount(uint processedRedemptionAmount_)
+        external;
 }

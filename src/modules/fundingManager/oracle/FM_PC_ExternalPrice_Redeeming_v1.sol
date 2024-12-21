@@ -351,6 +351,14 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
+    /// @inheritdoc IFM_PC_ExternalPrice_Redeeming_v1
+    function deductProcessedRedeemptionAmount(uint processedRedemptionAmount_)
+        external
+        onlyPaymentClient
+    {
+        _deductFromOpenRedemptionAmount(processedRedemptionAmount_);
+    }
+
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function setSellFee(uint fee_)
         public
@@ -457,7 +465,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
         _orderId = _nextOrderId++;
 
         // Update open redemption amount.
-        _openRedemptionAmount += collateralRedeemAmount_;
+        _addToOpenRedemptionAmount(collateralRedeemAmount_);
 
         // Calculate redemption amount.
         uint redemptionAmount_ = collateralRedeemAmount_ - issuanceFeeAmount_;
@@ -698,6 +706,24 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
             );
         }
         _projectTreasury = projectTreasury_;
+    }
+
+    /// @notice Deducts the amount of redeemed tokens from the open redemption amount.
+    /// @param  processedRedemptionAmount_ The amount of redemption tokens that were processed.
+    function _deductFromOpenRedemptionAmount(uint processedRedemptionAmount_)
+        internal
+    {
+        _openRedemptionAmount -= processedRedemptionAmount_;
+        emit RedemptionAmountUpdated(_openRedemptionAmount, block.timestamp);
+    }
+
+    /// @notice Adds the amount of redeemed tokens to the open redemption amount.
+    /// @param  addedOpenRedemptionAmount_ The amount of redeemed tokens to add.
+    function _addToOpenRedemptionAmount(uint addedOpenRedemptionAmount_)
+        internal
+    {
+        _openRedemptionAmount += addedOpenRedemptionAmount_;
+        emit RedemptionAmountUpdated(_openRedemptionAmount, block.timestamp);
     }
 
     /// @inheritdoc BondingCurveBase_v1
