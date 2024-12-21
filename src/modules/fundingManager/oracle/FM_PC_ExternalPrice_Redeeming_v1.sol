@@ -352,7 +352,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
     }
 
     /// @inheritdoc IFM_PC_ExternalPrice_Redeeming_v1
-    function deductProcessedRedeemptionAmount(uint processedRedemptionAmount_)
+    function deductProcessedRedemptionAmount(uint processedRedemptionAmount_)
         external
         onlyPaymentClient
     {
@@ -708,8 +708,10 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
         _projectTreasury = projectTreasury_;
     }
 
-    /// @notice Deducts the amount of redeemed tokens from the open redemption amount.
-    /// @param  processedRedemptionAmount_ The amount of redemption tokens that were processed.
+    /// @notice Deducts the amount of redeemed tokens from the open redemption
+    ///         amount.
+    /// @param  processedRedemptionAmount_ The amount of redemption tokens that
+    ///         were processed.
     function _deductFromOpenRedemptionAmount(uint processedRedemptionAmount_)
         internal
     {
@@ -717,7 +719,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1 is
         emit RedemptionAmountUpdated(_openRedemptionAmount, block.timestamp);
     }
 
-    /// @notice Adds the amount of redeemed tokens to the open redemption amount.
+    /// @notice Adds the amount of redeemed tokens to the open redemption
+    ///         amount.
     /// @param  addedOpenRedemptionAmount_ The amount of redeemed tokens to add.
     function _addToOpenRedemptionAmount(uint addedOpenRedemptionAmount_)
         internal

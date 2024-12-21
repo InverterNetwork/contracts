@@ -185,8 +185,10 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @param  isDirectOperationsOnly_ The new value for the flag.
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_) external;
 
-    /// @notice Deducts the processed redeem amount from the open redemption amount.
-    /// @param  processedRedemptionAmount_ The amount of redemption tokens that were processed.
-    function deductProcessedRedeemptionAmount(uint processedRedemptionAmount_)
+    /// @notice Deducts the processed redeem amount from the open redemption
+    ///         amount.
+    /// @param  processedRedemptionAmount_ The amount of redemption tokens that
+    ///         were processed.
+    function deductProcessedRedemptionAmount(uint processedRedemptionAmount_)
         external;
 }
