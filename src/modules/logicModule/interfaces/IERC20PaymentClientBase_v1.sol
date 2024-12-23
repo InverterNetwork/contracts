@@ -42,23 +42,13 @@ interface IERC20PaymentClientBase_v1 {
     /*
     | Flag | Variable type | Name       | Description                         |
     |------|---------------|------------|-------------------------------------|
-    | 0    | bytes32       | orderID    | ID of the order.                    |
+    | 0    | uint256       | orderID    | ID of the order within the client.  |
     | 1    | uint256       | start      | Start date of the streaming period. | 
     | 2    | uint256       | cliff      | Duration of the cliff period.       |
     | 3    | uint256       | end        | Due Date of the order               |
     | ...  | ...           | ...        | (yet unassigned)                    |
     | 255  | .             | .          | (Max Value).                        | 
     |------|---------------|------------|-------------------------------------|
-    */
-
-    /*
-    | Flag | Name       | Disclaimer                                          |
-    |------|------------|-----------------------------------------------------|
-    | 0    | orderID    | The order id should be a hashed value of an         |
-    |      |            | internally tracked id and the paymentOrder origin   |
-    |      |            | address, to prevent duplicate order ids from        |
-    |      |            | different ERC20PaymentClients.                      |
-    |------|------------|-----------------------------------------------------|
     */
 
     //--------------------------------------------------------------------------
