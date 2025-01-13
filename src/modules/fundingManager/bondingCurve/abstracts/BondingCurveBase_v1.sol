@@ -418,7 +418,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
             // mint fee amount
             _mint(_treasury, _feeAmount);
-            emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
+            emit ProtocolFeeMinted(
+                address(issuanceToken), _treasury, _feeAmount
+            );
         }
     }
 
