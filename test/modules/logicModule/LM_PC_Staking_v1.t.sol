@@ -75,7 +75,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
     // This function also tests all the getters
     function testInit() public override(ModuleTest) {
-        assertEq(address(stakingToken), stakingManager.stakingToken());
+        assertEq(address(stakingToken), stakingManager.getStakingToken());
+        assertEq(stakingManager.getFlagCount(), 0);
+        assertEq(stakingManager.getFlags(), 0);
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -121,11 +123,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Set up reasonable stakers
         setUpReasonableStakers(seed);
 
-        address user = address(uint160(1)); // Addresslikely to have stake in setUpReasonableStakers()
+        address user = address(uint160(1)); // Address likely to have stake in setUpReasonableStakers()
         uint providedRewardValue = stakingManager.direct_calculateRewardValue();
-        uint userRewardValue = stakingManager.getRewards(user);
-        uint userBalance = stakingManager.balanceOf(user);
-        uint previousUserRewards = stakingManager.getRewards(user);
+        uint userRewardValue = stakingManager.getUserRewardValue(user);
+        uint userBalance = stakingManager.getBalance(user);
+        uint previousUserRewards = stakingManager.getUserRewards(user);
 
         uint calculatedEarnings = calculateEarned(
             providedRewardValue,
@@ -134,7 +136,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             previousUserRewards
         );
 
-        assertEq(calculatedEarnings, stakingManager.earned(user));
+        assertEq(calculatedEarnings, stakingManager.getEarned(user));
     }
 
     function testEstimateReward(
@@ -158,19 +160,19 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // There is a chance that the warp is higher than the reward period
         vm.warp(bound(warp, 0, 35 days));
 
-        uint rewardRate = stakingManager.rewardRate();
-        uint totalSupply = stakingManager.totalSupply();
+        uint rewardRate = stakingManager.getRewardRate();
+        uint totalSupply = stakingManager.getTotalSupply();
 
-        if (block.timestamp > stakingManager.rewardsEnd()) {
+        if (block.timestamp > stakingManager.getRewardsEnd()) {
             // Assume that calculated reward is 0
-            assertEq(0, stakingManager.estimateReward(amount, duration));
+            assertEq(0, stakingManager.getEstimatedReward(amount, duration));
         } else {
             uint calculatedEstimation;
 
             // If duration went over rewardsend
-            if (block.timestamp + duration > stakingManager.rewardsEnd()) {
+            if (block.timestamp + duration > stakingManager.getRewardsEnd()) {
                 // Change duration so that it goes until rewardsend
-                duration = stakingManager.rewardsEnd() - block.timestamp;
+                duration = stakingManager.getRewardsEnd() - block.timestamp;
             }
 
             if (totalSupply == 0) {
@@ -182,7 +184,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
             assertEq(
                 calculatedEstimation,
-                stakingManager.estimateReward(amount, duration)
+                stakingManager.getEstimatedReward(amount, duration)
             );
         }
     }
@@ -195,14 +197,14 @@ contract LM_PC_Staking_v1Test is ModuleTest {
                 .selector
         );
 
-        stakingManager.estimateReward(0, 1);
+        stakingManager.getEstimatedReward(0, 1);
 
         // validDuration
         vm.expectRevert(
             ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
         );
 
-        stakingManager.estimateReward(1, 0);
+        stakingManager.getEstimatedReward(1, 0);
     }
 
     //--------------------------------------------------------------------------
@@ -240,9 +242,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         vm.prank(staker);
         stakingToken.approve(address(stakingManager), stakeAmount);
 
-        uint prevTotalAmount = stakingManager.totalSupply();
-        uint prevBalance = stakingManager.balanceOf(staker);
-        uint expectedEarnings = stakingManager.earned(staker);
+        uint prevTotalAmount = stakingManager.getTotalSupply();
+        uint prevBalance = stakingManager.getBalance(staker);
+        uint expectedEarnings = stakingManager.getEarned(staker);
 
         vm.expectEmit(true, true, true, true);
         emit Staked(staker, stakeAmount);
@@ -255,11 +257,11 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
 
-        assertEq(prevBalance + stakeAmount, stakingManager.balanceOf(staker));
-        assertEq(prevTotalAmount + stakeAmount, stakingManager.totalSupply());
+        assertEq(prevBalance + stakeAmount, stakingManager.getBalance(staker));
+        assertEq(prevTotalAmount + stakeAmount, stakingManager.getTotalSupply());
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
-            stakingManager.totalSupply()
+            stakingManager.getTotalSupply()
         );
     }
 
@@ -337,9 +339,9 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
-        uint prevTotalAmount = stakingManager.totalSupply();
-        uint prevBalance = stakingManager.balanceOf(staker);
-        uint expectedEarnings = stakingManager.earned(staker);
+        uint prevTotalAmount = stakingManager.getTotalSupply();
+        uint prevBalance = stakingManager.getBalance(staker);
+        uint expectedEarnings = stakingManager.getEarned(staker);
 
         vm.expectEmit(true, true, true, true);
         emit Unstaked(staker, unstakeAmount);
@@ -353,11 +355,13 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             assertEq(expectedEarnings, stakingManager.paymentOrders()[0].amount);
         }
 
-        assertEq(prevBalance - unstakeAmount, stakingManager.balanceOf(staker));
-        assertEq(prevTotalAmount - unstakeAmount, stakingManager.totalSupply());
+        assertEq(prevBalance - unstakeAmount, stakingManager.getBalance(staker));
+        assertEq(
+            prevTotalAmount - unstakeAmount, stakingManager.getTotalSupply()
+        );
         assertEq(
             stakingToken.balanceOf(address(stakingManager)),
-            stakingManager.totalSupply()
+            stakingManager.getTotalSupply()
         );
     }
 
@@ -453,8 +457,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.setRewards(amount, duration);
 
-        assertEq(expectedRewardRate, stakingManager.rewardRate());
-        assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
+        assertEq(expectedRewardRate, stakingManager.getRewardRate());
+        assertEq(expectedRewardsEnd, stakingManager.getRewardsEnd());
 
         // Test when rewards were already set
 
@@ -484,8 +488,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         stakingManager.setRewards(secondAmount, secondDuration);
 
-        assertEq(expectedRewardRate, stakingManager.rewardRate());
-        assertEq(expectedRewardsEnd, stakingManager.rewardsEnd());
+        assertEq(expectedRewardRate, stakingManager.getRewardRate());
+        assertEq(expectedRewardsEnd, stakingManager.getRewardsEnd());
     }
 
     function testSetRewardsModifierInPosition() public {
@@ -532,8 +536,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         uint expectedRewards;
         uint expectedUserRewardValue;
         if (trigger != address(0)) {
-            expectedRewards = stakingManager.getRewards(trigger)
-                + stakingManager.earned(trigger);
+            expectedRewards = stakingManager.getEarned(trigger)
+                + stakingManager.getUserRewards(trigger);
 
             expectedUserRewardValue =
                 stakingManager.direct_calculateRewardValue();
@@ -553,7 +557,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(stakingManager.getLastUpdate(), stakingManager.getLastUpdate());
 
         if (trigger != address(0)) {
-            assertEq(expectedRewards, stakingManager.getRewards(trigger));
+            assertEq(expectedRewards, stakingManager.getUserRewards(trigger));
             assertEq(
                 expectedUserRewardValue,
                 stakingManager.getUserRewardValue(trigger)
@@ -568,8 +572,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         uint rewardDistributionTimestamp =
             stakingManager.direct_getRewardDistributionTimestamp();
         uint lastUpdate = stakingManager.getLastUpdate();
-        uint rewardRate = stakingManager.rewardRate();
-        uint totalSupply = stakingManager.totalSupply();
+        uint rewardRate = stakingManager.getRewardRate();
+        uint totalSupply = stakingManager.getTotalSupply();
         uint rewardValue = stakingManager.getRewardValue();
 
         uint calculatedRewardValue = calculateRewardValue(
@@ -630,7 +634,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         // Warp the chain by a reasonable amount
         vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
 
-        uint expectedPayout = stakingManager.earned(user);
+        uint expectedPayout = stakingManager.getEarned(user);
 
         // For earned to work update had to be triggered
         stakingManager.direct_update(user);
@@ -641,7 +645,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         stakingManager.direct_distributeRewards(user);
 
         // rewards are reset
-        assertEq(0, stakingManager.getRewards(user));
+        assertEq(0, stakingManager.getUserRewards(user));
 
         // Expect paymentOrder to be correct
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -650,8 +654,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(1, orders.length);
         assertEq(user, orders[0].recipient);
         assertEq(expectedPayout, orders[0].amount);
-        assertEq(block.timestamp, orders[0].start);
-        assertEq(block.timestamp, orders[0].end);
+        assertEq(orders[0].flags, 0);
+        assertEq(orders[0].data.length, 0);
 
         // Make sure payment Processor was triggered
         assertEq(1, _paymentProcessor.processPaymentsTriggered());

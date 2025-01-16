@@ -79,14 +79,13 @@ contract LM_PC_KPIRewarder_v1 is
 
     // KPI and Configuration Storage
     /// @dev	The number of KPIs created.
-    uint public KPICounter;
+    uint internal KPICounter;
     /// @dev	Registry of KPIsid -> KPI.
-    mapping(uint => KPI) public registryOfKPIs;
+    mapping(uint => KPI) internal registryOfKPIs;
     /// @dev	Registry of Assertion Configurations assertionId -> RewardRoundConfiguration.
-    mapping(bytes32 => RewardRoundConfiguration) public assertionConfig;
-
+    mapping(bytes32 => RewardRoundConfiguration) internal assertionConfig;
     /// @dev	 For locking certain utilities when there are assertions open.
-    bool public assertionPending;
+    bool internal assertionPending;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -136,17 +135,27 @@ contract LM_PC_KPIRewarder_v1 is
     // View functions
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
-    function getKPI(uint KPInum) public view returns (KPI memory) {
+    function getKPI(uint KPInum) external view returns (KPI memory) {
         return registryOfKPIs[KPInum];
     }
 
     /// @inheritdoc ILM_PC_KPIRewarder_v1
     function getAssertionConfig(bytes32 assertionId)
-        public
+        external
         view
         returns (RewardRoundConfiguration memory)
     {
         return assertionConfig[assertionId];
+    }
+
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
+    function getKPICounter() external view returns (uint) {
+        return KPICounter;
+    }
+
+    /// @inheritdoc ILM_PC_KPIRewarder_v1
+    function getAssertionPending() external view returns (bool) {
+        return assertionPending;
     }
 
     // ========================================================================

@@ -39,6 +39,11 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     uint epochLength = 1 weeks; // 1 week;
     uint epochsAmount = 10;
 
+    // Default values for the streaming payments
+    uint defaultStart = 10;
+    uint defaultCliff = 5;
+    uint defaultEnd = 30;
+
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
     FM_Rebasing_v1 fundingManager;
@@ -77,7 +82,8 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         setUpStreamingPaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                streamingPaymentProcessorMetadata, bytes("")
+                streamingPaymentProcessorMetadata,
+                abi.encode(defaultStart, defaultCliff, defaultEnd)
             )
         );
 

@@ -61,6 +61,24 @@ contract LM_PC_PaymentRouter_v1 is
     bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER";
 
     //--------------------------------------------------------------------------
+    // Initializer
+    function init(
+        IOrchestrator_v1 orchestrator_,
+        Metadata memory metadata,
+        bytes memory configData
+    ) external override(Module_v1) initializer {
+        __Module_init(orchestrator_, metadata);
+
+        // Set the flags for the PaymentOrders
+        uint8[] memory flags = new uint8[](3); // The Module will use 3 flags
+        flags[0] = 1; // start, flag_ID 1
+        flags[1] = 2; // cliff, flag_ID 2
+        flags[2] = 3; // end, flag_ID 3
+
+        __ERC20PaymentClientBase_v1_init(flags);
+    }
+
+    //--------------------------------------------------------------------------
     // Mutating Functions
 
     /// @inheritdoc ILM_PC_PaymentRouter_v1
@@ -72,16 +90,29 @@ contract LM_PC_PaymentRouter_v1 is
         uint cliff,
         uint end
     ) public onlyModuleRole(PAYMENT_PUSHER_ROLE) {
-        _addPaymentOrder(
-            PaymentOrder(
-                recipient,
-                paymentToken,
-                amount,
-                start == 0 ? block.timestamp : start,
-                cliff,
-                end
-            )
-        );
+        bytes32 flags;
+        bytes32[] memory data;
+
+        {
+            bytes32[] memory paymentParameters = new bytes32[](3);
+            paymentParameters[0] = bytes32(start);
+            paymentParameters[1] = bytes32(cliff);
+            paymentParameters[2] = bytes32(end);
+
+            (flags, data) = _assemblePaymentConfig(paymentParameters);
+        }
+
+        PaymentOrder memory order = PaymentOrder({
+            recipient: recipient,
+            paymentToken: paymentToken,
+            amount: amount,
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flags,
+            data: data
+        });
+
+        _addPaymentOrder(order);
 
         // call PaymentProcessor
         __Module_orchestrator.paymentProcessor().processPayments(
@@ -105,20 +136,33 @@ contract LM_PC_PaymentRouter_v1 is
                 || paymentTokens.length != numOfOrders
                 || amounts.length != numOfOrders
         ) {
-            revert Module__ERC20PaymentClientBase__ArrayLengthMismatch();
+            revert Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch();
+        }
+
+        bytes32 flags;
+        bytes32[] memory data;
+
+        {
+            bytes32[] memory paymentParameters = new bytes32[](3);
+            paymentParameters[0] = bytes32(start);
+            paymentParameters[1] = bytes32(cliff);
+            paymentParameters[2] = bytes32(end);
+
+            (flags, data) = _assemblePaymentConfig(paymentParameters);
         }
 
         // Loop through the arrays and add Payments
         for (uint8 i = 0; i < numOfOrders; i++) {
             _addPaymentOrder(
-                PaymentOrder(
-                    recipients[i],
-                    paymentTokens[i],
-                    amounts[i],
-                    start == 0 ? block.timestamp : start,
-                    cliff,
-                    end
-                )
+                PaymentOrder({
+                    recipient: recipients[i],
+                    paymentToken: paymentTokens[i],
+                    amount: amounts[i],
+                    originChainId: block.chainid,
+                    targetChainId: block.chainid,
+                    flags: flags,
+                    data: data
+                })
             );
         }
 

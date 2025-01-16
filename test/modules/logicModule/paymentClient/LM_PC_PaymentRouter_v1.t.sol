@@ -18,10 +18,9 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
-import {
-    ILM_PC_PaymentRouter_v1,
-    LM_PC_PaymentRouter_v1
-} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {ILM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v1AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_PaymentRouter_v1AccessMock.sol";
 import {
     IERC20PaymentClientBase_v1,
     ERC20PaymentClientBase_v1
@@ -43,7 +42,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
     // SuT
-    LM_PC_PaymentRouter_v1 paymentRouter;
+    LM_PC_PaymentRouter_v1AccessMock paymentRouter;
 
     address paymentPusher_user = makeAddr("paymentPusher_user");
 
@@ -57,23 +56,19 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
 
     // Events
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
-    );
-
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
         address indexed recipient,
         address indexed token,
         uint amount,
-        uint start,
-        uint cliff,
-        uint end
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_PaymentRouter_v1());
-        paymentRouter = LM_PC_PaymentRouter_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_PaymentRouter_v1AccessMock());
+        paymentRouter = LM_PC_PaymentRouter_v1AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentRouter);
 
@@ -99,6 +94,11 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
         vm.startPrank(address(paymentRouter));
         assertEq(_authorizer.checkForRole(roleId, paymentPusher_user), true);
         vm.stopPrank();
+
+        assertEq(paymentRouter.getFlagCount(), 3);
+        bytes32 _START_END_CLIFF_FLAG =
+            0x000000000000000000000000000000000000000000000000000000000000000e;
+        assertEq(paymentRouter.getFlags(), _START_END_CLIFF_FLAG);
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -227,8 +227,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v1
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -238,8 +238,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v1
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -255,8 +255,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v1
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -266,8 +266,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20PaymentClientBase_v1
-                    .Module__ERC20PaymentClientBase__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v1
+                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
                     .selector
             )
         );
@@ -293,6 +293,7 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         external
         whenTheCallerHasThePAYMENT_PUSHER_ROLE
     {
+        vm.assume(_numOfOrders < 20);
         // It should add all Payment Orders
         // It should emit an event for each Payment Order
         // It should call processPayments
@@ -311,15 +312,36 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
         uint paymentsTriggeredBefore =
             _paymentProcessor.processPaymentsTriggered();
 
+        bytes32[] memory paymentParameters = new bytes32[](3);
+        paymentParameters[0] = bytes32(_start);
+        paymentParameters[1] = bytes32(_cliff);
+        paymentParameters[2] = bytes32(_end);
+
+        (bytes32 flags, bytes32[] memory data) =
+            paymentRouter.direct__assemblePaymentConfig(paymentParameters);
+
         for (uint i = 0; i < _numOfOrders; i++) {
             vm.expectEmit(true, true, true, true);
             emit PaymentOrderAdded(
-                _recipients[i], _paymentTokens[i], _amounts[i]
+                _recipients[i],
+                _paymentTokens[i],
+                _amounts[i],
+                block.chainid,
+                block.chainid,
+                flags,
+                data
             );
         }
         vm.expectEmit(true, false, false, false);
-        emit PaymentOrderProcessed(
-            address(0), address(0), address(0), 0, 0, 0, 0
+        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+            address(0),
+            address(0),
+            address(0),
+            0,
+            0,
+            0,
+            bytes32(0),
+            new bytes32[](0)
         ); // since we are using a mock.
 
         paymentRouter.pushPaymentBatched(
@@ -337,6 +359,47 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
             paymentsTriggeredBefore + 1
         );
     }
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
+    function test_AssemblePaymentConfig(uint start, uint cliff, uint end)
+        external
+    {
+        vm.assume(start <= type(uint).max / 2);
+        vm.assume(cliff <= type(uint).max / 2);
+        vm.assume(end <= type(uint).max / 2);
+
+        bytes32[] memory paymentParameters = new bytes32[](3);
+        paymentParameters[0] = bytes32(start);
+        paymentParameters[1] = bytes32(cliff);
+        paymentParameters[2] = bytes32(end);
+
+        (bytes32 flags, bytes32[] memory data) =
+            paymentRouter.direct__assemblePaymentConfig(paymentParameters);
+
+        uint expectedLength = 3; // start, cliff, end
+        assertEq(data.length, expectedLength);
+
+        uint dataIndex = 0;
+        if (start != 0) {
+            assertEq(uint(flags) & (1 << 1), 1 << 1); // Check start flag is set
+            assertEq(data[dataIndex], bytes32(start));
+        }
+        dataIndex++;
+
+        assertEq(uint(flags) & (1 << 3), 1 << 3);
+        assertEq(data[dataIndex], bytes32(cliff));
+        dataIndex++;
+
+        if (end != 0) {
+            assertEq(uint(flags) & (1 << 2), 1 << 2); // Check end flag is set
+            assertEq(data[dataIndex], bytes32(end));
+        }
+    }
+
+    //--------------------------------------------------------------------------
+    // Utils
 
     function _generateRandomValidOrders(uint8 _numOfOrders)
         internal

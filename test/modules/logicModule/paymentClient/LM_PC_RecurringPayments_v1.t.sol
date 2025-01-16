@@ -30,6 +30,8 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     LM_PC_RecurringPayments_v1 recurringPaymentManager;
 
     uint private constant _SENTINEL = type(uint).max;
+    bytes32 private constant _FLAGS_SET =
+        0x000000000000000000000000000000000000000000000000000000000000000a;
 
     event RecurringPaymentAdded(
         uint indexed recurringPaymentId,
@@ -95,6 +97,11 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
 
         assertEq(recurringPaymentManager.getEpochLength(), 1 weeks);
+
+        assertEq(recurringPaymentManager.getFlagCount(), 2);
+        bytes32 _START_END_FLAG =
+            0x000000000000000000000000000000000000000000000000000000000000000a;
+        assertEq(recurringPaymentManager.getFlags(), _START_END_FLAG);
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -686,7 +693,6 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             recurringPaymentManager.paymentOrders();
-
         assertEq(length, currentRecurringPayments.length);
 
         // prediction of how many orders have to be created for this recurring payment
@@ -762,8 +768,13 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         assertEq(order.recipient, recipient);
 
         assertEq(order.amount, amount);
-        assertEq(order.start, start);
+        // if first three flags are set the flags array is 0x07
+        assertEq(order.flags, _FLAGS_SET);
 
-        assertEq(order.end, end);
+        uint decodedStart = uint(order.data[0]);
+        uint decodedEnd = uint(order.data[1]);
+
+        assertEq(decodedStart, start);
+        assertEq(decodedEnd, end);
     }
 }

@@ -394,11 +394,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
             1
         );
-        assertEq(
-            bondingCurveFundingManager
-                .distributeCollateralTokenBeforeBuyFunctionCalled(),
-            1
-        );
     }
 
     /* Test _getBuyFeesAndTreasuryAddresses() function

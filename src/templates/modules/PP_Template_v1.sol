@@ -149,7 +149,14 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         // Emit event of the IPaymentProcessor_v1. This is used by Inverter's
         // Indexer.
         emit PaymentOrderProcessed(
-            address(client_), recipient_, token_, amount_, 0, 0, 0
+            address(client_),
+            recipient_,
+            token_,
+            amount_,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
         );
 
         // Transfer tokens from {IERC20PaymentClientBase_v1} to order

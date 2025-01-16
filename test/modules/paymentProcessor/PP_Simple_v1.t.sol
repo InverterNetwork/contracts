@@ -42,15 +42,6 @@ contract PP_SimpleV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Events
 
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
-        address indexed recipient,
-        address indexed paymentToken,
-        uint amount,
-        uint start,
-        uint cliff,
-        uint end
-    );
     event TokensReleased(
         address indexed recipient, address indexed token, uint amount
     );
@@ -119,14 +110,15 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(amount != 0);
 
         // Add payment order to client.
-        paymentClient.addPaymentOrder(
+        paymentClient.exposed_addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp
+                originChainId: block.chainid,
+                targetChainId: block.chainid,
+                flags: bytes32(0),
+                data: new bytes32[](0)
             })
         );
 
@@ -139,14 +131,15 @@ contract PP_SimpleV1Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit PaymentOrderProcessed(
+        emit IPaymentProcessor_v1.PaymentOrderProcessed(
             address(paymentClient),
             recipient,
             address(_token),
             amount,
-            block.timestamp,
-            0,
-            block.timestamp
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
         );
         if (!paymentsFail) {
             vm.expectEmit(true, true, true, true);
@@ -302,14 +295,24 @@ contract PP_SimpleV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
-            paymentClient.addPaymentOrder(
+            uint flags = 0; // Initialize flags as uint128 to accumulate the bits
+            flags |= (1 << 1); // Set bit 0 for start
+            flags |= (1 << 3); // Set bit 3 for end
+
+            bytes32 flagsBytes = bytes32(flags);
+            bytes32[] memory data = new bytes32[](2);
+            data[0] = bytes32(block.timestamp);
+            data[1] = bytes32(block.timestamp);
+
+            paymentClient.exposed_addPaymentOrder(
                 IERC20PaymentClientBase_v1.PaymentOrder({
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 1,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp
+                    originChainId: block.chainid,
+                    targetChainId: block.chainid,
+                    flags: flagsBytes,
+                    data: data
                 })
             );
         }
@@ -389,16 +392,11 @@ contract PP_SimpleV1Test is ModuleTest {
             order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
         );
 
-        order.start = bound(order.start, 0, type(uint).max / 2);
-        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
-
         vm.startPrank(sender);
-
-        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+        bool expectedValue = paymentProcessor.exposed_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
-            && paymentProcessor.original__validTotal(order.amount);
-
+        ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
+            && paymentProcessor.exposed__validTotal(order.amount);
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
         vm.stopPrank();
@@ -418,7 +416,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+            paymentProcessor.exposed_validPaymentReceiver(addr), expectedValue
         );
     }
 
@@ -428,7 +426,7 @@ contract PP_SimpleV1Test is ModuleTest {
             expectedValue = false;
         }
 
-        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
+        assertEq(paymentProcessor.exposed__validTotal(_total), expectedValue);
     }
 
     function test__validPaymentToken(address randomToken, address sender)
@@ -444,22 +442,20 @@ contract PP_SimpleV1Test is ModuleTest {
 
         vm.prank(sender);
 
-        assertEq(
-            paymentProcessor.original_validPaymentToken(randomToken), false
-        );
+        assertEq(paymentProcessor.exposed_validPaymentToken(randomToken), false);
 
         // ERC20 addresses are valid
         ERC20Mock actualToken = new ERC20Mock("Test", "TST");
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            paymentProcessor.exposed_validPaymentToken(address(actualToken)),
             true
         );
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(_token)), true
+            paymentProcessor.exposed_validPaymentToken(address(_token)), true
         );
     }
 }

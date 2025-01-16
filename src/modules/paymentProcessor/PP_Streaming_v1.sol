@@ -101,8 +101,13 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///         client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[]).
     mapping(address => mapping(address => uint[])) private activeStreams;
 
+    /// @dev    Default start, cliff and end times for new payment orders.
+    uint private defaultStart;
+    uint private defaultCliff;
+    uint private defaultEnd;
+
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[47] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -140,9 +145,14 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
-        bytes memory /*configData*/
+        bytes memory configData
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
+
+        (uint _defaultStart, uint _defaultCliff, uint _defaultEnd) =
+            abi.decode(configData, (uint, uint, uint));
+
+        _setDefaultTimes(_defaultStart, _defaultCliff, _defaultEnd);
     }
 
     /// @inheritdoc IPP_Streaming_v1
@@ -225,14 +235,15 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
                     numStreams[address(client)][orders[i].recipient] + 1
                 );
 
-                emit PaymentOrderProcessed(
+                emit IPaymentProcessor_v1.PaymentOrderProcessed(
                     address(client),
                     orders[i].recipient,
                     orders[i].paymentToken,
                     orders[i].amount,
-                    orders[i].start,
-                    orders[i].cliff,
-                    orders[i].end
+                    orders[i].originChainId,
+                    orders[i].targetChainId,
+                    orders[i].flags,
+                    orders[i].data
                 );
 
                 unchecked {
@@ -406,10 +417,24 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     function validPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
+        (uint start, uint cliff, uint end) =
+            _getStreamingDetails(order.flags, order.data);
+
         return _validPaymentReceiver(order.recipient)
-            && _validTotal(order.amount)
-            && _validTimes(order.start, order.cliff, order.end)
-            && _validPaymentToken(order.paymentToken);
+            && _validTotal(order.amount) && _validTimes(start, cliff, end)
+            && _validPaymentToken(order.paymentToken)
+            && _validOriginAndTargetChain(order.originChainId, order.targetChainId);
+    }
+
+    function setStreamingDefaults(uint newStart_, uint newCliff_, uint newEnd_)
+        external
+        onlyOrchestratorAdmin
+    {
+        _setDefaultTimes(newStart_, newCliff_, newEnd_);
+    }
+
+    function getStreamingDefaults() public view returns (uint, uint, uint) {
+        return (defaultStart, defaultCliff, defaultEnd);
     }
 
     //--------------------------------------------------------------------------
@@ -663,14 +688,11 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ) internal {
         ++numStreams[_client][_order.recipient];
 
+        (uint start, uint cliff, uint end) =
+            _getStreamingDetails(_order.flags, _order.data);
+
         streams[_client][_order.recipient][_streamId] = Stream(
-            _order.paymentToken,
-            _streamId,
-            _order.amount,
-            0,
-            _order.start,
-            _order.cliff,
-            _order.end
+            _order.paymentToken, _streamId, _order.amount, 0, start, cliff, end
         );
 
         // We do not want activePaymentReceivers[_client] to have duplicate paymentReceiver entries
@@ -690,9 +712,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             _order.paymentToken,
             _streamId,
             _order.amount,
-            _order.start,
-            _order.cliff,
-            _order.end
+            start,
+            cliff,
+            end
         );
     }
 
@@ -914,5 +936,53 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             )
         );
         return (success && data.length != 0 && _token.code.length != 0);
+    }
+
+    function _validOriginAndTargetChain(
+        uint originChainId_,
+        uint targetChainId_
+    ) internal view returns (bool) {
+        return (
+            (originChainId_ == targetChainId_)
+                && (originChainId_ == block.chainid)
+        );
+    }
+
+    function _getStreamingDetails(bytes32 flags, bytes32[] memory data)
+        internal
+        view
+        returns (uint start, uint cliff, uint end)
+    {
+        uint dataIdx = 0;
+
+        bool hasStart = (uint(flags) & (1 << 1)) != 0;
+        start = hasStart ? uint(data[dataIdx]) : defaultStart;
+        if (hasStart) dataIdx += 1;
+
+        bool hasCliff = (uint(flags) & (1 << 2)) != 0;
+        cliff = hasCliff ? uint(data[dataIdx]) : defaultCliff;
+        if (hasCliff) dataIdx += 1;
+
+        bool hasEnd = (uint(flags) & (1 << 3)) != 0;
+        end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
+    }
+
+    /// @dev    Sets the default start time, cliff and end times for new
+    ///         payment orders.
+    /// @param  newStart_ The new default start time.
+    /// @param  newCliff_ The new default cliff duration.
+    /// @param  newEnd_ The new default end time.
+    function _setDefaultTimes(uint newStart_, uint newCliff_, uint newEnd_)
+        internal
+    {
+        if (_validTimes(newStart_, newCliff_, newEnd_)) {
+            defaultStart = newStart_;
+            defaultCliff = newCliff_;
+            defaultEnd = newEnd_;
+        } else {
+            revert Module__PP_Streaming__InvalidDefaultTimes(
+                newStart_, newCliff_, newEnd_
+            );
+        }
     }
 }

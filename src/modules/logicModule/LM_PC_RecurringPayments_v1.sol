@@ -128,6 +128,7 @@ contract LM_PC_RecurringPayments_v1 is
         // Set empty list of RecurringPayment
         _paymentList.init();
 
+        // Set the epoch Data
         uint newEpochLength = abi.decode(configData, (uint));
         epochLength = newEpochLength;
 
@@ -137,6 +138,13 @@ contract LM_PC_RecurringPayments_v1 is
         }
 
         emit EpochLengthSet(newEpochLength);
+
+        // Set the flags for the PaymentOrders
+        uint8[] memory flags = new uint8[](2); // The Module will use 2 flags
+        flags[0] = 1; // start, flag_ID 1
+        flags[1] = 3; // end, flag_ID 3
+
+        __ERC20PaymentClientBase_v1_init(flags);
     }
 
     //--------------------------------------------------------------------------
@@ -297,6 +305,21 @@ contract LM_PC_RecurringPayments_v1 is
                     currentEpoch - currentPayment.lastTriggeredEpoch;
                 // If order hasnt been triggered this epoch
                 if (epochsNotTriggered > 0) {
+                    // assemble data array
+
+                    bytes32 flags;
+                    bytes32[] memory data;
+
+                    {
+                        bytes32[] memory paymentParameters = new bytes32[](2);
+                        paymentParameters[0] = bytes32(block.timestamp);
+                        paymentParameters[1] =
+                            bytes32((currentEpoch + 1) * epochLength);
+
+                        (flags, data) =
+                            _assemblePaymentConfig(paymentParameters);
+                    }
+
                     // add paymentOrder for this epoch
                     _addPaymentOrder(
                         PaymentOrder({
@@ -305,29 +328,28 @@ contract LM_PC_RecurringPayments_v1 is
                                 orchestrator().fundingManager().token()
                             ),
                             amount: currentPayment.amount,
-                            start: block.timestamp,
-                            cliff: 0,
-                            // End of current epoch is the end date
-                            end: (currentEpoch + 1) * epochLength
+                            originChainId: block.chainid,
+                            targetChainId: block.chainid,
+                            flags: flags,
+                            data: data
                         })
                     );
 
                     // if past epochs have not been triggered
                     if (epochsNotTriggered > 1) {
+                        data[1] = bytes32(currentEpoch * epochLength);
                         _addPaymentOrder(
                             PaymentOrder({
                                 recipient: currentPayment.recipient,
-                                // because we already made a payment that for the current epoch
                                 paymentToken: address(
                                     orchestrator().fundingManager().token()
                                 ),
                                 amount: currentPayment.amount
                                     * (epochsNotTriggered - 1),
-                                start: block.timestamp,
-                                cliff: 0,
-                                // Payment was already due so end is start of this epoch which should
-                                // already have passed
-                                end: currentEpoch * epochLength
+                                originChainId: block.chainid,
+                                targetChainId: block.chainid,
+                                flags: flags,
+                                data: data
                             })
                         );
                     }

@@ -86,11 +86,32 @@ abstract contract ERC20PaymentClientBase_v1 is
     /// @dev	The current cumulative amount of tokens outstanding.
     mapping(address => uint) internal _outstandingTokenAmounts;
 
+    /// @dev    The number of payment processor flags used by this payment
+    ///         client.
+    uint8 internal _flagCount;
+
+    /// @dev    The payment processor flags used by this payment client.
+    bytes32 internal _flags;
+
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[48] private __gap;
 
     //--------------------------------------------------------------------------
     // Internal Mutating Functions
+
+    /// @dev	Initializes the staking contract.
+    /// @param  flags_ The flags, represented as an array of uint8 containing
+    ///         the flag IDs between 0 and 255.
+    function __ERC20PaymentClientBase_v1_init(uint8[] memory flags_)
+        internal
+        onlyInitializing
+    {
+        uint amountOfFlags = flags_.length;
+        if (amountOfFlags > type(uint8).max) {
+            revert Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
+        }
+        _setFlags(uint8(flags_.length), flags_);
+    }
 
     /// @dev	Adds a new {PaymentOrder} to the list of outstanding orders.
     /// @param  order The new payment order.
@@ -106,7 +127,13 @@ abstract contract ERC20PaymentClientBase_v1 is
         _orders.push(order);
 
         emit PaymentOrderAdded(
-            order.recipient, order.paymentToken, order.amount
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
         );
     }
 
@@ -119,6 +146,31 @@ abstract contract ERC20PaymentClientBase_v1 is
         for (uint i; i < orderAmount; ++i) {
             _addPaymentOrder(orders[i]);
         }
+    }
+
+    /// @dev    Sets the flags for the PaymentOrders.
+    /// @param  flagCount_ The number of flags.
+    /// @param  flags_ The flags, represented as an array of uint8 containing
+    ///         the flag IDs between 0 and 255.
+    function _setFlags(uint8 flagCount_, uint8[] memory flags_)
+        internal
+        virtual
+    {
+        if (flagCount_ != flags_.length) {
+            revert
+                Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
+                flagCount_, flags_.length
+            );
+        }
+
+        _flagCount = flagCount_;
+
+        _flags = 0;
+        for (uint8 i = 0; i < flagCount_; i++) {
+            _flags |= bytes32((1 << flags_[i]));
+        }
+
+        emit FlagsSet(flagCount_, _flags);
     }
 
     //--------------------------------------------------------------------------
@@ -135,20 +187,24 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function outstandingTokenAmount(address _token)
+    function outstandingTokenAmount(address token_)
         external
         view
         virtual
-        returns (uint)
+        returns (uint total_)
     {
-        return _outstandingTokenAmounts[_token];
+        return _outstandingTokenAmounts[token_];
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
     function collectPaymentOrders()
         external
         virtual
-        returns (PaymentOrder[] memory, address[] memory, uint[] memory)
+        returns (
+            PaymentOrder[] memory paymentOrders_,
+            address[] memory tokens_,
+            uint[] memory totalAmounts_
+        )
     {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
@@ -162,22 +218,22 @@ abstract contract ERC20PaymentClientBase_v1 is
 
         address[] memory tokens_buffer = new address[](ordersLength);
         uint[] memory amounts_buffer = new uint[](ordersLength);
-        PaymentOrder[] memory copy = new PaymentOrder[](ordersLength);
+        paymentOrders_ = new PaymentOrder[](ordersLength);
 
         for (uint i; i < ordersLength; ++i) {
-            copy[i] = _orders[i];
+            paymentOrders_[i] = _orders[i];
             bool found;
             for (uint j; j < tokenCount; ++j) {
-                if (tokens_buffer[j] == copy[i].paymentToken) {
+                if (tokens_buffer[j] == paymentOrders_[i].paymentToken) {
                     found = true;
                     break;
                 }
             }
             if (!found) {
                 // if the token is not in the list, add it
-                tokens_buffer[tokenCount] = copy[i].paymentToken;
+                tokens_buffer[tokenCount] = paymentOrders_[i].paymentToken;
                 amounts_buffer[tokenCount] =
-                    _outstandingTokenAmounts[copy[i].paymentToken];
+                    _outstandingTokenAmounts[paymentOrders_[i].paymentToken];
                 tokenCount++;
             }
         }
@@ -186,30 +242,32 @@ abstract contract ERC20PaymentClientBase_v1 is
         delete _orders;
 
         // Prepare the arrays that will be sent back
-        address[] memory tokens = new address[](tokenCount);
-        uint[] memory amounts = new uint[](tokenCount);
+        tokens_ = new address[](tokenCount);
+        totalAmounts_ = new uint[](tokenCount);
 
         for (uint i; i < tokenCount; ++i) {
-            tokens[i] = tokens_buffer[i];
-            amounts[i] = amounts_buffer[i];
+            tokens_[i] = tokens_buffer[i];
+            totalAmounts_[i] = amounts_buffer[i];
 
             // Ensure payment processor is able to fetch the tokens from address(this).
-            _ensureTokenAllowance(IPaymentProcessor_v1(_msgSender()), tokens[i]);
+            _ensureTokenAllowance(
+                IPaymentProcessor_v1(_msgSender()), tokens_[i]
+            );
 
             // Ensure that the Client will have sufficient funds.
             // Note that while we also control when adding a payment order, more complex payment systems with
             // f.ex. deferred payments may not guarantee that having enough balance available when adding the order
             // means it'll have enough balance when the order is processed.
-            _ensureTokenBalance(tokens[i]);
+            _ensureTokenBalance(tokens_[i]);
         }
 
         // Return copy of orders and orders' total token amount to payment
         // processor.
-        return (copy, tokens, amounts);
+        return (paymentOrders_, tokens_, totalAmounts_);
     }
 
     /// @inheritdoc IERC20PaymentClientBase_v1
-    function amountPaid(address token, uint amount) external virtual {
+    function amountPaid(address token_, uint amount_) external virtual {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
         {
@@ -217,7 +275,17 @@ abstract contract ERC20PaymentClientBase_v1 is
         }
 
         // reduce outstanding token amount by the given amount
-        _outstandingTokenAmounts[token] -= amount;
+        _outstandingTokenAmounts[token_] -= amount_;
+    }
+
+    /// @inheritdoc IERC20PaymentClientBase_v1
+    function getFlags() public view returns (bytes32 flags_) {
+        return (_flags);
+    }
+
+    /// @inheritdoc IERC20PaymentClientBase_v1
+    function getFlagCount() public view returns (uint8 flagCount_) {
+        return _flagCount;
     }
 
     //--------------------------------------------------------------------------
@@ -300,5 +368,23 @@ abstract contract ERC20PaymentClientBase_v1 is
         returns (bool)
     {
         return __Module_orchestrator.paymentProcessor() == who;
+    }
+
+    /// @dev	Returns the payment configuration from a list of supplied flag
+    ///         values. Can be overriden to add additional validation steps.
+    function _assemblePaymentConfig(bytes32[] memory flagValues_)
+        internal
+        view
+        virtual
+        returns (bytes32 flags_, bytes32[] memory data_)
+    {
+        if (_flagCount != flagValues_.length) {
+            revert
+                Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
+                _flagCount, flagValues_.length
+            );
+        }
+
+        return (_flags, flagValues_);
     }
 }

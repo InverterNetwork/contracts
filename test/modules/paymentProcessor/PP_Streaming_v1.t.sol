@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/console.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -37,6 +36,12 @@ import {
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
+    bytes32 internal constant _START_END_CLIFF_FLAG =
+        0x000000000000000000000000000000000000000000000000000000000000000e;
+    uint internal constant defaultStart = 69;
+    uint internal constant defaultCliff = 13;
+    uint internal constant defaultEnd = 420;
+
     // SuT
     PP_Streaming_v1AccessMock paymentProcessor;
 
@@ -68,17 +73,6 @@ contract PP_StreamingV1Test is ModuleTest {
         uint end
     );
 
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
-        address indexed recipient,
-        address indexed paymentToken,
-        uint streamId,
-        uint amount,
-        uint start,
-        uint cliff,
-        uint end
-    );
-
     event UnclaimableAmountAdded(
         address indexed paymentClient,
         address recipient,
@@ -101,7 +95,10 @@ contract PP_StreamingV1Test is ModuleTest {
 
         _setUpOrchestrator(paymentProcessor);
 
-        paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
+        bytes memory configData =
+            abi.encode(defaultStart, defaultCliff, defaultEnd);
+
+        paymentProcessor.init(_orchestrator, _METADATA, configData);
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -166,15 +163,15 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + durations[i]
+                )
             );
 
             totalAmount += amount;
@@ -184,6 +181,11 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(address(paymentClient));
 
         for (uint i; i < recipients.length; i++) {
+            bytes32[] memory data = new bytes32[](3);
+            data[0] = bytes32(block.timestamp);
+            data[1] = bytes32(0);
+            data[2] = bytes32(block.timestamp + durations[i]);
+
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
                 address(paymentClient),
@@ -195,15 +197,15 @@ contract PP_StreamingV1Test is ModuleTest {
                 0,
                 block.timestamp + durations[i]
             );
-            emit PaymentOrderProcessed(
+            emit IPaymentProcessor_v1.PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
-                1,
                 amounts[i],
-                block.timestamp,
-                0,
-                block.timestamp + durations[i]
+                block.chainid,
+                block.chainid,
+                _START_END_CLIFF_FLAG,
+                data
             );
         }
 
@@ -255,15 +257,15 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + time
+                )
             );
 
             totalAmount += amount;
@@ -360,15 +362,15 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 50,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    50,
+                    block.timestamp + time
+                )
             );
 
             totalAmount += amount;
@@ -462,15 +464,15 @@ contract PP_StreamingV1Test is ModuleTest {
             uint amount = uint(amounts[i]);
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 50_000,
-                    end: block.timestamp + 100_000
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    50_000,
+                    block.timestamp + 100_000
+                )
             );
 
             expectedHalfAmount += amount / 2;
@@ -486,7 +488,6 @@ contract PP_StreamingV1Test is ModuleTest {
         // All recepients try to claim their vested tokens without success
         for (uint i; i < recipients.length;) {
             uint balanceBefore = _token.balanceOf(recipients[i]);
-
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
             assertTrue(
@@ -518,14 +519,12 @@ contract PP_StreamingV1Test is ModuleTest {
 
             vm.prank(recipients[i]);
             paymentProcessor.claimAll(address(paymentClient));
-
             // Check recipient balance
             assertEq(
                 _token.balanceOf(recipients[i]),
                 (uint(amounts[i]) / 2 + balanceBefore),
                 "Vested tokens not received by the paymentReceiver"
             );
-
             assertEq(
                 paymentProcessor.releasableForSpecificStream(
                     address(paymentClient),
@@ -572,15 +571,15 @@ contract PP_StreamingV1Test is ModuleTest {
 
         for (uint i; i < length; i++) {
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: payoutAmount,
-                    start: 0,
-                    cliff: 0,
-                    end: endTimes[i]
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    payoutAmount,
+                    0,
+                    0,
+                    endTimes[i]
+                )
             );
         }
 
@@ -595,8 +594,10 @@ contract PP_StreamingV1Test is ModuleTest {
             address recipient = recipients[i];
             IERC20PaymentClientBase_v1.PaymentOrder memory order = orders[i];
 
+            uint end = uint(order.data[2]);
+
             // If end is before currentTimestamp evereything should be releasable
-            if (order.end <= block.timestamp) {
+            if (end <= block.timestamp) {
                 assertEq(
                     paymentProcessor.releasableForSpecificStream(
                         address(paymentClient), address(recipient), 1
@@ -690,15 +691,15 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations_1[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipient,
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + time
+                )
             );
         }
 
@@ -733,15 +734,15 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations_2[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipient,
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + time
+                )
             );
         }
 
@@ -853,15 +854,15 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipient,
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + time
+                )
             );
         }
 
@@ -967,15 +968,15 @@ contract PP_StreamingV1Test is ModuleTest {
             uint time = durations[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipient,
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + time
+                )
             );
         }
 
@@ -1131,19 +1132,24 @@ contract PP_StreamingV1Test is ModuleTest {
         uint duration = 4 weeks;
 
         for (uint i = 0; i < length; ++i) {
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: amounts[i],
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + duration
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    amounts[i],
+                    block.timestamp,
+                    0,
+                    block.timestamp + duration
+                )
             );
         }
         // Expect the correct number and sequence of emits
         for (uint i = 0; i < length; ++i) {
+            bytes32[] memory data = new bytes32[](3);
+            data[0] = bytes32(block.timestamp);
+            data[1] = bytes32(0);
+            data[2] = bytes32(duration + block.timestamp);
+
             vm.expectEmit(true, true, true, true);
             emit StreamingPaymentAdded(
                 address(paymentClient),
@@ -1155,15 +1161,15 @@ contract PP_StreamingV1Test is ModuleTest {
                 0,
                 duration + block.timestamp
             );
-            emit PaymentOrderProcessed(
+            emit IPaymentProcessor_v1.PaymentOrderProcessed(
                 address(paymentClient),
                 recipients[i],
                 address(_token),
-                1,
                 amounts[i],
-                block.timestamp,
-                0,
-                duration + block.timestamp
+                block.chainid,
+                block.chainid,
+                _START_END_CLIFF_FLAG,
+                data
             );
         }
 
@@ -1297,15 +1303,15 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amounts[i],
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + durations[i]
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipient,
+                    address(_token),
+                    amounts[i],
+                    block.timestamp,
+                    0,
+                    block.timestamp + durations[i]
+                )
             );
         }
 
@@ -1380,15 +1386,15 @@ contract PP_StreamingV1Test is ModuleTest {
             uint amount = amounts[i];
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: start + duration
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipient,
+                    address(_token),
+                    amount,
+                    block.timestamp,
+                    0,
+                    block.timestamp + duration
+                )
             );
         }
 
@@ -1431,15 +1437,15 @@ contract PP_StreamingV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: 1,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    1,
+                    block.timestamp,
+                    0,
+                    block.timestamp
+                )
             );
             vm.prank(address(paymentClient));
             paymentProcessor.processPayments(paymentClient);
@@ -1593,15 +1599,15 @@ contract PP_StreamingV1Test is ModuleTest {
         blockAddress(recipient);
 
         // Add payment order to client and call processPayments.
-        paymentClient.addPaymentOrder(
-            IERC20PaymentClientBase_v1.PaymentOrder({
-                recipient: recipient,
-                paymentToken: address(_token),
-                amount: amount,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp + duration
-            })
+        paymentClient.exposed_addPaymentOrder(
+            createPaymentOrder(
+                recipient,
+                address(_token),
+                amount,
+                block.timestamp,
+                0,
+                block.timestamp + duration
+            )
         );
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
@@ -1670,15 +1676,15 @@ contract PP_StreamingV1Test is ModuleTest {
         uint duration = 10 days;
 
         // Add payment order to client and call processPayments.
-        paymentClient.addPaymentOrder(
-            IERC20PaymentClientBase_v1.PaymentOrder({
-                recipient: recipient,
-                paymentToken: address(_token),
-                amount: amount,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp + duration
-            })
+        paymentClient.exposed_addPaymentOrder(
+            createPaymentOrder(
+                recipient,
+                address(_token),
+                amount,
+                block.timestamp,
+                0,
+                block.timestamp + duration
+            )
         );
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(paymentClient);
@@ -1749,15 +1755,15 @@ contract PP_StreamingV1Test is ModuleTest {
         // Add payment order to client and call processPayments.
 
         for (uint i = 0; i < recipients.length; i++) {
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: 1,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    1,
+                    block.timestamp,
+                    0,
+                    block.timestamp
+                )
             );
             vm.prank(address(paymentClient));
             paymentProcessor.processPayments(paymentClient);
@@ -1810,7 +1816,6 @@ contract PP_StreamingV1Test is ModuleTest {
         // Them being equal is fine if no streaming is desired (instant payout)
         if (start > end) {
             resultShouldBe = false;
-            console.log("start > end");
         }
 
         // Check whether the start with cliff added is greater than the end time
@@ -1818,35 +1823,49 @@ contract PP_StreamingV1Test is ModuleTest {
         // (if cliff > 0)
         if (start + cliff > end) {
             resultShouldBe = false;
-            console.log("start + cliff > end");
         }
 
-        bool result = paymentProcessor.original_validTimes(start, cliff, end);
+        bool result = paymentProcessor.exposed_validTimes(start, cliff, end);
         assertEq(result, resultShouldBe);
     }
 
     function test_ValidPaymentOrder(
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
-        address sender
+        address sender,
+        uint start,
+        uint cliff,
+        uint end
     ) public {
         // The randomToken can't be the address of the Create2Deployer
-        // as that one uses a fallback funciton to deploy contracts, it will
+        // as that one uses a fallback function to deploy contracts, it will
         // pass the test here
         vm.assume(
             order.paymentToken != 0x4e59b44847b379578588920cA78FbF26c0B4956C
         );
 
-        order.start = bound(order.start, 0, type(uint).max / 2);
-        order.cliff = bound(order.cliff, 0, type(uint).max / 2);
+        start = bound(start, 0, type(uint).max / 2);
+        cliff = bound(cliff, 0, type(uint).max / 2);
+        end = bound(end, 0, type(uint).max / 2);
+
+        bytes32[] memory data = new bytes32[](3);
+        data[0] = bytes32(start);
+        data[1] = bytes32(cliff);
+        data[2] = bytes32(end);
+
+        // Set up data array before accessing it
+        order.data = data;
+
+        // Set flags to indicate all values are present
+        order.flags = bytes32(uint(7)); // 7 = 0b111 to set first 3 bits
 
         vm.startPrank(sender);
 
-        bool expectedValue = paymentProcessor.original_validPaymentReceiver(
+        bool expectedValue = paymentProcessor.exposed_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.original_validPaymentToken(order.paymentToken)
-            && paymentProcessor.original_validTimes(
-                order.start, order.cliff, order.end
-            ) && paymentProcessor.original__validTotal(order.amount);
+        ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
+            && paymentProcessor.exposed_validTimes(
+                uint(order.data[0]), uint(order.data[1]), uint(order.data[2])
+            ) && paymentProcessor.exposed__validTotal(order.amount);
 
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
@@ -1867,7 +1886,7 @@ contract PP_StreamingV1Test is ModuleTest {
         vm.prank(sender);
 
         assertEq(
-            paymentProcessor.original_validPaymentReceiver(addr), expectedValue
+            paymentProcessor.exposed_validPaymentReceiver(addr), expectedValue
         );
     }
 
@@ -1877,7 +1896,7 @@ contract PP_StreamingV1Test is ModuleTest {
             expectedValue = false;
         }
 
-        assertEq(paymentProcessor.original__validTotal(_total), expectedValue);
+        assertEq(paymentProcessor.exposed__validTotal(_total), expectedValue);
     }
 
     function test__validTimes(uint _start, uint _cliff, uint _end) public {
@@ -1890,7 +1909,7 @@ contract PP_StreamingV1Test is ModuleTest {
         }
 
         assertEq(
-            paymentProcessor.original_validTimes(_start, _cliff, _end),
+            paymentProcessor.exposed_validTimes(_start, _cliff, _end),
             expectedValue
         );
     }
@@ -1908,22 +1927,108 @@ contract PP_StreamingV1Test is ModuleTest {
 
         vm.prank(sender);
 
-        assertEq(
-            paymentProcessor.original_validPaymentToken(randomToken), false
-        );
+        assertEq(paymentProcessor.exposed_validPaymentToken(randomToken), false);
 
         // ERC20 addresses are valid
         ERC20Mock actualToken = new ERC20Mock("Test", "TST");
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(actualToken)),
+            paymentProcessor.exposed_validPaymentToken(address(actualToken)),
             true
         );
 
         vm.prank(sender);
         assertEq(
-            paymentProcessor.original_validPaymentToken(address(_token)), true
+            paymentProcessor.exposed_validPaymentToken(address(_token)), true
+        );
+    }
+
+    function test__getStreamingDetails(bytes32 flags, bytes32[] memory data)
+        public
+    {
+        bool hasStart = false;
+        bool hasCliff = false;
+        bool hasEnd = false;
+
+        uint8 numOnes = 0;
+        if ((uint(flags) & (1 << 1)) != 0) {
+            hasStart = true;
+            numOnes++;
+        }
+        if ((uint(flags) & (1 << 2)) != 0) {
+            hasCliff = true;
+            numOnes++;
+        }
+        if ((uint(flags) & (1 << 3)) != 0) {
+            hasEnd = true;
+            numOnes++;
+        }
+
+        // Bound data length to match number of flags set
+        vm.assume(data.length >= numOnes);
+        if (data.length > numOnes) {
+            bytes32[] memory newData = new bytes32[](numOnes);
+            for (uint i = 0; i < numOnes; i++) {
+                newData[i] = data[i];
+            }
+            data = newData;
+        }
+
+        (uint start, uint cliff, uint end) =
+            paymentProcessor.exposed_getStreamingDetails(flags, data);
+
+        uint idx = 0;
+        assertEq(start, hasStart ? uint(data[idx]) : defaultStart);
+        if (hasStart) idx++;
+        assertEq(cliff, hasCliff ? uint(data[idx]) : defaultCliff);
+        if (hasCliff) idx++;
+        assertEq(end, hasEnd ? uint(data[idx]) : defaultEnd);
+    }
+
+    function test_setStreamingDefaults(
+        uint defaultStart,
+        uint defaultCliff,
+        uint defaultEnd
+    ) public {
+        defaultStart = bound(defaultStart, 0, defaultEnd);
+        defaultCliff = bound(defaultCliff, 0, defaultEnd - defaultStart);
+
+        // Set default times
+        paymentProcessor.setStreamingDefaults(
+            defaultStart, defaultCliff, defaultEnd
+        );
+        // Check default times
+        (uint start, uint cliff, uint end) =
+            paymentProcessor.getStreamingDefaults();
+        assertEq(start, defaultStart);
+        assertEq(cliff, defaultCliff);
+        assertEq(end, defaultEnd);
+    }
+
+    function test_setStreamingDefaults_FailsIfInvalidTimes(
+        uint defaultStart,
+        uint defaultCliff,
+        uint defaultEnd
+    ) public {
+        vm.assume(defaultStart < 1e24); //upper bounds to avoid overflow
+        vm.assume(defaultCliff < 1e24);
+        vm.assume(defaultStart + defaultCliff != 0);
+
+        defaultEnd = bound(defaultEnd, 0, (defaultStart + defaultCliff - 1));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPP_Streaming_v1
+                    .Module__PP_Streaming__InvalidDefaultTimes
+                    .selector,
+                defaultStart,
+                defaultCliff,
+                defaultEnd
+            )
+        );
+        paymentProcessor.setStreamingDefaults(
+            defaultStart, defaultCliff, defaultEnd
         );
     }
 
@@ -1947,15 +2052,15 @@ contract PP_StreamingV1Test is ModuleTest {
             }
 
             // Add payment order to client.
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipients[i],
-                    paymentToken: address(_token),
-                    amount: amounts[i],
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: block.timestamp + time
-                })
+            paymentClient.exposed_addPaymentOrder(
+                createPaymentOrder(
+                    recipients[i],
+                    address(_token),
+                    amounts[i],
+                    block.timestamp,
+                    0,
+                    block.timestamp + time
+                )
             );
         }
 
@@ -1981,6 +2086,36 @@ contract PP_StreamingV1Test is ModuleTest {
         _token.unblockAddress(blockedAddress);
         bool blocked = _token.isBlockedAddress(blockedAddress);
         assertFalse(blocked);
+    }
+
+    function createPaymentOrder(
+        address recipient,
+        address paymentToken,
+        uint amount,
+        uint start,
+        uint cliff,
+        uint end
+    )
+        internal
+        view
+        returns (IERC20PaymentClientBase_v1.PaymentOrder memory paymentOrder)
+    {
+        bytes32 flagsBytes =
+            0x000000000000000000000000000000000000000000000000000000000000000e;
+        bytes32[] memory data = new bytes32[](3);
+        data[0] = bytes32(start);
+        data[1] = bytes32(cliff);
+        data[2] = bytes32(end);
+
+        paymentOrder = IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: recipient,
+            paymentToken: paymentToken,
+            amount: amount,
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flagsBytes,
+            data: data
+        });
     }
 
     //--------------------------------------------------------------------------

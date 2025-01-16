@@ -40,6 +40,11 @@ contract RecurringPaymentManagerE2E is E2ETest {
     uint epochLength = 1 weeks; // 1 week;
     uint epochsAmount = 10;
 
+    // Default values for the streaming payments
+    uint defaultStart = 10;
+    uint defaultCliff = 0;
+    uint defaultEnd = 30;
+
     // Constants
     uint constant _SENTINEL = type(uint).max;
 
@@ -78,7 +83,8 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpStreamingPaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                streamingPaymentProcessorMetadata, bytes("")
+                streamingPaymentProcessorMetadata,
+                abi.encode(defaultStart, defaultCliff, defaultEnd)
             )
         );
 
