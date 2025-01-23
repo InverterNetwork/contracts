@@ -20,7 +20,7 @@ contract PP_Connext_Crosschain_v1_Exposed is PP_Connext_Crosschain_v1 {
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
         bytes memory executionData
     ) external returns (bytes32) {
-        return _createCrossChainIntent(order, executionData);
+        return _createCrossChainIntent(order, executionData, false);
     }
 
     function exposed_setFailedTransfer(

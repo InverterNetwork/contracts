@@ -163,12 +163,13 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     ) external {
         _validateTransferRequest(client, recipient, executionData);
 
-        bytes32 newIntentId = _createCrossChainIntent(order, newExecutionData);
+        bytes32 newIntentId =
+            _createCrossChainIntent(order, newExecutionData, false);
         if (newIntentId == bytes32(0)) {
             revert Module__PP_Crosschain__MessageDeliveryFailed(
                 8453, 8453, executionData
             );
-        }
+        } //@note -> verify authentication checks
 
         _cleanupFailedTransfer(client, recipient, executionData);
         processedIntentId[client][recipient] = newIntentId;
@@ -200,7 +201,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
         bytes memory executionData
     ) internal override returns (bytes memory) {
-        bytes32 _intentId = _createCrossChainIntent(order, executionData);
+        bytes32 _intentId = _createCrossChainIntent(order, executionData, true);
         return abi.encode(_intentId);
     }
 
@@ -208,11 +209,13 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
      * @dev Creates a new cross-chain intent for payment transfer
      * @param order The payment order details
      * @param executionData Additional execution parameters
+     * @param transferFromRecipient Whether to transfer from the recipient
      * @return The ID of the created intent
      */
     function _createCrossChainIntent(
         IERC20PaymentClientBase_v1.PaymentOrder memory order,
-        bytes memory executionData
+        bytes memory executionData,
+        bool transferFromRecipient
     ) internal returns (bytes32) {
         _validateOrder(order);
 
@@ -227,13 +230,14 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
                 IPP_Connext_Crosschain_v1
                 .Module__PP_Connext_Crosschain__InvalidTTL();
         }
-
-        IERC20(order.paymentToken).transferFrom(
-            msg.sender, address(this), order.amount
-        );
-        IERC20(order.paymentToken).approve(
-            address(everClearSpoke), order.amount
-        );
+        if (transferFromRecipient) {
+            IERC20(order.paymentToken).transferFrom(
+                order.recipient, address(this), order.amount
+            );
+            IERC20(order.paymentToken).approve(
+                address(everClearSpoke), order.amount
+            );
+        }
 
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = 8453;
@@ -262,9 +266,9 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         bytes memory executionData
     ) internal view returns (uint) {
         //msg.sender should be the client
-        if (msg.sender != client) {
+        if (msg.sender != recipient) {
             revert Module__InvalidAddress();
-        }
+        } //@note -> should the msg.sender be the recipient, since they are the one who is trying to retry or cancel the payment isntead of paymentClient?
         //failedAmount should be stored if the transfer has failed
         uint failedAmount = failedTransfers[client][recipient][executionData];
         if (failedAmount == 0) {
