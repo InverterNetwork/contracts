@@ -1,10 +1,10 @@
-// External Dependencies
 // SPDX-License-Identifier: UNLICENSED
 
 pragma solidity ^0.8.20;
 
 //--------------------------------------------------------------------------
 // Imports
+// External Dependencies
 
 import {Test} from "forge-std/Test.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -150,7 +150,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             └── Then it should emit PaymentProcessed events for payment
                 └── And it should create cross-chain intent
     */
-    function testPublicProcessPayments_succeedsGivenSingleValidPaymentOrder(
+    function testFuzz_PublicProcessPayments_succeedsGivenSingleValidPaymentOrder(
         address testRecipient,
         uint testAmount
     ) public {
@@ -175,7 +175,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Process payments
-
         uint balanceBefore = _token.balanceOf(address(paymentProcessor));
         paymentProcessor.processPayments(client, executionData);
         assertEq(_token.balanceOf(address(testRecipient)), 0);
@@ -199,7 +198,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 ├── And it should create multiple cross-chain intents
                 └── And it should contain valid intent IDs
     */
-    function testPublicProcessPayments_succeedsGivenMultipleValidPaymentOrders(
+    function testFuzz_PublicProcessPayments_succeedsGivenMultipleValidPaymentOrders(
         uint8 numRecipients,
         uint testAmount
     ) public {
@@ -242,16 +241,16 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         // Process payments
         paymentProcessor.processPayments(client, executionData);
 
-        // //should be checking in the mock for valid bridge data
-        // for (uint i = 0; i < numRecipients; i++) {
-        //     bytes32 intentId = paymentProcessor.processedIntentId(
-        //         address(paymentClient), setupRecipients[i]
-        //     );
-        //     assertEq(
-        //         uint(everclearPaymentMock.status(intentId)),
-        //         uint(Mock_EverclearPayment.IntentStatus.ADDED)
-        //     );
-        // }
+        //should be checking in the mock for valid bridge data
+        for (uint i = 0; i < numRecipients; i++) {
+            bytes32 intentId = paymentProcessor.processedIntentId(
+                address(paymentClient), setupRecipients[i]
+            );
+            assertEq(
+                uint(everclearPaymentMock.status(intentId)),
+                uint(Mock_EverclearPayment.IntentStatus.ADDED)
+            );
+        }
     }
 
     /* Test empty payment processing
@@ -259,7 +258,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             ├── Then it should complete successfully
             └── And the bridge data should remain empty
     */
-    function testPublicProcessPayments_succeedsGivenNoPaymentOrders() public {
+    function testFuzz_PublicProcessPayments_succeedsGivenNoPaymentOrders()
+        public
+    {
         // Process payments and verify _bridgeData mapping is not updated
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v1(address(paymentClient)), executionData
@@ -283,7 +284,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When processing with invalid Connext parameters
             └── Then it should revert
     */
-    function testPublicProcessPayments_revertsGivenInvalidExecutionData(
+    function testFuzz_PublicProcessPayments_revertsGivenInvalidExecutionData(
         address testRecipient,
         uint testAmount
     ) public {
@@ -306,7 +307,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidExecutionData
     */
-    function testPublicProcessPayments_revertsGivenEmptyExecutionData(
+    function testFuzz_PublicProcessPayments_revertsGivenEmptyExecutionData(
         address testRecipient,
         uint testAmount
     ) public {
@@ -333,7 +334,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidRecipient
     */
-    function testPublicProcessPayments_revertsGivenInvalidRecipient(
+    function testFuzz_PublicProcessPayments_revertsGivenInvalidRecipient(
         uint testAmount
     ) public {
         vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
@@ -355,7 +356,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidAmount
     */
-    function testPublicProcessPayments_revertsGivenInvalidAmount(
+    function testFuzz_PublicProcessPayments_revertsGivenInvalidAmount(
         address testRecipient
     ) public {
         vm.assume(testRecipient != address(0));
@@ -379,7 +380,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         │           └── And intent ID should be stored correctly
                     └── And intent status should be ADDED in Everclear spoke
     */
-    function testPublicProcessPayments_worksGivenCorrectBridgeData(
+    function testFuzz_PublicProcessPayments_worksGivenCorrectBridgeData(
         address testRecipient,
         uint testAmount
     ) public {
@@ -408,7 +409,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         ── When checking bridge data with no added payments
             └── Then it should return empty bytes
     */
-    function testPublicProcessPayments_worksGivenEmptyBridgeData() public {
+    function testFuzz_PublicProcessPayments_worksGivenEmptyBridgeData()
+        public
+    {
         IERC20PaymentClientBase_v1 client =
             IERC20PaymentClientBase_v1(address(paymentClient));
         // Process payments and verify _bridgeData mapping is updated
@@ -424,7 +427,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             └── When attempting to process payment
                 └── Then it should revert with ERC20InsufficientBalance
     */
-    function testPublicProcessPayments_revertsGivenInsufficientBalance(
+    function testFuzz_PublicProcessPayments_revertsGivenInsufficientBalance(
         address testRecipient,
         uint testAmount
     ) public {
@@ -458,7 +461,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                     └── And should emit PaymentProcessed event
                     └── And should handle exact balance correctly
     */
-    function testPublicProcessPayments_worksGivenEdgeCaseAmounts(
+    function testFuzz_PublicProcessPayments_worksGivenEdgeCaseAmounts(
         address testRecipient,
         uint96 testAmount
     ) public {
@@ -504,7 +507,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And clear the failed transfer record
                 └── And emit FailedTransferRetried event
     */
-    function testRetryFailedTransfer_succeeds(
+    function testFuzz_RetryFailedTransfer_succeeds(
         address testRecipient,
         uint testAmount
     ) public {
@@ -568,9 +571,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And return funds to recipient
                 └── And emit TransferCancelled event
     */
-    function testCancelTransfer_succeeds(address testRecipient, uint testAmount)
-        public
-    {
+    function testFuzz_CancelTransfer_succeeds(
+        address testRecipient,
+        uint testAmount
+    ) public {
         // Setup
         vm.assume(testRecipient != address(0));
         vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
@@ -579,13 +583,16 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             _setupSinglePayment(testRecipient, testAmount);
 
+        uint balanceBefore = _token.balanceOf(address(paymentProcessor));
         bytes memory executionData = abi.encode(333, 1);
         //call processPayments with maxFee = 333
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v1(address(paymentClient)), executionData
         );
+        uint balanceAfter = _token.balanceOf(address(paymentProcessor));
+        assertEq(balanceAfter, balanceBefore + testAmount);
+
         // see if failed failedTransfers updates
-        //@note -->make sure amountPaid Increases
         assertEq(
             paymentProcessor.failedTransfers(
                 address(paymentClient), testRecipient, executionData
@@ -598,12 +605,16 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
         assertEq(failedAmount, orders[0].amount);
 
+        uint balanceBeforeCancel = _token.balanceOf(address(paymentProcessor));
         // Cancel as recipient
         vm.prank(address(testRecipient));
         paymentProcessor.cancelTransfer(
             address(paymentClient), testRecipient, executionData, orders[0]
         );
-        //@note -->make sure amountPaid decreases
+        uint balanceAfterCancel = _token.balanceOf(address(paymentProcessor));
+        console2.log("balanceAfterCancel", balanceAfterCancel);
+
+        assertEq(balanceAfterCancel, balanceBeforeCancel - testAmount);
 
         // Verify intentId was cleared
         assertEq(
@@ -619,7 +630,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When cancelled by someone other than recipient
             └── Then it should revert with InvalidAddress
     */
-    function testCancelTransfer_revertsForNonRecipient(
+    function testFuzz_CancelTransfer_revertsForNonRecipient(
         address testRecipient,
         address nonRecipient,
         uint testAmount
@@ -652,7 +663,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Prank as non-recipient
         vm.prank(nonRecipient);
-
         vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
         paymentProcessor.cancelTransfer(
             address(paymentClient), testRecipient, executionData, order
@@ -666,7 +676,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And the intent ID should remain unchanged
                 └── And the payment order should remain processed
     */
-    function testCancelTransfer_revertsAfterProcessing(
+    function testFuzz_CancelTransfer_revertsAfterProcessing(
         address testRecipient,
         uint testAmount
     ) public {
@@ -696,7 +706,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When processing payments
             └── Then it should revert with InvalidTTL
     */
-    function testProcessPayments_revertsWithZeroTTL(
+    function testFuzz_ProcessPayments_revertsWithZeroTTL(
         address testRecipient,
         uint testAmount
     ) public {
@@ -717,7 +727,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying failed transfer
             └── Then it should revert with InvalidAddress
     */
-    function testRetryFailedTransfer_revertsWithInvalidCaller(
+    function testFuzz_RetryFailedTransfer_revertsWithInvalidCaller(
         address testRecipient,
         uint testAmount,
         address invalidCaller
@@ -753,7 +763,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying transfer
             └── Then it should revert with InvalidAmount
     */
-    function testRetryFailedTransfer_revertsWithNoFailedTransfer(
+    function testFuzz_RetryFailedTransfer_revertsWithNoFailedTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -781,7 +791,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying transfer
             └── Then it should revert with InvalidIntentId
     */
-    function testRetryFailedTransfer_revertsWithExistingIntent(
+    function testFuzz_RetryFailedTransfer_revertsWithExistingIntent(
         address testRecipient,
         uint testAmount
     ) public {
@@ -809,12 +819,54 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
     }
 
+    /* Test retry with invalid execution data
+    └── Given a retry request with invalid execution data
+        └── When retrying failed transfer
+            └── Then it should revert with InvalidExecutionData
+    */
+    function testFuzz_RetryFailedTransferWithInvalidExecutionData(
+        address testRecipient,
+        uint testAmount
+    ) public {
+        vm.assume(testRecipient != address(0));
+        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+
+        // Setup failed transfer
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
+            _setupSinglePayment(testRecipient, testAmount);
+
+        bytes memory failingExecutionData = abi.encode(333, 1);
+        paymentProcessor.processPayments(
+            IERC20PaymentClientBase_v1(address(paymentClient)),
+            failingExecutionData
+        );
+
+        vm.prank(address(testRecipient));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPP_Crosschain_v1
+                    .Module__PP_Crosschain__MessageDeliveryFailed
+                    .selector,
+                8453,
+                8453,
+                failingExecutionData
+            )
+        );
+        paymentProcessor.retryFailedTransfer(
+            address(paymentClient),
+            testRecipient,
+            failingExecutionData,
+            failingExecutionData, // use failedExecutionData as newExecutionData
+            orders[0]
+        );
+    }
+
     /* Test process payments without token approval
     └── Given a payment order with zero approval
         └── When attempting to process payment
             └── Then it should revert with InvalidTokenApproval
     */
-    function testProcessPayments_revertsWithoutTokenApproval(
+    function testFuzz_ProcessPayments_revertsWithoutTokenApproval(
         address testRecipient,
         uint testAmount
     ) public {
@@ -839,7 +891,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v1(address(paymentClient)), executionData
         );
-        //@note -> assertion amount Paid in client is increased
     }
 
     /* Test payment processing with unsupported token
@@ -847,7 +898,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     └── When attempting to process payment
         └── Then it should revert with UnsupportedToken
     */
-    function testProcessPayments_revertsWithUnsupportedToken(
+    function testFuzz_ProcessPayments_revertsWithUnsupportedToken(
         address testRecipient,
         uint testAmount
     ) public {
@@ -879,9 +930,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When processing payments
             └── Then it should revert with ERC20InsufficientBalance
     */
-    function testProcessPayments_revertsWithZeroBalance(address testRecipient)
-        public
-    {
+    function testFuzz_ProcessPayments_revertsWithZeroBalance(
+        address testRecipient
+    ) public {
         vm.assume(testRecipient != address(0));
 
         _setupSinglePayment(testRecipient, ZERO_AMOUNT);
@@ -902,7 +953,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             └── And update intent IDs properly
             └── And track total amounts correctly
     */
-    function testProcessPayments_handlesMultipleDuplicateRecipients(
+    function testFuzz_ProcessPayments_handlesMultipleDuplicateRecipients(
         address testRecipient,
         uint testAmount
     ) public {
@@ -934,35 +985,86 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             address(paymentClient), testRecipient
         );
         assertTrue(finalIntentId != bytes32(0));
-
-        // // Verify total amount processed
-        // assertEq(uint(everclearPaymentMock.amount(finalIntentId)), amount * 3);
     }
 
-    // function testProcessPayments_revertsWithExpiredEndDate(
-    //     address testRecipient,
-    //     uint testAmount
-    // ) public {
-    //     vm.assume(testRecipient != address(0));
-    //     vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+    /* Test payment processing with varying start/end times
+    └── Given payment orders with different time configurations
+    └── When processing payments
+        └── Then it should handle valid time ranges
+            └── And revert for invalid ones
+    */
+    function testFuzz_ProcessPayments_handlesVariableTimeRanges(
+        address testRecipient,
+        uint testAmount,
+        uint32 timeOffset
+    ) public {
+        vm.assume(testRecipient != address(0));
+        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        vm.assume(timeOffset > 0 && timeOffset < 30 days);
 
-    //     // Setup payment with expired end date
-    //     IERC20PaymentClientBase_v1.PaymentOrder memory order =
-    //     IERC20PaymentClientBase_v1.PaymentOrder({
-    //         recipient: testRecipient,
-    //         paymentToken: address(_token),
-    //         amount: testAmount,
-    //         start: block.timestamp - 2 days,
-    //         cliff: 0, //@note 33audits -> shouldnt this revert since start and end time are in the past?
-    //         end: block.timestamp - 1 days // End date in the past
-    //     });
+        // Create payment order with fuzzed time range
+        IERC20PaymentClientBase_v1.PaymentOrder memory order =
+        IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: testRecipient,
+            paymentToken: address(_token),
+            amount: testAmount,
+            start: block.timestamp,
+            cliff: 0,
+            end: block.timestamp + timeOffset
+        });
 
-    //     paymentClient.addPaymentOrder(order);
+        _token.mint(testRecipient, testAmount);
+        vm.prank(testRecipient);
+        _token.approve(address(paymentProcessor), testAmount);
+        paymentClient.addPaymentOrder(order);
 
-    //     paymentProcessor.processPayments(
-    //         IERC20PaymentClientBase_v1(address(paymentClient)), executionData
-    //     );
-    // }
+        paymentProcessor.processPayments(
+            IERC20PaymentClientBase_v1(address(paymentClient)), executionData
+        );
+
+        bytes32 intentId = paymentProcessor.processedIntentId(
+            address(paymentClient), testRecipient
+        );
+        assertTrue(intentId != bytes32(0));
+    }
+
+    function testFuzz_ProcessPayments_revertsWithExpiredEndDate(
+        address testRecipient,
+        uint testAmount
+    ) public {
+        //@audit-issue -> discuss with 33 about this test
+        vm.assume(testRecipient != address(0));
+        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+
+        // Setup payment with expired end date
+        IERC20PaymentClientBase_v1.PaymentOrder memory order =
+        IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: testRecipient,
+            paymentToken: address(_token),
+            amount: testAmount,
+            start: block.timestamp - 2 days,
+            cliff: 0, //@note 33audits -> shouldnt this revert since start and end time are in the past?
+            end: block.timestamp - 1 days // End date in the past
+        });
+
+        // Mint tokens to recipient
+        _token.mint(testRecipient, testAmount);
+        vm.prank(testRecipient);
+        _token.approve(address(paymentProcessor), testAmount);
+
+        paymentClient.addPaymentOrder(order);
+
+        // Process payments
+        uint balanceBefore = _token.balanceOf(address(paymentProcessor));
+        paymentProcessor.processPayments(
+            IERC20PaymentClientBase_v1(address(paymentClient)), executionData
+        );
+        assertEq(_token.balanceOf(testRecipient), 0);
+        assertEq(
+            _token.balanceOf(address(paymentProcessor)),
+            balanceBefore + testAmount
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Payment Order Validation Tests
@@ -972,7 +1074,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testvalidPaymentOrder_InvalidRecipient() public {
+    function testFuzz_validPaymentOrder_InvalidRecipient() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0),
@@ -990,7 +1092,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testvalidPaymentOrder_InvalidToken() public {
+    function testFuzz_validPaymentOrder_InvalidToken() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1008,7 +1110,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testvalidPaymentOrder_InvalidAmount() public {
+    function testFuzz_validPaymentOrder_InvalidAmount() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1026,7 +1128,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testvalidPaymentOrder_InvalidStart() public {
+    function testFuzz_validPaymentOrder_InvalidStart() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1044,7 +1146,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testvalidPaymentOrder_InvalidCliff() public {
+    function testFuzz_validPaymentOrder_InvalidCliff() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1062,7 +1164,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return true
     */
-    function testvalidPaymentOrder_Success() public {
+    function testFuzz_validPaymentOrder_Success() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1104,10 +1206,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             new IERC20PaymentClientBase_v1.PaymentOrder[](orderCount);
-        //add payment order to client
 
         for (uint i = 0; i < orderCount; i++) {
             if (recipients[i] != address(0)) {
+                //mint tokens to recipient & approve payment processor
                 _token.mint(recipients[i], amounts[i]);
                 vm.prank(recipients[i]);
                 _token.approve(address(paymentProcessor), amounts[i]);
@@ -1120,6 +1222,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 cliff: 0,
                 end: block.timestamp + 1 days
             });
+            //add payment order to client
             paymentClient.addPaymentOrder(orders[i]);
         }
         return orders;

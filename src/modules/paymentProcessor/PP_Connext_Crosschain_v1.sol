@@ -169,7 +169,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
             revert Module__PP_Crosschain__MessageDeliveryFailed(
                 8453, 8453, executionData
             );
-        } //@note -> verify authentication checks
+        }
 
         _cleanupFailedTransfer(client, recipient, executionData);
         processedIntentId[client][recipient] = newIntentId;
