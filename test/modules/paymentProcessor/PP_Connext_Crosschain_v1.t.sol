@@ -195,8 +195,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     └── Given multiple valid payment orders
         └── When processing cross-chain payments
             └── Then it should emit PaymentProcessed events for each payment
-                ├── And it should create multiple cross-chain intents
-                └── And it should contain valid intent IDs
+                └── And it should create multiple cross-chain intents
     */
     function testFuzz_PublicProcessPayments_succeedsGivenMultipleValidPaymentOrders(
         uint8 numRecipients,
@@ -254,9 +253,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     }
 
     /* Test empty payment processing
-        └── When processing with no payment orders
-            ├── Then it should complete successfully
-            └── And the bridge data should remain empty
+    └── Given no payment orders
+        └── When processing payments
+            └── Then it should complete successfully
+                └── And bridge data should remain empty
     */
     function testFuzz_PublicProcessPayments_succeedsGivenNoPaymentOrders()
         public
@@ -280,10 +280,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Error Case Tests
 
-    /* Test invalid execution data
-        └── When processing with invalid Connext parameters
-            └── Then it should revert
-    */
     function testFuzz_PublicProcessPayments_revertsGivenInvalidExecutionData(
         address testRecipient,
         uint testAmount
@@ -409,7 +405,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         ── When checking bridge data with no added payments
             └── Then it should return empty bytes
     */
-    function testFuzz_PublicProcessPayments_worksGivenEmptyBridgeData()
+    function testFuzz_PublicProcessPayments_succeedsGivenEmptyBridgeData()
         public
     {
         IERC20PaymentClientBase_v1 client =
@@ -507,7 +503,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And clear the failed transfer record
                 └── And emit FailedTransferRetried event
     */
-    function testFuzz_RetryFailedTransfer_succeeds(
+    function testFuzz_PublicRetryFailedTransfer_succeedsGivenValidFailedTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -571,7 +567,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And return funds to recipient
                 └── And emit TransferCancelled event
     */
-    function testFuzz_CancelTransfer_succeeds(
+    function testFuzz_PublicCancelTransfer_succeedsGivenValidPendingTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -630,7 +626,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When cancelled by someone other than recipient
             └── Then it should revert with InvalidAddress
     */
-    function testFuzz_CancelTransfer_revertsForNonRecipient(
+    function testFuzz_PublicCancelTransfer_revertsGivenNonRecipientCaller(
         address testRecipient,
         address nonRecipient,
         uint testAmount
@@ -676,7 +672,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And the intent ID should remain unchanged
                 └── And the payment order should remain processed
     */
-    function testFuzz_CancelTransfer_revertsAfterProcessing(
+    function testFuzz_PublicCancelTransfer_revertsGivenProcessedTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -727,7 +723,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying failed transfer
             └── Then it should revert with InvalidAddress
     */
-    function testFuzz_RetryFailedTransfer_revertsWithInvalidCaller(
+    function testFuzz_PublicRetryFailedTransfer_revertsGivenInvalidCaller(
         address testRecipient,
         uint testAmount,
         address invalidCaller
@@ -763,7 +759,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying transfer
             └── Then it should revert with InvalidAmount
     */
-    function testFuzz_RetryFailedTransfer_revertsWithNoFailedTransfer(
+    function testFuzz_PublicRetryFailedTransfer_revertsGivenNoFailedTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -791,7 +787,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying transfer
             └── Then it should revert with InvalidIntentId
     */
-    function testFuzz_RetryFailedTransfer_revertsWithExistingIntent(
+    function testFuzz_PublicRetryFailedTransfer_revertsGivenExistingIntent(
         address testRecipient,
         uint testAmount
     ) public {
@@ -824,7 +820,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When retrying failed transfer
             └── Then it should revert with InvalidExecutionData
     */
-    function testFuzz_RetryFailedTransferWithInvalidExecutionData(
+    function testFuzz_PublicRetryFailedTransfer_revertsGivenInvalidExecutionData(
         address testRecipient,
         uint testAmount
     ) public {
@@ -866,7 +862,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When attempting to process payment
             └── Then it should revert with InvalidTokenApproval
     */
-    function testFuzz_ProcessPayments_revertsWithoutTokenApproval(
+    function testFuzz_PublicProcessPayments_revertsGivenNoTokenApproval(
         address testRecipient,
         uint testAmount
     ) public {
@@ -898,7 +894,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     └── When attempting to process payment
         └── Then it should revert with UnsupportedToken
     */
-    function testFuzz_ProcessPayments_revertsWithUnsupportedToken(
+    function testFuzz_PublicProcessPayments_revertsGivenUnsupportedToken(
         address testRecipient,
         uint testAmount
     ) public {
@@ -930,7 +926,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When processing payments
             └── Then it should revert with ERC20InsufficientBalance
     */
-    function testFuzz_ProcessPayments_revertsWithZeroBalance(
+    function testFuzz_PublicProcessPayments_revertsGivenZeroBalance(
         address testRecipient
     ) public {
         vm.assume(testRecipient != address(0));
@@ -953,7 +949,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             └── And update intent IDs properly
             └── And track total amounts correctly
     */
-    function testFuzz_ProcessPayments_handlesMultipleDuplicateRecipients(
+    function testFuzz_PublicProcessPayments_succeedsGivenDuplicateRecipients(
         address testRecipient,
         uint testAmount
     ) public {
@@ -993,7 +989,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── Then it should handle valid time ranges
             └── And revert for invalid ones
     */
-    function testFuzz_ProcessPayments_handlesVariableTimeRanges(
+    function testFuzz_PublicProcessPayments_succeedsGivenVariableTimeRanges(
         address testRecipient,
         uint testAmount,
         uint32 timeOffset
@@ -1028,7 +1024,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         assertTrue(intentId != bytes32(0));
     }
 
-    function testFuzz_ProcessPayments_revertsWithExpiredEndDate(
+    function testFuzz_PublicProcessPayments_succeedsGivenExpiredEndDate(
         address testRecipient,
         uint testAmount
     ) public {
@@ -1074,7 +1070,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testFuzz_validPaymentOrder_InvalidRecipient() public {
+    function testPublicValidPaymentOrder_revertsGivenInvalidRecipient()
+        public
+    {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0),
@@ -1092,7 +1090,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testFuzz_validPaymentOrder_InvalidToken() public {
+    function testFuzz_validPaymentOrder_InvatestPublicValidPaymentOrder_revertsGivenInvalidTokenlidToken(
+    ) public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1110,7 +1109,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testFuzz_validPaymentOrder_InvalidAmount() public {
+    function testPublicValidPaymentOrder_revertsGivenInvalidAmount() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1128,7 +1127,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testFuzz_validPaymentOrder_InvalidStart() public {
+    function testPublicValidPaymentOrder_revertsGivenInvalidStart() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1146,7 +1145,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testFuzz_validPaymentOrder_InvalidCliff() public {
+    function testPublicValidPaymentOrder_revertsGivenInvalidCliff() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),
@@ -1164,7 +1163,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return true
     */
-    function testFuzz_validPaymentOrder_Success() public {
+    function testPublicValidPaymentOrder_succeeds() public {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),

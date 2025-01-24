@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.20;
 
 // External Imports
@@ -24,15 +24,25 @@ import {IOrchestrator_v1} from
 
 /**
  * @title   Connext Cross-chain Payment Processor
- * @notice  Payment processor implementation for cross-chain payments using the Connext protocol
- * @dev     This contract implements cross-chain payment processing via Connext and provides:
- *          - Integration with Connext's EverClear protocol for cross-chain transfers
- *          - WETH handling for native token wrapping
- *          - Implementation of bridge-specific transfer logic
- *          - Payment order processing and validation
- *          - Bridge data storage and retrieval
+ *
+ * @notice  Specialized payment processor implementation for handling cross-chain payments via Connext protocol.
+ *
+ * @dev     This contract extends PP_Crosschain_v1 and provides:
+ *          - Integration with Connext's EverClear protocol for secure cross-chain transfers
+ *          - Native token handling through WETH wrapper
+ *          - Robust payment order processing and validation
+ *          - Failed transfer handling with retry and cancellation mechanisms
+ *          - Bridge-specific transfer logic implementation
  *          - Support for Base network (chainId: 8453)
+ *          - Comprehensive transfer state tracking
+ *
  * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @author  Inverter Network
+ * @custom:version 1.0.0
+ * @custom:standard-version 1.0.0
  */
 contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     // Storage Variables
@@ -57,7 +67,10 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     // Errors
     error FailedTransfer();
 
-    // External Functions
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initializes the payment processor module
      * @param orchestrator_ The orchestrator contract address
@@ -77,6 +90,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         weth = IWETH(weth_);
     }
 
+    // External Mutating Functions
     /**
      * @notice Processes multiple payment orders through the bridge
      * @param client The payment client contract interface
@@ -175,7 +189,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         processedIntentId[client][recipient] = newIntentId;
     }
 
-    // Public Functions
+    // View Functions
     /**
      * @notice Retrieves the bridge data for a specific payment ID
      * @param paymentId The unique identifier of the payment
@@ -190,7 +204,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         return _bridgeData[paymentId];
     }
 
-    // Internal Functions
+    // Overridden Internal Functions
     /**
      * @dev Execute the cross-chain bridge transfer
      * @param order The payment order containing transfer details
@@ -205,6 +219,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         return abi.encode(_intentId);
     }
 
+    // Internal Helper Functions
     /**
      * @dev Creates a new cross-chain intent for payment transfer
      * @param order The payment order details

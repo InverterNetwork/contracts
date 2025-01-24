@@ -1,26 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
+// Internal Imports
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 import {IERC20PaymentClientBase_v1} from
     "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
-
 import {CrossChainBase_v1} from "./CrossChainBase_v1.sol";
-
-// External Interfaces
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IPP_Crosschain_v1} from "../interfaces/IPP_Crosschain_v1.sol";
 
 // External Dependencies
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-
-// External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
-
-// Internal Interfaces
-import {IPP_Crosschain_v1} from "../interfaces/IPP_Crosschain_v1.sol";
 
 /**
  * @title   Cross-chain Payment Processor Base Contract

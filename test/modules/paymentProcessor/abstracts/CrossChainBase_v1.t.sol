@@ -91,11 +91,6 @@ contract CrossChainBase_v1_Test is ModuleTest {
         assertTrue(crossChainBase.supportsInterface(interfaceId));
     }
 
-    function testSupportsInterface_revertsGivenUnknownInterface() public {
-        bytes4 randomInterfaceId = bytes4(keccak256("random()"));
-        assertFalse(crossChainBase.supportsInterface(randomInterfaceId));
-    }
-
     /*  
     └──  Given the contract is already initialized
     └── When trying to reinitialize
@@ -104,14 +99,30 @@ contract CrossChainBase_v1_Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         crossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
     }
+
+    /**
+     * @dev Test interface support failure case
+     * └── Given the contract is initialized
+     * └── When checking for an unknown interface
+     *     └── Then it should return false
+     */
+    function testSupportsInterface_failsGivenUnknownInterface() public {
+        bytes4 randomInterfaceId = bytes4(keccak256("random()"));
+        assertFalse(crossChainBase.supportsInterface(randomInterfaceId));
+    }
+
     //--------------------------------------------------------------------------
     //Test: executeBridgeTransfer
 
-    /*
-    └──  Given an empty payment order is created
-    └── When executeBridgeTransfer is called
-        └── Then it should return empty bytes */
-    function testExecuteBridgeTransfer_worksGivenEmptyPaymentOrder() public {
+    /**
+     * @dev Test bridge transfer with empty payment order
+     * └── Given an empty payment order is created
+     * └── When executeBridgeTransfer is called
+     *     └── Then it should return empty bytes
+     */
+    function testExecuteBridgeTransfer_succeedsGivenEmptyPaymentOrder()
+        public
+    {
         address[] memory setupRecipients = new address[](1);
         setupRecipients[0] = address(1);
         uint[] memory setupAmounts = new uint[](1);
@@ -128,6 +139,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
         );
         assertEq(result, bytes(""));
     }
+
     //--------------------------------------------------------------------------
     //Helper Functions
 
