@@ -281,10 +281,9 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         bytes memory executionData
     ) internal view returns (uint) {
         //msg.sender should be the client
-        if (msg.sender != recipient) {
+        if (msg.sender != client) {
             revert Module__InvalidAddress();
-        } //@note -> should the msg.sender be the recipient, since they are the one who is trying to retry or cancel the payment isntead of paymentClient?
-        //failedAmount should be stored if the transfer has failed
+        }
         uint failedAmount = failedTransfers[client][recipient][executionData];
         if (failedAmount == 0) {
             revert Module__CrossChainBase__InvalidAmount();

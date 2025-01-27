@@ -533,7 +533,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Now retry with proper execution data
-        vm.prank(address(testRecipient));
+        vm.prank(address(paymentClient));
         paymentProcessor.retryFailedTransfer(
             address(paymentClient),
             testRecipient,
@@ -603,12 +603,12 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         uint balanceBeforeCancel = _token.balanceOf(address(paymentProcessor));
         // Cancel as recipient
-        vm.prank(address(testRecipient));
+        vm.prank(address(paymentClient));
         paymentProcessor.cancelTransfer(
             address(paymentClient), testRecipient, executionData, orders[0]
         );
         uint balanceAfterCancel = _token.balanceOf(address(paymentProcessor));
-        console2.log("balanceAfterCancel", balanceAfterCancel);
+        //console2.log("balanceAfterCancel", balanceAfterCancel);
 
         assertEq(balanceAfterCancel, balanceBeforeCancel - testAmount);
 
@@ -688,7 +688,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Cancel the transfer
-        vm.prank(address(testRecipient));
+        vm.prank(address(paymentClient));
         vm.expectRevert(
             ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
         );
@@ -769,7 +769,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             _setupSinglePayment(testRecipient, testAmount);
 
-        vm.prank(testRecipient);
+        vm.prank(address(paymentClient));
         vm.expectRevert(
             ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
         );
@@ -837,7 +837,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             failingExecutionData
         );
 
-        vm.prank(address(testRecipient));
+        vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
                 IPP_Crosschain_v1
