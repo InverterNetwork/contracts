@@ -291,17 +291,17 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         // Handle collateral tokens before buy
         _handleCollateralTokensBeforeBuy(_msgSender(), _depositAmount);
 
-        // Process the protocol fee
+        // Process protocol fee on incoming collateral tokens
         _processProtocolFeeViaTransfer(
             collateralTreasury, collateralToken, collateralProtocolFeeAmount
         );
 
-        // Add project fee if applicable
+        // Process project fee if applicable
         if (projectFeeAmount > 0) {
             _projectFeeCollected(projectFeeAmount);
         }
 
-        // collect protocol fee on outgoing issuance token
+        // Process protocol fee on outgoing issuance tokens
         _processProtocolFeeViaMinting(
             issuanceTreasury, issuanceProtocolFeeAmount
         );

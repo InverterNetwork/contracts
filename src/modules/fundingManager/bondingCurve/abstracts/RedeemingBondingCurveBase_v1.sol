@@ -269,18 +269,18 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Burn issued token from user
         _burn(_msgSender(), _depositAmount);
 
-        // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out
-        // the backing collateral
+        // Process the protocol fee on incoming issuance tokens. We can
+        // re-mint since we aren't paying out the backing collateral.
         _processProtocolFeeViaMinting(
             issuanceTreasury, issuanceProtocolFeeAmount
         );
 
-        // Process the protocol fee
+        // Process protocol fee on outgoing collateral tokens
         _processProtocolFeeViaTransfer(
             collateralTreasury, collateralToken, collateralProtocolFeeAmount
         );
 
-        // Add project fee if applicable
+        // Process project fee if applicable
         if (projectFeeAmount > 0) {
             _projectFeeCollected(projectFeeAmount);
         }
