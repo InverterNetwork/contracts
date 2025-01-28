@@ -510,9 +510,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit ProtocolFeeMinted(
-            address(bondingCurveFundingManager), treasury, _feeAmount
-        );
+        emit ProtocolFeeMinted(address(issuanceToken), treasury, _feeAmount);
         // Function call
         bondingCurveFundingManager.call_processProtocolFeeViaMinting(
             treasury, _feeAmount

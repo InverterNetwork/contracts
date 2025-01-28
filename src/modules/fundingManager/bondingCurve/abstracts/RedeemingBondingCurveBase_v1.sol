@@ -202,7 +202,14 @@ abstract contract RedeemingBondingCurveBase_v1 is
         internal
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
+        // ------------------------------------------------------------
+        // Checks
+
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+
+        // ------------------------------------------------------------
+        // Effects
+
         // Get protocol fee percentages and treasury addresses
         (
             address collateralTreasury,
@@ -213,51 +220,37 @@ abstract contract RedeemingBondingCurveBase_v1 is
             bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
-        uint protocolFeeAmount;
+        uint issuanceProtocolFeeAmount;
         uint projectFeeAmount;
         uint netDeposit;
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (netDeposit, protocolFeeAmount, /* projectFee */ ) =
+        (netDeposit, issuanceProtocolFeeAmount, /* projectFee */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
-        issuanceFeeAmount = protocolFeeAmount;
+        issuanceFeeAmount = issuanceProtocolFeeAmount;
 
         // Calculate redeem amount based on upstream formula
         uint collateralRedeemAmount = _redeemTokensFormulaWrapper(netDeposit);
 
         totalCollateralTokenMovedOut = collateralRedeemAmount;
 
-        // Burn issued token from user
-        _burn(_msgSender(), _depositAmount);
-
-        // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out
-        // the backing collateral
-        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
-
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
+        uint collateralProtocolFeeAmount;
+
         // Get net amount, protocol and project fee amounts
-        (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
-        _calculateNetAndSplitFees(
+        (collateralRedeemAmount, collateralProtocolFeeAmount, projectFeeAmount)
+        = _calculateNetAndSplitFees(
             collateralRedeemAmount, collateralSellFeePercentage, sellFee
         );
-        // Process the protocol fee
-        _processProtocolFeeViaTransfer(
-            collateralTreasury, collateralToken, protocolFeeAmount
-        );
-
-        // Add project fee if applicable
-        if (projectFeeAmount > 0) {
-            _projectFeeCollected(projectFeeAmount);
-        }
 
         // Require that enough collateral tokens are held to cover the project
         // collateral fee.
         if (
-            projectCollateralFeeCollected
+            projectCollateralFeeCollected + projectFeeAmount
                 > collateralToken.balanceOf(address(this))
         ) {
             revert
@@ -268,6 +261,28 @@ abstract contract RedeemingBondingCurveBase_v1 is
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
+        }
+
+        // ------------------------------------------------------------
+        // Interactions
+
+        // Burn issued token from user
+        _burn(_msgSender(), _depositAmount);
+
+        // Process the protocol fee on incoming issuance tokens. We can
+        // re-mint since we aren't paying out the backing collateral.
+        _processProtocolFeeViaMinting(
+            issuanceTreasury, issuanceProtocolFeeAmount
+        );
+
+        // Process protocol fee on outgoing collateral tokens
+        _processProtocolFeeViaTransfer(
+            collateralTreasury, collateralToken, collateralProtocolFeeAmount
+        );
+
+        // Process project fee if applicable
+        if (projectFeeAmount > 0) {
+            _projectFeeCollected(projectFeeAmount);
         }
 
         // Use virtual function to handle collateral tokens
