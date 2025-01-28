@@ -27,6 +27,11 @@ import {ERC165Upgradeable} from
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardUpgradeable} from
     "@oz-up/utils/ReentrancyGuardUpgradeable.sol";
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
 
 /**
  * @title   Inverter Staking Module
@@ -45,7 +50,8 @@ import {ReentrancyGuardUpgradeable} from
 contract LM_PC_Staking_v1 is
     ILM_PC_Staking_v1,
     ERC20PaymentClientBase_v1,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardUpgradeable,
+    ERC20Upgradeable
 {
     using SafeERC20 for IERC20;
 
@@ -76,7 +82,7 @@ contract LM_PC_Staking_v1 is
     /// @dev	address of the token that can be staked here.
     address internal stakingToken;
     /// @dev	total supply of the token that is staked here.
-    uint internal totalSupply;
+    uint internal staking_totalSupply;
     /// @dev	rate of how many reward tokens are distributed from the fundingmanager to the whole staking
     ///         pool in seconds.
     uint internal rewardRate;
@@ -88,7 +94,7 @@ contract LM_PC_Staking_v1 is
     uint internal lastUpdate;
 
     /// @dev	mapping of balances of each user in the staking token address => balance.
-    mapping(address => uint) internal balances;
+    //mapping(address => uint256) internal balances;
     /// @dev	mapping of reward Values that are needed to calculate the rewards that a user should receive.
     /// @dev	should change everytime the user stakes or unstakes funds
     ///         address => rewardValue.
@@ -115,6 +121,8 @@ contract LM_PC_Staking_v1 is
         __LM_PC_Staking_v1_init(_stakingToken);
 
         __ERC20PaymentClientBase_v1_init(new uint8[](0)); // This module does not use any PaymentOrder flags
+
+        __ERC20_init("Inverter Staking Token", "IST");
     }
 
     /// @dev	Initializes the staking contract.
@@ -131,7 +139,7 @@ contract LM_PC_Staking_v1 is
 
     /// @inheritdoc ILM_PC_Staking_v1
     function getBalance(address user) external view returns (uint) {
-        return balances[user];
+        return balanceOf(user);
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
@@ -157,11 +165,11 @@ contract LM_PC_Staking_v1 is
             duration = rewardsEnd - block.timestamp;
         }
         // If no one else staked
-        if (totalSupply == 0) {
+        if (staking_totalSupply == 0) {
             // Get full amount back
             return amount * duration * rewardRate;
         }
-        return (amount * duration * rewardRate) / totalSupply;
+        return (amount * duration * rewardRate) / staking_totalSupply;
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
@@ -171,7 +179,7 @@ contract LM_PC_Staking_v1 is
 
     /// @inheritdoc ILM_PC_Staking_v1
     function getTotalSupply() external view returns (uint) {
-        return totalSupply;
+        return staking_totalSupply;
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
@@ -196,6 +204,18 @@ contract LM_PC_Staking_v1 is
 
     //--------------------------------------------------------------------------
     // Mutating Functions
+
+    /// @dev Overridden from ERC20Upgradeable
+    /// @dev Mint tokens, after accumulating rewards for an user and update the rewards per token accumulator.
+    function _update(address from, address to, uint amount)
+        internal
+        virtual
+        override
+    {
+        _updateRewards(to);
+        _updateRewards(from);
+        super._update(from, to, amount);
+    }
 
     /// @inheritdoc ILM_PC_Staking_v1
     function stake(uint amount)
@@ -222,12 +242,12 @@ contract LM_PC_Staking_v1 is
     {
         address sender = _msgSender();
         // Update rewardValue, updatedTimestamp and earned values
-        _update(sender);
+        _updateRewards(sender);
 
         // Reduce balances accordingly
-        balances[sender] -= amount;
+        //balances[sender] -= amount;
         // Total supply too
-        totalSupply -= amount;
+        staking_totalSupply -= amount;
 
         // Transfer funds back to sender
         IERC20(stakingToken).safeTransfer(sender, amount);
@@ -238,6 +258,8 @@ contract LM_PC_Staking_v1 is
             _distributeRewards(sender);
         }
 
+        _burn(sender, amount); //Note: weird that this functions has not been externalized like _stake()
+
         emit Unstaked(sender, amount);
     }
 
@@ -245,7 +267,7 @@ contract LM_PC_Staking_v1 is
     function claimRewards() external virtual nonReentrant {
         address recipient = _msgSender();
 
-        _update(recipient);
+        _updateRewards(recipient);
         _distributeRewards(recipient);
     }
 
@@ -264,7 +286,7 @@ contract LM_PC_Staking_v1 is
     /// @param  depositFor The address of the user.
     /// @param  amount The amount of tokens to stake.
     function _stake(address depositFor, uint amount) internal virtual {
-        _update(depositFor);
+        _updateRewards(depositFor);
 
         // If the user has already earned something
         if (userRewards[depositFor] != 0) {
@@ -273,9 +295,11 @@ contract LM_PC_Staking_v1 is
         }
 
         // Increase balance accordingly
-        balances[depositFor] += amount;
+        //balances[depositFor] += amount;
         // Total supply too
-        totalSupply += amount;
+        staking_totalSupply += amount;
+
+        _mint(depositFor, amount);
 
         emit Staked(depositFor, amount);
     }
@@ -283,7 +307,7 @@ contract LM_PC_Staking_v1 is
     /// @dev	Updates the reward value and the timestamp of the last update.
     /// @dev	This has to trigger on every major change of the state of the contract.
     /// @param  triggerAddress The address of the user.
-    function _update(address triggerAddress) internal {
+    function _updateRewards(address triggerAddress) internal {
         // Set a new reward value
         uint newRewardValue = _calculateRewardValue();
         rewardValue = newRewardValue;
@@ -315,15 +339,15 @@ contract LM_PC_Staking_v1 is
     ///         essentially what a single token would have earned in that time period.
     /// @return The reward value.
     function _calculateRewardValue() internal view returns (uint) {
-        // In case the totalSupply is 0 the rewardValue doesnt change
-        if (totalSupply == 0) {
+        // In case the staking_totalSupply is 0 the rewardValue doesnt change
+        if (staking_totalSupply == 0) {
             return rewardValue;
         }
 
         return (_getRewardDistributionTimestamp() - lastUpdate) // Get the time difference between the last time it was updated and now (or in case the reward period ended the rewardEnd timestamp)
             * rewardRate // Multiply it with the rewardrate to get the rewards distributed for all of the stakers together
             * 1e36 // for the later division we need a value to compensate for the loss of precision. This value will be counteracted in earned()
-            / totalSupply // divide it by the totalSupply to get the rewards per token
+            / staking_totalSupply // divide it by the staking_totalSupply to get the rewards per token
             + rewardValue; // add the old rewardValue to the new "single" rewardValue
     }
 
@@ -350,7 +374,7 @@ contract LM_PC_Staking_v1 is
         returns (uint)
     {
         return (providedRewardValue - userRewardValues[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
-            * balances[user] // multiply by users balance of tokens to get their share of the token rewards
+            * balanceOf(user) // multiply by users balance of tokens to get their share of the token rewards
             / 1e36 // See comment in _calculateRewardValue();
             + userRewards[user];
     }
@@ -395,7 +419,7 @@ contract LM_PC_Staking_v1 is
         validAmount(amount)
         validDuration(duration)
     {
-        _update(address(0));
+        _updateRewards(address(0));
         // If rewardsEnd is already reached
         if (block.timestamp >= rewardsEnd) {
             // Dont include previous reward Rate
@@ -440,5 +464,40 @@ contract LM_PC_Staking_v1 is
         if (duration == 0) {
             revert Module__LM_PC_Staking_v1__InvalidDuration();
         }
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (bytes calldata)
+    {
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }

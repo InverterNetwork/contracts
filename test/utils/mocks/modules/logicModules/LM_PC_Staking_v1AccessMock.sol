@@ -42,8 +42,8 @@ contract LM_PC_Staking_v1AccessMock is LM_PC_Staking_v1 {
     //--------------------------------------------------------------------------
     // Internal Functions
 
-    function direct_update(address triggerAddress) external {
-        _update(triggerAddress);
+    function direct_updateRewards(address triggerAddress) external {
+        _updateRewards(triggerAddress);
     }
 
     function direct_calculateRewardValue() external view returns (uint) {

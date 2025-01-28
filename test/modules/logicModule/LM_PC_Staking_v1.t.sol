@@ -547,7 +547,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             trigger, expectedRewards, stakingManager.getLastUpdate(), 0
         );
 
-        stakingManager.direct_update(trigger);
+        stakingManager.direct_updateRewards(trigger);
 
         // Check that values changed
         assertEq(
@@ -637,7 +637,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         uint expectedPayout = stakingManager.getEarned(user);
 
         // For earned to work update had to be triggered
-        stakingManager.direct_update(user);
+        stakingManager.direct_updateRewards(user);
 
         vm.expectEmit(true, true, true, true);
         emit RewardsDistributed(user, expectedPayout);
@@ -661,6 +661,128 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(1, _paymentProcessor.processPaymentsTriggered());
     }
 
+    function test_distributeRewardsAfterTransfer(uint seed) public {
+        // Warp the chain to a reasonable amount
+        vm.warp(bound(seed, 1 days, 365 days));
+
+        // fund orchestrator
+        _token.mint(address(_fundingManager), 12_960_000);
+
+        address user = address(uint160(1));
+        address user_2 = address(uint160(2));
+
+        // Mint to user
+        stakingToken.mint(user, 1);
+
+        // User stakes a token and immediatly transfers the receipt
+        vm.startPrank(user);
+
+        stakingToken.approve(address(stakingManager), 1);
+        stakingManager.stake(1);
+        stakingManager.transfer(user_2, 1);
+
+        vm.stopPrank();
+
+        // Set up reasonable rewards
+        setUpReasonableRewards(seed);
+
+        // Warp the chain by a reasonable amount
+        vm.warp(bound(seed, 1 days, 30 days) + block.timestamp);
+
+        uint expectedPayout = stakingManager.getEarned(user_2);
+
+        // For earned to work update had to be triggered
+        stakingManager.direct_updateRewards(user_2);
+
+        vm.expectEmit(true, true, true, true);
+        emit RewardsDistributed(user_2, expectedPayout);
+
+        stakingManager.direct_distributeRewards(user_2);
+
+        // rewards are reset
+        assertEq(0, stakingManager.getUserRewards(user));
+
+        // Expect paymentOrder to be correct
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
+            stakingManager.paymentOrders();
+
+        assertEq(1, orders.length);
+        assertEq(user_2, orders[0].recipient);
+        assertEq(expectedPayout, orders[0].amount);
+        assertEq(orders[0].flags, 0);
+        assertEq(orders[0].data.length, 0);
+
+        // Make sure payment Processor was triggered
+        assertEq(1, _paymentProcessor.processPaymentsTriggered());
+    }
+
+    function test_Stake_TransferStakeToken_UnstakeWithRewards(uint seed)
+        public
+    {
+        // Warp the chain to a reasonable amount
+        vm.warp(bound(seed, 1 days, 365 days));
+
+        // fund orchestrator
+        _token.mint(address(_fundingManager), type(uint).max);
+
+        uint tokens = bound(
+            seed,
+            12_960_000, // Thats 5 tokens per second
+            1e22 * 12_960_000 // Thats 5000 tokens per second
+        );
+        // Set up reasonable rewards
+        stakingManager.setRewards(tokens, 2 seconds);
+
+        address user_1 = address(uint160(1234));
+        address user_2 = address(uint160(2345));
+
+        // Mint to user
+        stakingToken.mint(user_1, 1);
+
+        // User stakes a token
+        vm.startPrank(user_1);
+
+        stakingToken.approve(address(stakingManager), 1);
+        stakingManager.stake(1);
+        //half the staking time passes
+        vm.warp(block.timestamp + 1 seconds);
+
+        //user_1 transfers
+        stakingManager.transfer(user_2, 1);
+        vm.stopPrank();
+
+        //rest of the staking time passes
+        vm.warp(block.timestamp + 5 seconds);
+
+        //user 2 unstakes
+        vm.startPrank(user_2);
+
+        stakingManager.unstake(1);
+
+        vm.stopPrank();
+
+        //user 1 has half the rewards wating to be claimed
+        //user 2 has half the rewards in a paymentOrder
+        // rewards are reset
+
+        uint expectedPayout = stakingManager.getEarned(user_1);
+
+        assertNotEq(expectedPayout, 0);
+        assertEq(0, stakingManager.getUserRewards(user_2));
+
+        // Expect paymentOrder to be correct
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
+            stakingManager.paymentOrders();
+
+        assertEq(1, orders.length);
+        assertEq(user_2, orders[0].recipient);
+        assertEq(expectedPayout, orders[0].amount); //this also checks that it's half of the rewards
+        assertEq(orders[0].flags, 0);
+        assertEq(orders[0].data.length, 0);
+
+        // Make sure payment Processor was triggered
+        assertEq(1, _paymentProcessor.processPaymentsTriggered());
+    }
     // =========================================================================
 
     //--------------------------------------------------------------------------

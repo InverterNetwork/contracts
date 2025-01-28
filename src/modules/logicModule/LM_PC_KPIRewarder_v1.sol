@@ -26,6 +26,11 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+import {
+    ERC2771ContextUpgradeable,
+    ContextUpgradeable
+} from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
+
 /**
  * @title   Inverter KPI Rewarder Module
  *
@@ -411,5 +416,40 @@ contract LM_PC_KPIRewarder_v1 is
     //          to call it.
     function assertionDisputedCallback(bytes32 assertionId) public override {
         // Do nothing
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, LM_PC_Staking_v1)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, LM_PC_Staking_v1)
+        returns (bytes calldata)
+    {
+        return ERC2771ContextUpgradeable._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, LM_PC_Staking_v1)
+        returns (uint)
+    {
+        return ERC2771ContextUpgradeable._contextSuffixLength();
     }
 }
