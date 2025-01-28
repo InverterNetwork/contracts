@@ -444,7 +444,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                bondingCurveFundingManager.CURVE_INTERACTION_ROLE(),
+                _authorizer.generateRoleId(
+                    address(bondingCurveFundingManager),
+                    bondingCurveFundingManager.CURVE_INTERACTION_ROLE()
+                ),
                 nonAuthorizedBuyer
             )
         );
@@ -461,7 +464,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                bondingCurveFundingManager.CURVE_INTERACTION_ROLE(),
+                _authorizer.generateRoleId(
+                    address(bondingCurveFundingManager),
+                    bondingCurveFundingManager.CURVE_INTERACTION_ROLE()
+                ),
                 nonAuthorizedBuyer
             )
         );
@@ -572,7 +578,10 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                bondingCurveFundingManager.CURVE_INTERACTION_ROLE(),
+                _authorizer.generateRoleId(
+                    address(bondingCurveFundingManager),
+                    bondingCurveFundingManager.CURVE_INTERACTION_ROLE()
+                ),
                 nonAuthorizedBuyer
             )
         );

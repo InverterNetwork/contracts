@@ -579,7 +579,12 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     ///         check if the caller has the CURVE_INTERACTION_ROLE.
     function _onlyIfNotBuyAndSellRestrictedModifier() internal view {
         if (_buyAndSellIsRestricted) {
-            _checkRoleModifier(CURVE_INTERACTION_ROLE, _msgSender());
+            _checkRoleModifier(
+                __Module_orchestrator.authorizer().generateRoleId(
+                    address(this), CURVE_INTERACTION_ROLE
+                ),
+                _msgSender()
+            );
         }
     }
 
