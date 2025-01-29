@@ -10,6 +10,8 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // External Dependencies
@@ -43,6 +45,8 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
     address curveUser = makeAddr("CURVE_USER");
 
     address liquidityVaultController = makeAddr("liquidityVaultController");
+
+    address feeReceiver = makeAddr("feeReceiver");
 
     function setUp() public override {
         // Setup common E2E framework
@@ -133,6 +137,9 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Setup
 
+        // Warp time to account for time calculations
+        vm.warp(52 weeks);
+
         // address(this) creates a new orchestrator.
         IOrchestratorFactory_v1.WorkflowConfig memory workflowConfig =
         IOrchestratorFactory_v1.WorkflowConfig({
@@ -166,21 +173,156 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         issuanceToken.setMinter(address(fundingManager), true);
 
         // Make sure fundingManager contains MinimalReserve
-
         token.mint(address(fundingManager), fundingManager.MIN_RESERVE());
 
         // Set TokenVault
         fundingManager.setTokenVault(address(tokenVault));
+
+        // Set Roles
+        fundingManager.grantModuleRole(
+            fundingManager.RISK_MANAGER_ROLE(), riskManager
+        );
+        fundingManager.grantModuleRole(
+            fundingManager.COVER_MANAGER_ROLE(), coverManager
+        );
+        fundingManager.grantModuleRole(
+            fundingManager.CURVE_INTERACTION_ROLE(), curveUser
+        );
 
         //--------------------------------------------------------------------------------
         // Setup
 
         uint aliceBuyAmount = 2_000_000e18;
         uint bobBuyAmount = 5_000_000e18;
+        uint curveUserBuyAmount = 10_000_000e18;
 
-        // Mint tokens to alice and bob
+        // Mint tokens to participants
         token.mint(alice, aliceBuyAmount);
         token.mint(bob, bobBuyAmount);
+        token.mint(curveUser, curveUserBuyAmount);
+
+        //--------------------------------------------------------------------------------
+        // Buy and Sell Restrictions
+
+        // Check for that buy and sell is not restricted
+        assertEq(fundingManager.isBuyAndSellRestricted(), false);
+
+        // Restrict Buy and Sell
+        vm.prank(coverManager);
+        fundingManager.restrictBuyAndSell();
+
+        // Check that the buy and sell functionalities dont work anymore for a regular user
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                orchestrator.authorizer().generateRoleId(
+                    address(fundingManager),
+                    fundingManager.CURVE_INTERACTION_ROLE()
+                ),
+                alice
+            )
+        );
+        vm.prank(alice);
+        fundingManager.buy(1, 1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                orchestrator.authorizer().generateRoleId(
+                    address(fundingManager),
+                    fundingManager.CURVE_INTERACTION_ROLE()
+                ),
+                alice
+            )
+        );
+        vm.prank(alice);
+        fundingManager.sell(1, 1);
+
+        // Check that the buy and sell functionalites still work for the curve Interaction Role
+
+        vm.prank(curveUser);
+        token.approve(address(fundingManager), curveUserBuyAmount);
+
+        vm.prank(curveUser);
+        fundingManager.buy(curveUserBuyAmount, 1);
+
+        uint curveUserSellAmount = issuanceToken.balanceOf(curveUser);
+
+        vm.prank(curveUser);
+        fundingManager.sell(curveUserSellAmount, 1);
+
+        // Open up functions again
+        vm.prank(coverManager);
+        fundingManager.unrestrictBuyAndSell();
+
+        //--------------------------------------------------------------------------------
+        // Transfer Repayment
+
+        uint repaymentAmount = fundingManager.getRepayableAmount();
+
+        // Make sure there are enough tokens in the fundingManager to transfer
+        // This step would not be necessary if there where enough tokens
+        token.mint(address(fundingManager), repaymentAmount);
+
+        // Transfer Repayment to liquidityVaultController
+
+        //Check that minReserve is not reached
+        vm.prank(liquidityVaultController);
+        fundingManager.transferRepayment(
+            liquidityVaultController, repaymentAmount
+        );
+
+        assertEq(token.balanceOf(liquidityVaultController), repaymentAmount);
+
+        //--------------------------------------------------------------------------------
+        // Seize amounts
+
+        uint seizeAmount = fundingManager.getSeizableAmount();
+
+        // Make sure there are enough tokens in the fundingManager to transfer
+        // This step would not be necessary if there where enough tokens
+        token.mint(address(fundingManager), seizeAmount);
+
+        // Half seize amount for demonstration purposes
+        seizeAmount = seizeAmount / 2;
+
+        // Transfer Repayment to liquidityVaultController
+
+        // Check that minReserve is not reached
+        vm.prank(coverManager);
+        fundingManager.seize(seizeAmount);
+
+        assertEq(token.balanceOf(coverManager), seizeAmount);
+
+        // Check that seize cant be triggered again unditl Seize Delay is not reached
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
+                    .FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__SeizeTimeout
+                    .selector,
+                block.timestamp + fundingManager.SEIZE_DELAY()
+            )
+        );
+        vm.prank(coverManager);
+        fundingManager.seize(seizeAmount);
+
+        // Make time jump to pass Seize Delay
+        vm.warp(block.timestamp + fundingManager.SEIZE_DELAY() + 1);
+
+        // Seize again
+        vm.prank(coverManager);
+        fundingManager.seize(seizeAmount);
+
+        assertEq(token.balanceOf(coverManager), seizeAmount * 2);
+
+        //--------------------------------------------------------------------------------
+        // Set Capital Required and Base Price Multiplier
+
+        vm.prank(riskManager);
+        fundingManager.setCapitalRequired(500_000 * 1e18);
+
+        vm.prank(riskManager);
+        fundingManager.setBasePriceMultiplier(0.0000005 ether);
 
         //--------------------------------------------------------------------------------
         // Buy and Sell
@@ -248,7 +390,6 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         buf_minAmountOut = fundingManager.calculateSaleReturn(
             issuanceToken.balanceOf(alice) / 2
         );
-        emit here();
 
         vm.startPrank(alice);
         {
@@ -258,7 +399,19 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
             assertEq(token.balanceOf(alice), buf_minAmountOut);
         }
         vm.stopPrank();
-    }
 
-    event here();
+        //--------------------------------------------------------------------------------
+        // Check that fee got send to token vault
+
+        uint feeAmount = token.balanceOf(tokenVault);
+        assertTrue(feeAmount > 0);
+
+        // Withdraw fee from token vault
+        IFM_EXT_TokenVault_v1(tokenVault).withdraw(
+            address(token), feeAmount, feeReceiver
+        );
+
+        // Check that fee got send to fee receiver
+        assertEq(token.balanceOf(feeReceiver), feeAmount);
+    }
 }
