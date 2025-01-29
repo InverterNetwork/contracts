@@ -154,11 +154,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
-
         // Get the client interface
         IERC20PaymentClientBase_v1 client =
             IERC20PaymentClientBase_v1(address(paymentClient));
@@ -178,7 +175,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint balanceBefore = _token.balanceOf(address(paymentProcessor));
         paymentProcessor.processPayments(client, executionData);
         assertEq(_token.balanceOf(address(testRecipient)), 0);
-
+        console2.log(_token.balanceOf(address(testRecipient)));
         uint balanceAfter = _token.balanceOf(address(paymentProcessor));
         assertEq(balanceAfter, balanceBefore + testAmount);
 
@@ -284,9 +281,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
 
         // Get the client interface
@@ -307,9 +302,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
 
         // Get the client interface
@@ -380,9 +373,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
         // Get the client interface
         IERC20PaymentClientBase_v1 client =
@@ -427,9 +418,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > MINTED_SUPPLY && testAmount <= type(uint96).max);
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
 
         vm.prank(testRecipient);
@@ -438,6 +427,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         IERC20PaymentClientBase_v1 client =
             IERC20PaymentClientBase_v1(address(paymentClient));
+        console2.log(address(paymentProcessor));
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -461,9 +451,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint96 testAmount
     ) public {
-        // Assumptions
-        vm.assume(testAmount > 0 && testAmount <= MINTED_SUPPLY);
-        vm.assume(testRecipient != address(0));
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup - Clear existing balance
         uint currentBalance = _token.balanceOf(address(paymentProcessor));
@@ -507,8 +495,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup initial payment
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -571,9 +558,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        // Setup
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup the payment and process it
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -608,7 +593,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             address(paymentClient), testRecipient, executionData, orders[0]
         );
         uint balanceAfterCancel = _token.balanceOf(address(paymentProcessor));
-        //console2.log("balanceAfterCancel", balanceAfterCancel);
 
         assertEq(balanceAfterCancel, balanceBeforeCancel - testAmount);
 
@@ -631,10 +615,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address nonRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(nonRecipient != testRecipient);
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
 
         // Process payment to create intent
@@ -658,6 +639,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         });
 
         // Prank as non-recipient
+        console2.log(address(paymentClient));
         vm.prank(nonRecipient);
         vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
         paymentProcessor.cancelTransfer(
@@ -676,8 +658,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup initial payment and process it
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -706,8 +687,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         _setupSinglePayment(testRecipient, testAmount);
 
@@ -728,8 +708,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount,
         address invalidCaller
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         vm.assume(invalidCaller != address(paymentClient));
 
         // Setup failed transfer
@@ -763,8 +742,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             _setupSinglePayment(testRecipient, testAmount);
@@ -791,8 +769,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup initial payment and process it
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -824,8 +801,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup failed transfer
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
@@ -866,9 +842,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
-
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         _setupSinglePayment(testRecipient, testAmount);
 
         // Reset approval
@@ -876,6 +850,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         _token.approve(address(paymentProcessor), 0);
 
         // Expect revert for insufficient allowance
+        console2.log(_token.balanceOf(address(testRecipient)));
         vm.expectRevert(
             abi.encodeWithSelector(
                 IERC20Errors.ERC20InsufficientAllowance.selector,
@@ -898,8 +873,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup payment with unsupported token
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
@@ -933,7 +907,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         _setupSinglePayment(testRecipient, ZERO_AMOUNT);
         assertEq(_token.balanceOf(address(testRecipient)), ZERO_AMOUNT);
-
         vm.expectRevert(
             ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
         );
@@ -994,8 +967,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount,
         uint32 timeOffset
     ) public {
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
         vm.assume(timeOffset > 0 && timeOffset < 30 days);
 
         // Create payment order with fuzzed time range
@@ -1029,8 +1001,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         //@audit-issue -> discuss with 33 about this test
-        vm.assume(testRecipient != address(0));
-        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup payment with expired end date
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
@@ -1235,5 +1206,13 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         _token.mint(address(paymentProcessor), MINTED_SUPPLY); // Mint _tokens to processor
         vm.prank(address(paymentProcessor));
         _token.approve(address(paymentProcessor), type(uint).max); // Processor approves bridge logic
+    }
+
+    function _assumeValidRecipientAndAmount(
+        address testRecipient,
+        uint testAmount
+    ) internal pure {
+        vm.assume(testRecipient != address(0));
+        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
     }
 }
