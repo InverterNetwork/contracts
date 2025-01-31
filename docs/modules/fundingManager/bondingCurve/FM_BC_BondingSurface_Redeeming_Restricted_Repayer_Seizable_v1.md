@@ -31,7 +31,7 @@ This function allows the Cover Manager to seize collateral tokens from the bondi
 
 ### Repayment
 
-This function allows a predetermined address, a so called LiquidityVaultController, to transfer collateral tokens out of the bonding surface contract. The LiquidityVaultController works similar to a role in this instance, as it is a address that can be assigned by the Cover Manager via the setLiquidityVaultController function.
+This functionality allows a predetermined address, a so called LiquidityVaultController, to transfer collateral tokens out of the bonding surface contract. The LiquidityVaultController works similar to a role in this instance, as it is a address that can be assigned by the Cover Manager via the setLiquidityVaultController function. The transferal of collateral is done by calling the transferRepayment function.
 
 ### Access Restricted Buy and Sell Functions
 
@@ -63,7 +63,15 @@ These steps are needed before the bonding surface workflow is deployed.
 
 These steps are needed during the workflow deployment.
 
-##### Creation of the Tokenvault (optinal)
+#### Deployment Parameters
+
+These parameters mus be known in addition to the ones needed for the bonding surface redeeming contract setup.
+
+- **LiquidityVaultController address**: What is the address that can use the transferRepayment function
+- **buy and sell restriction value**\_ Is the buy and sell functionality restricted to the Curve User role?
+- **Seize percentage**: What is the percentage of the collateral tokens that can be seized by the Cover Manager?
+
+#### Creation of the Tokenvault (optinal)
 
 This is an optional step, as the tokenvault can be set as any address. However, we recommend to use the TokenVault_v1 contract that can be deployed alongside the bonding surface contract during workflow deployment.
 @todo reference?
@@ -82,6 +90,6 @@ After the deployment of the bonding surface contract, the following roles need t
 
 The roles that need to be assigned are:
 
-- Risk Manager which bytecode can be looked up via the RISK_MANAGER_ROLE() function.
-- Cover Manager which bytecode can be looked up via the COVER_MANAGER_ROLE() function.
-- Curve User which bytecode can be looked up via the CURVE_INTERACTION_ROLE() function.
+- **Risk Manager** which bytecode can be looked up via the RISK_MANAGER_ROLE() function.
+- **Cover Manager** which bytecode can be looked up via the COVER_MANAGER_ROLE() function.
+- **Curve User** which bytecode can be looked up via the CURVE_INTERACTION_ROLE() function.

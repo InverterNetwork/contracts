@@ -133,8 +133,21 @@ This contract needs to be deployed before the bonding surface workflow is deploy
 ### During Workflow Deployment
 
 These steps are needed during the workflow deployment.
+@todo Doesnt need anything here, but I wanted to leave it in as a reference.
 
 #### Deployment Parameters
+
+The following parameters need to be put in during the workflow deployment:
+
+- **issuanceToken address**: What is the address of the issuance token?
+- **acceptedToken (collateral Token) address**: What is the address of the token that is accepted as collateral by the BondingCurve contract?
+- **bonding surface formula address**: What is the address of the formula contract that is used to calculate the issuance and redeeming amount?
+- **capitalRequired amount**: What is the capital that is needed to operate the protocol according to market size and conditions?
+- **basePriceMultiplier value**: What is the base price multiplier in the bonding curve formula?
+- **buyFee percentage**: What is the fee that is charged for the buying of the issuance token?
+- **sellFee percentage**: What is the fee that is charged for the selling of the bonding curve token?
+- **buyIsOpen boolean**: Is the buy functionality open or closed for all users?
+- **sellIsOpen boolean**: Is the sell functionality open or closed for all users?
 
 ### After Workflow Deployment
 
