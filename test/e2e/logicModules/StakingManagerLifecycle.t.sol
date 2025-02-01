@@ -29,7 +29,7 @@ import {ERC20Mock} from
     "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
-contract LM_PC_Staking_v1Lifecycle is E2ETest {
+contract LM_PC_StakingManager_v1Lifecycle is E2ETest {
     using SafeERC20 for ERC20Mock;
 
     // Module Configurations for the current E2E test. Should be filled during setUp() call.

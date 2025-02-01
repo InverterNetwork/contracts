@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
+
 // Internal Interfaces
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -29,6 +32,7 @@ import {
     ContextUpgradeable
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
+
 /**
  * @title   Inverter Staking Module
  *
@@ -43,8 +47,7 @@ import {ERC20Upgradeable} from "@oz-up/token/ERC20/ERC20Upgradeable.sol";
  *
  * @author  Inverter Network
  */
-
-contract LM_PC_Staking_v1 is
+contract LM_PC_StakingWithYieldClaim_v1 is
     ILM_PC_Staking_v1,
     ERC20PaymentClientBase_v1,
     ReentrancyGuardUpgradeable,
@@ -99,8 +102,11 @@ contract LM_PC_Staking_v1 is
     /// @dev	mapping of how many reward tokens the user accumulated address => earned.
     mapping(address => uint) internal userRewards;
 
+    /// Extra Prototype Storage
+    address public treasuryAddress;
+
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[49] private __gap;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -274,6 +280,19 @@ contract LM_PC_Staking_v1 is
         onlyOrchestratorAdmin
     {
         _setRewards(amount, duration);
+    }
+
+    /// Extra Prototype Function
+    function withdrawYield() external {
+        uint amount =
+            IERC20(stakingToken).balanceOf(address(this)) - this.totalSupply();
+        IERC20(stakingToken).safeTransfer(treasuryAddress, amount);
+
+        emit YieldWithdrawn(stakingToken, treasuryAddress, amount);
+    }
+
+    function setTreasuryAddress(address treasuryAddress_) external {
+        treasuryAddress = treasuryAddress_;
     }
 
     //--------------------------------------------------------------------------

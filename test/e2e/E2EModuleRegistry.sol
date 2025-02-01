@@ -23,6 +23,10 @@ import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
 import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
 import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
+
+import {LM_PC_StakingWithYieldClaim_v1} from
+    "@lm/LM_PC_StakingWithYieldClaim_v1.sol";
+
 import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
@@ -538,6 +542,52 @@ contract E2EModuleRegistry is Test {
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
             LM_PC_Staking_v1Metadata, IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
+        );
+    }
+
+    // LM_PC_StakingWithYieldClaim_v1
+
+    LM_PC_StakingWithYieldClaim_v1 LM_PC_StakingWithYieldClaim_v1Impl;
+
+    InverterBeacon_v1 LM_PC_StakingWithYieldClaim_v1Beacon;
+
+    IModule_v1.Metadata LM_PC_StakingWithYieldClaim_v1Metadata = IModule_v1
+        .Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/staking-manager",
+        "LM_PC_StakingWithYieldClaim_v1"
+    );
+
+    /*
+     IOrchestratorFactory_v1.ModuleConfig LM_PC_StakingWithYieldClaim_v1FactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
+        LM_PC_StakingWithYieldClaim_v1Metadata,
+        bytes(address(stakingToken))  
+    ); 
+    */
+
+    function setUpLM_PC_StakingWithYieldClaim_v1() internal {
+        // Deploy module implementations.
+        LM_PC_StakingWithYieldClaim_v1Impl =
+            new LM_PC_StakingWithYieldClaim_v1();
+
+        // Deploy module beacons.
+        LM_PC_StakingWithYieldClaim_v1Beacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            LM_PC_StakingWithYieldClaim_v1Metadata.majorVersion,
+            address(LM_PC_StakingWithYieldClaim_v1Impl),
+            LM_PC_StakingWithYieldClaim_v1Metadata.minorVersion,
+            LM_PC_StakingWithYieldClaim_v1Metadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            LM_PC_StakingWithYieldClaim_v1Metadata,
+            IInverterBeacon_v1(LM_PC_StakingWithYieldClaim_v1Beacon)
         );
     }
 

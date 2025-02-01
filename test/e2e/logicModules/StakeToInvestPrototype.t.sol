@@ -21,7 +21,10 @@ import {ERC165Upgradeable} from
 import {FM_Rebasing_v1} from
     "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 // SuT
-import {LM_PC_Staking_v1, ILM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
+import {
+    LM_PC_StakingWithYieldClaim_v1,
+    ILM_PC_Staking_v1
+} from "@lm/LM_PC_StakingWithYieldClaim_v1.sol";
 
 // Mocks
 // import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -114,10 +117,10 @@ contract LM_PC_StakeToInvest_Prototype is E2ETest {
         );
 
         // Additional Logic Modules
-        setUpLM_PC_Staking_v1();
+        setUpLM_PC_StakingWithYieldClaim_v1();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_Staking_v1Metadata, abi.encode(stakingToken)
+                LM_PC_StakingWithYieldClaim_v1Metadata, abi.encode(stakingToken)
             )
         );
     }
@@ -139,7 +142,7 @@ contract LM_PC_StakeToInvest_Prototype is E2ETest {
         FM_Rebasing_v1 fundingManager =
             FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        LM_PC_Staking_v1 stakingManager;
+        LM_PC_StakingWithYieldClaim_v1 stakingManager;
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
@@ -148,7 +151,7 @@ contract LM_PC_StakeToInvest_Prototype is E2ETest {
                     type(ILM_PC_Staking_v1).interfaceId
                 )
             ) {
-                stakingManager = LM_PC_Staking_v1(modulesList[i]);
+                stakingManager = LM_PC_StakingWithYieldClaim_v1(modulesList[i]);
                 break;
             }
         }
