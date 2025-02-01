@@ -56,6 +56,11 @@ interface ILM_PC_Staking_v1 {
     /// @param  token Address of token that can be staked.
     event StakingTokenSet(address indexed token);
 
+    /// Extra Prototype Event
+    event YieldWithdrawn(
+        address indexed token, address indexed to, uint amount
+    );
+
     //--------------------------------------------------------------------------
     // Getter Functions
 

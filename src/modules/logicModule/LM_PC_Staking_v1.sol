@@ -102,8 +102,11 @@ contract LM_PC_Staking_v1 is
     /// @dev	mapping of how many reward tokens the user accumulated address => earned.
     mapping(address => uint) internal userRewards;
 
+    /// Extra Prototype Storage
+    address public treasuryAddress;
+
     /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
+    uint[49] private __gap;
 
     //--------------------------------------------------------------------------
     // Initialization
@@ -279,6 +282,19 @@ contract LM_PC_Staking_v1 is
         _setRewards(amount, duration);
     }
 
+    /// Extra Prototype Function
+    function withdrawYield() external {
+        uint amount =
+            IERC20(stakingToken).balanceOf(address(this)) - this.totalSupply();
+        IERC20(stakingToken).safeTransfer(treasuryAddress, amount);
+
+        emit YieldWithdrawn(stakingToken, treasuryAddress, amount);
+    }
+
+    function setTreasuryAddress(address treasuryAddress_) external {
+        treasuryAddress = treasuryAddress_;
+    }
+
     //--------------------------------------------------------------------------
     // Private Functions
 
@@ -299,7 +315,27 @@ contract LM_PC_Staking_v1 is
         // Total supply too
         staking_totalSupply += amount;
 
-        _mint(depositFor, amount);
+        _mint(address(this), amount);
+
+        // Create vesting for the new Token
+        (bytes32 flags, bytes32[] memory data) =
+            _assemblePaymentConfig(new bytes32[](0)); // No additional payment data
+
+        _addPaymentOrder(
+            PaymentOrder({
+                recipient: depositFor,
+                paymentToken: address(this),
+                amount: amount,
+                originChainId: block.chainid,
+                targetChainId: block.chainid,
+                flags: flags,
+                data: data
+            })
+        );
+
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClientBase_v1(address(this))
+        );
 
         emit Staked(depositFor, amount);
     }
