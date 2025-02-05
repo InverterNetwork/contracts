@@ -107,4 +107,42 @@ contract PaymentOrder_Utils_v1Test is Test {
     }
 
     //MISSING: parsePaymentOrderData Tests
+    /*
+    parsePaymentOrderData
+    └── it should go compare the needed flags with the flags provided in the order
+        ├── it should return the flags that are missing in the order
+        ├── it should return the flags that are present in the order
+        └── it should return the values of the flags that are present in the order
+    */
+    function test_parsePaymentOrderData(
+        uint8[] calldata targetFlags_,
+        uint8[] calldata orderFlags_,
+        bytes32[] calldata orderValues_
+    ) public {
+        if (targetFlags_.length > 256) targetFlags_ = targetFlags_[0:256];
+        if (orderFlags_.length > 256) orderFlags_ = orderFlags_[0:256];
+        if (orderValues_.length > orderFlags_.length) {
+            orderValues_ = orderValues_[0:orderFlags_.length];
+        }
+
+        bytes32 targetFlagConfig =
+            PaymentOrder_Utils.generateFlagConfig(targetFlags_);
+        bytes32 orderFlagConfig =
+            PaymentOrder_Utils.generateFlagConfig(orderFlags_);
+
+        (
+            uint8[] memory missingFlags_,
+            uint8[] memory foundFlags_,
+            bytes32[] memory foundValues_
+        ) = PaymentOrder_Utils.parsePaymentOrderData(
+            targetFlagConfig, orderFlagConfig, orderValues_
+        );
+
+        uint countFoundFlags = 0;
+        uint countMissingFlags = 0;
+
+        // TODO: FINISH TEST
+        // There is sth fishy in the loop regarding the if that breaks the loop
+        // Shouldn't we just check if we found all the values we needed?
+    }
 }

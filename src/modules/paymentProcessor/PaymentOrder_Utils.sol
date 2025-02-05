@@ -70,12 +70,14 @@ library PaymentOrder_Utils {
                 flagCounter++;
             }
         }
+
+        console.log("#");
         flagValues_ = new uint8[](flagCounter);
 
         for (uint i = 0; i < flagCounter; i++) {
             flagValues_[i] = flagValue_buffer[i];
         }
-
+        console.log("&");
         return flagValues_;
     }
 
@@ -91,33 +93,44 @@ library PaymentOrder_Utils {
         public
         view
         returns (
+            uint8[] memory missingFlags_,
             uint8[] memory foundFlags_,
-            bytes32[] memory foundValues_,
-            uint8[] memory missingFlags_
+            bytes32[] memory foundValues_
         )
     {
         // compare order & target flags to find:
         // - the flags that are included in the order
         // - the flags that are missing
 
+        console.logBytes32(targetFlags_);
+        console.logBytes32(orderFlags_);
+        console.logBytes32(~orderFlags_);
+
         bytes32 foundFlagBytes = targetFlags_ & orderFlags_;
         bytes32 missingFlagBytes = targetFlags_ & ~orderFlags_;
 
         // decodFlagConfig() for the missing and included flags
         foundFlags_ = decodeFlagConfig(foundFlagBytes);
+        console.log(".");
+        console.logBytes32(missingFlagBytes);
         missingFlags_ = decodeFlagConfig(missingFlagBytes);
+        //console.log(missingFlags_[0]);
+        console.log("+");
 
         // create an array that stores the values of the flags that are included in the order
         // go through orderData while checking if the the flag is present in both targetFlags and orderFlags
 
         uint8 positionInOrderData = 0;
-        uint8 positionInReturnData = 0;
+
+        foundValues_ = new bytes32[](foundFlags_.length);
+        uint8 positionInFoundValues = 0;
 
         for (uint i = 0; i < 256; i++) {
-            if (positionInReturnData == foundFlags_.length) {
-                // we have either:
-                // - reached the end of the orderData_ array
-                // - already checked for all the values this P_P will need
+            if (
+                positionInFoundValues == foundValues_.length
+                    || positionInOrderData == orderData_.length
+            ) {
+                // we have found all the values in the orderData_ array that we need
                 //      ==> exit loop
                 break;
             }
@@ -130,20 +143,13 @@ library PaymentOrder_Utils {
                 //      ==> skip that data slot in the order
                 positionInOrderData++;
             }
-            /* if (orderBit == false && processorBit == true) {
-                // the P_P needs the value, but it's missing in the order
-                //      ==> use default value
-                returnData[positionInReturnData] =
-                    uint(defaultValues[positionInReturnData]);
-                positionInReturnData++;
-            }*/
             if (orderBit == true && processorBit == true) {
                 // the P_P needs the value, and the order supplies it
                 //      ==> use the value from the order
-                foundValues_[positionInReturnData] =
+                foundValues_[positionInFoundValues] =
                     orderData_[positionInOrderData];
                 positionInOrderData++;
-                positionInReturnData++;
+                positionInFoundValues++;
             }
         }
 
