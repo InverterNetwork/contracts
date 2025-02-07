@@ -19,6 +19,8 @@ contract CustomFactoryDeploymentScript is Script {
             "Deploying Custom Factory, attached to Orchestrator Factory at %s:",
             orchestratorFactory
         );
+
+        console.log("hi");
         _deploy(vm.envString("FACTORY_TYPE"));
     }
 
@@ -49,12 +51,14 @@ contract CustomFactoryDeploymentScript is Script {
 
     function _deploy(string memory factoryType_) public validateInputs {
         // Obtain the correct trusted forwarder from the orchestrator factory.
-        address trustedForwarder =
-            ERC2771Context(orchestratorFactory).trustedForwarder();
-        require(
-            trustedForwarder != address(0),
-            "Trusted Forwarder address not set - aborting!"
-        );
+        // address trustedForwarder =
+        //     ERC2771Context(orchestratorFactory).trustedForwarder();
+        // require(
+        //     trustedForwarder != address(0),
+        //     "Trusted Forwarder address not set - aborting!"
+        // );
+
+        address trustedForwarder = 0x9eb1e60f0C5fF2F6af8CB6c29ed2eC69D88ae65a;
 
         vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
         if (_isEqual(factoryType_, "RESTRICTED")) {

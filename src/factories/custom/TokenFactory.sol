@@ -3,6 +3,7 @@ pragma solidity 0.8.23;
 
 // External Implementations
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {MintWrapper} from "src/external/token/MintWrapper.sol";
 
 // External Dependencies
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
@@ -47,22 +48,25 @@ contract ERC20Issuance_Factory_v1 is ERC2771Context {
         uint8 decimals,
         uint maxSupply,
         address owner
-    ) external returns (ERC20Issuance_v1 token) {
+    ) external returns (ERC20Issuance_v1 token, MintWrapper mintWrapper) {
         token = new ERC20Issuance_v1(
             name,
             symbol,
             decimals,
             maxSupply,
-            owner
+            address(this)
         );
 
-        emit TokenDeployed(
-            address(token),
-            name,
-            symbol,
-            decimals,
-            maxSupply,
-            owner
+        // deploy mint wrapper
+     mintWrapper = new MintWrapper(
+            token,
+            address(this) // assigns owner role to itself initially to manage minting rights temporarily
         );
+
+        // set mint wrapper as minter
+        token.setMinter(address(mintWrapper), true);
+        token.transferOwnership(owner);
+        mintWrapper.setMinter(owner, true);
+        mintWrapper.transferOwnership(owner);
     }
 }
