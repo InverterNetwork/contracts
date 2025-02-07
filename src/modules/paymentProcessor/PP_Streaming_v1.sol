@@ -21,6 +21,7 @@ import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+import {PaymentOrder_Utils} from "./PaymentOrder_Utils.sol";
 
 /**
  * @title   Inverter Linear Streaming Payment Processor
@@ -964,46 +965,35 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         bytes32 orderFlags_,
         bytes32[] memory orderData_
     ) internal view returns (uint start_, uint cliff_, uint end_) {
-        uint[3] memory returnData;
+        // Parse the payment order data using the utility library
+        (
+            uint8[] memory missingFlags,
+            uint8[] memory foundFlags,
+            bytes32[] memory foundValues
+        ) = PaymentOrder_Utils.parsePaymentOrderData(
+            PROCESSOR_FLAGS, orderFlags_, orderData_
+        );
 
-        uint8 positionInOrderData = 0;
-        uint8 positionInReturnData = 0;
+        // Initialize return values with defaults
+        start_ = defaultValues[0];
+        cliff_ = defaultValues[1];
+        end_ = defaultValues[2];
 
-        for (uint i = 0; i < 256; i++) {
-            if (positionInReturnData == returnData.length) {
-                // we have either:
-                // - reached the end of the orderData_ array
-                // - already checked for all the values this P_P will need
-                //      ==> exit loop
-                break;
-            }
-
-            bool orderBit = (uint(orderFlags_) & (1 << i)) != 0;
-            bool processorBit = (uint(PROCESSOR_FLAGS) & (1 << i)) != 0;
-
-            if (orderBit == true && processorBit == false) {
-                // the P_P does not use that value
-                //      ==> skip that data slot in the order
-                positionInOrderData++;
-            }
-            if (orderBit == false && processorBit == true) {
-                // the P_P needs the value, but it's missing in the order
-                //      ==> use default value
-                returnData[positionInReturnData] =
-                    uint(defaultValues[positionInReturnData]);
-                positionInReturnData++;
-            }
-            if (orderBit == true && processorBit == true) {
-                // the P_P needs the value, and the order supplies it
-                //      ==> use the value from the order
-                returnData[positionInReturnData] =
-                    uint(orderData_[positionInOrderData]);
-                positionInOrderData++;
-                positionInReturnData++;
+        // Update values for found flags
+        for (uint i = 0; i < foundFlags.length; i++) {
+            if (foundFlags[i] == 1) {
+                // start flag
+                start_ = uint(foundValues[i]);
+            } else if (foundFlags[i] == 2) {
+                // cliff flag
+                cliff_ = uint(foundValues[i]);
+            } else if (foundFlags[i] == 3) {
+                // end flag
+                end_ = uint(foundValues[i]);
             }
         }
 
-        return (returnData[0], returnData[1], returnData[2]);
+        return (start_, cliff_, end_);
     }
 
     /// @dev    Sets the default start time, cliff and end times for new
