@@ -188,6 +188,26 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
     }
 
+    /* Test single payment outstanding token amounts
+    └── Given a single valid payment order
+        └── When processing cross-chain payments
+            └── Then it should verify the outstanding token amounts
+    */
+    function testFuzz_PublicProcessPayments_verifyOutstandingTokenAmounts(
+        address testRecipient,
+        uint testAmount
+    ) public {
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
+        _setupSinglePayment(testRecipient, testAmount);
+        // Get the client interface
+        IERC20PaymentClientBase_v1 client =
+            IERC20PaymentClientBase_v1(address(paymentClient));
+
+        assertEq(client.outstandingTokenAmount(address(_token)), testAmount);
+        paymentProcessor.processPayments(client, executionData);
+        assertEq(client.outstandingTokenAmount(address(_token)), 0);
+    }
+
     /* Test multiple payment processing
     └── Given multiple valid payment orders
         └── When processing cross-chain payments
@@ -249,12 +269,55 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         }
     }
 
+    /* Test multiple payment outstanding token amounts
+    └── Given multiple valid payment orders
+        └── When processing cross-chain payments
+            └── Then it should verify the outstanding token amounts for each payment
+    */
+    function testFuzz_PublicProcessPaymentsMultiple_verifyOutstandingTokenAmounts(
+        uint8 numRecipients,
+        uint testAmount
+    ) public {
+        vm.assume(numRecipients > 0 && numRecipients <= 10);
+        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+
+        // Setup mock payment orders
+        address[] memory setupRecipients = new address[](numRecipients);
+        uint[] memory setupAmounts = new uint[](numRecipients);
+
+        uint OutstandingAmount = 0;
+
+        for (uint i = 0; i < numRecipients; i++) {
+            setupRecipients[i] = address(
+                uint160(uint(keccak256(abi.encodePacked(i, block.timestamp))))
+            );
+            setupAmounts[i] =
+                1 + (uint64(uint(keccak256(abi.encode(i, testAmount)))));
+            OutstandingAmount += setupAmounts[i];
+        }
+
+        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
+            _createPaymentOrders(numRecipients, setupRecipients, setupAmounts);
+
+        // Get the client interface
+        IERC20PaymentClientBase_v1 client =
+            IERC20PaymentClientBase_v1(address(paymentClient));
+
+        assertEq(
+            client.outstandingTokenAmount(address(_token)), OutstandingAmount
+        );
+        // Process payments
+        paymentProcessor.processPayments(client, executionData);
+        assertEq(client.outstandingTokenAmount(address(_token)), 0);
+    }
+
     /* Test empty payment processing
     └── Given no payment orders
         └── When processing payments
             └── Then it should complete successfully
                 └── And bridge data should remain empty
     */
+
     function testFuzz_PublicProcessPayments_succeedsGivenNoPaymentOrders()
         public
     {
@@ -907,6 +970,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         _setupSinglePayment(testRecipient, ZERO_AMOUNT);
         assertEq(_token.balanceOf(address(testRecipient)), ZERO_AMOUNT);
+        console2.log(_token.balanceOf(address(testRecipient)));
         vm.expectRevert(
             ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
         );
