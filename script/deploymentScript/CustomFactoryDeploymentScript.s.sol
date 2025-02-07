@@ -5,6 +5,8 @@ import "forge-std/Script.sol";
 
 import {Restricted_PIM_Factory_v1} from
     "src/factories/custom/Restricted_PIM_Factory_v1.sol";
+import {ERC20Issuance_Factory_v1} from
+    "src/factories/custom/TokenFactory.sol";
 
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
 
@@ -64,6 +66,13 @@ contract CustomFactoryDeploymentScript is Script {
                             orchestratorFactory, trustedForwarder
                         )
                     )
+                );
+            }
+        } else if (_isEqual(factoryType_, "TOKEN")) {
+            {
+                console2.log(
+                    "\tERC20Issuance_Factory_v1: %s",
+                    address(new ERC20Issuance_Factory_v1(trustedForwarder))
                 );
             }
         } else {
