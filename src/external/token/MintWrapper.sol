@@ -63,7 +63,7 @@ contract MintWrapper is IMintWrapper, Ownable {
         Ownable(_owner)
     {
         issuanceToken = _issuanceToken;
-        
+
         emit IssuanceTokenSet(address(_issuanceToken));
     }
 

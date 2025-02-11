@@ -271,7 +271,11 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
 
     function testAddFunding_FactoryNotActive() public {
         factory.setActive(false);
-        vm.expectRevert(abi.encodeWithSelector(IRestricted_PIM_Factory_v1.FactoryNotActive.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.FactoryNotActive.selector
+            )
+        );
         factory.addFunding(
             deployer,
             beneficiary,
