@@ -135,6 +135,9 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         |       └── then records the funding amount
         |       └── then emits an event
         └── given that token has NOT been approved
+        |   └── when called
+        |       └── then it reverts
+        └── given the factory is not active
             └── when called
                 └── then it reverts
     */
@@ -264,6 +267,22 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             deployer, beneficiary, admin, address(token), differentSponsor
         );
         assertEq(differentSponsorAmount, initialCollateralSupply / 2);
+    }
+
+    function testAddFunding_FactoryNotActive() public {
+        factory.setActive(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.FactoryNotActive.selector
+            )
+        );
+        factory.addFunding(
+            deployer,
+            beneficiary,
+            admin,
+            address(token),
+            initialCollateralSupply
+        );
     }
 
     /* Test withdrawFunding
@@ -481,6 +500,9 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
         └── given that there is no funding
         |   └── when called
         |       └── then it reverts
+        └── given the factory is inactive
+            └── when called
+                └── then it reverts
     */
 
     function testCreatePIMWorkflow_WithFunding() public {
@@ -620,5 +642,55 @@ contract Restricted_PIM_Factory_v1Test is E2ETest {
             issuanceTokenParams,
             beneficiary
         );
+    }
+
+    function testCreatePIMWorkflow_Inactive() public {
+        factory.setActive(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IRestricted_PIM_Factory_v1.FactoryNotActive.selector
+            )
+        );
+        factory.createPIMWorkflow(
+            workflowConfig,
+            fundingManagerConfig,
+            authorizerConfig,
+            paymentProcessorConfig,
+            logicModuleConfigs,
+            issuanceTokenParams,
+            beneficiary
+        );
+    }
+
+    /* Test setActive
+        └── given that caller is the owner
+        |   └── when called
+        |       └── then it sets the factory to active
+        |       └── then it emits an event
+        └── given that caller is NOT the owner
+            └── when called
+                └── then it reverts
+    */
+    function testSetActive() public {
+        vm.expectEmit(true, true, true, true);
+        emit IRestricted_PIM_Factory_v1.FactorySetActive(false);
+        factory.setActive(false);
+        assertFalse(factory.isActive());
+
+        vm.expectEmit(true, true, true, true);
+        emit IRestricted_PIM_Factory_v1.FactorySetActive(true);
+        factory.setActive(true);
+        assertTrue(factory.isActive());
+    }
+
+    function testSetActive_NotOwner() public {
+        vm.startPrank(address(0xA11CE));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IOwnable.OwnableUnauthorizedAccount.selector, address(0xA11CE)
+            )
+        );
+        factory.setActive(true);
+        vm.stopPrank();
     }
 }

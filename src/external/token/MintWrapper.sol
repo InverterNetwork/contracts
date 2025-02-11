@@ -50,12 +50,21 @@ contract MintWrapper is IMintWrapper, Ownable {
     }
 
     //--------------------------------------------------------------------------
+    // Events
+
+    /// @dev    Emitted when the issuance token is set.
+    /// @param  token The address of the issuance token.
+    event IssuanceTokenSet(address indexed token);
+
+    //--------------------------------------------------------------------------
     // Constructor
 
     constructor(IERC20Issuance_v1 _issuanceToken, address _owner)
         Ownable(_owner)
     {
         issuanceToken = _issuanceToken;
+
+        emit IssuanceTokenSet(address(_issuanceToken));
     }
 
     //------------------------------------------------------------------------------

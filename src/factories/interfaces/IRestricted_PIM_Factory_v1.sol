@@ -16,6 +16,9 @@ import {MintWrapper} from "src/external/token/MintWrapper.sol";
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
+// External Implementations
+import {Ownable} from "@oz/access/Ownable.sol";
+
 /**
  * @title   Inverter Restricted PIM Factory
  *
@@ -88,6 +91,9 @@ interface IRestricted_PIM_Factory_v1 {
     /// @notice The caller is not authorized to perform the desired action.
     error NotAuthorized();
 
+    /// @notice The factory is not active.
+    error FactoryNotActive();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -132,6 +138,10 @@ interface IRestricted_PIM_Factory_v1 {
         address token,
         uint amount
     );
+
+    /// @notice Event emitted when the factory is set to active or inactive.
+    /// @param isActive Whether the factory is active or not.
+    event FactorySetActive(bool isActive);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -212,4 +222,9 @@ interface IRestricted_PIM_Factory_v1 {
         address token,
         uint amount
     ) external;
+
+    /// @notice Sets the factory to active or inactive.
+    /// @dev Only callable by the owner.
+    /// @param _isActive Whether the factory should be active or not.
+    function setActive(bool _isActive) external;
 }

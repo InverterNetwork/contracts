@@ -35,6 +35,7 @@ import {MintWrapper} from "src/external/token/MintWrapper.sol";
 // External Dependencies
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 import {ERC165} from "@oz/utils/introspection/ERC165.sol";
+import {Ownable} from "@oz/access/Ownable.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -62,13 +63,27 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  */
 contract Restricted_PIM_Factory_v1 is
     ERC2771Context,
-    IRestricted_PIM_Factory_v1
+    IRestricted_PIM_Factory_v1,
+    Ownable
 {
     using SafeERC20 for IERC20;
 
     //--------------------------------------------------------------------------
+    // Modifier
+
+    /// @dev Modifier checks if factory is currently active.
+    modifier active() {
+        if (!isActive) {
+            revert FactoryNotActive();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // State Variables
 
+    // Whether the factory can deploy or not.
+    bool public isActive;
     // Stores address of orchestratorfactory.
     address public immutable orchestratorFactory;
     // Stores available fundings.
@@ -88,8 +103,10 @@ contract Restricted_PIM_Factory_v1 is
 
     constructor(address _orchestratorFactory, address _trustedForwarder)
         ERC2771Context(_trustedForwarder)
+        Ownable(msg.sender)
     {
         orchestratorFactory = _orchestratorFactory;
+        isActive = true;
     }
 
     //--------------------------------------------------------------------------
@@ -104,7 +121,7 @@ contract Restricted_PIM_Factory_v1 is
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
         address beneficiary
-    ) external returns (IOrchestrator_v1) {
+    ) external active returns (IOrchestrator_v1) {
         // deploy workflow and decode relevant config params
         (
             DeployedContracts memory deployedContracts,
@@ -137,7 +154,7 @@ contract Restricted_PIM_Factory_v1 is
         address admin,
         address token,
         uint amount
-    ) external {
+    ) external active {
         Funding storage funding = fundings[deployer][beneficiary][admin][token];
 
         // records funding amount
@@ -179,6 +196,13 @@ contract Restricted_PIM_Factory_v1 is
         emit IRestricted_PIM_Factory_v1.FundingRemoved(
             _msgSender(), deployer, beneficiary, admin, token, amount
         );
+    }
+
+    /// @inheritdoc IRestricted_PIM_Factory_v1
+    function setActive(bool _isActive) external onlyOwner {
+        isActive = _isActive;
+
+        emit IRestricted_PIM_Factory_v1.FactorySetActive(_isActive);
     }
 
     function getFundingAmount(
@@ -403,5 +427,40 @@ contract Restricted_PIM_Factory_v1 is
         orchestrator.authorizer().grantRole(adminRole, newAdmin);
         // and revoke admin role from factory
         orchestrator.authorizer().revokeRole(adminRole, address(this));
+    }
+
+    //--------------------------------------------------------------------------
+    // ERC2771 Context Upgradeable
+
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (address sender)
+    {
+        return ERC2771Context._msgSender();
+    }
+
+    /// Needs to be overridden, because they are imported via the Ownable2Step as well.
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (bytes calldata)
+    {
+        return ERC2771Context._msgData();
+    }
+
+    function _contextSuffixLength()
+        internal
+        view
+        virtual
+        override(ERC2771Context, Context)
+        returns (uint)
+    {
+        return ERC2771Context._contextSuffixLength();
     }
 }
