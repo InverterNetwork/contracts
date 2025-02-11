@@ -1,53 +1,39 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import 'forge-std/Test.sol';
+import 'forge-std/console.sol';
 
 // OpenZeppelin
-import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {ERC20} from '@oz/token/ERC20/ERC20.sol';
 
 // Test Utils
-import {E2ETest} from "test/e2e/E2ETest.sol";
-import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
+import {E2ETest} from 'test/e2e/E2ETest.sol';
+import {EventHelpers} from 'test/utils/helpers/EventHelpers.sol';
 
 // Core Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IMigrating_PIM_Factory_v1} from
-    "src/factories/interfaces/IMigrating_PIM_Factory_v1.sol";
+import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
+import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {IMigrating_PIM_Factory_v1} from 'src/factories/interfaces/IMigrating_PIM_Factory_v1.sol';
 
 // Funding Manager Interfaces
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
 
 // Implementations
-import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
-import {Migrating_PIM_Factory_v1} from
-    "src/factories/custom/Migrating_PIM_Factory_v1.sol";
-import {IMigrating_PIM_Factory_v1} from
-    "src/factories/interfaces/IMigrating_PIM_Factory_v1.sol";
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {UniswapV2Adapter} from
-    "src/external/immutable-migration/UniswapV2Adapter.sol";
+import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
+import {Migrating_PIM_Factory_v1} from 'src/factories/custom/Migrating_PIM_Factory_v1.sol';
+import {IMigrating_PIM_Factory_v1} from 'src/factories/interfaces/IMigrating_PIM_Factory_v1.sol';
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {UniswapV2Adapter} from 'src/external/immutable-migration/UniswapV2Adapter.sol';
 
 // Constants
-import {uniswapV2FactoryBytecode} from
-    "test/lib/uniswap/uniswapV2FactoryBytecode.sol";
-import {uniswapV2Router02Bytecode} from
-    "test/lib/uniswap/uniswapV2Router02Bytecode.sol";
+import {uniswapV2FactoryBytecode} from 'test/lib/uniswap/uniswapV2FactoryBytecode.sol';
+import {uniswapV2Router02Bytecode} from 'test/lib/uniswap/uniswapV2Router02Bytecode.sol';
 
-address constant uniswapFactoryAddress =
-    0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
-address constant uniswapRouterAddress =
-    0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+address constant uniswapFactoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+address constant uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
 contract Migrating_PIM_Factory_v1Test is E2ETest {
     // Utils
@@ -58,9 +44,13 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
 
         // Deploy UniswapV2Adapter
-        return address(
-            new UniswapV2Adapter(uniswapFactoryAddress, uniswapRouterAddress)
-        );
+        return
+            address(
+                new UniswapV2Adapter(
+                    uniswapFactoryAddress,
+                    uniswapRouterAddress
+                )
+            );
     }
 
     // SuT
@@ -105,7 +95,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // deploy new factory
         factory = new Migrating_PIM_Factory_v1(
-            address(orchestratorFactory), mockTrustedForwarder
+            address(orchestratorFactory),
+            mockTrustedForwarder
         );
 
         eventHelpers = new EventHelpers();
@@ -119,20 +110,23 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         authorizerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(address(workflowAdmin))
+            roleAuthorizerMetadata,
+            abi.encode(address(workflowAdmin))
         );
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         paymentProcessorConfig = IOrchestratorFactory_v1.ModuleConfig(
-            simplePaymentProcessorMetadata, bytes("")
+            simplePaymentProcessorMetadata,
+            bytes('')
         );
 
         // Replace bounty manager setup with ImmutableMigration setup
         setUpPaymentRouter();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                paymentRouterMetadata, bytes("")
+                paymentRouterMetadata,
+                bytes('')
             )
         );
 
@@ -140,16 +134,16 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         setUpBancorVirtualSupplyBondingCurveFundingManager();
         bcProperties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
             .BondingCurveProperties({
-            formula: address(formula),
-            reserveRatioForBuying: reserveRatio,
-            reserveRatioForSelling: reserveRatio,
-            buyFee: 0,
-            sellFee: 0,
-            buyIsOpen: true,
-            sellIsOpen: true,
-            initialIssuanceSupply: initialIssuuanceSupply,
-            initialCollateralSupply: initialCollateralSupply
-        });
+                formula: address(formula),
+                reserveRatioForBuying: reserveRatio,
+                reserveRatioForSelling: reserveRatio,
+                buyFee: 0,
+                sellFee: 0,
+                buyIsOpen: true,
+                sellIsOpen: true,
+                initialIssuanceSupply: initialIssuuanceSupply,
+                initialCollateralSupply: initialCollateralSupply
+            });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
@@ -158,8 +152,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // Put issuance token params in storage
         issuanceTokenParams = IBondingCurveBase_v1.IssuanceToken({
-            name: "Bonding Curve Token",
-            symbol: "BCT",
+            name: 'Bonding Curve Token',
+            symbol: 'BCT',
             decimals: 18,
             maxSupply: type(uint).max - 1
         });
@@ -173,7 +167,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             migrationThreshold: COLLATERAL_MIGRATION_THRESHOLD,
             dexAdapter: uniswapAdapter,
             lpTokenRecipient: address(0),
-            initialPurchaseAmount: initialPurchaseAmount
+            collateralToken: address(token)
         });
     }
 
@@ -200,16 +194,20 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
+            initialPurchaseAmount,
             migrationConfig
         );
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         // get issuance token address from event
         (bool emitted, bytes32 eventTopic) = eventHelpers.getEventTopic(
-            IMigrating_PIM_Factory_v1.PIMWorkflowCreated.selector, logs, 2
+            IMigrating_PIM_Factory_v1.PIMWorkflowCreated.selector,
+            logs,
+            2
         );
-        address issuanceTokenAddress =
-            eventHelpers.getAddressFromTopic(eventTopic);
+        address issuanceTokenAddress = eventHelpers.getAddressFromTopic(
+            eventTopic
+        );
 
         // CHECK: PIMWorkflowCreated event is emitted
         assertTrue(emitted);
@@ -219,49 +217,51 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         assertTrue(
             issuanceToken.allowedMinters(fundingManager),
-            "Bonding curve module should have minting rights on token"
+            'Bonding curve module should have minting rights on token'
         );
 
         assertEq(
             issuanceToken.owner(),
             address(0),
-            "Issuance token should be renounced"
+            'Issuance token should be renounced'
         );
 
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
 
         assertTrue(
             orchestrator.authorizer().hasRole(adminRole, address(factory)),
-            "Factory should have admin rights over workflow"
+            'Factory should have admin rights over workflow'
         );
 
         assertGt(
             issuanceToken.balanceOf(workflowAdmin),
             0,
-            "Workflow admin should have received issuance tokens"
+            'Workflow admin should have received issuance tokens'
         );
 
         assertEq(
             token.balanceOf(fundingManager),
             initialPurchaseAmount,
-            "Bonding curve module should have received collateral tokens"
+            'Bonding curve module should have received collateral tokens'
         );
 
         bytes32 curveAccess = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            fundingManager
-        ).CURVE_INTERACTION_ROLE();
-        bytes32 curveInteractionRoleId = orchestrator.authorizer()
+                fundingManager
+            ).CURVE_INTERACTION_ROLE();
+        bytes32 curveInteractionRoleId = orchestrator
+            .authorizer()
             .generateRoleId(fundingManager, curveAccess);
         assertTrue(
             orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, address(factory)
+                curveInteractionRoleId,
+                address(factory)
             ),
-            "Factory should have curve interaction role"
+            'Factory should have curve interaction role'
         );
 
         assertTrue(
             issuanceToken.allowedMinters(address(factory)),
-            "Factory should be allowed minter"
+            'Factory should be allowed minter'
         );
     }
 
@@ -273,6 +273,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
+            initialPurchaseAmount,
             migrationConfig
         );
 
@@ -294,8 +295,9 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // Record balances before
         uint buyerTokenBalanceBefore = token.balanceOf(address(this));
-        uint buyerIssuanceBalanceBefore =
-            ERC20(issuanceToken).balanceOf(address(this));
+        uint buyerIssuanceBalanceBefore = ERC20(issuanceToken).balanceOf(
+            address(this)
+        );
 
         // Execute buy
         factory.buyForUpTo(address(issuanceToken), address(this), amountIn, 1);
@@ -304,22 +306,22 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         assertLt(
             token.balanceOf(address(this)),
             buyerTokenBalanceBefore,
-            "Token balance should decrease"
+            'Token balance should decrease'
         );
         assertGt(
             ERC20(issuanceToken).balanceOf(address(this)),
             buyerIssuanceBalanceBefore,
-            "Issuance balance should increase"
+            'Issuance balance should increase'
         );
         assertTrue(
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
                 .buyIsOpen(),
-            "Buying should be open"
+            'Buying should be open'
         );
         assertTrue(
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
                 .sellIsOpen(),
-            "Selling should be open"
+            'Selling should be open'
         );
     }
 
@@ -331,6 +333,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
+            initialPurchaseAmount,
             migrationConfig
         );
 
@@ -355,22 +358,22 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         assertFalse(
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
                 .buyIsOpen(),
-            "Buying should be closed"
+            'Buying should be closed'
         );
         assertFalse(
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
                 .sellIsOpen(),
-            "Selling should be closed"
+            'Selling should be closed'
         );
         assertEq(
             token.balanceOf(address(this)),
             amountIn - COLLATERAL_MIGRATION_THRESHOLD + initialPurchaseAmount,
-            "Buyer should be reimbursed the excess payment"
+            'Buyer should be reimbursed the excess payment'
         );
         assertGt(
             issuanceToken.balanceOf(address(this)),
             0,
-            "Buyer should receive issuance tokens"
+            'Buyer should receive issuance tokens'
         );
     }
 
@@ -382,12 +385,12 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             paymentProcessorConfig,
             logicModuleConfigs,
             issuanceTokenParams,
+            initialPurchaseAmount,
             migrationConfig
         );
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            address(orchestrator.fundingManager())
-        );
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                address(orchestrator.fundingManager())
+            );
         address issuanceToken = fundingManager.getIssuanceToken();
 
         // Bound input to range below threshold
@@ -402,31 +405,36 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         assertEq(
             ERC20Issuance_v1(issuanceToken).balanceOf(address(this)),
             0,
-            "Buyer should not hold issuance tokens initially"
+            'Buyer should not hold issuance tokens initially'
         );
 
         factory.buyForUpTo(issuanceToken, address(this), amountIn, 1);
 
-        uint issuanceBalanceBeforeSale =
-            ERC20Issuance_v1(issuanceToken).balanceOf(address(this));
+        uint issuanceBalanceBeforeSale = ERC20Issuance_v1(issuanceToken)
+            .balanceOf(address(this));
         assertGt(
             issuanceBalanceBeforeSale,
             0,
-            "Buyer should have received issuance tokens"
+            'Buyer should have received issuance tokens'
         );
         ERC20(issuanceToken).approve(
-            address(factory), issuanceBalanceBeforeSale
+            address(factory),
+            issuanceBalanceBeforeSale
         );
 
         factory.sellTo(
-            address(issuanceToken), address(this), issuanceBalanceBeforeSale, 1
+            address(issuanceToken),
+            address(this),
+            issuanceBalanceBeforeSale,
+            1
         );
-        uint issuanceBalanceAfterSale =
-            ERC20(issuanceToken).balanceOf(address(this));
+        uint issuanceBalanceAfterSale = ERC20(issuanceToken).balanceOf(
+            address(this)
+        );
         assertEq(
             issuanceBalanceAfterSale,
             0,
-            "Buyer should not hold issuance tokens after sale"
+            'Buyer should not hold issuance tokens after sale'
         );
     }
 }

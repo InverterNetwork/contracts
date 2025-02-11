@@ -2,15 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
+import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
 
 // Internal Dependencies
-import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
 
 interface IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
@@ -84,11 +81,11 @@ interface IMigrating_PIM_Factory_v1 {
     }
 
     struct MigrationConfig {
+        address collateralToken;
         bool isImmutable;
         uint migrationThreshold;
         address dexAdapter;
         address lpTokenRecipient;
-        uint initialPurchaseAmount;
     }
 
     //--------------------------------------------------------------------------
@@ -101,6 +98,7 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param paymentProcessorConfig The config data for the orchestrator's {IPaymentProcessor_v1} instance.
     /// @param moduleConfigs Variable length set of optional module's config data.
     /// @param issuanceTokenParams The issuance token's parameters (name, symbol, decimals, maxSupply).
+    /// @param initialPurchaseAmount The initial purchase amount.
     /// @param migrationConfig_ The config data for the migration.
     /// @return CreatedOrchestrator Returns the created orchestrator instance.
     function createPIMWorkflow(
@@ -110,6 +108,7 @@ interface IMigrating_PIM_Factory_v1 {
         IOrchestratorFactory_v1.ModuleConfig memory paymentProcessorConfig,
         IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigs,
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        uint initialPurchaseAmount,
         MigrationConfig memory migrationConfig_
     ) external returns (IOrchestrator_v1);
 }
