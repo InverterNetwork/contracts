@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity 0.8.23;
+pragma solidity ^0.8.0;
 
 import "forge-std/console.sol";
 
-import {IUniswapV2Factory} from "@univ2core/interfaces/IUniswapV2Factory.sol";
-import {IUniswapV2Router01} from "@univ2peri/interfaces/IUniswapV2Router01.sol";
+import {IUniswapV2Factory} from "../interfaces/uniswap/IUniswapV2Factory.sol";
+import {IUniswapV2Router01} from "../interfaces/uniswap/IUniswapV2Router01.sol";
+import {IDexAdapter_v1} from "./interfaces/IDexAdapter_v1.sol";
+
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IDexAdapter_v1} from
-    "src/external/Immutable-migration/interfaces/IDexAdapter_v1.sol";
 
 /**
  * @title UniswapV2Adapter
