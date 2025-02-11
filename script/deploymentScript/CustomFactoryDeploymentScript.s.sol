@@ -7,8 +7,24 @@ import {Restricted_PIM_Factory_v1} from
     "src/factories/custom/Restricted_PIM_Factory_v1.sol";
 import {Immutable_PIM_Factory_v1} from
     "src/factories/custom/Immutable_PIM_Factory_v1.sol";
+import {Migrating_PIM_Factory_v1} from
+    "src/factories/custom/Migrating_PIM_Factory_v1.sol";
 
 import {ERC2771Context} from "@oz/metatx/ERC2771Context.sol";
+
+// Constants
+import {uniswapV2FactoryBytecode} from
+    "test/lib/uniswap/uniswapV2FactoryBytecode.sol";
+import {uniswapV2Router02Bytecode} from
+    "test/lib/uniswap/uniswapV2Router02Bytecode.sol";
+
+import {UniswapV2Adapter} from
+    "src/external/immutable-migration/UniswapV2Adapter.sol";
+
+address constant uniswapFactoryAddress =
+    0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+address constant uniswapRouterAddress =
+    0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
 contract CustomFactoryDeploymentScript is Script {
     address public orchestratorFactory =
@@ -42,10 +58,13 @@ contract CustomFactoryDeploymentScript is Script {
 
         _deploy("RESTRICTED");
         _deploy("IMMUTABLE");
+        _deploy("MIGRATING");
 
         console2.log(
             "--------------------------------------------------------------------------------"
         );
+
+        deployUniswapAdapter();
     }
 
     function _deploy(string memory factoryType_) public validateInputs {
@@ -80,6 +99,17 @@ contract CustomFactoryDeploymentScript is Script {
                     )
                 );
             }
+        } else if (_isEqual(factoryType_, "MIGRATING")) {
+            {
+                console2.log(
+                    "\tMigrating_PIM_Factory_v1: %s",
+                    address(
+                        new Migrating_PIM_Factory_v1(
+                            orchestratorFactory, trustedForwarder
+                        )
+                    )
+                );
+            }
         } else {
             revert("Invalid factory type - aborting!");
         }
@@ -94,6 +124,21 @@ contract CustomFactoryDeploymentScript is Script {
     {
         return
             keccak256(abi.encodePacked(a_)) == keccak256(abi.encodePacked(b_));
+    }
+
+    function deployUniswapAdapter() internal returns (address) {
+        console2.log("\tDeploying UniswapV2Adapter...");
+        vm.etch(uniswapFactoryAddress, uniswapV2FactoryBytecode);
+        vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
+
+        vm.startBroadcast(vm.envUint("DEPLOYER_PRIVATE_KEY"));
+        address adapter = address(
+            new UniswapV2Adapter(uniswapFactoryAddress, uniswapRouterAddress)
+        );
+        vm.stopBroadcast();
+
+        console2.log("\tUniswapV2Adapter: %s", adapter);
+        return adapter;
     }
 
     modifier validateInputs() {
