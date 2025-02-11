@@ -21,6 +21,10 @@ contract MintWrapperTest is Test {
         token = new ERC20Issuance_v1(
             "Test Token", "TT", 18, type(uint).max - 1, address(this)
         );
+
+        vm.expectEmit(true, true, true, true);
+        emit MintWrapper.IssuanceTokenSet(address(token));
+
         wrapper = new MintWrapper(token, address(this));
         token.setMinter(address(wrapper), true);
     }
