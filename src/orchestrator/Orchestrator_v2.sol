@@ -9,13 +9,13 @@ import {
     IAuthorizer_v2,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v2.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 
 // Internal Dependencies
-import {ModuleManagerBase_v1} from
-    "src/orchestrator/abstracts/ModuleManagerBase_v1.sol";
+import {ModuleManagerBase_v2} from
+    "src/orchestrator/abstracts/ModuleManagerBase_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -51,13 +51,13 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  *
  * @author  Inverter Network
  */
-contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
+contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ModuleManagerBase_v1)
+        override(ModuleManagerBase_v2)
         returns (bool)
     {
         return interfaceId == type(IOrchestrator_v2).interfaceId
@@ -128,7 +128,7 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     // Constructor & Initializer
 
     constructor(address _trustedForwarder)
-        ModuleManagerBase_v1(_trustedForwarder)
+        ModuleManagerBase_v2(_trustedForwarder)
     {
         _disableInitializers();
     }
@@ -359,7 +359,7 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
     function __ModuleManager_isAuthorized(address who)
         internal
         view
-        override(ModuleManagerBase_v1)
+        override(ModuleManagerBase_v2)
         returns (bool)
     {
         (bool isMember,) = authorizer.hasRole(
@@ -380,7 +380,7 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         address _contractAddr,
         bytes4 _privilegedInterfaceId
     ) internal view {
-        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
                 || !ERC165Checker.supportsInterface(
@@ -397,7 +397,7 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         internal
         view
     {
-        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
+        bytes4 moduleInterfaceId = type(IModule_v2).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
                 || ERC165Checker.supportsInterface(
@@ -425,10 +425,10 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         public
         view
         virtual
-        override(IModuleManagerBase_v1, ModuleManagerBase_v1)
+        override(IModuleManagerBase_v1, ModuleManagerBase_v2)
         returns (bool)
     {
-        return ModuleManagerBase_v1.isTrustedForwarder(forwarder);
+        return ModuleManagerBase_v2.isTrustedForwarder(forwarder);
     }
 
     /// @inheritdoc IModuleManagerBase_v1
@@ -436,9 +436,9 @@ contract Orchestrator_v2 is IOrchestrator_v2, ModuleManagerBase_v1 {
         public
         view
         virtual
-        override(IModuleManagerBase_v1, ModuleManagerBase_v1)
+        override(IModuleManagerBase_v1, ModuleManagerBase_v2)
         returns (address)
     {
-        return ModuleManagerBase_v1.trustedForwarder();
+        return ModuleManagerBase_v2.trustedForwarder();
     }
 }

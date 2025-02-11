@@ -12,4 +12,12 @@ contract Orchestrator_v2Mock is Orchestrator_v2 {
     function overrideSetAuthorizer(IAuthorizer_v2 newAuthorizer_) external {
         authorizer = newAuthorizer_;
     }
+
+    function overrideExecuteAddModule(address module_) external {
+        _executeAddModule(module_);
+    }
+
+    function setModuleFactory(address factory_) external {
+        moduleFactory = factory_;
+    }
 }

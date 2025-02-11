@@ -19,8 +19,10 @@ import {
 } from "@oz-up/metatx/ERC2771ContextUpgradeable.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-import {AccessManagedUpgradeable} from
-    "@oz-up/access/manager/AccessManagedUpgradeable.sol";
+import {
+    AccessManagedUpgradeable,
+    IAccessManaged
+} from "@oz-up/access/manager/AccessManagedUpgradeable.sol";
 
 library LibMetadata {
     /// @dev    Returns the identifier for given metadata.
@@ -154,10 +156,11 @@ abstract contract Module_v2 is
     /// @inheritdoc IModule_v2
     function init(
         IOrchestrator_v2 orchestrator_,
-        Metadata memory metadata,
+        Metadata memory metadata_,
+        RoleSpecification[] memory roleSpecs_,
         bytes memory /*configData*/
     ) external virtual initializer {
-        __Module_init(orchestrator_, metadata);
+        __Module_init(orchestrator_, metadata_, roleSpecs_);
         __AccessManaged_init(address(orchestrator_.authorizer()));
     }
 
@@ -166,7 +169,8 @@ abstract contract Module_v2 is
     /// @param  orchestrator_ The module's {Orchestrator_v1}.
     function __Module_init(
         IOrchestrator_v2 orchestrator_,
-        Metadata memory metadata
+        Metadata memory metadata_,
+        RoleSpecification[] memory roleSpecs_
     ) internal onlyInitializing {
         // Write orchestrator to storage.
         if (address(orchestrator_) == address(0)) {
@@ -175,12 +179,20 @@ abstract contract Module_v2 is
         __Module_orchestrator = orchestrator_;
 
         // Write metadata to storage.
-        if (!LibMetadata.isValid(metadata)) {
+        if (!LibMetadata.isValid(metadata_)) {
             revert Module__InvalidMetadata();
         }
-        __Module_metadata = metadata;
+        __Module_metadata = metadata_;
 
-        emit ModuleInitialized(address(orchestrator_), metadata);
+        // Forward roleSpecifications to authorizer.
+        uint roleSpecLength = roleSpecs_.length;
+        for (uint i = 0; i < roleSpecLength; i++) {
+            orchestrator_.authorizer().createRoleWithSpecifications(
+                address(this), roleSpecs_[i]
+            );
+        }
+
+        emit ModuleInitialized(address(orchestrator_), metadata_);
     }
 
     //--------------------------------------------------------------------------
@@ -215,7 +227,16 @@ abstract contract Module_v2 is
         return __Module_orchestrator;
     }
 
-    //--------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // Public Override Functions
+
+    /// @inheritdoc IAccessManaged
+    /// @dev This function is disabled for modules.
+    function setAuthority(address) public virtual override {
+        //no operation
+    }
+
+    //-------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Returns the collateral fee for the specified workflow module function and the according treasury

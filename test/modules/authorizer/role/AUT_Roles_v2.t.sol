@@ -18,6 +18,8 @@ import {IAuthorizer_v2, AUT_Roles_v2} from "@aut/role/AUT_Roles_v2.sol";
 import {Module_v2Mock} from "test/utils/mocks/modules/base/Module_v2Mock.sol";
 import {Orchestrator_v2Mock} from
     "test/utils/mocks/orchestrator/Orchestrator_v2Mock.sol";
+import {ModuleFactoryV1Mock} from
+    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
 
 contract AUT_Roles_v2Test is Test {
     Orchestrator_v2Mock _orchestrator = new Orchestrator_v2Mock(address(0));
@@ -38,7 +40,11 @@ contract AUT_Roles_v2Test is Test {
         MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
     );
 
+    IModule_v2.RoleSpecification[] emptyRoleSpec;
+
     function setUp() public virtual {
+        _orchestrator.setModuleFactory(address(new ModuleFactoryV1Mock()));
+
         _authorizer = new AUT_Roles_v2();
         module = new Module_v2Mock();
 
@@ -53,10 +59,13 @@ contract AUT_Roles_v2Test is Test {
         _authorizer.init(
             IOrchestrator_v2(_orchestrator),
             _METADATA,
+            emptyRoleSpec,
             abi.encode(owner) // make the owner address the initial admin
         );
 
-        module.init(IOrchestrator_v2(_orchestrator), _METADATA, bytes("")); // make this address the initial admin
+        module.init(
+            IOrchestrator_v2(_orchestrator), _METADATA, emptyRoleSpec, bytes("")
+        ); // make this address the initial admin
     }
 
     function testRestrictedModifier(address caller) public {
@@ -250,9 +259,59 @@ contract AUT_Roles_v2Test is Test {
 
     // Start directly with roles in a module
     function testStartDirectlyWithRolesInAModule() public {
-        //@todo
-    }
+        // Create a new module
+        address moduleImpl = address(new Module_v2Mock());
+        module = Module_v2Mock(Clones.clone(moduleImpl));
 
-    // Forward has role to external contracts // @todo Is this relevant?
-    // Module Roles vs Global Roles // @todo Is this relevant?
+        // Add module to orchestrator
+        // @note Module has to be added to Orchestrator before it is intialized now
+        // @note Modules v2 are not compatible with orchestrator v2 because of interface check when adding modules
+        vm.prank(owner);
+        _orchestrator.initiateAddModuleWithTimelock(address(module));
+
+        vm.warp(_orchestrator.MODULE_UPDATE_TIMELOCK() + 1);
+
+        vm.prank(owner);
+        _orchestrator.executeAddModule(address(module));
+
+        // Specify role data
+        // Role name
+        string memory roleName = "User";
+
+        // Function selectors
+        bytes4 functionSelector = module.doSmth.selector;
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = functionSelector;
+
+        // Role holders
+        address[] memory holders = new address[](2);
+        holders[0] = alice;
+        holders[1] = bob;
+
+        // Put it all together
+        IModule_v2.RoleSpecification[] memory initRoleSpec =
+            new IModule_v2.RoleSpecification[](1);
+        initRoleSpec[0] = IModule_v2.RoleSpecification({
+            roleName: roleName,
+            functionSelectors: selectors,
+            intendedHolders: holders
+        });
+
+        // Initialize the module
+
+        uint64 expectedRoleId = _authorizer.getCurrentRoleId();
+
+        // Check that the role was created
+        vm.expectEmit(true, true, true, true);
+        emit IAccessManager.RoleLabel(expectedRoleId, roleName);
+
+        module.init(_orchestrator, _METADATA, initRoleSpec, "");
+
+        // Check that holders can access function
+        vm.prank(alice);
+        module.doSmth(0);
+
+        vm.prank(bob);
+        module.doSmth(0);
+    }
 }

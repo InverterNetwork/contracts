@@ -92,9 +92,10 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
     function init(
         IOrchestrator_v2 orchestrator_,
         Metadata memory metadata_,
+        RoleSpecification[] memory roleSpecs_,
         bytes memory configData_
     ) external override initializer {
-        __Module_init(orchestrator_, metadata_);
+        __Module_init(orchestrator_, metadata_, roleSpecs_);
 
         (address initialAdmin) = abi.decode(configData_, (address));
 
@@ -129,14 +130,39 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
     // Public Mutating Functions
 
     /// @inheritdoc IAuthorizer_v2
-    function createRole(string calldata roleName_)
+    function createRoleWithSpecifications(
+        address target_,
+        IModule_v2.RoleSpecification memory roleSpec_
+    ) public onlyModulesOrAdmin returns (uint64 roleId_) {
+        // create the role and fetch the role id
+        roleId_ = _createRole(roleSpec_.roleName);
+
+        // get the amount of function selectors
+        uint selectorAmount = roleSpec_.functionSelectors.length;
+
+        // set the target function role
+        for (uint i = 0; i < selectorAmount; i++) {
+            _setTargetFunctionRole(
+                target_, roleSpec_.functionSelectors[i], roleId_
+            );
+        }
+
+        // get the amount of holders
+        uint holderAmount = roleSpec_.intendedHolders.length;
+
+        // grant role to the initial
+        for (uint i = 0; i < holderAmount; i++) {
+            _grantRole(roleId_, roleSpec_.intendedHolders[i], 0, 0);
+        }
+    }
+
+    /// @inheritdoc IAuthorizer_v2
+    function createRole(string memory roleName_)
         public
         onlyModulesOrAdmin
         returns (uint64 roleId_)
     {
-        roleId_ = _consumeRoleId();
-
-        emit RoleLabel(roleId_, roleName_);
+        return _createRole(roleName_);
     }
 
     //--------------------------------------------------------------------------
@@ -213,6 +239,15 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
 
     //--------------------------------------------------------------------------
     // Internal functions
+
+    function _createRole(string memory roleName_)
+        internal
+        returns (uint64 roleId_)
+    {
+        roleId_ = _consumeRoleId();
+
+        emit RoleLabel(roleId_, roleName_);
+    }
 
     function _consumeRoleId() internal returns (uint64 createdRoleId_) {
         return _currentRoleId++;
