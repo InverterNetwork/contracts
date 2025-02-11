@@ -10,6 +10,11 @@ pragma solidity ^0.8.0;
  * @author  OpenZeppelin
  */
 interface IOwnable {
+    /**
+     * @dev The caller account is not authorized to perform an operation.
+     */
+    error OwnableUnauthorizedAccount(address account);
+
     /// @notice The Owner of the contract.
     /// @return ownerAddress The address of the owner.
     function owner() external view returns (address ownerAddress);
