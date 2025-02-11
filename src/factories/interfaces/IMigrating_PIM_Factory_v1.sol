@@ -81,7 +81,6 @@ interface IMigrating_PIM_Factory_v1 {
     }
 
     struct MigrationConfig {
-        address collateralToken;
         bool isImmutable;
         uint migrationThreshold;
         address dexAdapter;

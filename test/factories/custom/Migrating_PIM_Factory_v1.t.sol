@@ -166,8 +166,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             isImmutable: isImmutable,
             migrationThreshold: COLLATERAL_MIGRATION_THRESHOLD,
             dexAdapter: uniswapAdapter,
-            lpTokenRecipient: address(0),
-            collateralToken: address(token)
+            lpTokenRecipient: address(0)
         });
     }
 
