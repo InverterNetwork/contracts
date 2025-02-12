@@ -1,53 +1,39 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import 'forge-std/Test.sol';
+import 'forge-std/console.sol';
 
 // OpenZeppelin
-import {ERC20} from "@oz/token/ERC20/ERC20.sol";
+import {ERC20} from '@oz/token/ERC20/ERC20.sol';
 
 // Test Utils
-import {E2ETest} from "test/e2e/E2ETest.sol";
-import {EventHelpers} from "test/utils/helpers/EventHelpers.sol";
+import {E2ETest} from 'test/e2e/E2ETest.sol';
+import {EventHelpers} from 'test/utils/helpers/EventHelpers.sol';
 
 // Core Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IMigrating_PIM_Factory_v1} from
-    "src/factories/interfaces/IMigrating_PIM_Factory_v1.sol";
+import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
+import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {IMigrating_PIM_Factory_v1} from 'src/factories/interfaces/IMigrating_PIM_Factory_v1.sol';
 
 // Funding Manager Interfaces
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
 
 // Implementations
-import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
-import {Migrating_PIM_Factory_v1} from
-    "src/factories/custom/Migrating_PIM_Factory_v1.sol";
-import {IMigrating_PIM_Factory_v1} from
-    "src/factories/interfaces/IMigrating_PIM_Factory_v1.sol";
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {UniswapV2Adapter} from
-    "src/external/immutable-migration/UniswapV2Adapter.sol";
+import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
+import {Migrating_PIM_Factory_v1} from 'src/factories/custom/Migrating_PIM_Factory_v1.sol';
+import {IMigrating_PIM_Factory_v1} from 'src/factories/interfaces/IMigrating_PIM_Factory_v1.sol';
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {UniswapV2Adapter} from 'src/external/immutable-migration/UniswapV2Adapter.sol';
 
 // Constants
-import {uniswapV2FactoryBytecode} from
-    "test/lib/uniswap/uniswapV2FactoryBytecode.sol";
-import {uniswapV2Router02Bytecode} from
-    "test/lib/uniswap/uniswapV2Router02Bytecode.sol";
+import {uniswapV2FactoryBytecode} from 'test/lib/uniswap/uniswapV2FactoryBytecode.sol';
+import {uniswapV2Router02Bytecode} from 'test/lib/uniswap/uniswapV2Router02Bytecode.sol';
 
-address constant uniswapFactoryAddress =
-    0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
-address constant uniswapRouterAddress =
-    0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
+address constant uniswapFactoryAddress = 0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f;
+address constant uniswapRouterAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 
 contract Migrating_PIM_Factory_v1Test is E2ETest {
     // SuT
@@ -66,7 +52,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
     uint initialPurchaseAmount = 1 ether;
-    uint secondaryPurchaseAmount = 9.5 ether;
+    uint secondaryPurchaseAmount = 10 ether;
     uint migrationThreshold = 10 ether;
     bool isImmutable = true;
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
@@ -90,7 +76,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // deploy new factory
         factory = new Migrating_PIM_Factory_v1(
-            address(orchestratorFactory), mockTrustedForwarder
+            address(orchestratorFactory),
+            mockTrustedForwarder
         );
 
         eventHelpers = new EventHelpers();
@@ -104,20 +91,23 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         // Authorizer
         setUpRoleAuthorizer();
         authorizerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            roleAuthorizerMetadata, abi.encode(address(workflowAdmin))
+            roleAuthorizerMetadata,
+            abi.encode(address(workflowAdmin))
         );
 
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         paymentProcessorConfig = IOrchestratorFactory_v1.ModuleConfig(
-            simplePaymentProcessorMetadata, bytes("")
+            simplePaymentProcessorMetadata,
+            bytes('')
         );
 
         // Replace bounty manager setup with ImmutableMigration setup
         setUpPaymentRouter();
         logicModuleConfigs.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                paymentRouterMetadata, bytes("")
+                paymentRouterMetadata,
+                bytes('')
             )
         );
 
@@ -125,16 +115,16 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         setUpBancorVirtualSupplyBondingCurveFundingManager();
         bcProperties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1
             .BondingCurveProperties({
-            formula: address(formula),
-            reserveRatioForBuying: reserveRatio,
-            reserveRatioForSelling: reserveRatio,
-            buyFee: 100,
-            sellFee: 100,
-            buyIsOpen: true,
-            sellIsOpen: true,
-            initialIssuanceSupply: initialIssuuanceSupply,
-            initialCollateralSupply: initialCollateralSupply
-        });
+                formula: address(formula),
+                reserveRatioForBuying: reserveRatio,
+                reserveRatioForSelling: reserveRatio,
+                buyFee: 100,
+                sellFee: 100,
+                buyIsOpen: true,
+                sellIsOpen: true,
+                initialIssuanceSupply: initialIssuuanceSupply,
+                initialCollateralSupply: initialCollateralSupply
+            });
 
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
@@ -143,8 +133,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // Put issuance token params in storage
         issuanceTokenParams = IBondingCurveBase_v1.IssuanceToken({
-            name: "Bonding Curve Token",
-            symbol: "BCT",
+            name: 'Bonding Curve Token',
+            symbol: 'BCT',
             decimals: 18,
             maxSupply: type(uint).max - 1
         });
@@ -175,10 +165,13 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         Vm.Log[] memory logs = vm.getRecordedLogs();
         (, bytes32 eventTopic) = eventHelpers.getEventTopic(
-            IMigrating_PIM_Factory_v1.PIMWorkflowCreated.selector, logs, 2
+            IMigrating_PIM_Factory_v1.PIMWorkflowCreated.selector,
+            logs,
+            2
         );
-        address issuanceTokenAddress =
-            eventHelpers.getAddressFromTopic(eventTopic);
+        address issuanceTokenAddress = eventHelpers.getAddressFromTopic(
+            eventTopic
+        );
 
         issuanceToken = ERC20Issuance_v1(issuanceTokenAddress);
         fundingManager = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
@@ -194,7 +187,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         // Check if bonding curve module has minting rights on token
         assertTrue(
             issuanceToken.allowedMinters(address(fundingManager)),
-            "Bonding curve module should have minting rights on token"
+            'Bonding curve module should have minting rights on token'
         );
 
         // Check if issuance token is renounced (immutable) or not (mutable)
@@ -202,13 +195,13 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             assertEq(
                 issuanceToken.owner(),
                 address(0),
-                "Issuance token should be renounced for immutable PIM"
+                'Issuance token should be renounced for immutable PIM'
             );
         } else {
             assertEq(
                 issuanceToken.owner(),
                 workflowAdmin,
-                "Issuance token should not be renounced for mutable PIM"
+                'Issuance token should not be renounced for mutable PIM'
             );
         }
 
@@ -216,51 +209,47 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         assertTrue(
             orchestrator.authorizer().hasRole(adminRole, address(factory)),
-            "Factory should have admin rights over workflow"
+            'Factory should have admin rights over workflow'
         );
 
         if (!isImmutable) {
             assertTrue(
                 orchestrator.authorizer().hasRole(adminRole, workflowAdmin),
-                "Workflow admin should have admin rights over workflow"
+                'Workflow admin should have admin rights over workflow'
             );
         }
 
         assertGt(
             issuanceToken.balanceOf(workflowAdmin),
             0,
-            "Workflow admin should have received issuance tokens"
+            'Workflow admin should have received issuance tokens'
         );
 
         assertEq(
             token.balanceOf(address(fundingManager)),
-            initialPurchaseAmount,
-            "Bonding curve module should have received collateral tokens"
+            initialPurchaseAmount - initialPurchaseAmount / 100, // 1% protocol fee
+            'Bonding curve module should have received collateral tokens'
         );
 
         bytes32 curveAccess = fundingManager.CURVE_INTERACTION_ROLE();
-        bytes32 curveInteractionRoleId = orchestrator.authorizer()
+        bytes32 curveInteractionRoleId = orchestrator
+            .authorizer()
             .generateRoleId(address(fundingManager), curveAccess);
         assertTrue(
             orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, address(factory)
+                curveInteractionRoleId,
+                address(factory)
             ),
-            "Factory should have curve interaction role"
+            'Factory should have curve interaction role'
         );
 
         assertTrue(
             issuanceToken.allowedMinters(address(factory)),
-            "Factory should be allowed minter"
+            'Factory should be allowed minter'
         );
     }
 
     function test_buyForUpTo_BelowThreshold() public {
-        assertEq(
-            token.balanceOf(address(fundingManager)),
-            initialPurchaseAmount,
-            "Funding manager should have received initial collateral tokens"
-        );
-
         // Adjust bounds to be more reasonable
         uint amountIn = 1 ether;
 
@@ -271,40 +260,39 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // Record balances before
         uint buyerTokenBalanceBefore = token.balanceOf(address(this));
-        uint buyerIssuanceBalanceBefore = issuanceToken.balanceOf(address(this));
+        uint buyerIssuanceBalanceBefore = issuanceToken.balanceOf(
+            address(this)
+        );
 
         uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
 
         // Execute buy
         factory.buyForUpTo(
-            address(issuanceToken), address(this), amountIn, purchaseReturn
+            address(issuanceToken),
+            address(this),
+            amountIn,
+            purchaseReturn
         );
 
         // Verify balances changed correctly
         assertLt(
             token.balanceOf(address(this)),
             buyerTokenBalanceBefore,
-            "Token balance should decrease"
+            'Token balance should decrease'
         );
         assertGt(
             issuanceToken.balanceOf(address(this)),
             buyerIssuanceBalanceBefore,
-            "Issuance balance should increase"
+            'Issuance balance should increase'
         );
 
-        assertTrue(fundingManager.buyIsOpen(), "Buying should be open");
-        assertTrue(fundingManager.sellIsOpen(), "Selling should be open");
+        assertTrue(fundingManager.buyIsOpen(), 'Buying should be open');
+        assertTrue(fundingManager.sellIsOpen(), 'Selling should be open');
 
-        assertFalse(factory.isGraduated(), "Factory should not be graduated");
+        assertFalse(factory.isGraduated(), 'Factory should not be graduated');
     }
 
     function test_sellTo() public {
-        assertEq(
-            token.balanceOf(address(fundingManager)),
-            initialPurchaseAmount,
-            "Funding manager should have received initial collateral tokens"
-        );
-
         // First buy some tokens
         uint amountIn = 1 ether;
 
@@ -314,20 +302,24 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
 
         factory.buyForUpTo(
-            address(issuanceToken), address(this), amountIn, purchaseReturn
+            address(issuanceToken),
+            address(this),
+            amountIn,
+            purchaseReturn
         );
 
         uint issuanceBalanceBeforeSale = issuanceToken.balanceOf(address(this));
         assertGt(
             issuanceBalanceBeforeSale,
             0,
-            "Buyer should have received issuance tokens"
+            'Buyer should have received issuance tokens'
         );
 
         issuanceToken.approve(address(factory), issuanceBalanceBeforeSale);
 
-        uint saleReturn =
-            fundingManager.calculateSaleReturn(issuanceBalanceBeforeSale);
+        uint saleReturn = fundingManager.calculateSaleReturn(
+            issuanceBalanceBeforeSale
+        );
 
         factory.sellTo(
             address(issuanceToken),
@@ -341,17 +333,11 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         assertEq(
             issuanceBalanceAfterSale,
             0,
-            "Buyer should not hold issuance tokens after sale"
+            'Buyer should not hold issuance tokens after sale'
         );
     }
 
     function test_buyForUpTo_AtAboveThreshold() public {
-        assertEq(
-            token.balanceOf(address(fundingManager)),
-            initialPurchaseAmount,
-            "Funding manager should have received initial collateral tokens"
-        );
-
         uint amountIn = secondaryPurchaseAmount; // 10 ether, 1 ether was already purchased on inital
 
         token.mint(address(this), amountIn);
@@ -360,33 +346,38 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
 
         factory.buyForUpTo(
-            address(issuanceToken), address(this), amountIn, purchaseReturn
+            address(issuanceToken),
+            address(this),
+            amountIn,
+            purchaseReturn
         );
 
-        assertFalse(fundingManager.buyIsOpen(), "Buying should be closed");
-        assertFalse(fundingManager.sellIsOpen(), "Selling should be closed");
-        assertTrue(factory.isGraduated(), "Factory should be graduated");
+        assertFalse(fundingManager.buyIsOpen(), 'Buying should be closed');
+        assertFalse(fundingManager.sellIsOpen(), 'Selling should be closed');
+        assertTrue(factory.isGraduated(), 'Factory should be graduated');
 
         // Check that only the amount up to threshold was used
-        uint expectedRefund =
-            amountIn - (migrationThreshold - initialPurchaseAmount);
+        uint expectedRefund = initialPurchaseAmount +
+            secondaryPurchaseAmount -
+            migrationThreshold -
+            fundingManager.projectCollateralFeeCollected();
 
         assertEq(
             token.balanceOf(address(this)),
             expectedRefund,
-            "Buyer should be reimbursed the excess payment"
+            'Buyer should be reimbursed the excess payment'
         );
 
         assertGt(
             issuanceToken.balanceOf(address(this)),
             0,
-            "Buyer should receive issuance tokens"
+            'Buyer should receive issuance tokens'
         );
 
         assertEq(
             token.balanceOf(address(fundingManager)),
-            migrationThreshold * fundingManager.buyFee() / 1000,
-            "Funding manager should only hold the fee amount after migration"
+            fundingManager.projectCollateralFeeCollected(),
+            'Funding manager should only hold the fee amount after migration'
         );
     }
 
@@ -398,8 +389,12 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
 
         // Deploy UniswapV2Adapter
-        return address(
-            new UniswapV2Adapter(uniswapFactoryAddress, uniswapRouterAddress)
-        );
+        return
+            address(
+                new UniswapV2Adapter(
+                    uniswapFactoryAddress,
+                    uniswapRouterAddress
+                )
+            );
     }
 }

@@ -2,46 +2,34 @@
 pragma solidity ^0.8.0;
 
 // OpenZeppelin
-import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
-import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {ERC2771Context, Context} from '@oz/metatx/ERC2771Context.sol';
+import {IERC20} from '@oz/token/ERC20/IERC20.sol';
 
 // Core Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
+import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {IModule_v1} from 'src/modules/base/IModule_v1.sol';
 
 // Funding Manager Interfaces
-import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IFundingManager_v1} from '@fm/IFundingManager_v1.sol';
+import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
+import {IRedeemingBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol';
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
 
 // Migration Interfaces
-import {IMigrating_PIM_Factory_v1} from
-    "../interfaces/IMigrating_PIM_Factory_v1.sol";
-import {IDexAdapter_v1} from
-    "src/external/immutable-migration/interfaces/IDexAdapter_v1.sol";
+import {IMigrating_PIM_Factory_v1} from '../interfaces/IMigrating_PIM_Factory_v1.sol';
+import {IDexAdapter_v1} from 'src/external/immutable-migration/interfaces/IDexAdapter_v1.sol';
 
 // Module Implementations
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
-    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
-import {LM_PC_PaymentRouter_v1} from
-    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {LM_PC_PaymentRouter_v1} from 'src/modules/logicModule/LM_PC_PaymentRouter_v1.sol';
+import {FeeManager_v1} from '@ex/fees/FeeManager_v1.sol';
 
 // Token Implementations
-import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
 
-contract Migrating_PIM_Factory_v1 is
-    ERC2771Context,
-    IMigrating_PIM_Factory_v1
-{
+contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // State Variables
 
@@ -52,6 +40,7 @@ contract Migrating_PIM_Factory_v1 is
     bool public isGraduated;
     uint public migrationThreshold;
     address public lpTokenRecipient;
+
     address private _initialAdmin;
 
     mapping(address issuanceToken => PIM orchestrator) public pims;
@@ -59,9 +48,10 @@ contract Migrating_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
     // Constructor
 
-    constructor(address _orchestratorFactory, address _trustedForwarder)
-        ERC2771Context(_trustedForwarder)
-    {
+    constructor(
+        address _orchestratorFactory,
+        address _trustedForwarder
+    ) ERC2771Context(_trustedForwarder) {
         isGraduated = false;
 
         orchestratorFactory = _orchestratorFactory;
@@ -106,13 +96,13 @@ contract Migrating_PIM_Factory_v1 is
             address initiator,
             address collateralToken
         ) = _deployOrchestrator(
-            workflowConfig,
-            fundingManagerConfig,
-            authorizerConfig,
-            paymentProcessorConfig,
-            moduleConfigs,
-            address(issuanceToken)
-        );
+                workflowConfig,
+                fundingManagerConfig,
+                authorizerConfig,
+                paymentProcessorConfig,
+                moduleConfigs,
+                address(issuanceToken)
+            );
 
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
@@ -131,7 +121,10 @@ contract Migrating_PIM_Factory_v1 is
         _handleWorkflowPrivileges(address(issuanceToken));
 
         _handleInitialPurchase(
-            fundingManager, collateralToken, initialPurchaseAmount, initiator
+            fundingManager,
+            collateralToken,
+            initialPurchaseAmount,
+            initiator
         );
 
         // renounce token ownership
@@ -166,64 +159,83 @@ contract Migrating_PIM_Factory_v1 is
         IERC20 collateralToken = pim.orchestrator.fundingManager().token();
 
         // Check if buy would exceed threshold BEFORE transferring tokens
-        (uint excessAmountIn, uint validAmountIn) =
-            _checkBuyExceedsThreshold(issuanceToken, amountIn);
+        (uint excessAmountIn, uint validAmountIn) = _checkBuyExceedsThreshold(
+            issuanceToken,
+            amountIn
+        );
 
-        // Transfer the full amount first
-        collateralToken.transferFrom(msg.sender, address(this), validAmountIn);
-
+        // Transfer only the valid amount
         if (validAmountIn > 0) {
+            collateralToken.transferFrom(
+                msg.sender,
+                address(this),
+                validAmountIn
+            );
+
             // Approve funding manager to spend collateral tokens
             collateralToken.approve(fundingManager, validAmountIn);
 
             // Calculate adjusted minAmountOut based on the ratio of valid to total amount
-            uint adjustedMinAmountOut = validAmountIn == 0
-                ? 0
-                : (minAmountOut * validAmountIn) / amountIn;
+            uint adjustedMinAmountOut = (minAmountOut * validAmountIn) /
+                amountIn;
 
             // Use valid amount to buy from curve
             IBondingCurveBase_v1(fundingManager).buyFor(
-                recipient, validAmountIn, adjustedMinAmountOut
+                recipient,
+                validAmountIn,
+                adjustedMinAmountOut
             );
 
             // If threshold has been reached, close curve and initiate graduation
-            if (collateralToken.balanceOf(fundingManager) >= migrationThreshold)
-            {
+            if (
+                collateralToken.balanceOf(fundingManager) >= migrationThreshold
+            ) {
                 // Initiate graduation
                 _graduate(issuanceToken);
             }
         }
     }
 
-    function _checkBuyExceedsThreshold(address token, uint amountIn)
-        internal
-        view
-        returns (uint excessAmountIn, uint validAmountIn)
-    {
+    function _checkBuyExceedsThreshold(
+        address token,
+        uint amountIn
+    ) internal view returns (uint excessAmountIn, uint validAmountIn) {
         PIM memory pim = pims[token];
+        FeeManager_v1 feeManager = FeeManager_v1(
+            pim.orchestrator.governor().getFeeManager()
+        );
 
         // Get funding manager and collateral token
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            address(pim.orchestrator.fundingManager())
-        );
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                address(pim.orchestrator.fundingManager())
+            );
 
         IERC20 collateralToken = pim.orchestrator.fundingManager().token();
 
         // Get actual collateral supply before and after buy
-        uint currentCollateral =
-            collateralToken.balanceOf(address(fundingManager));
-        uint collateralAfterBuy = currentCollateral + amountIn;
+        uint currentCollateral = collateralToken.balanceOf(
+            address(fundingManager)
+        );
+
+        // Calculate fee-adjusted amount that would actually go to the funding manager
+        uint feeRate = feeManager.getDefaultCollateralFee();
+        uint appliedFee = (amountIn * feeRate) / 10000;
+        uint netAmountIn = amountIn - appliedFee;
+        uint collateralAfterBuy = currentCollateral + netAmountIn;
 
         // Check if total would exceed threshold
         if (collateralAfterBuy > migrationThreshold) {
             // Calculate how much can be validly bought before hitting threshold
-            validAmountIn = migrationThreshold > currentCollateral
+            uint remainingToThreshold = migrationThreshold > currentCollateral
                 ? migrationThreshold - currentCollateral
                 : 0;
 
-            // Remaining amount is excess
-            excessAmountIn = amountIn - validAmountIn;
+            // Account for fees when calculating valid amount
+            // validAmountIn = remainingToThreshold * 10000 / (10000 - feeRate);
+            validAmountIn = (remainingToThreshold * 10000) / (10000 - feeRate);
+            excessAmountIn = amountIn > validAmountIn
+                ? amountIn - validAmountIn
+                : 0;
         } else {
             // Entire amount is valid if under threshold
             validAmountIn = amountIn;
@@ -238,19 +250,21 @@ contract Migrating_PIM_Factory_v1 is
         uint minAmountOut
     ) external {
         PIM memory pim = pims[issuanceToken];
-        IRedeemingBondingCurveBase_v1 fundingManager =
-        IRedeemingBondingCurveBase_v1(
-            address(pim.orchestrator.fundingManager())
-        );
+        IRedeemingBondingCurveBase_v1 fundingManager = IRedeemingBondingCurveBase_v1(
+                address(pim.orchestrator.fundingManager())
+            );
 
         // Transfer issuance tokens from sender to this contract
         ERC20Issuance_v1(issuanceToken).transferFrom(
-            msg.sender, address(this), amountIn
+            msg.sender,
+            address(this),
+            amountIn
         );
 
         // Approve funding manager to spend issuance token
         ERC20Issuance_v1(issuanceToken).approve(
-            address(fundingManager), amountIn
+            address(fundingManager),
+            amountIn
         );
 
         // Make sell order
@@ -259,26 +273,26 @@ contract Migrating_PIM_Factory_v1 is
 
     function _graduate(address issuanceToken) internal {
         PIM memory pim = pims[issuanceToken];
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            address(pim.orchestrator.fundingManager())
-        );
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                address(pim.orchestrator.fundingManager())
+            );
         IERC20 collateralToken = fundingManager.token();
 
         address[] memory modules = pim.orchestrator.listModules();
 
-        uint collateralLiquidity =
-            collateralToken.balanceOf(address(fundingManager));
-        uint issuanceLiquidity = fundingManager.getVirtualIssuanceSupply()
-            - pim.initialVirtualIssuanceSupply;
+        uint collateralLiquidity = collateralToken.balanceOf(
+            address(fundingManager)
+        );
+        uint issuanceLiquidity = fundingManager.getVirtualIssuanceSupply() -
+            pim.initialVirtualIssuanceSupply;
 
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
                 LM_PC_PaymentRouter_v1(modules[i]).pushPayment(
                     address(dexAdapter),
                     address(collateralToken),
-                    collateralLiquidity
-                        - fundingManager.projectCollateralFeeCollected(),
+                    collateralLiquidity -
+                        fundingManager.projectCollateralFeeCollected(),
                     0,
                     0,
                     0
@@ -292,12 +306,15 @@ contract Migrating_PIM_Factory_v1 is
 
         // Mint initial liquidity to dex adapter
         ERC20Issuance_v1(issuanceToken).mint(
-            address(dexAdapter), issuanceLiquidity
+            address(dexAdapter),
+            issuanceLiquidity
         );
 
         // Call migration on adapter
         address pool = dexAdapter.createLiquidity(
-            address(collateralToken), address(issuanceToken), lpTokenRecipient
+            address(collateralToken),
+            address(issuanceToken),
+            lpTokenRecipient
         );
 
         if (!isImmutable) {
@@ -319,10 +336,9 @@ contract Migrating_PIM_Factory_v1 is
 
     function _handleWorkflowPrivileges(address issuanceToken) internal {
         PIM memory pim = pims[issuanceToken];
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-            address(pim.orchestrator.fundingManager())
-        );
+        FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                address(pim.orchestrator.fundingManager())
+            );
 
         // grant admin role to factory (immutable) or to deployer address (mutable)
         pim.orchestrator.authorizer().grantRole(
@@ -333,7 +349,8 @@ contract Migrating_PIM_Factory_v1 is
         ERC20Issuance_v1(issuanceToken).setMinter(address(this), true);
         // grant curve interaction role to factory to be able to buy and sell
         fundingManager.grantModuleRole(
-            fundingManager.CURVE_INTERACTION_ROLE(), address(this)
+            fundingManager.CURVE_INTERACTION_ROLE(),
+            address(this)
         );
         // grant payment pusher role to factory to be able to transfer collateral to dex
         address[] memory modules = pim.orchestrator.listModules();
@@ -357,13 +374,18 @@ contract Migrating_PIM_Factory_v1 is
         // if initial purchase amount set execute first purchase from curve
         if (initialPurchaseAmount > 0) {
             IERC20(collateralToken).transferFrom(
-                _msgSender(), address(this), initialPurchaseAmount
+                _msgSender(),
+                address(this),
+                initialPurchaseAmount
             );
             IERC20(collateralToken).approve(
-                fundingManager, initialPurchaseAmount
+                fundingManager,
+                initialPurchaseAmount
             );
             IBondingCurveBase_v1(fundingManager).buyFor(
-                recipient, initialPurchaseAmount, 1
+                recipient,
+                initialPurchaseAmount,
+                1
             );
         }
     }
@@ -393,8 +415,8 @@ contract Migrating_PIM_Factory_v1 is
         // MODIFY FUNDING MANAGER CONFIG
         // decode configData of fundingManager
         // set newly deployed token as issuance token
-        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
-            bcProperties;
+        IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties
+            memory bcProperties;
         bytes memory fundingManagerConfigData = fundingManagerConfig.configData;
         (, bcProperties, collateralToken) = abi.decode(
             fundingManagerConfigData,
@@ -404,17 +426,20 @@ contract Migrating_PIM_Factory_v1 is
                 address
             )
         );
-        fundingManagerConfigData =
-            abi.encode(address(issuanceToken), bcProperties, collateralToken);
+        fundingManagerConfigData = abi.encode(
+            address(issuanceToken),
+            bcProperties,
+            collateralToken
+        );
         fundingManagerConfig.configData = fundingManagerConfigData;
         orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
             .createOrchestrator(
-            workflowConfig,
-            fundingManagerConfig,
-            authorizerConfig,
-            paymentProcessorConfig,
-            moduleConfigs
-        );
+                workflowConfig,
+                fundingManagerConfig,
+                authorizerConfig,
+                paymentProcessorConfig,
+                moduleConfigs
+            );
 
         return (orchestrator, initiator, collateralToken);
     }
