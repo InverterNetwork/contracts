@@ -52,6 +52,7 @@ contract Migrating_PIM_Factory_v1 is
     bool public isGraduated;
     uint public migrationThreshold;
     address public lpTokenRecipient;
+    address private _initialAdmin;
 
     mapping(address issuanceToken => PIM orchestrator) public pims;
 
@@ -169,15 +170,11 @@ contract Migrating_PIM_Factory_v1 is
             _checkBuyExceedsThreshold(issuanceToken, amountIn);
 
         // Transfer the full amount first
-        collateralToken.transferFrom(msg.sender, address(this), amountIn);
+        collateralToken.transferFrom(msg.sender, address(this), validAmountIn);
 
         if (validAmountIn > 0) {
             // Approve funding manager to spend collateral tokens
             collateralToken.approve(fundingManager, validAmountIn);
-
-            if (excessAmountIn > 0) {
-                collateralToken.transfer(msg.sender, excessAmountIn);
-            }
 
             // Calculate adjusted minAmountOut based on the ratio of valid to total amount
             uint adjustedMinAmountOut = validAmountIn == 0
@@ -190,8 +187,7 @@ contract Migrating_PIM_Factory_v1 is
             );
 
             // If threshold has been reached, close curve and initiate graduation
-            if (collateralToken.balanceOf(fundingManager) >= migrationThreshold)
-            {
+            if (excessAmountIn > 0) {
                 // Initiate graduation
                 _graduate(issuanceToken);
             }
@@ -303,6 +299,12 @@ contract Migrating_PIM_Factory_v1 is
             address(collateralToken), address(issuanceToken), lpTokenRecipient
         );
 
+        if (!isImmutable) {
+            ERC20Issuance_v1(issuanceToken).transferOwnership(
+                address(pim.orchestrator.authorizer())
+            );
+        }
+
         isGraduated = true;
 
         emit Graduation(
@@ -324,7 +326,7 @@ contract Migrating_PIM_Factory_v1 is
         // grant admin role to factory (immutable) or to deployer address (mutable)
         pim.orchestrator.authorizer().grantRole(
             pim.orchestrator.authorizer().getAdminRole(),
-            isImmutable ? address(this) : _msgSender()
+            isImmutable ? address(this) : msg.sender
         );
         // set factory as minter to be able to mint initial liquidity upon graduation
         ERC20Issuance_v1(issuanceToken).setMinter(address(this), true);

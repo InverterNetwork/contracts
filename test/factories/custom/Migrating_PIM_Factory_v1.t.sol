@@ -66,6 +66,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
     uint initialPurchaseAmount = 1 ether;
+    uint secondaryPurchaseAmount = 9.5 ether;
     uint migrationThreshold = 10 ether;
     bool isImmutable = true;
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
@@ -78,9 +79,9 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     address alice = vm.addr(0xA11CE);
 
     // bc params
-    uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
-    uint initialCollateralSupply = 122_727_272_727_272_727_272_727;
-    uint32 reserveRatio = 100_000;
+    uint initialIssuuanceSupply = 200_002_000_000_000_000_000_000;
+    uint initialCollateralSupply = 296_000_000_000_000_000_000;
+    uint32 reserveRatio = 160_000;
 
     function setUp() public override {
         super.setUp();
@@ -351,7 +352,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             "Funding manager should have received initial collateral tokens"
         );
 
-        uint amountIn = migrationThreshold; // 10 ether, 1 ether was already purchased on inital
+        uint amountIn = secondaryPurchaseAmount; // 10 ether, 1 ether was already purchased on inital
 
         token.mint(address(this), amountIn);
         token.approve(address(factory), amountIn);
