@@ -333,7 +333,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     }
 
     function test_buyForUpTo_AtAboveThreshold() public {
-        uint amountIn = migrationThreshold;
+        uint amountIn = migrationThreshold; // 10 ether, 1 ether was already purchased on inital
 
         token.mint(address(this), amountIn);
         token.approve(address(factory), amountIn);
@@ -346,6 +346,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         assertFalse(fundingManager.buyIsOpen(), "Buying should be closed");
         assertFalse(fundingManager.sellIsOpen(), "Selling should be closed");
+        assertTrue(factory.isGraduated(), "Factory should be graduated");
 
         // Check that only the amount up to threshold was used
         uint expectedRefund =
@@ -363,7 +364,11 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             "Buyer should receive issuance tokens"
         );
 
-        assertTrue(factory.isGraduated(), "Factory should be graduated");
+        assertEq(
+            token.balanceOf(address(fundingManager)),
+            0,
+            "Funding manager should not hold any collateral tokens after migration"
+        );
     }
 
     // Utils
