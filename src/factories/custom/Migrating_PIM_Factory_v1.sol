@@ -187,37 +187,12 @@ contract Migrating_PIM_Factory_v1 is
             );
 
             // If threshold has been reached, close curve and initiate graduation
-            if (excessAmountIn > 0) {
+            if (collateralToken.balanceOf(fundingManager) >= migrationThreshold)
+            {
                 // Initiate graduation
                 _graduate(issuanceToken);
             }
         }
-    }
-
-    function sellTo(
-        address issuanceToken,
-        address recipient,
-        uint amountIn,
-        uint minAmountOut
-    ) external {
-        PIM memory pim = pims[issuanceToken];
-        IRedeemingBondingCurveBase_v1 fundingManager =
-        IRedeemingBondingCurveBase_v1(
-            address(pim.orchestrator.fundingManager())
-        );
-
-        // Transfer issuance tokens from sender to this contract
-        ERC20Issuance_v1(issuanceToken).transferFrom(
-            msg.sender, address(this), amountIn
-        );
-
-        // Approve funding manager to spend issuance token
-        ERC20Issuance_v1(issuanceToken).approve(
-            address(fundingManager), amountIn
-        );
-
-        // Make sell order
-        fundingManager.sellTo(recipient, amountIn, minAmountOut);
     }
 
     function _checkBuyExceedsThreshold(address token, uint amountIn)
@@ -256,6 +231,32 @@ contract Migrating_PIM_Factory_v1 is
         }
     }
 
+    function sellTo(
+        address issuanceToken,
+        address recipient,
+        uint amountIn,
+        uint minAmountOut
+    ) external {
+        PIM memory pim = pims[issuanceToken];
+        IRedeemingBondingCurveBase_v1 fundingManager =
+        IRedeemingBondingCurveBase_v1(
+            address(pim.orchestrator.fundingManager())
+        );
+
+        // Transfer issuance tokens from sender to this contract
+        ERC20Issuance_v1(issuanceToken).transferFrom(
+            msg.sender, address(this), amountIn
+        );
+
+        // Approve funding manager to spend issuance token
+        ERC20Issuance_v1(issuanceToken).approve(
+            address(fundingManager), amountIn
+        );
+
+        // Make sell order
+        fundingManager.sellTo(recipient, amountIn, minAmountOut);
+    }
+
     function _graduate(address issuanceToken) internal {
         PIM memory pim = pims[issuanceToken];
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
@@ -277,7 +278,7 @@ contract Migrating_PIM_Factory_v1 is
                     address(dexAdapter),
                     address(collateralToken),
                     collateralLiquidity
-                        - collateralLiquidity * fundingManager.buyFee() / 1000,
+                        - fundingManager.projectCollateralFeeCollected(),
                     0,
                     0,
                     0
