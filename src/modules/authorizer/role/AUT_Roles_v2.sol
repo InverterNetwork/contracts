@@ -55,7 +55,12 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
     /// @dev    This is used to generate unique role ids. The id is incremented
     ///         by 1 for each new role and starts at 1 as the standard admin
     ///         role is always id 0.
-    uint64 _currentRoleId;
+    uint64 private _currentRoleId;
+
+    /// @notice	The role transferable flag.
+    /// @dev    This is a mapping of role ids to booleans that determine if a
+    ///         role is transferable.
+    mapping(uint64 => bool) private _roleTransferable;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -81,6 +86,13 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         // and is not the public roleId
         if (roleId >= _currentRoleId && roleId != type(uint64).max) {
             revert Authorizer_v2__RoleIdNotCreated();
+        }
+        _;
+    }
+
+    modifier roleTransferable(uint64 roleId) {
+        if (!_roleTransferable[roleId]) {
+            revert Authorizer_v2__RoleNotTransferable();
         }
         _;
     }
@@ -126,8 +138,37 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         return _currentRoleId;
     }
 
+    /// @inheritdoc IAuthorizer_v2
+    function getRoleTransferable(uint64 roleId_)
+        external
+        view
+        existingRoleId(roleId_)
+        returns (bool transferable_)
+    {
+        return _roleTransferable[roleId_];
+    }
+
     //--------------------------------------------------------------------------
-    // Public Mutating Functions
+    // Public Mutating General Functions
+
+    /// @inheritdoc IAuthorizer_v2
+    //@todo this could potentially circumvent the grantDelay or execution delay, so I have to look into that
+    function transferRole(uint64 roleId_, address newHolder)
+        public
+        existingRoleId(roleId_)
+        roleTransferable(roleId_)
+    {
+        address sender = _msgSender();
+        // Revoke the role from the sender
+        _revokeRole(roleId_, sender);
+        // Grant the role to the new holder
+        _grantRole(roleId_, newHolder, 0, 0);
+
+        emit RoleTransferred(roleId_, sender, newHolder);
+    }
+
+    //--------------------------------------------------------------------------
+    // Public Mutating Admin Functions
 
     /// @inheritdoc IAuthorizer_v2
     function createRoleWithSpecifications(
@@ -165,9 +206,19 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         return _createRole(roleName_);
     }
 
+    /// @inheritdoc IAuthorizer_v2
+    function setRoleTransferable(uint64 roleId_, bool transferable_)
+        public
+        onlyModulesOrAdmin
+        existingRoleId(roleId_)
+    {
+        _setRoleTransferable(roleId_, transferable_);
+    }
+
     //--------------------------------------------------------------------------
     // Override Public Functions
 
+    /// @inheritdoc IAccessManager
     function grantRole(uint64 roleId, address account, uint32 executionDelay)
         public
         virtual
@@ -177,6 +228,7 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         super.grantRole(roleId, account, executionDelay);
     }
 
+    /// @inheritdoc IAccessManager
     function revokeRole(uint64 roleId, address account)
         public
         virtual
@@ -186,6 +238,7 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         super.revokeRole(roleId, account);
     }
 
+    /// @inheritdoc IAccessManager
     function renounceRole(uint64 roleId, address callerConfirmation)
         public
         virtual
@@ -195,6 +248,7 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         super.renounceRole(roleId, callerConfirmation);
     }
 
+    /// @inheritdoc IAccessManager
     function setRoleAdmin(uint64 roleId, uint64 admin)
         public
         virtual
@@ -205,6 +259,7 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         super.setRoleAdmin(roleId, admin);
     }
 
+    /// @inheritdoc IAccessManager
     function setRoleGuardian(uint64 roleId, uint64 guardian)
         public
         virtual
@@ -215,6 +270,7 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         super.setRoleGuardian(roleId, guardian);
     }
 
+    /// @inheritdoc IAccessManager
     function setGrantDelay(uint64 roleId, uint32 newDelay)
         public
         virtual
@@ -224,6 +280,7 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         super.setGrantDelay(roleId, newDelay);
     }
 
+    /// @inheritdoc IAccessManager
     function setTargetFunctionRole(
         address target,
         bytes4[] calldata selectors,
@@ -240,17 +297,35 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
     //--------------------------------------------------------------------------
     // Internal functions
 
+    /// @notice Creates a new role.
+    /// @dev Emits a {RoleLabel} event.
+    /// @param roleName_ The role name.
+    /// @return roleId_ The created role id.
     function _createRole(string memory roleName_)
         internal
         returns (uint64 roleId_)
     {
-        roleId_ = _consumeRoleId();
+        roleId_ = _createRoleId();
 
         emit RoleLabel(roleId_, roleName_);
     }
 
-    function _consumeRoleId() internal returns (uint64 createdRoleId_) {
+    /// @notice Creates a new role id.
+    /// @return createdRoleId_ The created role id.
+    function _createRoleId() internal returns (uint64 createdRoleId_) {
         return _currentRoleId++;
+    }
+
+    /// @notice Sets the role transferable flag.
+    /// @dev Emits a {RoleTransferable} event.
+    /// @param roleId_ The role id.
+    /// @param transferable_ The transferable flag.
+    function _setRoleTransferable(uint64 roleId_, bool transferable_)
+        internal
+    {
+        _roleTransferable[roleId_] = transferable_;
+
+        emit RoleTransferable(roleId_, transferable_);
     }
 
     //--------------------------------------------------------------------------

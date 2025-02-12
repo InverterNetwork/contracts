@@ -6,6 +6,20 @@ import {IModule_v2} from "src/modules/base/IModule_v2.sol";
 
 interface IAuthorizer_v2 is IAccessManager {
     //--------------------------------------------------------------------------
+    // Events
+
+    /// @notice Emitted when a role is transferred.
+    /// @param roleId_ The role id.
+    /// @param sender_ The sender of the role transfer.
+    /// @param newHolder_ The new holder of the role.
+    event RoleTransferred(uint64 roleId_, address sender_, address newHolder_);
+
+    /// @notice Emitted when the role transferable flag is set.
+    /// @param roleId_ The role id.
+    /// @param transferable_ The transferable flag.
+    event RoleTransferable(uint64 roleId_, bool transferable_);
+
+    //--------------------------------------------------------------------------
     // Errors
 
     /// @notice Function is only callable by a module or the admin.
@@ -14,6 +28,9 @@ interface IAuthorizer_v2 is IAccessManager {
     /// @notice The given RoleId has not been created yet.
     error Authorizer_v2__RoleIdNotCreated();
 
+    /// @notice The given RoleId is not transferable.
+    error Authorizer_v2__RoleNotTransferable();
+
     //--------------------------------------------------------------------------
     // Public Getter Functions
 
@@ -21,8 +38,29 @@ interface IAuthorizer_v2 is IAccessManager {
     /// @return currentRoleId_ The next role if that will be created.
     function getCurrentRoleId() external view returns (uint64 currentRoleId_);
 
+    /// @notice Returns the role transferable flag.
+    /// @dev    This is restricted to existing roles.
+    /// @param  roleId_ The role id.
+    /// @return transferable_ The transferable flag.
+    function getRoleTransferable(uint64 roleId_)
+        external
+        view
+        returns (bool transferable_);
+
     //--------------------------------------------------------------------------
-    // Public Mutating Functions
+    // Public Mutating General Functions
+
+    /// @notice Transfers a role to a new holder.
+    /// @dev    This is restricted to existing roles and to roles that are
+    ///         transferable.
+    /// @dev    This is restricted existing roles.
+    /// @dev    This emits a {RoleTransferred} event.
+    /// @param  roleId_ The role id.
+    /// @param  newHolder_ The new holder of the role.
+    function transferRole(uint64 roleId_, address newHolder_) external;
+
+    //--------------------------------------------------------------------------
+    // Public Mutating Admin Functions
 
     /// @notice Creates a role, links the specified function selectors to that
     ///         role and adds the specified role holders to the role
@@ -44,4 +82,13 @@ interface IAuthorizer_v2 is IAccessManager {
     function createRole(string memory roleName_)
         external
         returns (uint64 roleId_);
+
+    /// @notice Sets the role transferable flag.
+    /// @dev    This is restricted to the admin and to modules that are registered
+    ///         in the orchestrator.
+    /// @dev    This is restricted to existing roles.
+    /// @dev    This emits a {RoleTransferable} event.
+    /// @param  roleId_ The role id.
+    /// @param  transferable_ The transferable flag.
+    function setRoleTransferable(uint64 roleId_, bool transferable_) external;
 }

@@ -184,7 +184,6 @@ contract AUT_Roles_v2Test is Test {
 
         // Set the Target function to be accessible form the newly created role
         vm.prank(owner);
-        //@todo should this be a different function? This would mean we have to check every time if the roleid is the public role or not
         _authorizer.setTargetFunctionRole(
             address(module),
             selectors,
@@ -200,7 +199,7 @@ contract AUT_Roles_v2Test is Test {
         module.doSmth(0);
     }
 
-    // Hierarchical Roles //@ŧodo We dont have the full definition of what this entails
+    // Hierarchical Roles //@todo We dont have the full definition of what this entails
     function testHierarchicalRoles() public {
         // Create the Role Subadmin
         uint64 subAdminRoleId = _authorizer.getCurrentRoleId();
@@ -245,7 +244,7 @@ contract AUT_Roles_v2Test is Test {
         module.doSmth(0);
     }
 
-    // Tranfer your own Role to another address //@todo this is not possible right now. What would be the restrictions for that?
+    // Tranfer your own Role to another address
     function testTransferRole() public {
         // Create the Role User
         uint64 userRoleId = _authorizer.getCurrentRoleId();
@@ -254,7 +253,33 @@ contract AUT_Roles_v2Test is Test {
 
         // Grant the role
         vm.prank(owner);
-        _authorizer.grantRole(userRoleId, bob, 0);
+        _authorizer.grantRole(userRoleId, alice, 0);
+
+        // Currently Alice should not be able to tranfer role
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v2.Authorizer_v2__RoleNotTransferable.selector
+            )
+        );
+        vm.prank(alice);
+        _authorizer.transferRole(userRoleId, bob);
+
+        // Owner makes role transferable
+        vm.expectEmit(true, true, true, true);
+        emit IAuthorizer_v2.RoleTransferable(userRoleId, true);
+
+        vm.prank(owner);
+        _authorizer.setRoleTransferable(userRoleId, true);
+
+        // Alice should be able to transfer role now
+        vm.prank(alice);
+        _authorizer.transferRole(userRoleId, bob);
+
+        // Bob should now have role and alice should not
+        (bool hasRole,) = _authorizer.hasRole(userRoleId, bob);
+        assertTrue(hasRole);
+        (hasRole,) = _authorizer.hasRole(userRoleId, alice);
+        assertFalse(hasRole);
     }
 
     // Start directly with roles in a module
@@ -264,8 +289,6 @@ contract AUT_Roles_v2Test is Test {
         module = Module_v2Mock(Clones.clone(moduleImpl));
 
         // Add module to orchestrator
-        // @note Module has to be added to Orchestrator before it is intialized now
-        // @note Modules v2 are not compatible with orchestrator v2 because of interface check when adding modules
         vm.prank(owner);
         _orchestrator.initiateAddModuleWithTimelock(address(module));
 
