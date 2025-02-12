@@ -23,5 +23,22 @@
 
 # To Discuss:
 
+- enable sub Roles to change function selectors
+
+  - multiple solutions:
+  - Targetaddress -> idArray
+    - multiple Role ids possible to handle Target function selector
+    - More effort on the contract side
+    - To check you get a array of ids back
+  - targetaddress -> SingleAdmin
+    - only one admin per targetaddress
+    - Pretty easy to implement
+    - Easy to understand
+  - Targetaddress -> RoleId -> bool
+    - multiple Role ids possible to handle Target function selector
+    - small effort on the contract side
+    - worse for frontend as you have to check if the role is enabled
+      - could be simulated
+
 - Workflow admin naming
   // Hierarchical Roles //@todo We dont have the full definition of what this entails
