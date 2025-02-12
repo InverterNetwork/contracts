@@ -336,15 +336,15 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
 
         // Verify that the Default Collateral Fee is set correctly
         require(
-            /* FeeManager_v1(feeManager).getDefaultCollateralFee() */
-            0 == feeManager_defaultCollateralFee,
+            FeeManager_v1(feeManager).getDefaultCollateralFee()
+                == feeManager_defaultCollateralFee,
             "Deployment failed - FeeManager not initialized correctly, Default Collateral Fee is not correct."
         );
 
         // Verify that the Default Issuance Fee is set correctly
         require(
-            /* FeeManager_v1(feeManager).getDefaultIssuanceFee() */
-            0 == feeManager_defaultIssuanceFee,
+            FeeManager_v1(feeManager).getDefaultIssuanceFee()
+                == feeManager_defaultIssuanceFee,
             "Deployment failed - FeeManager not initialized correctly, Default Issuance Fee is not correct."
         );
 
