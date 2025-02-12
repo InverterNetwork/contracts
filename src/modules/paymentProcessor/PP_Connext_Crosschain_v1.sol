@@ -50,9 +50,12 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     IWETH public weth;
 
     /// @dev Tracks all details for all payment orders of a paymentReceiver for a specific paymentClient.
-    ///      paymentClient => paymentReceiver => intentId.
+    ///      paymentClient => paymentReceiver => paymentId => intentId.
     mapping(
-        address paymentClient => mapping(address recipient => bytes32 intentId)
+        address paymentClient
+            => mapping(
+                address recipient => mapping(uint paymentId => bytes32 intentId)
+            )
     ) public processedIntentId;
 
     /// @dev Tracks failed transfers that can be retried
@@ -120,8 +123,8 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
                     orders[i].end
                 );
                 _paymentId++;
-                processedIntentId[address(client)][orders[i].recipient] =
-                    bytes32(bridgeData);
+                processedIntentId[address(client)][orders[i].recipient][_paymentId]
+                = bytes32(bridgeData);
             } else {
                 // Handle failed transfer
                 failedTransfers[clientAddress][orders[i].recipient][executionData]
@@ -186,7 +189,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         }
 
         _cleanupFailedTransfer(client, recipient, executionData);
-        processedIntentId[client][recipient] = newIntentId;
+        processedIntentId[client][recipient][_paymentId] = newIntentId;
     }
 
     // View Functions
@@ -289,7 +292,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
             revert Module__CrossChainBase__InvalidAmount();
         }
         //intentId should be 0 if the transfer has not been processed yet
-        if (processedIntentId[client][recipient] != bytes32(0)) {
+        if (processedIntentId[client][recipient][_paymentId] != bytes32(0)) {
             revert Module__PP_Crosschain__InvalidIntentId();
         }
 
@@ -307,7 +310,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         address recipient,
         bytes memory executionData
     ) internal {
-        delete processedIntentId[client][recipient];
+        delete processedIntentId[client][recipient][_paymentId];
         delete failedTransfers[client][recipient][executionData];
     }
 

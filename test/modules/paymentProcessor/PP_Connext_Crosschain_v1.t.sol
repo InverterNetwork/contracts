@@ -180,7 +180,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         assertEq(balanceAfter, balanceBefore + testAmount);
 
         bytes32 intentId = paymentProcessor.processedIntentId(
-            address(paymentClient), testRecipient
+            address(paymentClient), testRecipient, paymentProcessor._paymentId()
         );
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
@@ -260,7 +260,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         //should be checking in the mock for valid bridge data
         for (uint i = 0; i < numRecipients; i++) {
             bytes32 intentId = paymentProcessor.processedIntentId(
-                address(paymentClient), setupRecipients[i]
+                address(paymentClient),
+                setupRecipients[i],
+                paymentProcessor._paymentId()
             );
             assertEq(
                 uint(everclearPaymentMock.status(intentId)),
@@ -331,7 +333,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
         assertEq(
             paymentProcessor.processedIntentId(
-                address(paymentClient), address(0)
+                address(paymentClient),
+                address(0),
+                paymentProcessor._paymentId()
             ),
             bytes32(0)
         );
@@ -554,6 +558,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 └── And clear the failed transfer record
                 └── And emit FailedTransferRetried event
     */
+
     function testFuzz_PublicRetryFailedTransfer_succeedsGivenValidFailedTransfer(
         address testRecipient,
         uint testAmount
@@ -605,7 +610,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // 2. New intent was created (should be non-zero)
         bytes32 newIntentId = paymentProcessor.processedIntentId(
-            address(paymentClient), testRecipient
+            address(paymentClient), testRecipient, paymentProcessor._paymentId()
         );
         assertTrue(newIntentId != bytes32(0));
     }
@@ -662,7 +667,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         // Verify intentId was cleared
         assertEq(
             paymentProcessor.processedIntentId(
-                address(paymentClient), testRecipient
+                address(paymentClient),
+                testRecipient,
+                paymentProcessor._paymentId()
             ),
             bytes32(0)
         );
@@ -687,7 +694,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         bytes32 pendingIntentId = paymentProcessor.processedIntentId(
-            address(paymentClient), testRecipient
+            address(paymentClient), testRecipient, paymentProcessor._paymentId()
         );
 
         // Create payment order for cancellation
@@ -1015,7 +1022,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Verify final intent ID exists
         bytes32 finalIntentId = paymentProcessor.processedIntentId(
-            address(paymentClient), testRecipient
+            address(paymentClient), testRecipient, paymentProcessor._paymentId()
         );
         assertTrue(finalIntentId != bytes32(0));
     }
@@ -1055,7 +1062,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         bytes32 intentId = paymentProcessor.processedIntentId(
-            address(paymentClient), testRecipient
+            address(paymentClient), testRecipient, paymentProcessor._paymentId()
         );
         assertTrue(intentId != bytes32(0));
     }
