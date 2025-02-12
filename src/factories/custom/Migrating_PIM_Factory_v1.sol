@@ -175,6 +175,10 @@ contract Migrating_PIM_Factory_v1 is
             // Approve funding manager to spend collateral tokens
             collateralToken.approve(fundingManager, validAmountIn);
 
+            if (excessAmountIn > 0) {
+                collateralToken.transfer(msg.sender, excessAmountIn);
+            }
+
             // Calculate adjusted minAmountOut based on the ratio of valid to total amount
             uint adjustedMinAmountOut = validAmountIn == 0
                 ? 0
@@ -188,22 +192,9 @@ contract Migrating_PIM_Factory_v1 is
             // If threshold has been reached, close curve and initiate graduation
             if (collateralToken.balanceOf(fundingManager) >= migrationThreshold)
             {
-                // Close buying & selling on the funding manager
-                FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-                    fundingManager
-                ).closeBuy();
-                FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-                    fundingManager
-                ).closeSell();
-
                 // Initiate graduation
                 _graduate(issuanceToken);
             }
-        }
-
-        // If there was excess amount, transfer it back to sender
-        if (excessAmountIn > 0) {
-            collateralToken.transfer(msg.sender, excessAmountIn);
         }
     }
 
@@ -277,18 +268,20 @@ contract Migrating_PIM_Factory_v1 is
         );
         IERC20 collateralToken = fundingManager.token();
 
+        address[] memory modules = pim.orchestrator.listModules();
+
         uint collateralLiquidity =
             collateralToken.balanceOf(address(fundingManager));
         uint issuanceLiquidity = fundingManager.getVirtualIssuanceSupply()
             - pim.initialVirtualIssuanceSupply;
 
-        address[] memory modules = pim.orchestrator.listModules();
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
                 LM_PC_PaymentRouter_v1(modules[i]).pushPayment(
                     address(dexAdapter),
                     address(collateralToken),
-                    collateralLiquidity,
+                    collateralLiquidity
+                        - collateralLiquidity * fundingManager.buyFee() / 1000,
                     0,
                     0,
                     0

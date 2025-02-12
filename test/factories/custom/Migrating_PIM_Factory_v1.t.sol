@@ -127,8 +127,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             formula: address(formula),
             reserveRatioForBuying: reserveRatio,
             reserveRatioForSelling: reserveRatio,
-            buyFee: 0,
-            sellFee: 0,
+            buyFee: 100,
+            sellFee: 100,
             buyIsOpen: true,
             sellIsOpen: true,
             initialIssuanceSupply: initialIssuuanceSupply,
@@ -254,6 +254,12 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     }
 
     function test_buyForUpTo_BelowThreshold() public {
+        assertEq(
+            token.balanceOf(address(fundingManager)),
+            initialPurchaseAmount,
+            "Funding manager should have received initial collateral tokens"
+        );
+
         // Adjust bounds to be more reasonable
         uint amountIn = 1 ether;
 
@@ -292,6 +298,12 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     }
 
     function test_sellTo() public {
+        assertEq(
+            token.balanceOf(address(fundingManager)),
+            initialPurchaseAmount,
+            "Funding manager should have received initial collateral tokens"
+        );
+
         // First buy some tokens
         uint amountIn = 1 ether;
 
@@ -333,6 +345,12 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     }
 
     function test_buyForUpTo_AtAboveThreshold() public {
+        assertEq(
+            token.balanceOf(address(fundingManager)),
+            initialPurchaseAmount,
+            "Funding manager should have received initial collateral tokens"
+        );
+
         uint amountIn = migrationThreshold; // 10 ether, 1 ether was already purchased on inital
 
         token.mint(address(this), amountIn);
@@ -366,8 +384,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         assertEq(
             token.balanceOf(address(fundingManager)),
-            0,
-            "Funding manager should not hold any collateral tokens after migration"
+            migrationThreshold * fundingManager.buyFee() / 1000,
+            "Funding manager should only hold the fee amount after migration"
         );
     }
 
