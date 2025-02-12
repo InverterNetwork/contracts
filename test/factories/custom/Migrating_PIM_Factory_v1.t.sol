@@ -287,6 +287,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         assertTrue(fundingManager.buyIsOpen(), "Buying should be open");
         assertTrue(fundingManager.sellIsOpen(), "Selling should be open");
+
+        assertFalse(factory.isGraduated(), "Factory should not be graduated");
     }
 
     function test_sellTo() public {
@@ -349,7 +351,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         uint expectedRefund =
             amountIn - (migrationThreshold - initialPurchaseAmount);
 
-        assertGt(
+        assertEq(
             token.balanceOf(address(this)),
             expectedRefund,
             "Buyer should be reimbursed the excess payment"
