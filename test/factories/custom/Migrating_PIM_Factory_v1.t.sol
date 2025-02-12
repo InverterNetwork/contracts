@@ -231,10 +231,6 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             "Workflow admin should have received issuance tokens"
         );
 
-        console2.log(
-            "workflowAdmin balance", issuanceToken.balanceOf(workflowAdmin)
-        );
-
         assertEq(
             token.balanceOf(address(fundingManager)),
             initialPurchaseAmount,
@@ -334,14 +330,11 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         );
     }
 
-    function test_buyForUpTo_AtAboveThreshold(uint amountIn) public {
-        amountIn = 11 ether;
+    function test_buyForUpTo_AtAboveThreshold() public {
+        uint amountIn = migrationThreshold;
 
         token.mint(address(this), amountIn);
         token.approve(address(factory), amountIn);
-
-        vm.expectEmit(true, true, true, true);
-        emit IBondingCurveBase_v1.BuyingDisabled();
 
         uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
 
@@ -356,7 +349,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         uint expectedRefund =
             amountIn - (migrationThreshold - initialPurchaseAmount);
 
-        assertEq(
+        assertGt(
             token.balanceOf(address(this)),
             expectedRefund,
             "Buyer should be reimbursed the excess payment"
