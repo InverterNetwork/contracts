@@ -58,14 +58,10 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
             )
     ) public processedIntentId;
 
-    /// @dev Tracks failed transfers that can be retried
-    ///      paymentClient => recipient => intentId => amount
-    mapping(
-        address paymentClient
-            => mapping(
-                address recipient => mapping(bytes intentId => uint amount)
-            )
-    ) public failedTransfers;
+    /// @dev    Tracks all payments that could not be made to the paymentReceiver due to any reason.
+    /// @dev	paymentClient => token address => paymentReceiver => unclaimable Amount.
+    mapping(address => mapping(address => mapping(address => uint))) internal
+        unclaimableAmountsForRecipient;
 
     // Errors
     error FailedTransfer();
@@ -127,8 +123,8 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
                 = bytes32(bridgeData);
             } else {
                 // Handle failed transfer
-                failedTransfers[clientAddress][orders[i].recipient][executionData]
-                = orders[i].amount;
+                unclaimableAmountsForRecipient[clientAddress][orders[i]
+                    .paymentToken][orders[i].recipient] += orders[i].amount;
                 emit TransferFailed(
                     clientAddress,
                     orders[i].recipient,
@@ -138,29 +134,6 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
             }
             client.amountPaid(orders[i].paymentToken, orders[i].amount);
         }
-    }
-
-    /**
-     * @notice Cancels a pending transfer and returns funds to the client
-     * @param client The payment client address
-     * @param recipient The recipient address
-     * @param executionData The execution data to cancel
-     * @param order The payment order details
-     */
-    function cancelTransfer(
-        address client,
-        address recipient,
-        bytes memory executionData,
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
-    ) external {
-        _validateTransferRequest(client, recipient, executionData);
-        _cleanupFailedTransfer(client, recipient, executionData);
-
-        if (!IERC20(order.paymentToken).transfer(recipient, order.amount)) {
-            revert FailedTransfer();
-        }
-
-        emit TransferCancelled(client, recipient, executionData, order.amount);
     }
 
     /**
@@ -180,6 +153,11 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     ) external {
         _validateTransferRequest(client, recipient, executionData);
 
+        //unclaimable amount should not be 0 if the transfer has failed
+        if (unclaimable(client, order.paymentToken, recipient) == 0) {
+            revert Module__PP_Crosschain__InvalidUnclaimableAmount();
+        }
+
         bytes32 newIntentId =
             _createCrossChainIntent(order, newExecutionData, false);
         if (newIntentId == bytes32(0)) {
@@ -188,8 +166,28 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
             );
         }
 
-        _cleanupFailedTransfer(client, recipient, executionData);
+        unclaimableAmountsForRecipient[client][order.paymentToken][recipient] -=
+            order.amount;
         processedIntentId[client][recipient][_paymentId] = newIntentId;
+    }
+
+    // @notice Claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
+    // @dev This function is used to claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
+    // @param client address of the payment client.
+    // @param token address of the payment token.
+    // @param receiver address of the paymentReceiver for which the unclaimable amount will be claimed.
+    function claimPreviouslyUnclaimable(
+        address client,
+        address token,
+        address receiver
+    ) external virtual override {
+        if (unclaimable(client, token, _msgSender()) == 0) {
+            revert Module__PaymentProcessor__NothingToClaim(
+                client, _msgSender()
+            );
+        }
+
+        _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
     // View Functions
@@ -207,7 +205,45 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         return _bridgeData[paymentId];
     }
 
+    // @notice Returns the unclaimable amount of a particular `paymentReceiver` for a given payment client.
+    // @dev This function is used to return the unclaimable amount of a particular `paymentReceiver` for a given payment client.
+    // @param client address of the payment client.
+    // @param token address of the payment token.
+    // @param paymentReceiver address of the paymentReceiver for which the unclaimable amount will be returned.
+    function unclaimable(address client, address token, address paymentReceiver)
+        public
+        view
+        virtual
+        override
+        returns (uint amount)
+    {
+        return unclaimableAmountsForRecipient[client][token][paymentReceiver];
+    }
     // Overridden Internal Functions
+
+    /// @notice used to claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
+    /// @param  client address of the payment client.
+    /// @param  token address of the payment token.
+    /// @param  paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
+    function _claimPreviouslyUnclaimable(
+        address client,
+        address token,
+        address paymentReceiver
+    ) internal {
+        // get amount
+
+        address sender = _msgSender();
+        // copy value over
+        uint amount = unclaimableAmountsForRecipient[client][token][sender];
+        // Delete the field
+        delete unclaimableAmountsForRecipient[client][token][sender];
+
+        // Call has to succeed otherwise no state change
+        IERC20(token).transferFrom(address(this), paymentReceiver, amount);
+
+        emit TokensReleased(paymentReceiver, address(token), amount);
+    }
+
     /**
      * @dev Execute the cross-chain bridge transfer
      * @param order The payment order containing transfer details
@@ -282,36 +318,11 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         address client,
         address recipient,
         bytes memory executionData
-    ) internal view returns (uint) {
-        //msg.sender should be the client
-        if (msg.sender != client) {
-            revert Module__InvalidAddress();
-        }
-        uint failedAmount = failedTransfers[client][recipient][executionData];
-        if (failedAmount == 0) {
-            revert Module__CrossChainBase__InvalidAmount();
-        }
+    ) internal view validClient(client) {
         //intentId should be 0 if the transfer has not been processed yet
         if (processedIntentId[client][recipient][_paymentId] != bytes32(0)) {
             revert Module__PP_Crosschain__InvalidIntentId();
         }
-
-        return failedAmount;
-    }
-
-    /**
-     * @dev Cleans up storage after handling a failed transfer
-     * @param client The payment client address
-     * @param recipient The recipient address
-     * @param executionData The execution data
-     */
-    function _cleanupFailedTransfer(
-        address client,
-        address recipient,
-        bytes memory executionData
-    ) internal {
-        delete processedIntentId[client][recipient][_paymentId];
-        delete failedTransfers[client][recipient][executionData];
     }
 
     /**

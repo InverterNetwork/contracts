@@ -116,8 +116,8 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     function claimPreviouslyUnclaimable(
         address client,
         address token,
-        address receiver
-    ) external {
+        address paymentReceiver
+    ) external virtual {
         // Implementation depends on specific bridge requirements
         revert("Not implemented");
     }
@@ -126,6 +126,7 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     function unclaimable(address client, address token, address paymentReceiver)
         public
         view
+        virtual
         returns (uint amount)
     {
         // Implementation depends on specific bridge requirements

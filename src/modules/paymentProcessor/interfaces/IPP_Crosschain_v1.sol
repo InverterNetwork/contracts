@@ -52,6 +52,10 @@ interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
     /// @notice Thrown when the provided intent ID is invalid or does not exist
     error Module__PP_Crosschain__InvalidIntentId();
 
+    /// @notice Thrown when the unclaimable amount is invalid (e.g., zero or exceeds
+    /// limits)
+    error Module__PP_Crosschain__InvalidUnclaimableAmount();
+
     /// @notice Thrown when the payment amount is invalid (e.g., zero or exceeds
     /// limits)
     error Module__PP_Crosschain__InvalidAmount();

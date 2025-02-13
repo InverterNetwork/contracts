@@ -23,12 +23,11 @@ contract PP_Connext_Crosschain_v1_Exposed is PP_Connext_Crosschain_v1 {
         return _createCrossChainIntent(order, executionData, false);
     }
 
-    function exposed_setFailedTransfer(
+    function exposed_unclaimable(
         address client,
         address recipient,
-        bytes memory intentId,
-        uint amount
-    ) external {
-        failedTransfers[client][recipient][intentId] = amount;
+        address token
+    ) external view returns (uint) {
+        return unclaimableAmountsForRecipient[client][token][recipient];
     }
 }

@@ -260,9 +260,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         //should be checking in the mock for valid bridge data
         for (uint i = 0; i < numRecipients; i++) {
             bytes32 intentId = paymentProcessor.processedIntentId(
-                address(paymentClient),
-                setupRecipients[i],
-                paymentProcessor._paymentId()
+                address(paymentClient), setupRecipients[i], i + 1
             );
             assertEq(
                 uint(everclearPaymentMock.status(intentId)),
@@ -579,10 +577,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Verify failed transfer was recorded with the failing execution data
         assertEq(
-            paymentProcessor.failedTransfers(
-                address(paymentClient),
-                testRecipient,
-                failingExecutionData // Use the same execution data that was used in processPayments
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), testRecipient
             ),
             testAmount
         );
@@ -600,10 +596,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         // Verify:
         // 1. Failed transfer record was cleared
         assertEq(
-            paymentProcessor.failedTransfers(
-                address(paymentClient),
-                testRecipient,
-                failingExecutionData // Check using the original failing execution data
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), testRecipient
             ),
             0
         );
@@ -641,24 +635,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint balanceAfter = _token.balanceOf(address(paymentProcessor));
         assertEq(balanceAfter, balanceBefore + testAmount);
 
-        // see if failed failedTransfers updates
+        // see if failed unclaimable amount updates
         assertEq(
-            paymentProcessor.failedTransfers(
-                address(paymentClient), testRecipient, executionData
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), testRecipient
             ),
             orders[0].amount
         );
 
-        uint failedAmount = paymentProcessor.failedTransfers(
-            address(paymentClient), testRecipient, executionData
-        );
-        assertEq(failedAmount, orders[0].amount);
-
         uint balanceBeforeCancel = _token.balanceOf(address(paymentProcessor));
         // Cancel as recipient
-        vm.prank(address(paymentClient));
-        paymentProcessor.cancelTransfer(
-            address(paymentClient), testRecipient, executionData, orders[0]
+        vm.prank(testRecipient);
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), testRecipient
         );
         uint balanceAfterCancel = _token.balanceOf(address(paymentProcessor));
 
@@ -711,9 +700,17 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         // Prank as non-recipient
         console2.log(address(paymentClient));
         vm.prank(nonRecipient);
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
-        paymentProcessor.cancelTransfer(
-            address(paymentClient), testRecipient, executionData, order
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IPaymentProcessor_v1
+                    .Module__PaymentProcessor__NothingToClaim
+                    .selector,
+                address(paymentClient),
+                nonRecipient
+            )
+        );
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), testRecipient
         );
     }
 
@@ -739,12 +736,18 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Cancel the transfer
-        vm.prank(address(paymentClient));
+        vm.prank(testRecipient);
         vm.expectRevert(
-            ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
+            abi.encodeWithSelector(
+                IPaymentProcessor_v1
+                    .Module__PaymentProcessor__NothingToClaim
+                    .selector,
+                address(paymentClient),
+                testRecipient
+            )
         );
-        paymentProcessor.cancelTransfer(
-            address(paymentClient), testRecipient, executionData, orders[0]
+        paymentProcessor.claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), testRecipient
         );
     }
 
@@ -793,7 +796,11 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Attempt retry from invalid caller
         vm.prank(invalidCaller);
-        vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        vm.expectRevert(
+            IPaymentProcessor_v1
+                .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
+                .selector
+        );
         paymentProcessor.retryFailedTransfer(
             address(paymentClient),
             testRecipient,
@@ -819,7 +826,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
-            ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
+            IPP_Crosschain_v1
+                .Module__PP_Crosschain__InvalidUnclaimableAmount
+                .selector
         );
         paymentProcessor.retryFailedTransfer(
             address(paymentClient),
