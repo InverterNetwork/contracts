@@ -41,7 +41,7 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
     uint public migrationThreshold;
     address public lpTokenRecipient;
 
-    address private _initialAdmin;
+    address private _deployer;
 
     mapping(address issuanceToken => PIM orchestrator) public pims;
 
@@ -104,6 +104,8 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
                 address(issuanceToken)
             );
 
+        _deployer = initiator;
+
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
         // store orchestrator for issuance token
@@ -126,9 +128,6 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
             initialPurchaseAmount,
             initiator
         );
-
-        // renounce token ownership
-        issuanceToken.renounceOwnership();
 
         emit IMigrating_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator),
@@ -317,9 +316,16 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
             lpTokenRecipient
         );
 
+        if (isImmutable) {
+            ERC20Issuance_v1(issuanceToken).renounceOwnership();
+        } else {
+            ERC20Issuance_v1(issuanceToken).transferOwnership(_deployer);
+        }
+
         if (!isImmutable) {
-            ERC20Issuance_v1(issuanceToken).transferOwnership(
-                address(pim.orchestrator.authorizer())
+            pim.orchestrator.authorizer().grantRole(
+                pim.orchestrator.authorizer().getAdminRole(),
+                _deployer
             );
         }
 
@@ -341,10 +347,13 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
             );
 
         // grant admin role to factory (immutable) or to deployer address (mutable)
-        pim.orchestrator.authorizer().grantRole(
-            pim.orchestrator.authorizer().getAdminRole(),
-            isImmutable ? address(this) : msg.sender
-        );
+        if (!isImmutable) {
+            pim.orchestrator.authorizer().grantRole(
+                pim.orchestrator.authorizer().getAdminRole(),
+                _deployer
+            );
+        }
+
         // set factory as minter to be able to mint initial liquidity upon graduation
         ERC20Issuance_v1(issuanceToken).setMinter(address(this), true);
         // grant curve interaction role to factory to be able to buy and sell

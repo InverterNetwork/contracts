@@ -54,7 +54,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     uint initialPurchaseAmount = 1 ether;
     uint secondaryPurchaseAmount = 10 ether;
     uint migrationThreshold = 10 ether;
-    bool isImmutable = true;
+    bool isImmutable = false;
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
 
     // addresses
@@ -189,21 +189,6 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             issuanceToken.allowedMinters(address(fundingManager)),
             'Bonding curve module should have minting rights on token'
         );
-
-        // Check if issuance token is renounced (immutable) or not (mutable)
-        if (isImmutable) {
-            assertEq(
-                issuanceToken.owner(),
-                address(0),
-                'Issuance token should be renounced for immutable PIM'
-            );
-        } else {
-            assertEq(
-                issuanceToken.owner(),
-                workflowAdmin,
-                'Issuance token should not be renounced for mutable PIM'
-            );
-        }
 
         bytes32 adminRole = orchestrator.authorizer().getAdminRole();
 
@@ -379,6 +364,39 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             fundingManager.projectCollateralFeeCollected(),
             'Funding manager should only hold the fee amount after migration'
         );
+
+        // Check if issuance token is renounced (immutable) or not (mutable)
+        if (isImmutable) {
+            assertEq(
+                issuanceToken.owner(),
+                address(0),
+                'Issuance token should be renounced for immutable PIM'
+            );
+        } else {
+            assertEq(
+                issuanceToken.owner(),
+                workflowAdmin,
+                'Issuance token should not be renounced for mutable PIM'
+            );
+        }
+
+        if (!isImmutable) {
+            assertTrue(
+                orchestrator.authorizer().hasRole(
+                    orchestrator.authorizer().getAdminRole(),
+                    workflowAdmin
+                ),
+                'Workflow admin should have admin rights over workflow ( mutable )'
+            );
+        } else {
+            assertFalse(
+                orchestrator.authorizer().hasRole(
+                    orchestrator.authorizer().getAdminRole(),
+                    workflowAdmin
+                ),
+                'Workflow admin should not have admin rights over workflow ( immutable )'
+            );
+        }
     }
 
     // Utils
