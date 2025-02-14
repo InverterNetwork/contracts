@@ -68,6 +68,7 @@ contract AUT_Roles_v2Test is Test {
         ); // make this address the initial admin
     }
 
+    // Test Modifier Restriction Works
     function testRestrictedModifier(address caller) public {
         if (caller != address(owner)) {
             vm.expectRevert(
@@ -337,4 +338,54 @@ contract AUT_Roles_v2Test is Test {
         vm.prank(bob);
         module.doSmth(0);
     }
+
+    function testModuleAdminFunctionality() public {
+        // Create the Role Subadmin
+        uint64 subAdminRoleId = _authorizer.getCurrentRoleId();
+        vm.prank(owner);
+        _authorizer.createRole("SubAdmin");
+
+        // Create the Role User
+        uint64 userRoleId = _authorizer.getCurrentRoleId();
+        vm.prank(owner);
+        _authorizer.createRole("User");
+
+        // Make Role Admin of Module
+        vm.prank(owner);
+        _authorizer.setModuleAdminRoleId(address(module), subAdminRoleId);
+
+        // Assign Subadmin role to Bob
+        vm.prank(owner);
+        _authorizer.grantRole(subAdminRoleId, bob, 0);
+
+        // Fetch the function selector of the target function
+        bytes4 functionSelector = module.doSmth.selector;
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = functionSelector;
+
+        // Check that Bob can assign function restriction
+        vm.prank(bob);
+        _authorizer.setTargetFunctionRoleAsModuleAdmin(
+            address(module), selectors, userRoleId
+        );
+
+        // Assign User role to Alice
+        vm.prank(owner);
+        _authorizer.grantRole(userRoleId, alice, 0);
+
+        // Check that Alice can use the function Bob assigned
+        vm.prank(alice);
+        module.doSmth(0);
+    }
+
+    // Test Modifier Restriction Works
+
+    // Label Role Name to id
+    // Only allow functions to be called for created Roles
+    // Let Workflow owners define the restrictions of the functions themselves
+    // Public Roles
+    // Hierarchical Roles
+    // Renounce all Authorization
+    // Tranfer your own Role to another address
+    // Start directly with roles in a module
 }

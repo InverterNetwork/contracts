@@ -57,10 +57,20 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
     ///         role is always id 0.
     uint64 private _currentRoleId;
 
-    /// @notice	The role transferable flag.
+    /// @notice	Flag to determine if a role is transferable.
     /// @dev    This is a mapping of role ids to booleans that determine if a
     ///         role is transferable.
-    mapping(uint64 => bool) private _roleTransferable;
+    /// @dev    roleId The role id.
+    /// @dev    isTransferable The transferable flag.
+    mapping(uint64 roleId => bool isTransferable) private _roleTransferable;
+
+    /// @notice	Mapping that determines the admin role id that can change
+    ///         function restrictions in a module.
+    /// @dev    This is a mapping of target addresses to module admin addresses.
+    /// @dev    target The target address.
+    /// @dev    moduleAdminRoleId The mrole id of the module admin.
+    mapping(address target => uint64 moduleAdminRoleId) private
+        _moduleAdminRoleId;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -68,6 +78,20 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
     //--------------------------------------------------------------------------
     // Modifiers
 
+    /// @notice	Only allow calls from the workflow admin.
+    modifier onlyWorkflowAdmin() {
+        (bool isAdmin,) = hasRole(
+            0, //AdminRoleId
+            _msgSender()
+        );
+        // caller is not a module and not an admin
+        if (!isAdmin) {
+            revert Authorizer_v2__OnlyCallableByWorkflowAdmin();
+        }
+        _;
+    }
+
+    /// @notice	Only allow calls from modules or the workflow admin.
     modifier onlyModulesOrAdmin() {
         address caller = _msgSender();
         (bool isAdmin,) = hasRole(
@@ -81,17 +105,32 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         _;
     }
 
-    modifier existingRoleId(uint64 roleId) {
+    /// @notice Only allow calls from the target module admin role.
+    modifier onlyModuleAdmin(address target_) {
+        (bool isAdmin,) = hasRole(
+            _moduleAdminRoleId[target_], //AdminRoleId
+            _msgSender()
+        );
+        // caller is not a module and not an admin
+        if (!isAdmin) {
+            revert Authorizer_v2__OnlyCallableByModuleAdmin();
+        }
+        _;
+    }
+
+    /// @notice	Only allows role ids that have been created.
+    modifier existingRoleId(uint64 roleId_) {
         // If given roleId is higher or equal to the current roleId
         // and is not the public roleId
-        if (roleId >= _currentRoleId && roleId != type(uint64).max) {
+        if (roleId_ >= _currentRoleId && roleId_ != type(uint64).max) {
             revert Authorizer_v2__RoleIdNotCreated();
         }
         _;
     }
 
-    modifier roleTransferable(uint64 roleId) {
-        if (!_roleTransferable[roleId]) {
+    /// @notice Check if role is transferable or not
+    modifier roleTransferable(uint64 roleId_) {
+        if (!_roleTransferable[roleId_]) {
             revert Authorizer_v2__RoleNotTransferable();
         }
         _;
@@ -215,6 +254,27 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         _setRoleTransferable(roleId_, transferable_);
     }
 
+    /// @inheritdoc IAuthorizer_v2
+    function setModuleAdminRoleId(address target_, uint64 newModuleAdminId_)
+        public
+        onlyWorkflowAdmin
+        existingRoleId(newModuleAdminId_)
+    {
+        _setModuleAdmin(target_, newModuleAdminId_);
+    }
+
+    /// @inheritdoc IAuthorizer_v2
+    /// @dev    This function is not using the delay functionality of the AccessManager.
+    function setTargetFunctionRoleAsModuleAdmin(
+        address target_,
+        bytes4[] calldata selectors_,
+        uint64 roleId_
+    ) public virtual existingRoleId(roleId_) onlyModuleAdmin(target_) {
+        for (uint i = 0; i < selectors_.length; ++i) {
+            _setTargetFunctionRole(target_, selectors_[i], roleId_);
+        }
+    }
+
     //--------------------------------------------------------------------------
     // Override Public Functions
 
@@ -326,6 +386,14 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         _roleTransferable[roleId_] = transferable_;
 
         emit RoleTransferable(roleId_, transferable_);
+    }
+
+    function _setModuleAdmin(address target_, uint64 newModuleAdminId_)
+        internal
+    {
+        _moduleAdminRoleId[target_] = newModuleAdminId_;
+
+        emit NewModuleAdminRoleId(target_, newModuleAdminId_);
     }
 
     //--------------------------------------------------------------------------

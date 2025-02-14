@@ -19,11 +19,22 @@ interface IAuthorizer_v2 is IAccessManager {
     /// @param transferable_ The transferable flag.
     event RoleTransferable(uint64 roleId_, bool transferable_);
 
+    /// @notice Emitted when the module admin role id is set.
+    /// @param target_ The target address.
+    /// @param newModuleAdminId_ The new module admin role id.
+    event NewModuleAdminRoleId(address target_, uint64 newModuleAdminId_);
+
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Function is only callable by a workflow admin.
+    error Authorizer_v2__OnlyCallableByWorkflowAdmin();
+
     /// @notice Function is only callable by a module or the admin.
     error Authorizer_v2__OnlyCallableByModuleOrAdmin();
+
+    /// @notice Function is only callable by a module admin.
+    error Authorizer_v2__OnlyCallableByModuleAdmin();
 
     /// @notice The given RoleId has not been created yet.
     error Authorizer_v2__RoleIdNotCreated();
@@ -91,4 +102,25 @@ interface IAuthorizer_v2 is IAccessManager {
     /// @param  roleId_ The role id.
     /// @param  transferable_ The transferable flag.
     function setRoleTransferable(uint64 roleId_, bool transferable_) external;
+
+    /// @notice Sets the module admin role id.
+    /// @dev    This is restricted to the workflow admin.
+    /// @dev    This is restricted to existing modules.
+    /// @dev    This emits a {NewModuleAdminRoleId} event.
+    /// @param  target_ The target address.
+    /// @param  newModuleAdminId_ The new module admin role id.
+    function setModuleAdminRoleId(address target_, uint64 newModuleAdminId_)
+        external;
+
+    /// @notice Sets the Target Function Restiction
+    /// @dev    This is restricted to the module admin.
+    /// @dev    This is restricted to existing modules.
+    /// @param  target_ The target address.
+    /// @param  selectors_ The function selectors.
+    /// @param  roleId_ The role id.
+    function setTargetFunctionRoleAsModuleAdmin(
+        address target_,
+        bytes4[] calldata selectors_,
+        uint64 roleId_
+    ) external;
 }
