@@ -136,6 +136,9 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             initialCollateralSupply: initialCollateralSupply
         });
 
+        // Staking Manager / handled in the factory
+        setUpLM_PC_Staking_v1();
+
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata,
             abi.encode(address(0), bcProperties, token)

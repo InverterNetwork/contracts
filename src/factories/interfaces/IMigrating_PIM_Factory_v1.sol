@@ -23,19 +23,13 @@ interface IMigrating_PIM_Factory_v1 {
     // Events
 
     /// @notice Event emitted when a new PIM workflow is created.
-    /// @param fundingManager The address of the funding manager.
+    /// @param orchestrator The address of the funding manager.
     /// @param issuanceToken The address of the issuance token.
     /// @param deployer The address of the deployer.
-    /// @param isImmutable Whether the PIM is immutable.
-    /// @param migrationThreshold The migration threshold.
-    /// @param lpTokenRecipient The address of the LP token recipient.
     event PIMWorkflowCreated(
-        address indexed fundingManager,
+        address indexed orchestrator,
         address indexed issuanceToken,
-        address indexed deployer,
-        bool isImmutable,
-        uint migrationThreshold,
-        address lpTokenRecipient
+        address indexed deployer
     );
 
     /// @notice Event emitted when factory owner sets new fee.

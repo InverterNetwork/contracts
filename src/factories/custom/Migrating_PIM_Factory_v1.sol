@@ -132,12 +132,7 @@ contract Migrating_PIM_Factory_v1 is
         );
 
         emit IMigrating_PIM_Factory_v1.PIMWorkflowCreated(
-            address(fundingManager),
-            address(issuanceToken),
-            _msgSender(),
-            migrationConfig_.isImmutable,
-            migrationConfig_.migrationThreshold,
-            lpTokenRecipient
+            address(orchestrator), address(issuanceToken), _msgSender()
         );
 
         return orchestrator;
@@ -500,13 +495,36 @@ contract Migrating_PIM_Factory_v1 is
         fundingManagerConfigData =
             abi.encode(address(issuanceToken), bcProperties, collateralToken);
         fundingManagerConfig.configData = fundingManagerConfigData;
+
+        // Create a new memory array to hold the module configurations
+        IOrchestratorFactory_v1.ModuleConfig[] memory moduleConfigsMemory =
+            new IOrchestratorFactory_v1.ModuleConfig[](moduleConfigs.length + 1);
+
+        // Copy existing module configurations from memory to the new memory array
+        for (uint i = 0; i < moduleConfigs.length; i++) {
+            moduleConfigsMemory[i] = moduleConfigs[i];
+        }
+
+        // Add the new module configuration
+        moduleConfigsMemory[moduleConfigs.length] = IOrchestratorFactory_v1
+            .ModuleConfig(
+            IModule_v1.Metadata(
+                1,
+                0,
+                0,
+                "https://github.com/inverter/staking-manager",
+                "LM_PC_Staking_v1"
+            ),
+            abi.encode(issuanceToken)
+        );
+
         orchestrator = IOrchestratorFactory_v1(orchestratorFactory)
             .createOrchestrator(
             workflowConfig,
             fundingManagerConfig,
             authorizerConfig,
             paymentProcessorConfig,
-            moduleConfigs
+            moduleConfigsMemory
         );
 
         return (orchestrator, initiator, collateralToken);
