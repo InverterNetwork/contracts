@@ -2,12 +2,15 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
-import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
-import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // Internal Dependencies
-import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
+import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 interface IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
@@ -55,14 +58,16 @@ interface IMigrating_PIM_Factory_v1 {
     );
 
     /// @notice Event emitted when collateral liquidity is migrated to the dex.
+    /// @param fundingManager The address of the funding manager.
     /// @param issuanceToken The address of the issuance token.
     /// @param collateralToken The address of the collateral token.
     /// @param pool The address of the pool.
     /// @param issuanceTokenAmount The amount of issuance tokens added as liquidity.
     /// @param collateralTokenAmount The amount of collateral tokens added as liquidity.
     event Graduation(
+        address indexed fundingManager,
         address indexed issuanceToken,
-        address indexed collateralToken,
+        address collateralToken,
         address indexed pool,
         uint issuanceTokenAmount,
         uint collateralTokenAmount
