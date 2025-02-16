@@ -2,15 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
+import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
 
 // Internal Dependencies
-import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
 
 interface IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
@@ -75,6 +72,7 @@ interface IMigrating_PIM_Factory_v1 {
     // Structs
 
     struct PIM {
+        bool isGraduated;
         IOrchestrator_v1 orchestrator;
         uint initialVirtualIssuanceSupply;
         uint initialVirtualCollateralSupply;
