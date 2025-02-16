@@ -48,10 +48,6 @@ contract Migrating_PIM_Factory_v1 is
 
     /// @dev	store address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
-    IDexAdapter_v1 public dexAdapter;
-    bool public isImmutable;
-    uint public migrationThreshold;
-    address public lpTokenRecipient;
 
     address private _deployer;
 
@@ -80,17 +76,6 @@ contract Migrating_PIM_Factory_v1 is
         uint initialPurchaseAmount,
         MigrationConfig memory migrationConfig_
     ) external returns (IOrchestrator_v1) {
-        isImmutable = migrationConfig_.isImmutable;
-        migrationThreshold = migrationConfig_.migrationThreshold;
-        dexAdapter = IDexAdapter_v1(migrationConfig_.dexAdapter);
-
-        // set lp token recipient (mutable) or to factory (immutable)
-        if (isImmutable) {
-            lpTokenRecipient = address(this);
-        } else {
-            lpTokenRecipient = migrationConfig_.lpTokenRecipient;
-        }
-
         // deploy issuance token
         ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
             issuanceTokenParams.name,
@@ -115,17 +100,27 @@ contract Migrating_PIM_Factory_v1 is
 
         _deployer = initiator;
 
+        address lpTokenRecipient = migrationConfig_.isImmutable
+            ? address(this)
+            : migrationConfig_.lpTokenRecipient;
+
         // get bonding curve / funding manager
         address fundingManager = address(orchestrator.fundingManager());
         // store orchestrator for issuance token
-        pims[address(fundingManager)] = PIM(
-            false,
-            orchestrator,
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-                .getVirtualIssuanceSupply(),
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager)
-                .getVirtualCollateralSupply()
-        );
+        pims[address(fundingManager)] = IMigrating_PIM_Factory_v1.PIM({
+            isGraduated: false,
+            isImmutable: migrationConfig_.isImmutable,
+            migrationThreshold: migrationConfig_.migrationThreshold,
+            lpTokenRecipient: lpTokenRecipient,
+            dexAdapter: migrationConfig_.dexAdapter,
+            orchestrator: orchestrator,
+            initialVirtualIssuanceSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                fundingManager
+            ).getVirtualIssuanceSupply(),
+            initialVirtualCollateralSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                fundingManager
+            ).getVirtualCollateralSupply()
+        });
 
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
@@ -137,11 +132,11 @@ contract Migrating_PIM_Factory_v1 is
         );
 
         emit IMigrating_PIM_Factory_v1.PIMWorkflowCreated(
-            address(orchestrator),
+            address(fundingManager),
             address(issuanceToken),
             _msgSender(),
-            isImmutable,
-            migrationThreshold,
+            migrationConfig_.isImmutable,
+            migrationConfig_.migrationThreshold,
             lpTokenRecipient
         );
 
@@ -159,6 +154,45 @@ contract Migrating_PIM_Factory_v1 is
         returns (bool)
     {
         return pims[fundingManager].isGraduated;
+    }
+
+    /**
+     * @notice Returns whether the issuance token is immutable
+     * @param fundingManager The funding manager to check
+     * @return isImmutable Whether the issuance token is immutable
+     */
+    function getIsImmutable(address fundingManager)
+        external
+        view
+        returns (bool)
+    {
+        return pims[fundingManager].isImmutable;
+    }
+
+    /**
+     * @notice Returns the migration threshold
+     * @param fundingManager The funding manager to check
+     * @return migrationThreshold The migration threshold
+     */
+    function getMigrationThreshold(address fundingManager)
+        external
+        view
+        returns (uint)
+    {
+        return pims[fundingManager].migrationThreshold;
+    }
+
+    /**
+     * @notice Returns the LP token recipient
+     * @param fundingManager The funding manager to check
+     * @return lpTokenRecipient The LP token recipient
+     */
+    function getLpTokenRecipient(address fundingManager)
+        external
+        view
+        returns (address)
+    {
+        return pims[fundingManager].lpTokenRecipient;
     }
 
     /**
@@ -202,8 +236,10 @@ contract Migrating_PIM_Factory_v1 is
             fm.buyFor(recipient, validAmountIn, adjustedMinAmountOut);
 
             // If threshold has been reached, close curve and initiate graduation
-            if (collateralToken.balanceOf(fundingManager) >= migrationThreshold)
-            {
+            if (
+                collateralToken.balanceOf(fundingManager)
+                    >= pim.migrationThreshold
+            ) {
                 // Initiate graduation
                 _graduate(fundingManager);
             }
@@ -244,11 +280,10 @@ contract Migrating_PIM_Factory_v1 is
         uint collateralAfterBuy = currentCollateral + netAmountIn;
 
         // Check if total would exceed threshold
-        if (collateralAfterBuy > migrationThreshold) {
+        if (collateralAfterBuy > pim.migrationThreshold) {
             // Calculate how much can be validly bought before hitting threshold
-            uint remainingToThreshold = migrationThreshold > currentCollateral
-                ? migrationThreshold - currentCollateral
-                : 0;
+            uint remainingToThreshold = pim.migrationThreshold
+                > currentCollateral ? pim.migrationThreshold - currentCollateral : 0;
 
             // Account for fees when calculating valid amount
             // validAmountIn = remainingToThreshold * 10000 / (10000 - feeRate);
@@ -320,7 +355,7 @@ contract Migrating_PIM_Factory_v1 is
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
                 LM_PC_PaymentRouter_v1(modules[i]).pushPayment(
-                    address(dexAdapter),
+                    pim.dexAdapter,
                     address(collateralToken),
                     collateralLiquidity - fm.projectCollateralFeeCollected(),
                     0,
@@ -335,20 +370,22 @@ contract Migrating_PIM_Factory_v1 is
         fm.closeSell();
 
         // Mint initial liquidity to dex adapter
-        issuanceToken.mint(address(dexAdapter), issuanceLiquidity);
+        issuanceToken.mint(pim.dexAdapter, issuanceLiquidity);
 
         // Call migration on adapter
-        address pool = dexAdapter.createLiquidity(
-            address(collateralToken), address(issuanceToken), lpTokenRecipient
+        address pool = IDexAdapter_v1(pim.dexAdapter).createLiquidity(
+            address(collateralToken),
+            address(issuanceToken),
+            pim.lpTokenRecipient
         );
 
-        if (isImmutable) {
+        if (pim.isImmutable) {
             issuanceToken.renounceOwnership();
         } else {
             issuanceToken.transferOwnership(_deployer);
         }
 
-        if (!isImmutable) {
+        if (!pim.isImmutable) {
             pim.orchestrator.authorizer().grantRole(
                 pim.orchestrator.authorizer().getAdminRole(), _deployer
             );
@@ -380,7 +417,7 @@ contract Migrating_PIM_Factory_v1 is
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(fm.getIssuanceToken());
 
         // grant admin role to factory (immutable) or to deployer address (mutable)
-        if (!isImmutable) {
+        if (!pim.isImmutable) {
             pim.orchestrator.authorizer().grantRole(
                 pim.orchestrator.authorizer().getAdminRole(), _deployer
             );
