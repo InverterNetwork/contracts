@@ -23,7 +23,7 @@ contract BondingSurface_Test is Test {
     BondingSurface public bondingSurface;
     uint constant BASE_MULTIPLIER = 1e11; // 10^-7 * 1e18
     uint constant WAD = 1e18;
-    // 0.0001% relative tolerance for complex calculations
+    // 0.000001% relative tolerance for complex calculations
     uint constant REL_TOLERANCE = 1e12;
 
     function setUp() public {
