@@ -172,12 +172,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Process payments
-        uint balanceBefore = _token.balanceOf(address(paymentProcessor));
         paymentProcessor.processPayments(client, executionData);
         assertEq(_token.balanceOf(address(testRecipient)), 0);
         console2.log(_token.balanceOf(address(testRecipient)));
-        uint balanceAfter = _token.balanceOf(address(paymentProcessor));
-        assertEq(balanceAfter, balanceBefore + testAmount);
+        assertEq(_token.balanceOf(address(mockEverClearSpoke)), testAmount);
 
         bytes32 intentId = paymentProcessor.processedIntentId(
             address(paymentClient), testRecipient, paymentProcessor._paymentId()
@@ -257,6 +255,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         // Process payments
         paymentProcessor.processPayments(client, executionData);
 
+        uint totalAmount = 0;
         //should be checking in the mock for valid bridge data
         for (uint i = 0; i < numRecipients; i++) {
             bytes32 intentId = paymentProcessor.processedIntentId(
@@ -266,7 +265,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 uint(everclearPaymentMock.status(intentId)),
                 uint(Mock_EverclearPayment.IntentStatus.ADDED)
             );
+            totalAmount += setupAmounts[i];
         }
+        assertEq(_token.balanceOf(address(mockEverClearSpoke)), totalAmount);
     }
 
     /* Test multiple payment outstanding token amounts
@@ -609,14 +610,14 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         assertTrue(newIntentId != bytes32(0));
     }
 
-    /* Test cancel transfer
+    /* Test claim previously unclaimable
     └── Given a pending transfer
-        └── When cancelled by the recipient
+        └── When claimed by the recipient
             └── Then it should clear the intent
                 └── And return funds to recipient
-                └── And emit TransferCancelled event
+                └── And emit UnclaimableAmountClaimed event
     */
-    function testFuzz_PublicCancelTransfer_succeedsGivenValidPendingTransfer(
+    function testFuzz_PublicClaimUnclaimable_succeedsGivenValidPendingTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -664,12 +665,12 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test cancel transfer by non-recipient
+    /* Test claim by non-recipient
     └── Given a pending transfer
-        └── When cancelled by someone other than recipient
-            └── Then it should revert with InvalidAddress
+        └── When claimed by someone other than recipient
+            └── Then it should revert with NothingToClaim
     */
-    function testFuzz_PublicCancelTransfer_revertsGivenNonRecipientCaller(
+    function testFuzz_PublicClaimUnclaimable_revertsGivenNonRecipientCaller(
         address testRecipient,
         address nonRecipient,
         uint testAmount
@@ -714,14 +715,14 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test cancel transfer after processing
+    /* Test claim after processing
     └── Given a successfully processed payment
-        └── When attempting to cancel the transfer
-            └── Then it should revert with InvalidAmount
+        └── When attempting to claim unclaimable
+            └── Then it should revert with NothingToClaim
                 └── And the intent ID should remain unchanged
                 └── And the payment order should remain processed
     */
-    function testFuzz_PublicCancelTransfer_revertsGivenProcessedTransfer(
+    function testFuzz_PublicClaimUnclaimable_revertsGivenProcessedTransfer(
         address testRecipient,
         uint testAmount
     ) public {
@@ -986,7 +987,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         _setupSinglePayment(testRecipient, ZERO_AMOUNT);
         assertEq(_token.balanceOf(address(testRecipient)), ZERO_AMOUNT);
-        console2.log(_token.balanceOf(address(testRecipient)));
         vm.expectRevert(
             ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
         );
@@ -1102,15 +1102,12 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         paymentClient.addPaymentOrder(order);
 
         // Process payments
-        uint balanceBefore = _token.balanceOf(address(paymentProcessor));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v1(address(paymentClient)), executionData
         );
         assertEq(_token.balanceOf(testRecipient), 0);
-        assertEq(
-            _token.balanceOf(address(paymentProcessor)),
-            balanceBefore + testAmount
-        );
+        console2.log(_token.balanceOf(address(testRecipient)));
+        assertEq(_token.balanceOf(address(mockEverClearSpoke)), testAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -1141,8 +1138,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         └── When validating the payment order
             └── Then it should return false
     */
-    function testFuzz_validPaymentOrder_InvatestPublicValidPaymentOrder_revertsGivenInvalidTokenlidToken(
-    ) public {
+    function testFuzz_PublicValidPaymentOrder_revertsGivenInvalidToken()
+        public
+    {
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
         IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xBEEF),

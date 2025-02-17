@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
+// External Imports
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 contract Mock_EverclearPayment {
     event IntentAdded(bytes32 intentId, uint queuePosition, Intent intent);
 
@@ -65,6 +68,8 @@ contract Mock_EverclearPayment {
 
         // Generate a unique intent ID
         _intentId = keccak256(abi.encode(_intent));
+
+        IERC20(_inputAsset).transferFrom(msg.sender, address(this), _amount);
 
         // // Set intent status to ADDED and emit the event
         status[_intentId] = IntentStatus.ADDED;

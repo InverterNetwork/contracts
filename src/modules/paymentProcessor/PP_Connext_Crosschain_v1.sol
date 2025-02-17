@@ -109,7 +109,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
 
             if (bytes32(bridgeData) != bytes32(0)) {
                 // Handle successful transfer
-                _bridgeData[i] = bridgeData;
+                _bridgeData[_paymentId] = bridgeData;
                 emit PaymentOrderProcessed(
                     clientAddress,
                     orders[i].recipient,
