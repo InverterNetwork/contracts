@@ -24,10 +24,13 @@ interface IModule_v2 {
     }
 
     /// @notice A struct contains the data to set up a role with function selectors and role holders.
-    /// @param roleName The name of the role.
-    /// @param functionSelectors The function selectors of the role.
-    /// @param intendedHolders The intended holders of the role.
+    /// @param  isPublic Whether the role is public or not.
+    /// @dev    If the role is public, then the intendedHolders and roleName fields are ignored.
+    /// @param  roleName The name of the role.
+    /// @param  functionSelectors The function selectors of the role.
+    /// @param  intendedHolders The intended holders of the role.
     struct RoleSpecification {
+        bool isPublic;
         string roleName;
         bytes4[] functionSelectors;
         address[] intendedHolders;

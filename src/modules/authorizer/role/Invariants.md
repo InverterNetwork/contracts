@@ -9,6 +9,8 @@
 - Tranfer your own Role to another address
 - Forward has role to external contracts // We removed that
 - Start directly with roles in a module
+- Can start directly with public roles in a module
+- Its possible to add a module Admin that can add function restrictions to module
 
 # Technology Invariants
 
@@ -24,11 +26,6 @@
 
 - enable sub Roles to change function selectors
 
-  - targetaddress -> SingleAdmin @todo
-    - only one admin per targetaddress
-    - Pretty easy to implement
-    - Easy to understand
-
   -> @todo Check for orchestrator Admin restrictions in getFee functions and such
 
 - Workflow admin naming -> Call it that way
@@ -36,7 +33,7 @@
 
 # To Discuss:
 
-- Decision on savign names onchain
+- Decision on saving names onchain
 
 - Separation of concerns: Sometimes the system will have several actors which need to operate different parts of it with guarantees towards each other. It should be possible to set up roles that are "out of reach" from an administrator/owner, or even completely immutable.
   -> Multisig for Admin

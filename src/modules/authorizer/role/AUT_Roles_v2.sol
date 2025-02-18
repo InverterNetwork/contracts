@@ -214,8 +214,21 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
         address target_,
         IModule_v2.RoleSpecification memory roleSpec_
     ) public onlyModulesOrAdmin returns (uint64 roleId_) {
-        // create the role and fetch the role id
-        roleId_ = _createRole(roleSpec_.roleName);
+        //When public use public role for function restriction
+        if (roleSpec_.isPublic) {
+            roleId_ = type(uint64).max; // Public Role Id
+        } else {
+            // create the role and fetch the role id
+            roleId_ = _createRole(roleSpec_.roleName);
+
+            // get the amount of holders
+            uint holderAmount = roleSpec_.intendedHolders.length;
+
+            // grant role to the initial
+            for (uint i = 0; i < holderAmount; i++) {
+                _grantRole(roleId_, roleSpec_.intendedHolders[i], 0, 0);
+            }
+        }
 
         // get the amount of function selectors
         uint selectorAmount = roleSpec_.functionSelectors.length;
@@ -225,14 +238,6 @@ contract AUT_Roles_v2 is IAuthorizer_v2, AccessManagerUpgradeable, Module_v2 {
             _setTargetFunctionRole(
                 target_, roleSpec_.functionSelectors[i], roleId_
             );
-        }
-
-        // get the amount of holders
-        uint holderAmount = roleSpec_.intendedHolders.length;
-
-        // grant role to the initial
-        for (uint i = 0; i < holderAmount; i++) {
-            _grantRole(roleId_, roleSpec_.intendedHolders[i], 0, 0);
         }
     }
 

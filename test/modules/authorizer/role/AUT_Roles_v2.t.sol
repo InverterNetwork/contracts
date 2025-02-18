@@ -316,6 +316,7 @@ contract AUT_Roles_v2Test is Test {
         IModule_v2.RoleSpecification[] memory initRoleSpec =
             new IModule_v2.RoleSpecification[](1);
         initRoleSpec[0] = IModule_v2.RoleSpecification({
+            isPublic: false,
             roleName: roleName,
             functionSelectors: selectors,
             intendedHolders: holders
@@ -336,6 +337,52 @@ contract AUT_Roles_v2Test is Test {
         module.doSmth(0);
 
         vm.prank(bob);
+        module.doSmth(0);
+    }
+
+    // Start directly with roles in a module
+    function testStartDirectlyWithPublicRoleInAModule(address randomCaller)
+        public
+    {
+        vm.assume(randomCaller != address(_authorizer));
+        // Create a new module
+        address moduleImpl = address(new Module_v2Mock());
+        module = Module_v2Mock(Clones.clone(moduleImpl));
+
+        // Add module to orchestrator
+        vm.prank(owner);
+        _orchestrator.initiateAddModuleWithTimelock(address(module));
+
+        vm.warp(_orchestrator.MODULE_UPDATE_TIMELOCK() + 1);
+
+        vm.prank(owner);
+        _orchestrator.executeAddModule(address(module));
+
+        // Specify role data
+
+        // Function selectors
+        bytes4 functionSelector = module.doSmth.selector;
+        bytes4[] memory selectors = new bytes4[](1);
+        selectors[0] = functionSelector;
+
+        // Put it all together
+        IModule_v2.RoleSpecification[] memory initRoleSpec =
+            new IModule_v2.RoleSpecification[](1);
+        initRoleSpec[0] = IModule_v2.RoleSpecification({
+            isPublic: true,
+            roleName: "",
+            functionSelectors: selectors,
+            intendedHolders: new address[](0)
+        });
+
+        // Initialize the module
+        module.init(_orchestrator, _METADATA, initRoleSpec, "");
+
+        // Check that everyone can access function
+        vm.prank(alice);
+        module.doSmth(0);
+
+        vm.prank(randomCaller);
         module.doSmth(0);
     }
 
