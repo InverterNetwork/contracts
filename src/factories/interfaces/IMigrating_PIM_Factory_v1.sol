@@ -2,12 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestratorFactory_v1} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IBondingCurveBase_v1} from "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
@@ -19,6 +16,9 @@ interface IMigrating_PIM_Factory_v1 {
     /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
     error PIM_WorkflowFactory__OnlyPimFeeRecipient();
 
+    /// @notice Error thrown when an unpermissioned address tries to set rewards.
+    error PIM_WorkflowFactory__OnlyInitiator();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -26,10 +26,12 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param orchestrator The address of the funding manager.
     /// @param issuanceToken The address of the issuance token.
     /// @param deployer The address of the deployer.
+    /// @param initiator The address of the initiator.
     event PIMWorkflowCreated(
         address indexed orchestrator,
         address indexed issuanceToken,
-        address indexed deployer
+        address indexed deployer,
+        address initiator
     );
 
     /// @notice Event emitted when factory owner sets new fee.
@@ -77,6 +79,7 @@ interface IMigrating_PIM_Factory_v1 {
         bool isGraduated;
         bool isImmutable;
         uint migrationThreshold;
+        address initiator;
         address dexAdapter;
         address lpTokenRecipient;
         IOrchestrator_v1 orchestrator;

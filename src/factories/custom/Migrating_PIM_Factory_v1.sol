@@ -2,32 +2,33 @@
 pragma solidity ^0.8.0;
 
 // OpenZeppelin
-import {ERC2771Context, Context} from '@oz/metatx/ERC2771Context.sol';
-import {IERC20} from '@oz/token/ERC20/IERC20.sol';
+import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Core Interfaces
-import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
-import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
-import {IModule_v1} from 'src/modules/base/IModule_v1.sol';
+import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestratorFactory_v1} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Funding Manager Interfaces
-import {IFundingManager_v1} from '@fm/IFundingManager_v1.sol';
-import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
-import {IRedeemingBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol';
-import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol';
-import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {IBondingCurveBase_v1} from "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IRedeemingBondingCurveBase_v1} from "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
+import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from "@fm/bondingCurve/interfaces/IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 // Migration Interfaces
-import {IMigrating_PIM_Factory_v1} from '../interfaces/IMigrating_PIM_Factory_v1.sol';
-import {IDexAdapter_v1} from 'src/external/immutable-migration/interfaces/IDexAdapter_v1.sol';
+import {IMigrating_PIM_Factory_v1} from "../interfaces/IMigrating_PIM_Factory_v1.sol";
+import {IDexAdapter_v1} from "src/external/immutable-migration/interfaces/IDexAdapter_v1.sol";
 
 // Module Implementations
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
-import {LM_PC_PaymentRouter_v1} from 'src/modules/logicModule/LM_PC_PaymentRouter_v1.sol';
-import {FeeManager_v1} from '@ex/fees/FeeManager_v1.sol';
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {LM_PC_PaymentRouter_v1} from "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_Staking_v1} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
+import {FeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 
 // Token Implementations
-import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
+import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 
 contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
@@ -36,9 +37,19 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
     /// @dev	store address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
 
-    address private _deployer;
-
     mapping(address fundingManager => PIM orchestrator) public pims;
+
+    //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev	Modifier to guarantee the caller is the deployer for the given funding manager.
+    modifier onlyInitiator(address fundingManager) {
+        if (msg.sender != pims[fundingManager].initiator) {
+            revert IMigrating_PIM_Factory_v1
+                .PIM_WorkflowFactory__OnlyInitiator();
+        }
+        _;
+    }
 
     //--------------------------------------------------------------------------
     // Constructor
@@ -86,14 +97,13 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
                 address(issuanceToken)
             );
 
-        _deployer = initiator;
+        address fundingManager = address(orchestrator.fundingManager());
 
         address lpTokenRecipient = migrationConfig_.isImmutable
             ? address(this)
             : migrationConfig_.lpTokenRecipient;
 
         // get bonding curve / funding manager
-        address fundingManager = address(orchestrator.fundingManager());
         // store orchestrator for issuance token
         pims[address(fundingManager)] = IMigrating_PIM_Factory_v1.PIM({
             isGraduated: false,
@@ -102,6 +112,7 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
             lpTokenRecipient: lpTokenRecipient,
             dexAdapter: migrationConfig_.dexAdapter,
             orchestrator: orchestrator,
+            initiator: initiator,
             initialVirtualIssuanceSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
                 fundingManager
             ).getVirtualIssuanceSupply(),
@@ -125,7 +136,8 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         emit IMigrating_PIM_Factory_v1.PIMWorkflowCreated(
             address(orchestrator),
             address(issuanceToken),
-            _msgSender()
+            _msgSender(),
+            initiator
         );
 
         return orchestrator;
@@ -173,6 +185,23 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         address fundingManager
     ) external view returns (address) {
         return pims[fundingManager].lpTokenRecipient;
+    }
+
+    function setRewards(
+        address fundingManager,
+        uint amount,
+        uint duration
+    ) external onlyInitiator(fundingManager) {
+        PIM memory pim = pims[fundingManager];
+
+        address[] memory modules = pim.orchestrator.listModules();
+
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_Staking_v1(modules[i]).rewardRate() {
+                LM_PC_Staking_v1(modules[i]).setRewards(amount, duration);
+                break;
+            } catch {}
+        }
     }
 
     /**
@@ -379,13 +408,13 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         if (pim.isImmutable) {
             issuanceToken.renounceOwnership();
         } else {
-            issuanceToken.transferOwnership(_deployer);
+            issuanceToken.transferOwnership(pim.initiator);
         }
 
         if (!pim.isImmutable) {
             pim.orchestrator.authorizer().grantRole(
                 pim.orchestrator.authorizer().getAdminRole(),
-                _deployer
+                pim.initiator
             );
         }
 
@@ -421,7 +450,7 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         if (!pim.isImmutable) {
             pim.orchestrator.authorizer().grantRole(
                 pim.orchestrator.authorizer().getAdminRole(),
-                _deployer
+                pim.initiator
             );
         }
 
@@ -529,8 +558,8 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
                     1,
                     0,
                     0,
-                    'https://github.com/InverterNetwork/contracts',
-                    'LM_PC_Staking_v1'
+                    "https://github.com/InverterNetwork/contracts",
+                    "LM_PC_Staking_v1"
                 ),
                 abi.encode(issuanceToken)
             );
