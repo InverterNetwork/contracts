@@ -137,7 +137,8 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
             address(orchestrator),
             address(issuanceToken),
             _msgSender(),
-            initiator
+            initiator,
+            migrationConfig_.migrationThreshold
         );
 
         return orchestrator;

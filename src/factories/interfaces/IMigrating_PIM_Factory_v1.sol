@@ -27,11 +27,13 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param issuanceToken The address of the issuance token.
     /// @param deployer The address of the deployer.
     /// @param initiator The address of the initiator.
+    /// @param migrationThreshold The migration threshold.
     event PIMWorkflowCreated(
         address indexed orchestrator,
         address indexed issuanceToken,
         address indexed deployer,
-        address initiator
+        address initiator,
+        uint migrationThreshold
     );
 
     /// @notice Event emitted when factory owner sets new fee.
