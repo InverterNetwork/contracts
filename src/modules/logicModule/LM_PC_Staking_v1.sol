@@ -67,36 +67,34 @@ contract LM_PC_Staking_v1 is
     /// @dev	modifier to check if the duration is valid.
     /// @param  duration duration of the reward period.
     modifier validDuration(uint duration) {
-        if (duration == 0) {
-            revert Module__LM_PC_Staking_v1__InvalidDuration();
-        }
+        _ensureValidDuration(duration);
         _;
     }
 
     //--------------------------------------------------------------------------
     // Storage
     /// @dev	address of the token that can be staked here.
-    address public stakingToken;
+    address internal stakingToken;
     /// @dev	total supply of the token that is staked here.
-    uint public totalSupply;
+    uint internal totalSupply;
     /// @dev	rate of how many reward tokens are distributed from the fundingmanager to the whole staking
     ///         pool in seconds.
-    uint public rewardRate;
+    uint internal rewardRate;
     /// @dev	timestamp of when the reward period will end.
-    uint public rewardsEnd;
-    /// @dev	internal value that is needed to calculate the reard each user will receive.
+    uint internal rewardsEnd;
+    /// @dev	internal value that is needed to calculate the reward each user will receive.
     uint internal rewardValue;
     /// @dev	timestamp of when the rewardValue was last updated.
     uint internal lastUpdate;
 
     /// @dev	mapping of balances of each user in the staking token address => balance.
-    mapping(address => uint) internal _balances;
+    mapping(address => uint) internal balances;
     /// @dev	mapping of reward Values that are needed to calculate the rewards that a user should receive.
     /// @dev	should change everytime the user stakes or unstakes funds
     ///         address => rewardValue.
-    mapping(address => uint) internal userRewardValue;
+    mapping(address => uint) internal userRewardValues;
     /// @dev	mapping of how many reward tokens the user accumulated address => earned.
-    mapping(address => uint) internal rewards;
+    mapping(address => uint) internal userRewards;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -115,6 +113,8 @@ contract LM_PC_Staking_v1 is
 
         address _stakingToken = abi.decode(configData, (address));
         __LM_PC_Staking_v1_init(_stakingToken);
+
+        __ERC20PaymentClientBase_v1_init(new uint8[](0)); // This module does not use any PaymentOrder flags
     }
 
     /// @dev	Initializes the staking contract.
@@ -130,17 +130,17 @@ contract LM_PC_Staking_v1 is
     // Getter Functions
 
     /// @inheritdoc ILM_PC_Staking_v1
-    function balanceOf(address user) external view returns (uint) {
-        return _balances[user];
+    function getBalance(address user) external view returns (uint) {
+        return balances[user];
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
-    function earned(address user) external view returns (uint) {
+    function getEarned(address user) external view returns (uint) {
         return _earned(user, _calculateRewardValue());
     }
 
     /// @inheritdoc ILM_PC_Staking_v1
-    function estimateReward(uint amount, uint duration)
+    function getEstimatedReward(uint amount, uint duration)
         external
         view
         validAmount(amount)
@@ -162,6 +162,36 @@ contract LM_PC_Staking_v1 is
             return amount * duration * rewardRate;
         }
         return (amount * duration * rewardRate) / totalSupply;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getStakingToken() external view returns (address) {
+        return stakingToken;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getTotalSupply() external view returns (uint) {
+        return totalSupply;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getRewardRate() external view returns (uint) {
+        return rewardRate;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getRewardsEnd() external view returns (uint) {
+        return rewardsEnd;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getRewardValue() external view returns (uint) {
+        return rewardValue;
+    }
+
+    /// @inheritdoc ILM_PC_Staking_v1
+    function getLastUpdate() external view returns (uint) {
+        return lastUpdate;
     }
 
     //--------------------------------------------------------------------------
@@ -195,7 +225,7 @@ contract LM_PC_Staking_v1 is
         _update(sender);
 
         // Reduce balances accordingly
-        _balances[sender] -= amount;
+        balances[sender] -= amount;
         // Total supply too
         totalSupply -= amount;
 
@@ -203,7 +233,7 @@ contract LM_PC_Staking_v1 is
         IERC20(stakingToken).safeTransfer(sender, amount);
 
         // If the user has earned something
-        if (rewards[sender] != 0) {
+        if (userRewards[sender] != 0) {
             // distribute rewards
             _distributeRewards(sender);
         }
@@ -237,13 +267,13 @@ contract LM_PC_Staking_v1 is
         _update(depositFor);
 
         // If the user has already earned something
-        if (rewards[depositFor] != 0) {
+        if (userRewards[depositFor] != 0) {
             // distribute rewards for previous reward period
             _distributeRewards(depositFor);
         }
 
         // Increase balance accordingly
-        _balances[depositFor] += amount;
+        balances[depositFor] += amount;
         // Total supply too
         totalSupply += amount;
 
@@ -266,8 +296,8 @@ contract LM_PC_Staking_v1 is
         uint earnedAmount;
         if (triggerAddress != address(0)) {
             earnedAmount = _earned(triggerAddress, rewardValue);
-            rewards[triggerAddress] = earnedAmount;
-            userRewardValue[triggerAddress] = rewardValue;
+            userRewards[triggerAddress] = earnedAmount;
+            userRewardValues[triggerAddress] = rewardValue;
         }
         emit Updated(
             triggerAddress, newRewardValue, newLastUpdate, earnedAmount
@@ -319,10 +349,10 @@ contract LM_PC_Staking_v1 is
         view
         returns (uint)
     {
-        return (providedRewardValue - userRewardValue[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
-            * _balances[user] // multiply by users balance of tokens to get their share of the token rewards
+        return (providedRewardValue - userRewardValues[user]) // This difference in rewardValues basically represents the time period between now and the moment the userRewardValue was created
+            * balances[user] // multiply by users balance of tokens to get their share of the token rewards
             / 1e36 // See comment in _calculateRewardValue();
-            + rewards[user];
+            + userRewards[user];
     }
 
     /// @dev	Distributes earned rewards via the payment processor.
@@ -330,18 +360,22 @@ contract LM_PC_Staking_v1 is
     /// @param  recipient The address of the user.
     function _distributeRewards(address recipient) internal {
         // Check what recipient has earned
-        uint amount = rewards[recipient];
+        uint amount = userRewards[recipient];
         // Set rewards to zero
-        rewards[recipient] = 0;
+        userRewards[recipient] = 0;
+
+        (bytes32 flags, bytes32[] memory data) =
+            _assemblePaymentConfig(new bytes32[](0)); // No additional payment data
 
         _addPaymentOrder(
             PaymentOrder({
                 recipient: recipient,
                 paymentToken: address(orchestrator().fundingManager().token()),
                 amount: amount,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp
+                originChainId: block.chainid,
+                targetChainId: block.chainid,
+                flags: flags,
+                data: data
             })
         );
 
@@ -398,5 +432,13 @@ contract LM_PC_Staking_v1 is
         }
         stakingToken = _token;
         emit StakingTokenSet(_token);
+    }
+
+    /// @dev	Ensures that the duration in seconds is larger than 0.
+    /// @param  duration The duration of the reward period.
+    function _ensureValidDuration(uint duration) internal view {
+        if (duration == 0) {
+            revert Module__LM_PC_Staking_v1__InvalidDuration();
+        }
     }
 }
