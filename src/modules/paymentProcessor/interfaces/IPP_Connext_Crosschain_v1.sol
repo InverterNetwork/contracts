@@ -15,40 +15,37 @@ import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
 /// @notice Interface for cross-chain payment processing using Connext protocol
 interface IPP_Connext_Crosschain_v1 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
-    // Errors
-
-    /// @notice Thrown when the provided Time-To-Live (TTL) parameter is invalid
-    error Module__PP_Connext_Crosschain__InvalidTTL();
-
-    //--------------------------------------------------------------------------
     // View Functions
 
     /// @notice Returns the Everclear spoke contract instance
     /// @return The IEverclearSpoke contract interface
-    function everClearSpoke() external view returns (IEverclearSpoke);
+    function getEverClearSpoke() external view returns (IEverclearSpoke);
 
     /// @notice Returns the WETH contract instance
     /// @return The IWETH contract interface used for wrapping/unwrapping ETH
-    function weth() external view returns (IWETH);
+    function getWeth() external view returns (IWETH);
+
+    /// @notice Returns the processed intent ID for a given payment client, recipient, and payment ID
+    /// @param paymentClient The address of the payment client
+    /// @param recipient The address of the recipient
+    /// @param paymentId The ID of the payment
+    /// @return The processed intent ID
+    function getProcessedIntentId(
+        address paymentClient,
+        address recipient,
+        uint paymentId
+    ) external view returns (bytes32);
 
     //--------------------------------------------------------------------------
     // External Functions
 
-    /// @notice Process payments for a given client with execution data
-    /// @dev This function handles the cross-chain payment processing using Connext
-    /// @param client The payment client contract initiating the payment
-    /// @param executionData The encoded execution parameters (maxFee, ttl)
-    function processPayments(
-        IERC20PaymentClientBase_v2 client,
-        bytes memory executionData
+    /// @notice Retries a previously failed transfer
+    /// @param client_ The payment client address
+    /// @param recipient_ The recipient address
+    /// @param order_ The payment order details
+    function retryFailedBridgeTransfer(
+        address client_,
+        address recipient_,
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external;
-
-    /// @notice Get bridge data for a specific payment ID
-    /// @dev Used to retrieve information about a cross-chain payment
-    /// @param paymentId The ID of the payment to query
-    /// @return The bridge data associated with the payment (encoded bytes)
-    function getBridgeData(uint paymentId)
-        external
-        view
-        returns (bytes memory);
 }
