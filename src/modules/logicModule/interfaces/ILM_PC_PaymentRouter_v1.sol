@@ -2,6 +2,12 @@
 pragma solidity ^0.8.0;
 
 interface ILM_PC_PaymentRouter_v1 {
+    // -----------------------------------------------------------------------------
+    // Errors
+
+    /// @notice Given arrays' length mismatch.
+    error Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch();
+
     //--------------------------------------------------------------------------
     // Mutating Functions
 

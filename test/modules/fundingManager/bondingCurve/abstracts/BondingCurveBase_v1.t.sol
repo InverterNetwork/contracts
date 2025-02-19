@@ -394,11 +394,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
             bondingCurveFundingManager.distributeIssuanceTokenFunctionCalled(),
             1
         );
-        assertEq(
-            bondingCurveFundingManager
-                .distributeCollateralTokenBeforeBuyFunctionCalled(),
-            1
-        );
     }
 
     /* Test _getBuyFeesAndTreasuryAddresses() function
@@ -515,9 +510,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit ProtocolFeeMinted(
-            address(bondingCurveFundingManager), treasury, _feeAmount
-        );
+        emit ProtocolFeeMinted(address(issuanceToken), treasury, _feeAmount);
         // Function call
         bondingCurveFundingManager.call_processProtocolFeeViaMinting(
             treasury, _feeAmount

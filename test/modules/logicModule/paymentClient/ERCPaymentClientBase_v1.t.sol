@@ -36,6 +36,9 @@ import {
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 contract ERC20PaymentClientBaseV1Test is ModuleTest {
+    bytes32 internal constant _START_END_CLIFF_FLAG =
+        0x0000000000000000000000000000000000000000000000000000000000000007;
+
     // SuT
     ERC20PaymentClientBaseV1AccessMock paymentClient;
     FundingManagerV1Mock fundingManager;
@@ -46,11 +49,14 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Events
 
-    /// @notice Added a payment order.
-    /// @param  recipient The address that will receive the payment.
-    /// @param  amount The amount of tokens the payment consists of.
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     function setUp() public {
@@ -80,7 +86,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     //----------------------------------
-    // Test: addPaymentOrder()
+    // Test: exposed_addPaymentOrder()
 
     function testAddPaymentOrder(
         uint orderAmount,
@@ -96,29 +102,35 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         _assumeValidAmount(amount);
 
         for (uint i; i < orderAmount; ++i) {
-            vm.expectEmit();
-            emit PaymentOrderAdded(recipient, address(_token), amount);
+            IERC20PaymentClientBase_v1.PaymentOrder memory order =
+                _createPaymentOrder(address(_token), recipient, amount, end);
 
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: end
-                })
+            vm.expectEmit();
+            emit PaymentOrderAdded(
+                recipient,
+                address(_token),
+                amount,
+                block.chainid,
+                block.chainid,
+                _START_END_CLIFF_FLAG,
+                order.data
             );
+
+            paymentClient.exposed_addPaymentOrder(order);
         }
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
 
         assertEq(orders.length, orderAmount);
+
         for (uint i; i < orderAmount; ++i) {
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
-            assertEq(orders[i].end, end);
+
+            if (end != 0) {
+                assertEq(orders[i].data[2], bytes32(end));
+            }
         }
 
         assertEq(
@@ -136,14 +148,15 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                 .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                 .selector
         );
-        paymentClient.addPaymentOrder(
+        paymentClient.exposed_addPaymentOrder(
             IERC20PaymentClientBase_v1.PaymentOrder({
                 recipient: address(0),
                 paymentToken: address(_token),
                 amount: 1,
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp
+                originChainId: block.chainid,
+                targetChainId: block.chainid,
+                flags: bytes32(0),
+                data: new bytes32[](0)
             })
         );
     }
@@ -154,48 +167,89 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAddPaymentOrders() public {
         IERC20PaymentClientBase_v1.PaymentOrder[] memory ordersToAdd =
             new IERC20PaymentClientBase_v1.PaymentOrder[](3);
+
         ordersToAdd[0] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE1),
             paymentToken: address(_token),
             amount: 100e18,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+
+        uint flags = 0; // Initialize flags as uint128 to accumulate the bits
+        flags |= (1 << 0); // Set bit 0 for start
+        flags |= (1 << 1); // Set bit 1 for end
+        bytes32 flagsBytes = bytes32(flags);
+        bytes32[] memory data = new bytes32[](2);
+        data[0] = bytes32(block.timestamp);
+        data[1] = bytes32(block.timestamp + 1);
+
         ordersToAdd[1] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE2),
             paymentToken: address(_token),
             amount: 100e18,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flagsBytes,
+            data: data
         });
+
+        bytes32[] memory data2 = new bytes32[](1);
+        data[0] = bytes32(block.timestamp);
+        data[1] = bytes32(block.timestamp + 2);
+
         ordersToAdd[2] = IERC20PaymentClientBase_v1.PaymentOrder({
             recipient: address(0xCAFE3),
             paymentToken: address(_token),
             amount: 100e18,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 2
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flagsBytes,
+            data: data2
         });
 
         vm.expectEmit();
-        emit PaymentOrderAdded(address(0xCAFE1), address(_token), 100e18);
-        emit PaymentOrderAdded(address(0xCAFE2), address(_token), 100e18);
-        emit PaymentOrderAdded(address(0xCAFE3), address(_token), 100e18);
-
-        paymentClient.addPaymentOrders(ordersToAdd);
+        emit PaymentOrderAdded(
+            address(0xCAFE1),
+            address(_token),
+            100e18,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
+        );
+        emit PaymentOrderAdded(
+            address(0xCAFE2),
+            address(_token),
+            100e18,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
+        );
+        emit PaymentOrderAdded(
+            address(0xCAFE3),
+            address(_token),
+            100e18,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
+        );
+        paymentClient.exposed_addPaymentOrders(ordersToAdd);
 
         IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
             paymentClient.paymentOrders();
-
         assertEq(orders.length, 3);
         for (uint i; i < 3; ++i) {
             assertEq(orders[i].recipient, ordersToAdd[i].recipient);
             assertEq(orders[i].amount, ordersToAdd[i].amount);
-            assertEq(orders[i].end, ordersToAdd[i].end);
+            for (uint j; j < orders[i].data.length; ++j) {
+                assertEq(orders[i].data[j], ordersToAdd[i].data[j]);
+            }
         }
-
         assertEq(paymentClient.outstandingTokenAmount(address(_token)), 300e18);
     }
 
@@ -218,15 +272,8 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         _token.mint(address(_fundingManager), orderAmount * amount);
 
         for (uint i; i < orderAmount; ++i) {
-            paymentClient.addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
-                    recipient: recipient,
-                    paymentToken: address(_token),
-                    amount: amount,
-                    start: block.timestamp,
-                    cliff: 0,
-                    end: end
-                })
+            paymentClient.exposed_addPaymentOrder(
+                _createPaymentOrder(address(_token), recipient, amount, end)
             );
         }
 
@@ -242,7 +289,9 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         for (uint i; i < orderAmount; ++i) {
             assertEq(orders[i].recipient, recipient);
             assertEq(orders[i].amount, amount);
-            assertEq(orders[i].end, end);
+            if (end != 0) {
+                assertEq(orders[i].data[2], bytes32(end));
+            }
         }
 
         // Check that the returned token list and outstanding amounts are correct.
@@ -303,7 +352,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAmountPaid(uint preAmount, uint amount) public {
         vm.assume(preAmount >= amount);
 
-        paymentClient.set_outstandingTokenAmount(address(token), preAmount);
+        paymentClient.exposed_outstandingTokenAmount(address(token), preAmount);
 
         vm.prank(address(_paymentProcessor));
         paymentClient.amountPaid(address(token), amount);
@@ -317,7 +366,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     function testAmountPaidModifierInPosition(address caller) public {
         address fundingManagerToken =
             address(_orchestrator.fundingManager().token());
-        paymentClient.set_outstandingTokenAmount(fundingManagerToken, 1);
+        paymentClient.exposed_outstandingTokenAmount(fundingManagerToken, 1);
 
         if (caller != address(_paymentProcessor)) {
             vm.expectRevert(
@@ -343,20 +392,16 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         // create paymentOrder with required amount
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
-        IERC20PaymentClientBase_v1.PaymentOrder({
-            recipient: address(0xA11CE),
-            paymentToken: address(_token),
-            amount: amountRequired,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp
-        });
-        paymentClient.addPaymentOrder(order);
+        _createPaymentOrder(
+            address(_token), address(0xA11CE), amountRequired, block.timestamp
+        );
+
+        paymentClient.exposed_addPaymentOrder(order);
 
         _orchestrator.setInterceptData(true);
 
         if (currentFunds > amountRequired) {
-            paymentClient.originalEnsureTokenBalance(address(_token));
+            paymentClient.exposed_ensureTokenBalance(address(_token));
         } else if (
             _token.balanceOf(address(_fundingManager))
                 < order.amount - _token.balanceOf(address(paymentClient))
@@ -370,7 +415,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
                     order.amount - _token.balanceOf(address(paymentClient))
                 )
             );
-            paymentClient.originalEnsureTokenBalance(address(_token));
+            paymentClient.exposed_ensureTokenBalance(address(_token));
         }
     }
 
@@ -389,18 +434,13 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
 
         // we add the first paymentOrder to increase the outstanding amount
         IERC20PaymentClientBase_v1.PaymentOrder memory order =
-        IERC20PaymentClientBase_v1.PaymentOrder({
-            recipient: address(0xA11CE),
-            paymentToken: address(_token),
-            amount: firstAmount,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp
-        });
-        paymentClient.addPaymentOrder(order);
+        _createPaymentOrder(
+            address(_token), address(0xA11CE), firstAmount, block.timestamp
+        );
+        paymentClient.exposed_addPaymentOrder(order);
 
         // test ensureTokenAllowance
-        paymentClient.originalEnsureTokenAllowance(
+        paymentClient.exposed_ensureTokenAllowance(
             _paymentProcessor, address(_token)
         );
 
@@ -410,18 +450,13 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         assertEq(currentAllowance, firstAmount);
 
         // we add a second paymentOrder to increase the outstanding amount
-        order = IERC20PaymentClientBase_v1.PaymentOrder({
-            recipient: address(0xA11CE),
-            paymentToken: address(_token),
-            amount: secondAmount,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp
-        });
-        paymentClient.addPaymentOrder(order);
+        order = _createPaymentOrder(
+            address(_token), address(0xA11CE), secondAmount, block.timestamp
+        );
+        paymentClient.exposed_addPaymentOrder(order);
 
         // test ensureTokenAllowance now accounts for both
-        paymentClient.originalEnsureTokenAllowance(
+        paymentClient.exposed_ensureTokenAllowance(
             _paymentProcessor, address(_token)
         );
 
@@ -432,7 +467,7 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
     }
 
     function testIsAuthorizedPaymentProcessor(address addr) public {
-        bool isAuthorized = paymentClient.originalIsAuthorizedPaymentProcessor(
+        bool isAuthorized = paymentClient.exposed_isAuthorizedPaymentProcessor(
             IPaymentProcessor_v1(addr)
         );
 
@@ -440,6 +475,59 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
             assertTrue(isAuthorized);
         } else {
             assertFalse(isAuthorized);
+        }
+    }
+
+    function test_setFlags(uint8 flagCount_) public {
+        bytes32 newFlags = 0;
+        uint8[] memory flags = new uint8[](flagCount_);
+
+        for (uint i = 0; i < flagCount_; i++) {
+            newFlags |= bytes32((1 << i));
+            flags[i] = uint8(i);
+        }
+
+        paymentClient.exposed_setFlags(flagCount_, flags);
+
+        assertEq(paymentClient.getFlagCount(), flagCount_);
+        assertEq(
+            abi.encodePacked(paymentClient.getFlags()),
+            abi.encodePacked(newFlags)
+        );
+    }
+
+    function test_assemblePaymentConfig_FailsIfAmountOfFlagsIsIncorrect(
+        bytes32[] memory flagValues
+    ) public {
+        vm.assume(flagValues.length != paymentClient.getFlagCount());
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20PaymentClientBase_v1
+                    .Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength
+                    .selector,
+                paymentClient.getFlagCount(),
+                flagValues.length
+            )
+        );
+
+        paymentClient.exposed_assemblePaymentConfig(flagValues);
+    }
+
+    function test_assemblePaymentConfig(bytes32[] memory randValues) public {
+        uint8 flagCount = paymentClient.getFlagCount();
+        bytes32[] memory flagValues = new bytes32[](flagCount);
+        for (uint8 i; i < flagCount; ++i) {
+            flagValues[i] = randValues[randValues.length % i];
+        }
+
+        (bytes32 ret_flags, bytes32[] memory ret_FlagValues) =
+            paymentClient.exposed_assemblePaymentConfig(flagValues);
+
+        assertEq(flagCount, ret_FlagValues.length);
+        assertEq(ret_flags, paymentClient.getFlags());
+        for (uint8 i; i < ret_FlagValues.length; ++i) {
+            assertEq(ret_FlagValues[i], flagValues[i]);
         }
     }
 
@@ -488,5 +576,30 @@ contract ERC20PaymentClientBaseV1Test is ModuleTest {
         invalids[1] = type(uint).max / 100_000;
 
         return invalids;
+    }
+
+    /// @dev    Creates a PaymentOrder with the given parameters.
+    function _createPaymentOrder(
+        address paymentToken,
+        address recipient,
+        uint amount,
+        uint end
+    ) internal view returns (IERC20PaymentClientBase_v1.PaymentOrder memory) {
+        bytes32[] memory data = new bytes32[](end != 0 ? 3 : 2);
+        data[0] = bytes32(block.timestamp);
+        data[1] = bytes32(0);
+        if (end != 0) {
+            data[2] = bytes32(end);
+        }
+
+        return IERC20PaymentClientBase_v1.PaymentOrder({
+            recipient: recipient,
+            paymentToken: paymentToken,
+            amount: amount,
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: _START_END_CLIFF_FLAG,
+            data: data
+        });
     }
 }

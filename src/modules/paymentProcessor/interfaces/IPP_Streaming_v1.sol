@@ -81,26 +81,6 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
         uint end
     );
 
-    /// @notice Emitted when a payment gets processed for execution.
-    /// @param  paymentClient The payment client that originated the order.
-    /// @param  recipient The address that will receive the payment.
-    /// @param  paymentToken The address of the token that will be used for the payment.
-    /// @param  streamId ID of the streaming payment order that was processed.
-    /// @param  amount The amount of tokens the payment consists of.
-    /// @param  start The start date of the streaming period.
-    /// @param  cliff The duration of the cliff period.
-    /// @param  end The ending of the streaming period.
-    event PaymentOrderProcessed(
-        address indexed paymentClient,
-        address indexed recipient,
-        address indexed paymentToken,
-        uint streamId,
-        uint amount,
-        uint start,
-        uint cliff,
-        uint end
-    );
-
     /// @notice Emitted when a payment was unclaimable due to a token error.
     /// @param  paymentClient The payment client that originated the order.
     /// @param  recipient The address that wshould have received the payment.
@@ -150,6 +130,14 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @param  paymentReceiver The address that will receive the payment.
     error Module__PP_Streaming__In_validPaymentReceiver(
         address paymentClient, address paymentReceiver
+    );
+
+    /// @notice The default start, cliff and end times are invalid.
+    /// @param  start The start time.
+    /// @param  cliff The cliff duration.
+    /// @param  end The end time.
+    error Module__PP_Streaming__InvalidDefaultTimes(
+        uint start, uint cliff, uint end
     );
 
     //--------------------------------------------------------------------------

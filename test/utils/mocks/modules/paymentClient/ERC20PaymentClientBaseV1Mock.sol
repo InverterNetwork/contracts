@@ -41,7 +41,7 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // IERC20PaymentClientBase_v1 Wrapper Functions
 
-    function addPaymentOrder(PaymentOrder memory order) external {
+    function exposed_addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
     }
 
@@ -54,11 +54,17 @@ contract ERC20PaymentClientBaseV1Mock is ERC20PaymentClientBase_v1 {
         _orders.push(order);
 
         emit PaymentOrderAdded(
-            order.recipient, order.paymentToken, order.amount
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
         );
     }
 
-    function addPaymentOrders(PaymentOrder[] memory orders) external {
+    function exposed_addPaymentOrders(PaymentOrder[] memory orders) external {
         _addPaymentOrders(orders);
     }
 

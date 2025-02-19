@@ -1,6 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
+/**
+ * @title   Inverter Redeeming Bonding Curve Funding Manager Base Interface
+ *
+ * @notice  Interface that enables the management of the the redemption of
+ *          issuance for collateral along a bonding curve in the
+ *          Inverter Network, including fee handling and sell functionality control.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer
+ *                          to our Security Policy at security.inverter.network
+ *                          or email us directly!
+ *
+ * @custom:version 1.1.3
+ *
+ * @author  Inverter Network
+ */
 interface IRedeemingBondingCurveBase_v1 {
     //--------------------------------------------------------------------------
     // Errors
@@ -8,8 +24,8 @@ interface IRedeemingBondingCurveBase_v1 {
     /// @notice Selling functionalities are set to closed.
     error Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed();
 
-    /// @notice Not enough collateral in contract for redemption.
-    error Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
+    /// @notice Insufficient collateral tokens are held to cover the project collateral fee.
+    error Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee(
     );
 
     //--------------------------------------------------------------------------

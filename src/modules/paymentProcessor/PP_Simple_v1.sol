@@ -119,9 +119,10 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
                 recipient,
                 address(token_),
                 amount,
-                orders[i].start,
-                orders[i].cliff,
-                orders[i].end
+                orders[i].originChainId,
+                orders[i].targetChainId,
+                orders[i].flags,
+                orders[i].data
             );
 
             (bool success, bytes memory data) = token_.call(
@@ -194,7 +195,8 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
         IERC20PaymentClientBase_v1.PaymentOrder memory order
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
-            && _validTotal(order.amount) && _validPaymentToken(order.paymentToken);
+            && _validTotal(order.amount) && _validPaymentToken(order.paymentToken)
+            && _validOriginAndTargetChain(order.originChainId, order.targetChainId);
     }
 
     //--------------------------------------------------------------------------
@@ -257,5 +259,15 @@ contract PP_Simple_v1 is Module_v1, IPaymentProcessor_v1 {
             )
         );
         return (success && data.length != 0 && _token.code.length != 0);
+    }
+
+    function _validOriginAndTargetChain(
+        uint originChainId_,
+        uint targetChainId_
+    ) internal view returns (bool) {
+        return (
+            (originChainId_ == targetChainId_)
+                && (originChainId_ == block.chainid)
+        );
     }
 }

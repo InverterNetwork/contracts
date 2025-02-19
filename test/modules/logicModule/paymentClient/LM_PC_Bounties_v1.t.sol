@@ -98,7 +98,10 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     // This function also tests all the getters
-    function testInit() public override(ModuleTest) {}
+    function testInit() public override(ModuleTest) {
+        assertEq(bountyManager.getFlagCount(), 0);
+        assertEq(bountyManager.getFlags(), 0);
+    }
 
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
@@ -954,9 +957,17 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             assertEq(orders[i].recipient, contribs[i].addr);
 
             assertEq(orders[i].amount, claimAmount);
-            assertEq(orders[i].start, block.timestamp);
 
-            assertEq(orders[i].end, block.timestamp);
+            // Decode start and end from flags and data
+            bool hasStart = (uint(orders[i].flags) & (1 << 1)) != 0;
+            bool hasEnd = (uint(orders[i].flags) & (1 << 3)) != 0;
+
+            if (hasStart) {
+                assertEq(uint(orders[i].data[0]), 0);
+            }
+            if (hasEnd) {
+                assertEq(uint(orders[i].data[2]), 0);
+            }
         }
 
         assertEqualClaim(claimId, bountyId, contribs, details, true);

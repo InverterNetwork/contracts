@@ -5,24 +5,73 @@ pragma solidity ^0.8.0;
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
+/**
+ * @title   Inverter ERC20 Payment Client Base Interface
+ *
+ * @notice  Enables modules within the Inverter Network to create and manage
+ *          payment orders that can be processed by authorized payment
+ *          processors, ensuring efficient and secure transactions. Refer to
+ *          the implementations contract for more details.
+ *
+ * @dev     STRUCTURING OF THE FLAGS AND DATA FIELDS
+ *          The PaymentOrder struct implements a flag system to manage the
+ *          information payloads received by the payment processor. It is
+ *          comprised of a bytes32 value that indicates the number of flags
+ *          that are active, and a bytes32[] value that stores the
+ *          corresponding values.
+ *
+ *          For example:
+ *          If the value of 'flags' is '0000 [...] 0000 1011', then that order
+ *          stores values for the paramters 0, 1 and 3 of the master list. The
+ *          byte code for simple flag setups might also be represented by
+ *          hexadecimal values like 0xB, which has the same value as the bit
+ *          combination above.
+ *
+ *          If a module wants to set flags, it can use bit shifts, in this case
+ *          1 << 0, 1 << 1 and 1 << 3.
+ *          Afterwards, to be correct, the following data variable should
+ *          contain 3 elements of the type specified in the master list, each
+ *          stored as bytes32 value.
+ *
+ * @author  Inverter Network
+ */
 interface IERC20PaymentClientBase_v1 {
+    //-------------------------------------------------------------------------
+    // MASTER LIST OF PAYMENT ORDER FLAGS
+
+    /*
+    | Flag | Variable type | Name       | Description                         |
+    |------|---------------|------------|-------------------------------------|
+    | 0    | uint256       | orderID    | ID of the order within the client.  |
+    | 1    | uint256       | start      | Start date of the streaming period. | 
+    | 2    | uint256       | cliff      | Duration of the cliff period.       |
+    | 3    | uint256       | end        | Due Date of the order               |
+    | ...  | ...           | ...        | (yet unassigned)                    |
+    | 255  | .             | .          | (Max Value).                        | 
+    |------|---------------|------------|-------------------------------------|
+    */
+
     //--------------------------------------------------------------------------
     // Structs
 
     /// @notice Struct used to store information about a payment order.
     /// @param  recipient The recipient of the payment.
-    /// @param  paymentToken The token in which to pay.
+    /// @param  paymentToken The token in which to pay. Assumed to always
+    ///         be on the local chain.
     /// @param  amount The amount of tokens to pay.
-    /// @param  start Timestamp at which the payment should start.
-    /// @param  cliff Duration of the payment cliff.
-    /// @param  end Timestamp at which the payment should be fulfilled.
+    /// @param  originChainId The id of the origin chain.
+    /// @param  targetChainId The id of the target chain.
+    /// @param  flags Flags that indicate which information the data array
+    ///         contains.
+    /// @param  data Array of additional data regarding the payment order.
     struct PaymentOrder {
         address recipient;
         address paymentToken;
         uint amount;
-        uint start;
-        uint cliff;
-        uint end;
+        uint originChainId;
+        uint targetChainId;
+        bytes32 flags;
+        bytes32[] data;
     }
 
     //--------------------------------------------------------------------------
@@ -50,11 +99,13 @@ interface IERC20PaymentClientBase_v1 {
     /// @notice Given paymentOrder is invalid.
     error Module__ERC20PaymentClientBase__InvalidPaymentOrder();
 
-    /// @notice Given end invalid.
-    error Module__ERC20PaymentClientBase__Invalidend();
+    /// @notice Given mismatch between flag count and supplied array length.
+    error Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
+        uint8 flagCount, uint arrayLength
+    );
 
-    /// @notice Given arrays' length mismatch.
-    error Module__ERC20PaymentClientBase__ArrayLengthMismatch();
+    /// @notice Given number of flags exceeds the limit.
+    error Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
 
     //--------------------------------------------------------------------------
     // Events
@@ -63,9 +114,25 @@ interface IERC20PaymentClientBase_v1 {
     /// @param  recipient The address that will receive the payment.
     /// @param  token The token in which to pay.
     /// @param  amount The amount of tokens the payment consists of.
+    /// @param  originChainId The id of the origin chain.
+    /// @param  targetChainId The id of the target chain.
+    /// @param  flags Flags that indicate additional data used by the payment
+    ///         order.
+    /// @param  data Array of additional data regarding the payment order.
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
+
+    /// @notice Emitted when the flags are set.
+    /// @param  flagCount The number of flags set.
+    /// @param  newFlags The newly set flags.
+    event FlagsSet(uint8 flagCount, bytes32 newFlags);
 
     //--------------------------------------------------------------------------
     // Functions
@@ -75,26 +142,39 @@ interface IERC20PaymentClientBase_v1 {
     function paymentOrders() external view returns (PaymentOrder[] memory);
 
     /// @notice Returns the total outstanding token payment amount.
-    /// @param  token The token in which to pay.
-    /// @return total amount of token to pay.
-    function outstandingTokenAmount(address token)
+    /// @param  token_ The token in which to pay.
+    /// @return total_ amount of token to pay.
+    function outstandingTokenAmount(address token_)
         external
         view
-        returns (uint);
+        returns (uint total_);
 
     /// @notice Collects outstanding payment orders.
     /// @dev	Marks the orders as completed for the client.
-    /// @return list of payment orders.
-    /// @return list of token addresses.
-    /// @return list of amounts.
+    /// @return paymentOrders_ list of payment orders.
+    /// @return tokens_ list of token addresses.
+    /// @return totalAmounts_ list of amounts.
     function collectPaymentOrders()
         external
-        returns (PaymentOrder[] memory, address[] memory, uint[] memory);
+        returns (
+            PaymentOrder[] memory paymentOrders_,
+            address[] memory tokens_,
+            uint[] memory totalAmounts_
+        );
 
     /// @notice Notifies the PaymentClient, that tokens have been paid out accordingly.
     /// @dev	Payment Client will reduce the total amount of tokens it will stock up by the given amount.
     /// @dev	This has to be called by a paymentProcessor.
-    /// @param  token The token in which the payment was made.
-    /// @param  amount amount of tokens that have been paid out.
-    function amountPaid(address token, uint amount) external;
+    /// @param  token_ The token in which the payment was made.
+    /// @param  amount_ amount of tokens that have been paid out.
+    function amountPaid(address token_, uint amount_) external;
+
+    /// @notice Returns the flags used when creating payment orders in this
+    ///         client.
+    /// @return flags_ The flags this client will use.
+    function getFlags() external view returns (bytes32 flags_);
+
+    /// @notice Returns the number of flags this client uses for PaymentOrders.
+    /// @return flagCount_ The number of flags.
+    function getFlagCount() external view returns (uint8 flagCount_);
 }

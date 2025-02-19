@@ -101,7 +101,13 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     );
 
     event PaymentOrderAdded(
-        address indexed recipient, address indexed token, uint amount
+        address indexed recipient,
+        address indexed token,
+        uint amount,
+        uint originChainId,
+        uint targetChainId,
+        bytes32 flags,
+        bytes32[] data
     );
 
     event DeletedStuckAssertion(bytes32 indexed assertionId);
@@ -484,7 +490,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         );
 
         // state after
-        assertEq(kpiManager.assertionPending(), true);
+        assertEq(kpiManager.getAssertionPending(), true);
 
         // Posting another assertion should now fail
         vm.expectRevert(
@@ -501,7 +507,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         );
 
         // created one is still pending
-        assertEq(kpiManager.assertionPending(), true);
+        assertEq(kpiManager.getAssertionPending(), true);
     }
 
     function test_SuccessfulAssertion(
@@ -826,7 +832,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
             MOCK_ASSERTER_ADDRESS,
             0
         );
-        assertEq(kpiManager.assertionPending(), true);
+        assertEq(kpiManager.getAssertionPending(), true);
 
         // Staking should now fail
 
@@ -872,8 +878,8 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
             stakingToken.balanceOf(address(kpiManager)),
             contractBalanceBefore + amount
         );
-        assertEq(kpiManager.balanceOf(USER_1), amount);
-        assertEq(kpiManager.totalSupply(), contractBalanceBefore + amount);
+        assertEq(kpiManager.getBalance(USER_1), amount);
+        assertEq(kpiManager.getTotalSupply(), contractBalanceBefore + amount);
     }
 }
 
@@ -987,19 +993,19 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         // check earned rewards are correct
         for (uint i; i < length; i++) {
-            assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
+            assertEq(kpiManager.getBalance(users[i]), amounts[i]);
 
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
             //=========================================================
 
             uint userReward =
-                amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
+                amounts[i] * kpiManager.getRewardRate() / totalStakedFunds;
             console.log(userReward);
 
             // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
             assertApproxEqAbs(
-                kpiManager.earned(users[i]),
+                kpiManager.getEarned(users[i]),
                 userReward,
                 1e8 // Below this it reverts due to precision error
             );
@@ -1007,17 +1013,25 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         for (uint i; i < length; i++) {
             vm.startPrank(users[i]);
-            uint earnedReward = kpiManager.earned(users[i]);
+            uint earnedReward = kpiManager.getEarned(users[i]);
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(users[i], address(_token), earnedReward);
+                emit PaymentOrderAdded(
+                    users[i],
+                    address(_token),
+                    earnedReward,
+                    block.chainid,
+                    block.chainid,
+                    bytes32(0),
+                    new bytes32[](0)
+                );
             }
 
             kpiManager.unstake(amounts[i]);
 
-            assertEq(kpiManager.balanceOf(users[i]), 0);
-            assertEq(kpiManager.earned(users[i]), 0);
+            assertEq(kpiManager.getBalance(users[i]), 0);
+            assertEq(kpiManager.getEarned(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
 
             vm.stopPrank();
@@ -1070,19 +1084,19 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         // check earned rewards are correct
         for (uint i; i < length; i++) {
-            assertEq(kpiManager.balanceOf(users[i]), amounts[i]);
+            assertEq(kpiManager.getBalance(users[i]), amounts[i]);
 
             //=========================================================
             // This is the place where imprecision issues arise. Needs review
             //=========================================================
 
             uint userReward =
-                amounts[i] * kpiManager.rewardRate() / totalStakedFunds;
+                amounts[i] * kpiManager.getRewardRate() / totalStakedFunds;
             console.log(userReward);
 
             // Asserts a is approximately equal to b with delta in percentage, where 1e18 is 100%
             assertApproxEqAbs(
-                kpiManager.earned(users[i]),
+                kpiManager.getEarned(users[i]),
                 userReward,
                 1e8 // Below this it reverts due to precision error
             );
@@ -1090,17 +1104,25 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
 
         for (uint i; i < length; i++) {
             vm.startPrank(users[i]);
-            uint earnedReward = kpiManager.earned(users[i]);
+            uint earnedReward = kpiManager.getEarned(users[i]);
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(users[i], address(_token), earnedReward);
+                emit PaymentOrderAdded(
+                    users[i],
+                    address(_token),
+                    earnedReward,
+                    block.chainid,
+                    block.chainid,
+                    bytes32(0),
+                    new bytes32[](0)
+                );
             }
 
             kpiManager.unstake(amounts[i]);
 
-            assertEq(kpiManager.balanceOf(users[i]), 0);
-            assertEq(kpiManager.earned(users[i]), 0);
+            assertEq(kpiManager.getBalance(users[i]), 0);
+            assertEq(kpiManager.getEarned(users[i]), 0);
             assertEq(stakingToken.balanceOf(users[i]), amounts[i]);
 
             vm.stopPrank();

@@ -200,7 +200,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         // Staker 4:     |   Staker 4:               |   Staker 4:
 
         // Check if values are accurate
-        assertEq(amount1 / 2, stakingManager.earned(staker1));
+        assertEq(amount1 / 2, stakingManager.getEarned(staker1));
         assertEq(amount1 / 2, rewardToken.balanceOf(staker2));
 
         // 8. Set up reward period 2
@@ -218,7 +218,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         // Staker 4:     |   Staker 4:               |   Staker 4:
 
         // Check if values are accurate
-        assertEq(amount1 / 2 + amount2 / 2, stakingManager.earned(staker1));
+        assertEq(amount1 / 2 + amount2 / 2, stakingManager.getEarned(staker1));
 
         // 10. Let staker 3 and 4 into it
 
@@ -250,9 +250,11 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         // Staker 4: 5   |   Staker 4: 1/8 amount2               |   Staker 4:
 
         // Check if values are accurate
-        assertEq(amount1 / 2 + amount2 * 3 / 4, stakingManager.earned(staker1));
+        assertEq(
+            amount1 / 2 + amount2 * 3 / 4, stakingManager.getEarned(staker1)
+        );
         assertEq(amount2 * 1 / 8, rewardToken.balanceOf(staker3));
-        assertEq(amount2 * 1 / 8, stakingManager.earned(staker4));
+        assertEq(amount2 * 1 / 8, stakingManager.getEarned(staker4));
 
         // 13. Let 4 stake more
 
@@ -289,9 +291,9 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
 
         assertEq(
             amount1 / 2 + amount2 * 3 / 4 + amount3,
-            stakingManager.earned(staker1)
+            stakingManager.getEarned(staker1)
         );
-        assertEq(amount3, stakingManager.earned(staker4));
+        assertEq(amount3, stakingManager.getEarned(staker4));
 
         // 16. Let 1 withdraw half and 4 withdraw full
 
@@ -309,7 +311,7 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
 
         // Check if values are accurate
 
-        assertEq(5, stakingManager.balanceOf(staker1));
+        assertEq(5, stakingManager.getBalance(staker1));
         assertEq(
             amount1 / 2 + amount2 * 3 / 4 + amount3,
             rewardToken.balanceOf(staker1)

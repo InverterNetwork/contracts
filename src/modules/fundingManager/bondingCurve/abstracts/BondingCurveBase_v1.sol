@@ -233,13 +233,17 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
     {
+        // ------------------------------------------------------------
+        // Checks
+
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+
+        // ------------------------------------------------------------
+        // Effects
 
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
-        // Handle collateral tokens before buy
-        _handleCollateralTokensBeforeBuy(_msgSender(), _depositAmount);
         // Get protocol fee percentages and treasury addresses
         (
             address collateralTreasury,
@@ -251,23 +255,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
 
         // Get net amount, protocol and project fee amounts
-        (uint netDeposit, uint protocolFeeAmount, uint projectFeeAmount) =
-        _calculateNetAndSplitFees(
+        (
+            uint netDeposit,
+            uint collateralProtocolFeeAmount,
+            uint projectFeeAmount
+        ) = _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
         // collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
-        collateralFeeAmount = protocolFeeAmount + projectFeeAmount;
-
-        // Process the protocol fee
-        _processProtocolFeeViaTransfer(
-            collateralTreasury, collateralToken, protocolFeeAmount
-        );
-
-        // Add project fee if applicable
-        if (projectFeeAmount > 0) {
-            _projectFeeCollected(projectFeeAmount);
-        }
+        collateralFeeAmount = collateralProtocolFeeAmount + projectFeeAmount;
 
         // Calculate token amount based on upstream formula
         uint issuanceTokenAmount = _issueTokensFormulaWrapper(netDeposit);
@@ -275,17 +272,39 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (issuanceTokenAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
-        _calculateNetAndSplitFees(
+        uint issuanceProtocolFeeAmount;
+        (
+            issuanceTokenAmount,
+            issuanceProtocolFeeAmount, /* projectFeeAmount */
+        ) = _calculateNetAndSplitFees(
             issuanceTokenAmount, issuanceBuyFeePercentage, 0
         );
-        // collect protocol fee on outgoing issuance token
-        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
         // Revert if the token amount is lower than the minimum amount the user expects
         if (issuanceTokenAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
+
+        // ------------------------------------------------------------
+        // Interactions
+
+        // Handle collateral tokens before buy
+        _handleCollateralTokensBeforeBuy(_msgSender(), _depositAmount);
+
+        // Process protocol fee on incoming collateral tokens
+        _processProtocolFeeViaTransfer(
+            collateralTreasury, collateralToken, collateralProtocolFeeAmount
+        );
+
+        // Process project fee if applicable
+        if (projectFeeAmount > 0) {
+            _projectFeeCollected(projectFeeAmount);
+        }
+
+        // Process protocol fee on outgoing issuance tokens
+        _processProtocolFeeViaMinting(
+            issuanceTreasury, issuanceProtocolFeeAmount
+        );
 
         // Use virtual function to handle issuance tokens
         _handleIssuanceTokensAfterBuy(_receiver, issuanceTokenAmount);
@@ -418,7 +437,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
             // mint fee amount
             _mint(_treasury, _feeAmount);
-            emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
+            emit ProtocolFeeMinted(
+                address(issuanceToken), _treasury, _feeAmount
+            );
         }
     }
 
