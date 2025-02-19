@@ -26,14 +26,28 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param orchestrator The address of the funding manager.
     /// @param issuanceToken The address of the issuance token.
     /// @param deployer The address of the deployer.
+    /// @param collateralToken The address of the collateral token.
     /// @param initiator The address of the initiator.
-    /// @param migrationThreshold The migration threshold.
+    /// @param migrationConfig_ The migration config.
     event PIMWorkflowCreated(
         address indexed orchestrator,
         address indexed issuanceToken,
         address indexed deployer,
+        address collateralToken,
         address initiator,
-        uint migrationThreshold
+        MigrationConfig migrationConfig_
+    );
+
+    /// @notice Event emitted when collateral liquidity is migrated to the dex.
+    /// @param orchestrator The address of the orchestrator.
+    /// @param pool The address of the pool.
+    /// @param issuanceTokenAmount The amount of issuance tokens added as liquidity.
+    /// @param collateralTokenAmount The amount of collateral tokens added as liquidity.
+    event Graduation(
+        address indexed orchestrator,
+        address indexed pool,
+        uint issuanceTokenAmount,
+        uint collateralTokenAmount
     );
 
     /// @notice Event emitted when factory owner sets new fee.
@@ -56,22 +70,6 @@ interface IMigrating_PIM_Factory_v1 {
         address indexed claimer,
         address indexed to,
         uint amount
-    );
-
-    /// @notice Event emitted when collateral liquidity is migrated to the dex.
-    /// @param fundingManager The address of the funding manager.
-    /// @param issuanceToken The address of the issuance token.
-    /// @param collateralToken The address of the collateral token.
-    /// @param pool The address of the pool.
-    /// @param issuanceTokenAmount The amount of issuance tokens added as liquidity.
-    /// @param collateralTokenAmount The amount of collateral tokens added as liquidity.
-    event Graduation(
-        address indexed fundingManager,
-        address indexed issuanceToken,
-        address collateralToken,
-        address indexed pool,
-        uint issuanceTokenAmount,
-        uint collateralTokenAmount
     );
 
     //--------------------------------------------------------------------------

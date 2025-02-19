@@ -137,8 +137,9 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
             address(orchestrator),
             address(issuanceToken),
             _msgSender(),
+            collateralToken,
             initiator,
-            migrationConfig_.migrationThreshold
+            migrationConfig_
         );
 
         return orchestrator;
@@ -223,7 +224,6 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
                 fundingManager
             );
 
-        address issuanceToken = fm.getIssuanceToken();
         IERC20 collateralToken = fm.token();
 
         // Check if buy would exceed threshold BEFORE transferring tokens
@@ -331,8 +331,6 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         uint amountIn,
         uint minAmountOut
     ) external {
-        PIM memory pim = pims[fundingManager];
-
         // Get funding manager
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm = FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
                 fundingManager
@@ -425,9 +423,7 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         pims[fundingManager] = pim;
 
         emit Graduation(
-            fundingManager,
-            address(issuanceToken),
-            address(collateralToken),
+            address(pim.orchestrator),
             pool,
             issuanceLiquidity,
             collateralLiquidity

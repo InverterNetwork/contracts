@@ -55,7 +55,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     uint initialPurchaseAmount = 1 ether;
     uint secondaryPurchaseAmount = 10 ether;
     uint migrationThreshold = 10 ether;
-    bool isImmutable = false;
+    bool isImmutable = true;
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
 
     // addresses
