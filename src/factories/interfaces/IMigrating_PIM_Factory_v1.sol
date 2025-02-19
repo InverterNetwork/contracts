@@ -2,9 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveBase_v1} from "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
@@ -12,12 +15,6 @@ import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 interface IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Errors
-
-    /// @notice Error thrown when an unpermissioned address tries to claim fees or to transfer role.
-    error PIM_WorkflowFactory__OnlyPimFeeRecipient();
-
-    /// @notice Error thrown when an unpermissioned address tries to set rewards.
-    error PIM_WorkflowFactory__OnlyInitiator();
 
     //--------------------------------------------------------------------------
     // Events
@@ -43,33 +40,13 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param pool The address of the pool.
     /// @param issuanceTokenAmount The amount of issuance tokens added as liquidity.
     /// @param collateralTokenAmount The amount of collateral tokens added as liquidity.
+    /// @param stakingRewards The amount of staking rewards added as liquidity.
     event Graduation(
         address indexed orchestrator,
         address indexed pool,
         uint issuanceTokenAmount,
-        uint collateralTokenAmount
-    );
-
-    /// @notice Event emitted when factory owner sets new fee.
-    /// @param fundingManager The address of the funding manager.
-    /// @param oldRecipient The previous pim fee recipient.
-    /// @param  newRecipient The new pim fee recipient.
-    event PimFeeRecipientUpdated(
-        address indexed fundingManager,
-        address indexed oldRecipient,
-        address indexed newRecipient
-    );
-
-    /// @notice Event emitted when PIM fee (buy/sell fees) is claimed.
-    /// @param fundingManager The address of the funding manager.
-    /// @param  claimer The address of the one that is claiming.
-    /// @param  to The address of that is receiving the fee.
-    /// @param  amount The amount claimed.
-    event PimFeeClaimed(
-        address indexed fundingManager,
-        address indexed claimer,
-        address indexed to,
-        uint amount
+        uint collateralTokenAmount,
+        uint stakingRewards
     );
 
     //--------------------------------------------------------------------------
