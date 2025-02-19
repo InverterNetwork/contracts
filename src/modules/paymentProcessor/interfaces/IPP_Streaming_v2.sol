@@ -2,15 +2,15 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
+interface IPP_Streaming_v2 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Structs
 
@@ -144,7 +144,7 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     // Functions
     /// @notice claim everything that the paymentClient owes to the `_msgSender` till the current timestamp.
     /// @dev	This function should be callable if the `_msgSender` is an `activePaymentReceiver`.
-    /// @param  client The {IERC20PaymentClientBase_v1} instance address that processes all claims from `_msgSender`.
+    /// @param  client The {IERC20PaymentClientBase_v2} instance address that processes all claims from `_msgSender`.
     function claimAll(address client) external;
 
     /// @notice claim the total amount up til block.timestamp from the client for a payment order with id = streamId
@@ -152,18 +152,18 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     /// @dev	If for a specific streamId, the tokens could not be transferred for some reason, it will added
     ///         to the unclaimableAmounts of the `paymentReceiver`, and the amount would no longer hold
     ///         any co-relation with he specific streamId of the `paymentReceiver`.
-    /// @param  client The {IERC20PaymentClientBase_v1} instance address that processes the `streamId` claim
+    /// @param  client The {IERC20PaymentClientBase_v2} instance address that processes the `streamId` claim
     ///               from `_msgSender`.
     /// @param  streamId The ID of the streaming payment order for which claim is being made.
     function claimForSpecificStream(address client, uint streamId) external;
 
     /// @notice Deletes all payments related to a paymentReceiver & leaves currently streaming tokens in the
-    ///         {IERC20PaymentClientBase_v1}.
+    ///         {IERC20PaymentClientBase_v2}.
     /// @dev	this function calls `_removePayment` which goes through all the payment orders for a `paymentReceiver`.
     ///         For the payment orders that are completely streamed, their details are deleted in the
     ///         `_claimForSpecificStrea` function and for others it is deleted in the `_removePayment` function only,
     ///         leaving the currently streaming tokens as balance of the paymentClient itself.
-    /// @param  client The {IERC20PaymentClientBase_v1} instance address from which we will remove the payments.
+    /// @param  client The {IERC20PaymentClientBase_v2} instance address from which we will remove the payments.
     /// @param  paymentReceiver PaymentReceiver's address.
     function removeAllPaymentReceiverPayments(
         address client,
@@ -171,10 +171,10 @@ interface IPP_Streaming_v1 is IPaymentProcessor_v1 {
     ) external;
 
     /// @notice Deletes a specific payment with id = streamId for a paymentReceiver & leaves currently streaming
-    ///         tokens in the {IERC20PaymentClientBase_v1}.
+    ///         tokens in the {IERC20PaymentClientBase_v2}.
     /// @dev	the detail of the wallet that is being removed is either deleted in the `_claimForSpecificStream`
     ///         or later down in this function itself depending on the timestamp of when this function was called.
-    /// @param  client The {IERC20PaymentClientBase_v1} instance address from which we will remove the payment.
+    /// @param  client The {IERC20PaymentClientBase_v2} instance address from which we will remove the payment.
     /// @param  paymentReceiver Address of the paymentReceiver whose payment order is to be removed.
     /// @param  streamId The ID of the paymentReceiver's payment order which is to be removed.
     function removePaymentForSpecificStream(

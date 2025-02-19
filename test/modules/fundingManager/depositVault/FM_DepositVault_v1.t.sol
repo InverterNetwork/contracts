@@ -10,8 +10,8 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
-import {ERC20PaymentClientBaseV1Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {FM_DepositVault_v1_Exposed} from
     "test/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
 
@@ -31,7 +31,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 contract FM_DepositVaultV1Test is ModuleTest {
     // SuT
     FM_DepositVault_v1_Exposed vault;
-    ERC20PaymentClientBaseV1Mock client;
+    ERC20PaymentClientBaseV2Mock client;
 
     uint internal constant BPS = 10_000;
 
@@ -44,7 +44,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         // Init Module
         vault.init(_orchestrator, _METADATA, abi.encode(address(_token)));
 
-        client = new ERC20PaymentClientBaseV1Mock();
+        client = new ERC20PaymentClientBaseV2Mock();
         _addLogicModuleToOrchestrator(address(client));
 
         vm.prank(address(governor));

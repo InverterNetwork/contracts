@@ -20,8 +20,8 @@ import {
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {ERC20PaymentClientBaseV1Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 

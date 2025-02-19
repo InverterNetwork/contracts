@@ -40,8 +40,8 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 // Mocks
 import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
     "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
-import {ERC20PaymentClientBaseV1Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 import {RedeemingBondingCurveBaseV1Test} from
     "test/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
@@ -72,7 +72,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     address formula;
 
     ERC20Issuance_v1 issuanceToken;
-    ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
+    ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock;
 
     address admin_address = address(0xA1BA);
     address non_admin_address = address(0xB0B);
@@ -1664,7 +1664,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         address to,
         uint amount
     ) public {
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(caller);
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
@@ -1696,7 +1696,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
 
         // Add logic module to workflow to pass modifier
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
         vm.startPrank(address(_erc20PaymentClientMock));
         {
@@ -1722,7 +1722,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(bondingCurveFundingManager)), amount);
 
         // Add logic module to workflow to pass modifier
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
         vm.startPrank(address(_erc20PaymentClientMock));
         {

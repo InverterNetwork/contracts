@@ -10,8 +10,8 @@ import {
 
 // SuT
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
-} from "@lm/LM_PC_Bounties_v1.sol";
+    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
+} from "@lm/LM_PC_Bounties_v2.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
@@ -93,16 +93,16 @@ contract BountyManagerE2E is E2ETest {
         FM_Rebasing_v1 fundingManager =
             FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        LM_PC_Bounties_v1 bountyManager;
+        LM_PC_Bounties_v2 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_Bounties_v1).interfaceId
+                    type(ILM_PC_Bounties_v2).interfaceId
                 )
             ) {
-                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
                 break;
             }
         }
@@ -146,18 +146,18 @@ contract BountyManagerE2E is E2ETest {
         );
 
         // Workers submit bounty
-        ILM_PC_Bounties_v1.Contributor memory contrib1 =
-            ILM_PC_Bounties_v1.Contributor(address(0xA11CE), 150e18);
-        ILM_PC_Bounties_v1.Contributor memory contrib2 =
-            ILM_PC_Bounties_v1.Contributor(address(0xb0b), 150e18);
+        ILM_PC_Bounties_v2.Contributor memory contrib1 =
+            ILM_PC_Bounties_v2.Contributor(address(0xA11CE), 150e18);
+        ILM_PC_Bounties_v2.Contributor memory contrib2 =
+            ILM_PC_Bounties_v2.Contributor(address(0xb0b), 150e18);
 
         // auth.setIsAuthorized(address(0xA11CE), true);
         bountyManager.grantModuleRole(
             bountyManager.CLAIMANT_ROLE(), address(0xA11CE)
         );
 
-        ILM_PC_Bounties_v1.Contributor[] memory contribs =
-            new ILM_PC_Bounties_v1.Contributor[](2);
+        ILM_PC_Bounties_v2.Contributor[] memory contribs =
+            new ILM_PC_Bounties_v2.Contributor[](2);
         contribs[0] = contrib1;
         contribs[1] = contrib2;
 

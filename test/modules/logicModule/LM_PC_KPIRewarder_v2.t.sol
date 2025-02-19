@@ -16,35 +16,35 @@ import {
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 
-import {IERC20PaymentClientBase_v1} from
-    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-    LM_PC_KPIRewarder_v1,
-    ILM_PC_KPIRewarder_v1,
+    LM_PC_KPIRewarder_v2,
+    ILM_PC_KPIRewarder_v2,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v1,
+    ILM_PC_Staking_v2,
     OptimisticOracleV3CallbackRecipientInterface
-} from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
+} from "src/modules/logicModule/LM_PC_KPIRewarder_v2.sol";
 
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
 } from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
 
-import {LM_PC_Staking_v1AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v1AccessMock.sol";
+import {LM_PC_Staking_v2AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v2AccessMock.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract LM_PC_KPIRewarder_v1Test is ModuleTest {
+contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     // SuT
-    LM_PC_KPIRewarder_v1 kpiManager;
+    LM_PC_KPIRewarder_v2 kpiManager;
 
     OptimisticOracleV3Mock ooV3;
 
@@ -122,8 +122,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
         feeTokenBond = ooV3.getMinimumBond(address(feeToken));
 
         // Add Module to Mock Orchestrator
-        address impl = address(new LM_PC_KPIRewarder_v1());
-        kpiManager = LM_PC_KPIRewarder_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_KPIRewarder_v2());
+        kpiManager = LM_PC_KPIRewarder_v2(Clones.clone(impl));
 
         _setUpOrchestrator(kpiManager);
 
@@ -152,8 +152,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     // Test: Initialization
 
     function testInit() public override(ModuleTest) {
-        address impl = address(new LM_PC_KPIRewarder_v1());
-        kpiManager = LM_PC_KPIRewarder_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_KPIRewarder_v2());
+        kpiManager = LM_PC_KPIRewarder_v2(Clones.clone(impl));
 
         _setUpOrchestrator(kpiManager);
 
@@ -167,8 +167,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
 
         // Test invalid staking token
         vm.expectRevert(
-            ILM_PC_Staking_v1
-                .Module__LM_PC_Staking_v1__InvalidStakingToken
+            ILM_PC_Staking_v2
+                .Module__LM_PC_Staking_v2__InvalidStakingToken
                 .selector
         );
         kpiManager.init(
@@ -234,8 +234,8 @@ contract LM_PC_KPIRewarder_v1Test is ModuleTest {
     }
 
     function test_InterfaceInheritanceTree() public view {
-        kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v1).interfaceId);
-        kpiManager.supportsInterface(type(ILM_PC_Staking_v1).interfaceId);
+        kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v2).interfaceId);
+        kpiManager.supportsInterface(type(ILM_PC_Staking_v2).interfaceId);
         kpiManager.supportsInterface(
             type(IOptimisticOracleIntegrator).interfaceId
         );
@@ -399,13 +399,13 @@ postAssertionTest
     └── it should return a correct assertionId
 */
 
-contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
+contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
     function test_RevertWhen_TheBondConfigurationIsInvalid() external {
         // Since the setup has a correct KPI MAnager, we create a new one with stakingToken == FeeToken
 
-        address impl = address(new LM_PC_KPIRewarder_v1());
-        LM_PC_KPIRewarder_v1 alt_kpiManager =
-            LM_PC_KPIRewarder_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_KPIRewarder_v2());
+        LM_PC_KPIRewarder_v2 alt_kpiManager =
+            LM_PC_KPIRewarder_v2(Clones.clone(impl));
 
         bytes memory configData = abi.encode(
             address(feeToken),
@@ -420,8 +420,8 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         // it should revert
 
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__ModuleCannotUseStakingTokenAsBond
                 .selector
         );
         alt_kpiManager.postAssertion(
@@ -432,8 +432,8 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
     function test_RevertWhen_ThereAreNoKPIs() external {
         // it should revert
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__InvalidKPINumber
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__InvalidKPINumber
                 .selector
         );
         kpiManager.postAssertion(
@@ -446,8 +446,8 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
 
         // it should revert
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__InvalidKPINumber
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__InvalidKPINumber
                 .selector
         );
         kpiManager.postAssertion(
@@ -494,8 +494,8 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
 
         // Posting another assertion should now fail
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__UnresolvedAssertionExists
                 .selector
         );
         vm.prank(address(MOCK_ASSERTER_ADDRESS));
@@ -561,7 +561,7 @@ contract LM_PC_KPIRewarder_v1_postAssertionTest is LM_PC_KPIRewarder_v1Test {
         // check mock for stored data
         IOptimisticOracleIntegrator.DataAssertion memory assertion =
             kpiManager.getAssertion(assertionId);
-        ILM_PC_KPIRewarder_v1.RewardRoundConfiguration memory rewardRoundConfig =
+        ILM_PC_KPIRewarder_v2.RewardRoundConfiguration memory rewardRoundConfig =
             kpiManager.getAssertionConfig(assertionId);
 
         assertEq(assertion.dataId, MOCK_ASSERTION_DATA_ID);
@@ -631,7 +631,7 @@ createKPITest
 
 */
 
-contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
+contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
     function test_RevertWhen_TheNumberOfTranchesIs0() external {
         // it should revert
 
@@ -639,8 +639,8 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         uint[] memory trancheRewards;
 
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__InvalidTrancheNumber
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber
                 .selector
         );
         kpiManager.createKPI(true, trancheValues, trancheRewards);
@@ -654,8 +654,8 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         vm.assume(trancheValues.length >= 21);
 
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__InvalidTrancheNumber
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber
                 .selector
         );
         kpiManager.createKPI(true, trancheValues, trancheRewards);
@@ -673,8 +673,8 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
 
         if (rewardLength != valueLength) {
             vm.expectRevert(
-                ILM_PC_KPIRewarder_v1
-                    .Module__LM_PC_KPIRewarder_v1__InvalidKPIValueLengths
+                ILM_PC_KPIRewarder_v2
+                    .Module__LM_PC_KPIRewarder_v2__InvalidKPIValueLengths
                     .selector
             );
             kpiManager.createKPI(
@@ -708,8 +708,8 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         // Guarantee wrong value in the last tranche.
         valuesCapped[length - 1] = valuesCapped[length - 2] / 2;
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__InvalidKPITrancheValues
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__InvalidKPITrancheValues
                 .selector
         );
         kpiManager.createKPI(true, valuesCapped, rewardsCapped);
@@ -751,7 +751,7 @@ contract LM_PC_KPIRewarder_v1_createKPITest is LM_PC_KPIRewarder_v1Test {
         uint kpiNum =
             kpiManager.createKPI(continuous, trancheValues, trancheRewards);
 
-        ILM_PC_KPIRewarder_v1.KPI memory generatedKPI =
+        ILM_PC_KPIRewarder_v2.KPI memory generatedKPI =
             kpiManager.getKPI(kpiNum);
 
         assertEq(generatedKPI.trancheValues.length, numOfTranches);
@@ -777,7 +777,7 @@ stakeTest
     ├── it should take the funds from the user
     └── it should stake the funds
 */
-contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
+contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
     function test_RevertWhen_TheStakedAmountIs0() external {
         // it should revert
 
@@ -785,7 +785,7 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
         vm.startPrank(USER_1);
         stakingToken.approve(address(kpiManager), 1000e18);
         vm.expectRevert(
-            IERC20PaymentClientBase_v1
+            IERC20PaymentClientBase_v2
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -840,8 +840,8 @@ contract LM_PC_KPIRewarder_v1_stakeTest is LM_PC_KPIRewarder_v1Test {
         vm.startPrank(USER_1);
         stakingToken.approve(address(kpiManager), stakeAmount);
         vm.expectRevert(
-            ILM_PC_KPIRewarder_v1
-                .Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending
+            ILM_PC_KPIRewarder_v2
+                .Module__LM_PC_KPIRewarder_v2__CannotStakeWhenAssertionPending
                 .selector
         );
         kpiManager.stake(stakeAmount);
@@ -901,8 +901,8 @@ assertionresolvedCallbackTest
     └── it should emit an event
 */
 
-contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
-    LM_PC_KPIRewarder_v1Test
+contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
+    LM_PC_KPIRewarder_v2Test
 {
     function test_WhenTheAssertionResolvedToFalse(
         address[] memory users,
@@ -1194,8 +1194,8 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         vm.prank(address(ooV3));
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v1
-                    .Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId
+                ILM_PC_KPIRewarder_v2
+                    .Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId
                     .selector,
                 fake_ID
             )
@@ -1225,8 +1225,8 @@ contract LM_PC_KPIRewarder_v1_assertionresolvedCallbackTest is
         └── It should emit an event
     */
 
-contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
-    LM_PC_KPIRewarder_v1Test
+contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
+    LM_PC_KPIRewarder_v2Test
 {
     function test_RevertWhen_TheAssertionIsntStoredLocally(bytes32 assertionId)
         external
@@ -1235,8 +1235,8 @@ contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v1
-                    .Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId
+                ILM_PC_KPIRewarder_v2
+                    .Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId
                     .selector,
                 assertionId
             )
@@ -1266,8 +1266,8 @@ contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v1
-                    .Module__LM_PC_KPIRewarder_v1__AssertionNotStuck
+                ILM_PC_KPIRewarder_v2
+                    .Module__LM_PC_KPIRewarder_v2__AssertionNotStuck
                     .selector,
                 createdID
             )
@@ -1297,8 +1297,8 @@ contract LM_PC_KPIRewarder_v1_deleteStuckAssertionTest is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_KPIRewarder_v1
-                    .Module__LM_PC_KPIRewarder_v1__AssertionNotStuck
+                ILM_PC_KPIRewarder_v2
+                    .Module__LM_PC_KPIRewarder_v2__AssertionNotStuck
                     .selector,
                 createdID
             )

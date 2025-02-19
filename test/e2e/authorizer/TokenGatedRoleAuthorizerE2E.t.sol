@@ -14,8 +14,8 @@ import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 
 // Modules that are used in this E2E test
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
-} from "@lm/LM_PC_Bounties_v1.sol";
+    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
+} from "@lm/LM_PC_Bounties_v2.sol";
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 
 contract TokenGatedRoleAuthorizerE2E is E2ETest {
@@ -93,14 +93,14 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         FM_Rebasing_v1 fundingManager =
             FM_Rebasing_v1(address(orchestrator.fundingManager()));
 
-        // Find LM_PC_Bounties_v1
-        LM_PC_Bounties_v1 bountyManager;
+        // Find LM_PC_Bounties_v2
+        LM_PC_Bounties_v2 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -188,7 +188,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         bountyManager.addBounty(100e18, 500e18, "This is a test bounty");
 
         // Validate
-        ILM_PC_Bounties_v1.Bounty memory bounty =
+        ILM_PC_Bounties_v2.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, 100e18);
         assertEq(bounty.maximumPayoutAmount, 500e18);
@@ -198,11 +198,11 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         // Worker submits bounty
         //--------------------------------------------------------------------------
         vm.startPrank(bountySubmitter);
-        ILM_PC_Bounties_v1.Contributor memory BOB =
-            ILM_PC_Bounties_v1.Contributor(bountySubmitter, 200e18);
+        ILM_PC_Bounties_v2.Contributor memory BOB =
+            ILM_PC_Bounties_v2.Contributor(bountySubmitter, 200e18);
 
-        ILM_PC_Bounties_v1.Contributor[] memory contribs =
-            new ILM_PC_Bounties_v1.Contributor[](1);
+        ILM_PC_Bounties_v2.Contributor[] memory contribs =
+            new ILM_PC_Bounties_v2.Contributor[](1);
         contribs[0] = BOB;
 
         uint claimId = bountyManager.addClaim(

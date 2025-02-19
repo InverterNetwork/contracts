@@ -18,12 +18,12 @@ import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
-import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
-import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
-import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
-import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
-import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
-import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
+import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+import {LM_PC_Bounties_v2} from "@lm/LM_PC_Bounties_v2.sol";
+import {LM_PC_RecurringPayments_v2} from "@lm/LM_PC_RecurringPayments_v2.sol";
+import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
+import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
+import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v1} from
@@ -322,9 +322,9 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // PP_Streaming_v1
+    // PP_Streaming_v2
 
-    PP_Streaming_v1 streamingPaymentProcessorImpl;
+    PP_Streaming_v2 streamingPaymentProcessorImpl;
 
     InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
@@ -333,7 +333,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/streaming-payment-processor",
-        "PP_Streaming_v1"
+        "PP_Streaming_v2"
     );
 
     /*
@@ -346,7 +346,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpStreamingPaymentProcessor() internal {
         // Deploy module implementations.
-        streamingPaymentProcessorImpl = new PP_Streaming_v1();
+        streamingPaymentProcessorImpl = new PP_Streaming_v2();
 
         // Deploy module beacons.
         streamingPaymentProcessorBeacon = new InverterBeacon_v1(
@@ -369,9 +369,9 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // logicModules
 
-    // LM_PC_RecurringPayments_v1
+    // LM_PC_RecurringPayments_v2
 
-    LM_PC_RecurringPayments_v1 recurringPaymentManagerImpl;
+    LM_PC_RecurringPayments_v2 recurringPaymentManagerImpl;
 
     InverterBeacon_v1 recurringPaymentManagerBeacon;
 
@@ -380,7 +380,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/recurring-payment-manager",
-        "LM_PC_RecurringPayments_v1"
+        "LM_PC_RecurringPayments_v2"
     );
     /*
     IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
@@ -392,7 +392,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpRecurringPaymentManager() internal {
         // Deploy module implementations.
-        recurringPaymentManagerImpl = new LM_PC_RecurringPayments_v1();
+        recurringPaymentManagerImpl = new LM_PC_RecurringPayments_v2();
 
         // Deploy module beacons.
         recurringPaymentManagerBeacon = new InverterBeacon_v1(
@@ -412,9 +412,9 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // LM_PC_Bounties_v1
+    // LM_PC_Bounties_v2
 
-    LM_PC_Bounties_v1 bountyManagerImpl;
+    LM_PC_Bounties_v2 bountyManagerImpl;
 
     InverterBeacon_v1 bountyManagerBeacon;
 
@@ -423,7 +423,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/inverter/bounty-manager",
-        "LM_PC_Bounties_v1"
+        "LM_PC_Bounties_v2"
     );
     /*
      IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
@@ -436,7 +436,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpBountyManager() internal {
         // Deploy module implementations.
-        bountyManagerImpl = new LM_PC_Bounties_v1();
+        bountyManagerImpl = new LM_PC_Bounties_v2();
 
         // Deploy module beacons.
         bountyManagerBeacon = new InverterBeacon_v1(
@@ -455,8 +455,8 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // LM_PC_PaymentRouter_v1
-    LM_PC_PaymentRouter_v1 paymentRouterImpl;
+    // LM_PC_PaymentRouter_v2
+    LM_PC_PaymentRouter_v2 paymentRouterImpl;
 
     InverterBeacon_v1 paymentRouterBeacon;
 
@@ -465,7 +465,7 @@ contract E2EModuleRegistry is Test {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_PaymentRouter_v1"
+        "LM_PC_PaymentRouter_v2"
     );
 
     /*
@@ -479,7 +479,7 @@ contract E2EModuleRegistry is Test {
 
     function setUpPaymentRouter() internal {
         // Deploy module implementations.
-        paymentRouterImpl = new LM_PC_PaymentRouter_v1();
+        paymentRouterImpl = new LM_PC_PaymentRouter_v2();
 
         // Deploy module beacons.
         paymentRouterBeacon = new InverterBeacon_v1(
@@ -498,90 +498,90 @@ contract E2EModuleRegistry is Test {
         );
     }
 
-    // LM_PC_Staking_v1
+    // LM_PC_Staking_v2
 
-    LM_PC_Staking_v1 LM_PC_Staking_v1Impl;
+    LM_PC_Staking_v2 LM_PC_Staking_v2Impl;
 
-    InverterBeacon_v1 LM_PC_Staking_v1Beacon;
+    InverterBeacon_v1 LM_PC_Staking_v2Beacon;
 
-    IModule_v1.Metadata LM_PC_Staking_v1Metadata = IModule_v1.Metadata(
+    IModule_v1.Metadata LM_PC_Staking_v2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
         "https://github.com/inverter/staking-manager",
-        "LM_PC_Staking_v1"
+        "LM_PC_Staking_v2"
     );
 
     /*
-     IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v1FactoryConfig =
+     IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v2FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        LM_PC_Staking_v1Metadata,
+        LM_PC_Staking_v2Metadata,
         bytes(address(stakingToken))  
     ); 
     */
 
-    function setUpLM_PC_Staking_v1() internal {
+    function setUpLM_PC_Staking_v2() internal {
         // Deploy module implementations.
-        LM_PC_Staking_v1Impl = new LM_PC_Staking_v1();
+        LM_PC_Staking_v2Impl = new LM_PC_Staking_v2();
 
         // Deploy module beacons.
-        LM_PC_Staking_v1Beacon = new InverterBeacon_v1(
+        LM_PC_Staking_v2Beacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
-            LM_PC_Staking_v1Metadata.majorVersion,
-            address(LM_PC_Staking_v1Impl),
-            LM_PC_Staking_v1Metadata.minorVersion,
-            LM_PC_Staking_v1Metadata.patchVersion
+            LM_PC_Staking_v2Metadata.majorVersion,
+            address(LM_PC_Staking_v2Impl),
+            LM_PC_Staking_v2Metadata.minorVersion,
+            LM_PC_Staking_v2Metadata.patchVersion
         );
 
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            LM_PC_Staking_v1Metadata, IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
+            LM_PC_Staking_v2Metadata, IInverterBeacon_v1(LM_PC_Staking_v2Beacon)
         );
     }
 
-    // LM_PC_KPIRewarder_v1
+    // LM_PC_KPIRewarder_v2
 
-    LM_PC_KPIRewarder_v1 LM_PC_KPIRewarder_v1Impl;
+    LM_PC_KPIRewarder_v2 LM_PC_KPIRewarder_v2Impl;
 
-    InverterBeacon_v1 LM_PC_KPIRewarder_v1Beacon;
+    InverterBeacon_v1 LM_PC_KPIRewarder_v2Beacon;
 
-    IModule_v1.Metadata LM_PC_KPIRewarder_v1Metadata = IModule_v1.Metadata(
+    IModule_v1.Metadata LM_PC_KPIRewarder_v2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
         "https://github.com/inverter/KPI-Rewarder",
-        "LM_PC_KPIRewarder_v1"
+        "LM_PC_KPIRewarder_v2"
     );
 
     /*
-     IOrchestratorFactory_v1.ModuleConfig LM_PC_KPIRewarder_v1FactoryConfig =
+     IOrchestratorFactory_v1.ModuleConfig LM_PC_KPIRewarder_v2FactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
-        LM_PC_KPIRewarder_v1Metadata,
+        LM_PC_KPIRewarder_v2Metadata,
         abi.encode(address(stakingToken), address(oracleBondToken), address(OptimisticOracleV3Address), uint64(assertionLiveness) )  
     ); 
     */
 
-    function setUpLM_PC_KPIRewarder_v1() internal {
+    function setUpLM_PC_KPIRewarder_v2() internal {
         // Deploy module implementations.
-        LM_PC_KPIRewarder_v1Impl = new LM_PC_KPIRewarder_v1();
+        LM_PC_KPIRewarder_v2Impl = new LM_PC_KPIRewarder_v2();
 
         // Deploy module beacons.
-        LM_PC_KPIRewarder_v1Beacon = new InverterBeacon_v1(
+        LM_PC_KPIRewarder_v2Beacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
-            LM_PC_KPIRewarder_v1Metadata.majorVersion,
-            address(LM_PC_KPIRewarder_v1Impl),
-            LM_PC_KPIRewarder_v1Metadata.minorVersion,
-            LM_PC_KPIRewarder_v1Metadata.patchVersion
+            LM_PC_KPIRewarder_v2Metadata.majorVersion,
+            address(LM_PC_KPIRewarder_v2Impl),
+            LM_PC_KPIRewarder_v2Metadata.minorVersion,
+            LM_PC_KPIRewarder_v2Metadata.patchVersion
         );
 
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            LM_PC_KPIRewarder_v1Metadata,
-            IInverterBeacon_v1(LM_PC_KPIRewarder_v1Beacon)
+            LM_PC_KPIRewarder_v2Metadata,
+            IInverterBeacon_v1(LM_PC_KPIRewarder_v2Beacon)
         );
     }
 

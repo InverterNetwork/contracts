@@ -16,10 +16,10 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {PP_Template_v1_Exposed} from
     "src/templates/tests/unit/PP_Template_v1_Exposed.sol";
 import {
-    IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock,
+    IERC20PaymentClientBase_v2,
+    ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
 import {
@@ -58,7 +58,7 @@ contract PP_Template_v1_Test is ModuleTest {
     // System under test (SuT)
     PP_Template_v1_Exposed paymentProcessor;
     // Mocks
-    ERC20PaymentClientBaseV1Mock paymentClient;
+    ERC20PaymentClientBaseV2Mock paymentClient;
 
     //--------------------------------------------------------------------------
     // Setup
@@ -81,8 +81,8 @@ contract PP_Template_v1_Test is ModuleTest {
 
         // Setup other modules needed in the unit tests.
         // In this case a payment client is needed to test the PP_Template_v1.
-        impl = address(new ERC20PaymentClientBaseV1Mock());
-        paymentClient = ERC20PaymentClientBaseV1Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBaseV2Mock());
+        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
         // Adding the payment client is done through a timelock mechanism
         _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -134,8 +134,8 @@ contract PP_Template_v1_Test is ModuleTest {
                 └── Then it should revert
     */
     function testProcessPayments_modifierInPlace() public {
-        ERC20PaymentClientBaseV1Mock nonRegisteredClient =
-            new ERC20PaymentClientBaseV1Mock();
+        ERC20PaymentClientBaseV2Mock nonRegisteredClient =
+            new ERC20PaymentClientBaseV2Mock();
 
         vm.expectRevert(
             IPP_Template_v1.Module__PP_Template__ClientNotValid.selector

@@ -182,7 +182,7 @@ contract ModuleBeaconDeployer_v1 is
                     bountiesMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Bounties_v1,
+                    impl_mod_LM_PC_Bounties_v2,
                     bountiesMetadata.majorVersion,
                     bountiesMetadata.minorVersion,
                     bountiesMetadata.patchVersion
@@ -198,7 +198,7 @@ contract ModuleBeaconDeployer_v1 is
                     kpiRewarderMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_KPIRewarder_v1,
+                    impl_mod_LM_PC_KPIRewarder_v2,
                     kpiRewarderMetadata.majorVersion,
                     kpiRewarderMetadata.minorVersion,
                     kpiRewarderMetadata.patchVersion
@@ -214,7 +214,7 @@ contract ModuleBeaconDeployer_v1 is
                     paymentRouterMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_PaymentRouter_v1,
+                    impl_mod_LM_PC_PaymentRouter_v2,
                     paymentRouterMetadata.majorVersion,
                     paymentRouterMetadata.minorVersion,
                     paymentRouterMetadata.patchVersion
@@ -230,7 +230,7 @@ contract ModuleBeaconDeployer_v1 is
                     recurringPaymentsMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_RecurringPayments_v1,
+                    impl_mod_LM_PC_RecurringPayments_v2,
                     recurringPaymentsMetadata.majorVersion,
                     recurringPaymentsMetadata.minorVersion,
                     recurringPaymentsMetadata.patchVersion
@@ -246,7 +246,7 @@ contract ModuleBeaconDeployer_v1 is
                     stakingMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Staking_v1,
+                    impl_mod_LM_PC_Staking_v2,
                     stakingMetadata.majorVersion,
                     stakingMetadata.minorVersion,
                     stakingMetadata.patchVersion
@@ -281,7 +281,7 @@ contract ModuleBeaconDeployer_v1 is
                     streamingPaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_PP_Streaming_v1,
+                    impl_mod_PP_Streaming_v2,
                     streamingPaymentProcessorMetadata.majorVersion,
                     streamingPaymentProcessorMetadata.minorVersion,
                     streamingPaymentProcessorMetadata.patchVersion

@@ -11,13 +11,13 @@ import {
 import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 // SuT
 import {
-    LM_PC_RecurringPayments_v1,
-    ILM_PC_RecurringPayments_v1
-} from "@lm/LM_PC_RecurringPayments_v1.sol";
+    LM_PC_RecurringPayments_v2,
+    ILM_PC_RecurringPayments_v2
+} from "@lm/LM_PC_RecurringPayments_v2.sol";
 
-import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
+import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 
-import {IPP_Streaming_v1} from "@pp/interfaces/IPP_Streaming_v1.sol";
+import {IPP_Streaming_v2} from "@pp/interfaces/IPP_Streaming_v2.sol";
 
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
@@ -47,8 +47,8 @@ contract StreamingPaymentProcessorE2E is E2ETest {
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
     FM_Rebasing_v1 fundingManager;
-    LM_PC_RecurringPayments_v1 recurringPaymentManager;
-    PP_Streaming_v1 streamingPaymentProcessor;
+    LM_PC_RecurringPayments_v2 recurringPaymentManager;
+    PP_Streaming_v2 streamingPaymentProcessor;
 
     function setUp() public override {
         // Setup common E2E framework
@@ -115,11 +115,11 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_RecurringPayments_v1).interfaceId
+                    type(ILM_PC_RecurringPayments_v2).interfaceId
                 )
             ) {
                 recurringPaymentManager =
-                    LM_PC_RecurringPayments_v1(modulesList[i]);
+                    LM_PC_RecurringPayments_v2(modulesList[i]);
                 break;
             }
         }
@@ -130,10 +130,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(IPP_Streaming_v1).interfaceId
+                    type(IPP_Streaming_v2).interfaceId
                 )
             ) {
-                streamingPaymentProcessor = PP_Streaming_v1(modulesList[i]);
+                streamingPaymentProcessor = PP_Streaming_v2(modulesList[i]);
                 break;
             }
         }
@@ -152,7 +152,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         init();
 
         // ---------------------------------------------------------------------------------------------------
-        // User side of the PP_Streaming_v1
+        // User side of the PP_Streaming_v2
 
         // Create 3 different Payments
 
@@ -176,7 +176,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         // Check Payments
         // viewAllPaymentOrders
         // Lets see all avaialable orders
-        IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 
@@ -291,7 +291,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         recurringPaymentManager.trigger();
 
         // Check if everyone has a running payment active
-        IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(address(recurringPaymentManager), alice);
         assertTrue(streams.length == 3);
 

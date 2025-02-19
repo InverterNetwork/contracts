@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Template_v1} from "./IPP_Template_v1.sol";
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 
@@ -123,17 +123,17 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
     // Public (Mutating)
 
     /// @inheritdoc IPaymentProcessor_v1
-    function processPayments(IERC20PaymentClientBase_v1 client_)
+    function processPayments(IERC20PaymentClientBase_v2 client_)
         external
         clientIsValid(address(client_))
     {
-        // The IERC20PaymentClientBase_v1 client should be used to access
+        // The IERC20PaymentClientBase_v2 client should be used to access
         // created payment orders in the Logic Module (LM) implementing the
         // interface. The interface should be referenced to see the different
-        // functionalities provided by the ERC20PaymentClientBase_v1.
+        // functionalities provided by the ERC20PaymentClientBase_v2.
 
         // Collect orders from the client
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
         (orders,,) = client_.collectPaymentOrders();
 
         // Custom logic to proces the payment orders should be implemented
@@ -159,7 +159,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
             new bytes32[](0)
         );
 
-        // Transfer tokens from {IERC20PaymentClientBase_v1} to order
+        // Transfer tokens from {IERC20PaymentClientBase_v2} to order
         // recipients.
         // Please note: When processing multiple payment orders and then
         // letting the call revert as in this example might not be the best
@@ -178,7 +178,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
     }
 
     /// @inheritdoc IPaymentProcessor_v1
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client_)
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
         external
         view
         clientIsValid(address(client_))
@@ -213,7 +213,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
 
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order_
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external view returns (bool) {
         // This function is used to validate the payment order created on the
         // client side (LM_PC) with the input required by the Payment Processor

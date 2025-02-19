@@ -5,17 +5,17 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {ILM_PC_Bounties_v1} from "@lm/interfaces/ILM_PC_Bounties_v1.sol";
+import {ILM_PC_Bounties_v2} from "@lm/interfaces/ILM_PC_Bounties_v2.sol";
 import {
-    IERC20PaymentClientBase_v1,
+    IERC20PaymentClientBase_v2,
     IPaymentProcessor_v1
-} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // Internal Dependencies
 import {
-    ERC20PaymentClientBase_v1,
+    ERC20PaymentClientBase_v2,
     Module_v1
-} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // External Dependencies
 import {ERC165Upgradeable} from
@@ -34,7 +34,7 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
  *          allowing participants to propose, update, and claim bounties securely
  *          and transparently.
  *
- * @dev     Extends {ERC20PaymentClientBase_v1} to integrate payment processing with
+ * @dev     Extends {ERC20PaymentClientBase_v2} to integrate payment processing with
  *          bounty management, supporting dynamic additions, updates, and the locking
  *          of bounties. Utilizes roles for managing permissions and maintaining robust
  *          control over bounty operations.
@@ -45,16 +45,16 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
  *
  * @author  Inverter Network
  */
-contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
+contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v1)
+        override(ERC20PaymentClientBase_v2)
         returns (bool)
     {
-        return interfaceId == type(ILM_PC_Bounties_v1).interfaceId
+        return interfaceId == type(ILM_PC_Bounties_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -276,7 +276,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
         // This module does not use any PaymentOrder flags.
-        __ERC20PaymentClientBase_v1_init(new uint8[](0));
+        __ERC20PaymentClientBase_v2_init(bytes32(0));
         // init empty list of bounties and claims
         _bountyList.init();
         _claimList.init();
@@ -285,7 +285,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function getBountyInformation(uint bountyId)
         external
         view
@@ -295,17 +295,17 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         return _bountyRegistry[bountyId];
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function listBountyIds() external view returns (uint[] memory) {
         return _bountyList.listIds();
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function isExistingBountyId(uint bountyId) public view returns (bool) {
         return _bountyList.isExistingId(bountyId);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function getClaimInformation(uint claimId)
         external
         view
@@ -315,17 +315,17 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         return _claimRegistry[claimId];
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function listClaimIds() external view returns (uint[] memory) {
         return _claimList.listIds();
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function isExistingClaimId(uint claimId) public view returns (bool) {
         return _claimList.isExistingId(claimId);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function listClaimIdsForContributorAddress(address contributorAddrs)
         external
         view
@@ -337,7 +337,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function addBounty(
         uint minimumPayoutAmount,
         uint maximumPayoutAmount,
@@ -351,7 +351,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         return _addBounty(minimumPayoutAmount, maximumPayoutAmount, details);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function addBountyBatch(
         uint[] calldata minimumPayoutAmounts,
         uint[] calldata maximumPayoutAmounts,
@@ -381,7 +381,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         }
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function updateBounty(uint bountyId, bytes calldata details)
         external
         onlyModuleRole(BOUNTY_ISSUER_ROLE)
@@ -393,7 +393,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         emit BountyUpdated(bountyId, details);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function lockBounty(uint bountyId)
         external
         onlyModuleRole(BOUNTY_ISSUER_ROLE)
@@ -405,7 +405,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         emit BountyLocked(bountyId);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function addClaim(
         uint bountyId,
         Contributor[] calldata contributors,
@@ -446,7 +446,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         return claimId;
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function updateClaimContributors(
         uint claimId,
         Contributor[] calldata contributors
@@ -487,7 +487,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         emit ClaimContributorsUpdated(claimId, contributors);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
         validClaimId(claimId)
@@ -500,7 +500,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
         emit ClaimDetailsUpdated(claimId, details);
     }
 
-    /// @inheritdoc ILM_PC_Bounties_v1
+    /// @inheritdoc ILM_PC_Bounties_v2
     function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
         onlyModuleRole(VERIFIER_ROLE)
@@ -542,7 +542,7 @@ contract LM_PC_Bounties_v1 is ILM_PC_Bounties_v1, ERC20PaymentClientBase_v1 {
 
         // when done process the Payments correctly
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v1(address(this))
+            IERC20PaymentClientBase_v2(address(this))
         );
 
         // Set completed to true

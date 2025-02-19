@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ILM_PC_PaymentRouter_v1 {
+interface ILM_PC_PaymentRouter_v2 {
     // -----------------------------------------------------------------------------
     // Errors
 
     /// @notice Given arrays' length mismatch.
-    error Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch();
+    error Module__LM_PC_PaymentRouter_v2__ArrayLengthMismatch();
 
     //--------------------------------------------------------------------------
     // Mutating Functions

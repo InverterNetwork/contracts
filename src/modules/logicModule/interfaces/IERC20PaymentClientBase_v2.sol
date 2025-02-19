@@ -35,7 +35,7 @@ import {IPaymentProcessor_v1} from
  *
  * @author  Inverter Network
  */
-interface IERC20PaymentClientBase_v1 {
+interface IERC20PaymentClientBase_v2 {
     //-------------------------------------------------------------------------
     // MASTER LIST OF PAYMENT ORDER FLAGS
 
@@ -105,7 +105,7 @@ interface IERC20PaymentClientBase_v1 {
     );
 
     /// @notice Given number of flags exceeds the limit.
-    error Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
+    error Module__ERC20PaymentClientBase_v2__FlagAmountTooHigh();
 
     //--------------------------------------------------------------------------
     // Events
