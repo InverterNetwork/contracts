@@ -21,8 +21,8 @@ import {IPaymentProcessor_v1} from
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {
-    ILM_PC_Bounties_v1, LM_PC_Bounties_v1
-} from "@lm/LM_PC_Bounties_v1.sol";
+    ILM_PC_Bounties_v2, LM_PC_Bounties_v2
+} from "@lm/LM_PC_Bounties_v2.sol";
 
 // Beacon
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
@@ -70,7 +70,7 @@ contract OrchestratorE2E is E2ETest {
             )
         );
 
-        // We also set up the LM_PC_Bounties_v1, even though we'll add it later
+        // We also set up the LM_PC_Bounties_v2, even though we'll add it later
         setUpBountyManager();
     }
 

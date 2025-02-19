@@ -18,13 +18,13 @@ import {
 } from "test/modules/ModuleTest.sol";
 
 // SuT
-import {ILM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
-import {LM_PC_PaymentRouter_v1AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_PaymentRouter_v1AccessMock.sol";
+import {ILM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
+import {LM_PC_PaymentRouter_v2AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_PaymentRouter_v2AccessMock.sol";
 import {
-    IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBase_v1
-} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+    IERC20PaymentClientBase_v2,
+    ERC20PaymentClientBase_v2
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
 import {OrchestratorV1Mock} from
@@ -40,9 +40,9 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
+contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
     // SuT
-    LM_PC_PaymentRouter_v1AccessMock paymentRouter;
+    LM_PC_PaymentRouter_v2AccessMock paymentRouter;
 
     address paymentPusher_user = makeAddr("paymentPusher_user");
 
@@ -67,8 +67,8 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_PaymentRouter_v1AccessMock());
-        paymentRouter = LM_PC_PaymentRouter_v1AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_PaymentRouter_v2AccessMock());
+        paymentRouter = LM_PC_PaymentRouter_v2AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentRouter);
 
@@ -125,8 +125,8 @@ contract LM_PC_PaymentRouter_v1_Test is ModuleTest {
             ├── It should call processPayments
             └── It should emit an event
     */
-contract LM_PC_PaymentRouter_v1_Test_pushPayment is
-    LM_PC_PaymentRouter_v1_Test
+contract LM_PC_PaymentRouter_v2_Test_pushPayment is
+    LM_PC_PaymentRouter_v2_Test
 {
     function test_WhenTheCallerDoesntHaveThePAYMENT_PUSHER_ROLE(address caller)
         external
@@ -165,8 +165,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPayment is
             ├── It should call processPayments
             └── It should emit an event for each Payment Order
     */
-contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
-    LM_PC_PaymentRouter_v1_Test
+contract LM_PC_PaymentRouter_v2_Test_pushPaymentBatched is
+    LM_PC_PaymentRouter_v2_Test
 {
     uint8 numOfOrders = 2;
     address[] recipients = new address[](2);
@@ -227,8 +227,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_PaymentRouter_v1
-                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v2
+                    .Module__LM_PC_PaymentRouter_v2__ArrayLengthMismatch
                     .selector
             )
         );
@@ -238,8 +238,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_PaymentRouter_v1
-                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v2
+                    .Module__LM_PC_PaymentRouter_v2__ArrayLengthMismatch
                     .selector
             )
         );
@@ -255,8 +255,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_PaymentRouter_v1
-                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v2
+                    .Module__LM_PC_PaymentRouter_v2__ArrayLengthMismatch
                     .selector
             )
         );
@@ -266,8 +266,8 @@ contract LM_PC_PaymentRouter_v1_Test_pushPaymentBatched is
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_PaymentRouter_v1
-                    .Module__LM_PC_PaymentRouter_v1__ArrayLengthMismatch
+                ILM_PC_PaymentRouter_v2
+                    .Module__LM_PC_PaymentRouter_v2__ArrayLengthMismatch
                     .selector
             )
         );

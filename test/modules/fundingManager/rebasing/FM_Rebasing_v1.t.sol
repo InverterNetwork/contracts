@@ -27,8 +27,8 @@ import {
     FM_Rebasing_v1, IFundingManager_v1
 } from "@fm/rebasing/FM_Rebasing_v1.sol";
 
-import {ERC20PaymentClientBaseV1Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 contract FM_RebasingV1Test is ModuleTest {
     struct UserDeposits {
@@ -38,7 +38,7 @@ contract FM_RebasingV1Test is ModuleTest {
 
     // SuT
     FM_Rebasing_v1 fundingManager;
-    ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock;
+    ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock;
 
     mapping(address => bool) _usersCache;
 
@@ -446,7 +446,7 @@ contract FM_RebasingV1Test is ModuleTest {
         address to,
         uint amount
     ) public {
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(address(_erc20PaymentClientMock));
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
@@ -465,7 +465,7 @@ contract FM_RebasingV1Test is ModuleTest {
         assertEq(_token.balanceOf(address(fundingManager)), amount);
 
         // Add logic module to workflow to pass modifier
-        _erc20PaymentClientMock = new ERC20PaymentClientBaseV1Mock();
+        _erc20PaymentClientMock = new ERC20PaymentClientBaseV2Mock();
         _addLogicModuleToOrchestrator(address(_erc20PaymentClientMock));
         vm.startPrank(address(_erc20PaymentClientMock));
         {

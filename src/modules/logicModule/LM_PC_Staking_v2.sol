@@ -5,16 +5,16 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
-    IERC20PaymentClientBase_v1,
+    IERC20PaymentClientBase_v2,
     IPaymentProcessor_v1
-} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
-import {ILM_PC_Staking_v1} from "@lm/interfaces/ILM_PC_Staking_v1.sol";
+} from "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {ILM_PC_Staking_v2} from "@lm/interfaces/ILM_PC_Staking_v2.sol";
 
 // Internal Dependencies
 import {
-    ERC20PaymentClientBase_v1,
+    ERC20PaymentClientBase_v2,
     Module_v1
-} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -33,7 +33,7 @@ import {ReentrancyGuardUpgradeable} from
  *
  * @notice  Provides a mechanism for users to stake tokens and earn rewards.
  *
- * @dev     Extends {ERC20PaymentClientBase_v1} and integrates with the Payment Processor
+ * @dev     Extends {ERC20PaymentClientBase_v2} and integrates with the Payment Processor
  *          to enable the distribution of rewards to stakers.
  *
  * @custom:security-contact security@inverter.network
@@ -42,9 +42,9 @@ import {ReentrancyGuardUpgradeable} from
  *
  * @author  Inverter Network
  */
-contract LM_PC_Staking_v1 is
-    ILM_PC_Staking_v1,
-    ERC20PaymentClientBase_v1,
+contract LM_PC_Staking_v2 is
+    ILM_PC_Staking_v2,
+    ERC20PaymentClientBase_v2,
     ReentrancyGuardUpgradeable
 {
     using SafeERC20 for IERC20;
@@ -54,10 +54,10 @@ contract LM_PC_Staking_v1 is
         public
         view
         virtual
-        override(ERC20PaymentClientBase_v1)
+        override(ERC20PaymentClientBase_v2)
         returns (bool)
     {
-        return interfaceId == type(ILM_PC_Staking_v1).interfaceId
+        return interfaceId == type(ILM_PC_Staking_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -112,14 +112,14 @@ contract LM_PC_Staking_v1 is
         __Module_init(orchestrator_, metadata);
 
         address _stakingToken = abi.decode(configData, (address));
-        __LM_PC_Staking_v1_init(_stakingToken);
+        __LM_PC_Staking_v2_init(_stakingToken);
 
-        __ERC20PaymentClientBase_v1_init(new uint8[](0)); // This module does not use any PaymentOrder flags
+        __ERC20PaymentClientBase_v2_init(bytes32(0)); // This module does not use any PaymentOrder flags
     }
 
     /// @dev	Initializes the staking contract.
     /// @param  _stakingToken The address of the token that can be staked.
-    function __LM_PC_Staking_v1_init(address _stakingToken)
+    function __LM_PC_Staking_v2_init(address _stakingToken)
         internal
         onlyInitializing
     {
@@ -129,17 +129,17 @@ contract LM_PC_Staking_v1 is
     //--------------------------------------------------------------------------
     // Getter Functions
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getBalance(address user) external view returns (uint) {
         return balances[user];
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getEarned(address user) external view returns (uint) {
         return _earned(user, _calculateRewardValue());
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getEstimatedReward(uint amount, uint duration)
         external
         view
@@ -164,32 +164,32 @@ contract LM_PC_Staking_v1 is
         return (amount * duration * rewardRate) / totalSupply;
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getStakingToken() external view returns (address) {
         return stakingToken;
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getTotalSupply() external view returns (uint) {
         return totalSupply;
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getRewardRate() external view returns (uint) {
         return rewardRate;
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getRewardsEnd() external view returns (uint) {
         return rewardsEnd;
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getRewardValue() external view returns (uint) {
         return rewardValue;
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function getLastUpdate() external view returns (uint) {
         return lastUpdate;
     }
@@ -197,7 +197,7 @@ contract LM_PC_Staking_v1 is
     //--------------------------------------------------------------------------
     // Mutating Functions
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function stake(uint amount)
         external
         virtual
@@ -208,11 +208,11 @@ contract LM_PC_Staking_v1 is
 
         _stake(sender, amount);
 
-        // transfer funds to LM_PC_Staking_v1
+        // transfer funds to LM_PC_Staking_v2
         IERC20(stakingToken).safeTransferFrom(sender, address(this), amount);
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     /// @dev	this function will revert with a Over/Underflow error in case amount is higher than balance.
     function unstake(uint amount)
         external
@@ -241,7 +241,7 @@ contract LM_PC_Staking_v1 is
         emit Unstaked(sender, amount);
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function claimRewards() external virtual nonReentrant {
         address recipient = _msgSender();
 
@@ -249,7 +249,7 @@ contract LM_PC_Staking_v1 is
         _distributeRewards(recipient);
     }
 
-    /// @inheritdoc ILM_PC_Staking_v1
+    /// @inheritdoc ILM_PC_Staking_v2
     function setRewards(uint amount, uint duration)
         external
         onlyOrchestratorAdmin
@@ -380,7 +380,7 @@ contract LM_PC_Staking_v1 is
         );
 
         __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v1(address(this))
+            IERC20PaymentClientBase_v2(address(this))
         );
 
         emit RewardsDistributed(recipient, amount);
@@ -409,7 +409,7 @@ contract LM_PC_Staking_v1 is
 
         // RewardRate cant be zero
         if (rewardRate == 0) {
-            revert Module__LM_PC_Staking_v1__InvalidRewardRate();
+            revert Module__LM_PC_Staking_v2__InvalidRewardRate();
         }
 
         // Rewards end is now plus duration
@@ -428,7 +428,7 @@ contract LM_PC_Staking_v1 is
             _token == address(0)
                 || _token == address(orchestrator().fundingManager().token())
         ) {
-            revert Module__LM_PC_Staking_v1__InvalidStakingToken();
+            revert Module__LM_PC_Staking_v2__InvalidStakingToken();
         }
         stakingToken = _token;
         emit StakingTokenSet(_token);
@@ -438,7 +438,7 @@ contract LM_PC_Staking_v1 is
     /// @param  duration The duration of the reward period.
     function _ensureValidDuration(uint duration) internal view {
         if (duration == 0) {
-            revert Module__LM_PC_Staking_v1__InvalidDuration();
+            revert Module__LM_PC_Staking_v2__InvalidDuration();
         }
     }
 }

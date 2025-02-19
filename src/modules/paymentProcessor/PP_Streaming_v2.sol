@@ -5,10 +5,10 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {
-    IPP_Streaming_v1,
+    IPP_Streaming_v2,
     IPaymentProcessor_v1,
-    IERC20PaymentClientBase_v1
-} from "@pp/interfaces/IPP_Streaming_v1.sol";
+    IERC20PaymentClientBase_v2
+} from "@pp/interfaces/IPP_Streaming_v2.sol";
 
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
@@ -54,7 +54,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
  *
  * @author  Inverter Network
  */
-contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
+contract PP_Streaming_v2 is Module_v1, IPP_Streaming_v2 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -63,7 +63,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IPP_Streaming_v1).interfaceId
+        return interfaceId == type(IPP_Streaming_v2).interfaceId
             || interfaceId == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId);
     }
@@ -101,10 +101,14 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     ///         client => paymentReceiver => arrayOfStreamIdsWithPendingPayment(uint[]).
     mapping(address => mapping(address => uint[])) private activeStreams;
 
-    /// @dev    Default start, cliff and end times for new payment orders.
-    uint private defaultStart;
-    uint private defaultCliff;
-    uint private defaultEnd;
+    /// @dev    The flags that this PaymentProcessor uses.
+    ///         Contains the value 1110.
+    bytes32 internal constant PROCESSOR_FLAGS =
+        0x000000000000000000000000000000000000000000000000000000000000000e;
+
+    /// @dev    The default values for those flags, in ascending order: start
+    //          cliff, end.
+    uint[3] private defaultValues;
 
     /// @dev	Storage gap for future upgrades.
     uint[47] private __gap;
@@ -155,7 +159,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _setDefaultTimes(_defaultStart, _defaultCliff, _defaultEnd);
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function claimAll(address client) external {
         if (activeStreams[client][_msgSender()].length == 0) {
             revert Module__PaymentProcessor__NothingToClaim(
@@ -181,7 +185,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _claimPreviouslyUnclaimable(client, token, receiver);
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function claimForSpecificStream(address client, uint streamId) external {
         if (
             activeStreams[client][_msgSender()].length == 0
@@ -203,7 +207,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPaymentProcessor_v1
-    function processPayments(IERC20PaymentClientBase_v1 client)
+    function processPayments(IERC20PaymentClientBase_v2 client)
         external
         onlyModule
         validClient(address(client))
@@ -211,7 +215,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         // We check if there are any new paymentOrders, without processing them
         if (client.paymentOrders().length > 0) {
             // Collect outstanding orders and their total token amount.
-            IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
+            IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
             address[] memory tokens;
             uint[] memory totalAmounts;
             (orders, tokens, totalAmounts) = client.collectPaymentOrders();
@@ -229,6 +233,12 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             uint numOrders = orders.length;
 
             for (uint i; i < numOrders;) {
+                if (!validPaymentOrder(orders[i])) {
+                    revert
+                        IERC20PaymentClientBase_v2
+                        .Module__ERC20PaymentClientBase__InvalidPaymentOrder();
+                }
+
                 _addPayment(
                     address(client),
                     orders[i],
@@ -254,7 +264,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @inheritdoc IPaymentProcessor_v1
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
         external
         onlyModule
         validClient(address(client))
@@ -262,7 +272,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _cancelRunningOrders(address(client));
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function removeAllPaymentReceiverPayments(
         address client,
         address paymentReceiver
@@ -278,7 +288,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _removePayment(client, paymentReceiver);
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function removePaymentForSpecificStream(
         address client,
         address paymentReceiver,
@@ -301,7 +311,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     //--------------------------------------------------------------------------
     // Public Functions
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function isActivePaymentReceiver(address client, address paymentReceiver)
         public
         view
@@ -310,7 +320,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return activeStreams[client][paymentReceiver].length > 0;
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function startForSpecificStream(
         address client,
         address paymentReceiver,
@@ -319,7 +329,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return streams[client][paymentReceiver][streamId]._start;
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function cliffForSpecificStream(
         address client,
         address paymentReceiver,
@@ -328,7 +338,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return streams[client][paymentReceiver][streamId]._cliff;
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function endForSpecificStream(
         address client,
         address paymentReceiver,
@@ -337,7 +347,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return streams[client][paymentReceiver][streamId]._end;
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function releasedForSpecificStream(
         address client,
         address paymentReceiver,
@@ -346,7 +356,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         return streams[client][paymentReceiver][streamId]._released;
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function streamedAmountForSpecificStream(
         address client,
         address paymentReceiver,
@@ -358,7 +368,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         );
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function releasableForSpecificStream(
         address client,
         address paymentReceiver,
@@ -387,7 +397,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         }
     }
 
-    /// @inheritdoc IPP_Streaming_v1
+    /// @inheritdoc IPP_Streaming_v2
     function viewAllPaymentOrders(address client, address paymentReceiver)
         external
         view
@@ -415,8 +425,8 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
 
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
-    ) external returns (bool) {
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
+    ) public returns (bool) {
         (uint start, uint cliff, uint end) =
             _getStreamingDetails(order.flags, order.data);
 
@@ -433,8 +443,16 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         _setDefaultTimes(newStart_, newCliff_, newEnd_);
     }
 
-    function getStreamingDefaults() public view returns (uint, uint, uint) {
-        return (defaultStart, defaultCliff, defaultEnd);
+    function getStreamingDefaults()
+        public
+        view
+        returns (uint defaultStart_, uint defaultCliff_, uint defaultEnd_)
+    {
+        return (defaultValues[0], defaultValues[1], defaultValues[2]);
+    }
+
+    function getProcessorFlags() public view returns (bytes32 flags_) {
+        return PROCESSOR_FLAGS;
     }
 
     //--------------------------------------------------------------------------
@@ -550,7 +568,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     }
 
     /// @notice Deletes all payments related to a `paymentReceiver` & leaves currently streaming tokens in the
-    ///         {IERC20PaymentClientBase_v1}.
+    ///         {IERC20PaymentClientBase_v2}.
     /// @dev	This function calls `_removePayment` which goes through all the payment orders for a `paymentReceiver`.
     ///         For the payment orders that are completely streamed, their details are deleted in the
     ///         `_claimForSpecificStream` function and for others it is deleted in the `_removePayment` function only,
@@ -614,7 +632,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         if (remainingReleasable > 0) {
             // Let PaymentClient know that the amount is not needed to be stored anymore
 
-            IERC20PaymentClientBase_v1(client).amountPaid(
+            IERC20PaymentClientBase_v2(client).amountPaid(
                 _token, remainingReleasable
             );
         }
@@ -683,7 +701,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
     /// @param  _streamId ID of the new stream of the a particular paymentReceiver being added.
     function _addPayment(
         address _client,
-        IERC20PaymentClientBase_v1.PaymentOrder memory _order,
+        IERC20PaymentClientBase_v2.PaymentOrder memory _order,
         uint _streamId
     ) internal {
         ++numStreams[_client][_order.recipient];
@@ -781,7 +799,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
             emit TokensReleased(paymentReceiver, _token, amount);
 
             // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-            IERC20PaymentClientBase_v1(client).amountPaid(
+            IERC20PaymentClientBase_v2(client).amountPaid(
                 address(_token), amount
             );
         } else {
@@ -847,7 +865,7 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         delete unclaimableStreams[client][token][sender];
 
         // Make sure to let paymentClient know that amount doesnt have to be stored anymore
-        IERC20PaymentClientBase_v1(client).amountPaid(address(token), amount);
+        IERC20PaymentClientBase_v2(client).amountPaid(address(token), amount);
 
         // Call has to succeed otherwise no state change
         IERC20(token).safeTransferFrom(client, paymentReceiver, amount);
@@ -948,23 +966,50 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         );
     }
 
-    function _getStreamingDetails(bytes32 flags, bytes32[] memory data)
-        internal
-        view
-        returns (uint start, uint cliff, uint end)
-    {
-        uint dataIdx = 0;
+    function _getStreamingDetails(
+        bytes32 orderFlags_,
+        bytes32[] memory orderData_
+    ) internal view returns (uint start_, uint cliff_, uint end_) {
+        uint[3] memory returnData;
 
-        bool hasStart = (uint(flags) & (1 << 1)) != 0;
-        start = hasStart ? uint(data[dataIdx]) : defaultStart;
-        if (hasStart) dataIdx += 1;
+        uint8 positionInOrderData = 0;
+        uint8 positionInReturnData = 0;
 
-        bool hasCliff = (uint(flags) & (1 << 2)) != 0;
-        cliff = hasCliff ? uint(data[dataIdx]) : defaultCliff;
-        if (hasCliff) dataIdx += 1;
+        for (uint i = 0; i < 256; i++) {
+            if (positionInReturnData == returnData.length) {
+                // we have either:
+                // - reached the end of the orderData_ array
+                // - already checked for all the values this P_P will need
+                //      ==> exit loop
+                break;
+            }
 
-        bool hasEnd = (uint(flags) & (1 << 3)) != 0;
-        end = hasEnd ? uint(data[dataIdx]) : defaultEnd;
+            bool orderBit = (uint(orderFlags_) & (1 << i)) != 0;
+            bool processorBit = (uint(PROCESSOR_FLAGS) & (1 << i)) != 0;
+
+            if (orderBit == true && processorBit == false) {
+                // the P_P does not use that value
+                //      ==> skip that data slot in the order
+                positionInOrderData++;
+            }
+            if (orderBit == false && processorBit == true) {
+                // the P_P needs the value, but it's missing in the order
+                //      ==> use default value
+                returnData[positionInReturnData] =
+                    uint(defaultValues[positionInReturnData]);
+                positionInReturnData++;
+            }
+            if (orderBit == true && processorBit == true) {
+                // the P_P needs the value, and the order supplies it
+                //      ==> use the value from the order
+                returnData[positionInReturnData] =
+                    uint(orderData_[positionInOrderData]);
+                positionInOrderData++;
+                positionInReturnData++;
+            }
+        }
+
+        return (returnData[0], returnData[1], returnData[2]);
     }
 
     /// @dev    Sets the default start time, cliff and end times for new
@@ -976,9 +1021,9 @@ contract PP_Streaming_v1 is Module_v1, IPP_Streaming_v1 {
         internal
     {
         if (_validTimes(newStart_, newCliff_, newEnd_)) {
-            defaultStart = newStart_;
-            defaultCliff = newCliff_;
-            defaultEnd = newEnd_;
+            defaultValues[0] = newStart_;
+            defaultValues[1] = newCliff_;
+            defaultValues[2] = newEnd_;
         } else {
             revert Module__PP_Streaming__InvalidDefaultTimes(
                 newStart_, newCliff_, newEnd_

@@ -7,8 +7,8 @@ import {ERC165} from "@oz/utils/introspection/ERC165.sol";
 
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IModule_v1} from "src/modules/base/Module_v1.sol";
 
 contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
@@ -33,7 +33,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
     //--------------------------------------------------------------------------
     // IPaymentProcessor_v1 Functions
 
-    function processPayments(IERC20PaymentClientBase_v1 /*client*/ ) external {
+    function processPayments(IERC20PaymentClientBase_v2 /*client*/ ) external {
         emit PaymentOrderProcessed(
             address(0),
             address(0),
@@ -47,13 +47,13 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
         processPaymentsTriggered += 1;
     }
 
-    function cancelRunningPayments(IERC20PaymentClientBase_v1) external {}
+    function cancelRunningPayments(IERC20PaymentClientBase_v2) external {}
 
     function token() external pure returns (IERC20) {
         return IERC20(address(0));
     }
 
-    function deleteAllPayments(IERC20PaymentClientBase_v1 client) external {
+    function deleteAllPayments(IERC20PaymentClientBase_v2 client) external {
         client.collectPaymentOrders();
     }
 
@@ -65,7 +65,7 @@ contract PaymentProcessorV1Mock is IPaymentProcessor_v1, ERC165 {
 
     function claimPreviouslyUnclaimable(address, address, address) external {}
 
-    function validPaymentOrder(IERC20PaymentClientBase_v1.PaymentOrder memory)
+    function validPaymentOrder(IERC20PaymentClientBase_v2.PaymentOrder memory)
         external
         view
         returns (bool)

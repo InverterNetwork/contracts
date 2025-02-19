@@ -3,9 +3,9 @@ pragma solidity 0.8.23;
 
 // Internal Interfaces
 import {
-    IERC20PaymentClientBase_v1,
+    IERC20PaymentClientBase_v2,
     IPaymentProcessor_v1
-} from "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+} from "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // Internal Dependencies
@@ -38,8 +38,8 @@ import {ERC165Upgradeable} from
  *
  * @author  Inverter Network
  */
-abstract contract ERC20PaymentClientBase_v1 is
-    IERC20PaymentClientBase_v1,
+abstract contract ERC20PaymentClientBase_v2 is
+    IERC20PaymentClientBase_v2,
     Module_v1
 {
     /// @inheritdoc ERC165Upgradeable
@@ -50,7 +50,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId == type(IERC20PaymentClientBase_v1).interfaceId
+        return interfaceId == type(IERC20PaymentClientBase_v2).interfaceId
             || super.supportsInterface(interfaceId);
     }
 
@@ -102,15 +102,11 @@ abstract contract ERC20PaymentClientBase_v1 is
     /// @dev	Initializes the staking contract.
     /// @param  flags_ The flags, represented as an array of uint8 containing
     ///         the flag IDs between 0 and 255.
-    function __ERC20PaymentClientBase_v1_init(uint8[] memory flags_)
+    function __ERC20PaymentClientBase_v2_init(bytes32 flags_)
         internal
         onlyInitializing
     {
-        uint amountOfFlags = flags_.length;
-        if (amountOfFlags > type(uint8).max) {
-            revert Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
-        }
-        _setFlags(uint8(flags_.length), flags_);
+        _setFlags(flags_);
     }
 
     /// @dev	Adds a new {PaymentOrder} to the list of outstanding orders.
@@ -149,34 +145,27 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     /// @dev    Sets the flags for the PaymentOrders.
-    /// @param  flagCount_ The number of flags.
     /// @param  flags_ The flags, represented as an array of uint8 containing
     ///         the flag IDs between 0 and 255.
-    function _setFlags(uint8 flagCount_, uint8[] memory flags_)
-        internal
-        virtual
-    {
-        if (flagCount_ != flags_.length) {
-            revert
-                Module__ERC20PaymentClientBase__MismatchBetweenFlagCountAndArrayLength(
-                flagCount_, flags_.length
-            );
+    function _setFlags(bytes32 flags_) internal virtual {
+        uint8 amountOfFlags = 0;
+
+        for (uint i = 0; i <= type(uint8).max; i++) {
+            if (flags_ & bytes32((1 << i)) != 0) {
+                amountOfFlags++;
+            }
         }
 
-        _flagCount = flagCount_;
+        _flags = flags_;
+        _flagCount = amountOfFlags;
 
-        _flags = 0;
-        for (uint8 i = 0; i < flagCount_; i++) {
-            _flags |= bytes32((1 << flags_[i]));
-        }
-
-        emit FlagsSet(flagCount_, _flags);
+        emit FlagsSet(uint8(amountOfFlags), _flags);
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClientBase_v1 Functions
+    // IERC20PaymentClientBase_v2 Functions
 
-    /// @inheritdoc IERC20PaymentClientBase_v1
+    /// @inheritdoc IERC20PaymentClientBase_v2
     function paymentOrders()
         external
         view
@@ -186,7 +175,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         return _orders;
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v1
+    /// @inheritdoc IERC20PaymentClientBase_v2
     function outstandingTokenAmount(address token_)
         external
         view
@@ -196,7 +185,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         return _outstandingTokenAmounts[token_];
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v1
+    /// @inheritdoc IERC20PaymentClientBase_v2
     function collectPaymentOrders()
         external
         virtual
@@ -266,7 +255,7 @@ abstract contract ERC20PaymentClientBase_v1 is
         return (paymentOrders_, tokens_, totalAmounts_);
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v1
+    /// @inheritdoc IERC20PaymentClientBase_v2
     function amountPaid(address token_, uint amount_) external virtual {
         // Ensure caller is authorized to act as payment processor.
         if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
@@ -278,12 +267,12 @@ abstract contract ERC20PaymentClientBase_v1 is
         _outstandingTokenAmounts[token_] -= amount_;
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v1
+    /// @inheritdoc IERC20PaymentClientBase_v2
     function getFlags() public view returns (bytes32 flags_) {
         return (_flags);
     }
 
-    /// @inheritdoc IERC20PaymentClientBase_v1
+    /// @inheritdoc IERC20PaymentClientBase_v2
     function getFlagCount() public view returns (uint8 flagCount_) {
         return _flagCount;
     }
@@ -324,7 +313,7 @@ abstract contract ERC20PaymentClientBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // {ERC20PaymentClientBase_v1} Function Implementations
+    // {ERC20PaymentClientBase_v2} Function Implementations
 
     /// @dev	Ensures `amount` of payment tokens exist in address(this). In case the token being paid out is the
     ///         FundingManager token, it will trigger a callback to the FundingManager to transfer the tokens to

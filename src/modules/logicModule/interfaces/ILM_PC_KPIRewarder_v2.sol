@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-interface ILM_PC_KPIRewarder_v1 {
+interface ILM_PC_KPIRewarder_v2 {
     //--------------------------------------------------------------------------
     // Structs
 
@@ -35,33 +35,33 @@ interface ILM_PC_KPIRewarder_v1 {
     // Errors
 
     /// @notice The KPI beinge created has either no tranches or too many.
-    error Module__LM_PC_KPIRewarder_v1__InvalidTrancheNumber();
+    error Module__LM_PC_KPIRewarder_v2__InvalidTrancheNumber();
 
     /// @notice The number of tranches in the KPI does not match the number of rewards.
-    error Module__LM_PC_KPIRewarder_v1__InvalidKPIValueLengths();
+    error Module__LM_PC_KPIRewarder_v2__InvalidKPIValueLengths();
 
     /// @notice The values for the tranches are not in ascending order.
-    error Module__LM_PC_KPIRewarder_v1__InvalidKPITrancheValues();
+    error Module__LM_PC_KPIRewarder_v2__InvalidKPITrancheValues();
 
     /// @notice The KPI number is invalid.
-    error Module__LM_PC_KPIRewarder_v1__InvalidKPINumber();
+    error Module__LM_PC_KPIRewarder_v2__InvalidKPINumber();
 
     /// @notice The Token used paying the bond cannot be the same that is being staked.
-    error Module__LM_PC_KPIRewarder_v1__ModuleCannotUseStakingTokenAsBond();
+    error Module__LM_PC_KPIRewarder_v2__ModuleCannotUseStakingTokenAsBond();
 
     /// @notice An assertion can only by posted if the preceding one is resolved.
-    error Module__LM_PC_KPIRewarder_v1__UnresolvedAssertionExists();
+    error Module__LM_PC_KPIRewarder_v2__UnresolvedAssertionExists();
 
     /// @notice The user cannot stake while an assertion is unresolved.
-    error Module__LM_PC_KPIRewarder_v1__CannotStakeWhenAssertionPending();
+    error Module__LM_PC_KPIRewarder_v2__CannotStakeWhenAssertionPending();
 
     /// @notice Callback received references non existent assertionId.
-    error Module__LM_PC_KPIRewarder_v1__NonExistentAssertionId(
+    error Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(
         bytes32 assertionId
     );
 
     /// @notice The assertion that is being removed was not stuck.
-    error Module__LM_PC_KPIRewarder_v1__AssertionNotStuck(bytes32 assertionId);
+    error Module__LM_PC_KPIRewarder_v2__AssertionNotStuck(bytes32 assertionId);
 
     //--------------------------------------------------------------------------
     // Events

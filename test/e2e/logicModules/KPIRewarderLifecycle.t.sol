@@ -19,11 +19,11 @@ import {FM_Rebasing_v1} from
 import {PP_Simple_v1, IPaymentProcessor_v1} from "@pp/PP_Simple_v1.sol";
 
 import {
-    LM_PC_KPIRewarder_v1,
-    ILM_PC_KPIRewarder_v1,
+    LM_PC_KPIRewarder_v2,
+    ILM_PC_KPIRewarder_v2,
     IOptimisticOracleIntegrator,
-    ILM_PC_Staking_v1
-} from "src/modules/logicModule/LM_PC_KPIRewarder_v1.sol";
+    ILM_PC_Staking_v2
+} from "src/modules/logicModule/LM_PC_KPIRewarder_v2.sol";
 
 import {OptimisticOracleV3Interface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
@@ -44,7 +44,7 @@ Fork testing necessary. Make sure to have a sepolia rpc configured in foundry.to
 
 */
 
-contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
+contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     /*
     - This needs to be a fork test using an actual UMA instance.
     - Where are the UMA test deployments? => https://github.com/UMAprotocol/protocol/tree/master/packages/core/networks
@@ -83,7 +83,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
     IOrchestrator_v1 orchestrator;
     FM_Rebasing_v1 fundingManager;
-    LM_PC_KPIRewarder_v1 kpiRewarder;
+    LM_PC_KPIRewarder_v2 kpiRewarder;
 
     ERC20Mock USDC;
     ERC20Mock rewardToken;
@@ -210,10 +210,10 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
 
         // KPI Rewarder
 
-        setUpLM_PC_KPIRewarder_v1();
+        setUpLM_PC_KPIRewarder_v2();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                LM_PC_KPIRewarder_v1Metadata,
+                LM_PC_KPIRewarder_v2Metadata,
                 abi.encode(
                     address(stakingToken),
                     USDC_address,
@@ -227,11 +227,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         );
     }
 
-    function test_e2e_LM_PC_KPIRewarder_v1Lifecycle() public {
-        // NOTE: Temporary skip if the rpc is failing.
-        if (skipTestsWithFailingRpc) {
-            return;
-        }
+    function test_e2e_LM_PC_KPIRewarder_v2Lifecycle() public {
         //--------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------
@@ -252,10 +248,10 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_KPIRewarder_v1).interfaceId
+                    type(ILM_PC_KPIRewarder_v2).interfaceId
                 )
             ) {
-                kpiRewarder = LM_PC_KPIRewarder_v1(modulesList[i]);
+                kpiRewarder = LM_PC_KPIRewarder_v2(modulesList[i]);
                 break;
             }
         }
@@ -278,7 +274,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         _setupUSDC();
 
         // give the automation service the rights to post assertions
-        _prepareLM_PC_KPIRewarder_v1();
+        _prepareLM_PC_KPIRewarder_v2();
 
         // Initialize kpiRewarder setup:
         rewardToken.mint(address(this), REWARD_DEPOSIT_AMOUNT);
@@ -407,7 +403,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
     //--------------------------------------------------------------------------
 
     function _getExpectedRewardAmount(
-        ILM_PC_KPIRewarder_v1.KPI memory resolvedKPI,
+        ILM_PC_KPIRewarder_v2.KPI memory resolvedKPI,
         uint assertedValue
     ) internal pure returns (uint) {
         uint rewardAmount;
@@ -470,7 +466,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
         );
     }
 
-    function _prepareLM_PC_KPIRewarder_v1() internal {
+    function _prepareLM_PC_KPIRewarder_v2() internal {
         kpiRewarder.grantModuleRole(
             kpiRewarder.ASSERTER_ROLE(), AUTOMATION_SERVICE
         );
@@ -487,7 +483,7 @@ contract LM_PC_KPIRewarder_v1Lifecycle is E2ETest {
             _trancheRewards[i] = trancheRewards[i];
         }
 
-        ILM_PC_KPIRewarder_v1(kpiManager).createKPI(
+        ILM_PC_KPIRewarder_v2(kpiManager).createKPI(
             true, _trancheValues, _trancheRewards
         );
     }
