@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+// Internal
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
-import {ICrossChainBase_v1} from "../interfaces/ICrosschainBase_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
+
+// External
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   Cross-chain Base Contract
@@ -24,21 +25,12 @@ import {ICrossChainBase_v1} from "../interfaces/ICrosschainBase_v1.sol";
  *                          Security Policy at security.inverter.network or email us
  *                          directly!
  * @custom:version 1.0.0
+ *
  * @custom:standard-version 1.0.0
+ *
  * @author  33Audits
  */
 abstract contract CrossChainBase_v1 is ICrossChainBase_v1, Module_v1 {
-    // Storage Variables
-    mapping(uint => bytes) internal _bridgeData;
-
-    // External Functions
-    /// @notice Process payments for a given payment client
-    /// @param client The payment client to process payments for
-    function processPayments(IERC20PaymentClientBase_v2 client)
-        external
-        virtual;
-
-    // Public Functions
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -51,22 +43,33 @@ abstract contract CrossChainBase_v1 is ICrossChainBase_v1, Module_v1 {
             || super.supportsInterface(interfaceId_);
     }
 
-    /// @notice Get the bridge data for a given payment ID
-    /// @param paymentId The ID of the payment to get the bridge data for
-    /// @return The bridge data for the given payment ID
-    function getBridgeData(uint paymentId)
+    // -------------------------------------------------------------------------
+    // State Variables
+
+    /// @notice Mapping of payment IDs to bridge data.
+    mapping(uint paymentId => bytes bridgeData) internal _bridgeData;
+
+    // -------------------------------------------------------------------------
+    // View Functions
+
+    /// @inheritdoc ICrossChainBase_v1
+    function getBridgeData(uint paymentId_)
         public
         view
         virtual
-        returns (bytes memory);
+        returns (bytes memory bridgeData_);
 
+    // -------------------------------------------------------------------------
     // Internal Functions
+
     /// @notice Execute the cross-chain bridge transfer
     /// @dev Override this function to implement specific bridge logic
-    /// @param order The payment order containing all necessary transfer details
-    /// @return bridgeData Arbitrary data returned by the bridge implementation
+    /// @param order_ The payment order containing all necessary transfer details
+    /// @return bridgeData_ Arbitrary data returned by the bridge implementation
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
-        bytes memory executionData
-    ) internal virtual returns (bytes memory);
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+    ) internal virtual returns (bytes memory bridgeData_);
+
+    /// @dev    Gap for possible future upgrades.
+    uint[50] private __gap;
 }
