@@ -8,8 +8,7 @@ import {IERC20PaymentClientBase_v2} from
 
 contract CrossChainBase_v1_Exposed is CrossChainBase_v1 {
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
-        bytes memory executionData
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) internal pure override returns (bytes memory) {
         return "";
     }
@@ -23,15 +22,9 @@ contract CrossChainBase_v1_Exposed is CrossChainBase_v1 {
         return "";
     }
 
-    function processPayments(IERC20PaymentClientBase_v2 client)
-        external
-        override
-    {}
-
     function exposed_executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
-        bytes memory executionData
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external payable returns (bytes memory) {
-        return _executeBridgeTransfer(order, executionData);
+        return _executeBridgeTransfer(order);
     }
 }

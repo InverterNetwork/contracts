@@ -130,9 +130,8 @@ contract CrossChainBase_v1_Test is ModuleTest {
 
         bytes memory executionData = abi.encode(0, 0); //maxFee and ttl setup
 
-        bytes memory result = crossChainBase.exposed_executeBridgeTransfer(
-            orders[0], executionData
-        );
+        bytes memory result =
+            crossChainBase.exposed_executeBridgeTransfer(orders[0]);
         assertEq(result, bytes(""));
     }
 

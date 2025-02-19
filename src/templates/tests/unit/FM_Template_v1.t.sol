@@ -64,7 +64,7 @@ contract FM_Template_v1_Test is ModuleTest {
         // Deploy the SuT
         address impl = address(new FM_Template_v1_Exposed());
         fundingManager = FM_Template_v1_Exposed(Clones.clone(impl));
-        
+
         orchestratorToken = new ERC20Mock("Orchestrator Token", "OTK");
 
         // Setup the module to test

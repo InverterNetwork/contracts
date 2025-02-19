@@ -9,18 +9,16 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 contract PP_Connext_Crosschain_v1_Exposed is PP_Connext_Crosschain_v1 {
     // Expose internal _executeBridgeTransfer function
     function exposed_executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
-        bytes memory executionData
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external returns (bytes memory) {
-        return _executeBridgeTransfer(order, executionData);
+        return _executeBridgeTransfer(order);
     }
 
     // Expose internal xcall function
     function exposed_createCrossChainIntent(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order,
-        bytes memory executionData
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external returns (bytes32) {
-        return _createCrossChainIntent(order, executionData, false);
+        return _createCrossChainIntent(order);
     }
 
     function exposed_unclaimable(
@@ -28,6 +26,6 @@ contract PP_Connext_Crosschain_v1_Exposed is PP_Connext_Crosschain_v1 {
         address recipient,
         address token
     ) external view returns (uint) {
-        return unclaimableAmountsForRecipient[client][token][recipient];
+        return _unclaimableAmountsForRecipient[client][token][recipient];
     }
 }
