@@ -53,6 +53,20 @@ contract Migrating_PIM_Factory_v1 is
     mapping(address fundingManager => PIM orchestrator) public pims;
 
     //--------------------------------------------------------------------------
+    // Modifiers
+
+    /// @dev	Modifier to guarantee the caller is the deployer for the given funding manager.
+    modifier onlyInitiatorAfterGraduation(address fundingManager) {
+        PIM memory pim = pims[fundingManager];
+        if (msg.sender != pim.initiator || !pim.isGraduated) {
+            revert
+                IMigrating_PIM_Factory_v1
+                .PIM_WorkflowFactory__OnlyInitiatorAfterGraduation();
+        }
+        _;
+    }
+
+    //--------------------------------------------------------------------------
     // Constructor
 
     constructor(address _orchestratorFactory, address _trustedForwarder)
@@ -118,7 +132,8 @@ contract Migrating_PIM_Factory_v1 is
             ).getVirtualIssuanceSupply(),
             initialVirtualCollateralSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
                 fundingManager
-            ).getVirtualCollateralSupply()
+            ).getVirtualCollateralSupply(),
+            initialRewardDuration: migrationConfig_.initialRewardDuration
         });
 
         // enable bonding curve to mint issuance token
@@ -397,8 +412,8 @@ contract Migrating_PIM_Factory_v1 is
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_Staking_v1(modules[i]).rewardRate() {
                 LM_PC_Staking_v1(modules[i]).setRewards(
-                    stakingRewards, 7_884_000
-                ); // 3 months in seconds
+                    stakingRewards, pim.initialRewardDuration
+                );
                 break;
             } catch {}
         }

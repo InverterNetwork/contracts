@@ -16,6 +16,9 @@ interface IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
+    /// @notice Error emitted when the caller is not the initiator after graduation.
+    error PIM_WorkflowFactory__OnlyInitiatorAfterGraduation();
+
     //--------------------------------------------------------------------------
     // Events
 
@@ -62,6 +65,7 @@ interface IMigrating_PIM_Factory_v1 {
         IOrchestrator_v1 orchestrator;
         uint initialVirtualIssuanceSupply;
         uint initialVirtualCollateralSupply;
+        uint initialRewardDuration;
     }
 
     struct MigrationConfig {
@@ -69,6 +73,7 @@ interface IMigrating_PIM_Factory_v1 {
         uint migrationThreshold;
         address dexAdapter;
         address lpTokenRecipient;
+        uint initialRewardDuration;
     }
 
     //--------------------------------------------------------------------------

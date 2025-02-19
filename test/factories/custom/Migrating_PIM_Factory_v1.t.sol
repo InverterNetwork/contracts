@@ -70,6 +70,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     uint secondaryPurchaseAmount = 10 ether;
     uint migrationThreshold = 10 ether;
     bool isImmutable = true;
+    uint initialRewardDuration = 7_884_000;
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
 
     // addresses
@@ -161,7 +162,8 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             isImmutable: isImmutable,
             migrationThreshold: migrationThreshold,
             dexAdapter: uniswapAdapter,
-            lpTokenRecipient: address(0)
+            lpTokenRecipient: address(0),
+            initialRewardDuration: initialRewardDuration
         });
 
         // Deploy workflow and set up contracts for all tests
@@ -401,19 +403,19 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         address[] memory modules = orchestrator.listModules();
 
-        uint rewardRate;
+        LM_PC_Staking_v1 stakingModule;
 
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_Staking_v1(modules[i]).rewardRate() {
-                rewardRate = LM_PC_Staking_v1(modules[i]).rewardRate();
+                stakingModule = LM_PC_Staking_v1(modules[i]);
                 break;
             } catch {}
         }
 
         assertEq(
-            rewardRate,
-            collateralFee / 7_884_000,
-            "Reward rate should be set correctly"
+            stakingModule.rewardRate(),
+            collateralFee / initialRewardDuration,
+            "Initial reward rate should be set correctly"
         );
     }
 
