@@ -9,21 +9,17 @@ import {
 } from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {ICrossChainBase_v1} from
-    "src/modules/paymentProcessor/interfaces/ICrosschainBase_v1.sol";
-import {CrossChainBase_v1} from
-    "src/modules/paymentProcessor/abstracts/CrossChainBase_v1.sol";
+    "src/modules/paymentProcessor/interfaces/ICrossChainBase_v1.sol";
 import {
-    IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock,
+    IERC20PaymentClientBase_v2,
+    ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {CrossChainBase_v1_Exposed} from
     "test/utils/mocks/modules/paymentProcessor/CrossChainBase_v1_Exposed.sol";
 
 import {IPaymentProcessor_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ICrossChainBase_v1} from
-    "src/modules/paymentProcessor/interfaces/ICrosschainBase_v1.sol";
 //External Dependencies
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -33,7 +29,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
     //Constants
     //--------------------------------------------------------------------------
     //Mocks
-    ERC20PaymentClientBaseV1Mock paymentClient;
+    ERC20PaymentClientBaseV2Mock paymentClient;
     CrossChainBase_v1_Exposed public crossChainBase;
 
     //--------------------------------------------------------------------------
@@ -55,8 +51,8 @@ contract CrossChainBase_v1_Test is ModuleTest {
 
         //Setup other modules needed in the unit tests.
         //In this case a payment client is needed to test the PP_Template_v1.
-        impl = address(new ERC20PaymentClientBaseV1Mock());
-        paymentClient = ERC20PaymentClientBaseV1Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBaseV2Mock());
+        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
         //Adding the payment client is done through a timelock mechanism
         _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -128,7 +124,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
         uint[] memory setupAmounts = new uint[](1);
         setupAmounts[0] = 100 ether;
 
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             _createPaymentOrders(1, setupRecipients, setupAmounts);
         paymentClient.addPaymentOrders(orders);
 
@@ -150,17 +146,17 @@ contract CrossChainBase_v1_Test is ModuleTest {
     )
         internal
         view
-        returns (IERC20PaymentClientBase_v1.PaymentOrder[] memory)
+        returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory)
     {
         // Sanity checks for array lengths
         require(
             recipients.length == orderCount && amounts.length == orderCount,
             "Array lengths must match orderCount"
         );
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
-            new IERC20PaymentClientBase_v1.PaymentOrder[](orderCount);
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+            new IERC20PaymentClientBase_v2.PaymentOrder[](orderCount);
         for (uint i = 0; i < orderCount; i++) {
-            orders[i] = IERC20PaymentClientBase_v1.PaymentOrder({
+            orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: recipients[i],
                 paymentToken: address(0xabcd),
                 amount: amounts[i],

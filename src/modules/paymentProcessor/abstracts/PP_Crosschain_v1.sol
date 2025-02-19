@@ -5,8 +5,8 @@ pragma solidity 0.8.23;
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 import {CrossChainBase_v1} from "./CrossChainBase_v1.sol";
 import {IPP_Crosschain_v1} from "../interfaces/IPP_Crosschain_v1.sol";
@@ -96,14 +96,14 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
 
     /// @notice Process payments for a given payment client
     /// @param client The payment client to process payments for
-    function processPayments(IERC20PaymentClientBase_v1 client)
+    function processPayments(IERC20PaymentClientBase_v2 client)
         external
         virtual
         override(IPaymentProcessor_v1, CrossChainBase_v1)
     {}
 
     /// @inheritdoc IPaymentProcessor_v1
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
         external
         onlyModule
         validClient(address(client))
@@ -135,7 +135,7 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
 
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount)

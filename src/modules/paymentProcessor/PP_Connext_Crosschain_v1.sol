@@ -12,8 +12,8 @@ import {ICrossChainBase_v1} from
     "src/modules/paymentProcessor/interfaces/ICrosschainBase_v1.sol";
 import {IPP_Connext_Crosschain_v1} from
     "src/modules/paymentProcessor/interfaces/IPP_Connext_Crosschain_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {PP_Crosschain_v1} from
     "src/modules/paymentProcessor/abstracts/PP_Crosschain_v1.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
@@ -97,10 +97,10 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
      * @param executionData Additional data needed for execution (encoded maxFee and TTL)
      */
     function processPayments(
-        IERC20PaymentClientBase_v1 client,
+        IERC20PaymentClientBase_v2 client,
         bytes memory executionData
     ) external {
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
         (orders,,) = client.collectPaymentOrders();
         address clientAddress = address(client);
         for (uint i = 0; i < orders.length; i++) {
@@ -150,7 +150,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         address recipient,
         bytes memory executionData,
         bytes memory newExecutionData,
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external validClient(client) {
         //unclaimable amount should not be 0 if the transfer has failed
         uint unclaimableAmount =
@@ -246,7 +246,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
      * @return bridgeData Data returned by the bridge implementation
      */
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        IERC20PaymentClientBase_v2.PaymentOrder memory order,
         bytes memory executionData
     ) internal override returns (bytes memory) {
         bytes32 _intentId = _createCrossChainIntent(order, executionData, true);
@@ -262,7 +262,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
      * @return The ID of the created intent
      */
     function _createCrossChainIntent(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        IERC20PaymentClientBase_v2.PaymentOrder memory order,
         bytes memory executionData,
         bool transferFromRecipient
     ) internal returns (bytes32) {
@@ -308,7 +308,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
      * @param order The payment order to validate
      */
     function _validateOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) internal pure {
         if (order.amount == 0) {
             revert ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount();

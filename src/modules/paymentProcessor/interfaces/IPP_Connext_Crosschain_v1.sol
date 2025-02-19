@@ -8,8 +8,8 @@ import {IEverclearSpoke} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
 // External Dependencies
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
 
 /// @notice Interface for cross-chain payment processing using Connext protocol
@@ -39,7 +39,7 @@ interface IPP_Connext_Crosschain_v1 is IPaymentProcessor_v1 {
     /// @param client The payment client contract initiating the payment
     /// @param executionData The encoded execution parameters (maxFee, ttl)
     function processPayments(
-        IERC20PaymentClientBase_v1 client,
+        IERC20PaymentClientBase_v2 client,
         bytes memory executionData
     ) external;
 
