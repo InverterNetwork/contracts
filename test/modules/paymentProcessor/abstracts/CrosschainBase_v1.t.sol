@@ -126,7 +126,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             _createPaymentOrders(1, setupRecipients, setupAmounts);
-        paymentClient.addPaymentOrders(orders);
+        paymentClient.exposed_addPaymentOrders(orders);
 
         bytes memory executionData = abi.encode(0, 0); //maxFee and ttl setup
 
@@ -160,10 +160,19 @@ contract CrossChainBase_v1_Test is ModuleTest {
                 recipient: recipients[i],
                 paymentToken: address(0xabcd),
                 amount: amounts[i],
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp + 1 days
+                originChainId: 0,
+                targetChainId: 0,
+                flags: bytes32(0),
+                data: new bytes32[](0)
             });
+            // orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
+            //     recipient: recipients[i],
+            //     paymentToken: address(0xabcd),
+            //     amount: amounts[i],
+            //     start: block.timestamp,
+            //     cliff: 0,
+            //     end: block.timestamp + 1 days
+            // });
         }
         return orders;
     }

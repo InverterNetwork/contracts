@@ -166,10 +166,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             testRecipient,
             address(_token),
             testAmount,
-            block.timestamp,
             0,
-            block.timestamp + 1 days
+            0,
+            bytes32(0),
+            new bytes32[](0)
         );
+        // emit IPaymentProcessor_v1.PaymentOrderProcessed(
+        //     address(paymentClient),
+        //     testRecipient,
+        //     address(_token),
+        //     testAmount,
+        //     0,
+        //     block.timestamp + 1 days
+        // );
 
         // Process payments
         paymentProcessor.processPayments(client, executionData);
@@ -246,10 +255,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 setupRecipients[i],
                 address(_token),
                 setupAmounts[i],
-                block.timestamp,
                 0,
-                block.timestamp + 1 days
+                0,
+                bytes32(0),
+                new bytes32[](0)
             );
+            // emit IPaymentProcessor_v1.PaymentOrderProcessed(
+            //     address(paymentClient),
+            //     setupRecipients[i],
+            //     address(_token),
+            //     setupAmounts[i],
+            //     0,
+            //     block.timestamp + 1 days
+            // );
         }
 
         // Process payments
@@ -539,10 +557,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             testRecipient,
             address(_token),
             testAmount,
-            block.timestamp,
             0,
-            block.timestamp + 1 days
+            0,
+            bytes32(0),
+            new bytes32[](0)
         );
+        // emit IPaymentProcessor_v1.PaymentOrderProcessed(
+        //     address(paymentClient),
+        //     testRecipient,
+        //     address(_token),
+        //     testAmount,
+        //     0,
+        //     block.timestamp + 1 days
+        // );
 
         // Action - Process payments
         paymentProcessor.processPayments(
@@ -693,10 +720,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: testRecipient,
             paymentToken: address(_token),
             amount: testAmount,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: testRecipient,
+        //     paymentToken: address(_token),
+        //     amount: testAmount,
+        //     start: block.timestamp,
+        //     cliff: 0,
+        //     end: block.timestamp + 1 days
+        // });
 
         // Prank as non-recipient
         console2.log(address(paymentClient));
@@ -961,12 +997,13 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: testRecipient,
             paymentToken: address(0xDEADBEEF), // Unsupported token address
             amount: testAmount,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
 
-        paymentClient.addPaymentOrder(order);
+        paymentClient.exposed_addPaymentOrder(order);
 
         // Expect revert due to unsupported token
         vm.expectRevert();
@@ -1052,19 +1089,27 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Create payment order with fuzzed time range
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: testRecipient,
+        //     paymentToken: address(_token),
+        // amount: testAmount,
+        // start: block.timestamp,
+        // cliff: 0,
+        // end: block.timestamp + timeOffset
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: testRecipient,
             paymentToken: address(_token),
             amount: testAmount,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + timeOffset
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
 
         _token.mint(testRecipient, testAmount);
         vm.prank(testRecipient);
         _token.approve(address(paymentProcessor), testAmount);
-        paymentClient.addPaymentOrder(order);
+        paymentClient.exposed_addPaymentOrder(order);
 
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient)), executionData
@@ -1089,17 +1134,26 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: testRecipient,
             paymentToken: address(_token),
             amount: testAmount,
-            start: block.timestamp - 2 days,
-            cliff: 0, //@note 33audits -> shouldnt this revert since start and end time are in the past?
-            end: block.timestamp - 1 days // End date in the past
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: testRecipient,
+        //     paymentToken: address(_token),
+        //     amount: testAmount,
+        //     start: block.timestamp - 2 days,
+        //     cliff: 0, //@note 33audits -> shouldnt this revert since start and end time are in the past?
+        //     end: block.timestamp - 1 days // End date in the past
+        // });
 
         // Mint tokens to recipient
         _token.mint(testRecipient, testAmount);
         vm.prank(testRecipient);
         _token.approve(address(paymentProcessor), testAmount);
 
-        paymentClient.addPaymentOrder(order);
+        paymentClient.exposed_addPaymentOrder(order);
 
         // Process payments
         paymentProcessor.processPayments(
@@ -1126,10 +1180,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0),
             paymentToken: address(_token),
             amount: 1,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: address(0),
+        //     paymentToken: address(_token),
+        //     amount: 1,
+        //     start: block.timestamp,
+        //     cliff: 0,
+        //     end: block.timestamp + 1 days
+        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1146,10 +1209,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(0),
             amount: 1,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: address(0xBEEF),
+        //     paymentToken: address(0),
+        //     amount: 1,
+        //     start: block.timestamp,
+        //     cliff: 0,
+        //     end: block.timestamp + 1 days
+        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1164,10 +1236,28 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(_token),
             amount: 0,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: address(0xBEEF),
+            paymentToken: address(_token),
+            amount: 0,
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
+        });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: address(0xBEEF),
+        //     paymentToken: address(_token),
+        //     amount: 0,
+        //     start: block.timestamp,
+        //     cliff: 0,
+        //     end: block.timestamp + 1 days
+        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1182,10 +1272,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(_token),
             amount: 1,
-            start: block.timestamp + 1 days,
-            cliff: 0,
-            end: block.timestamp
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: address(0xBEEF),
+        //     paymentToken: address(_token),
+        //     amount: 1,
+        //     start: block.timestamp + 1 days,
+        //     cliff: 0,
+        //     end: block.timestamp
+        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1200,10 +1299,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(_token),
             amount: 1,
-            start: block.timestamp,
-            cliff: 1 days,
-            end: block.timestamp - 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: address(0xBEEF),
+        //     paymentToken: address(_token),
+        //     amount: 1,
+        //     start: block.timestamp,
+        //     cliff: 1 days,
+        //     end: block.timestamp - 1 days
+        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1218,10 +1326,19 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(_token),
             amount: 1,
-            start: block.timestamp,
-            cliff: 0,
-            end: block.timestamp + 1 days
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
         });
+        // IERC20PaymentClientBase_v2.PaymentOrder({
+        //     recipient: address(0xBEEF),
+        //     paymentToken: address(_token),
+        //     amount: 1,
+        //     start: block.timestamp,
+        //     cliff: 0,
+        //     end: block.timestamp + 1 days
+        // });
         assertEq(paymentProcessor.validPaymentOrder(order), true);
     }
 
@@ -1266,12 +1383,21 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 recipient: recipients[i],
                 paymentToken: address(_token),
                 amount: amounts[i],
-                start: block.timestamp,
-                cliff: 0,
-                end: block.timestamp + 1 days
+                originChainId: 0,
+                targetChainId: 0,
+                flags: bytes32(0),
+                data: new bytes32[](0)
             });
+            // orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
+            //     recipient: recipients[i],
+            //     paymentToken: address(_token),
+            //     amount: amounts[i],
+            //     start: block.timestamp,
+            //     cliff: 0,
+            //     end: block.timestamp + 1 days
+            // });
             //add payment order to client
-            paymentClient.addPaymentOrder(orders[i]);
+            paymentClient.exposed_addPaymentOrder(orders[i]);
         }
         return orders;
     }

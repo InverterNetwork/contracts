@@ -139,8 +139,8 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount)
-            && _validTimes(order.start, order.cliff, order.end)
-            && _validPaymentToken(order.paymentToken);
+        // && _validTimes(order.start, order.cliff, order.end)
+        && _validPaymentToken(order.paymentToken);
     }
 
     //--------------------------------------------------------------------------

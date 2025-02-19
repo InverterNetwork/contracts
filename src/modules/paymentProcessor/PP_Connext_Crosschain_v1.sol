@@ -115,9 +115,10 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
                     orders[i].recipient,
                     orders[i].paymentToken,
                     orders[i].amount,
-                    orders[i].start,
-                    orders[i].cliff,
-                    orders[i].end
+                    orders[i].originChainId,
+                    orders[i].targetChainId,
+                    orders[i].flags,
+                    orders[i].data
                 );
                 _paymentId++;
                 processedIntentId[address(client)][orders[i].recipient][_paymentId]
