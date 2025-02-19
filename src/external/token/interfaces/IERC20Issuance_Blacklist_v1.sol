@@ -43,16 +43,25 @@ interface IERC20Issuance_Blacklist_v1 is IERC20Issuance_v1 {
 
     /// @notice Emitted when an address is added to the blacklist.
     /// @param  account_ The address that was blacklisted.
-    event AddedToBlacklist(address indexed account_);
+    /// @param  blacklistManager_ The address that added the address to the blacklist.
+    event AddedToBlacklist(
+        address indexed account_, address indexed blacklistManager_
+    );
 
     /// @notice Emitted when an address is removed from the blacklist.
     /// @param  account_ The address that was removed from blacklist.
-    event RemovedFromBlacklist(address indexed account_);
+    /// @param  blacklistManager_ The address that removed the address from the blacklist.
+    event RemovedFromBlacklist(
+        address indexed account_, address indexed blacklistManager_
+    );
 
     /// @notice Emitted when a blacklist manager role is granted or revoked.
     /// @param  account_ The address that was granted or revoked the role.
     /// @param  allowed_ Whether the role was granted (true) or revoked (false).
-    event BlacklistManagerUpdated(address indexed account_, bool allowed_);
+    /// @param  tokenOwner_ The address that owns the token.
+    event BlacklistManagerUpdated(
+        address indexed account_, bool allowed_, address indexed tokenOwner_
+    );
 
     // -------------------------------------------------------------------------
     // Errors

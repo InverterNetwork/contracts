@@ -484,7 +484,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev    Ensures that the deposit amount and min amount out are not zero.
     /// @param  _depositAmount Deposit amount.
-    /// @param  _minAmountOut Minimum amount out.`
+    /// @param  _minAmountOut Minimum amount out.
     function _ensureNonZeroTradeParameters(
         uint _depositAmount,
         uint _minAmountOut

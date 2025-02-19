@@ -17,7 +17,7 @@ import {IRedeemingBondingCurveBase_v1} from
  *          mechanism.
  *
  * @dev     This contract inherits from:
- *              - IFM_PC_ExternalPrice_Redeeming_v1.
+ *              - IFM_PC_Oracle_Redeeming_v1.
  *              - ERC20PaymentClientBase_v2.
  *              - RedeemingBondingCurveBase_v1.
  *          Key features:
@@ -37,7 +37,7 @@ import {IRedeemingBondingCurveBase_v1} from
  *
  * @author  Zealynx Security
  */
-interface IFM_PC_ExternalPrice_Redeeming_v1 is
+interface IFM_PC_Oracle_Redeeming_v1 is
     IFundingManager_v1,
     IERC20PaymentClientBase_v2,
     IRedeemingBondingCurveBase_v1
@@ -47,9 +47,10 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
 
     // Enum for redemption order states.
     enum RedemptionState {
-        COMPLETED,
+        PROCESSED,
         CANCELLED,
-        PROCESSING
+        PENDING,
+        FAILED
     }
 
     // -------------------------------------------------------------------------
@@ -77,6 +78,9 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @notice Thrown when the project treasury address is invalid.
     error Module__FM_PC_ExternalPrice_Redeeming_InvalidProjectTreasury();
 
+    /// @notice Thrown when the maximum buy/sell fee is invalid.
+    error Module__FM_PC_ExternalPrice_Redeeming_InvalidMaxFee();
+
     // -------------------------------------------------------------------------
     // Events
 
@@ -85,40 +89,70 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @param	amount_ The amount deposited.
     event ReserveDeposited(address indexed depositor_, uint amount_);
 
+    /// @notice Emitted when the project treasury address is updated.
+    /// @param  currentProjectTreasury_ The current project treasury to be replaced.
+    /// @param  newProjectTreasury_ The new project treasury replacing the current.
+    event ProjectTreasuryUpdated(
+        address indexed currentProjectTreasury_,
+        address indexed newProjectTreasury_
+    );
+
+    /// @notice Emitted when the oracle address is updated.
+    /// @param  currentOracle_ The current oracle to be replaced.
+    /// @param  newOracle_ The new oracle replacing the current.
+    event OracleUpdated(
+        address indexed currentOracle_, address indexed newOracle_
+    );
+
+    /// @notice Emitted when direct operation permission is updated.
+    /// @param  currentIsDirectOperationFlag_ The current state of
+    ///         direct operation permission.
+    /// @param  newIsDirectOperationFlag_ The new state of direct
+    ///         operations permission.
+    event DirectOperationsOnlyUpdated(
+        bool indexed currentIsDirectOperationFlag_,
+        bool indexed newIsDirectOperationFlag_
+    );
+
     /// @notice	Emitted when a new redemption order is created.
+    /// @param  paymentClient_ The address of payment client that created
+    ///         the payment order.
     /// @param	orderId_ Order identifier.
     /// @param	seller_ Address selling tokens.
-    /// @param	receiver_ Address who receives the redeemed tokens.
-    /// @param	sellAmount_ Amount of tokens to sell.
-    /// @param	exchangeRate_ Current exchange rate.
-    /// @param	collateralAmount_ Amount of collateral.
-    /// @param	feePercentage_ Fee percentage applied.
-    /// @param	feeAmount_ Fee amount calculated.
-    /// @param	redemptionAmount_ Final redemption amount.
+    /// @param	receiver_ Address who receives the redeemed collateral tokens.
+    /// @param	sellAmount_ Amount of issuance tokens sold.
+    /// @param	exchangeRate_ Current redemption exchange rate, denominated
+    ///         in collateral token decimals.
+    /// @param	feePercentage_ Project collateral fee percentage applied.
+    /// @param	feeAmount_ Project collateral fee amount collected.
+    /// @param	finalRedemptionAmount_ Final redemption amount to be received.
     /// @param	collateralToken_ Address of collateral token.
-    /// @param	redemptionTime_ Time of redemption.
     /// @param	state_ Initial state of the order.
     event RedemptionOrderCreated(
+        address indexed paymentClient_,
         uint indexed orderId_,
-        address indexed seller_,
+        address seller_,
         address indexed receiver_,
         uint sellAmount_,
         uint exchangeRate_,
-        uint collateralAmount_,
         uint feePercentage_,
         uint feeAmount_,
-        uint redemptionAmount_,
+        uint finalRedemptionAmount_,
         address collateralToken_,
-        uint redemptionTime_,
         RedemptionState state_
     );
 
     /// @notice	Emitted when the open redemption amount is updated.
-    /// @param  redemptionAmount The new open redemption amount.
-    /// @param	timestamp The timestamp when the update was made.
-    event RedemptionAmountUpdated(
-        uint indexed redemptionAmount, uint indexed timestamp
-    );
+    /// @param	_openRedemptionAmount The new open redemption amount.
+    event RedemptionAmountUpdated(uint _openRedemptionAmount);
+
+    /// @notice Emitted when the maximum buy fee is set.
+    /// @param  maxProjectBuyFee_ The maximum project buy fee.
+    event MaxProjectBuyFeeSet(uint maxProjectBuyFee_);
+
+    /// @notice Emitted when the maximum sell fee is set.
+    /// @param  maxProjectSellFee_ The maximum project sell fee.
+    event MaxProjectSellFeeSet(uint maxProjectSellFee_);
 
     // -------------------------------------------------------------------------
     // View Functions
@@ -126,10 +160,6 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @notice	Gets the current open collateral redemption amount.
     /// @return	amount_ The total amount of open redemptions.
     function getOpenRedemptionAmount() external view returns (uint amount_);
-
-    /// @notice	Gets the next available order ID.
-    /// @return	orderId_ The next order ID.
-    function getNextOrderId() external view returns (uint orderId_);
 
     /// @notice	Gets the current order ID.
     /// @return	orderId_ The current order ID.
@@ -151,8 +181,11 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     function getBuyFee() external view returns (uint buyFee_);
 
     /// @notice Gets the maximum fee that can be charged for buy operations.
-    /// @return maxBuyFee_ The maximum buy fee.
-    function getMaxBuyFee() external view returns (uint maxBuyFee_);
+    /// @return maxProjectBuyFee_ The maximum buy fee.
+    function getMaxProjectBuyFee()
+        external
+        view
+        returns (uint maxProjectBuyFee_);
 
     /// @notice Gets the maximum project fee that can be charged for sell
     ///         operations.
@@ -165,6 +198,29 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @notice Gets current sell fee.
     /// @return fee_ The current sell fee.
     function getSellFee() external view returns (uint fee_);
+
+    /// @notice Gets the whitelist role identifier
+    /// @return role_ The whitelist role identifier
+    function getWhitelistRole() external pure returns (bytes32 role_);
+
+    /// @notice Gets the whitelist role admin identifier
+    /// @return role_ The whitelist role admin identifier
+    function getWhitelistRoleAdmin() external pure returns (bytes32 role_);
+
+    /// @notice Gets the queue executor role identifier
+    /// @return role_ The queue executor role identifier
+    function getQueueExecutorRole() external pure returns (bytes32 role_);
+
+    /// @notice Gets the queue executor role admin identifier
+    /// @return role_ The queue executor role admin identifier
+    function getQueueExecutorRoleAdmin()
+        external
+        pure
+        returns (bytes32 role_);
+
+    /// @notice Gets the oracle address.
+    /// @return oracle_ The address of the oracle.
+    function getOracle() external view returns (address oracle_);
 
     // -------------------------------------------------------------------------
     // External Functions
@@ -185,10 +241,10 @@ interface IFM_PC_ExternalPrice_Redeeming_v1 is
     /// @param  isDirectOperationsOnly_ The new value for the flag.
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_) external;
 
-    /// @notice Deducts the processed redeem amount from the open redemption
-    ///         amount.
-    /// @param  processedRedemptionAmount_ The amount of redemption tokens that
-    ///         were processed.
-    function deductProcessedRedemptionAmount(uint processedRedemptionAmount_)
-        external;
+    /// @notice Manually executes the redemption queue in the workflows Payment
+    ///         Processor.
+    /// @dev    If this function is called but the Payment Processor does not
+    ///         implement the option to manually execute the redemption queue
+    ///         then this function will revert.
+    function executeRedemptionQueue() external;
 }
