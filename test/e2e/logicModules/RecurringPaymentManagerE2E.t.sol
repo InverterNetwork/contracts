@@ -21,7 +21,7 @@ import {
     IPP_Streaming_v1,
     IERC20PaymentClientBase_v1
 } from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
@@ -64,10 +64,10 @@ contract RecurringPaymentManagerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -113,8 +113,8 @@ contract RecurringPaymentManagerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        FM_Rebasing_v1 fundingManager =
-            FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        FM_DepositVault_v1 fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
