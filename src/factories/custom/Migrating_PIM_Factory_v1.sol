@@ -66,6 +66,22 @@ contract Migrating_PIM_Factory_v1 is
         _;
     }
 
+    /// @dev	Modifier to guarantee the caller is the initiator and the reward duration is over for the given funding manager.
+    modifier onlyInitiatorAndRewardDurationOver(address fundingManager) {
+        PIM memory pim = pims[fundingManager];
+
+        if (
+            msg.sender != pim.initiator
+                || pim.staking.rewardsEnd() > block.timestamp
+        ) {
+            revert
+                IMigrating_PIM_Factory_v1
+                .PIM_WorkflowFactory__OnlyInitiatorAndRewardDurationOver();
+        }
+
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constructor
 
@@ -90,13 +106,8 @@ contract Migrating_PIM_Factory_v1 is
         MigrationConfig memory migrationConfig_
     ) external returns (IOrchestrator_v1) {
         // deploy issuance token
-        ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
-            issuanceTokenParams.name,
-            issuanceTokenParams.symbol,
-            issuanceTokenParams.decimals,
-            issuanceTokenParams.maxSupply,
-            address(this) // assigns owner role to itself initially to manage minting rights temporarily
-        );
+        ERC20Issuance_v1 issuanceToken =
+            _deployIssuanceToken(issuanceTokenParams);
 
         (
             IOrchestrator_v1 orchestrator,
@@ -111,30 +122,28 @@ contract Migrating_PIM_Factory_v1 is
             address(issuanceToken)
         );
 
+        // get modules
+        (LM_PC_Staking_v1 staking, LM_PC_PaymentRouter_v1 paymentRouter) =
+            _getModules(orchestrator);
+
+        // get funding manager
         address fundingManager = address(orchestrator.fundingManager());
 
+        // get lp token recipient
         address lpTokenRecipient = migrationConfig_.isImmutable
             ? address(this)
             : migrationConfig_.lpTokenRecipient;
 
-        // get bonding curve / funding manager
         // store orchestrator for issuance token
-        pims[address(fundingManager)] = IMigrating_PIM_Factory_v1.PIM({
-            isGraduated: false,
-            isImmutable: migrationConfig_.isImmutable,
-            migrationThreshold: migrationConfig_.migrationThreshold,
-            lpTokenRecipient: lpTokenRecipient,
-            dexAdapter: migrationConfig_.dexAdapter,
-            orchestrator: orchestrator,
-            initiator: initiator,
-            initialVirtualIssuanceSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-                fundingManager
-            ).getVirtualIssuanceSupply(),
-            initialVirtualCollateralSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-                fundingManager
-            ).getVirtualCollateralSupply(),
-            initialRewardDuration: migrationConfig_.initialRewardDuration
-        });
+        _storePIM(
+            fundingManager,
+            orchestrator,
+            initiator,
+            staking,
+            paymentRouter,
+            migrationConfig_,
+            lpTokenRecipient
+        );
 
         // enable bonding curve to mint issuance token
         issuanceToken.setMinter(fundingManager, true);
@@ -157,11 +166,7 @@ contract Migrating_PIM_Factory_v1 is
         return orchestrator;
     }
 
-    /**
-     * @notice Returns whether the issuance token has been graduated
-     * @param fundingManager The funding manager to check
-     * @return isGraduated Whether the issuance token has been graduated
-     */
+    /// @inheritdoc IMigrating_PIM_Factory_v1
     function getIsGraduated(address fundingManager)
         external
         view
@@ -170,11 +175,7 @@ contract Migrating_PIM_Factory_v1 is
         return pims[fundingManager].isGraduated;
     }
 
-    /**
-     * @notice Returns whether the issuance token is immutable
-     * @param fundingManager The funding manager to check
-     * @return isImmutable Whether the issuance token is immutable
-     */
+    /// @inheritdoc IMigrating_PIM_Factory_v1
     function getIsImmutable(address fundingManager)
         external
         view
@@ -183,11 +184,7 @@ contract Migrating_PIM_Factory_v1 is
         return pims[fundingManager].isImmutable;
     }
 
-    /**
-     * @notice Returns the migration threshold
-     * @param fundingManager The funding manager to check
-     * @return migrationThreshold The migration threshold
-     */
+    /// @inheritdoc IMigrating_PIM_Factory_v1
     function getMigrationThreshold(address fundingManager)
         external
         view
@@ -196,11 +193,7 @@ contract Migrating_PIM_Factory_v1 is
         return pims[fundingManager].migrationThreshold;
     }
 
-    /**
-     * @notice Returns the LP token recipient
-     * @param fundingManager The funding manager to check
-     * @return lpTokenRecipient The LP token recipient
-     */
+    /// @inheritdoc IMigrating_PIM_Factory_v1
     function getLpTokenRecipient(address fundingManager)
         external
         view
@@ -209,13 +202,30 @@ contract Migrating_PIM_Factory_v1 is
         return pims[fundingManager].lpTokenRecipient;
     }
 
-    /**
-     * @notice Buys tokens from the bonding curve funding manager for a recipient
-     * @param fundingManager The funding manager to buy from
-     * @param recipient The address to receive the purchased tokens
-     * @param amountIn The maximum amount of collateral tokens to spend
-     * @param minAmountOut The minimum amount of issuance tokens to receive
-     */
+    /// @inheritdoc IMigrating_PIM_Factory_v1
+    function withdrawPimFee(address fundingManager, address to)
+        external
+        onlyInitiatorAfterGraduation(fundingManager)
+    {
+        IBondingCurveBase_v1 fm = IBondingCurveBase_v1(fundingManager);
+        // get accumulated fee amount from bonding curve
+        uint amount = fm.projectCollateralFeeCollected();
+
+        // withdraw fee from bonding curve and send to `to`
+        fm.withdrawProjectCollateralFee(to, amount);
+    }
+
+    /// @inheritdoc IMigrating_PIM_Factory_v1
+    function setRewards(address fundingManager, uint amount, uint duration)
+        external
+        onlyInitiatorAndRewardDurationOver(fundingManager)
+    {
+        PIM memory pim = pims[fundingManager];
+
+        pim.staking.setRewards(amount, duration);
+    }
+
+    /// @inheritdoc IMigrating_PIM_Factory_v1
     function buyFor(
         address fundingManager,
         address recipient,
@@ -310,13 +320,7 @@ contract Migrating_PIM_Factory_v1 is
         }
     }
 
-    /**
-     * @notice Sells tokens to the funding manager for a recipient
-     * @param fundingManager The funding manager to sell to
-     * @param recipient The address to receive the purchased tokens
-     * @param amountIn The amount of issuance tokens to sell
-     * @param minAmountOut The minimum amount of collateral tokens to receive
-     */
+    /// @inheritdoc IMigrating_PIM_Factory_v1
     function sellTo(
         address fundingManager,
         address recipient,
@@ -356,26 +360,20 @@ contract Migrating_PIM_Factory_v1 is
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(fm.getIssuanceToken());
 
         // Get modules
-        address[] memory modules = pim.orchestrator.listModules();
 
         uint collateralLiquidity = collateralToken.balanceOf(fundingManager);
 
         uint issuanceLiquidity =
             fm.getVirtualIssuanceSupply() - pim.initialVirtualIssuanceSupply;
 
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
-                LM_PC_PaymentRouter_v1(modules[i]).pushPayment(
-                    pim.dexAdapter,
-                    address(collateralToken),
-                    collateralLiquidity - fm.projectCollateralFeeCollected(),
-                    0,
-                    0,
-                    0
-                );
-                break;
-            } catch {}
-        }
+        pim.paymentRouter.pushPayment(
+            pim.dexAdapter,
+            address(collateralToken),
+            collateralLiquidity - fm.projectCollateralFeeCollected(),
+            0,
+            0,
+            0
+        );
 
         fm.closeBuy();
         fm.closeSell();
@@ -409,14 +407,10 @@ contract Migrating_PIM_Factory_v1 is
 
         uint stakingRewards = fm.projectCollateralFeeCollected();
 
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_Staking_v1(modules[i]).rewardRate() {
-                LM_PC_Staking_v1(modules[i]).setRewards(
-                    stakingRewards, pim.initialRewardDuration
-                );
-                break;
-            } catch {}
-        }
+        // withdraw project collateral fee to staking module
+        fm.withdrawProjectCollateralFee(address(pim.staking), stakingRewards);
+
+        pim.staking.setRewards(stakingRewards, pim.initialRewardDuration);
 
         emit Graduation(
             address(pim.orchestrator),
@@ -450,16 +444,10 @@ contract Migrating_PIM_Factory_v1 is
         // grant curve interaction role to factory to be able to buy and sell
         fm.grantModuleRole(fm.CURVE_INTERACTION_ROLE(), address(this));
         // grant payment pusher role to factory to be able to transfer collateral to dex
-        address[] memory modules = pim.orchestrator.listModules();
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
-                LM_PC_PaymentRouter_v1(modules[i]).grantModuleRole(
-                    LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE(),
-                    address(this)
-                );
-                break;
-            } catch {}
-        }
+
+        pim.paymentRouter.grantModuleRole(
+            pim.paymentRouter.PAYMENT_PUSHER_ROLE(), address(this)
+        );
     }
 
     function _handleInitialPurchase(
@@ -559,5 +547,65 @@ contract Migrating_PIM_Factory_v1 is
         );
 
         return (orchestrator, initiator, collateralToken);
+    }
+
+    function _deployIssuanceToken(
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
+    ) internal returns (ERC20Issuance_v1) {
+        return new ERC20Issuance_v1(
+            issuanceTokenParams.name,
+            issuanceTokenParams.symbol,
+            issuanceTokenParams.decimals,
+            issuanceTokenParams.maxSupply,
+            address(this)
+        );
+    }
+
+    function _getModules(IOrchestrator_v1 orchestrator)
+        internal
+        returns (LM_PC_Staking_v1 staking, LM_PC_PaymentRouter_v1 paymentRouter)
+    {
+        address[] memory modules = orchestrator.listModules();
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_Staking_v1(modules[i]).rewardRate() {
+                staking = LM_PC_Staking_v1(modules[i]);
+                break;
+            } catch {}
+        }
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
+                paymentRouter = LM_PC_PaymentRouter_v1(modules[i]);
+                break;
+            } catch {}
+        }
+    }
+
+    function _storePIM(
+        address fundingManager,
+        IOrchestrator_v1 orchestrator,
+        address initiator,
+        LM_PC_Staking_v1 staking,
+        LM_PC_PaymentRouter_v1 paymentRouter,
+        MigrationConfig memory migrationConfig_,
+        address lpTokenRecipient
+    ) internal {
+        pims[address(fundingManager)] = IMigrating_PIM_Factory_v1.PIM({
+            isGraduated: false,
+            isImmutable: migrationConfig_.isImmutable,
+            migrationThreshold: migrationConfig_.migrationThreshold,
+            lpTokenRecipient: lpTokenRecipient,
+            dexAdapter: migrationConfig_.dexAdapter,
+            orchestrator: orchestrator,
+            initiator: initiator,
+            initialVirtualIssuanceSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                fundingManager
+            ).getVirtualIssuanceSupply(),
+            initialVirtualCollateralSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                fundingManager
+            ).getVirtualCollateralSupply(),
+            initialRewardDuration: migrationConfig_.initialRewardDuration,
+            staking: staking,
+            paymentRouter: paymentRouter
+        });
     }
 }

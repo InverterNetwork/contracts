@@ -328,6 +328,17 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     }
 
     function test_buyForUpTo_AtAboveThreshold() public {
+        address[] memory modules = orchestrator.listModules();
+        LM_PC_Staking_v1 stakingModule;
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_Staking_v1(modules[i]).rewardRate() {
+                stakingModule = LM_PC_Staking_v1(modules[i]);
+                break;
+            } catch {}
+        }
+
+        // START
+
         uint amountIn = secondaryPurchaseAmount; // 10 ether, 1 ether was already purchased on inital
 
         token.mint(address(this), amountIn);
@@ -346,9 +357,11 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             "Factory should be graduated"
         );
 
+        uint stakingRewardsTransferred = token.balanceOf(address(stakingModule));
+
         // Check that only the amount up to threshold was used
         uint expectedRefund = initialPurchaseAmount + secondaryPurchaseAmount
-            - migrationThreshold - fundingManager.projectCollateralFeeCollected();
+            - migrationThreshold - stakingRewardsTransferred;
 
         assertEq(
             token.balanceOf(address(this)),
@@ -362,12 +375,10 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             "Buyer should receive issuance tokens"
         );
 
-        uint collateralFee = fundingManager.projectCollateralFeeCollected();
-
         assertEq(
             token.balanceOf(address(fundingManager)),
-            collateralFee,
-            "Funding manager should only hold the fee amount after migration"
+            0,
+            "Funding manager should not hold any collateral tokens after migration"
         );
 
         // Check if issuance token is renounced (immutable) or not (mutable)
@@ -401,20 +412,9 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             );
         }
 
-        address[] memory modules = orchestrator.listModules();
-
-        LM_PC_Staking_v1 stakingModule;
-
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_Staking_v1(modules[i]).rewardRate() {
-                stakingModule = LM_PC_Staking_v1(modules[i]);
-                break;
-            } catch {}
-        }
-
         assertEq(
             stakingModule.rewardRate(),
-            collateralFee / initialRewardDuration,
+            stakingRewardsTransferred / initialRewardDuration,
             "Initial reward rate should be set correctly"
         );
     }
