@@ -18,15 +18,13 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-import {FM_Rebasing_v1} from
-    "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 // SuT
 import {LM_PC_Staking_v1, ILM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
 // import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {ERC20Mock} from
-    "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract LM_PC_Staking_v1Lifecycle is E2ETest {
@@ -76,10 +74,10 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
+                depositVaultMetadata, abi.encode(address(rewardToken))
             )
         );
 
@@ -122,8 +120,8 @@ contract LM_PC_Staking_v1Lifecycle is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        FM_Rebasing_v1 fundingManager =
-            FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        FM_DepositVault_v1 fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         LM_PC_Staking_v1 stakingManager;
         // ------------------ FROM ModuleTest.sol

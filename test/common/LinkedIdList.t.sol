@@ -27,6 +27,7 @@ contract LinkedIdListTest is Test {
     //--------------------------------------------------------------------------
     // Modifier
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testValidNewId(uint[] calldata seed, uint id) public {
         vm.assume(seed.length < 1000); // Reasonable size
 
@@ -41,6 +42,7 @@ contract LinkedIdListTest is Test {
         list.addId(id);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testValidId(uint[] calldata seed, uint id) public {
         vm.assume(seed.length < 1000); // Reasonable size
 
@@ -59,6 +61,7 @@ contract LinkedIdListTest is Test {
         list.removeId(prevId, id);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testValidPosition(uint[] calldata seed, uint id) public {
         vm.assume(seed.length < 1000); // Reasonable size
 
@@ -73,6 +76,7 @@ contract LinkedIdListTest is Test {
         list.getPreviousId(id);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testOnlyConsecutiveIds(uint[] calldata seed, uint prevId) public {
         vm.assume(seed.length < 1000); // Reasonable size
         vm.assume(seed.length > 0);
@@ -94,6 +98,7 @@ contract LinkedIdListTest is Test {
         list.removeId(prevId, randomId);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testValidMoveParameter(
         uint[] calldata seed,
         uint id,
@@ -173,6 +178,7 @@ contract LinkedIdListTest is Test {
         assertEq(list.isExistingId(randomId), expectedValue);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testGetPreviousId(uint[] calldata seed) public {
         vm.assume(seed.length < 1000); // Reasonable size
 
@@ -188,6 +194,7 @@ contract LinkedIdListTest is Test {
         }
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testGetPreviousIdModifier() public {
         // Check validPosition is in place
         vm.expectRevert(
@@ -197,6 +204,7 @@ contract LinkedIdListTest is Test {
         list.getPreviousId(0);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testGetNextIdModifier() public {
         // Check validPosition is in place
         vm.expectRevert(
@@ -209,6 +217,7 @@ contract LinkedIdListTest is Test {
     //--------------------------------------------------------------------------
     // Mutating Functions
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testAddId(uint[] calldata seed) public {
         vm.assume(seed.length > 0); // Reasonable size
         vm.assume(seed.length < 1000);
@@ -239,6 +248,7 @@ contract LinkedIdListTest is Test {
         list.addId(ids[0]);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testAddIdModifier() public {
         list.addId(1);
 
@@ -250,6 +260,7 @@ contract LinkedIdListTest is Test {
         list.addId(1);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testRemoveId(uint[] calldata seed) public {
         vm.assume(seed.length > 0); // Reasonable size
         vm.assume(seed.length < 1000);
@@ -303,6 +314,7 @@ contract LinkedIdListTest is Test {
         assertEq(list.listIds().length, 0);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testRemoveIdModifier() public {
         list.addId(1);
 
@@ -353,6 +365,7 @@ contract LinkedIdListTest is Test {
         }
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testMoveIdInListModifier() public {
         // Check validId is in place for id
         vm.expectRevert(LinkedIdList.Library__LinkedIdList__InvalidId.selector);
