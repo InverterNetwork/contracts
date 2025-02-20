@@ -346,6 +346,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     }
     // -> no case
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testCannotAddNonTokenWhenTokenGated() public {
         setUpTokenGatedRole(
             address(mockModule), ROLE_TOKEN, address(roleToken), 500
@@ -366,6 +367,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
         _authorizer.grantRoleFromModule(ROLE_TOKEN, CLOE);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testAdminCannotAddNonTokenWhenTokenGated() public {
         // we set BOB as admin
         makeAddressDefaultAdmin(BOB);
