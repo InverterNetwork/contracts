@@ -24,7 +24,9 @@ import {FM_Rebasing_v1} from
 import {LM_PC_Staking_v1, ILM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+// import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from
+    "test/modules/fundingManager/rebasing/utils/mocks/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract LM_PC_Staking_v1Lifecycle is E2ETest {
