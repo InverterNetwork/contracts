@@ -70,9 +70,12 @@ contract Migrating_PIM_Factory_v1 is
     modifier onlyInitiatorAndRewardDurationOver(address fundingManager) {
         PIM memory pim = pims[fundingManager];
 
+        // get modules
+        LM_PC_Staking_v1 staking = _getStaking(pim.orchestrator);
+
         if (
             msg.sender != pim.initiator
-                || pim.staking.rewardsEnd() > block.timestamp
+                || staking.rewardsEnd() > block.timestamp
         ) {
             revert
                 IMigrating_PIM_Factory_v1
@@ -122,10 +125,6 @@ contract Migrating_PIM_Factory_v1 is
             address(issuanceToken)
         );
 
-        // get modules
-        (LM_PC_Staking_v1 staking, LM_PC_PaymentRouter_v1 paymentRouter) =
-            _getModules(orchestrator);
-
         // get funding manager
         address fundingManager = address(orchestrator.fundingManager());
 
@@ -139,8 +138,6 @@ contract Migrating_PIM_Factory_v1 is
             fundingManager,
             orchestrator,
             initiator,
-            staking,
-            paymentRouter,
             migrationConfig_,
             lpTokenRecipient
         );
@@ -222,7 +219,10 @@ contract Migrating_PIM_Factory_v1 is
     {
         PIM memory pim = pims[fundingManager];
 
-        pim.staking.setRewards(amount, duration);
+        // get staking module
+        LM_PC_Staking_v1 staking = _getStaking(pim.orchestrator);
+
+        staking.setRewards(amount, duration);
     }
 
     /// @inheritdoc IMigrating_PIM_Factory_v1
@@ -351,6 +351,13 @@ contract Migrating_PIM_Factory_v1 is
     function _graduate(address fundingManager) internal {
         PIM memory pim = pims[fundingManager];
 
+        // get payment router
+        LM_PC_PaymentRouter_v1 paymentRouter =
+            _getPaymentRouter(pim.orchestrator);
+
+        // get staking module
+        LM_PC_Staking_v1 staking = _getStaking(pim.orchestrator);
+
         // Get funding manager
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager);
@@ -366,7 +373,7 @@ contract Migrating_PIM_Factory_v1 is
         uint issuanceLiquidity =
             fm.getVirtualIssuanceSupply() - pim.initialVirtualIssuanceSupply;
 
-        pim.paymentRouter.pushPayment(
+        paymentRouter.pushPayment(
             pim.dexAdapter,
             address(collateralToken),
             collateralLiquidity - fm.projectCollateralFeeCollected(),
@@ -408,9 +415,9 @@ contract Migrating_PIM_Factory_v1 is
         uint stakingRewards = fm.projectCollateralFeeCollected();
 
         // withdraw project collateral fee to staking module
-        fm.withdrawProjectCollateralFee(address(pim.staking), stakingRewards);
+        fm.withdrawProjectCollateralFee(address(staking), stakingRewards);
 
-        pim.staking.setRewards(stakingRewards, pim.initialRewardDuration);
+        staking.setRewards(stakingRewards, pim.initialRewardDuration);
 
         emit Graduation(
             address(pim.orchestrator),
@@ -423,6 +430,10 @@ contract Migrating_PIM_Factory_v1 is
 
     function _handleWorkflowPrivileges(address fundingManager) internal {
         PIM memory pim = pims[fundingManager];
+
+        // get payment router
+        LM_PC_PaymentRouter_v1 paymentRouter =
+            _getPaymentRouter(pim.orchestrator);
 
         // Get funding manager
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
@@ -445,8 +456,8 @@ contract Migrating_PIM_Factory_v1 is
         fm.grantModuleRole(fm.CURVE_INTERACTION_ROLE(), address(this));
         // grant payment pusher role to factory to be able to transfer collateral to dex
 
-        pim.paymentRouter.grantModuleRole(
-            pim.paymentRouter.PAYMENT_PUSHER_ROLE(), address(this)
+        paymentRouter.grantModuleRole(
+            paymentRouter.PAYMENT_PUSHER_ROLE(), address(this)
         );
     }
 
@@ -561,17 +572,26 @@ contract Migrating_PIM_Factory_v1 is
         );
     }
 
-    function _getModules(IOrchestrator_v1 orchestrator)
+    function _getStaking(IOrchestrator_v1 orchestrator)
         internal
-        returns (LM_PC_Staking_v1 staking, LM_PC_PaymentRouter_v1 paymentRouter)
+        returns (LM_PC_Staking_v1 staking)
     {
         address[] memory modules = orchestrator.listModules();
+
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_Staking_v1(modules[i]).rewardRate() {
                 staking = LM_PC_Staking_v1(modules[i]);
                 break;
             } catch {}
         }
+    }
+
+    function _getPaymentRouter(IOrchestrator_v1 orchestrator)
+        internal
+        returns (LM_PC_PaymentRouter_v1 paymentRouter)
+    {
+        address[] memory modules = orchestrator.listModules();
+
         for (uint i = 0; i < modules.length; i++) {
             try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
                 paymentRouter = LM_PC_PaymentRouter_v1(modules[i]);
@@ -584,8 +604,6 @@ contract Migrating_PIM_Factory_v1 is
         address fundingManager,
         IOrchestrator_v1 orchestrator,
         address initiator,
-        LM_PC_Staking_v1 staking,
-        LM_PC_PaymentRouter_v1 paymentRouter,
         MigrationConfig memory migrationConfig_,
         address lpTokenRecipient
     ) internal {
@@ -603,9 +621,7 @@ contract Migrating_PIM_Factory_v1 is
             initialVirtualCollateralSupply: FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
                 fundingManager
             ).getVirtualCollateralSupply(),
-            initialRewardDuration: migrationConfig_.initialRewardDuration,
-            staking: staking,
-            paymentRouter: paymentRouter
+            initialRewardDuration: migrationConfig_.initialRewardDuration
         });
     }
 }

@@ -72,8 +72,6 @@ interface IMigrating_PIM_Factory_v1 {
         uint initialVirtualIssuanceSupply;
         uint initialVirtualCollateralSupply;
         uint initialRewardDuration;
-        LM_PC_Staking_v1 staking;
-        LM_PC_PaymentRouter_v1 paymentRouter;
     }
 
     struct MigrationConfig {
