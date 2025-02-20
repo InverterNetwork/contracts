@@ -368,7 +368,7 @@ contract AUT_RolesV1Test is Test {
     // Test grantRoleFromModule
     // - Should revert if caller is not a module
     // - Should not revert if role is already granted, but not emit events either
-
+    /// forge-config: default.allow_internal_expect_revert = true
     function testGrantRoleFromModule() public {
         address newModule = _setupMockSelfManagedModule();
         bytes32 role0_module = _authorizer.generateRoleId(newModule, ROLE_0);

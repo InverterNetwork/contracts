@@ -13,12 +13,12 @@ import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1} from
     "@fm/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1.sol";
 import {FM_EXT_TokenVault_v1} from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
@@ -77,47 +77,6 @@ contract E2EModuleRegistry is Test {
     //--------------------------------------------------------------------------
     // Funding Managers
     //--------------------------------------------------------------------------
-
-    // FM_Rebasing_v1
-
-    FM_Rebasing_v1 rebasingFundingManagerImpl;
-
-    InverterBeacon_v1 rebasingFundingManagerBeacon;
-
-    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
-        1, 0, 0, "https://github.com/inverter/funding-manager", "FM_Rebasing_v1"
-    );
-
-    /*
-    IOrchestratorFactory_v1.ModuleConfig rebasingFundingManagerFactoryConfig =
-        IOrchestratorFactory_v1.ModuleConfig(
-            rebasingFundingManagerMetadata,
-            abi.encode(address(token)),
-             
-        )
-    */
-
-    function setUpRebasingFundingManager() internal {
-        // Deploy module implementations.
-        rebasingFundingManagerImpl = new FM_Rebasing_v1();
-
-        // Deploy module beacons.
-        rebasingFundingManagerBeacon = new InverterBeacon_v1(
-            moduleFactory.reverter(),
-            DEFAULT_BEACON_OWNER,
-            rebasingFundingManagerMetadata.majorVersion,
-            address(rebasingFundingManagerImpl),
-            rebasingFundingManagerMetadata.minorVersion,
-            rebasingFundingManagerMetadata.patchVersion
-        );
-
-        // Register modules at moduleFactory.
-        vm.prank(teamMultisig);
-        gov.registerMetadataInModuleFactory(
-            rebasingFundingManagerMetadata,
-            IInverterBeacon_v1(rebasingFundingManagerBeacon)
-        );
-    }
 
     // FM_BC_Bancor_Redeeming_VirtualSupply_v1
 
@@ -320,6 +279,42 @@ contract E2EModuleRegistry is Test {
         gov.registerMetadataInModuleFactory(
             tokenVaultFundingManagerExtensionMetadata,
             IInverterBeacon_v1(tokenVaultFundingManagerExtensionBeacon)
+        );
+    }
+
+    //--------------------------------------------------------------------------
+    // Deposit Vault
+
+    FM_DepositVault_v1 depositVaultImpl;
+
+    InverterBeacon_v1 depositVaultBeacon;
+
+    IModule_v1.Metadata depositVaultMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/depositVault",
+        "FM_DepositVault_v1"
+    );
+
+    function setUpDepositVaultFundingManager() internal {
+        // Deploy module implementations.
+        depositVaultImpl = new FM_DepositVault_v1();
+
+        // Deploy module beacons.
+        depositVaultBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            depositVaultMetadata.majorVersion,
+            address(depositVaultImpl),
+            depositVaultMetadata.minorVersion,
+            depositVaultMetadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            depositVaultMetadata, IInverterBeacon_v1(depositVaultBeacon)
         );
     }
 
