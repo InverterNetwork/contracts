@@ -417,6 +417,28 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             stakingRewardsTransferred / initialRewardDuration,
             "Initial reward rate should be set correctly"
         );
+
+        // Expect the setRewards call to revert
+        vm.startPrank(workflowAdmin);
+        vm.expectRevert();
+        factory.setRewards(
+            address(fundingManager), 1 ether, initialRewardDuration
+        );
+
+        // Skip the initial reward duration and try again
+        uint initialTimestamp = block.timestamp;
+        vm.warp(initialTimestamp + initialRewardDuration);
+
+        factory.setRewards(
+            address(fundingManager), 1 ether, initialRewardDuration
+        );
+        vm.stopPrank();
+
+        assertEq(
+            stakingModule.rewardRate(),
+            1 ether / initialRewardDuration,
+            "Reward rate should be set correctly after reward duration"
+        );
     }
 
     // Utils
