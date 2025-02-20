@@ -16,7 +16,7 @@ import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {
     LM_PC_Bounties_v1, ILM_PC_Bounties_v1
 } from "@lm/LM_PC_Bounties_v1.sol";
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 contract TokenGatedRoleAuthorizerE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -42,10 +42,10 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -90,8 +90,8 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
         AUT_TokenGated_Roles_v1 authorizer =
             AUT_TokenGated_Roles_v1(address(orchestrator.authorizer()));
 
-        FM_Rebasing_v1 fundingManager =
-            FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        FM_DepositVault_v1 fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         // Find LM_PC_Bounties_v1
         LM_PC_Bounties_v1 bountyManager;

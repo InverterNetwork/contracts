@@ -8,7 +8,7 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 // SuT
 import {
     LM_PC_RecurringPayments_v1,
@@ -46,7 +46,7 @@ contract StreamingPaymentProcessorE2E is E2ETest {
 
     // Modules, for reference between functions
     IOrchestrator_v1 orchestrator;
-    FM_Rebasing_v1 fundingManager;
+    FM_DepositVault_v1 fundingManager;
     LM_PC_RecurringPayments_v1 recurringPaymentManager;
     PP_Streaming_v1 streamingPaymentProcessor;
 
@@ -63,10 +63,10 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -109,7 +109,8 @@ contract StreamingPaymentProcessorE2E is E2ETest {
         orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
