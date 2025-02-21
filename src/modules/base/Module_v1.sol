@@ -324,11 +324,14 @@ abstract contract Module_v1 is
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())
-                || (!ERC165Upgradeable(_msgSender()).supportsInterface(
-                    type(IERC20PaymentClientBase_v1).interfaceId
-                ) && !ERC165Upgradeable(_msgSender()).supportsInterface(
-                    type(IERC20PaymentClientBase_v2).interfaceId
-                ))
+                || (
+                    !ERC165Upgradeable(_msgSender()).supportsInterface(
+                        type(IERC20PaymentClientBase_v1).interfaceId
+                    )
+                        && !ERC165Upgradeable(_msgSender()).supportsInterface(
+                            type(IERC20PaymentClientBase_v2).interfaceId
+                        )
+                )
         ) revert Module__OnlyCallableByPaymentClient();
     }
 
