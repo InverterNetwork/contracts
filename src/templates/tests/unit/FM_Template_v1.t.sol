@@ -18,9 +18,9 @@ import {FM_Template_v1_Exposed} from
     "src/templates/tests/unit/FM_Template_v1_Exposed.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {
-    IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+    IERC20PaymentClientBase_v2,
+    ERC20PaymentClientBaseV2Mock
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
 import {IFM_Template_v1} from "src/templates/modules/IFM_Template_v1.sol";
@@ -55,7 +55,7 @@ contract FM_Template_v1_Test is ModuleTest {
 
     // Mocks
     ERC20Mock orchestratorToken;
-    ERC20PaymentClientBaseV1Mock paymentClient;
+    ERC20PaymentClientBaseV2Mock paymentClient;
 
     // =========================================================================
     // Setup
@@ -80,7 +80,7 @@ contract FM_Template_v1_Test is ModuleTest {
 
         // Setup other modules needed in the unit tests.
         // In this case a payment client is needed to test the FM_Template_v1.
-        paymentClient = new ERC20PaymentClientBaseV1Mock();
+        paymentClient = new ERC20PaymentClientBaseV2Mock();
         _addLogicModuleToOrchestrator(address(paymentClient));
     }
 

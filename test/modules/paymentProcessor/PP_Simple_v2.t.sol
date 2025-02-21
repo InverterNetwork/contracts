@@ -14,30 +14,30 @@ import {
 
 // SuT
 
-import {PP_Simple_v1AccessMock} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v1AccessMock.sol";
+import {PP_Simple_v2AccessMock} from
+    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v2AccessMock.sol";
 
 import {
-    PP_Simple_v1,
-    IPaymentProcessor_v1
-} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
+    PP_Simple_v2,
+    IPaymentProcessor_v2
+} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
 
 // Mocks
 import {
-    IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock,
+    IERC20PaymentClientBase_v2,
+    ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PP_SimpleV1Test is ModuleTest {
+contract PP_SimpleV2Test is ModuleTest {
     // SuT
-    PP_Simple_v1AccessMock paymentProcessor;
+    PP_Simple_v2AccessMock paymentProcessor;
 
     // Mocks
-    ERC20PaymentClientBaseV1Mock paymentClient;
+    ERC20PaymentClientBaseV2Mock paymentClient;
 
     //--------------------------------------------------------------------------
     // Events
@@ -53,8 +53,8 @@ contract PP_SimpleV1Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Simple_v1AccessMock());
-        paymentProcessor = PP_Simple_v1AccessMock(Clones.clone(impl));
+        address impl = address(new PP_Simple_v2AccessMock());
+        paymentProcessor = PP_Simple_v2AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 
@@ -62,8 +62,8 @@ contract PP_SimpleV1Test is ModuleTest {
 
         paymentProcessor.init(_orchestrator, _METADATA, bytes(""));
 
-        impl = address(new ERC20PaymentClientBaseV1Mock());
-        paymentClient = ERC20PaymentClientBaseV1Mock(Clones.clone(impl));
+        impl = address(new ERC20PaymentClientBaseV2Mock());
+        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
 
         _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
         vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
@@ -86,7 +86,7 @@ contract PP_SimpleV1Test is ModuleTest {
     function testSupportsInterface() public {
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPaymentProcessor_v1).interfaceId
+                type(IPaymentProcessor_v2).interfaceId
             )
         );
     }
@@ -111,7 +111,7 @@ contract PP_SimpleV1Test is ModuleTest {
 
         // Add payment order to client.
         paymentClient.exposed_addPaymentOrder(
-            IERC20PaymentClientBase_v1.PaymentOrder({
+            IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: recipient,
                 paymentToken: address(_token),
                 amount: amount,
@@ -131,7 +131,7 @@ contract PP_SimpleV1Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+        emit IPaymentProcessor_v2.PaymentOrderProcessed(
             address(paymentClient),
             recipient,
             address(_token),
@@ -197,7 +197,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
@@ -216,13 +216,13 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        ERC20PaymentClientBaseV1Mock otherERC20PaymentClient =
-            new ERC20PaymentClientBaseV1Mock();
+        ERC20PaymentClientBaseV2Mock otherERC20PaymentClient =
+            new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -244,7 +244,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
@@ -263,13 +263,13 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.assume(nonModule != address(_paymentProcessor));
         vm.assume(nonModule != address(_fundingManager));
 
-        ERC20PaymentClientBaseV1Mock otherERC20PaymentClient =
-            new ERC20PaymentClientBaseV1Mock();
+        ERC20PaymentClientBaseV2Mock otherERC20PaymentClient =
+            new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -305,7 +305,7 @@ contract PP_SimpleV1Test is ModuleTest {
             data[1] = bytes32(block.timestamp);
 
             paymentClient.exposed_addPaymentOrder(
-                IERC20PaymentClientBase_v1.PaymentOrder({
+                IERC20PaymentClientBase_v2.PaymentOrder({
                     recipient: recipients[i],
                     paymentToken: address(_token),
                     amount: 1,
@@ -369,7 +369,7 @@ contract PP_SimpleV1Test is ModuleTest {
     function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__NothingToClaim
                     .selector,
                 address(paymentClient),
@@ -382,7 +382,7 @@ contract PP_SimpleV1Test is ModuleTest {
     }
 
     function test_ValidPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        IERC20PaymentClientBase_v2.PaymentOrder memory order,
         address sender
     ) public {
         // The randomToken can't be the address of the Create2Deployer

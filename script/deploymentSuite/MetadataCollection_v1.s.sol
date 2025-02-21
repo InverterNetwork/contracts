@@ -170,7 +170,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_Bounties_v1"
+        "LM_PC_Bounties_v2"
     );
 
     // KPIRewarder
@@ -179,7 +179,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_KPIRewarder_v1"
+        "LM_PC_KPIRewarder_v2"
     );
 
     // PaymentRouter
@@ -188,7 +188,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_PaymentRouter_v1"
+        "LM_PC_PaymentRouter_v2"
     );
 
     // RecurringPayments
@@ -197,7 +197,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_RecurringPayments_v1"
+        "LM_PC_RecurringPayments_v2"
     );
 
     // Staking
@@ -206,7 +206,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_Staking_v1"
+        "LM_PC_Staking_v2"
     );
 
     // ------------------------------------------------------------------------
@@ -215,7 +215,7 @@ contract MetadataCollection_v1 {
     // SimplePaymentProcessor
     IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
         .Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v2"
     );
 
     // StreamingPaymentProcessor
@@ -225,6 +225,6 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "PP_Streaming_v1"
+        "PP_Streaming_v2"
     );
 }

@@ -40,7 +40,7 @@ The protocol is based on our [technical specification](https://docs.google.com/d
 ## Dependencies
 - [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts)
 - [OpenZeppelin Upgradeable-Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable)
-- [UMAProtocol](https://github.com/UMAprotocol/protocol) (_for the [KPIRewarder Staking Module](./src/modules/logicModule/LM_PC_KPIRewarder_v1.sol)_)
+- [UMAProtocol](https://github.com/UMAprotocol/protocol) (_for the [KPIRewarder Staking Module](./src/modules/logicModule/LM_PC_KPIRewarder_v2.sol)_)
 
 ## Contributing
 You are considering to contribute to our protocol? Awesome - please refer to our [Contribution Guidelines](./CONTRIBUTING.md) to find our about the processes we established to ensure highest quality within our codebase.

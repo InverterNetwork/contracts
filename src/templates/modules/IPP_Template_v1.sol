@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 
 /**
  * @title   Inverter Template Payment Processor
@@ -14,7 +14,7 @@ import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
  *          processor. The contract showcases the following:
  *          - Inherit from the Module_v1 contract to enable interaction with
  *            the Inverter workflow.
- *          - Use of the IPaymentProcessor_v1 interface to facilitate
+ *          - Use of the IPaymentProcessor_v2 interface to facilitate
  *            interaction with a payment client.
  *          - Implement custom interface which has all the public facing
  *            functions, errors, events and structs.
@@ -32,7 +32,7 @@ import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
  *
  * @author  Inverter Network
  */
-interface IPP_Template_v1 is IPaymentProcessor_v1 {
+interface IPP_Template_v1 is IPaymentProcessor_v2 {
     //--------------------------------------------------------------------------
     // Structs
 

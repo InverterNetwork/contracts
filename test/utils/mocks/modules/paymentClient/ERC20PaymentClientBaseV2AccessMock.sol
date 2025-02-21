@@ -12,18 +12,18 @@ import {
 
 // SuT
 import {
-    ERC20PaymentClientBase_v1,
-    IERC20PaymentClientBase_v1
-} from "@lm/abstracts/ERC20PaymentClientBase_v1.sol";
+    ERC20PaymentClientBase_v2,
+    IERC20PaymentClientBase_v2
+} from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // Internal Interfaces
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
+contract ERC20PaymentClientBaseV2AccessMock is ERC20PaymentClientBase_v2 {
     mapping(address => bool) authorized;
 
     function init(
@@ -35,7 +35,7 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // IERC20PaymentClientBase_v1 Wrapper Functions
+    // IERC20PaymentClientBase_v2 Wrapper Functions
 
     function exposed_addPaymentOrder(PaymentOrder memory order) external {
         _addPaymentOrder(order);
@@ -71,14 +71,14 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
     }
 
     function exposed_ensureTokenAllowance(
-        IPaymentProcessor_v1 spender,
+        IPaymentProcessor_v2 spender,
         address token
     ) external {
         return _ensureTokenAllowance(spender, token);
     }
 
     function exposed_isAuthorizedPaymentProcessor(
-        IPaymentProcessor_v1 processor
+        IPaymentProcessor_v2 processor
     ) external view returns (bool) {
         return _isAuthorizedPaymentProcessor(processor);
     }
@@ -89,10 +89,8 @@ contract ERC20PaymentClientBaseV1AccessMock is ERC20PaymentClientBase_v1 {
         _outstandingTokenAmounts[token] = amount;
     }
 
-    function exposed_setFlags(uint8 flagCount_, uint8[] memory flags_)
-        external
-    {
-        _setFlags(flagCount_, flags_);
+    function exposed_setFlags(bytes32 flags_) external {
+        _setFlags(flags_);
     }
 
     function exposed_assemblePaymentConfig(bytes32[] memory flagValues_)

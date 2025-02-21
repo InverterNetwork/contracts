@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
-import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
+import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 
-contract LM_PC_Staking_v1AccessMock is LM_PC_Staking_v1 {
+contract LM_PC_Staking_v2AccessMock is LM_PC_Staking_v2 {
     //--------------------------------------------------------------------------
     // Getter Functions
 
