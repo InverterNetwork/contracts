@@ -64,7 +64,7 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
     address public impl_mod_LM_PC_Staking_v2;
 
     // Payment Processors
-    address public impl_mod_PP_Simple_v1;
+    address public impl_mod_PP_Simple_v2;
     address public impl_mod_PP_Streaming_v2;
 
     // Orchestrator
@@ -224,8 +224,8 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         // Payment Processors
         console2.log("  -- Payment Processors");
 
-        impl_mod_PP_Simple_v1 = deployAndLogWithCreate2(
-            "PP_Simple_v1", vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
+        impl_mod_PP_Simple_v2 = deployAndLogWithCreate2(
+            "PP_Simple_v2", vm.getCode("PP_Simple_v2.sol:PP_Simple_v2")
         );
         impl_mod_PP_Streaming_v2 = deployAndLogWithCreate2(
             "PP_Streaming_v2", vm.getCode("PP_Streaming_v2.sol:PP_Streaming_v2")

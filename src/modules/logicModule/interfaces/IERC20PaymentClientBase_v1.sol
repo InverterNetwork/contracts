@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IPaymentProcessor_v2} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 
 /**
  * @title   Inverter ERC20 Payment Client Base Interface
@@ -35,7 +35,7 @@ import {IPaymentProcessor_v2} from
  *
  * @author  Inverter Network
  */
-interface IERC20PaymentClientBase_v2 {
+interface IERC20PaymentClientBase_v1 {
     //-------------------------------------------------------------------------
     // MASTER LIST OF PAYMENT ORDER FLAGS
 
@@ -105,7 +105,7 @@ interface IERC20PaymentClientBase_v2 {
     );
 
     /// @notice Given number of flags exceeds the limit.
-    error Module__ERC20PaymentClientBase_v2__FlagAmountTooHigh();
+    error Module__ERC20PaymentClientBase_v1__FlagAmountTooHigh();
 
     //--------------------------------------------------------------------------
     // Events

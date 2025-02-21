@@ -17,7 +17,7 @@ import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
-import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
+import {PP_Simple_v2} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
 import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 import {LM_PC_Bounties_v2} from "@lm/LM_PC_Bounties_v2.sol";
 import {LM_PC_RecurringPayments_v2} from "@lm/LM_PC_RecurringPayments_v2.sol";
@@ -283,14 +283,14 @@ contract E2EModuleRegistry is Test {
     // Payment Processors
     //--------------------------------------------------------------------------
 
-    // PP_Simple_v1
+    // PP_Simple_v2
 
-    PP_Simple_v1 simplePaymentProcessorImpl;
+    PP_Simple_v2 simplePaymentProcessorImpl;
 
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
     IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
-        1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v1"
+        1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v2"
     );
 
     /*
@@ -302,7 +302,7 @@ contract E2EModuleRegistry is Test {
     */
     function setUpSimplePaymentProcessor() internal {
         // Deploy module implementations.
-        simplePaymentProcessorImpl = new PP_Simple_v1();
+        simplePaymentProcessorImpl = new PP_Simple_v2();
 
         // Deploy module beacons.
         simplePaymentProcessorBeacon = new InverterBeacon_v1(

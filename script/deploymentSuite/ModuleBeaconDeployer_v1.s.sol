@@ -265,7 +265,7 @@ contract ModuleBeaconDeployer_v1 is
                     simplePaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_PP_Simple_v1,
+                    impl_mod_PP_Simple_v2,
                     simplePaymentProcessorMetadata.majorVersion,
                     simplePaymentProcessorMetadata.minorVersion,
                     simplePaymentProcessorMetadata.patchVersion

@@ -17,7 +17,7 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {
     IOrchestrator_v1,
     IAuthorizer_v1,
-    IPaymentProcessor_v1
+    IPaymentProcessor_v2
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 import {TransactionForwarder_v1} from
@@ -141,7 +141,7 @@ contract OrchestratorV1Test is Test {
             modules,
             fundingManager,
             authorizer,
-            IPaymentProcessor_v1(wrongModule),
+            IPaymentProcessor_v2(wrongModule),
             governor
         );
 
@@ -537,7 +537,7 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v1(newPaymentProcessor)
+            IPaymentProcessor_v2(newPaymentProcessor)
         );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
@@ -573,7 +573,7 @@ contract OrchestratorV1Test is Test {
             )
         );
         orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v1(newPaymentProcessor)
+            IPaymentProcessor_v2(newPaymentProcessor)
         );
 
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);

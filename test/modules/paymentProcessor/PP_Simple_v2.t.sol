@@ -14,13 +14,13 @@ import {
 
 // SuT
 
-import {PP_Simple_v1AccessMock} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v1AccessMock.sol";
+import {PP_Simple_v2AccessMock} from
+    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v2AccessMock.sol";
 
 import {
-    PP_Simple_v1,
-    IPaymentProcessor_v1
-} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
+    PP_Simple_v2,
+    IPaymentProcessor_v2
+} from "src/modules/paymentProcessor/PP_Simple_v2.sol";
 
 // Mocks
 import {
@@ -32,9 +32,9 @@ import {
 // Errors
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PP_SimpleV1Test is ModuleTest {
+contract PP_SimpleV2Test is ModuleTest {
     // SuT
-    PP_Simple_v1AccessMock paymentProcessor;
+    PP_Simple_v2AccessMock paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -53,8 +53,8 @@ contract PP_SimpleV1Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Simple_v1AccessMock());
-        paymentProcessor = PP_Simple_v1AccessMock(Clones.clone(impl));
+        address impl = address(new PP_Simple_v2AccessMock());
+        paymentProcessor = PP_Simple_v2AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 
@@ -86,7 +86,7 @@ contract PP_SimpleV1Test is ModuleTest {
     function testSupportsInterface() public {
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPaymentProcessor_v1).interfaceId
+                type(IPaymentProcessor_v2).interfaceId
             )
         );
     }
@@ -131,7 +131,7 @@ contract PP_SimpleV1Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+        emit IPaymentProcessor_v2.PaymentOrderProcessed(
             address(paymentClient),
             recipient,
             address(_token),
@@ -197,7 +197,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
@@ -222,7 +222,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -244,7 +244,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(nonModule);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__OnlyCallableByModule
                     .selector
             )
@@ -269,7 +269,7 @@ contract PP_SimpleV1Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                     .selector
             )
@@ -369,7 +369,7 @@ contract PP_SimpleV1Test is ModuleTest {
     function testClaimPreviouslyUnclaimableFailsIfNothingToClaim() public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__NothingToClaim
                     .selector,
                 address(paymentClient),

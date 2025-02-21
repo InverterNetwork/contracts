@@ -16,7 +16,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {FM_Rebasing_v1} from
     "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
 
-import {PP_Simple_v1, IPaymentProcessor_v1} from "@pp/PP_Simple_v1.sol";
+import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
 
 import {
     LM_PC_KPIRewarder_v2,
