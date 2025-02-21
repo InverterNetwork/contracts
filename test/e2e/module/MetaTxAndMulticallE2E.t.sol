@@ -13,7 +13,7 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 import {
     LM_PC_Bounties_v2, ILM_PC_Bounties_v2
@@ -41,10 +41,10 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -143,7 +143,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         // Check if successful
         assertEq(
-            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
+            FM_DepositVault_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
 
@@ -305,7 +305,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // Check if successful
         // For the fundingmanager
         assertEq(
-            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
+            FM_DepositVault_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
         // For the bountyManager

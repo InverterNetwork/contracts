@@ -253,6 +253,7 @@ contract OrchestratorV1Test is Test {
         );
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testExecuteSetAuthorizer_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
@@ -287,6 +288,7 @@ contract OrchestratorV1Test is Test {
         assertTrue(orchestrator.authorizer() == authorizer);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testInitiateSetAuthorizerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
@@ -362,6 +364,7 @@ contract OrchestratorV1Test is Test {
         );
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testInitiateSetFundingManagerWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
@@ -399,6 +402,7 @@ contract OrchestratorV1Test is Test {
         assertTrue(orchestrator.fundingManager() == fundingManager);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testExecuteSetFundingManager_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
@@ -507,6 +511,7 @@ contract OrchestratorV1Test is Test {
         assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testInitiateSetPaymentProcessorWithTimelock_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
@@ -543,6 +548,7 @@ contract OrchestratorV1Test is Test {
         assertTrue(orchestrator.paymentProcessor() == paymentProcessor);
     }
 
+    /// forge-config: default.allow_internal_expect_revert = true
     function testExecuteSetPaymentProcessor_FailsIfWrongModuleType(
         uint orchestratorId,
         uint moduleAmount
