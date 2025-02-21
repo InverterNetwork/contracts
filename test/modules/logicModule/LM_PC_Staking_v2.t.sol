@@ -18,21 +18,21 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
 // SuT
 import {
-    LM_PC_Staking_v1,
-    ILM_PC_Staking_v1,
+    LM_PC_Staking_v2,
+    ILM_PC_Staking_v2,
     ReentrancyGuardUpgradeable,
-    IERC20PaymentClientBase_v1
-} from "@lm/LM_PC_Staking_v1.sol";
+    IERC20PaymentClientBase_v2
+} from "@lm/LM_PC_Staking_v2.sol";
 
-import {LM_PC_Staking_v1AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v1AccessMock.sol";
+import {LM_PC_Staking_v2AccessMock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v2AccessMock.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-contract LM_PC_Staking_v1Test is ModuleTest {
+contract LM_PC_Staking_v2Test is ModuleTest {
     // SuT
-    LM_PC_Staking_v1AccessMock stakingManager;
+    LM_PC_Staking_v2AccessMock stakingManager;
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 
@@ -58,8 +58,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
     function setUp() public {
         // Add Module to Mock Orchestrator
-        address impl = address(new LM_PC_Staking_v1AccessMock());
-        stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v2AccessMock());
+        stakingManager = LM_PC_Staking_v2AccessMock(Clones.clone(impl));
 
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
@@ -86,14 +86,14 @@ contract LM_PC_Staking_v1Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
 
-        address impl = address(new LM_PC_Staking_v1AccessMock());
-        stakingManager = LM_PC_Staking_v1AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v2AccessMock());
+        stakingManager = LM_PC_Staking_v2AccessMock(Clones.clone(impl));
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
 
         vm.expectRevert(
-            ILM_PC_Staking_v1
-                .Module__LM_PC_Staking_v1__InvalidStakingToken
+            ILM_PC_Staking_v2
+                .Module__LM_PC_Staking_v2__InvalidStakingToken
                 .selector
         );
         stakingManager.init(
@@ -108,8 +108,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         duration = bound(duration, 0, 31_536_000_000); // 31536000000 = 1000 years in seconds
         if (duration == 0) {
             vm.expectRevert(
-                ILM_PC_Staking_v1
-                    .Module__LM_PC_Staking_v1__InvalidDuration
+                ILM_PC_Staking_v2
+                    .Module__LM_PC_Staking_v2__InvalidDuration
                     .selector
             );
         }
@@ -192,7 +192,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     function testEstimateRewardModifierInPosition() public {
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v1
+            IERC20PaymentClientBase_v2
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -201,7 +201,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         // validDuration
         vm.expectRevert(
-            ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
+            ILM_PC_Staking_v2.Module__LM_PC_Staking_v2__InvalidDuration.selector
         );
 
         stakingManager.getEstimatedReward(1, 0);
@@ -268,7 +268,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     function testStakeModifierInPosition() public {
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v1
+            IERC20PaymentClientBase_v2
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -368,7 +368,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
     function testUnstakeModifierInPosition() public {
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v1
+            IERC20PaymentClientBase_v2
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -443,8 +443,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         if (expectedRewardRate == 0) {
             vm.expectRevert(
-                ILM_PC_Staking_v1
-                    .Module__LM_PC_Staking_v1__InvalidRewardRate
+                ILM_PC_Staking_v2
+                    .Module__LM_PC_Staking_v2__InvalidRewardRate
                     .selector
             );
             stakingManager.setRewards(amount, duration);
@@ -472,8 +472,8 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         if (expectedRewardRate == 0) {
             vm.expectRevert(
-                ILM_PC_Staking_v1
-                    .Module__LM_PC_Staking_v1__InvalidRewardRate
+                ILM_PC_Staking_v2
+                    .Module__LM_PC_Staking_v2__InvalidRewardRate
                     .selector
             );
             stakingManager.setRewards(secondAmount, secondDuration);
@@ -507,7 +507,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         // validAmount
         vm.expectRevert(
-            IERC20PaymentClientBase_v1
+            IERC20PaymentClientBase_v2
                 .Module__ERC20PaymentClientBase__InvalidAmount
                 .selector
         );
@@ -516,7 +516,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
 
         // validDuration
         vm.expectRevert(
-            ILM_PC_Staking_v1.Module__LM_PC_Staking_v1__InvalidDuration.selector
+            ILM_PC_Staking_v2.Module__LM_PC_Staking_v2__InvalidDuration.selector
         );
 
         stakingManager.setRewards(1, 0);
@@ -648,7 +648,7 @@ contract LM_PC_Staking_v1Test is ModuleTest {
         assertEq(0, stakingManager.getUserRewards(user));
 
         // Expect paymentOrder to be correct
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders =
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             stakingManager.paymentOrders();
 
         assertEq(1, orders.length);

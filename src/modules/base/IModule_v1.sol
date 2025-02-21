@@ -52,7 +52,7 @@ interface IModule_v1 {
     /// @notice Function is only callable by the {Orchestrator_v1}.
     error Module__OnlyCallableByOrchestrator();
 
-    /// @notice Function is only callable by a {IERC20PaymentClientBase_v1}.
+    /// @notice Function is only callable by a {IERC20PaymentClientBase_v2}.
     error Module__OnlyCallableByPaymentClient();
 
     /// @notice Given {Orchestrator_v1} address invalid.

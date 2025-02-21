@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
-interface ILM_PC_Bounties_v1 is IERC20PaymentClientBase_v1 {
+interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
     //--------------------------------------------------------------------------
     // Structs
 
