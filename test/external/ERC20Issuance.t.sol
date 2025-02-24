@@ -156,4 +156,39 @@ contract ERC20IssuanceTest is Test {
 
         assertEq(token.totalSupply(), supplyBefore);
     }
+
+    /*
+    test spendAllowance
+    ├── When the caller is not the Minter
+    │   └── It should revert
+    └── When the caller is the Minter
+    └── It should reduce the allowance by the defined amount 
+    */
+
+    function testSpendAllowanceFails_IfCallerNotMinter() public {
+        vm.startPrank(address(0xB0B));
+        {
+            vm.expectRevert(
+                IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
+            );
+            token.spendAllowance(address(this), address(0xB0B), 100);
+        }
+    }
+
+    function testSpendAllowance(uint intitialAllowance, uint amount) public {
+        intitialAllowance = bound(intitialAllowance, 0, type(uint32).max);
+
+        token.mint(address(0xBEEF), intitialAllowance);
+        vm.prank(address(0xBEEF));
+        token.approve(address(0xB0B), intitialAllowance);
+
+        amount = bound(amount, 0, intitialAllowance);
+
+        token.spendAllowance(address(0xBEEF), address(0xB0B), amount);
+
+        assertEq(
+            token.allowance(address(0xBEEF), address(0xB0B)),
+            intitialAllowance - amount
+        );
+    }
 }
