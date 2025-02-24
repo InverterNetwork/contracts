@@ -63,15 +63,6 @@ contract PP_Connext_Crosschain_v1 is
     /// @notice The WETH contract address.
     IWETH internal _weth;
 
-    /// @notice Tracks all details for all payment orders of a paymentReceiver for a specific paymentClient.
-    /// @dev    paymentClient => paymentReceiver => paymentId => intentId.
-    mapping(
-        address paymentClient
-            => mapping(
-                address recipient => mapping(uint paymentId => bytes32 intentId)
-            )
-    ) internal _processedIntentId;
-
     // -------------------------------------------------------------------------
     // Initialization Function
 
@@ -107,15 +98,6 @@ contract PP_Connext_Crosschain_v1 is
         return _weth;
     }
 
-    /// @inheritdoc IPP_Connext_Crosschain_v1
-    function getProcessedIntentId(
-        address paymentClient,
-        address recipient,
-        uint paymentId
-    ) external view returns (bytes32) {
-        return _processedIntentId[paymentClient][recipient][paymentId];
-    }
-
     /// @inheritdoc ICrossChainBase_v1
     function getBridgeData(uint paymentId)
         public
@@ -123,7 +105,7 @@ contract PP_Connext_Crosschain_v1 is
         override(CrossChainBase_v1)
         returns (bytes memory)
     {
-        return _bridgeData[paymentId]; // @note how is this different than the mapping in the getter above?
+        return _bridgeData[paymentId];
     }
 
     // -------------------------------------------------------------------------
@@ -151,9 +133,6 @@ contract PP_Connext_Crosschain_v1 is
 
             // If a non-zero intent ID is returned.
             if (bytes32(bridgeData) != bytes32(0)) {
-                // Store intent ID in the bridge data.
-                _bridgeData[_paymentId] = bridgeData;
-
                 // Emit the Payment Processor's PaymentOrderProcessed event.
                 emit PaymentOrderProcessed(
                     address(client),
@@ -166,12 +145,10 @@ contract PP_Connext_Crosschain_v1 is
                     orders[i].data
                 );
                 // @note how does the end user know the payment ID if needed to retrive the intendId later?
-                // @note Also why increment here, but using the value below again to store the intent ID?
-                _paymentId++;
 
                 // Store the intent ID for the payment order.
-                _processedIntentId[address(client)][orders[i].recipient][_paymentId]
-                = bytes32(bridgeData);
+                _bridgeData[_paymentId] = bridgeData;
+                _paymentId++;
             } else {
                 // Handle failed transfer.
                 _unclaimableAmountsForRecipient[address(client)][orders[i]
@@ -184,9 +161,6 @@ contract PP_Connext_Crosschain_v1 is
                     orders[i].data
                 );
             }
-
-            // Update the amount paid on the payment client side.
-            client.amountPaid(orders[i].paymentToken, orders[i].amount);
         }
     }
 
@@ -195,9 +169,7 @@ contract PP_Connext_Crosschain_v1 is
         address client_,
         address recipient_,
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) external validClient(client_) {
-        // @note should this function call be restricted to only the payment client?
-
+    ) external {
         uint unclaimableAmount =
             unclaimable(client_, order_.paymentToken, recipient_);
 
@@ -231,11 +203,9 @@ contract PP_Connext_Crosschain_v1 is
                 order_.data
             );
         }
-
         // Store the intent ID for the payment order.
-        _processedIntentId[client_][recipient_][_paymentId] =
-            bytes32(bridgeData);
-        // @note should we increment the payment ID here?
+        _bridgeData[_paymentId] = bridgeData;
+        _paymentId++;
     }
 
     /// @inheritdoc IPaymentProcessor_v1
@@ -262,6 +232,7 @@ contract PP_Connext_Crosschain_v1 is
 
         ( /* maxFee */ , uint48 ttl) =
             _getEverclearMaxFeeAndTTL(order.flags, order.data);
+
         return ttl > 0 && valid_;
     }
 
@@ -288,6 +259,11 @@ contract PP_Connext_Crosschain_v1 is
         IERC20(order_.paymentToken).transferFrom(
             client_, address(this), order_.amount
         );
+        // Update the amount paid on the payment client side.
+        IERC20PaymentClientBase_v2(client_).amountPaid(
+            order_.paymentToken, order_.amount
+        );
+
         IERC20(order_.paymentToken).approve(
             address(_everClearSpoke), order_.amount
         );
@@ -306,6 +282,7 @@ contract PP_Connext_Crosschain_v1 is
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = uint32(order_.targetChainId);
 
+        //@todo -> add checks for maxFee and ttl
         return _everClearSpoke.newIntent(
             destinations,
             order_.recipient,
@@ -357,7 +334,6 @@ contract PP_Connext_Crosschain_v1 is
 
         // Count how many flags are set.
         for (uint8 i; i <= 8; ++i) {
-            // @note why set 8 as max flag? If we know we only need 4 flags, why not set 4?
             if (flagsValue & (1 << i) != 0) {
                 requiredDataLength++;
             }

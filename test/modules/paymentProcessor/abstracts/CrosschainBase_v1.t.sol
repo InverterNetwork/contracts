@@ -8,8 +8,7 @@ import {
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
-import {ICrossChainBase_v1} from
-    "src/modules/paymentProcessor/interfaces/ICrossChainBase_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,

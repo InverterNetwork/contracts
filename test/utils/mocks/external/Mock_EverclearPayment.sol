@@ -11,6 +11,7 @@ contract Mock_EverclearPayment {
     uint32 public DOMAIN;
     IntentStatus public nextIntentStatus;
     mapping(bytes32 => IntentStatus) public status;
+    bool public mockBridgeToFail;
 
     enum IntentStatus {
         NONE,
@@ -66,19 +67,27 @@ contract Mock_EverclearPayment {
             data: _data
         });
 
-        // Generate a unique intent ID
-        _intentId = keccak256(abi.encode(_intent));
+        if (mockBridgeToFail == false) {
+            // Generate a unique intent ID
+            _intentId = keccak256(abi.encode(_intent));
 
-        IERC20(_inputAsset).transferFrom(msg.sender, address(this), _amount);
+            IERC20(_inputAsset).transferFrom(msg.sender, address(this), _amount);
 
-        // // Set intent status to ADDED and emit the event
-        status[_intentId] = IntentStatus.ADDED;
-        emit IntentAdded(_intentId, nonce, _intent);
-
+            // // Set intent status to ADDED and emit the event
+            status[_intentId] = IntentStatus.ADDED;
+            emit IntentAdded(_intentId, nonce, _intent);
+        } else {
+            _intentId = bytes32(0);
+            status[_intentId] = IntentStatus.FAILED;
+        }
         return (_intentId);
     }
 
     function setNextIntentStatus(IntentStatus _status) external {
         nextIntentStatus = _status;
+    }
+
+    function setMockBridgeToFail(bool _fail) external {
+        mockBridgeToFail = _fail;
     }
 }

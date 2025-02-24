@@ -17,8 +17,7 @@ import {PP_Connext_Crosschain_v1} from
     "src/modules/paymentProcessor/PP_Connext_Crosschain_v1.sol";
 import {CrossChainBase_v1} from
     "src/modules/paymentProcessor/abstracts/CrossChainBase_v1.sol";
-import {ICrossChainBase_v1} from
-    "src/modules/paymentProcessor/interfaces/ICrosschainBase_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {IPP_Crosschain_v1} from
@@ -41,11 +40,17 @@ import {
 import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
+// At the top of the contract, add custom error messages
+error ArrayLengthMismatch();
+error InvalidRecipientOrAmount();
+
 contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Constants
     uint constant MINTED_SUPPLY = 1000 ether;
     uint constant ZERO_AMOUNT = 0;
+    uint ORIGIN_CHAIN_ID;
+    uint TARGET_CHAIN_ID;
     //--------------------------------------------------------------------------
     // Test Storage
     PP_Connext_Crosschain_v1_Exposed public paymentProcessor;
@@ -62,17 +67,12 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     // Execution data storage
     uint maxFee = 0;
     uint ttl = 1;
-    bytes executionData;
-    bytes invalidExecutionData;
+    bytes32[] public emptyExecutionData;
 
     //--------------------------------------------------------------------------
     // Setup Function
 
     function setUp() public {
-        // Prepare execution data for bridge operations
-        executionData = abi.encode(maxFee, ttl);
-        invalidExecutionData = abi.encode(address(0));
-
         // Deploy mock contracts and set addresses
         everclearPaymentMock = new Mock_EverclearPayment();
         mockEverClearSpoke = address(everclearPaymentMock);
@@ -101,7 +101,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
         paymentClient.setToken(_token);
 
-        _setupInitialBalances();
+        ORIGIN_CHAIN_ID = block.chainid;
+        TARGET_CHAIN_ID = 1337;
+
+        emptyExecutionData = new bytes32[](6);
     }
 
     //--------------------------------------------------------------------------
@@ -155,46 +158,40 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
-        // Get the client interface
-        IERC20PaymentClientBase_v2 client =
-            IERC20PaymentClientBase_v2(address(paymentClient));
-        // Expect the event
+        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+
+        // Prepare expected event data
+        bytes32[] memory expectedExecutionData = _getExecutionData();
+
+        // Expect event with specific parameters
         vm.expectEmit(true, true, true, true);
         emit IPaymentProcessor_v1.PaymentOrderProcessed(
             address(paymentClient),
             testRecipient,
             address(_token),
             testAmount,
-            0,
-            0,
-            bytes32(0),
-            new bytes32[](0)
+            ORIGIN_CHAIN_ID,
+            TARGET_CHAIN_ID,
+            bytes32(uint(0x3F)),
+            expectedExecutionData
         );
-        // emit IPaymentProcessor_v1.PaymentOrderProcessed(
-        //     address(paymentClient),
-        //     testRecipient,
-        //     address(_token),
-        //     testAmount,
-        //     0,
-        //     block.timestamp + 1 days
-        // );
 
-        // Process payments
-        paymentProcessor.processPayments(client);
-        assertEq(_token.balanceOf(address(testRecipient)), 0);
-        console2.log(_token.balanceOf(address(testRecipient)));
+        // Execute the transaction
+        paymentProcessor.processPayments(
+            IERC20PaymentClientBase_v2(address(paymentClient))
+        );
         assertEq(_token.balanceOf(address(mockEverClearSpoke)), testAmount);
-
-        bytes32 intentId = paymentProcessor.getProcessedIntentId(
-            address(paymentClient),
-            testRecipient,
-            paymentProcessor.getPaymentId()
+        console2.log(
+            "balance of mockEverClearSpoke",
+            _token.balanceOf(address(mockEverClearSpoke))
         );
+
+        bytes32 intentId = bytes32(paymentProcessor.getBridgeData(0));
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
             uint(Mock_EverclearPayment.IntentStatus.ADDED)
         );
+        console2.logBytes32(intentId);
     }
 
     /* Test single payment outstanding token amounts
@@ -207,7 +204,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
+        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
@@ -243,11 +240,15 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         }
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(numRecipients, setupRecipients, setupAmounts);
+        _createPaymentOrders(
+            numRecipients, setupRecipients, setupAmounts, emptyExecutionData
+        );
 
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
+
+        bytes32[] memory executionData = _getExecutionData();
 
         // Expect events for each payment
         for (uint i = 0; i < numRecipients; i++) {
@@ -257,19 +258,11 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 setupRecipients[i],
                 address(_token),
                 setupAmounts[i],
-                0,
-                0,
-                bytes32(0),
-                new bytes32[](0)
+                ORIGIN_CHAIN_ID,
+                TARGET_CHAIN_ID,
+                bytes32(uint(0x3F)), // Binary: ...0011 1111
+                executionData
             );
-            // emit IPaymentProcessor_v1.PaymentOrderProcessed(
-            //     address(paymentClient),
-            //     setupRecipients[i],
-            //     address(_token),
-            //     setupAmounts[i],
-            //     0,
-            //     block.timestamp + 1 days
-            // );
         }
 
         // Process payments
@@ -278,9 +271,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint totalAmount = 0;
         //should be checking in the mock for valid bridge data
         for (uint i = 0; i < numRecipients; i++) {
-            bytes32 intentId = paymentProcessor.getProcessedIntentId(
-                address(paymentClient), setupRecipients[i], i + 1
-            );
+            bytes32 intentId = bytes32(paymentProcessor.getBridgeData(i));
             assertEq(
                 uint(everclearPaymentMock.status(intentId)),
                 uint(Mock_EverclearPayment.IntentStatus.ADDED)
@@ -318,7 +309,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         }
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(numRecipients, setupRecipients, setupAmounts);
+        _createPaymentOrders(
+            numRecipients, setupRecipients, setupAmounts, emptyExecutionData
+        );
 
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
@@ -351,10 +344,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             "Bridge data should be empty"
         );
         assertEq(
-            paymentProcessor.getProcessedIntentId(
-                address(paymentClient),
-                address(0),
-                paymentProcessor.getPaymentId()
+            bytes32(
+                paymentProcessor.getBridgeData(paymentProcessor.getPaymentId())
             ),
             bytes32(0)
         );
@@ -368,7 +359,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
+        bytes32[] memory customExecutionData = _getExecutionData();
+        customExecutionData[5] = bytes32(uint(0)); //set TTL to 0
+        _setupSinglePayment(testRecipient, testAmount, customExecutionData);
 
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
@@ -377,7 +370,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         // Process payments
         vm.expectRevert();
         paymentProcessor.processPayments(client);
-        // paymentProcessor.processPayments(client, invalidExecutionData);
     }
 
     /* Test empty execution data
@@ -385,72 +377,84 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidExecutionData
     */
-    // function testFuzz_PublicProcessPayments_revertsGivenEmptyExecutionData(
-    //     address testRecipient,
-    //     uint testAmount
-    // ) public {
-    //     _assumeValidRecipientAndAmount(testRecipient, testAmount);
-    //     _setupSinglePayment(testRecipient, testAmount);
+    function testFuzz_PublicProcessPayments_revertsGivenEmptyExecutionData(
+        address testRecipient,
+        uint testAmount
+    ) public {
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
-    //     // Get the client interface
-    //     IERC20PaymentClientBase_v2 client =
-    //         IERC20PaymentClientBase_v2(address(paymentClient));
+        bytes32[] memory customExecutionData = _getExecutionData();
+        // Create payment order with fuzzed time range
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: testRecipient,
+            paymentToken: address(_token),
+            amount: testAmount,
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(0),
+            data: customExecutionData
+        });
 
-    //     // Process payments
-    //     vm.expectRevert(
-    //         ICrossChainBase_v1
-    //             .Module__CrossChainBase_InvalidExecutionData
-    //             .selector
-    //     );
-    // @note I removed the revert in the Connect crosschain implementation and instead added a revert in in the processPayments function.
-    //     paymentProcessor.processPayments(client);
-    // }
+        paymentClient.exposed_addPaymentOrder(order);
+
+        vm.expectRevert(
+            IERC20PaymentClientBase_v2
+                .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                .selector
+        );
+        paymentProcessor.processPayments(
+            IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+    }
 
     /* Test invalid recipient
         ├── Given a payment order with address(0) recipient
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidRecipient
     */
-    // function testFuzz_PublicProcessPayments_revertsGivenInvalidRecipient(
-    //     uint testAmount
-    // ) public {
-    //     vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
+    function testFuzz_PublicProcessPayments_revertsGivenInvalidRecipient(
+        uint testAmount
+    ) public {
+        vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
 
-    //     _setupSinglePayment(address(0), testAmount);
-    //     // Get the client interface
-    //     IERC20PaymentClientBase_v2 client =
-    //         IERC20PaymentClientBase_v2(address(paymentClient));
+        _setupSinglePayment(address(0), testAmount, emptyExecutionData);
+        // Get the client interface
+        IERC20PaymentClientBase_v2 client =
+            IERC20PaymentClientBase_v2(address(paymentClient));
 
-    //     // Process payments
-    //     vm.expectRevert(
-    //         ICrossChainBase_v1.Module__CrossChainBase__InvalidRecipient.selector
-    //     );
-    // @note I removed the revert in the Connect crosschain implementation and instead added a revert in in the processPayments function.
-    //     paymentProcessor.processPayments(client);
-    // }
+        // Process payments
+        vm.expectRevert(
+            IERC20PaymentClientBase_v2
+                .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                .selector
+        );
+        paymentProcessor.processPayments(client);
+    }
 
     /* Test invalid amount
         ├── Given a payment order with zero amount
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidAmount
     */
-    // function testFuzz_PublicProcessPayments_revertsGivenInvalidAmount(
-    //     address testRecipient
-    // ) public {
-    //     vm.assume(testRecipient != address(0));
+    function testFuzz_PublicProcessPayments_revertsGivenInvalidAmount(
+        address testRecipient
+    ) public {
+        vm.assume(testRecipient != address(0));
 
-    //     _setupSinglePayment(testRecipient, 0);
-    //     // Get the client interface
-    //     IERC20PaymentClientBase_v2 client =
-    //         IERC20PaymentClientBase_v2(address(paymentClient));
+        _setupSinglePayment(testRecipient, 0, emptyExecutionData);
+        // Get the client interface
+        IERC20PaymentClientBase_v2 client =
+            IERC20PaymentClientBase_v2(address(paymentClient));
 
-    //     // Process payments
-    //     vm.expectRevert(
-    //         ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
-    //     );
-    // @note I removed the revert in the Connect crosschain implementation as to add a payment order, it has to be valid first.
-    //     paymentProcessor.processPayments(client);
-    // }
+        // Process payments
+        vm.expectRevert(
+            IERC20PaymentClientBase_v2
+                .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                .selector
+        );
+        paymentProcessor.processPayments(client);
+    }
 
     /* Test bridge data storage
         ├── Given a valid payment order
@@ -464,7 +468,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
+        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
@@ -499,37 +503,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test insufficient balance
-        └── Given payment amount exceeds available balance
-            └── When attempting to process payment
-                └── Then it should revert with ERC20InsufficientBalance
-    */
-    function testFuzz_PublicProcessPayments_revertsGivenInsufficientBalance(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
-
-        vm.prank(testRecipient);
-        _token.transfer(address(0xDEAD), testAmount);
-        assertEq(_token.balanceOf(address(testRecipient)), 0);
-
-        IERC20PaymentClientBase_v2 client =
-            IERC20PaymentClientBase_v2(address(paymentClient));
-        console2.log(address(paymentProcessor));
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20Errors.ERC20InsufficientBalance.selector,
-                testRecipient,
-                _token.balanceOf(testRecipient),
-                testAmount
-            )
-        );
-        paymentProcessor.processPayments(client);
-    }
-
     /* Test edge case amounts
         └── Given payment processor has exactly required amount
             └── When processing payment
@@ -550,32 +523,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             _token.transfer(address(0xDEAD), currentBalance);
         }
 
-        // Setup - Mint exact amount needed
-        _token.mint(address(paymentProcessor), testAmount);
-
         // Setup - Configure payment
-        _setupSinglePayment(testRecipient, testAmount);
-
-        // Expectations
-        vm.expectEmit(true, true, true, true);
-        emit IPaymentProcessor_v1.PaymentOrderProcessed(
-            address(paymentClient),
-            testRecipient,
-            address(_token),
-            testAmount,
-            0,
-            0,
-            bytes32(0),
-            new bytes32[](0)
-        );
-        // emit IPaymentProcessor_v1.PaymentOrderProcessed(
-        //     address(paymentClient),
-        //     testRecipient,
-        //     address(_token),
-        //     testAmount,
-        //     0,
-        //     block.timestamp + 1 days
-        // );
+        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
         // Action - Process payments
         paymentProcessor.processPayments(
@@ -599,19 +548,20 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Setup initial payment
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
+            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
-        // Store the initial execution data that will fail
-        bytes memory failingExecutionData = abi.encode(333, 1); // maxFee of 333 will cause failure
         // First attempt with high maxFee to force failure
+        everclearPaymentMock.setMockBridgeToFail(true);
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
-        // paymentProcessor.processPayments(
-        //     IERC20PaymentClientBase_v2(address(paymentClient)),
-        //     failingExecutionData
-        // );
-
+        console2.log(
+            "paymentProcessor.unclaimable(address(paymentClient), address(_token), testRecipient)",
+            paymentProcessor.unclaimable(
+                address(paymentClient), address(_token), testRecipient
+            )
+        );
         // Verify failed transfer was recorded with the failing execution data
         assertEq(
             paymentProcessor.unclaimable(
@@ -621,6 +571,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Now retry with proper execution data
+        everclearPaymentMock.setMockBridgeToFail(false);
+
         vm.prank(address(paymentClient));
         paymentProcessor.retryFailedBridgeTransfer(
             address(paymentClient), testRecipient, orders[0]
@@ -636,10 +588,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // 2. New intent was created (should be non-zero)
-        bytes32 newIntentId = paymentProcessor.getProcessedIntentId(
-            address(paymentClient),
-            testRecipient,
-            paymentProcessor.getPaymentId()
+        bytes32 newIntentId = bytes32(
+            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId() - 1)
         );
         assertTrue(newIntentId != bytes32(0));
     }
@@ -659,11 +609,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Setup the payment and process it
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
+            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
         uint balanceBefore = _token.balanceOf(address(paymentProcessor));
-        bytes memory executionData = abi.encode(333, 1);
-        //call processPayments with maxFee = 333
+        everclearPaymentMock.setMockBridgeToFail(true); //Force the bridge transfer to fail
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -681,6 +630,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint balanceBeforeCancel = _token.balanceOf(address(paymentProcessor));
         // Cancel as recipient
         vm.prank(testRecipient);
+
         paymentProcessor.claimPreviouslyUnclaimable(
             address(paymentClient), address(_token), testRecipient
         );
@@ -690,10 +640,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Verify intentId was cleared
         assertEq(
-            paymentProcessor.getProcessedIntentId(
-                address(paymentClient),
-                testRecipient,
-                paymentProcessor.getPaymentId()
+            bytes32(
+                paymentProcessor.getBridgeData(paymentProcessor.getPaymentId())
             ),
             bytes32(0)
         );
@@ -710,41 +658,18 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
+        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
         // Process payment to create intent
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
 
-        bytes32 pendingIntentId = paymentProcessor.getProcessedIntentId(
-            address(paymentClient),
-            testRecipient,
-            paymentProcessor.getPaymentId()
+        bytes32 pendingIntentId = bytes32(
+            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId())
         );
 
-        // Create payment order for cancellation
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: testRecipient,
-            paymentToken: address(_token),
-            amount: testAmount,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
-        });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: testRecipient,
-        //     paymentToken: address(_token),
-        //     amount: testAmount,
-        //     start: block.timestamp,
-        //     cliff: 0,
-        //     end: block.timestamp + 1 days
-        // });
-
         // Prank as non-recipient
-        console2.log(address(paymentClient));
         vm.prank(nonRecipient);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -775,7 +700,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Setup initial payment and process it
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
+            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -808,56 +733,13 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
-        _setupSinglePayment(testRecipient, testAmount);
+        bytes32[] memory customExecutionData = _getExecutionData();
+        customExecutionData[5] = bytes32(uint(0)); // set TTL to 0
+        _setupSinglePayment(testRecipient, testAmount, customExecutionData);
 
-        bytes memory zeroTTLData = abi.encode(maxFee, 0);
         vm.expectRevert();
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-        // paymentProcessor.processPayments(
-        //     IERC20PaymentClientBase_v2(address(paymentClient)), zeroTTLData
-        // );
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-    }
-
-    /* Test retry with invalid client
-    └── Given a retry request from non-client address
-        └── When retrying failed transfer
-            └── Then it should revert with InvalidAddress
-    */
-    function testFuzz_PublicRetryFailedTransfer_revertsGivenInvalidCaller(
-        address testRecipient,
-        uint testAmount,
-        address invalidCaller
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        vm.assume(invalidCaller != address(paymentClient));
-
-        // Setup failed transfer
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
-
-        bytes memory failingExecutionData = abi.encode(333, 1);
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-        // paymentProcessor.processPayments(
-        //     IERC20PaymentClientBase_v2(address(paymentClient)),
-        //     failingExecutionData
-        // );
-
-        // Attempt retry from invalid caller
-        vm.prank(invalidCaller);
-        vm.expectRevert(
-            IPaymentProcessor_v1
-                .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
-                .selector
-        );
-        paymentProcessor.retryFailedBridgeTransfer(
-            address(paymentClient), testRecipient, orders[0]
         );
     }
 
@@ -873,7 +755,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
+            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -899,7 +781,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Setup initial payment and process it
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
+            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
         // Create a successful intent first
         paymentProcessor.processPayments(
@@ -927,16 +809,12 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         // Setup failed transfer
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount);
+            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
 
-        bytes memory failingExecutionData = abi.encode(333, 1);
+        everclearPaymentMock.setMockBridgeToFail(true); //Force the bridge transfer to fail
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
-        // paymentProcessor.processPayments(
-        //     IERC20PaymentClientBase_v2(address(paymentClient)),
-        //     failingExecutionData
-        // );
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
@@ -944,44 +822,14 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 IPP_Crosschain_v1
                     .Module__PP_Crosschain__MessageDeliveryFailed
                     .selector,
-                8453,
-                8453,
-                failingExecutionData
+                ORIGIN_CHAIN_ID,
+                TARGET_CHAIN_ID,
+                orders[0].flags,
+                orders[0].data
             )
         );
         paymentProcessor.retryFailedBridgeTransfer(
             address(paymentClient), testRecipient, orders[0]
-        );
-    }
-
-    /* Test process payments without token approval
-    └── Given a payment order with zero approval
-        └── When attempting to process payment
-            └── Then it should revert with InvalidTokenApproval
-    */
-    function testFuzz_PublicProcessPayments_revertsGivenNoTokenApproval(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount);
-
-        // Reset approval
-        vm.prank(testRecipient);
-        _token.approve(address(paymentProcessor), 0);
-
-        // Expect revert for insufficient allowance
-        console2.log(_token.balanceOf(address(testRecipient)));
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20Errors.ERC20InsufficientAllowance.selector,
-                address(paymentProcessor),
-                0,
-                testAmount
-            )
-        );
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
         );
     }
 
@@ -1017,28 +865,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test payment processing with zero token balance
-    └── Given payment processor has zero token balance
-        └── When processing payments
-            └── Then it should revert with ERC20InsufficientBalance
-    */
-    // function testFuzz_PublicProcessPayments_revertsGivenZeroBalance(
-    //     address testRecipient
-    // ) public {
-    //     vm.assume(testRecipient != address(0));
-
-    //     _setupSinglePayment(testRecipient, ZERO_AMOUNT);
-    //     assertEq(_token.balanceOf(address(testRecipient)), ZERO_AMOUNT);
-    //     vm.expectRevert(
-    //         ICrossChainBase_v1.Module__CrossChainBase__InvalidAmount.selector
-    //     );
-    // @note I removed the revert in the Connect crosschain implementation and instead added a revert in in the processPayments function.
-
-    //     paymentProcessor.processPayments(
-    //         IERC20PaymentClientBase_v2(address(paymentClient))
-    //     );
-    // }
-
     /* Test payment processing with duplicate recipients
     └── Given payment orders with duplicate recipients
     └── When processing payments
@@ -1050,7 +876,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         address testRecipient,
         uint testAmount
     ) public {
-        vm.assume(testRecipient != address(0));
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Create multiple orders for same recipient
         address[] memory recipients = new address[](3);
@@ -1058,15 +884,11 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         for (uint i = 0; i < 3; i++) {
             recipients[i] = testRecipient;
-            vm.assume(testAmount > 0 && testAmount <= MINTED_SUPPLY);
             amounts[i] = testAmount;
         }
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(3, recipients, amounts);
-
-        vm.prank(testRecipient);
-        _token.approve(address(paymentProcessor), type(uint).max);
+            _createPaymentOrders(3, recipients, amounts, emptyExecutionData);
 
         // Process payments
         paymentProcessor.processPayments(
@@ -1074,10 +896,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         );
 
         // Verify final intent ID exists
-        bytes32 finalIntentId = paymentProcessor.getProcessedIntentId(
-            address(paymentClient),
-            testRecipient,
-            paymentProcessor.getPaymentId()
+        bytes32 finalIntentId = bytes32(
+            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId() - 1)
         );
         assertTrue(finalIntentId != bytes32(0));
     }
@@ -1096,83 +916,30 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
         vm.assume(timeOffset > 0 && timeOffset < 30 days);
 
+        bytes32[] memory customExecutionData = _getExecutionData();
+        customExecutionData[3] = bytes32(uint(block.timestamp + timeOffset));
         // Create payment order with fuzzed time range
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: testRecipient,
-        //     paymentToken: address(_token),
-        // amount: testAmount,
-        // start: block.timestamp,
-        // cliff: 0,
-        // end: block.timestamp + timeOffset
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: testRecipient,
             paymentToken: address(_token),
             amount: testAmount,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(uint(0x3F)),
+            data: customExecutionData
         });
 
-        _token.mint(testRecipient, testAmount);
-        vm.prank(testRecipient);
-        _token.approve(address(paymentProcessor), testAmount);
         paymentClient.exposed_addPaymentOrder(order);
 
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
 
-        bytes32 intentId = paymentProcessor.getProcessedIntentId(
-            address(paymentClient),
-            testRecipient,
-            paymentProcessor.getPaymentId()
+        bytes32 intentId = bytes32(
+            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId() - 1)
         );
         assertTrue(intentId != bytes32(0));
-    }
-
-    function testFuzz_PublicProcessPayments_succeedsGivenExpiredEndDate(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        //@audit-issue -> discuss with 33 about this test
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-
-        // Setup payment with expired end date
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: testRecipient,
-            paymentToken: address(_token),
-            amount: testAmount,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
-        });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: testRecipient,
-        //     paymentToken: address(_token),
-        //     amount: testAmount,
-        //     start: block.timestamp - 2 days,
-        //     cliff: 0, //@note 33audits -> shouldnt this revert since start and end time are in the past?
-        //     end: block.timestamp - 1 days // End date in the past
-        // });
-
-        // Mint tokens to recipient
-        _token.mint(testRecipient, testAmount);
-        vm.prank(testRecipient);
-        _token.approve(address(paymentProcessor), testAmount);
-
-        paymentClient.exposed_addPaymentOrder(order);
-
-        // Process payments
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-        assertEq(_token.balanceOf(testRecipient), 0);
-        console2.log(_token.balanceOf(address(testRecipient)));
-        assertEq(_token.balanceOf(address(mockEverClearSpoke)), testAmount);
     }
 
     //--------------------------------------------------------------------------
@@ -1190,20 +957,12 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: address(0),
             paymentToken: address(_token),
-            amount: 1,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
+            amount: 10 ether,
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            data: _getExecutionData()
         });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: address(0),
-        //     paymentToken: address(_token),
-        //     amount: 1,
-        //     start: block.timestamp,
-        //     cliff: 0,
-        //     end: block.timestamp + 1 days
-        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1220,19 +979,11 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(0),
             amount: 1,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            data: _getExecutionData()
         });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: address(0xBEEF),
-        //     paymentToken: address(0),
-        //     amount: 1,
-        //     start: block.timestamp,
-        //     cliff: 0,
-        //     end: block.timestamp + 1 days
-        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1247,82 +998,11 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             recipient: address(0xBEEF),
             paymentToken: address(_token),
             amount: 0,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            data: _getExecutionData()
         });
-        IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: address(0xBEEF),
-            paymentToken: address(_token),
-            amount: 0,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
-        });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: address(0xBEEF),
-        //     paymentToken: address(_token),
-        //     amount: 0,
-        //     start: block.timestamp,
-        //     cliff: 0,
-        //     end: block.timestamp + 1 days
-        // });
-        assertEq(paymentProcessor.validPaymentOrder(order), false);
-    }
-
-    /* Test invalid start
-    └── Given a payment order with start time after end time
-        └── When validating the payment order
-            └── Then it should return false
-    */
-    function testPublicValidPaymentOrder_revertsGivenInvalidStart() public {
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: address(0xBEEF),
-            paymentToken: address(_token),
-            amount: 1,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
-        });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: address(0xBEEF),
-        //     paymentToken: address(_token),
-        //     amount: 1,
-        //     start: block.timestamp + 1 days,
-        //     cliff: 0,
-        //     end: block.timestamp
-        // });
-        assertEq(paymentProcessor.validPaymentOrder(order), false);
-    }
-
-    /* Test invalid cliff
-    └── Given a payment order with cliff time after end time
-        └── When validating the payment order
-            └── Then it should return false
-    */
-    function testPublicValidPaymentOrder_revertsGivenInvalidCliff() public {
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: address(0xBEEF),
-            paymentToken: address(_token),
-            amount: 1,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
-        });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: address(0xBEEF),
-        //     paymentToken: address(_token),
-        //     amount: 1,
-        //     start: block.timestamp,
-        //     cliff: 1 days,
-        //     end: block.timestamp - 1 days
-        // });
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
@@ -1336,98 +1016,116 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: address(0xBEEF),
             paymentToken: address(_token),
-            amount: 1,
-            originChainId: 0,
-            targetChainId: 0,
-            flags: bytes32(0),
-            data: new bytes32[](0)
+            amount: 10 ether,
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            data: _getExecutionData()
         });
-        // IERC20PaymentClientBase_v2.PaymentOrder({
-        //     recipient: address(0xBEEF),
-        //     paymentToken: address(_token),
-        //     amount: 1,
-        //     start: block.timestamp,
-        //     cliff: 0,
-        //     end: block.timestamp + 1 days
-        // });
         assertEq(paymentProcessor.validPaymentOrder(order), true);
     }
 
     //--------------------------------------------------------------------------
     // Helper Functions
 
-    function _setupSinglePayment(address _recipient, uint _amount)
-        internal
-        returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory)
-    {
+    function _setupSinglePayment(
+        address _recipient,
+        uint _amount,
+        bytes32[] memory executionData
+    ) internal returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory) {
         address[] memory setupRecipients = new address[](1);
         setupRecipients[0] = _recipient;
         uint[] memory setupAmounts = new uint[](1);
         setupAmounts[0] = _amount;
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(1, setupRecipients, setupAmounts);
+        _createPaymentOrders(1, setupRecipients, setupAmounts, executionData);
         return orders;
     }
 
     function _createPaymentOrders(
         uint orderCount,
         address[] memory recipients,
-        uint[] memory amounts
+        uint[] memory amounts,
+        bytes32[] memory executionData
     ) internal returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory) {
-        // Sanity checks for array lengths
-        require(
-            recipients.length == orderCount && amounts.length == orderCount,
-            "Array lengths must match orderCount"
-        );
+        if (recipients.length != orderCount || amounts.length != orderCount) {
+            revert ArrayLengthMismatch();
+        }
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             new IERC20PaymentClientBase_v2.PaymentOrder[](orderCount);
 
         for (uint i = 0; i < orderCount; i++) {
-            if (recipients[i] != address(0)) {
-                //mint tokens to recipient & approve payment processor
-                _token.mint(recipients[i], amounts[i]);
-                vm.prank(recipients[i]);
-                _token.approve(address(paymentProcessor), amounts[i]);
-            }
-            orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
-                recipient: recipients[i],
-                paymentToken: address(_token),
-                amount: amounts[i],
-                originChainId: 0,
-                targetChainId: 0,
-                flags: bytes32(0),
-                data: new bytes32[](0)
-            });
-            // orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
-            //     recipient: recipients[i],
-            //     paymentToken: address(_token),
-            //     amount: amounts[i],
-            //     start: block.timestamp,
-            //     cliff: 0,
-            //     end: block.timestamp + 1 days
-            // });
+            orders[i] = _createTestPaymentOrder(
+                recipients[i], amounts[i], address(_token), executionData
+            );
+            bool isValid = paymentProcessor.validPaymentOrder(orders[i]);
+            console2.log("isValid", isValid);
             //add payment order to client
             paymentClient.exposed_addPaymentOrder(orders[i]);
         }
         return orders;
     }
 
-    function _setupInitialBalances() internal {
-        // Setup token approvals and initial balances
-        _token.mint(address(this), MINTED_SUPPLY);
-        _token.approve(address(paymentProcessor), type(uint).max);
+    function _createTestPaymentOrder(
+        address recipient,
+        uint amount,
+        address token,
+        bytes32[] memory executionData
+    ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
+        bytes32[] memory data = new bytes32[](6);
 
-        _token.mint(address(paymentProcessor), MINTED_SUPPLY); // Mint _tokens to processor
-        vm.prank(address(paymentProcessor));
-        _token.approve(address(paymentProcessor), type(uint).max); // Processor approves bridge logic
+        if (executionData.length == 6 && executionData[0] == bytes32(0)) {
+            data = _getExecutionData();
+        } else {
+            data = executionData;
+        }
+
+        return IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: recipient,
+            paymentToken: token,
+            amount: amount,
+            originChainId: ORIGIN_CHAIN_ID,
+            targetChainId: TARGET_CHAIN_ID,
+            flags: bytes32(uint(0x3F)), // Binary: ...0011 1111
+            data: data
+        });
     }
 
     function _assumeValidRecipientAndAmount(
         address testRecipient,
         uint testAmount
-    ) internal pure {
+    ) internal view {
         vm.assume(testRecipient != address(0));
+        vm.assume(testRecipient != address(msg.sender));
+        vm.assume(testRecipient != address(this));
+
+        vm.assume(testRecipient != address(paymentProcessor));
+        vm.assume(testRecipient != address(paymentClient));
+        vm.assume(testRecipient != address(_token));
+
+        vm.assume(testRecipient != address(paymentProcessor.orchestrator()));
+        vm.assume(
+            testRecipient
+                != address(paymentProcessor.orchestrator().fundingManager().token())
+        );
+
         vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY);
+    }
+
+    function _getExecutionData() internal view returns (bytes32[] memory) {
+        // Pre-allocate with fixed size
+        bytes32[] memory executionData = new bytes32[](6);
+
+        // Use unchecked for gas optimization where overflow is impossible
+        unchecked {
+            executionData[0] = bytes32(uint(444));
+            executionData[1] = bytes32(block.timestamp);
+            executionData[2] = bytes32(uint(0));
+            executionData[3] = bytes32(block.timestamp + 7 days);
+            executionData[4] = bytes32(uint(0));
+            executionData[5] = bytes32(uint(1));
+        }
+        return executionData;
     }
 }

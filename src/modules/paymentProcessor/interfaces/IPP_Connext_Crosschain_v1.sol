@@ -25,17 +25,6 @@ interface IPP_Connext_Crosschain_v1 is IPaymentProcessor_v1 {
     /// @return The IWETH contract interface used for wrapping/unwrapping ETH
     function getWeth() external view returns (IWETH);
 
-    /// @notice Returns the processed intent ID for a given payment client, recipient, and payment ID
-    /// @param paymentClient The address of the payment client
-    /// @param recipient The address of the recipient
-    /// @param paymentId The ID of the payment
-    /// @return The processed intent ID
-    function getProcessedIntentId(
-        address paymentClient,
-        address recipient,
-        uint paymentId
-    ) external view returns (bytes32);
-
     //--------------------------------------------------------------------------
     // External Functions
 
