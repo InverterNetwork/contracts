@@ -144,7 +144,7 @@ contract PP_Connext_Crosschain_v1 is
                     orders[i].flags,
                     orders[i].data
                 );
-                // @note how does the end user know the payment ID if needed to retrive the intendId later?
+                emit PaymentIdAssigned(_paymentId, bytes32(bridgeData));
 
                 // Store the intent ID for the payment order.
                 _bridgeData[_paymentId] = bridgeData;
@@ -230,10 +230,11 @@ contract PP_Connext_Crosschain_v1 is
                 order.originChainId, order.targetChainId
             ) && _validateFlagsAndData(order.flags, order.data);
 
-        ( /* maxFee */ , uint48 ttl) =
+        (uint48 maxFee, uint48 ttl) =
             _getEverclearMaxFeeAndTTL(order.flags, order.data);
+        bool validParams = maxFee > 0 && ttl > 0;
 
-        return ttl > 0 && valid_;
+        return validParams && valid_;
     }
 
     /// @dev Execute the cross-chain bridge transfer
@@ -282,14 +283,13 @@ contract PP_Connext_Crosschain_v1 is
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = uint32(order_.targetChainId);
 
-        //@todo -> add checks for maxFee and ttl
         return _everClearSpoke.newIntent(
             destinations,
             order_.recipient,
             order_.paymentToken,
             address(_weth),
             order_.amount,
-            maxFee, // @todo validate if maxFee has to be > 0. If so, add check to validatePaymentOrder
+            maxFee,
             ttl,
             "" // @note is calldata always empty? What could it be used for?
         );

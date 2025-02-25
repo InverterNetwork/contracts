@@ -1123,8 +1123,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             executionData[1] = bytes32(block.timestamp);
             executionData[2] = bytes32(uint(0));
             executionData[3] = bytes32(block.timestamp + 7 days);
-            executionData[4] = bytes32(uint(0));
-            executionData[5] = bytes32(uint(1));
+            executionData[4] = bytes32(uint(1)); // maxFee
+            executionData[5] = bytes32(uint(1)); // ttl
         }
         return executionData;
     }

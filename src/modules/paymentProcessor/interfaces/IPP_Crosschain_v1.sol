@@ -23,6 +23,11 @@ interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
         bytes32[] data
     );
 
+    /// @notice Emitted when a payment ID is assigned
+    /// @param paymentId_ The payment ID
+    /// @param data_ The data for this transfer attempt
+    event PaymentIdAssigned(uint indexed paymentId_, bytes32 indexed data_);
+
     // Errors
     //--------------------------------------------------------------------------
 
