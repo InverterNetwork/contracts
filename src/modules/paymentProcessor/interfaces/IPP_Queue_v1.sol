@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
@@ -33,7 +33,7 @@ import {IERC20PaymentClientBase_v2} from
  *
  * @author  Zealynx Security
  */
-interface IPP_Queue_v1 is IPaymentProcessor_v1 {
+interface IPP_Queue_v1 is IPaymentProcessor_v2 {
     // -------------------------------------------------------------------------
     // Type Declarations
 

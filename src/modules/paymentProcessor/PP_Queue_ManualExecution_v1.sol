@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
@@ -59,18 +59,18 @@ contract PP_Queue_ManualExecution_v1 is
         returns (bool)
     {
         return interfaceId_ == type(IPP_Queue_ManualExecution_v1).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
     // -------------------------------------------------------------------------
     // Public
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function processPayments(IERC20PaymentClientBase_v2 client_)
         external
         virtual
-        override(PP_Queue_v1, IPaymentProcessor_v1)
+        override(PP_Queue_v1, IPaymentProcessor_v2)
         clientIsValid(address(client_))
         onlyModule
     {

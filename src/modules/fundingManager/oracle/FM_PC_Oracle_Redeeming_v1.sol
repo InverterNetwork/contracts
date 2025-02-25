@@ -400,7 +400,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         public
         view
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         returns (uint buyPrice_)
     {
         return _oracle.getPriceForIssuance();
@@ -479,7 +479,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function buy(uint collateralAmount_, uint minAmountOut_)
         public
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         onlyModuleRole(WHITELIST_ROLE)
     {
         super.buyFor(_msgSender(), collateralAmount_, minAmountOut_);
@@ -489,7 +489,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         onlyModuleRole(WHITELIST_ROLE)
         thirdPartyOperationsEnabled
     {
@@ -557,7 +557,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setBuyFee(uint fee_)
         external
         virtual
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         onlyOrchestratorAdmin
     {
         _setBuyFee(fee_);

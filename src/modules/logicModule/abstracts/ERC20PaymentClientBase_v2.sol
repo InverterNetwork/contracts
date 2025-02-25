@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // Internal Interfaces
 import {
     IERC20PaymentClientBase_v2,
-    IPaymentProcessor_v1
+    IPaymentProcessor_v2
 } from "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
@@ -28,7 +28,7 @@ import {ERC165Upgradeable} from
  *          that can be processed by authorized payment processors, ensuring efficient
  *          and secure transactions.
  *
- * @dev     Utilizes {SafeERC20} for token operations and integrates with {IPaymentProcessor_v1}
+ * @dev     Utilizes {SafeERC20} for token operations and integrates with {IPaymentProcessor_v2}
  *          to handle token payments. This abstract contract must be extended by modules
  *          that manage {ERC20} payment orders, supporting complex payment scenarios.
  *
@@ -196,7 +196,7 @@ abstract contract ERC20PaymentClientBase_v2 is
         )
     {
         // Ensure caller is authorized to act as payment processor.
-        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
+        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v2(_msgSender())))
         {
             revert Module__ERC20PaymentClientBase__CallerNotAuthorized();
         }
@@ -240,7 +240,7 @@ abstract contract ERC20PaymentClientBase_v2 is
 
             // Ensure payment processor is able to fetch the tokens from address(this).
             _ensureTokenAllowance(
-                IPaymentProcessor_v1(_msgSender()), tokens_[i]
+                IPaymentProcessor_v2(_msgSender()), tokens_[i]
             );
 
             // Ensure that the Client will have sufficient funds.
@@ -258,7 +258,7 @@ abstract contract ERC20PaymentClientBase_v2 is
     /// @inheritdoc IERC20PaymentClientBase_v2
     function amountPaid(address token_, uint amount_) public virtual {
         // Ensure caller is authorized to act as payment processor.
-        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v1(_msgSender())))
+        if (!_isAuthorizedPaymentProcessor(IPaymentProcessor_v2(_msgSender())))
         {
             revert Module__ERC20PaymentClientBase__CallerNotAuthorized();
         }
@@ -340,7 +340,7 @@ abstract contract ERC20PaymentClientBase_v2 is
     }
 
     /// @dev	Ensures `amount` of token allowance for payment processor(s).
-    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address token)
+    function _ensureTokenAllowance(IPaymentProcessor_v2 spender, address token)
         internal
         virtual
     {
@@ -350,7 +350,7 @@ abstract contract ERC20PaymentClientBase_v2 is
     }
 
     /// @dev	Returns whether address `who` is an authorized payment processor.
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor_v1 who)
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor_v2 who)
         internal
         view
         virtual

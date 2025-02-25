@@ -77,7 +77,7 @@ contract TestnetDeploymentScript is DeploymentScript {
             console2.log("\tOptimisticOracleV3Mock: %s", address(ooV3));
 
             // Deploy and setup Mock Collateral Token
-            mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD");
+            mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD", 18);
             console2.log("\tERC20Mock iUSD: %s", address(mockCollateralToken));
         }
         vm.stopBroadcast();

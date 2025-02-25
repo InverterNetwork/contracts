@@ -28,7 +28,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {ERC20PaymentClientBaseV2Mock} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
-import {ERC20Decimals_Mock} from "test/utils/mocks/ERC20Decimals_Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {OraclePrice_Mock} from
     "test/utils/mocks/modules/logicModules/OraclePrice_Mock.sol";
 import {InvalidOraclePrice_Mock} from
@@ -1912,9 +1912,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint8 collateralTokenDecimals_
     ) internal returns (address fundingManager_) {
         // Create collateral token
-        ERC20Decimals_Mock newCollateralToken = new ERC20Decimals_Mock(
-            "Collateral Token", "CT", collateralTokenDecimals_
-        );
+        ERC20Mock newCollateralToken =
+            new ERC20Mock("Collateral Token", "CT", collateralTokenDecimals_);
 
         // Create issuance token
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(

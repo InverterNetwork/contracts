@@ -17,7 +17,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {Test} from "forge-std/Test.sol";
 import {LM_Oracle_Permissioned_v1_Exposed} from
     "test/modules/logicModule/LM_Oracle_Permissioned_v1_Exposed.sol";
-import {ERC20Decimals_Mock} from "test/utils/mocks/ERC20Decimals_Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // System under testing
 import {
@@ -40,14 +40,14 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
     // ================================================================================
     // State
     LM_Oracle_Permissioned_v1_Exposed manualExternalPriceSetter;
-    ERC20Decimals_Mock collateralToken;
+    ERC20Mock collateralToken;
 
     // ================================================================================
     // Setup
     function setUp() public {
         // Create mock token with 6 decimals like USDC
         collateralToken =
-            new ERC20Decimals_Mock(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
+            new ERC20Mock(TOKEN_NAME, TOKEN_SYMBOL, TOKEN_DECIMALS);
 
         // Setup manual external price setter
         address impl = address(new LM_Oracle_Permissioned_v1_Exposed());

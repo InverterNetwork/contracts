@@ -7,8 +7,8 @@ import {IModuleManagerBase_v1} from
 import {IGovernor_v1} from "src/external/governance/interfaces/IGovernor_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -93,7 +93,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
         address[] calldata modules,
         IFundingManager_v1 fundingManager,
         IAuthorizer_v1 authorizer,
-        IPaymentProcessor_v1 paymentProcessor,
+        IPaymentProcessor_v2 paymentProcessor,
         IGovernor_v1 governor
     ) external;
 
@@ -114,7 +114,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @dev	Only callable by authorized caller.
     /// @param  paymentProcessor_ The address of the new payment processor module.
     function initiateSetPaymentProcessorWithTimelock(
-        IPaymentProcessor_v1 paymentProcessor_
+        IPaymentProcessor_v2 paymentProcessor_
     ) external;
 
     /// @notice Cancels the replacement of the current authorizer with `authorizer_`.
@@ -132,7 +132,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @dev	Only callable by authorized caller.
     /// @param  paymentProcessor_ The address of the new payment processro module, for which the update is canceled.
     function cancelPaymentProcessorUpdate(
-        IPaymentProcessor_v1 paymentProcessor_
+        IPaymentProcessor_v2 paymentProcessor_
     ) external;
 
     /// @notice Executes replacing the current authorizer with `_authorizer`.
@@ -155,7 +155,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     ///         Make sure to resolve those payments properly beforehand.
     /// @dev	Only callable by authorized caller.
     /// @param  paymentProcessor_ The address of the new payment processor module.
-    function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
+    function executeSetPaymentProcessor(IPaymentProcessor_v2 paymentProcessor_)
         external;
 
     /// @notice Initiates the adding of a module to the {Orchestrator_v1} on a timelock.
@@ -207,10 +207,10 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @return The {IAuthorizer_v1} implementation.
     function authorizer() external view returns (IAuthorizer_v1);
 
-    /// @notice The {IPaymentProcessor_v1} implementation used to process module
+    /// @notice The {IPaymentProcessor_v2} implementation used to process module
     ///         payments.
-    /// @return The {IPaymentProcessor_v1} implementation.
-    function paymentProcessor() external view returns (IPaymentProcessor_v1);
+    /// @return The {IPaymentProcessor_v2} implementation.
+    function paymentProcessor() external view returns (IPaymentProcessor_v2);
 
     /// @notice The {IGovernor_v1} implementation used for protocol level interactions.
     /// @return The {IGovernor_v1} implementation.

@@ -9,7 +9,7 @@ import {ILM_PC_PaymentRouter_v2} from
     "@lm/interfaces/ILM_PC_PaymentRouter_v2.sol";
 import {
     IERC20PaymentClientBase_v2,
-    IPaymentProcessor_v1
+    IPaymentProcessor_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // Internal Dependencies

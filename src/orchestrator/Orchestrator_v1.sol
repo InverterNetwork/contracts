@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {
     IOrchestrator_v1,
     IFundingManager_v1,
-    IPaymentProcessor_v1,
+    IPaymentProcessor_v2,
     IAuthorizer_v1,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -41,7 +41,7 @@ import {ERC165Checker} from "@oz/utils/introspection/ERC165Checker.sol";
  *          The token being accepted for funding is non-changeable and set during
  *          initialization. Authorization is performed via calling a non-changeable
  *          {IAuthorizer_v1} instance. Payments, initiated by modules, are processed
- *          via a non-changeable {IPaymentProcessor_v1} instance.
+ *          via a non-changeable {IPaymentProcessor_v2} instance.
  *
  *          Each orchestrator has a unique id set during initialization.
  *
@@ -110,7 +110,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     IAuthorizer_v1 public override(IOrchestrator_v1) authorizer;
 
     /// @inheritdoc IOrchestrator_v1
-    IPaymentProcessor_v1 public override(IOrchestrator_v1) paymentProcessor;
+    IPaymentProcessor_v2 public override(IOrchestrator_v1) paymentProcessor;
 
     /// @inheritdoc IOrchestrator_v1
     IGovernor_v1 public override(IOrchestrator_v1) governor;
@@ -134,7 +134,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         address[] calldata modules,
         IFundingManager_v1 fundingManager_,
         IAuthorizer_v1 authorizer_,
-        IPaymentProcessor_v1 paymentProcessor_,
+        IPaymentProcessor_v2 paymentProcessor_,
         IGovernor_v1 governor_
     ) external override(IOrchestrator_v1) initializer {
         // Initialize upstream contracts.
@@ -164,7 +164,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         __ModuleManager_addModule(address(authorizer_));
 
         _enforcePrivilegedModuleInterfaceCheck(
-            address(paymentProcessor_), type(IPaymentProcessor_v1).interfaceId
+            address(paymentProcessor_), type(IPaymentProcessor_v2).interfaceId
         );
         __ModuleManager_addModule(address(paymentProcessor_));
 
@@ -275,12 +275,12 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
 
     /// @inheritdoc IOrchestrator_v1
     function initiateSetPaymentProcessorWithTimelock(
-        IPaymentProcessor_v1 newPaymentProcessor
+        IPaymentProcessor_v2 newPaymentProcessor
     ) external onlyOrchestratorAdmin {
         address newPaymentProcessorAddress = address(newPaymentProcessor);
 
         _enforcePrivilegedModuleInterfaceCheck(
-            newPaymentProcessorAddress, type(IPaymentProcessor_v1).interfaceId
+            newPaymentProcessorAddress, type(IPaymentProcessor_v2).interfaceId
         );
 
         _initiateAddModuleWithTimelock(newPaymentProcessorAddress);
@@ -289,12 +289,12 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
 
     /// @inheritdoc IOrchestrator_v1
     function executeSetPaymentProcessor(
-        IPaymentProcessor_v1 newPaymentProcessor
+        IPaymentProcessor_v2 newPaymentProcessor
     ) external onlyOrchestratorAdmin {
         address newPaymentProcessorAddress = address(newPaymentProcessor);
 
         _enforcePrivilegedModuleInterfaceCheck(
-            newPaymentProcessorAddress, type(IPaymentProcessor_v1).interfaceId
+            newPaymentProcessorAddress, type(IPaymentProcessor_v2).interfaceId
         );
 
         _executeRemoveModule(address(paymentProcessor));
@@ -305,7 +305,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
 
     /// @inheritdoc IOrchestrator_v1
     function cancelPaymentProcessorUpdate(
-        IPaymentProcessor_v1 paymentProcessor_
+        IPaymentProcessor_v2 paymentProcessor_
     ) external onlyOrchestratorAdmin {
         _cancelModuleUpdate(address(paymentProcessor));
         _cancelModuleUpdate(address(paymentProcessor_));
@@ -397,7 +397,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                     _contractAddr, type(IFundingManager_v1).interfaceId
                 )
                 || ERC165Checker.supportsInterface(
-                    _contractAddr, type(IPaymentProcessor_v1).interfaceId
+                    _contractAddr, type(IPaymentProcessor_v2).interfaceId
                 )
         ) {
             revert Orchestrator__InvalidModuleType(_contractAddr);

@@ -1701,8 +1701,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(address(_erc20PaymentClientMock));
         {
             vm.expectRevert(
-                IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-                    .Module__FM_BC_Bancor_Redeeming_VirtualSupply__InvalidOrchestratorTokenWithdrawAmount
+                IFundingManager_v1
+                    .InvalidOrchestratorTokenWithdrawAmount
                     .selector
             );
             bondingCurveFundingManager.transferOrchestratorToken(to, amount);

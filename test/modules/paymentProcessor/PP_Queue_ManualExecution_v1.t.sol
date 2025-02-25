@@ -3,10 +3,6 @@ pragma solidity ^0.8.0;
 
 // Internal
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
-import {
-    PP_Simple_v1,
-    IPaymentProcessor_v1
-} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
 
 // External
 import {Test} from "forge-std/Test.sol";
@@ -24,8 +20,6 @@ import {
 } from "test/modules/ModuleTest.sol";
 import {PP_Queue_v1_Exposed} from
     "test/modules/paymentProcessor/utils/mocks/PP_Queue_v1_Exposed.sol";
-import {PP_Simple_v1AccessMock} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v1AccessMock.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,

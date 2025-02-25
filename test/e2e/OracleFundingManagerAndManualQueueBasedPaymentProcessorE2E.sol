@@ -37,7 +37,7 @@ import {ERC165Upgradeable} from
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
-import {ERC20Decimals_Mock} from "test/utils/mocks/ERC20Decimals_Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
@@ -112,7 +112,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     address projectTreasury = makeAddr("projectTreasury");
 
     // Contracts
-    ERC20Decimals_Mock collateralToken;
+    ERC20Mock collateralToken;
     ERC20Issuance_Blacklist_v1 issuanceToken;
     FM_PC_Oracle_Redeeming_v1 fundingManager;
     PP_Queue_ManualExecution_v1 paymentProcessor;
@@ -153,7 +153,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         );
 
         // Create collateral token with 6 decimals to simulate USDC
-        collateralToken = new ERC20Decimals_Mock(
+        collateralToken = new ERC20Mock(
             COLLATERAL_NAME, COLLATERAL_SYMBOL, COLLATERAL_DECIMALS
         );
 

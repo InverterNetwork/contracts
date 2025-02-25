@@ -513,4 +513,15 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function _burn(address _from, uint _amount) internal virtual {
         issuanceToken.burn(_from, _amount);
     }
+
+    /// @dev	Spend allowance.
+    /// @param  _owner The address of the owner.
+    /// @param  _spender The address of the spender.
+    /// @param  _amount The amount of tokens to spend.
+    function _spendAllowance(address _owner, address _spender, uint _amount)
+        internal
+        virtual
+    {
+        issuanceToken.spendAllowance(_owner, _spender, _amount);
+    }
 }

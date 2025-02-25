@@ -10,7 +10,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 // Internal Imports
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
@@ -66,7 +66,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         returns (bool supported_)
     {
         return interfaceId_ == type(IPP_Queue_v1).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -296,7 +296,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         _setFailedOrdersTreasury(treasury_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function processPayments(IERC20PaymentClientBase_v2 client_)
         external
         virtual
@@ -317,7 +317,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         _executePaymentQueue(address(client_));
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
         external
         view
@@ -327,7 +327,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function unclaimable(
         address client_,
         address token_,
@@ -337,7 +337,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function claimPreviouslyUnclaimable(
         address client_,
         address token_,
@@ -350,7 +350,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         _claimPreviouslyUnclaimable(client_, token_, receiver_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external view virtual returns (bool isValid_) {

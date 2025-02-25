@@ -27,7 +27,7 @@ import {OrchestratorV1Mock} from
 
 import {
     PaymentProcessorV1Mock,
-    IPaymentProcessor_v1
+    IPaymentProcessor_v2
 } from "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 import {
     IFundingManager_v1,
@@ -468,7 +468,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
 
     function testIsAuthorizedPaymentProcessor(address addr) public {
         bool isAuthorized = paymentClient.exposed_isAuthorizedPaymentProcessor(
-            IPaymentProcessor_v1(addr)
+            IPaymentProcessor_v2(addr)
         );
 
         if (addr == address(_paymentProcessor)) {
