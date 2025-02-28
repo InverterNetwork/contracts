@@ -39,7 +39,10 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
 
     address private admin;
 
-    address public mainFundingManager = address(0);
+    address public mainFundingManager;
+
+    uint public collateralFeeMultiplier = 0;
+    uint public issuanceFeeMultiplier = 0;
 
     mapping(address fundingManager => PIM orchestrator) public pims;
 
@@ -168,6 +171,18 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         }
 
         mainFundingManager = _mainFundingManager;
+    }
+
+    function setCollateralFeeMultiplier(
+        uint _collateralFeeMultiplier
+    ) external onlyAdmin {
+        collateralFeeMultiplier = _collateralFeeMultiplier;
+    }
+
+    function setIssuanceFeeMultiplier(
+        uint _issuanceFeeMultiplier
+    ) external onlyAdmin {
+        issuanceFeeMultiplier = _issuanceFeeMultiplier;
     }
 
     /// @inheritdoc IMigrating_PIM_Factory_v1
@@ -356,25 +371,40 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
 
         // Get modules
 
-        uint collateralLiquidity = collateralToken.balanceOf(fundingManager);
+        uint collateralLiquidity = collateralToken.balanceOf(fundingManager) -
+            fm.projectCollateralFeeCollected();
 
-        uint issuanceLiquidity = (fm.getVirtualIssuanceSupply() -
-            pim.initialVirtualIssuanceSupply) / 14;
+        uint collateralFee = (collateralLiquidity * collateralFeeMultiplier) /
+            10_000;
 
+        // Transfer collateral liquidity to factory
         paymentRouter.pushPayment(
-            pim.dexAdapter,
+            address(this),
             address(collateralToken),
-            collateralLiquidity - fm.projectCollateralFeeCollected(),
+            collateralLiquidity,
             0,
             0,
             0
         );
+
+        collateralLiquidity -= collateralFee;
+
+        collateralToken.transfer(pim.dexAdapter, collateralLiquidity);
+        collateralToken.transfer(admin, collateralFee);
+
+        uint issuanceLiquidity = (fm.getVirtualIssuanceSupply() -
+            pim.initialVirtualIssuanceSupply) / 14;
+
+        uint issuanceFee = (issuanceLiquidity * issuanceFeeMultiplier) / 10_000;
+
+        issuanceLiquidity -= issuanceFee;
 
         fm.closeBuy();
         fm.closeSell();
 
         // Mint initial liquidity to dex adapter
         issuanceToken.mint(pim.dexAdapter, issuanceLiquidity);
+        issuanceToken.mint(admin, issuanceFee);
 
         // Call migration on adapter
         address pool = IDexAdapter_v1(pim.dexAdapter).createLiquidity(
@@ -558,8 +588,8 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
                 moduleConfigsMemory
             );
 
-        // if mainFundingManager is not set, set it to the funding manager of the new orchestrator
-        if (mainFundingManager == address(0)) {
+        // if mainFundingManager is not set and the new orchestrator is not immutable, set it to the funding manager of the new orchestrator
+        if (mainFundingManager == address(0) && !isImmutable) {
             mainFundingManager = address(orchestrator.fundingManager());
         }
 
