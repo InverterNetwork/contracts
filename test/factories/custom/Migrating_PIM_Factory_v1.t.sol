@@ -55,7 +55,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     uint initialPurchaseAmount = 1 ether;
     uint secondaryPurchaseAmount = 10 ether;
     uint migrationThreshold = 10 ether;
-    bool isImmutable = true;
+    bool isImmutable = false;
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
 
     // addresses
@@ -331,6 +331,21 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     }
 
     function test_buyForUpTo_AtAboveThreshold() public {
+        IOrchestrator_v1 mainOrchestrator = (
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
+                factory.mainFundingManager()
+            ).orchestrator()
+        );
+
+        address[] memory modules = mainOrchestrator.listModules();
+        LM_PC_Staking_v1 stakingModule;
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_Staking_v1(modules[i]).rewardRate() {
+                stakingModule = LM_PC_Staking_v1(modules[i]);
+                break;
+            } catch {}
+        }
+
         // START
 
         uint amountIn = secondaryPurchaseAmount; // 10 ether, 1 ether was already purchased on inital
@@ -354,10 +369,15 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             'Factory should be graduated'
         );
 
+        uint stakingRewardsTransferred = token.balanceOf(
+            address(stakingModule)
+        );
+
         // Check that only the amount up to threshold was used
         uint expectedRefund = initialPurchaseAmount +
             secondaryPurchaseAmount -
-            migrationThreshold;
+            migrationThreshold -
+            stakingRewardsTransferred;
 
         assertEq(
             token.balanceOf(address(this)),

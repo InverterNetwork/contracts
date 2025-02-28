@@ -39,7 +39,7 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
 
     address private admin;
 
-    address public mainFundingManager;
+    address public mainFundingManager = address(0);
 
     mapping(address fundingManager => PIM orchestrator) public pims;
 
@@ -397,14 +397,12 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         uint stakingRewards = fm.projectCollateralFeeCollected();
 
         // if mainFundingManager is set, withdraw project collateral fee to staking module
-        if (mainFundingManager != address(0)) {
-            address mainTokenStaking = address(
-                _getStaking(pims[mainFundingManager].orchestrator)
-            );
+        address mainTokenStaking = address(
+            _getStaking(pims[mainFundingManager].orchestrator)
+        );
 
-            // withdraw project collateral fee to staking module
-            fm.withdrawProjectCollateralFee(mainTokenStaking, stakingRewards);
-        }
+        // withdraw project collateral fee to staking module
+        fm.withdrawProjectCollateralFee(mainTokenStaking, stakingRewards);
 
         emit Graduation(
             address(pim.orchestrator),
@@ -559,6 +557,11 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
                 paymentProcessorConfig,
                 moduleConfigsMemory
             );
+
+        // if mainFundingManager is not set, set it to the funding manager of the new orchestrator
+        if (mainFundingManager == address(0)) {
+            mainFundingManager = address(orchestrator.fundingManager());
+        }
 
         return (orchestrator, initiator, collateralToken);
     }
