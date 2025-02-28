@@ -71,7 +71,7 @@ To execute a buy operation, the following steps should be taken
 - The caller has sufficiant collateral tokens
 - The caller has the collateral token approved to the FM
 1. **Get minAmountOut**:
-    To protect agains to much slipage, the minimum amount out is pre-computed
+    To protect against too much slipage, the minimum amount out is pre-computed
     ```solidity!
     uint depositAmount = 10e18;
     uint minAmountOut =             fundingManager.calculatePurchaseReturn(depositAmount);
