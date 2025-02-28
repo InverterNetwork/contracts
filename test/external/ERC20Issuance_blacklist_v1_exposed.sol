@@ -14,16 +14,14 @@ contract ERC20Issuance_Blacklist_v1_Exposed is ERC20Issuance_Blacklist_v1 {
         string memory symbol_,
         uint8 decimals_,
         uint initialSupply_,
-        address initialAdmin_,
-        address initialBlacklistManager_
+        address initialAdmin_
     )
         ERC20Issuance_Blacklist_v1(
             name_,
             symbol_,
             decimals_,
             initialSupply_,
-            initialAdmin_,
-            initialBlacklistManager_
+            initialAdmin_
         )
     {}
 

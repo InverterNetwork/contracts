@@ -149,7 +149,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
 
         // First create issuance token
         issuanceToken = new ERC20Issuance_Blacklist_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this), address(this)
+            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
         );
 
         // Create collateral token with 6 decimals to simulate USDC
