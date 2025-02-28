@@ -2,18 +2,14 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from
-    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {LM_PC_Staking_v1} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
-import {LM_PC_PaymentRouter_v1} from
-    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
+import {IOrchestrator_v1} from 'src/orchestrator/interfaces/IOrchestrator_v1.sol';
+import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {IBondingCurveBase_v1} from '@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol';
+import {LM_PC_Staking_v1} from 'src/modules/logicModule/LM_PC_Staking_v1.sol';
+import {LM_PC_PaymentRouter_v1} from 'src/modules/logicModule/LM_PC_PaymentRouter_v1.sol';
 
 // Internal Dependencies
-import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
+import {ERC20Issuance_v1} from 'src/external/token/ERC20Issuance_v1.sol';
 
 interface IMigrating_PIM_Factory_v1 {
     //--------------------------------------------------------------------------
@@ -22,8 +18,11 @@ interface IMigrating_PIM_Factory_v1 {
     /// @notice Error emitted when the caller is not the initiator after graduation.
     error PIM_WorkflowFactory__OnlyInitiatorAfterGraduation();
 
-    /// @notice Error emitted when the caller is not the initiator and reward duration is not over.
-    error PIM_WorkflowFactory__OnlyInitiatorAndRewardDurationOver();
+    /// @notice Error emitted when the caller is not the admin.
+    error PIM_WorkflowFactory__OnlyAdmin();
+
+    /// @notice Error emitted when the address is zero.
+    error PIM_WorkflowFactory__CantBeZeroAddress();
 
     //--------------------------------------------------------------------------
     // Events
@@ -71,7 +70,6 @@ interface IMigrating_PIM_Factory_v1 {
         IOrchestrator_v1 orchestrator;
         uint initialVirtualIssuanceSupply;
         uint initialVirtualCollateralSupply;
-        uint initialRewardDuration;
     }
 
     struct MigrationConfig {
@@ -79,7 +77,6 @@ interface IMigrating_PIM_Factory_v1 {
         uint migrationThreshold;
         address dexAdapter;
         address lpTokenRecipient;
-        uint initialRewardDuration;
     }
 
     //--------------------------------------------------------------------------
@@ -105,19 +102,6 @@ interface IMigrating_PIM_Factory_v1 {
         uint initialPurchaseAmount,
         MigrationConfig memory migrationConfig_
     ) external returns (IOrchestrator_v1);
-
-    /// @notice Withdraws buy/sell fees accumulated by a bonding curve.
-    /// @dev Only callable by the current fee recipient.
-    /// @param fundingManager The address of the funding manager.
-    /// @param to The address to send the fees to.
-    function withdrawPimFee(address fundingManager, address to) external;
-
-    /// @notice Sets the rewards for the staking module
-    /// @param fundingManager The funding manager to set the rewards for
-    /// @param amount The amount of rewards to set
-    /// @param duration The duration of the rewards
-    function setRewards(address fundingManager, uint amount, uint duration)
-        external;
 
     /**
      * @notice Buys tokens from the bonding curve funding manager for a recipient
@@ -152,38 +136,34 @@ interface IMigrating_PIM_Factory_v1 {
      * @param fundingManager The funding manager to check
      * @return lpTokenRecipient The LP token recipient
      */
-    function getLpTokenRecipient(address fundingManager)
-        external
-        view
-        returns (address lpTokenRecipient);
+    function getLpTokenRecipient(
+        address fundingManager
+    ) external view returns (address lpTokenRecipient);
 
     /**
      * @notice Returns the migration threshold
      * @param fundingManager The funding manager to check
      * @return migrationThreshold The migration threshold
      */
-    function getMigrationThreshold(address fundingManager)
-        external
-        view
-        returns (uint migrationThreshold);
+    function getMigrationThreshold(
+        address fundingManager
+    ) external view returns (uint migrationThreshold);
 
     /**
      * @notice Returns whether the issuance token is immutable
      * @param fundingManager The funding manager to check
      * @return isImmutable Whether the issuance token is immutable
      */
-    function getIsImmutable(address fundingManager)
-        external
-        view
-        returns (bool isImmutable);
+    function getIsImmutable(
+        address fundingManager
+    ) external view returns (bool isImmutable);
 
     /**
      * @notice Returns whether the issuance token has been graduated
      * @param fundingManager The funding manager to check
      * @return isGraduated Whether the issuance token has been graduated
      */
-    function getIsGraduated(address fundingManager)
-        external
-        view
-        returns (bool isGraduated);
+    function getIsGraduated(
+        address fundingManager
+    ) external view returns (bool isGraduated);
 }
