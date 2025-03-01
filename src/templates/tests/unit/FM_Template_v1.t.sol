@@ -47,6 +47,9 @@ import {IFM_Template_v1} from "src/templates/modules/IFM_Template_v1.sol";
  */
 contract FM_Template_v1_Test is ModuleTest {
     // =========================================================================
+    // Constants
+    
+    // =========================================================================
     // State
     FM_Template_v1_Exposed fundingManager;
 
