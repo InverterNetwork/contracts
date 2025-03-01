@@ -33,4 +33,37 @@ import {IERC20PaymentClientBase_v2} from
  *
  * @author  Inverter Network
  */
-interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {}
+interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
+    // =========================================================================
+    // Events
+
+    /// @notice Emit when the token amount has been deposited.
+    /// @param  sender_ The address of the depositor.
+    /// @param  amount_ The amount of tokens deposited.
+    event Deposited(address indexed sender_, uint amount_);
+
+    // =========================================================================
+    // Errors
+
+    /// @notice Amount can not be zero.
+    error Module__LM_PC_Template_InvalidDepositAmount();
+
+    // =========================================================================
+    // Public - Getters
+
+    /// @notice Returns the deposited balance of a specific address.
+    /// @param  user_ The address of the user.
+    /// @return amount_ Deposited amount of the user.
+    function getDepositedAmount(address user_) external view returns (uint amount_);
+
+    // =========================================================================
+    // Public - Mutating
+
+    /// @notice Deposits tokens to the funding manager.
+    /// @param  amount_ The amount of tokens to deposit.
+    function deposit(uint amount_) external;
+
+    /// @notice Process a specific deposit by calling processPayments on the payment processor
+    /// @param user_ The address of the user whose deposit to process
+    function processDeposit(address user_) external;
+}
