@@ -37,9 +37,11 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
     /// @dev	store address of {Orchestratorfactory_v1}.
     address public orchestratorFactory;
 
-    address private admin;
+    address public admin;
 
     address public mainFundingManager;
+
+    uint public issuanceLiquidityDivisor = 14;
 
     uint public collateralFeeMultiplier = 0;
     uint public issuanceFeeMultiplier = 0;
@@ -183,6 +185,12 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         uint _issuanceFeeMultiplier
     ) external onlyAdmin {
         issuanceFeeMultiplier = _issuanceFeeMultiplier;
+    }
+
+    function setIssuanceLiquidityDivisor(
+        uint _issuanceLiquidityDivisor
+    ) external onlyAdmin {
+        issuanceLiquidityDivisor = _issuanceLiquidityDivisor;
     }
 
     /// @inheritdoc IMigrating_PIM_Factory_v1
@@ -393,7 +401,7 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         collateralToken.transfer(admin, collateralFee);
 
         uint issuanceLiquidity = (fm.getVirtualIssuanceSupply() -
-            pim.initialVirtualIssuanceSupply) / 14;
+            pim.initialVirtualIssuanceSupply) / issuanceLiquidityDivisor;
 
         uint issuanceFee = (issuanceLiquidity * issuanceFeeMultiplier) / 10_000;
 
@@ -427,12 +435,14 @@ contract Migrating_PIM_Factory_v1 is ERC2771Context, IMigrating_PIM_Factory_v1 {
         uint stakingRewards = fm.projectCollateralFeeCollected();
 
         // if mainFundingManager is set, withdraw project collateral fee to staking module
-        address mainTokenStaking = address(
-            _getStaking(pims[mainFundingManager].orchestrator)
-        );
+        if (mainFundingManager != address(0)) {
+            address mainTokenStaking = address(
+                _getStaking(pims[mainFundingManager].orchestrator)
+            );
 
-        // withdraw project collateral fee to staking module
-        fm.withdrawProjectCollateralFee(mainTokenStaking, stakingRewards);
+            // withdraw project collateral fee to staking module
+            fm.withdrawProjectCollateralFee(mainTokenStaking, stakingRewards);
+        }
 
         emit Graduation(
             address(pim.orchestrator),
