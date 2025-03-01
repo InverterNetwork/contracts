@@ -25,20 +25,36 @@ import {
 // System under Test (SuT)
 import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 
+/**
+ * @title   Inverter Template Logic Module Payment Client Tests
+ *
+ * @notice  Tests for the template logic module payment client
+ *
+ * @dev     This test contract follows the standard testing pattern showing:
+ *          - Initialization tests
+ *          - External function tests
+ *          - Internal function tests through exposed functions
+ *          - Use of Gherkin for test documentation
+ *
+ * @author  Inverter Network
+ */
 contract LM_PC_Template_v1_Test is ModuleTest {
+    // =========================================================================
+    // State
+
     // SuT
     LM_PC_Template_v1_Exposed paymentClient;
 
     // Mocks
     ERC20Mock paymentToken;
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Setup
+
     function setUp() public {
         // Setup the payment token
         paymentToken = new ERC20Mock("Payment Token", "PT");
 
-        // This function is used to setup the unit test
         // Deploy the SuT
         address impl = address(new LM_PC_Template_v1_Exposed());
         paymentClient = LM_PC_Template_v1_Exposed(Clones.clone(impl));
@@ -46,13 +62,13 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         // Setup the module to test
         _setUpOrchestrator(paymentClient);
 
-        // Initiate the PP with the medata and config data
+        // Initiate the Logic Module with the metadata and config data
         paymentClient.init(
             _orchestrator, _METADATA, abi.encode(address(paymentToken))
         );
     }
 
-    //--------------------------------------------------------------------------
+    // =========================================================================
     // Test: Initialization
 
     // Test if the orchestrator is correctly set
@@ -80,20 +96,19 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
-    //--------------------------------------------------------------------------
-    // Test: Modifiers
-
-    /* Test validDepositAmount modifier in place (extensive testing done through internal modifier functions)
-        └── Given the modifier is in place
-            └── When the function deposit() is called with amount > 100 ether
-                └── Then it should revert
+    /* Test external deposit function
+        ├── Given valid deposit amount
+        │   └── When user deposits tokens
+        │       ├── Then their deposit balance should increase
+        │       └── Then tokens should be transferred to contract
+        └── Given invalid deposit amount
+            └── When user tries to deposit > maxDepositAmount
+                └── Then it should revert with InvalidDepositAmount
     */
     function testDeposit_modifierInPlace() public {
         uint invalidAmount = 101 ether;
 
-        // Mint tokens to test address
         paymentToken.mint(address(this), invalidAmount);
-        // Approve payment client to spend tokens
         paymentToken.approve(address(paymentClient), invalidAmount);
 
         vm.expectRevert(
@@ -104,31 +119,58 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.deposit(invalidAmount);
     }
 
+    /* Test external processDeposit function
+        ├── Given caller has DEPOSIT_ADMIN_ROLE
+        │   └── When processing a user's deposit
+        │       ├── Then their deposit balance should be cleared
+        │       └── Then a payment order should be created and processed
+        └── Given caller doesn't have DEPOSIT_ADMIN_ROLE 
+            └── When trying to process a deposit
+                └── Then it should revert with CallerNotAuthorized (not done here)
+    */
     function testProcessDeposit() public {
         // Grant DEPOSIT_ADMIN_ROLE to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
-            address(paymentClient),
-            paymentClient.DEPOSIT_ADMIN_ROLE()
+            address(paymentClient), paymentClient.DEPOSIT_ADMIN_ROLE()
         );
         _authorizer.grantRole(roleId, address(this));
 
-        // Setup
         address user = makeAddr("user");
         uint depositAmount = 50 ether;
-        
-        // Mint and approve tokens
+
         paymentToken.mint(user, depositAmount);
         vm.prank(user);
         paymentToken.approve(address(paymentClient), depositAmount);
-        
-        // Make deposit
+
         vm.prank(user);
         paymentClient.deposit(depositAmount);
-        
-        // Process deposit (no need for vm.prank since test contract has the role)
+
         paymentClient.processDeposit(user);
-        
-        // Verify deposit was processed
+
         assertEq(paymentClient.getDepositedAmount(user), 0);
+    }
+
+    // Test external getDepositedAmount function
+
+    // =========================================================================
+    // Test: Internal (tested through exposed_ functions)
+
+    /* Test internal _ensureValidDepositAmount()
+        ├── Given amount <= maxDepositAmount
+        │   └── When validating the amount
+        │       └── Then it should not revert (not done here)
+        └── Given amount > maxDepositAmount
+            └── When validating the amount
+                └── Then it should revert with InvalidDepositAmount
+    */
+    function testEnsureValidDepositAmount_revertsWhenAmountTooHigh() public {
+        uint invalidAmount = 101 ether;
+
+        vm.expectRevert(
+            ILM_PC_Template_v1
+                .Module__LM_PC_Template_InvalidDepositAmount
+                .selector
+        );
+        paymentClient.exposed_ensureValidDepositAmount(invalidAmount);
     }
 }

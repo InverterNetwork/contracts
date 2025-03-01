@@ -6,23 +6,25 @@ import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
 /**
- * @title   Inverter Template Payment Processor
+ * @title   Inverter Template Logic Module Payment Client
  *
- * @notice  Basic template payment processor used as base for developing new
- *          payment processors.
+ * @notice  A template logic module payment client that handles deposits and payment processing.
+ *          Users can deposit tokens up to a maximum amount, and authorized admins can process
+ *          these deposits into payment orders.
  *
- * @dev     This contract is used to showcase a basic setup for a payment
- *          processor. The contract showcases the following:
- *          - Inherit from the Module_v1 contract to enable interaction with
- *            the Inverter workflow.
- *          - Use of the IPaymentProcessor_v2 interface to facilitate
- *            interaction with a payment client.
- *          - Implement custom interface which has all the public facing
- *            functions, errors, events and structs.
- *          - Pre-defined layout for all contract functions, modifiers, state
- *            variables etc.
- *          - Use of the ERC165Upgradeable contract to check for interface
- *            support.
+ * @dev     This contract implements the following key functionality:
+ *          - Deposit handling with maximum amount validation
+ *          - Payment order creation and processing through the Orchestrator
+ *          - Role-based access control for deposit processing
+ *          - ERC20 token integration with SafeERC20
+ *          - Interface compliance checks via ERC165
+ *
+ *          Key components:
+ *          - Inherits ERC20PaymentClientBase_v2 for payment client functionality
+ *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
+ *          - Tracks user deposits in _depositedAmounts mapping
+ *          - Enforces maximum deposit limit of 100 ether
+ *          - Processes payments through Orchestrator's payment processor
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -54,7 +56,10 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Returns the deposited balance of a specific address.
     /// @param  user_ The address of the user.
     /// @return amount_ Deposited amount of the user.
-    function getDepositedAmount(address user_) external view returns (uint amount_);
+    function getDepositedAmount(address user_)
+        external
+        view
+        returns (uint amount_);
 
     // =========================================================================
     // Public - Mutating

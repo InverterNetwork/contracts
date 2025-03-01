@@ -25,21 +25,23 @@ import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 /**
  * @title   Inverter Template Logic Module Payment Client
  *
- * @notice  Basic template logic module payment client used as base for developing new
- *          logic module payment clients.
+ * @notice  A template logic module payment client that handles deposits and payment processing.
+ *          Users can deposit tokens up to a maximum amount, and authorized admins can process
+ *          these deposits into payment orders.
  *
- * @dev     This contract is used to showcase a basic setup for a logic module
- *          payment client. The contract showcases the following:
- *          - Inherit from the Module_v1 contract to enable interaction with
- *            the Inverter workflow.
- *          - Use of the ILM_PC_PaymentRouter_v2 interface to facilitate
- *            interaction as a Logic Module Payment Client.
- *          - Implement custom interface which has all the public facing
- *            functions, errors, events and structs.
- *          - Pre-defined layout for all contract functions, modifiers, state
- *            variables etc.
- *          - Use of the ERC165Upgradeable contract to check for interface
- *            support.
+ * @dev     This contract implements the following key functionality:
+ *          - Deposit handling with maximum amount validation
+ *          - Payment order creation and processing through the Orchestrator
+ *          - Role-based access control for deposit processing
+ *          - ERC20 token integration with SafeERC20
+ *          - Interface compliance checks via ERC165
+ *
+ *          Key components:
+ *          - Inherits ERC20PaymentClientBase_v2 for payment client functionality
+ *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
+ *          - Tracks user deposits in _depositedAmounts mapping
+ *          - Enforces maximum deposit limit of 100 ether
+ *          - Processes payments through Orchestrator's payment processor
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
@@ -123,23 +125,27 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     // Public - Mutating
 
     /// @inheritdoc ILM_PC_Template_v1
-    function deposit(uint amount_) external virtual onlyValidDepositAmount(amount_) {
+    function deposit(uint amount_)
+        external
+        virtual
+        onlyValidDepositAmount(amount_)
+    {
         // Update state.
         _depositedAmounts[_msgSender()] += amount_;
 
         // Transfer tokens.
-        _paymentToken.safeTransferFrom(
-            _msgSender(), address(this), amount_
-        );
+        _paymentToken.safeTransferFrom(_msgSender(), address(this), amount_);
 
         // Emit event.
         emit Deposited(_msgSender(), amount_);
     }
 
     /// @inheritdoc ILM_PC_Template_v1
-    function processDeposit(address user_) external onlyModuleRole(DEPOSIT_ADMIN_ROLE) {
+    function processDeposit(address user_)
+        external
+        onlyModuleRole(DEPOSIT_ADMIN_ROLE)
+    {
         uint amount = _depositedAmounts[user_];
-        require(amount > 0, "No deposit to process");
 
         // Clear the deposit amount before processing
         _depositedAmounts[user_] = 0;
