@@ -99,10 +99,7 @@ contract CustomFactoryDeploymentScript is Script {
                         new Migrating_PIM_Factory_v1(
                             orchestratorFactory,
                             trustedForwarder,
-                            vm.envOr(
-                                'MIGRATING_PIM_FACTORY_ADMIN',
-                                0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-                            )
+                            vm.addr(vm.envUint('DEPLOYER_PRIVATE_KEY'))
                         )
                     )
                 );
