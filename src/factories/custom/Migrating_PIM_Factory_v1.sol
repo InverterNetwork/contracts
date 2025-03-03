@@ -327,11 +327,8 @@ contract Migrating_PIM_Factory_v1 is
     function withdrawAllProjectCollateralFeesToStaking() external {
         for (uint i = 0; i < fundingManagers.length; i++) {
             address fundingManager = fundingManagers[i];
-            PIM memory pim = pims[fundingManager];
 
-            if (!pim.isGraduated) {
-                _withdrawCollateralFeeToStaking(pim);
-            }
+            _withdrawCollateralFeeToStaking(fundingManager);
         }
     }
 
@@ -361,17 +358,18 @@ contract Migrating_PIM_Factory_v1 is
         uint currentCollateral = collateralToken.balanceOf(fundingManager);
 
         // Calculate fee-adjusted amount
-        uint feeRate = feeManager.getDefaultCollateralFee();
-        uint appliedFee = (amountIn * feeRate) / 10_000;
+        uint protocolFeeRate = feeManager.getDefaultCollateralFee();
+        uint projectFeeRate = fm.buyFee();
+        uint totalFeeRate = protocolFeeRate + projectFeeRate;
+        uint appliedFee = (amountIn * totalFeeRate) / 10_000;
         uint netAmountIn = amountIn - appliedFee;
         uint collateralAfterBuy = currentCollateral + netAmountIn;
 
         // Check if total would exceed threshold
         if (collateralAfterBuy > pim.migrationThreshold) {
-            // Calculate valid amount before hitting threshold
-            uint remainingToThreshold = pim.migrationThreshold
-                > currentCollateral ? pim.migrationThreshold - currentCollateral : 0;
-            validAmountIn = (remainingToThreshold * 10_000) / (10_000 - feeRate);
+            // Calculate excess collateral
+            uint excess = collateralAfterBuy - pim.migrationThreshold;
+            validAmountIn = amountIn - excess;
         } else {
             validAmountIn = amountIn;
         }
@@ -387,6 +385,7 @@ contract Migrating_PIM_Factory_v1 is
      */
     function _graduate(address fundingManager) internal {
         PIM memory pim = pims[fundingManager];
+
         LM_PC_PaymentRouter_v1 paymentRouter =
             _getPaymentRouter(pim.orchestrator);
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
@@ -398,7 +397,7 @@ contract Migrating_PIM_Factory_v1 is
         // Calculate collateral liquidity and fees
         uint collateralLiquidity = collateralToken.balanceOf(fundingManager)
             - fm.projectCollateralFeeCollected();
-        uint collateralFee =
+        uint adminCollateralFee =
             (collateralLiquidity * collateralFeeMultiplier) / 10_000;
 
         // Transfer collateral to factory
@@ -412,24 +411,26 @@ contract Migrating_PIM_Factory_v1 is
         );
 
         // Distribute collateral
-        collateralLiquidity -= collateralFee;
+        collateralLiquidity -= adminCollateralFee;
         collateralToken.transfer(pim.dexAdapter, collateralLiquidity);
-        collateralToken.transfer(admin, collateralFee);
+        collateralToken.transfer(admin, adminCollateralFee);
+        _withdrawCollateralFeeToStaking(fundingManager);
 
         // Calculate issuance liquidity and fees
         uint issuanceLiquidity = (
             fm.getVirtualIssuanceSupply() - pim.initialVirtualIssuanceSupply
         ) / issuanceLiquidityDivisor;
-        uint issuanceFee = (issuanceLiquidity * issuanceFeeMultiplier) / 10_000;
-        issuanceLiquidity -= issuanceFee;
+        uint adminIssuanceFee =
+            (issuanceLiquidity * issuanceFeeMultiplier) / 10_000;
+        issuanceLiquidity -= adminIssuanceFee;
+
+        // Mint liquidity tokens
+        issuanceToken.mint(pim.dexAdapter, issuanceLiquidity);
+        issuanceToken.mint(admin, adminIssuanceFee);
 
         // Close bonding curve
         fm.closeBuy();
         fm.closeSell();
-
-        // Mint liquidity tokens
-        issuanceToken.mint(pim.dexAdapter, issuanceLiquidity);
-        issuanceToken.mint(admin, issuanceFee);
 
         // Create liquidity on DEX
         address pool = IDexAdapter_v1(pim.dexAdapter).createLiquidity(
@@ -448,9 +449,6 @@ contract Migrating_PIM_Factory_v1 is
         // Update graduation status
         pim.isGraduated = true;
         pims[fundingManager] = pim;
-
-        // Handle fees
-        _withdrawCollateralFeeToStaking(pim);
 
         emit Graduation(
             address(pim.orchestrator),
@@ -673,19 +671,22 @@ contract Migrating_PIM_Factory_v1 is
         }
     }
 
-    function _withdrawCollateralFeeToStaking(PIM memory pim) internal {
-        if (mainFundingManager != address(0)) {
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-                address(pim.orchestrator.fundingManager())
-            );
+    function _withdrawCollateralFeeToStaking(address fundingManager) internal {
+        if (mainFundingManager == address(0)) return;
 
-            uint stakingRewards = fm.projectCollateralFeeCollected();
-            address mainTokenStaking =
-                address(_getStaking(pims[mainFundingManager].orchestrator));
+        if (pims[fundingManager].isGraduated) return;
 
-            // Withdraw project collateral fee to staking module
-            fm.withdrawProjectCollateralFee(mainTokenStaking, stakingRewards);
-        }
+        IBondingCurveBase_v1 fm = IBondingCurveBase_v1(fundingManager);
+
+        uint feeAmount = fm.projectCollateralFeeCollected();
+        if (feeAmount == 0) return;
+
+        address mainTokenStaking =
+            address(_getStaking(pims[mainFundingManager].orchestrator));
+
+        if (mainTokenStaking == address(0)) return;
+
+        // transfer fee
+        fm.withdrawProjectCollateralFee(mainTokenStaking, feeAmount);
     }
 }

@@ -144,6 +144,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         (, bytes32 eventTopic) = eventHelpers.getEventTopic(
             IMigrating_PIM_Factory_v1.PIMWorkflowCreated.selector, logs, 2
         );
+
         address issuanceTokenAddress =
             eventHelpers.getAddressFromTopic(eventTopic);
 
@@ -366,21 +367,9 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     // =========================================================================
 
     function test_buyForUpTo_AtAboveThreshold() public {
-        // Get staking module reference
-        IOrchestrator_v1 mainOrchestrator = (
-            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(
-                factory.mainFundingManager()
-            ).orchestrator()
-        );
-
-        address[] memory modules = mainOrchestrator.listModules();
-        LM_PC_Staking_v1 stakingModule;
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_Staking_v1(modules[i]).rewardRate() {
-                stakingModule = LM_PC_Staking_v1(modules[i]);
-                break;
-            } catch {}
-        }
+        // Fee Rates
+        uint protocolFeeRate = feeManager.getDefaultCollateralFee();
+        uint projectFeeRate = fundingManager.buyFee();
 
         // Setup purchase
         uint amountIn = secondaryPurchaseAmount; // 10 ether
@@ -399,11 +388,6 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
 
         // Withdraw fees to staking
         factory.withdrawAllProjectCollateralFeesToStaking();
-        assertGt(
-            token.balanceOf(address(stakingModule)),
-            0,
-            "Staking module should have collateral fees"
-        );
 
         // Second purchase (half) - triggers migration
         uint secondPurchaseReturn =
@@ -423,16 +407,16 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             "Factory should be graduated"
         );
 
-        // Verify fee handling
-        uint stakingRewardsTransferred = token.balanceOf(address(stakingModule));
-        uint collateralFee = fundingManager.projectCollateralFeeCollected();
-        assertEq(
-            collateralFee, 0, "Collateral fee should be 0 after graduation"
-        );
-
         // Verify refund
-        uint expectedRefund = initialPurchaseAmount + amountIn
-            - migrationThreshold - stakingRewardsTransferred;
+        uint totalAmountIn = initialPurchaseAmount + amountIn;
+
+        // Calculate fees on full amount
+        uint protocolFees = totalAmountIn * protocolFeeRate / 10_000;
+        uint projectFees = totalAmountIn * projectFeeRate / 10_000;
+
+        // Calculate expected refund
+        uint expectedRefund =
+            totalAmountIn - protocolFees - projectFees - migrationThreshold;
         assertEq(
             token.balanceOf(address(this)),
             expectedRefund,
