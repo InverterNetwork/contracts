@@ -62,6 +62,10 @@ interface IMigrating_PIM_Factory_v1 {
         uint collateralTokenAmount
     );
 
+    /// @notice Event emitted when a funding manager registers to the factory.
+    /// @param fundingManager The address of the funding manager.
+    event FundingManagerRegistered(address indexed fundingManager);
+
     //--------------------------------------------------------------------------
     // Structs
 
@@ -75,6 +79,8 @@ interface IMigrating_PIM_Factory_v1 {
         IOrchestrator_v1 orchestrator;
         uint initialVirtualIssuanceSupply;
         uint initialVirtualCollateralSupply;
+        address stakingModule;
+        address paymentRouter;
     }
 
     struct MigrationConfig {

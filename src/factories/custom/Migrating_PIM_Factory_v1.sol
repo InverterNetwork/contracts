@@ -387,7 +387,7 @@ contract Migrating_PIM_Factory_v1 is
         PIM memory pim = pims[fundingManager];
 
         LM_PC_PaymentRouter_v1 paymentRouter =
-            _getPaymentRouter(pim.orchestrator);
+            LM_PC_PaymentRouter_v1(pim.paymentRouter);
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager);
 
@@ -562,7 +562,7 @@ contract Migrating_PIM_Factory_v1 is
     function _handleWorkflowPrivileges(address fundingManager) internal {
         PIM memory pim = pims[fundingManager];
         LM_PC_PaymentRouter_v1 paymentRouter =
-            _getPaymentRouter(pim.orchestrator);
+            LM_PC_PaymentRouter_v1(pim.paymentRouter);
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager);
         ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(fm.getIssuanceToken());
@@ -622,6 +622,26 @@ contract Migrating_PIM_Factory_v1 is
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager);
 
+        address[] memory modules = orchestrator.listModules();
+
+        address paymentRouter;
+        for (uint i = 0; i < modules.length; i++) {
+            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
+                paymentRouter = modules[i];
+                break;
+            } catch {}
+        }
+
+        address stakingModule;
+        if (!migrationConfig_.isImmutable) {
+            for (uint i = 0; i < modules.length; i++) {
+                try LM_PC_Staking_v1(modules[i]).rewardRate() {
+                    stakingModule = modules[i];
+                    break;
+                } catch {}
+            }
+        }
+
         pims[fundingManager] = IMigrating_PIM_Factory_v1.PIM({
             isGraduated: false,
             isImmutable: migrationConfig_.isImmutable,
@@ -631,45 +651,19 @@ contract Migrating_PIM_Factory_v1 is
             orchestrator: orchestrator,
             initiator: initiator,
             initialVirtualIssuanceSupply: fm.getVirtualIssuanceSupply(),
-            initialVirtualCollateralSupply: fm.getVirtualCollateralSupply()
+            initialVirtualCollateralSupply: fm.getVirtualCollateralSupply(),
+            stakingModule: stakingModule,
+            paymentRouter: paymentRouter
         });
 
         fundingManagers.push(fundingManager);
+
+        emit FundingManagerRegistered(fundingManager);
     }
 
     //--------------------------------------------------------------------------
     // Internal Functions - Module Helpers
     //--------------------------------------------------------------------------
-
-    function _getStaking(IOrchestrator_v1 orchestrator)
-        internal
-        view
-        returns (LM_PC_Staking_v1 staking)
-    {
-        address[] memory modules = orchestrator.listModules();
-
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_Staking_v1(modules[i]).rewardRate() {
-                staking = LM_PC_Staking_v1(modules[i]);
-                break;
-            } catch {}
-        }
-    }
-
-    function _getPaymentRouter(IOrchestrator_v1 orchestrator)
-        internal
-        view
-        returns (LM_PC_PaymentRouter_v1 paymentRouter)
-    {
-        address[] memory modules = orchestrator.listModules();
-
-        for (uint i = 0; i < modules.length; i++) {
-            try LM_PC_PaymentRouter_v1(modules[i]).PAYMENT_PUSHER_ROLE() {
-                paymentRouter = LM_PC_PaymentRouter_v1(modules[i]);
-                break;
-            } catch {}
-        }
-    }
 
     function _withdrawCollateralFeeToStaking(address fundingManager) internal {
         if (mainFundingManager == address(0)) return;
@@ -681,8 +675,7 @@ contract Migrating_PIM_Factory_v1 is
         uint feeAmount = fm.projectCollateralFeeCollected();
         if (feeAmount == 0) return;
 
-        address mainTokenStaking =
-            address(_getStaking(pims[mainFundingManager].orchestrator));
+        address mainTokenStaking = pims[mainFundingManager].stakingModule;
 
         if (mainTokenStaking == address(0)) return;
 
