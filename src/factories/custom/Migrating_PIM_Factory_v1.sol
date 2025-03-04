@@ -657,8 +657,6 @@ contract Migrating_PIM_Factory_v1 is
         });
 
         fundingManagers.push(fundingManager);
-
-        emit FundingManagerRegistered(fundingManager);
     }
 
     //--------------------------------------------------------------------------
