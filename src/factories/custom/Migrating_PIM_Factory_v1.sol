@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 // External imports
 import {ERC2771Context, Context} from "@oz/metatx/ERC2771Context.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 // Core interfaces
 import {IOrchestrator_v1} from
@@ -11,6 +12,7 @@ import {IOrchestrator_v1} from
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 
 // Funding manager interfaces
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -48,11 +50,23 @@ contract Migrating_PIM_Factory_v1 is
     ERC2771Context,
     IMigrating_PIM_Factory_v1
 {
+    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Issuance_v1;
+
+    //--------------------------------------------------------------------------
+    // Constants
+    //--------------------------------------------------------------------------
+
+    uint private constant FEE_DENOMINATOR = 1e4;
+    uint private constant DEFAULT_ISSUANCE_LIQUIDITY_DIVISOR = 14;
+    uint private constant DEFAULT_COLLATERAL_FEE_MULTIPLIER = 0;
+    uint private constant DEFAULT_ISSUANCE_FEE_MULTIPLIER = 0;
+
     //--------------------------------------------------------------------------
     // State Variables
     //--------------------------------------------------------------------------
 
-    address public orchestratorFactory;
+    address public immutable orchestratorFactory;
     address public admin;
     address public mainFundingManager;
     // Staking module metadata
@@ -97,6 +111,16 @@ contract Migrating_PIM_Factory_v1 is
         address _trustedForwarder,
         address _admin
     ) ERC2771Context(_trustedForwarder) {
+        if (_orchestratorFactory == address(0)) {
+            revert
+                IMigrating_PIM_Factory_v1
+                .PIM_WorkflowFactory__CantBeZeroAddress();
+        }
+        if (_admin == address(0)) {
+            revert
+                IMigrating_PIM_Factory_v1
+                .PIM_WorkflowFactory__CantBeZeroAddress();
+        }
         orchestratorFactory = _orchestratorFactory;
         admin = _admin;
 
@@ -104,9 +128,9 @@ contract Migrating_PIM_Factory_v1 is
             1, 0, 0, "https://github.com/InverterNetwork/contracts"
         );
 
-        issuanceLiquidityDivisor = 14;
-        collateralFeeMultiplier = 0;
-        issuanceFeeMultiplier = 0;
+        issuanceLiquidityDivisor = DEFAULT_ISSUANCE_LIQUIDITY_DIVISOR;
+        collateralFeeMultiplier = DEFAULT_COLLATERAL_FEE_MULTIPLIER;
+        issuanceFeeMultiplier = DEFAULT_ISSUANCE_FEE_MULTIPLIER;
     }
 
     //--------------------------------------------------------------------------
@@ -125,7 +149,7 @@ contract Migrating_PIM_Factory_v1 is
         MigrationConfig memory migrationConfig_
     ) external returns (IOrchestrator_v1) {
         // Deploy issuance token
-        ERC20Issuance_v1 issuanceToken =
+        IERC20Issuance_v1 issuanceToken =
             _deployIssuanceToken(issuanceTokenParams);
 
         // Deploy orchestrator
@@ -192,7 +216,9 @@ contract Migrating_PIM_Factory_v1 is
                 IMigrating_PIM_Factory_v1
                 .PIM_WorkflowFactory__CantBeZeroAddress();
         }
+        address oldAdmin = admin;
         admin = _admin;
+        emit IMigrating_PIM_Factory_v1.AdminChanged(oldAdmin, _admin);
     }
 
     function setMainFundingManager(address _mainFundingManager)
@@ -204,34 +230,54 @@ contract Migrating_PIM_Factory_v1 is
                 IMigrating_PIM_Factory_v1
                 .PIM_WorkflowFactory__CantBeZeroAddress();
         }
+        address oldMainFundingManager = mainFundingManager;
         mainFundingManager = _mainFundingManager;
+        emit IMigrating_PIM_Factory_v1.MainFundingManagerChanged(
+            oldMainFundingManager, _mainFundingManager
+        );
     }
 
     function setCollateralFeeMultiplier(uint _collateralFeeMultiplier)
         external
         onlyAdmin
     {
+        uint oldMultiplier = collateralFeeMultiplier;
         collateralFeeMultiplier = _collateralFeeMultiplier;
+        emit IMigrating_PIM_Factory_v1.CollateralFeeMultiplierChanged(
+            oldMultiplier, _collateralFeeMultiplier
+        );
     }
 
     function setIssuanceFeeMultiplier(uint _issuanceFeeMultiplier)
         external
         onlyAdmin
     {
+        uint oldMultiplier = issuanceFeeMultiplier;
         issuanceFeeMultiplier = _issuanceFeeMultiplier;
+        emit IMigrating_PIM_Factory_v1.IssuanceFeeMultiplierChanged(
+            oldMultiplier, _issuanceFeeMultiplier
+        );
     }
 
     function setIssuanceLiquidityDivisor(uint _issuanceLiquidityDivisor)
         external
         onlyAdmin
     {
+        uint oldDivisor = issuanceLiquidityDivisor;
         issuanceLiquidityDivisor = _issuanceLiquidityDivisor;
+        emit IMigrating_PIM_Factory_v1.IssuanceLiquidityDivisorChanged(
+            oldDivisor, _issuanceLiquidityDivisor
+        );
     }
 
     function setStakingModuleMetadata(
         LM_PC_Staking_v1_Metadata memory _stakingModuleMetadata
     ) external onlyAdmin {
+        LM_PC_Staking_v1_Metadata memory oldMetadata = stakingModuleMetadata;
         stakingModuleMetadata = _stakingModuleMetadata;
+        emit IMigrating_PIM_Factory_v1.StakingModuleMetadataChanged(
+            oldMetadata, _stakingModuleMetadata
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -295,10 +341,10 @@ contract Migrating_PIM_Factory_v1 is
         uint validAmountIn = _checkBuyExceedsThreshold(fundingManager, amountIn);
 
         if (validAmountIn > 0) {
-            collateralToken.transferFrom(
+            collateralToken.safeTransferFrom(
                 msg.sender, address(this), validAmountIn
             );
-            collateralToken.approve(fundingManager, validAmountIn);
+            collateralToken.safeIncreaseAllowance(fundingManager, validAmountIn);
 
             // Calculate adjusted minAmountOut based on the ratio of valid to total amount
             uint adjustedMinAmountOut =
@@ -327,11 +373,12 @@ contract Migrating_PIM_Factory_v1 is
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager);
 
-        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(fm.getIssuanceToken());
+        IERC20Issuance_v1 issuanceToken =
+            IERC20Issuance_v1(fm.getIssuanceToken());
 
         // Transfer and approve tokens
-        issuanceToken.transferFrom(msg.sender, address(this), amountIn);
-        issuanceToken.approve(fundingManager, amountIn);
+        issuanceToken.safeTransferFrom(msg.sender, address(this), amountIn);
+        issuanceToken.safeIncreaseAllowance(fundingManager, amountIn);
 
         // Sell tokens
         fm.sellTo(recipient, amountIn, minAmountOut);
@@ -342,7 +389,8 @@ contract Migrating_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
 
     function withdrawAllProjectCollateralFeesToStaking() external {
-        for (uint i = 0; i < fundingManagers.length; i++) {
+        uint length = fundingManagers.length;
+        for (uint i = 0; i < length; i++) {
             address fundingManager = fundingManagers[i];
 
             _withdrawCollateralFeeToStaking(fundingManager);
@@ -415,7 +463,7 @@ contract Migrating_PIM_Factory_v1 is
         uint collateralLiquidity = collateralToken.balanceOf(fundingManager)
             - fm.projectCollateralFeeCollected();
         uint adminCollateralFee =
-            (collateralLiquidity * collateralFeeMultiplier) / 10_000;
+            (collateralLiquidity * collateralFeeMultiplier) / FEE_DENOMINATOR;
 
         // Transfer collateral to factory
         paymentRouter.pushPayment(
@@ -429,8 +477,8 @@ contract Migrating_PIM_Factory_v1 is
 
         // Distribute collateral
         collateralLiquidity -= adminCollateralFee;
-        collateralToken.transfer(pim.dexAdapter, collateralLiquidity);
-        collateralToken.transfer(admin, adminCollateralFee);
+        collateralToken.safeTransfer(pim.dexAdapter, collateralLiquidity);
+        collateralToken.safeTransfer(admin, adminCollateralFee);
         _withdrawCollateralFeeToStaking(fundingManager);
 
         // Calculate issuance liquidity and fees
@@ -438,7 +486,7 @@ contract Migrating_PIM_Factory_v1 is
             fm.getVirtualIssuanceSupply() - pim.initialVirtualIssuanceSupply
         ) / issuanceLiquidityDivisor;
         uint adminIssuanceFee =
-            (issuanceLiquidity * issuanceFeeMultiplier) / 10_000;
+            (issuanceLiquidity * issuanceFeeMultiplier) / FEE_DENOMINATOR;
         issuanceLiquidity -= adminIssuanceFee;
 
         // Mint liquidity tokens
@@ -481,7 +529,7 @@ contract Migrating_PIM_Factory_v1 is
 
     function _deployIssuanceToken(
         IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
-    ) internal returns (ERC20Issuance_v1) {
+    ) internal returns (IERC20Issuance_v1) {
         return new ERC20Issuance_v1(
             issuanceTokenParams.name,
             issuanceTokenParams.symbol,
@@ -582,7 +630,8 @@ contract Migrating_PIM_Factory_v1 is
             LM_PC_PaymentRouter_v1(pim.paymentRouter);
         FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fm =
             FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1(fundingManager);
-        ERC20Issuance_v1 issuanceToken = ERC20Issuance_v1(fm.getIssuanceToken());
+        IERC20Issuance_v1 issuanceToken =
+            IERC20Issuance_v1(fm.getIssuanceToken());
 
         // Grant admin role to initiator for mutable PIMs
         if (!pim.isImmutable) {
@@ -617,10 +666,10 @@ contract Migrating_PIM_Factory_v1 is
         }
 
         if (initialPurchaseAmount > 0) {
-            IERC20(collateralToken).transferFrom(
+            IERC20(collateralToken).safeTransferFrom(
                 _msgSender(), address(this), initialPurchaseAmount
             );
-            IERC20(collateralToken).approve(
+            IERC20(collateralToken).safeIncreaseAllowance(
                 fundingManager, initialPurchaseAmount
             );
             IBondingCurveBase_v1(fundingManager).buyFor(

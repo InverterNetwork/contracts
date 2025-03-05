@@ -62,6 +62,44 @@ interface IMigrating_PIM_Factory_v1 {
         uint collateralTokenAmount
     );
 
+    /// @notice Event emitted when admin is changed
+    /// @param oldAdmin The old admin address
+    /// @param newAdmin The new admin address
+    event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
+
+    /// @notice Event emitted when main funding manager is changed
+    /// @param oldMainFundingManager The old main funding manager address
+    /// @param newMainFundingManager The new main funding manager address
+    event MainFundingManagerChanged(
+        address indexed oldMainFundingManager,
+        address indexed newMainFundingManager
+    );
+
+    /// @notice Event emitted when collateral fee multiplier is changed
+    /// @param oldMultiplier The old collateral fee multiplier
+    /// @param newMultiplier The new collateral fee multiplier
+    event CollateralFeeMultiplierChanged(
+        uint oldMultiplier, uint newMultiplier
+    );
+
+    /// @notice Event emitted when issuance fee multiplier is changed
+    /// @param oldMultiplier The old issuance fee multiplier
+    /// @param newMultiplier The new issuance fee multiplier
+    event IssuanceFeeMultiplierChanged(uint oldMultiplier, uint newMultiplier);
+
+    /// @notice Event emitted when issuance liquidity divisor is changed
+    /// @param oldDivisor The old issuance liquidity divisor
+    /// @param newDivisor The new issuance liquidity divisor
+    event IssuanceLiquidityDivisorChanged(uint oldDivisor, uint newDivisor);
+
+    /// @notice Event emitted when staking module metadata is changed
+    /// @param oldMetadata The old staking module metadata
+    /// @param newMetadata The new staking module metadata
+    event StakingModuleMetadataChanged(
+        LM_PC_Staking_v1_Metadata oldMetadata,
+        LM_PC_Staking_v1_Metadata newMetadata
+    );
+
     //--------------------------------------------------------------------------
     // Structs
 
