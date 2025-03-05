@@ -55,10 +55,14 @@ contract Migrating_PIM_Factory_v1 is
     address public orchestratorFactory;
     address public admin;
     address public mainFundingManager;
+    // Staking module metadata
+    // @notice This is the metadata for the staking module that will be used to create the staking module for the PIM
+    // @dev This is give so we can update the metadata relative to the beacon, it basically solves a dependency issue during initialization
+    IModule_v1.Metadata public stakingModuleMetadata;
 
-    uint public issuanceLiquidityDivisor = 14;
-    uint public collateralFeeMultiplier = 0;
-    uint public issuanceFeeMultiplier = 0;
+    uint public issuanceLiquidityDivisor;
+    uint public collateralFeeMultiplier;
+    uint public issuanceFeeMultiplier;
 
     mapping(address fundingManager => PIM orchestrator) public pims;
     address[] public fundingManagers;
@@ -95,6 +99,18 @@ contract Migrating_PIM_Factory_v1 is
     ) ERC2771Context(_trustedForwarder) {
         orchestratorFactory = _orchestratorFactory;
         admin = _admin;
+
+        stakingModuleMetadata = IModule_v1.Metadata(
+            1,
+            0,
+            0,
+            "https://github.com/InverterNetwork/contracts",
+            "LM_PC_Staking_v1"
+        );
+
+        issuanceLiquidityDivisor = 14;
+        collateralFeeMultiplier = 0;
+        issuanceFeeMultiplier = 0;
     }
 
     //--------------------------------------------------------------------------
@@ -214,6 +230,12 @@ contract Migrating_PIM_Factory_v1 is
         onlyAdmin
     {
         issuanceLiquidityDivisor = _issuanceLiquidityDivisor;
+    }
+
+    function setStakingModuleMetadata(
+        IModule_v1.Metadata memory _stakingModuleMetadata
+    ) external onlyAdmin {
+        stakingModuleMetadata = _stakingModuleMetadata;
     }
 
     //--------------------------------------------------------------------------
@@ -525,16 +547,7 @@ contract Migrating_PIM_Factory_v1 is
         // Add staking module for non-immutable PIMs
         if (!isImmutable) {
             moduleConfigsMemory[moduleConfigs.length] = IOrchestratorFactory_v1
-                .ModuleConfig(
-                IModule_v1.Metadata(
-                    1,
-                    0,
-                    0,
-                    "https://github.com/InverterNetwork/contracts",
-                    "LM_PC_Staking_v1"
-                ),
-                abi.encode(issuanceToken)
-            );
+                .ModuleConfig(stakingModuleMetadata, abi.encode(issuanceToken));
         }
 
         // Create orchestrator
