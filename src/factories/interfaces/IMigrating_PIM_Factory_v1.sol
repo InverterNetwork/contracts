@@ -86,6 +86,13 @@ interface IMigrating_PIM_Factory_v1 {
         address lpTokenRecipient;
     }
 
+    struct LM_PC_Staking_v1_Metadata {
+        uint majorVersion;
+        uint minorVersion;
+        uint patchVersion;
+        string url;
+    }
+
     //--------------------------------------------------------------------------
     // Functions
 

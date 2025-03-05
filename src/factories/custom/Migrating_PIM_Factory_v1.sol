@@ -58,7 +58,7 @@ contract Migrating_PIM_Factory_v1 is
     // Staking module metadata
     // @notice This is the metadata for the staking module that will be used to create the staking module for the PIM
     // @dev This is give so we can update the metadata relative to the beacon, it basically solves a dependency issue during initialization
-    IModule_v1.Metadata public stakingModuleMetadata;
+    LM_PC_Staking_v1_Metadata public stakingModuleMetadata;
 
     uint public issuanceLiquidityDivisor;
     uint public collateralFeeMultiplier;
@@ -100,12 +100,8 @@ contract Migrating_PIM_Factory_v1 is
         orchestratorFactory = _orchestratorFactory;
         admin = _admin;
 
-        stakingModuleMetadata = IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            "https://github.com/InverterNetwork/contracts",
-            "LM_PC_Staking_v1"
+        stakingModuleMetadata = LM_PC_Staking_v1_Metadata(
+            1, 0, 0, "https://github.com/InverterNetwork/contracts"
         );
 
         issuanceLiquidityDivisor = 14;
@@ -233,7 +229,7 @@ contract Migrating_PIM_Factory_v1 is
     }
 
     function setStakingModuleMetadata(
-        IModule_v1.Metadata memory _stakingModuleMetadata
+        LM_PC_Staking_v1_Metadata memory _stakingModuleMetadata
     ) external onlyAdmin {
         stakingModuleMetadata = _stakingModuleMetadata;
     }
@@ -296,8 +292,7 @@ contract Migrating_PIM_Factory_v1 is
         IERC20 collateralToken = fm.token();
 
         // Check if buy would exceed threshold before transferring tokens
-        (uint validAmountIn) =
-            _checkBuyExceedsThreshold(fundingManager, amountIn);
+        uint validAmountIn = _checkBuyExceedsThreshold(fundingManager, amountIn);
 
         if (validAmountIn > 0) {
             collateralToken.transferFrom(
@@ -547,7 +542,16 @@ contract Migrating_PIM_Factory_v1 is
         // Add staking module for non-immutable PIMs
         if (!isImmutable) {
             moduleConfigsMemory[moduleConfigs.length] = IOrchestratorFactory_v1
-                .ModuleConfig(stakingModuleMetadata, abi.encode(issuanceToken));
+                .ModuleConfig(
+                IModule_v1.Metadata(
+                    stakingModuleMetadata.majorVersion,
+                    stakingModuleMetadata.minorVersion,
+                    stakingModuleMetadata.patchVersion,
+                    stakingModuleMetadata.url,
+                    "LM_PC_Staking_v1"
+                ),
+                abi.encode(issuanceToken)
+            );
         }
 
         // Create orchestrator
