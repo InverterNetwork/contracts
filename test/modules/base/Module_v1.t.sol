@@ -32,8 +32,8 @@ import {FundingManagerV1Mock} from
 import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
     "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
-import {ERC20PaymentClientBaseV1Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 // Errors
@@ -381,8 +381,8 @@ contract ModuleBaseV1Test is ModuleTest {
 
     function testOnlyPaymentClientModifier_worksGivenCallerIsPaymentClientButNotRegisteredModule(
     ) public {
-        ERC20PaymentClientBaseV1Mock _erc20PaymentClientMock =
-            new ERC20PaymentClientBaseV1Mock();
+        ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock =
+            new ERC20PaymentClientBaseV2Mock();
 
         vm.prank(address(_erc20PaymentClientMock));
         vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);

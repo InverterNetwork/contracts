@@ -155,6 +155,46 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
+        // BondingSurfaceRedeemingFundingManager
+        initialMetadataRegistration.push(
+            bondingSurfaceRedeemingFundingManagerMetadata
+        );
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    bondingSurfaceRedeemingFundingManagerMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_BC_BondingSurface_Redeeming_v1,
+                    bondingSurfaceRedeemingFundingManagerMetadata.majorVersion,
+                    bondingSurfaceRedeemingFundingManagerMetadata.minorVersion,
+                    bondingSurfaceRedeemingFundingManagerMetadata.patchVersion
+                )
+            )
+        );
+
+        // BondingSurfaceRedeemingRestrictedRepayerSeizableFundingManager
+        initialMetadataRegistration.push(
+            bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+        );
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1,
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .majorVersion,
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .minorVersion,
+                    bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata
+                        .patchVersion
+                )
+            )
+        );
+
         // DepositVaultFundingManager
         initialMetadataRegistration.push(depositVaultFundingManagerMetadata);
         initialBeaconRegistration.push(
@@ -171,6 +211,24 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
+        // Funding Managers - Extensions
+
+        // TokenVault
+        initialMetadataRegistration.push(tokenVaultMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    tokenVaultMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_EXT_TokenVault_v1,
+                    tokenVaultMetadata.majorVersion,
+                    tokenVaultMetadata.minorVersion,
+                    tokenVaultMetadata.patchVersion
+                )
+            )
+        );
+
         //--------------------------------------------------------------------------
         // Logic Modules
 
@@ -182,7 +240,7 @@ contract ModuleBeaconDeployer_v1 is
                     bountiesMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Bounties_v1,
+                    impl_mod_LM_PC_Bounties_v2,
                     bountiesMetadata.majorVersion,
                     bountiesMetadata.minorVersion,
                     bountiesMetadata.patchVersion
@@ -198,7 +256,7 @@ contract ModuleBeaconDeployer_v1 is
                     kpiRewarderMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_KPIRewarder_v1,
+                    impl_mod_LM_PC_KPIRewarder_v2,
                     kpiRewarderMetadata.majorVersion,
                     kpiRewarderMetadata.minorVersion,
                     kpiRewarderMetadata.patchVersion
@@ -214,7 +272,7 @@ contract ModuleBeaconDeployer_v1 is
                     paymentRouterMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_PaymentRouter_v1,
+                    impl_mod_LM_PC_PaymentRouter_v2,
                     paymentRouterMetadata.majorVersion,
                     paymentRouterMetadata.minorVersion,
                     paymentRouterMetadata.patchVersion
@@ -230,7 +288,7 @@ contract ModuleBeaconDeployer_v1 is
                     recurringPaymentsMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_RecurringPayments_v1,
+                    impl_mod_LM_PC_RecurringPayments_v2,
                     recurringPaymentsMetadata.majorVersion,
                     recurringPaymentsMetadata.minorVersion,
                     recurringPaymentsMetadata.patchVersion
@@ -246,7 +304,7 @@ contract ModuleBeaconDeployer_v1 is
                     stakingMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_LM_PC_Staking_v1,
+                    impl_mod_LM_PC_Staking_v2,
                     stakingMetadata.majorVersion,
                     stakingMetadata.minorVersion,
                     stakingMetadata.patchVersion
@@ -265,7 +323,7 @@ contract ModuleBeaconDeployer_v1 is
                     simplePaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_PP_Simple_v1,
+                    impl_mod_PP_Simple_v2,
                     simplePaymentProcessorMetadata.majorVersion,
                     simplePaymentProcessorMetadata.minorVersion,
                     simplePaymentProcessorMetadata.patchVersion
@@ -281,7 +339,7 @@ contract ModuleBeaconDeployer_v1 is
                     streamingPaymentProcessorMetadata.title,
                     reverter,
                     governor,
-                    impl_mod_PP_Streaming_v1,
+                    impl_mod_PP_Streaming_v2,
                     streamingPaymentProcessorMetadata.majorVersion,
                     streamingPaymentProcessorMetadata.minorVersion,
                     streamingPaymentProcessorMetadata.patchVersion

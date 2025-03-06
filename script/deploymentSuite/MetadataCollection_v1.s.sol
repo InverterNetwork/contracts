@@ -119,6 +119,27 @@ contract MetadataCollection_v1 {
             "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
         );
 
+    // BondingSurfaceRedeemingFundingManager
+    IModule_v1.Metadata public bondingSurfaceRedeemingFundingManagerMetadata =
+    IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "FM_BC_BondingSurface_Redeeming_v1"
+    );
+
+    // BondingSurfaceRedeemingRestrictedRepayerSeizableFundingManager
+    IModule_v1.Metadata public
+        bondingSurfaceRedeemingRestrictedRepayerSeizableFundingManagerMetadata =
+        IModule_v1.Metadata(
+            1,
+            0,
+            0,
+            "https://github.com/InverterNetwork/contracts",
+            "FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1"
+        );
+
     // DepositVaultFundingManager
     IModule_v1.Metadata public depositVaultFundingManagerMetadata = IModule_v1
         .Metadata(
@@ -127,6 +148,17 @@ contract MetadataCollection_v1 {
         0,
         "https://github.com/InverterNetwork/contracts",
         "FM_DepositVault_v1"
+    );
+
+    // Funding Manager - Extensions
+
+    // FM_EXT_TokenVault_v1
+    IModule_v1.Metadata public tokenVaultMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "FM_EXT_TokenVault_v1"
     );
 
     // ------------------------------------------------------------------------
@@ -138,7 +170,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_Bounties_v1"
+        "LM_PC_Bounties_v2"
     );
 
     // KPIRewarder
@@ -147,7 +179,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_KPIRewarder_v1"
+        "LM_PC_KPIRewarder_v2"
     );
 
     // PaymentRouter
@@ -156,7 +188,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_PaymentRouter_v1"
+        "LM_PC_PaymentRouter_v2"
     );
 
     // RecurringPayments
@@ -165,7 +197,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_RecurringPayments_v1"
+        "LM_PC_RecurringPayments_v2"
     );
 
     // Staking
@@ -174,7 +206,7 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "LM_PC_Staking_v1"
+        "LM_PC_Staking_v2"
     );
 
     // ------------------------------------------------------------------------
@@ -183,7 +215,7 @@ contract MetadataCollection_v1 {
     // SimplePaymentProcessor
     IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
         .Metadata(
-        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v1"
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v2"
     );
 
     // StreamingPaymentProcessor
@@ -193,6 +225,6 @@ contract MetadataCollection_v1 {
         0,
         0,
         "https://github.com/InverterNetwork/contracts",
-        "PP_Streaming_v1"
+        "PP_Streaming_v2"
     );
 }

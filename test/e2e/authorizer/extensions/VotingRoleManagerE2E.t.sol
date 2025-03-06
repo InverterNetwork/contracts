@@ -11,8 +11,8 @@ import {
 // Modules that are used in this E2E test
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
-} from "@lm/LM_PC_Bounties_v1.sol";
+    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
+} from "@lm/LM_PC_Bounties_v2.sol";
 
 // SuT
 import {
@@ -98,14 +98,14 @@ contract VotingRoleManagerE2E is E2ETest {
         AUT_Roles_v1 authorizer =
             AUT_Roles_v1(address(orchestrator.authorizer()));
 
-        // Find LM_PC_Bounties_v1
-        LM_PC_Bounties_v1 bountyManager;
+        // Find LM_PC_Bounties_v2
+        LM_PC_Bounties_v2 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -151,7 +151,7 @@ contract VotingRoleManagerE2E is E2ETest {
         bytes32 motionId = votingRoles.createMotion(
             address(bountyManager),
             abi.encodeWithSelector(
-                ILM_PC_Bounties_v1.addBounty.selector,
+                ILM_PC_Bounties_v2.addBounty.selector,
                 minimumPayoutAmount,
                 maximumPayoutAmount,
                 details
@@ -180,7 +180,7 @@ contract VotingRoleManagerE2E is E2ETest {
         vm.warp(block.timestamp + 2);
 
         // check that the bounty was created
-        ILM_PC_Bounties_v1.Bounty memory bounty =
+        ILM_PC_Bounties_v2.Bounty memory bounty =
             bountyManager.getBountyInformation(1);
         assertEq(bounty.minimumPayoutAmount, minimumPayoutAmount);
         assertEq(bounty.maximumPayoutAmount, maximumPayoutAmount);
