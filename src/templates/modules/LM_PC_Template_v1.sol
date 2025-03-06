@@ -147,7 +147,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     {
         uint amount = _depositedAmounts[user_];
 
-        // Clear the deposit amount before processing
+        // Clear the deposit amount before processing.
         _depositedAmounts[user_] = 0;
 
         // Create and add payment order.
