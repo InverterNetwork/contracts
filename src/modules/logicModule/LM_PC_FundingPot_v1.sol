@@ -81,6 +81,9 @@ contract LM_PC_FundingPot_v1 is
     /// @dev The role that allows processing deposits
     bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
+    /// @dev The role for the funding pot admin.
+    bytes32 public constant FUNDING_POT_ADMIN_ROLE = "FUNDING_POT_ADMIN";
+
     /// @notice    Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
 
@@ -163,6 +166,24 @@ contract LM_PC_FundingPot_v1 is
         // Process the payment.
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClientBase_v2(address(this))
+        );
+    }
+
+    function grantFundingPotAdminRole(address admin_)
+        external
+        onlyOrchestratorAdmin
+    {
+        __Module_orchestrator.authorizer().grantRoleFromModule(
+            FUNDING_POT_ADMIN_ROLE, admin_
+        );
+    }
+
+    function revokeFundingPotAdminRole(address admin_)
+        external
+        onlyOrchestratorAdmin
+    {
+        __Module_orchestrator.authorizer().revokeRoleFromModule(
+            FUNDING_POT_ADMIN_ROLE, admin_
         );
     }
 

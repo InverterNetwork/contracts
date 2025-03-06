@@ -71,4 +71,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Process a specific deposit by calling processPayments on the payment processor
     /// @param user_ The address of the user whose deposit to process
     function processDeposit(address user_) external;
+
+    /// @notice Grants the funding pot admin role to an address.
+    /// @param admin_ The address to grant the funding pot admin role to.
+    function grantFundingPotAdminRole(address admin_) external;
+
+    /// @notice Revokes the funding pot admin role from an address.
+    /// @param admin_ The address to revoke the funding pot admin role from.
+    function revokeFundingPotAdminRole(address admin_) external;
 }
