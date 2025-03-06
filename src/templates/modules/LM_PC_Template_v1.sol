@@ -163,7 +163,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
 
         _addPaymentOrder(order);
 
-        // Process the payment
+        // Process the payment.
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClientBase_v2(address(this))
         );
