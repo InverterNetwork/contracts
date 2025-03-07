@@ -23,8 +23,10 @@ import {
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
-import {ILM_PC_FundingPot_v1} from
-    "src/modules/logicModule/interfaces/ILM_PC_FundingPot_v1.sol";
+import {
+    LM_PC_FundingPot_v1,
+    ILM_PC_FundingPot_v1
+} from "src/modules/logicModule/LM_PC_FundingPot_v1.sol";
 
 /**
  * @title   Inverter Template Logic Module Payment Client Tests
@@ -39,15 +41,18 @@ import {ILM_PC_FundingPot_v1} from
  *
  * @author  Inverter Network
  */
-contract LM_PC_FundingPot_v1_Test is ModuleTest {
+contract LM_PC_FundingPot_v1Test is ModuleTest {
     // =========================================================================
     // State
 
     // SuT
-    LM_PC_FundingPot_v1_Exposed paymentClient;
+    LM_PC_FundingPot_v1 fundingPot;
 
     // Mocks
     ERC20Mock paymentToken;
+
+    // Variables
+    address orchestratorAdmin = makeAddr("orchestratorAdmin");
 
     // =========================================================================
     // Setup
@@ -57,14 +62,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         paymentToken = new ERC20Mock("Payment Token", "PT");
 
         // Deploy the SuT
-        address impl = address(new LM_PC_FundingPot_v1_Exposed());
-        paymentClient = LM_PC_FundingPot_v1_Exposed(Clones.clone(impl));
+        address impl = address(new LM_PC_FundingPot_v1());
+        fundingPot = LM_PC_FundingPot_v1(Clones.clone(impl));
 
         // Setup the module to test
-        _setUpOrchestrator(paymentClient);
+        _setUpOrchestrator(fundingPot);
+        _authorizer.grantRole(_authorizer.getAdminRole(), orchestratorAdmin);
+        _authorizer.grantRole(_authorizer.getAdminRole(), address(fundingPot));
 
         // Initiate the Logic Module with the metadata and config data
-        paymentClient.init(
+        fundingPot.init(
             _orchestrator, _METADATA, abi.encode(address(paymentToken))
         );
     }
@@ -74,27 +81,25 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // Test if the orchestrator is correctly set
     function testInit() public override(ModuleTest) {
-        assertEq(address(paymentClient.orchestrator()), address(_orchestrator));
+        assertEq(address(fundingPot.orchestrator()), address(_orchestrator));
     }
 
     // Test the interface support
     function testSupportsInterface() public {
         assertTrue(
-            paymentClient.supportsInterface(
+            fundingPot.supportsInterface(
                 type(IERC20PaymentClientBase_v2).interfaceId
             )
         );
         assertTrue(
-            paymentClient.supportsInterface(
-                type(ILM_PC_FundingPot_v1).interfaceId
-            )
+            fundingPot.supportsInterface(type(ILM_PC_FundingPot_v1).interfaceId)
         );
     }
 
     // Test the reinit function
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
+        fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
     /* Test external deposit function
@@ -110,14 +115,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint invalidAmount = 101 ether;
 
         paymentToken.mint(address(this), invalidAmount);
-        paymentToken.approve(address(paymentClient), invalidAmount);
+        paymentToken.approve(address(fundingPot), invalidAmount);
 
         vm.expectRevert(
             ILM_PC_FundingPot_v1
                 .Module__LM_PC_FundingPot_InvalidDepositAmount
                 .selector
         );
-        paymentClient.deposit(invalidAmount);
+        fundingPot.deposit(invalidAmount);
     }
 
     /* Test external processDeposit function
@@ -132,7 +137,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testProcessDeposit() public {
         // Grant DEPOSIT_ADMIN_ROLE to this test contract
         bytes32 roleId = _authorizer.generateRoleId(
-            address(paymentClient), paymentClient.DEPOSIT_ADMIN_ROLE()
+            address(fundingPot), fundingPot.DEPOSIT_ADMIN_ROLE()
         );
         _authorizer.grantRole(roleId, address(this));
 
@@ -141,14 +146,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         paymentToken.mint(user, depositAmount);
         vm.prank(user);
-        paymentToken.approve(address(paymentClient), depositAmount);
+        paymentToken.approve(address(fundingPot), depositAmount);
 
         vm.prank(user);
-        paymentClient.deposit(depositAmount);
+        fundingPot.deposit(depositAmount);
 
-        paymentClient.processDeposit(user);
+        fundingPot.processDeposit(user);
 
-        assertEq(paymentClient.getDepositedAmount(user), 0);
+        assertEq(fundingPot.getDepositedAmount(user), 0);
     }
 
     // Test external getDepositedAmount function
@@ -172,6 +177,40 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     //             .Module__LM_PC_FundingPot_InvalidDepositAmount
     //             .selector
     //     );
-    //     paymentClient.exposed_ensureValidDepositAmount(invalidAmount);
+    //     fundingPot.exposed_ensureValidDepositAmount(invalidAmount);
     // }
+
+    function testFuzz_GrantFundingPotAdminRole(address admin_) public {
+        vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
+
+        vm.prank(orchestratorAdmin);
+        fundingPot.grantFundingPotAdminRole(admin_);
+
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(
+                    address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+                ),
+                admin_
+            ),
+            true
+        );
+    }
+
+    function testFuzz_RevokeFundingPotAdminRole(address admin_) public {
+        vm.prank(orchestratorAdmin);
+        fundingPot.grantFundingPotAdminRole(admin_);
+
+        fundingPot.revokeFundingPotAdminRole(admin_);
+
+        assertEq(
+            _authorizer.hasRole(
+                _authorizer.generateRoleId(
+                    address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+                ),
+                admin_
+            ),
+            false
+        );
+    }
 }
