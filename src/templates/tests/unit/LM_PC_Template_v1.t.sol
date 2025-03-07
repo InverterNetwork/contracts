@@ -39,7 +39,7 @@ import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
  * @author  Inverter Network
  */
 contract LM_PC_Template_v1_Test is ModuleTest {
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // State
 
     // SuT
@@ -48,7 +48,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     // Mocks
     ERC20Mock paymentToken;
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Setup
 
     function setUp() public {
@@ -68,7 +68,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         );
     }
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Test: Initialization
 
     // Test if the orchestrator is correctly set
@@ -129,11 +129,9 @@ contract LM_PC_Template_v1_Test is ModuleTest {
                 └── Then it should revert with CallerNotAuthorized (not done here)
     */
     function testProcessDeposit() public {
-        // Grant DEPOSIT_ADMIN_ROLE to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(paymentClient), paymentClient.DEPOSIT_ADMIN_ROLE()
+        paymentClient.grantModuleRole(
+            paymentClient.DEPOSIT_ADMIN_ROLE(), address(this)
         );
-        _authorizer.grantRole(roleId, address(this));
 
         address user = makeAddr("user");
         uint depositAmount = 50 ether;
@@ -152,7 +150,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     // Test external getDepositedAmount function
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Test: Internal (tested through exposed_ functions)
 
     /* Test internal _ensureValidDepositAmount()

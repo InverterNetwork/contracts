@@ -36,7 +36,7 @@ import {IERC20PaymentClientBase_v2} from
  * @author  Inverter Network
  */
 interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Events
 
     /// @notice Emit when the token amount has been deposited.
@@ -44,13 +44,13 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     /// @param  amount_ The amount of tokens deposited.
     event Deposited(address indexed sender_, uint amount_);
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Errors
 
     /// @notice Amount can not be zero.
     error Module__LM_PC_Template_InvalidDepositAmount();
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Public - Getters
 
     /// @notice Returns the deposited balance of a specific address.
@@ -61,7 +61,7 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (uint amount_);
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Public - Mutating
 
     /// @notice Deposits tokens to the funding manager.

@@ -53,12 +53,12 @@ import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
  * @author  Inverter Network
  */
 contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Libraries
 
     using SafeERC20 for IERC20;
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // ERC165
 
     /// @inheritdoc ERC165Upgradeable
@@ -93,7 +93,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @notice    Storage gap for future upgrades.
     uint[50] private __gap;
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Modifiers
 
     modifier onlyValidDepositAmount(uint amount_) {
@@ -101,7 +101,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         _;
     }
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Constructor & Init
 
     /// @inheritdoc Module_v1
@@ -121,7 +121,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         _paymentToken = IERC20(paymentToken);
     }
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Public - Mutating
 
     /// @inheritdoc ILM_PC_Template_v1
@@ -169,7 +169,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         );
     }
 
-    // =========================================================================
+    // -------------------------------------------------------------------------
     // Public - Getters
 
     /// @inheritdoc ILM_PC_Template_v1
@@ -177,7 +177,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         return _depositedAmounts[user_];
     }
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Internal
 
     /// @dev    Ensures the deposit amount is valid.
