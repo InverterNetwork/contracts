@@ -46,7 +46,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     /// @dev    The number of decimals of the token.
     uint8 internal immutable _decimals;
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Modifiers
 
     /// @dev    Modifier to guarantee the caller is a minter.
@@ -57,7 +57,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _;
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Constructor
 
     /// @notice Constructor for ERC20Issuance_v1.
@@ -74,7 +74,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _decimals = decimals_;
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // External Functions
 
     function decimals() public view override returns (uint8) {
@@ -104,7 +104,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _spendAllowance(_from, _spender, _amount);
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Sets the minting rights of an address.

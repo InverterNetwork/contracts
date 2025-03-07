@@ -27,7 +27,8 @@ import {ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
  *              - Batch blacklisting operations (multiple addresses at once)
  *              - Role-based access control:
  *                  * Contract owner assigns blacklist managers
- *                  * Only blacklist managers can add/remove addresses from blacklist
+ *                  * Only blacklist managers can add/remove addresses from
+ *                    blacklist
  *
  *          Access control structure:
  *              - Owner: Controls who can be a blacklist manager
@@ -207,7 +208,8 @@ contract ERC20Issuance_Blacklist_v1 is
     // -------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Internal hook to enforce blacklist restrictions on token transfers.
+    /// @notice Internal hook to enforce blacklist restrictions on token
+    ///         transfers.
     /// @dev    Overrides ERC20Capped._update to add blacklist checks.
     /// @param  from_ Address tokens are transferred from.
     /// @param  to_ Address tokens are transferred to.

@@ -80,6 +80,10 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     // -------------------------------------------------------------------------
     // Initializer
 
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice Initializes the contract.
     /// @param  name_ The name of the token.
     /// @param  symbol_ The symbol of the token.
@@ -191,7 +195,8 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     // -------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Internal hook to enforce blacklist restrictions on token transfers.
+    /// @notice Internal hook to enforce blacklist restrictions on token
+    ///         transfers.
     /// @dev    Overrides ERC20CappedUpgradeable._update to add blacklist checks.
     /// @param  from_ Address tokens are transferred from.
     /// @param  to_ Address tokens are transferred to.

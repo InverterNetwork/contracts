@@ -54,14 +54,14 @@ contract ERC20IssuanceUpgradeable_v1 is
     OwnableUpgradeable
 {
     // State Variables
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
 
     /// @dev    The mapping of allowed minters.
     mapping(address => bool) public allowedMinters;
     /// @dev    The number of decimals of the token.
     uint8 internal _decimals;
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Modifiers
 
     /// @dev    Modifier to guarantee the caller is a minter.
@@ -72,8 +72,12 @@ contract ERC20IssuanceUpgradeable_v1 is
         _;
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Initializer
+
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @notice Initializes the ERC20IssuanceUpgradeable_v1 contract.
     /// @param  name_ The name of the token.
@@ -93,7 +97,7 @@ contract ERC20IssuanceUpgradeable_v1 is
         _decimals = decimals_;
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // External Functions
 
     function decimals() public view override returns (uint8) {
@@ -123,7 +127,7 @@ contract ERC20IssuanceUpgradeable_v1 is
         _spendAllowance(_from, _spender, _amount);
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Sets the minting rights of an address.
