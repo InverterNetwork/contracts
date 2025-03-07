@@ -180,7 +180,9 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
     //     fundingPot.exposed_ensureValidDepositAmount(invalidAmount);
     // }
 
-    function testFuzz_GrantFundingPotAdminRole(address admin_) public {
+    function testFuzz_GrantFundingPotAdminRole_Succeeds(address admin_)
+        public
+    {
         vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
 
         vm.prank(orchestratorAdmin);
@@ -197,11 +199,26 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         );
     }
 
-    function testFuzz_RevokeFundingPotAdminRole(address admin_) public {
-        vm.prank(orchestratorAdmin);
+    function testFuzz_GrantFundingPotAdminRole_Fails(address admin_) public {
+        vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
+
+        vm.startPrank(orchestratorAdmin);
         fundingPot.grantFundingPotAdminRole(admin_);
 
+        vm.expectRevert(
+            ILM_PC_FundingPot_v1
+                .Module__LM_PC_FundingPot_FundingPotAdminAlreadySet
+                .selector
+        );
+        fundingPot.grantFundingPotAdminRole(admin_);
+        vm.stopPrank();
+    }
+
+    function testFuzz_RevokeFundingPotAdminRole(address admin_) public {
+        vm.startPrank(orchestratorAdmin);
+        fundingPot.grantFundingPotAdminRole(admin_);
         fundingPot.revokeFundingPotAdminRole(admin_);
+        vm.stopPrank();
 
         assertEq(
             _authorizer.hasRole(
