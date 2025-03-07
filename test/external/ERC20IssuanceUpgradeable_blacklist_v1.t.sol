@@ -56,13 +56,13 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
                     NAME,
                     SYMBOL,
                     DECIMALS,
-                    MAX_SUPPLY,
-                    address(this) // initial admin
+                    MAX_SUPPLY
                 )
             )
         );
         token = ERC20IssuanceUpgradeable_Blacklist_v1_Exposed(proxy);
         token.setBlacklistManager(address(this), true);
+        token.setMinter(address(this), true);
     }
 
     // ================================================================================
@@ -80,9 +80,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
 
     function testReinitializationFails() public {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        token.__ERC20Issuance_init(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        token.__ERC20IssuanceBlacklist_init(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
     }
 
     // ================================================================================

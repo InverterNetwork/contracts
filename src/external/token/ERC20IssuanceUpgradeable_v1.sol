@@ -14,19 +14,28 @@ import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 /**
  * @title   Inverter ERC20 Issuance Token (Upgradeable)
  *
- * @notice  This contract creates an upgradeable {ERC20} token with a supply cap
- *          and a whitelist-gated functionality to mint and burn tokens.
+ * @notice  An upgradeable ERC20 token implementation with a maximum supply cap
+ *          and controlled minting/burning through a whitelist permission system.
  *
- * @dev     The contract implements functionalities for:
- *          - Managing a whitelist of allowed minters.
- *          - Minting and burning tokens by members of said whitelist.
- *          - Enforcing a supply cap on minted tokens.
- *          - Supporting contract upgrades through the OpenZeppelin upgradeable
- *            pattern.
+ * @dev     This contract implements the following key functionalities:
+ *          - Role-based access control through a minter whitelist
+ *          - Controlled token issuance (minting) by authorized addresses only
+ *          - Controlled token redemption (burning) by authorized addresses only
+ *          - Hard cap on total token supply to prevent inflation
+ *          - Support for contract upgrades through OpenZeppelin's
+ *            upgradeable pattern
  *
- *          This contract uses initializers instead of constructors to support
- *          the proxy upgrade pattern. State is initialized through the
- *          initialize function rather than in a constructor.
+ * @custom:setup    This contract requires the following MANDATORY setup steps:
+ *
+ *                  Set Minter:
+ *                     - Purpose: The contract needs a minter to handle token
+ *                                minting and burning operations. Without this
+ *                                permission, the workflow cannot mint or burn
+ *                                tokens.
+ *                     - How:     The owner of the contract must call the
+ *                                setMinter function to authorize the Funding
+ *                                Manager of the workflow
+ *                     - Example: token.setMinter(fundingManagerAddress, true);
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -66,18 +75,21 @@ contract ERC20IssuanceUpgradeable_v1 is
     //------------------------------------------------------------------------------
     // Initializer
 
+    /// @notice Initializes the ERC20IssuanceUpgradeable_v1 contract.
+    /// @param  name_ The name of the token.
+    /// @param  symbol_ The symbol of the token.
+    /// @param  decimals_ The number of decimals of the token.
+    /// @param  maxSupply_ The maximum supply of the token.
     function __ERC20Issuance_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
-        uint maxSupply_,
-        address initialAdmin_
+        uint maxSupply_
     ) public initializer {
         __ERC20_init(name_, symbol_);
         __ERC20Capped_init(maxSupply_);
-        __Ownable_init(initialAdmin_);
+        __Ownable_init(_msgSender());
 
-        _setMinter(initialAdmin_, true);
         _decimals = decimals_;
     }
 

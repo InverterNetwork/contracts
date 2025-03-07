@@ -2,25 +2,26 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
+import {ERC20IssuanceUpgradeable_v1} from
+    "@ex/token/ERC20IssuanceUpgradeable_v1.sol";
 import {IERC20Issuance_Blacklist_v1} from
     "@ex/token/interfaces/IERC20Issuance_Blacklist_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {ERC20} from "@oz/token/ERC20/ERC20.sol";
-import {ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
+import {ERC20CappedUpgradeable} from
+    "@oz-up/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
 
 /**
- * @title   ERC20 Issuance Token with Blacklist Functionality
+ * @title   ERC20 Issuance Token with Blacklist Functionality (Upgradeable)
  *
- * @notice  An ERC20 token implementation that extends ERC20Issuance_v1 with
- *          blacklisting capabilities, allowing designated managers to restrict
- *          specific addresses from token operations.
+ * @notice  An upgradeable ERC20 token implementation that extends
+ *          ERC20IssuanceUpgradeable_v1 with blacklisting capabilities, allowing
+ *          designated managers to restrict specific addresses from token operations.
  *
  * @dev     This contract inherits from:
  *              - IERC20Issuance_Blacklist_v1
- *              - ERC20Issuance_v1
+ *              - ERC20IssuanceUpgradeable_v1
  *
  *          Key features:
  *              - Individual address blacklisting
@@ -28,6 +29,8 @@ import {ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
  *              - Role-based access control:
  *                  * Contract owner assigns blacklist managers
  *                  * Only blacklist managers can add/remove addresses from blacklist
+ *              - Support for contract upgrades through OpenZeppelin's
+ *                upgradeable pattern
  *
  *          Access control structure:
  *              - Owner: Controls who can be a blacklist manager
@@ -65,9 +68,9 @@ import {ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
  *
  * @author  Zealynx Security
  */
-contract ERC20Issuance_Blacklist_v1 is
+contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     IERC20Issuance_Blacklist_v1,
-    ERC20Issuance_v1
+    ERC20IssuanceUpgradeable_v1
 {
     // -------------------------------------------------------------------------
     // Constants
@@ -96,19 +99,21 @@ contract ERC20Issuance_Blacklist_v1 is
     }
 
     // -------------------------------------------------------------------------
-    // Constructor
+    // Initializer
 
-    /// @notice	Constructor for ERC20Issuance_Blacklist_v1.
-    /// @param	name_ Token name.
-    /// @param	symbol_ Token symbol.
-    /// @param	decimals_ Token decimals.
-    /// @param	maxSupply_ Max token supply.
-    constructor(
+    /// @notice Initializes the ERC20IssuanceUpgradeable_Blacklist_v1 contract.
+    /// @param name_ The name of the token.
+    /// @param symbol_ The symbol of the token.
+    /// @param decimals_ The number of decimals of the token.
+    /// @param maxSupply_ The maximum supply of the token.
+    function __ERC20IssuanceBlacklist_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
         uint maxSupply_
-    ) ERC20Issuance_v1(name_, symbol_, decimals_, maxSupply_) {}
+    ) public initializer {
+        __ERC20Issuance_init(name_, symbol_, decimals_, maxSupply_);
+    }
 
     // -------------------------------------------------------------------------
     // View Functions
@@ -208,15 +213,15 @@ contract ERC20Issuance_Blacklist_v1 is
     // Internal Functions
 
     /// @notice Internal hook to enforce blacklist restrictions on token transfers.
-    /// @dev    Overrides ERC20Capped._update to add blacklist checks.
+    /// @dev    Overrides ERC20CappedUpgradeable._update to add blacklist checks.
     /// @param  from_ Address tokens are transferred from.
     /// @param  to_ Address tokens are transferred to.
     /// @param  amount_ Number of tokens to transfer.
-    /// @inheritdoc ERC20Capped
+    /// @inheritdoc ERC20CappedUpgradeable
     function _update(address from_, address to_, uint amount_)
         internal
         virtual
-        override(ERC20Capped)
+        override(ERC20CappedUpgradeable)
     {
         if (isBlacklisted(from_)) {
             revert ERC20Issuance_Blacklist_BlacklistedAddress(from_);

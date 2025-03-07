@@ -45,14 +45,14 @@ contract ERC20IssuanceUpgradeableTest is Test {
                     NAME,
                     SYMBOL,
                     DECIMALS,
-                    MAX_SUPPLY,
-                    address(this) // initial admin
+                    MAX_SUPPLY
                 )
             )
         );
 
         // Cast the proxy address to the implementation type
         token = ERC20IssuanceUpgradeable_v1(proxy);
+        token.setMinter(address(this), true);
     }
 
     // ================================================================================
@@ -71,13 +71,7 @@ contract ERC20IssuanceUpgradeableTest is Test {
     function testReinitializationFails() public {
         // Attempt to reinitialize the contract
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        token.__ERC20Issuance_init(
-            NAME,
-            SYMBOL,
-            DECIMALS,
-            MAX_SUPPLY,
-            address(this) // initial admin
-        );
+        token.__ERC20Issuance_init(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
     }
 
     /*

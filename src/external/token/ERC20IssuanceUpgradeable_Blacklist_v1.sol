@@ -79,16 +79,19 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
 
     // -------------------------------------------------------------------------
     // Initializer
+
+    /// @notice Initializes the contract.
+    /// @param  name_ The name of the token.
+    /// @param  symbol_ The symbol of the token.
+    /// @param  decimals_ The number of decimals of the token.
+    /// @param  maxSupply_ The maximum supply of the token.
     function __ERC20IssuanceBlacklist_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
-        uint maxSupply_,
-        address initialAdmin_
+        uint maxSupply_
     ) public initializer {
-        __ERC20Issuance_init(
-            name_, symbol_, decimals_, maxSupply_, initialAdmin_
-        );
+        __ERC20Issuance_init(name_, symbol_, decimals_, maxSupply_);
     }
 
     // -------------------------------------------------------------------------

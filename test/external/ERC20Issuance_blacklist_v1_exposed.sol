@@ -13,17 +13,8 @@ contract ERC20Issuance_Blacklist_v1_Exposed is ERC20Issuance_Blacklist_v1 {
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
-        uint initialSupply_,
-        address initialAdmin_
-    )
-        ERC20Issuance_Blacklist_v1(
-            name_,
-            symbol_,
-            decimals_,
-            initialSupply_,
-            initialAdmin_
-        )
-    {}
+        uint initialSupply_
+    ) ERC20Issuance_Blacklist_v1(name_, symbol_, decimals_, initialSupply_) {}
 
     /**
      * @dev Exposes the internal _update function for testing

@@ -85,9 +85,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         projectTreasury = makeAddr("projectTreasury");
 
         // Create issuance token
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         // Setup mock oracle
         impl = address(new OraclePrice_Mock());
@@ -1257,8 +1256,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Setup
         vm.assume(decimals_ > 0);
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            "New Issuance Token", "NIT", decimals_, MAX_SUPPLY, address(this)
+            "New Issuance Token", "NIT", decimals_, MAX_SUPPLY
         );
+        newIssuanceToken.setMinter(address(this), true);
 
         // Assert
         assertEq(
@@ -1917,8 +1917,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
 
         // Create issuance token
         ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, issuanceTokenDecimals_, MAX_SUPPLY, address(this)
+            NAME, SYMBOL, issuanceTokenDecimals_, MAX_SUPPLY
         );
+        newIssuanceToken.setMinter(address(this), true);
         bytes memory newConfigData = abi.encode(
             projectTreasury,
             address(newIssuanceToken),
