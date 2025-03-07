@@ -173,6 +173,13 @@ contract LM_PC_FundingPot_v1 is
         external
         onlyOrchestratorAdmin
     {
+        if (
+            __Module_orchestrator.authorizer().checkForRole(
+                FUNDING_POT_ADMIN_ROLE, admin_
+            )
+        ) {
+            revert Module__LM_PC_FundingPot_FundingPotAdminAlreadySet();
+        }
         __Module_orchestrator.authorizer().grantRoleFromModule(
             FUNDING_POT_ADMIN_ROLE, admin_
         );
@@ -182,6 +189,13 @@ contract LM_PC_FundingPot_v1 is
         external
         onlyOrchestratorAdmin
     {
+        if (
+            !__Module_orchestrator.authorizer().checkForRole(
+                FUNDING_POT_ADMIN_ROLE, admin_
+            )
+        ) {
+            revert Module__LM_PC_FundingPot_AddressIsNotFundingPotAdmin();
+        }
         __Module_orchestrator.authorizer().revokeRoleFromModule(
             FUNDING_POT_ADMIN_ROLE, admin_
         );
