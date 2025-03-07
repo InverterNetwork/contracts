@@ -169,15 +169,15 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    /// @notice Grants the funding pot admin role to the given address.
+    /// @dev This function is only callable by the orchestrator admin.
+    /// @param admin_ The address to grant the funding pot admin role to.
     function grantFundingPotAdminRole(address admin_)
         external
         onlyOrchestratorAdmin
     {
-        if (
-            __Module_orchestrator.authorizer().checkForRole(
-                FUNDING_POT_ADMIN_ROLE, admin_
-            )
-        ) {
+        if (_checkForFundingPotAdminRole(admin_)) {
             revert Module__LM_PC_FundingPot_FundingPotAdminAlreadySet();
         }
         __Module_orchestrator.authorizer().grantRoleFromModule(
@@ -185,15 +185,15 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    /// @notice Revokes the funding pot admin role from the given address.
+    /// @dev This function is only callable by the orchestrator admin.
+    /// @param admin_ The address to revoke the funding pot admin role from.
     function revokeFundingPotAdminRole(address admin_)
         external
         onlyOrchestratorAdmin
     {
-        if (
-            !__Module_orchestrator.authorizer().checkForRole(
-                FUNDING_POT_ADMIN_ROLE, admin_
-            )
-        ) {
+        if (!_checkForFundingPotAdminRole(admin_)) {
             revert Module__LM_PC_FundingPot_AddressIsNotFundingPotAdmin();
         }
         __Module_orchestrator.authorizer().revokeRoleFromModule(
@@ -218,5 +218,19 @@ contract LM_PC_FundingPot_v1 is
         if (amount_ > _maxDepositAmount) {
             revert Module__LM_PC_FundingPot_InvalidDepositAmount();
         }
+    }
+
+    /// @dev    Checks if the given address has the funding pot admin role.
+    /// @param  admin_ The address to check for the funding pot admin role.
+    /// @return bool True if the address has the funding pot admin role, false otherwise.
+    function _checkForFundingPotAdminRole(address admin_)
+        internal
+        view
+        returns (bool)
+    {
+        bytes32 roleId = __Module_orchestrator.authorizer().generateRoleId(
+            address(this), FUNDING_POT_ADMIN_ROLE
+        );
+        return __Module_orchestrator.authorizer().checkForRole(roleId, admin_);
     }
 }
