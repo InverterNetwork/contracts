@@ -180,9 +180,12 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
     //     fundingPot.exposed_ensureValidDepositAmount(invalidAmount);
     // }
 
-    function testFuzz_GrantFundingPotAdminRole_Succeeds(address admin_)
-        public
-    {
+    /* Test external grantFundingPotAdminRole()
+        ├── Given an address has the orchestrator admin role
+        │   └── When granting the funding pot admin role
+        │       └── Then it should be granted
+    */
+    function testFuzz_GrantFundingPotAdminRole(address admin_) public {
         vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
 
         vm.prank(orchestratorAdmin);
@@ -199,7 +202,14 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         );
     }
 
-    function testFuzz_GrantFundingPotAdminRole_Fails(address admin_) public {
+    /* Test external grantFundingPotAdminRole()
+        ├── Given an address already has the funding pot admin role
+        │   └── When granting the funding pot admin role
+        │       └── Then it should revert with FundingPotAdminAlreadySet
+    */
+    function testFuzz_GrantFundingPotAdminRole_failsWhenGrantedTwice(
+        address admin_
+    ) public {
         vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
 
         vm.startPrank(orchestratorAdmin);
@@ -214,20 +224,68 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testFuzz_RevokeFundingPotAdminRole(address admin_) public {
-        vm.startPrank(orchestratorAdmin);
+    /* Test external grantFundingPotAdminRole()
+        ├── Given an address doesn't have the orchestrator admin role
+        │   └── When granting the funding pot admin role
+        │       └── Then it should revert with CallerNotAuthorized
+    */
+    function testFuzz_GrantFundingPotAdminRole_failsWhenNotOrchestratorAdmin(
+        address caller_,
+        address admin_
+    ) public {
+        vm.assume(caller_ != address(0) && caller_ != orchestratorAdmin);
+        vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
+        vm.startPrank(caller_);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _orchestrator.authorizer().getAdminRole(),
+                caller_
+            )
+        );
         fundingPot.grantFundingPotAdminRole(admin_);
+        vm.stopPrank();
+    }
+
+    /* Test external revokeFundingPotAdminRole()
+        ├── Given an address has the funding pot admin role
+        │   └── When revoking the funding pot admin role
+        │       └── Then it should be revoked
+    */
+    function testFuzz_RevokeFundingPotAdminRole(address admin_) public {
+        testFuzz_GrantFundingPotAdminRole(admin_);
+
+        vm.startPrank(orchestratorAdmin);
         fundingPot.revokeFundingPotAdminRole(admin_);
         vm.stopPrank();
 
         assertEq(
-            _authorizer.hasRole(
-                _authorizer.generateRoleId(
-                    address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
-                ),
-                admin_
-            ),
+            _authorizer.hasRole(fundingPot.getFundingPotAdminRoleId(), admin_),
             false
         );
+    }
+
+    /* Test external revokeFundingPotAdminRole()
+        ├── Given an address doesn't have the funding pot admin role
+        │   └── When revoking the funding pot admin role
+        │       └── Then it should revert with CallerNotAuthorized
+    */
+    function testFuzz_RevokeFundingPotAdminRole_failsWhenNotFundingPotAdmin(
+        address caller_,
+        address admin_
+    ) public {
+        vm.assume(caller_ != address(0) && caller_ != orchestratorAdmin);
+        testFuzz_GrantFundingPotAdminRole(admin_);
+
+        vm.startPrank(caller_);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _orchestrator.authorizer().getAdminRole(),
+                caller_
+            )
+        );
+        fundingPot.revokeFundingPotAdminRole(admin_);
+        vm.stopPrank();
     }
 }
