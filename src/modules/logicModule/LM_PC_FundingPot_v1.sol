@@ -180,8 +180,8 @@ contract LM_PC_FundingPot_v1 is
         if (_checkForFundingPotAdminRole(admin_)) {
             revert Module__LM_PC_FundingPot_FundingPotAdminAlreadySet();
         }
-        __Module_orchestrator.authorizer().grantRoleFromModule(
-            FUNDING_POT_ADMIN_ROLE, admin_
+        __Module_orchestrator.authorizer().grantRole(
+            getFundingPotAdminRoleId(), admin_
         );
     }
 
@@ -196,8 +196,8 @@ contract LM_PC_FundingPot_v1 is
         if (!_checkForFundingPotAdminRole(admin_)) {
             revert Module__LM_PC_FundingPot_AddressIsNotFundingPotAdmin();
         }
-        __Module_orchestrator.authorizer().revokeRoleFromModule(
-            FUNDING_POT_ADMIN_ROLE, admin_
+        __Module_orchestrator.authorizer().revokeRole(
+            getFundingPotAdminRoleId(), admin_
         );
     }
 
@@ -209,6 +209,12 @@ contract LM_PC_FundingPot_v1 is
         return _depositedAmounts[user_];
     }
 
+    /// @notice Generates a role id for the funding pot admin role.
+    function getFundingPotAdminRoleId() public view returns (bytes32) {
+        return __Module_orchestrator.authorizer().generateRoleId(
+            address(this), FUNDING_POT_ADMIN_ROLE
+        );
+    }
     //--------------------------------------------------------------------------
     // Internal
 
@@ -228,9 +234,8 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (bool)
     {
-        bytes32 roleId = __Module_orchestrator.authorizer().generateRoleId(
-            address(this), FUNDING_POT_ADMIN_ROLE
+        return __Module_orchestrator.authorizer().checkForRole(
+            getFundingPotAdminRoleId(), admin_
         );
-        return __Module_orchestrator.authorizer().checkForRole(roleId, admin_);
     }
 }

@@ -85,4 +85,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Revokes the funding pot admin role from an address.
     /// @param admin_ The address to revoke the funding pot admin role from.
     function revokeFundingPotAdminRole(address admin_) external;
+
+    /// @notice Returns the funding pot admin role id.
+    /// @return roleId_ The funding pot admin role id.
+    function getFundingPotAdminRoleId() external view returns (bytes32);
 }
