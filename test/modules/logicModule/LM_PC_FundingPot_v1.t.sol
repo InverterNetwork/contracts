@@ -46,7 +46,7 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
     // State
 
     // SuT
-    LM_PC_FundingPot_v1 fundingPot;
+    LM_PC_FundingPot_v1_Exposed fundingPot;
 
     // Mocks
     ERC20Mock paymentToken;
@@ -62,8 +62,8 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         paymentToken = new ERC20Mock("Payment Token", "PT");
 
         // Deploy the SuT
-        address impl = address(new LM_PC_FundingPot_v1());
-        fundingPot = LM_PC_FundingPot_v1(Clones.clone(impl));
+        address impl = address(new LM_PC_FundingPot_v1_Exposed());
+        fundingPot = LM_PC_FundingPot_v1_Exposed(Clones.clone(impl));
 
         // Setup the module to test
         _setUpOrchestrator(fundingPot);
