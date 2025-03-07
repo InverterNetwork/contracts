@@ -51,50 +51,36 @@ address constant uniswapRouterAddress =
 
 contract Migrating_PIM_Factory_v1Test is E2ETest {
     // =========================================================================
-    // State Variables
+    // State Variables & Constants
     // =========================================================================
 
-    // System under test
+    // Core contracts
     Migrating_PIM_Factory_v1 factory;
     address uniswapAdapter;
-    IOrchestrator_v1 orchestrator;
-    ERC20Issuance_v1 issuanceToken;
-    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager;
-
-    // Test helpers
     EventHelpers eventHelpers;
 
-    // =========================================================================
-    // Configuration Parameters
-    // =========================================================================
-
-    // Workflow configuration
+    // Configuration objects
     IOrchestratorFactory_v1.WorkflowConfig workflowConfig;
     IOrchestratorFactory_v1.ModuleConfig fundingManagerConfig;
     IOrchestratorFactory_v1.ModuleConfig authorizerConfig;
     IOrchestratorFactory_v1.ModuleConfig paymentProcessorConfig;
     IOrchestratorFactory_v1.ModuleConfig[] logicModuleConfigs;
 
-    // Bonding curve configuration
+    // Bonding curve settings
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties bcProperties;
     IBondingCurveBase_v1.IssuanceToken issuanceTokenParams;
-
-    // Migration configuration
     IMigrating_PIM_Factory_v1.MigrationConfig migrationConfig;
-    uint initialPurchaseAmount = 1 ether;
-    uint secondaryPurchaseAmount = 10 ether;
-    uint migrationThreshold = 10 ether;
-    bool isImmutable = false;
+
+    // Test parameters
+    uint constant migrationThreshold = 10 ether;
+    uint constant initialIssuuanceSupply = 500_000_000e18;
+    uint constant initialCollateralSupply = 3200e18;
+    uint32 constant reserveRatio = 333_333;
 
     // Test addresses
     address workflowAdmin = vm.addr(420);
     address mockTrustedForwarder = vm.addr(3);
     address alice = vm.addr(0xA11CE);
-
-    // Bonding curve parameters
-    uint initialIssuuanceSupply = 500_000_000e18;
-    uint initialCollateralSupply = 3200e18;
-    uint32 reserveRatio = 333_333;
 
     // =========================================================================
     // Setup
@@ -120,12 +106,320 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         _setupBondingCurveConfig();
 
         // Configure migration
-        _setupMigrationConfig();
+        _setupMigrationConfig(false);
 
-        // Prepare initial purchase
+        vm.prank(workflowAdmin);
+        postSetup(0);
+    }
+
+    // =========================================================================
+    // Test Cases: Workflow Creation
+    // =========================================================================
+
+    /// @notice Tests basic workflow creation with immutable configuration
+    /// @dev Verifies:
+    ///      - Correct role assignments
+    ///      - Token minting permissions
+    ///      - Initial token distributions
+    ///      - Admin role configurations
+    function testCreatePIMWorkflow() public {
+        _setupMigrationConfig(true);
+
+        uint initialPurchaseAmount = 1 ether;
+
         token.mint(address(this), initialPurchaseAmount);
         token.approve(address(factory), initialPurchaseAmount);
 
+        // Post setup
+        (
+            IOrchestrator_v1 orchestrator,
+            ERC20Issuance_v1 issuanceToken,
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager
+        ) = postSetup(initialPurchaseAmount);
+
+        // Verify bonding curve has minting rights
+        assertTrue(
+            issuanceToken.allowedMinters(address(fundingManager)),
+            "Bonding curve should have minting rights"
+        );
+
+        // Verify admin roles
+        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
+        assertTrue(
+            orchestrator.authorizer().hasRole(adminRole, address(factory)),
+            "Factory should have admin rights"
+        );
+
+        if (!migrationConfig.isImmutable) {
+            assertTrue(
+                orchestrator.authorizer().hasRole(adminRole, workflowAdmin),
+                "Workflow admin should have admin rights"
+            );
+        }
+
+        // Verify token distribution
+        assertGt(
+            issuanceToken.balanceOf(workflowAdmin),
+            0,
+            "Admin should have issuance tokens"
+        );
+
+        assertEq(
+            token.balanceOf(address(fundingManager)),
+            initialPurchaseAmount - initialPurchaseAmount / 100, // 1% protocol fee
+            "Funding manager should have collateral tokens"
+        );
+
+        // Verify roles
+        bytes32 curveAccess = fundingManager.CURVE_INTERACTION_ROLE();
+        bytes32 curveInteractionRoleId = orchestrator.authorizer()
+            .generateRoleId(address(fundingManager), curveAccess);
+        assertTrue(
+            orchestrator.authorizer().checkForRole(
+                curveInteractionRoleId, address(factory)
+            ),
+            "Factory should have curve interaction role"
+        );
+
+        assertTrue(
+            issuanceToken.allowedMinters(address(factory)),
+            "Factory should be allowed minter"
+        );
+    }
+
+    // =========================================================================
+    // Test Cases: Trading Operations
+    // =========================================================================
+
+    /// @notice Tests buying tokens below migration threshold
+    /// @dev Verifies:
+    ///      - Token balance changes
+    ///      - Bonding curve state remains unchanged
+    ///      - Graduation state remains false
+    function test_buyForUpTo_BelowThreshold() public {
+        _setupMigrationConfig(true);
+
+        // Post setup
+        (
+            ,
+            ERC20Issuance_v1 issuanceToken,
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager
+        ) = postSetup(0);
+
+        // Setup
+        uint amountIn = 1 ether;
+        token.mint(address(this), amountIn);
+        token.approve(address(factory), amountIn);
+
+        // Record initial balances
+        uint buyerTokenBalanceBefore = token.balanceOf(address(this));
+        uint buyerIssuanceBalanceBefore = issuanceToken.balanceOf(address(this));
+        uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
+
+        // Execute buy
+        factory.buyFor(
+            address(fundingManager), address(this), amountIn, purchaseReturn
+        );
+
+        // Verify balance changes
+        assertLt(
+            token.balanceOf(address(this)),
+            buyerTokenBalanceBefore,
+            "Token balance should decrease"
+        );
+        assertGt(
+            issuanceToken.balanceOf(address(this)),
+            buyerIssuanceBalanceBefore,
+            "Issuance balance should increase"
+        );
+
+        // Verify curve state
+        assertTrue(fundingManager.buyIsOpen(), "Buying should be open");
+        assertTrue(fundingManager.sellIsOpen(), "Selling should be open");
+        assertFalse(
+            factory.getIsGraduated(address(fundingManager)),
+            "Factory should not be graduated"
+        );
+    }
+
+    /// @notice Tests complete sell operation of previously purchased tokens
+    /// @dev Verifies:
+    ///      - Purchase success
+    ///      - Sale execution
+    ///      - Final balance check
+    function test_sellTo() public {
+        _setupMigrationConfig(true);
+
+        // Post setup
+        (
+            ,
+            ERC20Issuance_v1 issuanceToken,
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager
+        ) = postSetup(0);
+
+        // First buy tokens
+        uint amountIn = 1 ether;
+        token.mint(address(this), amountIn);
+        token.approve(address(factory), amountIn);
+        uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
+        factory.buyFor(
+            address(fundingManager), address(this), amountIn, purchaseReturn
+        );
+
+        // Verify purchase
+        uint issuanceBalanceBeforeSale = issuanceToken.balanceOf(address(this));
+        assertGt(
+            issuanceBalanceBeforeSale, 0, "Buyer should have issuance tokens"
+        );
+
+        // Sell tokens
+        issuanceToken.approve(address(factory), issuanceBalanceBeforeSale);
+        uint saleReturn =
+            fundingManager.calculateSaleReturn(issuanceBalanceBeforeSale);
+        factory.sellTo(
+            address(fundingManager),
+            address(this),
+            issuanceBalanceBeforeSale,
+            saleReturn
+        );
+
+        // Verify sale
+        uint issuanceBalanceAfterSale = issuanceToken.balanceOf(address(this));
+        assertEq(
+            issuanceBalanceAfterSale,
+            0,
+            "Buyer should have no issuance tokens after sale"
+        );
+    }
+
+    // =========================================================================
+    // Test Cases: Migration Scenarios
+    // =========================================================================
+
+    /// @notice Tests buying tokens that trigger migration threshold
+    /// @dev Verifies:
+    ///      - Migration trigger conditions
+    ///      - Post-migration curve state
+    ///      - Token refunds and balances
+    ///      - Ownership transitions
+    function test_buyForUpTo_AtAboveThreshold() public {
+        _setupMigrationConfig(true);
+
+        // Post setup
+        (
+            IOrchestrator_v1 orchestrator,
+            ERC20Issuance_v1 issuanceToken,
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager
+        ) = postSetup(0);
+
+        // Fee Rates
+        uint protocolFeeRate = feeManager.getDefaultCollateralFee();
+
+        // Setup purchase
+        uint amountIn = 12 ether;
+        token.mint(address(this), amountIn);
+        token.approve(address(factory), amountIn);
+
+        // First purchase (half)
+        uint firstPurchaseReturn =
+            fundingManager.calculatePurchaseReturn(amountIn / 2);
+        factory.buyFor(
+            address(fundingManager),
+            address(this),
+            amountIn / 2,
+            firstPurchaseReturn
+        );
+
+        // Withdraw fees to staking
+        factory.withdrawAllProjectCollateralFeesToStaking();
+
+        // Second purchase (half) - triggers migration
+        uint secondPurchaseReturn =
+            fundingManager.calculatePurchaseReturn(amountIn / 2);
+        factory.buyFor(
+            address(fundingManager),
+            address(this),
+            amountIn / 2,
+            secondPurchaseReturn
+        );
+
+        // Verify curve state after migration
+        assertFalse(fundingManager.buyIsOpen(), "Buying should be closed");
+        assertFalse(fundingManager.sellIsOpen(), "Selling should be closed");
+        assertTrue(
+            factory.getIsGraduated(address(fundingManager)),
+            "Factory should be graduated"
+        );
+
+        // Verify refund
+        uint totalAmountIn = amountIn;
+
+        // Calculate fees on full amount
+        uint protocolFees = totalAmountIn * protocolFeeRate / 10_000;
+        uint pusherFee = (amountIn / 2) * 100 / 9900;
+
+        // Calculate expected refund
+        uint expectedRefund =
+            totalAmountIn - protocolFees - pusherFee - migrationThreshold;
+        assertApproxEqAbs(
+            token.balanceOf(address(this)),
+            expectedRefund,
+            0.02 ether,
+            "Buyer should be reimbursed excess payment"
+        );
+
+        // Verify token balances
+        assertGt(
+            issuanceToken.balanceOf(address(this)),
+            0,
+            "Buyer should have issuance tokens"
+        );
+        assertEq(
+            token.balanceOf(address(fundingManager)),
+            0,
+            "Funding manager should have no collateral after migration"
+        );
+
+        // Verify ownership based on migration type
+        assertEq(
+            issuanceToken.owner(),
+            address(0),
+            "Issuance token should be renounced upon migration"
+        );
+        if (migrationConfig.isImmutable) {
+            assertFalse(
+                orchestrator.authorizer().hasRole(
+                    orchestrator.authorizer().getAdminRole(), workflowAdmin
+                ),
+                "Admin should not have admin rights (immutable)"
+            );
+        } else {
+            assertTrue(
+                orchestrator.authorizer().hasRole(
+                    orchestrator.authorizer().getAdminRole(), workflowAdmin
+                ),
+                "Admin should have admin rights (mutable)"
+            );
+        }
+    }
+
+    // =========================================================================
+    // Helper Functions
+    // =========================================================================
+
+    /// @notice Deploys and configures a new workflow instance
+    /// @param initialPurchaseAmount Amount of tokens to purchase during setup
+    /// @return orchestrator The deployed orchestrator contract
+    /// @return issuanceToken The deployed issuance token contract
+    /// @return fundingManager The deployed funding manager contract
+    function postSetup(uint initialPurchaseAmount)
+        internal
+        returns (
+            IOrchestrator_v1 orchestrator,
+            ERC20Issuance_v1 issuanceToken,
+            FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 fundingManager
+        )
+    {
         // Deploy workflow and record events
         vm.recordLogs();
         orchestrator = factory.createPIMWorkflow(
@@ -155,10 +449,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         );
     }
 
-    // =========================================================================
-    // Configuration Helper Functions
-    // =========================================================================
-
+    // Configuration helpers
     function _setupWorkflowConfig() internal {
         workflowConfig = IOrchestratorFactory_v1.WorkflowConfig({
             independentUpdates: false,
@@ -221,7 +512,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         });
     }
 
-    function _setupMigrationConfig() internal {
+    function _setupMigrationConfig(bool isImmutable) internal {
         migrationConfig = IMigrating_PIM_Factory_v1.MigrationConfig({
             isImmutable: isImmutable,
             migrationThreshold: migrationThreshold,
@@ -230,238 +521,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         });
     }
 
-    // =========================================================================
-    // Tests: Basic Workflow Creation
-    // =========================================================================
-
-    function testCreatePIMWorkflow() public {
-        // Verify bonding curve has minting rights
-        assertTrue(
-            issuanceToken.allowedMinters(address(fundingManager)),
-            "Bonding curve should have minting rights"
-        );
-
-        // Verify admin roles
-        bytes32 adminRole = orchestrator.authorizer().getAdminRole();
-        assertTrue(
-            orchestrator.authorizer().hasRole(adminRole, address(factory)),
-            "Factory should have admin rights"
-        );
-
-        if (!isImmutable) {
-            assertTrue(
-                orchestrator.authorizer().hasRole(adminRole, workflowAdmin),
-                "Workflow admin should have admin rights"
-            );
-        }
-
-        // Verify token distribution
-        assertGt(
-            issuanceToken.balanceOf(workflowAdmin),
-            0,
-            "Admin should have issuance tokens"
-        );
-
-        assertEq(
-            token.balanceOf(address(fundingManager)),
-            initialPurchaseAmount - initialPurchaseAmount / 100, // 1% protocol fee
-            "Funding manager should have collateral tokens"
-        );
-
-        // Verify roles
-        bytes32 curveAccess = fundingManager.CURVE_INTERACTION_ROLE();
-        bytes32 curveInteractionRoleId = orchestrator.authorizer()
-            .generateRoleId(address(fundingManager), curveAccess);
-        assertTrue(
-            orchestrator.authorizer().checkForRole(
-                curveInteractionRoleId, address(factory)
-            ),
-            "Factory should have curve interaction role"
-        );
-
-        assertTrue(
-            issuanceToken.allowedMinters(address(factory)),
-            "Factory should be allowed minter"
-        );
-    }
-
-    // =========================================================================
-    // Tests: Buying and Selling
-    // =========================================================================
-
-    function test_buyForUpTo_BelowThreshold() public {
-        // Setup
-        uint amountIn = 1 ether;
-        token.mint(address(this), amountIn);
-        token.approve(address(factory), amountIn);
-
-        // Record initial balances
-        uint buyerTokenBalanceBefore = token.balanceOf(address(this));
-        uint buyerIssuanceBalanceBefore = issuanceToken.balanceOf(address(this));
-        uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
-
-        // Execute buy
-        factory.buyFor(
-            address(fundingManager), address(this), amountIn, purchaseReturn
-        );
-
-        // Verify balance changes
-        assertLt(
-            token.balanceOf(address(this)),
-            buyerTokenBalanceBefore,
-            "Token balance should decrease"
-        );
-        assertGt(
-            issuanceToken.balanceOf(address(this)),
-            buyerIssuanceBalanceBefore,
-            "Issuance balance should increase"
-        );
-
-        // Verify curve state
-        assertTrue(fundingManager.buyIsOpen(), "Buying should be open");
-        assertTrue(fundingManager.sellIsOpen(), "Selling should be open");
-        assertFalse(
-            factory.getIsGraduated(address(fundingManager)),
-            "Factory should not be graduated"
-        );
-    }
-
-    function test_sellTo() public {
-        // First buy tokens
-        uint amountIn = 1 ether;
-        token.mint(address(this), amountIn);
-        token.approve(address(factory), amountIn);
-        uint purchaseReturn = fundingManager.calculatePurchaseReturn(amountIn);
-        factory.buyFor(
-            address(fundingManager), address(this), amountIn, purchaseReturn
-        );
-
-        // Verify purchase
-        uint issuanceBalanceBeforeSale = issuanceToken.balanceOf(address(this));
-        assertGt(
-            issuanceBalanceBeforeSale, 0, "Buyer should have issuance tokens"
-        );
-
-        // Sell tokens
-        issuanceToken.approve(address(factory), issuanceBalanceBeforeSale);
-        uint saleReturn =
-            fundingManager.calculateSaleReturn(issuanceBalanceBeforeSale);
-        factory.sellTo(
-            address(fundingManager),
-            address(this),
-            issuanceBalanceBeforeSale,
-            saleReturn
-        );
-
-        // Verify sale
-        uint issuanceBalanceAfterSale = issuanceToken.balanceOf(address(this));
-        assertEq(
-            issuanceBalanceAfterSale,
-            0,
-            "Buyer should have no issuance tokens after sale"
-        );
-    }
-
-    // =========================================================================
-    // Tests: Migration
-    // =========================================================================
-
-    function test_buyForUpTo_AtAboveThreshold() public {
-        // Fee Rates
-        uint protocolFeeRate = feeManager.getDefaultCollateralFee();
-        uint projectFeeRate = fundingManager.buyFee();
-
-        // Setup purchase
-        uint amountIn = secondaryPurchaseAmount; // 10 ether
-        token.mint(address(this), amountIn);
-        token.approve(address(factory), amountIn);
-
-        // First purchase (half)
-        uint firstPurchaseReturn =
-            fundingManager.calculatePurchaseReturn(amountIn / 2);
-        factory.buyFor(
-            address(fundingManager),
-            address(this),
-            amountIn / 2,
-            firstPurchaseReturn
-        );
-
-        // Withdraw fees to staking
-        factory.withdrawAllProjectCollateralFeesToStaking();
-
-        // Second purchase (half) - triggers migration
-        uint secondPurchaseReturn =
-            fundingManager.calculatePurchaseReturn(amountIn / 2);
-        factory.buyFor(
-            address(fundingManager),
-            address(this),
-            amountIn / 2,
-            secondPurchaseReturn
-        );
-
-        // Verify curve state after migration
-        assertFalse(fundingManager.buyIsOpen(), "Buying should be closed");
-        assertFalse(fundingManager.sellIsOpen(), "Selling should be closed");
-        assertTrue(
-            factory.getIsGraduated(address(fundingManager)),
-            "Factory should be graduated"
-        );
-
-        // Verify refund
-        uint totalAmountIn = initialPurchaseAmount + amountIn;
-
-        // Calculate fees on full amount
-        uint protocolFees = totalAmountIn * protocolFeeRate / 10_000;
-        uint projectFees = totalAmountIn * projectFeeRate / 10_000;
-
-        // Calculate expected refund
-        uint expectedRefund =
-            totalAmountIn - protocolFees - projectFees - migrationThreshold;
-        assertEq(
-            token.balanceOf(address(this)),
-            expectedRefund,
-            "Buyer should be reimbursed excess payment"
-        );
-
-        // Verify token balances
-        assertGt(
-            issuanceToken.balanceOf(address(this)),
-            0,
-            "Buyer should have issuance tokens"
-        );
-        assertEq(
-            token.balanceOf(address(fundingManager)),
-            0,
-            "Funding manager should have no collateral after migration"
-        );
-
-        // Verify ownership based on migration type
-        assertEq(
-            issuanceToken.owner(),
-            address(0),
-            "Issuance token should be renounced upon migration"
-        );
-        if (isImmutable) {
-            assertFalse(
-                orchestrator.authorizer().hasRole(
-                    orchestrator.authorizer().getAdminRole(), workflowAdmin
-                ),
-                "Admin should not have admin rights (immutable)"
-            );
-        } else {
-            assertTrue(
-                orchestrator.authorizer().hasRole(
-                    orchestrator.authorizer().getAdminRole(), workflowAdmin
-                ),
-                "Admin should have admin rights (mutable)"
-            );
-        }
-    }
-
-    // =========================================================================
-    // Utility Functions
-    // =========================================================================
-
+    /// @notice Deploys Uniswap infrastructure for testing
     function deployUniswapAdapter() internal returns (address) {
         vm.etch(uniswapFactoryAddress, uniswapV2FactoryBytecode);
         vm.etch(uniswapRouterAddress, uniswapV2Router02Bytecode);
