@@ -92,9 +92,9 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
     address alice = vm.addr(0xA11CE);
 
     // Bonding curve parameters
-    uint initialIssuuanceSupply = 200_002_000_000_000_000_000_000;
-    uint initialCollateralSupply = 296_000_000_000_000_000_000;
-    uint32 reserveRatio = 160_000;
+    uint initialIssuuanceSupply = 500_000_000e18;
+    uint initialCollateralSupply = 3200e18;
+    uint32 reserveRatio = 333_333;
 
     // =========================================================================
     // Setup
@@ -217,7 +217,7 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
             name: "Bonding Curve Token",
             symbol: "BCT",
             decimals: 18,
-            maxSupply: type(uint).max - 1
+            maxSupply: 1_000_000_000e18
         });
     }
 
@@ -436,12 +436,12 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
         );
 
         // Verify ownership based on migration type
+        assertEq(
+            issuanceToken.owner(),
+            address(0),
+            "Issuance token should be renounced upon migration"
+        );
         if (isImmutable) {
-            assertEq(
-                issuanceToken.owner(),
-                address(0),
-                "Issuance token should be renounced for immutable PIM"
-            );
             assertFalse(
                 orchestrator.authorizer().hasRole(
                     orchestrator.authorizer().getAdminRole(), workflowAdmin
@@ -449,11 +449,6 @@ contract Migrating_PIM_Factory_v1Test is E2ETest {
                 "Admin should not have admin rights (immutable)"
             );
         } else {
-            assertEq(
-                issuanceToken.owner(),
-                workflowAdmin,
-                "Issuance token should be owned by admin for mutable PIM"
-            );
             assertTrue(
                 orchestrator.authorizer().hasRole(
                     orchestrator.authorizer().getAdminRole(), workflowAdmin

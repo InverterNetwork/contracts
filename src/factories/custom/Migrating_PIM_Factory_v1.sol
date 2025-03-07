@@ -15,11 +15,8 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
 
 // Funding manager interfaces
-import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {IRedeemingBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {IFM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
@@ -58,7 +55,7 @@ contract Migrating_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
 
     uint private constant FEE_DENOMINATOR = 1e4;
-    uint private constant DEFAULT_ISSUANCE_LIQUIDITY_DIVISOR = 14;
+    uint private constant DEFAULT_MUTABLE_INITIAL_MINT_AMOUNT = 200_000_000e18;
     uint private constant DEFAULT_COLLATERAL_FEE_MULTIPLIER = 0;
     uint private constant DEFAULT_ISSUANCE_FEE_MULTIPLIER = 0;
 
@@ -74,7 +71,7 @@ contract Migrating_PIM_Factory_v1 is
     // @dev This is give so we can update the metadata relative to the beacon, it basically solves a dependency issue during initialization
     LM_PC_Staking_v1_Metadata public stakingModuleMetadata;
 
-    uint public issuanceLiquidityDivisor;
+    uint public mutableInitialMintAmount;
     uint public collateralFeeMultiplier;
     uint public issuanceFeeMultiplier;
 
@@ -128,7 +125,7 @@ contract Migrating_PIM_Factory_v1 is
             1, 0, 0, "https://github.com/InverterNetwork/contracts"
         );
 
-        issuanceLiquidityDivisor = DEFAULT_ISSUANCE_LIQUIDITY_DIVISOR;
+        mutableInitialMintAmount = DEFAULT_MUTABLE_INITIAL_MINT_AMOUNT;
         collateralFeeMultiplier = DEFAULT_COLLATERAL_FEE_MULTIPLIER;
         issuanceFeeMultiplier = DEFAULT_ISSUANCE_FEE_MULTIPLIER;
     }
@@ -149,8 +146,9 @@ contract Migrating_PIM_Factory_v1 is
         MigrationConfig memory migrationConfig_
     ) external returns (IOrchestrator_v1) {
         // Deploy issuance token
-        IERC20Issuance_v1 issuanceToken =
-            _deployIssuanceToken(issuanceTokenParams);
+        IERC20Issuance_v1 issuanceToken = _deployIssuanceToken(
+            issuanceTokenParams, migrationConfig_.isImmutable
+        );
 
         // Deploy orchestrator
         (
@@ -169,7 +167,7 @@ contract Migrating_PIM_Factory_v1 is
 
         address fundingManager = address(orchestrator.fundingManager());
         address lpTokenRecipient = migrationConfig_.isImmutable
-            ? address(this)
+            ? address(0)
             : migrationConfig_.lpTokenRecipient;
 
         // Store PIM data
@@ -259,14 +257,14 @@ contract Migrating_PIM_Factory_v1 is
         );
     }
 
-    function setIssuanceLiquidityDivisor(uint _issuanceLiquidityDivisor)
+    function setMutableInitialMintAmount(uint _mutableInitialMintAmount)
         external
         onlyAdmin
     {
-        uint oldDivisor = issuanceLiquidityDivisor;
-        issuanceLiquidityDivisor = _issuanceLiquidityDivisor;
-        emit IMigrating_PIM_Factory_v1.IssuanceLiquidityDivisorChanged(
-            oldDivisor, _issuanceLiquidityDivisor
+        uint oldAmount = mutableInitialMintAmount;
+        mutableInitialMintAmount = _mutableInitialMintAmount;
+        emit IMigrating_PIM_Factory_v1.MutableInitialMintAmountChanged(
+            oldAmount, _mutableInitialMintAmount
         );
     }
 
@@ -482,16 +480,21 @@ contract Migrating_PIM_Factory_v1 is
         _withdrawCollateralFeeToStaking(fundingManager);
 
         // Calculate issuance liquidity and fees
-        uint issuanceLiquidity = (
-            fm.getVirtualIssuanceSupply() - pim.initialVirtualIssuanceSupply
-        ) / issuanceLiquidityDivisor;
+        uint issuanceCap = issuanceToken.cap();
+        uint issuanceTotalSupply = issuanceToken.totalSupply();
+        uint issuanceLiquidity = (issuanceCap - issuanceTotalSupply);
         uint adminIssuanceFee =
             (issuanceLiquidity * issuanceFeeMultiplier) / FEE_DENOMINATOR;
         issuanceLiquidity -= adminIssuanceFee;
 
-        // Mint liquidity tokens
-        issuanceToken.mint(pim.dexAdapter, issuanceLiquidity);
-        issuanceToken.mint(admin, adminIssuanceFee);
+        // Mint & transfer liquidity tokens
+        issuanceToken.mint(address(this), issuanceLiquidity + adminIssuanceFee);
+        IERC20Issuance_v1(address(issuanceToken)).safeTransfer(
+            pim.dexAdapter, issuanceLiquidity
+        );
+        IERC20Issuance_v1(address(issuanceToken)).safeTransfer(
+            admin, adminIssuanceFee
+        );
 
         // Close bonding curve
         fm.closeBuy();
@@ -505,11 +508,7 @@ contract Migrating_PIM_Factory_v1 is
         );
 
         // Handle token ownership
-        if (pim.isImmutable) {
-            issuanceToken.renounceOwnership();
-        } else {
-            issuanceToken.transferOwnership(pim.initiator);
-        }
+        issuanceToken.renounceOwnership();
 
         // Update graduation status
         pim.isGraduated = true;
@@ -528,15 +527,24 @@ contract Migrating_PIM_Factory_v1 is
     //--------------------------------------------------------------------------
 
     function _deployIssuanceToken(
-        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams
+        IBondingCurveBase_v1.IssuanceToken memory issuanceTokenParams,
+        bool isImmutable
     ) internal returns (IERC20Issuance_v1) {
-        return new ERC20Issuance_v1(
+        ERC20Issuance_v1 issuanceToken = new ERC20Issuance_v1(
             issuanceTokenParams.name,
             issuanceTokenParams.symbol,
             issuanceTokenParams.decimals,
             issuanceTokenParams.maxSupply,
             address(this)
         );
+
+        // If mutable and mintTo is set, mint mutableInitialMintAmount to mintTo
+        if (!isImmutable && admin != address(0) && mutableInitialMintAmount > 0)
+        {
+            issuanceToken.mint(admin, mutableInitialMintAmount);
+        }
+
+        return issuanceToken;
     }
 
     function _deployOrchestrator(

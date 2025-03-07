@@ -87,10 +87,10 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param newMultiplier The new issuance fee multiplier
     event IssuanceFeeMultiplierChanged(uint oldMultiplier, uint newMultiplier);
 
-    /// @notice Event emitted when issuance liquidity divisor is changed
-    /// @param oldDivisor The old issuance liquidity divisor
-    /// @param newDivisor The new issuance liquidity divisor
-    event IssuanceLiquidityDivisorChanged(uint oldDivisor, uint newDivisor);
+    /// @notice Event emitted when mutable initial mint amount is changed
+    /// @param oldAmount The old mutable initial mint amount
+    /// @param newAmount The new mutable initial mint amount
+    event MutableInitialMintAmountChanged(uint oldAmount, uint newAmount);
 
     /// @notice Event emitted when staking module metadata is changed
     /// @param oldMetadata The old staking module metadata
