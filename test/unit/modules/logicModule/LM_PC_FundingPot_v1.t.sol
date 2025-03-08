@@ -28,19 +28,6 @@ import {
     ILM_PC_FundingPot_v1
 } from "src/modules/logicModule/LM_PC_FundingPot_v1.sol";
 
-/**
- * @title   Inverter Template Logic Module Payment Client Tests
- *
- * @notice  Tests for the template logic module payment client
- *
- * @dev     This test contract follows the standard testing pattern showing:
- *          - Initialization tests
- *          - External function tests
- *          - Internal function tests through exposed functions
- *          - Use of Gherkin for test documentation
- *
- * @author  Inverter Network
- */
 contract LM_PC_FundingPot_v1Test is ModuleTest {
     // =========================================================================
     // State
@@ -58,9 +45,6 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
     // Setup
 
     function setUp() public {
-        // Setup the payment token
-        paymentToken = new ERC20Mock("Payment Token", "PT");
-
         // Deploy the SuT
         address impl = address(new LM_PC_FundingPot_v1_Exposed());
         fundingPot = LM_PC_FundingPot_v1_Exposed(Clones.clone(impl));
@@ -68,12 +52,9 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         // Setup the module to test
         _setUpOrchestrator(fundingPot);
         _authorizer.grantRole(_authorizer.getAdminRole(), orchestratorAdmin);
-        _authorizer.grantRole(_authorizer.getAdminRole(), address(fundingPot));
 
         // Initiate the Logic Module with the metadata and config data
-        fundingPot.init(
-            _orchestrator, _METADATA, abi.encode(address(paymentToken))
-        );
+        fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
     // =========================================================================
