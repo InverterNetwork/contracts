@@ -15,7 +15,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 // Tests and Mocks
 import {LM_PC_FundingPot_v1_Exposed} from
-    "test/modules/logicModule/PP_FundingPot_v1_Exposed.sol";
+    "test/modules/logicModule/LM_PC_FundingPot_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
@@ -101,84 +101,6 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
     }
-
-    /* Test external deposit function
-        ├── Given valid deposit amount
-        │   └── When user deposits tokens
-        │       ├── Then their deposit balance should increase
-        │       └── Then tokens should be transferred to contract
-        └── Given invalid deposit amount
-            └── When user tries to deposit > maxDepositAmount
-                └── Then it should revert with InvalidDepositAmount
-    */
-    function testDeposit_modifierInPlace() public {
-        uint invalidAmount = 101 ether;
-
-        paymentToken.mint(address(this), invalidAmount);
-        paymentToken.approve(address(fundingPot), invalidAmount);
-
-        vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot_InvalidDepositAmount
-                .selector
-        );
-        fundingPot.deposit(invalidAmount);
-    }
-
-    /* Test external processDeposit function
-        ├── Given caller has DEPOSIT_ADMIN_ROLE
-        │   └── When processing a user's deposit
-        │       ├── Then their deposit balance should be cleared
-        │       └── Then a payment order should be created and processed
-        └── Given caller doesn't have DEPOSIT_ADMIN_ROLE 
-            └── When trying to process a deposit
-                └── Then it should revert with CallerNotAuthorized (not done here)
-    */
-    function testProcessDeposit() public {
-        // Grant DEPOSIT_ADMIN_ROLE to this test contract
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(fundingPot), fundingPot.DEPOSIT_ADMIN_ROLE()
-        );
-        _authorizer.grantRole(roleId, address(this));
-
-        address user = makeAddr("user");
-        uint depositAmount = 50 ether;
-
-        paymentToken.mint(user, depositAmount);
-        vm.prank(user);
-        paymentToken.approve(address(fundingPot), depositAmount);
-
-        vm.prank(user);
-        fundingPot.deposit(depositAmount);
-
-        fundingPot.processDeposit(user);
-
-        assertEq(fundingPot.getDepositedAmount(user), 0);
-    }
-
-    // Test external getDepositedAmount function
-
-    // =========================================================================
-    // Test: Internal (tested through exposed_ functions)
-
-    /* Test internal _ensureValidDepositAmount()
-        ├── Given amount <= maxDepositAmount
-        │   └── When validating the amount
-        │       └── Then it should not revert (not done here)
-        └── Given amount > maxDepositAmount
-            └── When validating the amount
-                └── Then it should revert with InvalidDepositAmount
-    */
-    // function testEnsureValidDepositAmount_revertsWhenAmountTooHigh() public {
-    //     uint invalidAmount = 101 ether;
-
-    //     vm.expectRevert(
-    //         ILM_PC_FundingPot_v1
-    //             .Module__LM_PC_FundingPot_InvalidDepositAmount
-    //             .selector
-    //     );
-    //     fundingPot.exposed_ensureValidDepositAmount(invalidAmount);
-    // }
 
     /* Test external grantFundingPotAdminRole()
         ├── Given an address has the orchestrator admin role

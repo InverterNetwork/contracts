@@ -10,23 +10,6 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     // Use the `exposed_` prefix for functions to expose internal contract for
     // testing.
 
-    // function exposed_setPayoutAmountMultiplier(uint newPayoutAmountMultiplier_)
-    //     external
-    // {
-    //     _setPayoutAmountMultiplier(newPayoutAmountMultiplier_);
-    // }
-
-    // function exposed_validPaymentReceiver(address receiver_)
-    //     external
-    //     view
-    //     returns (bool validPaymentReceiver_)
-    // {
-    //     validPaymentReceiver_ = _validPaymentReceiver(receiver_);
-    // }
-
-    // function exposed_ensureValidClient(address client_) external view {
-    //     _ensureValidClient(client_);
-    // }
     function exposed_checkForFundingPotAdminRole(address admin_)
         external
         view
