@@ -79,7 +79,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     //--------------------------------------------------------------------------
     // State
 
-    /// @dev The role that allows processing deposits
+    /// @notice The role that allows processing deposits
     bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
     /// @notice    Mapping of user addresses to their deposited token amounts.
@@ -178,7 +178,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     // -------------------------------------------------------------------------
     // Internal
 
-    /// @dev    Ensures the deposit amount is valid.
+    /// @notice Ensures the deposit amount is valid.
     /// @param  amount_ The amount to validate.
     function _ensureValidDepositAmount(uint amount_) internal pure {
         if (amount_ == 0 || amount_ > _maxDepositAmount) {
