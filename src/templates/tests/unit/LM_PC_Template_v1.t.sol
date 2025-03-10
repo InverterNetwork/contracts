@@ -71,13 +71,11 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Test: Initialization
 
-    // Test if the orchestrator is correctly set
-    function testInit() public override(ModuleTest) {
+    function testInit_worksGivenValidParams() public override(ModuleTest) {
         assertEq(address(paymentClient.orchestrator()), address(_orchestrator));
     }
 
-    // Test the interface support
-    function testSupportsInterface() public {
+    function testSupportsInterface_worksGivenAllInterfaces() public {
         assertTrue(
             paymentClient.supportsInterface(
                 type(IERC20PaymentClientBase_v2).interfaceId
@@ -90,22 +88,19 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         );
     }
 
-    // Test the reinit function
-    function testReinitFails() public override(ModuleTest) {
+    function testInit_revertGivenReinitialization() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
-    /* Test external deposit function
-        ├── Given valid deposit amount
-        │   └── When user deposits tokens
-        │       ├── Then their deposit balance should increase
-        │       └── Then tokens should be transferred to contract
-        └── Given invalid deposit amount
-            └── When user tries to deposit > maxDepositAmount
-                └── Then it should revert with InvalidDepositAmount
+    /* Test: deposit()
+        ├── When user deposits valid amount
+        │   ├── Then deposit balance increases
+        │   └── Then tokens transfer to contract
+        └── When user deposits invalid amount
+            └── Then reverts with InvalidDepositAmount
     */
-    function testDeposit() public {
+    function testDeposit_worksGivenValidAmount() public {
         uint validAmount = 50 ether;
         
         paymentToken.mint(address(this), validAmount);
@@ -118,7 +113,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         assertEq(paymentToken.balanceOf(address(this)), 0);
     }
 
-    function testDeposit_modifierInPlace() public {
+    function testDeposit_revertGivenAmountTooHigh() public {
         uint invalidAmount = 101 ether;
 
         paymentToken.mint(address(this), invalidAmount);
@@ -132,17 +127,14 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.deposit(invalidAmount);
     }
 
-    /* Test external processDeposit function
-        ├── Given caller has DEPOSIT_ADMIN_ROLE
-        │   └── When processing a user's deposit
-        │       ├── Then their deposit balance should be cleared
-        │       └── Then a payment order should be created and processed
-        └── Given caller doesn't have DEPOSIT_ADMIN_ROLE 
-            └── When trying to process a deposit
-                └── Then it should revert with CallerNotAuthorized (Modifier in place)
+    /* Test: processDeposit()
+        ├── When caller has DEPOSIT_ADMIN_ROLE
+        │   ├── Then deposit balance clears
+        │   └── Then payment order processes
+        └── When caller lacks DEPOSIT_ADMIN_ROLE
+            └── Then reverts with CallerNotAuthorized
     */
-
-    function testProcessDeposit() public {
+    function testProcessDeposit_worksGivenAdminRole() public {
         paymentClient.grantModuleRole(
             paymentClient.DEPOSIT_ADMIN_ROLE(), address(this)
         );
@@ -162,7 +154,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         assertEq(paymentClient.getDepositedAmount(user), 0);
     }
 
-    function testProcessDeposit_modifierInPlace() public {
+    function testProcessDeposit_revertGivenNotAdmin() public {
         address user = makeAddr("user");
         uint depositAmount = 50 ether;
         vm.startPrank(user);
@@ -185,20 +177,16 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         vm.stopPrank();
     }
 
-    // Test external getDepositedAmount function
-
     // -------------------------------------------------------------------------
-    // Test: Internal (tested through exposed_ functions)
+    // Test: Internal Functions
 
-    /* Test internal _ensureValidDepositAmount()
-        ├── Given amount <= maxDepositAmount
-        │   └── When validating the amount
-        │       └── Then it should not revert (not done here)
-        └── Given amount > maxDepositAmount
-            └── When validating the amount
-                └── Then it should revert with InvalidDepositAmount
+    /* Test: _ensureValidDepositAmount()
+        ├── When amount <= maxDepositAmount
+        │   └── Then validation succeeds
+        └── When amount > maxDepositAmount
+            └── Then reverts with InvalidDepositAmount
     */
-    function testEnsureValidDepositAmount_revertsWhenAmountTooHigh() public {
+    function testEnsureValidDepositAmount_revertGivenAmountTooHigh() public {
         uint invalidAmount = 101 ether;
 
         vm.expectRevert(
