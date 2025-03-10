@@ -97,7 +97,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         ├── Given the user has a valid amount to deposit
         │   └── When the user deposits the valid amount
         │       ├── Then the deposit balance increases
-        │       └── Then tokens transfer to the contract
+        │       └── And tokens transfer to the contract
         ├── Given the user attempts to deposit a zero amount
         │   └── When the deposit is attempted
         │       └── Then it reverts with InvalidDepositAmount
@@ -145,7 +145,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         ├── Given the caller has DEPOSIT_ADMIN_ROLE
         │   └── When the deposit is processed
         │       ├── Then the deposit balance clears
-        │       └── Then the payment order processes
+        │       └── And the payment order processes
         └── Given the caller lacks DEPOSIT_ADMIN_ROLE
             └── When the deposit is processed
                 └── Then it reverts with CallerNotAuthorized

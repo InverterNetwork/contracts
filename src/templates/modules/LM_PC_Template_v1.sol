@@ -95,7 +95,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     // State
 
     /// @notice The role that allows processing deposits
-    bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
+    bytes32 internal constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
     /// @notice Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
