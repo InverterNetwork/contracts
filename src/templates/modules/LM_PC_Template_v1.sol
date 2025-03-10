@@ -4,6 +4,7 @@ pragma solidity 0.8.23;
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 import {
     IERC20PaymentClientBase_v2,
     IPaymentProcessor_v2
@@ -19,15 +20,12 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-// System under Test (SuT)
-import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
-
 /**
  * @title   Inverter Template Logic Module Payment Client
  *
  * @notice  A template for a logic module payment client.
- *          Users can deposit tokens up to a maximum amount, and authorized admins can process
- *          these deposits into payment orders.
+ *          Users can deposit tokens up to a maximum amount, and
+ *          authorized admins can process these deposits into payment orders.
  *
  * @dev     This contract implements the following key functionality:
  *          - Deposit handling with maximum amount validation
@@ -37,7 +35,7 @@ import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
  *          - Interface compliance checks via ERC165
  *
  *          Key components:
- *          - Inherits ERC20PaymentClientBase_v2 for payment client functionality
+ *          - Inherits from ERC20PaymentClientBase_v2
  *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether

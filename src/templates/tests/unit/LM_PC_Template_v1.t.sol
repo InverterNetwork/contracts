@@ -105,6 +105,19 @@ contract LM_PC_Template_v1_Test is ModuleTest {
             └── When user tries to deposit > maxDepositAmount
                 └── Then it should revert with InvalidDepositAmount
     */
+    function testDeposit() public {
+        uint validAmount = 50 ether;
+        
+        paymentToken.mint(address(this), validAmount);
+        paymentToken.approve(address(paymentClient), validAmount);
+
+        paymentClient.deposit(validAmount);
+
+        assertEq(paymentClient.getDepositedAmount(address(this)), validAmount);
+        assertEq(paymentToken.balanceOf(address(paymentClient)), validAmount);
+        assertEq(paymentToken.balanceOf(address(this)), 0);
+    }
+
     function testDeposit_modifierInPlace() public {
         uint invalidAmount = 101 ether;
 
@@ -126,8 +139,9 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         │       └── Then a payment order should be created and processed
         └── Given caller doesn't have DEPOSIT_ADMIN_ROLE 
             └── When trying to process a deposit
-                └── Then it should revert with CallerNotAuthorized (not done here)
+                └── Then it should revert with CallerNotAuthorized (Modifier in place)
     */
+
     function testProcessDeposit() public {
         paymentClient.grantModuleRole(
             paymentClient.DEPOSIT_ADMIN_ROLE(), address(this)
@@ -146,6 +160,29 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.processDeposit(user);
 
         assertEq(paymentClient.getDepositedAmount(user), 0);
+    }
+
+    function testProcessDeposit_modifierInPlace() public {
+        address user = makeAddr("user");
+        uint depositAmount = 50 ether;
+        vm.startPrank(user);
+        paymentToken.mint(user, depositAmount);
+        paymentToken.approve(address(paymentClient), depositAmount);
+
+        paymentClient.deposit(depositAmount);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                _orchestrator.authorizer().generateRoleId(
+                    address(paymentClient), paymentClient.DEPOSIT_ADMIN_ROLE()
+                ),
+                user
+            )
+        );
+        paymentClient.processDeposit(user);
+
+        vm.stopPrank();
     }
 
     // Test external getDepositedAmount function

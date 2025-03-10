@@ -8,9 +8,9 @@ import {IERC20PaymentClientBase_v2} from
 /**
  * @title   Inverter Template Logic Module Payment Client
  *
- * @notice  A template logic module payment client that handles deposits and payment processing.
- *          Users can deposit tokens up to a maximum amount, and authorized admins can process
- *          these deposits into payment orders.
+ * @notice  A template for a logic module payment client.
+ *          Users can deposit tokens up to a maximum amount, and
+ *          authorized admins can process these deposits into payment orders.
  *
  * @dev     This contract implements the following key functionality:
  *          - Deposit handling with maximum amount validation
@@ -20,7 +20,7 @@ import {IERC20PaymentClientBase_v2} from
  *          - Interface compliance checks via ERC165
  *
  *          Key components:
- *          - Inherits ERC20PaymentClientBase_v2 for payment client functionality
+ *          - Inherits from ERC20PaymentClientBase_v2
  *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether
@@ -68,7 +68,7 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     /// @param  amount_ The amount of tokens to deposit.
     function deposit(uint amount_) external;
 
-    /// @notice Process a specific deposit by calling processPayments on the payment processor
-    /// @param user_ The address of the user whose deposit to process
+    /// @notice Processes a user's deposit.
+    /// @param user_ The address of the user whose deposit to process.
     function processDeposit(address user_) external;
 }
