@@ -97,7 +97,9 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         ├── When user deposits valid amount
         │   ├── Then deposit balance increases
         │   └── Then tokens transfer to contract
-        └── When user deposits invalid amount
+        ├── When user deposits zero amount
+        │   └── Then reverts with InvalidDepositAmount
+        └── When user deposits amount exceeding maximum
             └── Then reverts with InvalidDepositAmount
     */
     function testDeposit_worksGivenValidAmount() public {
@@ -125,6 +127,13 @@ contract LM_PC_Template_v1_Test is ModuleTest {
                 .selector
         );
         paymentClient.deposit(invalidAmount);
+    }
+
+    function testDeposit_revertGivenZeroAmount() public {
+        vm.expectRevert(
+            ILM_PC_Template_v1.Module__LM_PC_Template_InvalidDepositAmount.selector
+        );
+        paymentClient.deposit(0);
     }
 
     /* Test: processDeposit()
@@ -181,18 +190,23 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     // Test: Internal Functions
 
     /* Test: _ensureValidDepositAmount()
-        ├── When amount <= maxDepositAmount
-        │   └── Then validation succeeds
-        └── When amount > maxDepositAmount
-            └── Then reverts with InvalidDepositAmount
+        ├── When amount is zero or exceeds maximum
+        │   └── Then reverts with InvalidDepositAmount
+        └── When amount is valid
+            └── Then validation succeeds
     */
+    function testEnsureValidDepositAmount_revertGivenZeroAmount() public {
+        vm.expectRevert(
+            ILM_PC_Template_v1.Module__LM_PC_Template_InvalidDepositAmount.selector
+        );
+        paymentClient.exposed_ensureValidDepositAmount(0);
+    }
+
     function testEnsureValidDepositAmount_revertGivenAmountTooHigh() public {
         uint invalidAmount = 101 ether;
 
         vm.expectRevert(
-            ILM_PC_Template_v1
-                .Module__LM_PC_Template_InvalidDepositAmount
-                .selector
+            ILM_PC_Template_v1.Module__LM_PC_Template_InvalidDepositAmount.selector
         );
         paymentClient.exposed_ensureValidDepositAmount(invalidAmount);
     }

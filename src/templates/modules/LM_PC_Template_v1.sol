@@ -127,7 +127,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         external
         virtual
         onlyValidDepositAmount(amount_)
-    {
+    {   
         // Update state.
         _depositedAmounts[_msgSender()] += amount_;
 
@@ -181,7 +181,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @dev    Ensures the deposit amount is valid.
     /// @param  amount_ The amount to validate.
     function _ensureValidDepositAmount(uint amount_) internal pure {
-        if (amount_ > _maxDepositAmount) {
+        if (amount_ == 0 || amount_ > _maxDepositAmount) {
             revert Module__LM_PC_Template_InvalidDepositAmount();
         }
     }

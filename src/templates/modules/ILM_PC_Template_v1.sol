@@ -47,7 +47,7 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     // -------------------------------------------------------------------------
     // Errors
 
-    /// @notice Amount can not be zero.
+    /// @notice Amount must be > 0 and not exceed maximum deposit limit.
     error Module__LM_PC_Template_InvalidDepositAmount();
 
     // -------------------------------------------------------------------------
