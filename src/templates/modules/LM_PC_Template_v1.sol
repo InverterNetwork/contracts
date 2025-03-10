@@ -89,7 +89,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     // Constants
 
     /// @notice The maximum deposit amount.
-    uint internal constant _maxDepositAmount = 100 ether;
+    uint internal constant MAX_DEPOSIT_AMOUNT = 100 ether;
 
     // -------------------------------------------------------------------------
     // State
