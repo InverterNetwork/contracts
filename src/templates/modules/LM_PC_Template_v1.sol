@@ -88,7 +88,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     //--------------------------------------------------------------------------
     // Constants
 
-    /// @notice The maximum deposit amount. 
+    /// @notice The maximum deposit amount.
     uint internal constant _maxDepositAmount = 100 ether;
 
     //--------------------------------------------------------------------------
@@ -144,7 +144,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         external
         virtual
         onlyValidDepositAmount(amount_)
-    {   
+    {
         // Update state.
         _depositedAmounts[_msgSender()] += amount_;
 

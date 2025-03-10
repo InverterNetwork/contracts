@@ -93,7 +93,6 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
-
     /* Test: deposit()
         ├── Given the user has a valid amount to deposit
         │   └── When the user deposits the valid amount
@@ -108,7 +107,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     */
     function testDeposit_worksGivenValidAmount() public {
         uint validAmount = 50 ether;
-        
+
         paymentToken.mint(address(this), validAmount);
         paymentToken.approve(address(paymentClient), validAmount);
 
@@ -135,7 +134,9 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     function testDeposit_revertGivenZeroAmount() public {
         vm.expectRevert(
-            ILM_PC_Template_v1.Module__LM_PC_Template_InvalidDepositAmount.selector
+            ILM_PC_Template_v1
+                .Module__LM_PC_Template_InvalidDepositAmount
+                .selector
         );
         paymentClient.deposit(0);
     }
@@ -208,7 +209,9 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     */
     function testEnsureValidDepositAmount_revertGivenZeroAmount() public {
         vm.expectRevert(
-            ILM_PC_Template_v1.Module__LM_PC_Template_InvalidDepositAmount.selector
+            ILM_PC_Template_v1
+                .Module__LM_PC_Template_InvalidDepositAmount
+                .selector
         );
         paymentClient.exposed_ensureValidDepositAmount(0);
     }
@@ -217,7 +220,9 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         uint invalidAmount = 101 ether;
 
         vm.expectRevert(
-            ILM_PC_Template_v1.Module__LM_PC_Template_InvalidDepositAmount.selector
+            ILM_PC_Template_v1
+                .Module__LM_PC_Template_InvalidDepositAmount
+                .selector
         );
         paymentClient.exposed_ensureValidDepositAmount(invalidAmount);
     }
