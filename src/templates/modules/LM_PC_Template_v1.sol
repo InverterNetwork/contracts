@@ -41,6 +41,20 @@ import {ERC165Upgradeable} from
  *          - Enforces maximum deposit limit of 100 ether
  *          - Processes payments through Orchestrator's payment processor
  *
+ * @custom:setup    This module requires the following MANDATORY setup steps:
+ *
+ *                  1. Configure DEPOSIT_ADMIN_ROLE:
+ *                     - Purpose: Implements access control for processing user
+ *                               deposits. Only authorized admins can process
+ *                               deposits into payment orders.
+ *                     - How:     The OrchestratorAdmin must:
+ *                               1. Retrieve the deposit admin role identifier
+ *                               2. Grant the role to designated admins
+ *                     - Example: module.grantModuleRole(
+ *                                 module.DEPOSIT_ADMIN_ROLE(),
+ *                                 adminAddress
+ *                               );
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
  *                          to our Security Policy at security.inverter.network
