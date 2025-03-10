@@ -71,11 +71,11 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Test: Initialization
 
-    function testInit_worksGivenValidParams() public override(ModuleTest) {
+    function testInit() public override(ModuleTest) {
         assertEq(address(paymentClient.orchestrator()), address(_orchestrator));
     }
 
-    function testSupportsInterface_worksGivenAllInterfaces() public {
+    function testSupportsInterface() public {
         assertTrue(
             paymentClient.supportsInterface(
                 type(IERC20PaymentClientBase_v2).interfaceId
@@ -88,7 +88,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         );
     }
 
-    function testInit_revertGivenReinitialization() public override(ModuleTest) {
+    function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
     }
@@ -195,5 +195,29 @@ contract LM_PC_Template_v1_Test is ModuleTest {
                 .selector
         );
         paymentClient.exposed_ensureValidDepositAmount(invalidAmount);
+    }
+
+    /* Test: getDepositedAmount()
+        ├── Given user has no deposits
+        │   └── Then returns 0
+        └── Given user has deposited
+            └── Then returns deposited amount
+    */
+    function testGetDepositedAmount_returnsZeroGivenNoDeposits() public {
+        address user = makeAddr("user");
+        assertEq(paymentClient.getDepositedAmount(user), 0);
+    }
+
+    function testGetDepositedAmount_returnsAmountGivenDeposited() public {
+        address user = makeAddr("user");
+        uint depositAmount = 50 ether;
+
+        vm.startPrank(user);
+        paymentToken.mint(user, depositAmount);
+        paymentToken.approve(address(paymentClient), depositAmount);
+        paymentClient.deposit(depositAmount);
+        vm.stopPrank();
+
+        assertEq(paymentClient.getDepositedAmount(user), depositAmount);
     }
 }
