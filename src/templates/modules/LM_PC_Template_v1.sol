@@ -85,25 +85,25 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
             || super.supportsInterface(interfaceId_);
     }
 
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Constants
 
     /// @notice The maximum deposit amount.
     uint internal constant _maxDepositAmount = 100 ether;
 
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // State
 
     /// @notice The role that allows processing deposits
     bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
-    /// @notice    Mapping of user addresses to their deposited token amounts.
+    /// @notice Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
 
-    /// @notice    Payment token.
+    /// @notice Payment token.
     IERC20 internal _paymentToken;
 
-    /// @notice    Storage gap for future upgrades.
+    /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
     // -------------------------------------------------------------------------

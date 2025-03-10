@@ -83,6 +83,6 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
     function deposit(uint amount_) external;
 
     /// @notice Processes a user's deposit.
-    /// @param user_ The address of the user whose deposit to process.
+    /// @param  user_ The address of the user whose deposit to process.
     function processDeposit(address user_) external;
 }
