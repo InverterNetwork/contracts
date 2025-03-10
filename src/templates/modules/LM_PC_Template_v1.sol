@@ -25,7 +25,7 @@ import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 /**
  * @title   Inverter Template Logic Module Payment Client
  *
- * @notice  A template logic module payment client that handles deposits and payment processing.
+ * @notice  A template for a logic module payment client.
  *          Users can deposit tokens up to a maximum amount, and authorized admins can process
  *          these deposits into payment orders.
  *
