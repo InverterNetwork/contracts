@@ -29,7 +29,7 @@ import {ERC165Upgradeable} from
  *
  * @dev     This contract implements the following key functionality:
  *          - Deposit handling with maximum amount validation
- *          - Payment order creation and processing through the Orchestrator
+ *          - Payment order creation assuming a vesting schedule
  *          - Role-based access control for deposit processing
  *          - ERC20 token integration with SafeERC20
  *          - Interface compliance checks via ERC165
@@ -40,6 +40,7 @@ import {ERC165Upgradeable} from
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether
  *          - Processes payments through Orchestrator's payment processor
+ *          - Makes use of payment order flags
  *
  * @custom:setup    This module requires the following MANDATORY setup steps:
  *
