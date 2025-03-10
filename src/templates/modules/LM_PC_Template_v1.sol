@@ -97,6 +97,15 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @notice The role that allows processing deposits
     bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
+    /// @notice The payment processor flag for the start timestamp.
+    uint8 public constant FLAG_START = 1;
+
+    /// @notice The payment processor flag for the cliff timestamp.
+    uint8 public constant FLAG_CLIFF = 2;
+
+    /// @notice The payment processor flag for the end timestamp.
+    uint8 public constant FLAG_END = 3;
+
     /// @notice Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
 
@@ -140,6 +149,14 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
 
         // Set init state.
         _paymentToken = IERC20(paymentToken);
+
+        // Set the flags for the PaymentOrders (this module uses 3 flags).
+        bytes32 flags;
+        flags |= bytes32(1 << FLAG_START);
+        flags |= bytes32(1 << FLAG_CLIFF);
+        flags |= bytes32(1 << FLAG_END);
+
+        __ERC20PaymentClientBase_v2_init(flags);
     }
 
     // -------------------------------------------------------------------------
@@ -162,7 +179,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     }
 
     /// @inheritdoc ILM_PC_Template_v1
-    function processDeposit(address user_)
+    function processDeposit(address user_, uint start_, uint cliff_, uint end_)
         external
         onlyModuleRole(DEPOSIT_ADMIN_ROLE)
     {
@@ -171,6 +188,16 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         // Clear the deposit amount before processing.
         _depositedAmounts[user_] = 0;
 
+        bytes32 flags;
+        bytes32[] memory data;
+        {
+            bytes32[] memory paymentParameters = new bytes32[](3);
+            paymentParameters[0] = bytes32(start_);
+            paymentParameters[1] = bytes32(cliff_);
+            paymentParameters[2] = bytes32(end_);
+            (flags, data) = _assemblePaymentConfig(paymentParameters);
+        }
+
         // Create and add payment order.
         PaymentOrder memory order = PaymentOrder({
             recipient: user_,
@@ -178,8 +205,8 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
             amount: amount,
             originChainId: block.chainid,
             targetChainId: block.chainid,
-            flags: 0,
-            data: new bytes32[](0)
+            flags: flags,
+            data: data
         });
 
         _addPaymentOrder(order);

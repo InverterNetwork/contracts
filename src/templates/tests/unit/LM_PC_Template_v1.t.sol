@@ -144,7 +144,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     /* Test: processDeposit()
         ├── Given the caller has DEPOSIT_ADMIN_ROLE
-        │   └── When the deposit is processed
+        │   └── When the deposit is processed with valid timestamps
         │       ├── Then the deposit balance clears
         │       └── And the payment order processes
         └── Given the caller lacks DEPOSIT_ADMIN_ROLE
@@ -163,10 +163,14 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         vm.prank(user);
         paymentToken.approve(address(paymentClient), depositAmount);
 
+        uint start = block.timestamp;
+        uint cliff = block.timestamp + 30 days;
+        uint end = block.timestamp + 90 days;
+
         vm.prank(user);
         paymentClient.deposit(depositAmount);
 
-        paymentClient.processDeposit(user);
+        paymentClient.processDeposit(user, start, cliff, end);
 
         assertEq(paymentClient.getDepositedAmount(user), 0);
     }
@@ -177,6 +181,10 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         vm.startPrank(user);
         paymentToken.mint(user, depositAmount);
         paymentToken.approve(address(paymentClient), depositAmount);
+
+        uint start = block.timestamp;
+        uint cliff = block.timestamp + 30 days;
+        uint end = block.timestamp + 90 days;
 
         paymentClient.deposit(depositAmount);
 
@@ -189,7 +197,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
                 user
             )
         );
-        paymentClient.processDeposit(user);
+        paymentClient.processDeposit(user, start, cliff, end);
 
         vm.stopPrank();
     }
