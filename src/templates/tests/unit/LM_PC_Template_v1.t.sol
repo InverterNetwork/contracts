@@ -14,8 +14,6 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // Tests and Mocks
-import {LM_PC_Template_v1_Exposed} from
-    "src/templates/tests/unit/LM_PC_Template_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
@@ -23,6 +21,8 @@ import {
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
+import {LM_PC_Template_v1_Exposed} from
+    "src/templates/tests/unit/LM_PC_Template_v1_Exposed.sol";
 import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
 
 /**
@@ -73,6 +73,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     function testInit() public override(ModuleTest) {
         assertEq(address(paymentClient.orchestrator()), address(_orchestrator));
+        assertEq(paymentClient.getPaymentToken(), address(paymentToken));
     }
 
     function testSupportsInterface() public {
@@ -251,5 +252,13 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         vm.stopPrank();
 
         assertEq(paymentClient.getDepositedAmount(user), depositAmount);
+    }
+
+    /* Test: getPaymentToken()
+        └── When queried
+            └── Then it returns the payment token address
+    */
+    function testGetPaymentToken() public {
+        assertEq(paymentClient.getPaymentToken(), address(paymentToken));
     }
 }

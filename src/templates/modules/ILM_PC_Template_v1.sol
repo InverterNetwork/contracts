@@ -75,6 +75,10 @@ interface ILM_PC_Template_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (uint amount_);
 
+    /// @notice Returns the payment token address.
+    /// @return token_ The address of the payment token.
+    function getPaymentToken() external view returns (address token_);
+
     // -------------------------------------------------------------------------
     // Public - Mutating
 

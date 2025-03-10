@@ -95,7 +95,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     // State
 
     /// @notice The role that allows processing deposits
-    bytes32 internal constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
+    bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
     /// @notice Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
@@ -117,9 +117,15 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     }
 
     // -------------------------------------------------------------------------
-    // Constructor & Init
+    // Initialization
 
-    /// @inheritdoc Module_v1
+    /// @notice The module's initializer function.
+    /// @dev    CAN be overridden by downstream contract.
+    /// @dev    MUST call `__Module_init()`.
+    /// @param  orchestrator_ The orchestrator contract.
+    /// @param  metadata_ The metadata of the module.
+    /// @param  configData_ The config data of the module, comprised of:
+    ///     - address: paymentToken: The payment token address.
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
@@ -192,13 +198,18 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         return _depositedAmounts[user_];
     }
 
+    /// @inheritdoc ILM_PC_Template_v1
+    function getPaymentToken() external view returns (address) {
+        return address(_paymentToken);
+    }
+
     // -------------------------------------------------------------------------
     // Internal
 
     /// @notice Ensures the deposit amount is valid.
     /// @param  amount_ The amount to validate.
     function _ensureValidDepositAmount(uint amount_) internal pure {
-        if (amount_ == 0 || amount_ > _maxDepositAmount) {
+        if (amount_ == 0 || amount_ > MAX_DEPOSIT_AMOUNT) {
             revert Module__LM_PC_Template_InvalidDepositAmount();
         }
     }
