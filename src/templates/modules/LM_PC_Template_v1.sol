@@ -94,6 +94,8 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     // -------------------------------------------------------------------------
     // Modifiers
 
+    /// @notice Ensures the deposit amount is valid.
+    /// @param  amount_ The amount to validate.
     modifier onlyValidDepositAmount(uint amount_) {
         _ensureValidDepositAmount(amount_);
         _;
