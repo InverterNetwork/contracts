@@ -89,9 +89,9 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         │       └── Then it should be granted
     */
     function testFuzz_GrantFundingPotAdminRole(address admin_) public {
-        vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
+        _assumeValidFundingPotAdmin(admin_);
 
-        vm.prank(orchestratorAdmin);
+        vm.startPrank(orchestratorAdmin);
         fundingPot.grantFundingPotAdminRole(admin_);
 
         assertEq(
@@ -103,6 +103,7 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
             ),
             true
         );
+        vm.stopPrank();
     }
 
     /* Test external grantFundingPotAdminRole()
@@ -113,7 +114,7 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
     function testFuzz_GrantFundingPotAdminRole_failsWhenGrantedTwice(
         address admin_
     ) public {
-        vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
+        _assumeValidFundingPotAdmin(admin_);
 
         vm.startPrank(orchestratorAdmin);
         fundingPot.grantFundingPotAdminRole(admin_);
@@ -137,7 +138,8 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         address admin_
     ) public {
         vm.assume(caller_ != address(0) && caller_ != orchestratorAdmin);
-        vm.assume(admin_ != address(0) && admin_ != orchestratorAdmin);
+        _assumeValidFundingPotAdmin(admin_);
+
         vm.startPrank(caller_);
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -177,7 +179,7 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         address caller_,
         address admin_
     ) public {
-        vm.assume(caller_ != address(0) && caller_ != orchestratorAdmin);
+        _assumeValidFundingPotAdmin(admin_);
         testFuzz_GrantFundingPotAdminRole(admin_);
 
         vm.startPrank(caller_);
@@ -190,5 +192,30 @@ contract LM_PC_FundingPot_v1Test is ModuleTest {
         );
         fundingPot.revokeFundingPotAdminRole(admin_);
         vm.stopPrank();
+    }
+
+    // =========================================================================
+    // Test exposed_ functions
+
+    function testFuzz_exposed_checkForFundingPotAdminRole(address admin_)
+        public
+    {
+        assertEq(fundingPot.exposed_checkForFundingPotAdminRole(admin_), false);
+
+        vm.startPrank(orchestratorAdmin);
+        fundingPot.grantFundingPotAdminRole(admin_);
+        vm.stopPrank();
+
+        assertEq(fundingPot.exposed_checkForFundingPotAdminRole(admin_), true);
+    }
+
+    // =========================================================================
+    // Helper functions
+
+    function _assumeValidFundingPotAdmin(address admin_) internal {
+        vm.assume(
+            admin_ != address(0) && admin_ != orchestratorAdmin
+                && admin_ != address(fundingPot) && admin_ != address(this)
+        );
     }
 }
