@@ -93,14 +93,18 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
+
     /* Test: deposit()
-        ├── When user deposits valid amount
-        │   ├── Then deposit balance increases
-        │   └── Then tokens transfer to contract
-        ├── When user deposits zero amount
-        │   └── Then reverts with InvalidDepositAmount
-        └── When user deposits amount exceeding maximum
-            └── Then reverts with InvalidDepositAmount
+        ├── Given the user has a valid amount to deposit
+        │   └── When the user deposits the valid amount
+        │       ├── Then the deposit balance increases
+        │       └── Then tokens transfer to the contract
+        ├── Given the user attempts to deposit a zero amount
+        │   └── When the deposit is attempted
+        │       └── Then it reverts with InvalidDepositAmount
+        └── Given the user attempts to deposit an amount exceeding the maximum
+            └── When the deposit is attempted
+                └── Then it reverts with InvalidDepositAmount
     */
     function testDeposit_worksGivenValidAmount() public {
         uint validAmount = 50 ether;
@@ -137,11 +141,13 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     }
 
     /* Test: processDeposit()
-        ├── When caller has DEPOSIT_ADMIN_ROLE
-        │   ├── Then deposit balance clears
-        │   └── Then payment order processes
-        └── When caller lacks DEPOSIT_ADMIN_ROLE
-            └── Then reverts with CallerNotAuthorized
+        ├── Given the caller has DEPOSIT_ADMIN_ROLE
+        │   └── When the deposit is processed
+        │       ├── Then the deposit balance clears
+        │       └── Then the payment order processes
+        └── Given the caller lacks DEPOSIT_ADMIN_ROLE
+            └── When the deposit is processed
+                └── Then it reverts with CallerNotAuthorized
     */
     function testProcessDeposit_worksGivenAdminRole() public {
         paymentClient.grantModuleRole(
@@ -190,10 +196,15 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     // Test: Internal Functions
 
     /* Test: _ensureValidDepositAmount()
-        ├── When amount is zero or exceeds maximum
-        │   └── Then reverts with InvalidDepositAmount
-        └── When amount is valid
-            └── Then validation succeeds
+        ├── Given the amount is zero
+        │   └── When the amount is validated
+        │       └── Then it reverts with InvalidDepositAmount
+        ├── Given the amount exceeds the maximum
+        │   └── When the amount is validated
+        │       └── Then it reverts with InvalidDepositAmount
+        └── Given the amount is valid
+            └── When the amount is validated
+                └── Then validation succeeds
     */
     function testEnsureValidDepositAmount_revertGivenZeroAmount() public {
         vm.expectRevert(
@@ -212,10 +223,12 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     }
 
     /* Test: getDepositedAmount()
-        ├── Given user has no deposits
-        │   └── Then returns 0
-        └── Given user has deposited
-            └── Then returns deposited amount
+        ├── Given the user has no deposits
+        │   └── When the deposited amount is queried
+        │       └── Then it returns 0
+        └── Given the user has deposited
+            └── When the deposited amount is queried
+                └── Then it returns the deposited amount
     */
     function testGetDepositedAmount_returnsZeroGivenNoDeposits() public {
         address user = makeAddr("user");
