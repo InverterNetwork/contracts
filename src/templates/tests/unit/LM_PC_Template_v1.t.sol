@@ -40,6 +40,12 @@ import {ILM_PC_Template_v1} from "src/templates/modules/ILM_PC_Template_v1.sol";
  */
 contract LM_PC_Template_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
+    // Constants
+
+    bytes32 internal constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
+    uint internal constant MAX_DEPOSIT_AMOUNT = 100 ether;
+
+    // -------------------------------------------------------------------------
     // State
 
     // SuT
@@ -65,6 +71,11 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         // Initiate the Logic Module with the metadata and config data
         paymentClient.init(
             _orchestrator, _METADATA, abi.encode(address(paymentToken))
+        );
+
+        // Give test contract the DEPOSIT_ADMIN_ROLE.
+        paymentClient.grantModuleRole(
+            paymentClient.getDepositAdminRole(), address(this)
         );
     }
 
@@ -94,46 +105,54 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
+    // -------------------------------------------------------------------------
+    // Test External (public + external)
+
     /* Test: deposit()
         ├── Given the user has a valid amount to deposit
-        │   └── When the user deposits the valid amount
+        │   └── When the function deposit() is called
         │       ├── Then the deposit balance increases
         │       └── And tokens transfer to the contract
         ├── Given the user attempts to deposit a zero amount
-        │   └── When the deposit is attempted
+        │   └── When the function deposit() is called
         │       └── Then it reverts with InvalidDepositAmount
         └── Given the user attempts to deposit an amount exceeding the maximum
-            └── When the deposit is attempted
+            └── When the function deposit() is called
                 └── Then it reverts with InvalidDepositAmount
     */
-    function testDeposit_worksGivenValidAmount() public {
-        uint validAmount = 50 ether;
+    function testDeposit_worksGivenValidAmount(uint validAmount_) public {
+        // Setup
+        validAmount_ =
+            bound(validAmount_, 1, paymentClient.getMaxDepositAmount());
+        paymentToken.mint(address(this), validAmount_);
+        paymentToken.approve(address(paymentClient), validAmount_);
 
-        paymentToken.mint(address(this), validAmount);
-        paymentToken.approve(address(paymentClient), validAmount);
+        // Test
+        paymentClient.deposit(validAmount_);
 
-        paymentClient.deposit(validAmount);
-
-        assertEq(paymentClient.getDepositedAmount(address(this)), validAmount);
-        assertEq(paymentToken.balanceOf(address(paymentClient)), validAmount);
+        // Assert
+        assertEq(paymentClient.getDepositedAmount(address(this)), validAmount_);
+        assertEq(paymentToken.balanceOf(address(paymentClient)), validAmount_);
         assertEq(paymentToken.balanceOf(address(this)), 0);
     }
 
-    function testDeposit_revertGivenAmountTooHigh() public {
-        uint invalidAmount = 101 ether;
+    function testDeposit_revertGivenAmountTooHigh(uint invalidAmount_) public {
+        // Setup
+        vm.assume(invalidAmount_ > paymentClient.getMaxDepositAmount());
+        paymentToken.mint(address(this), invalidAmount_);
+        paymentToken.approve(address(paymentClient), invalidAmount_);
 
-        paymentToken.mint(address(this), invalidAmount);
-        paymentToken.approve(address(paymentClient), invalidAmount);
-
+        // Test
         vm.expectRevert(
             ILM_PC_Template_v1
                 .Module__LM_PC_Template_InvalidDepositAmount
                 .selector
         );
-        paymentClient.deposit(invalidAmount);
+        paymentClient.deposit(invalidAmount_);
     }
 
     function testDeposit_revertGivenZeroAmount() public {
+        // Test
         vm.expectRevert(
             ILM_PC_Template_v1
                 .Module__LM_PC_Template_InvalidDepositAmount
@@ -143,43 +162,22 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     }
 
     /* Test: processDeposit()
-        ├── Given the caller has DEPOSIT_ADMIN_ROLE
-        │   └── When the deposit is processed with valid timestamps
-        │       ├── Then the deposit balance clears
-        │       └── And the payment order processes
-        └── Given the caller lacks DEPOSIT_ADMIN_ROLE
-            └── When the deposit is processed
-                └── Then it reverts with CallerNotAuthorized
+        ├── Given the caller does not have the DEPOSIT_ADMIN_ROLE
+        │   └── When the function processDeposit() is called
+        │       └── Then it reverts (modifier in place)
+        └── Given the caller has DEPOSIT_ADMIN_ROLE
+            └── When the function processDeposit() is called
+                ├── Then the deposit balance clears
+                └── And the payment order processes
+
     */
-    function testProcessDeposit_worksGivenAdminRole() public {
-        paymentClient.grantModuleRole(
-            paymentClient.DEPOSIT_ADMIN_ROLE(), address(this)
-        );
+    function testProcessDeposit_revertGivenNotAdmin(address notAdmin_) public {
+        // Setup
+        vm.assume(notAdmin_ != address(this) && notAdmin_ != address(0));
 
-        address user = makeAddr("user");
         uint depositAmount = 50 ether;
-
-        paymentToken.mint(user, depositAmount);
-        vm.prank(user);
-        paymentToken.approve(address(paymentClient), depositAmount);
-
-        uint start = block.timestamp;
-        uint cliff = block.timestamp + 30 days;
-        uint end = block.timestamp + 90 days;
-
-        vm.prank(user);
-        paymentClient.deposit(depositAmount);
-
-        paymentClient.processDeposit(user, start, cliff, end);
-
-        assertEq(paymentClient.getDepositedAmount(user), 0);
-    }
-
-    function testProcessDeposit_revertGivenNotAdmin() public {
-        address user = makeAddr("user");
-        uint depositAmount = 50 ether;
-        vm.startPrank(user);
-        paymentToken.mint(user, depositAmount);
+        vm.startPrank(notAdmin_);
+        paymentToken.mint(notAdmin_, depositAmount);
         paymentToken.approve(address(paymentClient), depositAmount);
 
         uint start = block.timestamp;
@@ -188,18 +186,99 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
         paymentClient.deposit(depositAmount);
 
+        // Test
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
                 _orchestrator.authorizer().generateRoleId(
-                    address(paymentClient), paymentClient.DEPOSIT_ADMIN_ROLE()
+                    address(paymentClient), paymentClient.getDepositAdminRole()
                 ),
-                user
+                notAdmin_
             )
         );
-        paymentClient.processDeposit(user, start, cliff, end);
+        paymentClient.processDeposit(notAdmin_, start, cliff, end);
 
         vm.stopPrank();
+    }
+
+    function testProcessDeposit_worksGivenDepositIsProcessed(
+        uint depositAmount_
+    ) public {
+        // Setup
+        depositAmount_ =
+            bound(depositAmount_, 1, paymentClient.getMaxDepositAmount());
+
+        paymentToken.mint(address(this), depositAmount_);
+        paymentToken.approve(address(paymentClient), depositAmount_);
+
+        uint start = block.timestamp;
+        uint cliff = block.timestamp + 30 days;
+        uint end = block.timestamp + 90 days;
+
+        paymentClient.deposit(depositAmount_);
+
+        // Test
+        paymentClient.processDeposit(address(this), start, cliff, end);
+
+        // Assert
+        assertEq(paymentClient.getDepositedAmount(address(this)), 0);
+    }
+
+    /* Test: getDepositedAmount()
+        ├── Given the user has no deposits
+        │   └── When the function getDepositAmount() is called
+        │       └── Then it returns 0
+        └── Given the user has deposited
+            └── When the function getDepositAmount() is called
+                └── Then it returns the deposited amount
+    */
+
+    function testGetDepositedAmount_worksGivenReturnValueIsZero(address user_)
+        public
+    {
+        vm.assume(user_ != address(0));
+        assertEq(paymentClient.getDepositedAmount(user_), 0);
+    }
+
+    function testGetDepositedAmount_worksGivenReturnValueIsAmountDeposited(
+        address user_,
+        uint depositAmount_
+    ) public {
+        vm.assume(user_ != address(0));
+        depositAmount_ =
+            bound(depositAmount_, 1, paymentClient.getMaxDepositAmount());
+
+        vm.startPrank(user_);
+        paymentToken.mint(user_, depositAmount_);
+        paymentToken.approve(address(paymentClient), depositAmount_);
+        paymentClient.deposit(depositAmount_);
+        vm.stopPrank();
+
+        assertEq(paymentClient.getDepositedAmount(user_), depositAmount_);
+    }
+
+    /* Test: getPaymentToken()
+        └── When the function getPaymentToken() is called
+            └── Then it returns the payment token address
+    */
+    function testGetPaymentToken() public {
+        assertEq(paymentClient.getPaymentToken(), address(paymentToken));
+    }
+
+    /* Test: getDepositAdminRole()
+        └── When the function getDepositAdminRole() is called
+            └── Then it returns the deposit admin role
+    */
+    function testGetDepositAdminRole() public {
+        assertEq(paymentClient.getDepositAdminRole(), DEPOSIT_ADMIN_ROLE);
+    }
+
+    /* Test: getMaxDepositAmount()
+        └── When the function getMaxDepositAmount() is called
+            └── Then it returns the maximum deposit amount
+    */
+    function testGetMaxDepositAmount() public {
+        assertEq(paymentClient.getMaxDepositAmount(), MAX_DEPOSIT_AMOUNT);
     }
 
     // -------------------------------------------------------------------------
@@ -207,16 +286,15 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     /* Test: _ensureValidDepositAmount()
         ├── Given the amount is zero
-        │   └── When the amount is validated
+        │   └── When the function _ensureValidDepositAmount() is called
         │       └── Then it reverts with InvalidDepositAmount
-        ├── Given the amount exceeds the maximum
-        │   └── When the amount is validated
-        │       └── Then it reverts with InvalidDepositAmount
-        └── Given the amount is valid
-            └── When the amount is validated
-                └── Then validation succeeds
+        └──  Given the amount exceeds the maximum
+            └── When the function _ensureValidDepositAmount() is called
+                └── Then it reverts with InvalidDepositAmount
     */
-    function testEnsureValidDepositAmount_revertGivenZeroAmount() public {
+    function testInternalEnsureValidDepositAmount_revertGivenZeroAmount()
+        public
+    {
         vm.expectRevert(
             ILM_PC_Template_v1
                 .Module__LM_PC_Template_InvalidDepositAmount
@@ -225,48 +303,16 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         paymentClient.exposed_ensureValidDepositAmount(0);
     }
 
-    function testEnsureValidDepositAmount_revertGivenAmountTooHigh() public {
-        uint invalidAmount = 101 ether;
+    function testInternalEnsureValidDepositAmount_revertGivenAmountTooHigh(
+        uint invalidAmount_
+    ) public {
+        vm.assume(invalidAmount_ > paymentClient.getMaxDepositAmount());
 
         vm.expectRevert(
             ILM_PC_Template_v1
                 .Module__LM_PC_Template_InvalidDepositAmount
                 .selector
         );
-        paymentClient.exposed_ensureValidDepositAmount(invalidAmount);
-    }
-
-    /* Test: getDepositedAmount()
-        ├── Given the user has no deposits
-        │   └── When the deposited amount is queried
-        │       └── Then it returns 0
-        └── Given the user has deposited
-            └── When the deposited amount is queried
-                └── Then it returns the deposited amount
-    */
-    function testGetDepositedAmount_returnsZeroGivenNoDeposits() public {
-        address user = makeAddr("user");
-        assertEq(paymentClient.getDepositedAmount(user), 0);
-    }
-
-    function testGetDepositedAmount_returnsAmountGivenDeposited() public {
-        address user = makeAddr("user");
-        uint depositAmount = 50 ether;
-
-        vm.startPrank(user);
-        paymentToken.mint(user, depositAmount);
-        paymentToken.approve(address(paymentClient), depositAmount);
-        paymentClient.deposit(depositAmount);
-        vm.stopPrank();
-
-        assertEq(paymentClient.getDepositedAmount(user), depositAmount);
-    }
-
-    /* Test: getPaymentToken()
-        └── When queried
-            └── Then it returns the payment token address
-    */
-    function testGetPaymentToken() public {
-        assertEq(paymentClient.getPaymentToken(), address(paymentToken));
+        paymentClient.exposed_ensureValidDepositAmount(invalidAmount_);
     }
 }
