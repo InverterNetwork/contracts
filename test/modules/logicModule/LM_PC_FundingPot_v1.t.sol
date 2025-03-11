@@ -113,4 +113,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // -------------------------------------------------------------------------
     // Test: Internal Functions
+
+    /* Test internal _ensureValidDepositAmount()
+        ├── Given amount <= maxDepositAmount
+        │   └── When validating the amount
+        │       └── Then it should not revert (not done here)
+        └── Given amount > maxDepositAmount
+            └── When validating the amount
+                └── Then it should revert with InvalidDepositAmount
+    */
+    function testEnsureValidDepositAmount_revertsWhenAmountTooHigh() public {
+        uint invalidAmount = 101 ether;
+
+        vm.expectRevert(
+            ILM_PC_FundingPot_v1
+                .Module__LM_PC_FundingPot_InvalidDepositAmount
+                .selector
+        );
+        fundingPot.exposed_ensureValidDepositAmount(invalidAmount);
+    }
 }
