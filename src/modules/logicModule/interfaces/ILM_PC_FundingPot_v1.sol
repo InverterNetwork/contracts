@@ -12,6 +12,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     // -------------------------------------------------------------------------
     // Errors
 
+    /// @notice Amount can not be zero.
+    error Module__LM_PC_FundingPot_InvalidDepositAmount();
     // -------------------------------------------------------------------------
     // Public - Getters
 
