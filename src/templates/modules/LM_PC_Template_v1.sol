@@ -92,20 +92,20 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @notice The maximum deposit amount.
     uint internal constant MAX_DEPOSIT_AMOUNT = 100 ether;
 
-    // -------------------------------------------------------------------------
-    // State
-
     /// @notice The role that allows processing deposits
-    bytes32 public constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
+    bytes32 internal constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
     /// @notice The payment processor flag for the start timestamp.
-    uint8 public constant FLAG_START = 1;
+    uint8 internal constant FLAG_START = 1;
 
     /// @notice The payment processor flag for the cliff timestamp.
-    uint8 public constant FLAG_CLIFF = 2;
+    uint8 internal constant FLAG_CLIFF = 2;
 
     /// @notice The payment processor flag for the end timestamp.
-    uint8 public constant FLAG_END = 3;
+    uint8 internal constant FLAG_END = 3;
+
+    // -------------------------------------------------------------------------
+    // State
 
     /// @notice Mapping of user addresses to their deposited token amounts.
     mapping(address user => uint amount) internal _depositedAmounts;
@@ -158,6 +158,29 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         flags |= bytes32(1 << FLAG_END);
 
         __ERC20PaymentClientBase_v2_init(flags);
+    }
+
+    // -------------------------------------------------------------------------
+    // Public - Getters
+
+    /// @inheritdoc ILM_PC_Template_v1
+    function getDepositedAmount(address user_) external view returns (uint) {
+        return _depositedAmounts[user_];
+    }
+
+    /// @inheritdoc ILM_PC_Template_v1
+    function getPaymentToken() external view returns (address) {
+        return address(_paymentToken);
+    }
+
+    /// @inheritdoc ILM_PC_Template_v1
+    function getDepositAdminRole() external pure returns (bytes32) {
+        return DEPOSIT_ADMIN_ROLE;
+    }
+
+    /// @inheritdoc ILM_PC_Template_v1
+    function getMaxDepositAmount() external pure returns (uint) {
+        return MAX_DEPOSIT_AMOUNT;
     }
 
     // -------------------------------------------------------------------------
@@ -216,19 +239,6 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
         __Module_orchestrator.paymentProcessor().processPayments(
             IERC20PaymentClientBase_v2(address(this))
         );
-    }
-
-    // -------------------------------------------------------------------------
-    // Public - Getters
-
-    /// @inheritdoc ILM_PC_Template_v1
-    function getDepositedAmount(address user_) external view returns (uint) {
-        return _depositedAmounts[user_];
-    }
-
-    /// @inheritdoc ILM_PC_Template_v1
-    function getPaymentToken() external view returns (address) {
-        return address(_paymentToken);
     }
 
     // -------------------------------------------------------------------------
