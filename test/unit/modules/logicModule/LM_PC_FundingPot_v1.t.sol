@@ -54,16 +54,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     LM_PC_FundingPot_v1_Exposed fundingPot;
     address public fundingPotAdmin = makeAddr("FundingPotAdmin");
 
-    // Mocks
-    ERC20Mock public paymentToken;
-
     // -------------------------------------------------------------------------
     // Setup
 
     function setUp() public {
-        // Setup the payment token
-        paymentToken = new ERC20Mock("Payment Token", "PT");
-
         // Deploy the SuT
         address impl = address(new LM_PC_FundingPot_v1_Exposed());
         fundingPot = LM_PC_FundingPot_v1_Exposed(Clones.clone(impl));
@@ -113,23 +107,4 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // -------------------------------------------------------------------------
     // Test: Internal Functions
-
-    /* Test internal _ensureValidDepositAmount()
-        ├── Given amount <= maxDepositAmount
-        │   └── When validating the amount
-        │       └── Then it should not revert (not done here)
-        └── Given amount > maxDepositAmount
-            └── When validating the amount
-                └── Then it should revert with InvalidDepositAmount
-    */
-    function testEnsureValidDepositAmount_revertsWhenAmountTooHigh() public {
-        uint invalidAmount = 101 ether;
-
-        vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot_InvalidDepositAmount
-                .selector
-        );
-        fundingPot.exposed_ensureValidDepositAmount(invalidAmount);
-    }
 }

@@ -48,8 +48,6 @@ contract LM_PC_FundingPot_v1 is
     // --------------------------------------------------------------------------
     // Constants
 
-    uint internal constant _maxDepositAmount = 100 ether;
-
     /// @notice The role that allows creating funding rounds.
     bytes32 internal constant FUNDING_POT_ADMIN_ROLE = "FUNDING_POT_ADMIN";
 
@@ -125,12 +123,4 @@ contract LM_PC_FundingPot_v1 is
 
     // -------------------------------------------------------------------------
     // Internal
-
-    /// @dev    Ensures the deposit amount is valid.
-    /// @param  amount_ The amount to validate.
-    function _ensureValidDepositAmount(uint amount_) internal pure {
-        if (amount_ > _maxDepositAmount) {
-            revert Module__LM_PC_FundingPot_InvalidDepositAmount();
-        }
-    }
 }
