@@ -56,10 +56,13 @@ contract ERC20IssuanceUpgradeable_v1 is
     // State Variables
     // --------------------------------------------------------------------------
 
-    /// @dev    The mapping of allowed minters.
+    /// @notice    The mapping of allowed minters.
     mapping(address => bool) public allowedMinters;
-    /// @dev    The number of decimals of the token.
+    /// @notice    The number of decimals of the token.
     uint8 internal _decimals;
+
+    /// @notice    Storage gap for future upgrades.
+    uint[50] private __gap;
 
     // --------------------------------------------------------------------------
     // Modifiers
@@ -137,7 +140,4 @@ contract ERC20IssuanceUpgradeable_v1 is
         allowedMinters[_minter] = _allowed;
         emit MinterSet(_minter, _allowed);
     }
-
-    /// @dev    Storage gap for future upgrades.
-    uint[50] private __gap;
 }

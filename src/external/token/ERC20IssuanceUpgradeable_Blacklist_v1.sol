@@ -16,25 +16,46 @@ import {ERC20CappedUpgradeable} from
  * @title   ERC20 Issuance Token with Blacklist Functionality (Upgradeable)
  *
  * @notice  An upgradeable ERC20 token implementation that extends
- *          ERC20IssuanceUpgradeable_v1 with blacklisting capabilities. This
- *          allows accounts with the blacklist manager role to restrict specific
- *          addresses from participating in token operations.
+ *          ERC20IssuanceUpgradeable_v1 with blacklisting capabilities, allowing
+ *          designated managers to restrict specific addresses from token operations.
  *
  * @dev     This contract inherits from:
- *              - IERC20Issuance_Blacklist_v1.
- *              - ERC20IssuanceUpgradeable_v1.
+ *              - IERC20Issuance_Blacklist_v1
+ *              - ERC20IssuanceUpgradeable_v1
+ *
  *          Key features:
- *              - Individual address blacklisting.
- *              - Batch blacklisting operations.
- *              - Owner-controlled manager role assignment.
- *              - Blacklist manager controlled blacklist management.
+ *              - Individual address blacklisting
+ *              - Batch blacklisting operations (multiple addresses at once)
+ *              - Role-based access control:
+ *                  * Contract owner assigns blacklist managers
+ *                  * Only blacklist managers can add/remove addresses from blacklist
  *              - Support for contract upgrades through OpenZeppelin's
- *                upgradeable pattern.
- *          Blacklist operations are performed by accounts with the blacklist
- *          manager role, while the contract owner controls who can be a
- *          blacklist manager.
- *          All blacklist operations can only be performed by accounts with the
- *          blacklist manager role.
+ *                upgradeable pattern
+ *
+ *          Access control structure:
+ *              - Owner: Controls who can be a blacklist manager
+ *              - Blacklist Manager: Controls which addresses are blacklisted
+ *
+ * @custom:setup    This contract requires the following MANDATORY setup steps:
+ *
+ *                  1. Set Minter:
+ *                     - Purpose: The contract needs a minter to handle token
+ *                                minting and burning operations. Without this
+ *                                permission, the workflow cannot mint or burn
+ *                                tokens.
+ *                     - How:     The owner of the contract must call the
+ *                                setMinter function to authorize the Funding
+ *                                Manager of the workflow
+ *                     - Example: token.setMinter(fundingManagerAddress, true);
+ *
+ *                  2. Set Blacklist Manager:
+ *                     - Purpose: The contract needs a blacklist manager to handle
+ *                                blacklisting operations. This role can add or
+ *                                remove addresses from the blacklist.
+ *                     - How:     The owner of the contract must call the
+ *                                setBlacklistManager function to authorize a
+ *                                trusted address
+ *                     - Example: token.setBlacklistManager(trustedAddress, true);
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -66,6 +87,9 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     /// @notice	Mapping of blacklist manager addresses.
     mapping(address account => bool isManager) private _blacklistManager;
 
+    /// @notice    Storage gap for future upgrades.
+    uint[50] private __gap;
+
     // -------------------------------------------------------------------------
     // Modifiers
 
@@ -80,15 +104,11 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     // -------------------------------------------------------------------------
     // Initializer
 
-    constructor() {
-        _disableInitializers();
-    }
-
-    /// @notice Initializes the contract.
-    /// @param  name_ The name of the token.
-    /// @param  symbol_ The symbol of the token.
-    /// @param  decimals_ The number of decimals of the token.
-    /// @param  maxSupply_ The maximum supply of the token.
+    /// @notice Initializes the ERC20IssuanceUpgradeable_Blacklist_v1 contract.
+    /// @param name_ The name of the token.
+    /// @param symbol_ The symbol of the token.
+    /// @param decimals_ The number of decimals of the token.
+    /// @param maxSupply_ The maximum supply of the token.
     function __ERC20IssuanceBlacklist_init(
         string memory name_,
         string memory symbol_,
@@ -195,8 +215,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     // -------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Internal hook to enforce blacklist restrictions on token
-    ///         transfers.
+    /// @notice Internal hook to enforce blacklist restrictions on token transfers.
     /// @dev    Overrides ERC20CappedUpgradeable._update to add blacklist checks.
     /// @param  from_ Address tokens are transferred from.
     /// @param  to_ Address tokens are transferred to.
