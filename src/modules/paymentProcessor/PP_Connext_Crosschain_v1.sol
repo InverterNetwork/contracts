@@ -18,6 +18,8 @@ import {IWETH} from "@pp/interfaces/IWETH.sol";
 import {IEverclearSpoke} from "@pp/interfaces/IEverclear.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
  * @title   Connext Cross-chain Payment Processor
@@ -47,6 +49,17 @@ contract PP_Connext_Crosschain_v1 is
     IPP_Connext_Crosschain_v1,
     PP_Crosschain_v1
 {
+    /// @inheritdoc ERC165Upgradeable
+    function supportsInterface(bytes4 interfaceId_)
+        public
+        view
+        virtual
+        override(PP_Crosschain_v1)
+        returns (bool)
+    {
+        return interfaceId_ == type(IPP_Connext_Crosschain_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
+    }
     // -------------------------------------------------------------------------
     // Constants
 
