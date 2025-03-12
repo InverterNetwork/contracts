@@ -63,6 +63,16 @@ contract LM_PC_FundingPot_v1 is
     // -------------------------------------------------------------------------
 
     // State
+
+    /// @notice Payment token.
+    IERC20 internal _paymentToken;
+
+    /// @notice Stores all funding rounds by their unique ID.
+    mapping(uint64 => Round) public rounds;
+
+    /// @notice The next available round ID.
+    uint64 private nextRoundId;
+
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -100,6 +110,108 @@ contract LM_PC_FundingPot_v1 is
     // -------------------------------------------------------------------------
     // Public - Mutating
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function createRound(
+        uint _roundStart,
+        uint _roundEnd,
+        uint _roundCap,
+        address _hookContract,
+        bytes memory _hookFunction,
+        bool _closureMechanism,
+        bool _globalAccumulativeCaps
+    ) external returns (uint64) {
+        if (_roundStart <= block.timestamp) {
+            revert Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
+        }
+
+        if (_roundEnd <= _roundStart && _roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
+        }
+
+        if (_roundEnd > 0 && _roundEnd <= _roundStart) {
+            revert Module__LM_PC_FundingPot__RoundEndMustBeAfterStart();
+        }
+
+        uint64 roundId = nextRoundId;
+        rounds[roundId] = Round({
+            roundStart: _roundStart,
+            roundEnd: _roundEnd,
+            roundCap: _roundCap,
+            hookContract: _hookContract,
+            hookFunction: _hookFunction,
+            closureMechanism: _closureMechanism,
+            globalAccumulativeCaps: _globalAccumulativeCaps,
+            isActive: true
+        });
+
+        nextRoundId++;
+
+        emit RoundCreated(
+            roundId,
+            _roundStart,
+            _roundEnd,
+            _roundCap,
+            _hookContract,
+            _closureMechanism,
+            _globalAccumulativeCaps
+        );
+
+        return roundId;
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function editRound(
+        uint64 _roundId,
+        uint _roundStart,
+        uint _roundEnd,
+        uint _roundCap,
+        address _hookContract,
+        bytes memory _hookFunction,
+        bool _closureMechanism,
+        bool _globalAccumulativeCaps
+    ) external returns (bool) {
+        Round storage round = rounds[_roundId];
+
+        if (round.roundStart == 0) {
+            revert Module__LM_PC_FundingPot__RoundDoesNotExist();
+        }
+
+        if (block.timestamp >= round.roundStart) {
+            revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
+        }
+
+        if (_roundStart <= block.timestamp) {
+            revert Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
+        }
+
+        if (_roundEnd <= _roundStart && _roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
+        }
+
+        if (_roundEnd > 0 && _roundEnd <= _roundStart) {
+            revert Module__LM_PC_FundingPot__RoundEndMustBeAfterStart();
+        }
+
+        round.roundStart = _roundStart;
+        round.roundEnd = _roundEnd;
+        round.roundCap = _roundCap;
+        round.hookContract = _hookContract;
+        round.hookFunction = _hookFunction;
+        round.closureMechanism = _closureMechanism;
+        round.globalAccumulativeCaps = _globalAccumulativeCaps;
+
+        emit RoundEdited(
+            _roundId,
+            _roundStart,
+            _roundEnd,
+            _roundCap,
+            _hookContract,
+            _closureMechanism,
+            _globalAccumulativeCaps
+        );
+
+        return true;
+    }
     // -------------------------------------------------------------------------
     // Internal
 }
