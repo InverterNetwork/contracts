@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.20;
 
-// External Imports
+// External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
-// Internal Imports
+// Internal
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 import {CrossChainBase_v1} from "@pp/abstracts/CrossChainBase_v1.sol";
 import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
@@ -58,6 +58,7 @@ contract PP_Connext_Crosschain_v1 is
         returns (bool)
     {
         return interfaceId_ == type(IPP_Connext_Crosschain_v1).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
     // -------------------------------------------------------------------------

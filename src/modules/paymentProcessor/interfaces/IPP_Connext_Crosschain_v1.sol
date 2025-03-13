@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.20;
 
-// Internal Dependencies
+// Internal
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {IEverclearSpoke} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
-// External Dependencies
+// External
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";

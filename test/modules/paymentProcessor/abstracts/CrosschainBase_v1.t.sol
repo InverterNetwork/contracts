@@ -2,11 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {
-    ModuleTest,
-    IModule_v1,
-    IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IModule_v1} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
 import {
@@ -17,8 +13,6 @@ import {
 import {CrossChainBase_v1_Exposed} from
     "test/utils/mocks/modules/paymentProcessor/CrossChainBase_v1_Exposed.sol";
 
-import {IPaymentProcessor_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 //External Dependencies
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -153,6 +147,16 @@ contract CrossChainBase_v1_Test is ModuleTest {
         );
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             new IERC20PaymentClientBase_v2.PaymentOrder[](orderCount);
+
+        bytes32[] memory executionData = new bytes32[](6);
+
+        executionData[0] = bytes32(uint(444));
+        executionData[1] = bytes32(block.timestamp);
+        executionData[2] = bytes32(uint(0));
+        executionData[3] = bytes32(block.timestamp + 7 days);
+        executionData[4] = bytes32(uint(1)); // maxFee
+        executionData[5] = bytes32(uint(1)); // ttl
+
         for (uint i = 0; i < orderCount; i++) {
             orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: recipients[i],
@@ -160,17 +164,9 @@ contract CrossChainBase_v1_Test is ModuleTest {
                 amount: amounts[i],
                 originChainId: 0,
                 targetChainId: 0,
-                flags: bytes32(0),
-                data: new bytes32[](0)
+                flags: bytes32(uint(0x3F)),
+                data: executionData
             });
-            // orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
-            //     recipient: recipients[i],
-            //     paymentToken: address(0xabcd),
-            //     amount: amounts[i],
-            //     start: block.timestamp,
-            //     cliff: 0,
-            //     end: block.timestamp + 1 days
-            // });
         }
         return orders;
     }

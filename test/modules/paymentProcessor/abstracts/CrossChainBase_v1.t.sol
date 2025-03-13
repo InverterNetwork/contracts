@@ -118,19 +118,19 @@ contract CrossChainBase_v1_Test is ModuleTest {
     function testExecuteBridgeTransfer_succeedsGivenEmptyPaymentOrder()
         public
     {
-        address[] memory setupRecipients = new address[](1);
-        setupRecipients[0] = address(1);
-        uint[] memory setupAmounts = new uint[](1);
-        setupAmounts[0] = 100 ether;
-
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(1, setupRecipients, setupAmounts);
-        paymentClient.exposed_addPaymentOrders(orders);
-
-        bytes memory executionData = abi.encode(0, 0); //maxFee and ttl setup
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: address(0),
+            paymentToken: address(0),
+            amount: 0 ether,
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
+        });
 
         bytes memory result =
-            crossChainBase.exposed_executeBridgeTransfer(orders[0]);
+            crossChainBase.exposed_executeBridgeTransfer(order);
         assertEq(result, bytes(""));
     }
 

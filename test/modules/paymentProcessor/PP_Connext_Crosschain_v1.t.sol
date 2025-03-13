@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
 //--------------------------------------------------------------------------
 // Imports
 // External Dependencies
 
-import {Test} from "forge-std/Test.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20Errors} from "@oz/interfaces/draft-IERC6093.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
@@ -25,6 +24,8 @@ import {IPP_Crosschain_v1} from
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IPP_Connext_Crosschain_v1} from
+    "src/modules/paymentProcessor/interfaces/IPP_Connext_Crosschain_v1.sol";
 
 // Tests and Mocks
 import {CrossChainBase_v1_Exposed} from
@@ -39,10 +40,6 @@ import {
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
-
-// At the top of the contract, add custom error messages
-error ArrayLengthMismatch();
-error InvalidRecipientOrAmount();
 
 contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
@@ -114,8 +111,9 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     */
     function testInit() public override(ModuleTest) {
         assertEq(
-            address(paymentProcessor.orchestrator()), address(_orchestrator)
+            address(paymentProcessor.getEverClearSpoke()), mockEverClearSpoke
         );
+        assertEq(address(paymentProcessor.getWeth()), mockWeth);
     }
 
     /* Test interface support
@@ -132,7 +130,18 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 type(ICrossChainBase_v1).interfaceId
             )
         );
-
+        // Test for IPP_Connext_Crosschain_v1 interface
+        assertTrue(
+            paymentProcessor.supportsInterface(
+                type(IPP_Connext_Crosschain_v1).interfaceId
+            )
+        );
+        // Test for IPaymentProcessor_v1 interface
+        assertTrue(
+            paymentProcessor.supportsInterface(
+                type(IPaymentProcessor_v1).interfaceId
+            )
+        );
         // Test for a non-supported interface (using a random interface ID)
         assertFalse(paymentProcessor.supportsInterface(0xffffffff));
     }
@@ -1049,9 +1058,6 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         uint[] memory amounts,
         bytes32[] memory executionData
     ) internal returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory) {
-        if (recipients.length != orderCount || amounts.length != orderCount) {
-            revert ArrayLengthMismatch();
-        }
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             new IERC20PaymentClientBase_v2.PaymentOrder[](orderCount);
 
