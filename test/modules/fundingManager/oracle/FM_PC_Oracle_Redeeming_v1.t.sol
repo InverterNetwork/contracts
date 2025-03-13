@@ -968,8 +968,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IFM_PC_Oracle_Redeeming_v1
-                    .Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed
-                    .selector
+            .Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed
+            .selector,
+        bytes("")
             )
         );
         fundingManager.executeRedemptionQueue();
