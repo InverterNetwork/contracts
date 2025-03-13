@@ -83,16 +83,16 @@ contract PP_Connext_Crosschain_v1 is
      * @notice Initializes the payment processor module
      * @param orchestrator_ The orchestrator contract address
      * @param metadata Module metadata
-     * @param configData ABI encoded configuration data (_everClearSpoke and WETH addresses)
+     * @param configData_ ABI encoded configuration data (_everClearSpoke and WETH addresses)
      */
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
-        bytes memory configData
+        bytes memory configData_
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
         (address everClearSpoke_, address weth_) =
-            abi.decode(configData, (address, address));
+            abi.decode(configData_, (address, address));
 
         _everClearSpoke = IEverclearSpoke(everClearSpoke_);
         _weth = IWETH(weth_);
@@ -112,13 +112,13 @@ contract PP_Connext_Crosschain_v1 is
     }
 
     /// @inheritdoc ICrossChainBase_v1
-    function getBridgeData(uint paymentId)
+    function getBridgeData(uint paymentId_)
         public
         view
         override(CrossChainBase_v1)
         returns (bytes memory)
     {
-        return _bridgeData[paymentId];
+        return _bridgeData[paymentId_];
     }
 
     // -------------------------------------------------------------------------
@@ -232,32 +232,32 @@ contract PP_Connext_Crosschain_v1 is
     // Internal Functions
 
     /// @notice Validates the payment order.
-    /// @param order The payment order to validate.
+    /// @param order_ The payment order to validate.
     /// @return valid_ True if the payment order is valid, false otherwise.
     function _validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal virtual returns (bool valid_) {
-        valid_ = _validPaymentReceiver(order.recipient)
-            && _validPaymentToken(order.paymentToken) && _validTotal(order.amount)
+        valid_ = _validPaymentReceiver(order_.recipient)
+            && _validPaymentToken(order_.paymentToken) && _validTotal(order_.amount)
             && _validateOriginAndTargetChainId(
-                order.originChainId, order.targetChainId
-            ) && _validateFlagsAndData(order.flags, order.data);
+                order_.originChainId, order_.targetChainId
+            ) && _validateFlagsAndData(order_.flags, order_.data);
 
         (uint48 maxFee, uint48 ttl) =
-            _getEverclearMaxFeeAndTTL(order.flags, order.data);
+            _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
         bool validParams = maxFee > 0 && ttl > 0;
 
         return validParams && valid_;
     }
 
-    /// @dev Execute the cross-chain bridge transfer
-    /// @param order The payment order containing transfer details
-    /// @return bridgeData Data returned by the bridge implementation
+    /// @notice Execute the cross-chain bridge transfer
+    /// @param order_ The payment order containing transfer details
+    /// @return intentId_ Data returned by the bridge implementation
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) internal override(CrossChainBase_v1) returns (bytes memory) {
-        bytes32 _intentId = _createCrossChainIntent(order);
-        return abi.encode(_intentId);
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+    ) internal override(CrossChainBase_v1) returns (bytes memory intentId_) {
+        bytes32 intentId = _createCrossChainIntent(order_);
+        return abi.encode(intentId);
     }
 
     /// @notice Transfer the token for the payment order into the payment processor.
@@ -309,8 +309,8 @@ contract PP_Connext_Crosschain_v1 is
     }
 
     /// @notice Gets the Everclear max fee and TTL from the flags and data.
-    /// @param flags_ The flags to get the max fee and TTL from.
-    /// @param data_ The data to get the max fee and TTL from.
+    /// @param  flags_ The flags to get the max fee and TTL from.
+    /// @param  data_ The data to get the max fee and TTL from.
     /// @return maxFee_ The max fee.
     /// @return ttl_ The TTL.
     function _getEverclearMaxFeeAndTTL(bytes32 flags_, bytes32[] memory data_)
@@ -324,7 +324,7 @@ contract PP_Connext_Crosschain_v1 is
     }
 
     /// @notice Validates the target chain ID
-    /// @param targetChainId_ The target chain ID to validate
+    /// @param  targetChainId_ The target chain ID to validate
     function _validateOriginAndTargetChainId(
         uint originChainId_,
         uint targetChainId_

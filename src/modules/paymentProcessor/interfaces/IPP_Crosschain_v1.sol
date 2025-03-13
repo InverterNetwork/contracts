@@ -10,17 +10,17 @@ interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
 
     /// @notice Emitted when a cross-chain transfer fails to complete
-    /// @param client The address initiating the transfer
-    /// @param recipient The intended recipient of the transfer
-    /// @param amount The amount that failed to transfer
-    /// @param flags The flags for this transfer attempt
-    /// @param data The data for this transfer attempt
+    /// @param client_ The address initiating the transfer
+    /// @param recipient_ The intended recipient of the transfer
+    /// @param amount_ The amount that failed to transfer
+    /// @param flags_ The flags for this transfer attempt
+    /// @param data_ The data for this transfer attempt
     event BridgeTransferFailed(
-        address indexed client,
-        address indexed recipient,
-        uint amount,
-        bytes32 flags,
-        bytes32[] data
+        address indexed client_,
+        address indexed recipient_,
+        uint amount_,
+        bytes32 flags_,
+        bytes32[] data_
     );
 
     /// @notice Emitted when a payment ID is assigned
@@ -36,11 +36,11 @@ interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
     error Module__PP_Crosschain__InvalidUnclaimableAmount();
 
     /// @notice Thrown when the cross-chain message fails to be delivered
-    /// @param sourceChain The chain ID where the message originated
-    /// @param destinationChain The chain ID where the message was meant to be
+    /// @param  sourceChain The chain ID where the message originated
+    /// @param  destinationChain The chain ID where the message was meant to be
     /// delivered
-    /// @param flags The flags for this transfer attempt
-    /// @param data The data for this transfer attempt
+    /// @param  flags The flags for this transfer attempt
+    /// @param  data The data for this transfer attempt
     error Module__PP_Crosschain__MessageDeliveryFailed(
         uint sourceChain, uint destinationChain, bytes32 flags, bytes32[] data
     );

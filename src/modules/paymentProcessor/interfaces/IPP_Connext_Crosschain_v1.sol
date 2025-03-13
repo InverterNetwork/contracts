@@ -18,20 +18,20 @@ interface IPP_Connext_Crosschain_v1 is IPaymentProcessor_v1 {
     // View Functions
 
     /// @notice Returns the Everclear spoke contract instance
-    /// @return The IEverclearSpoke contract interface
+    /// @return IEverclearSpoke The Everclear contract interface
     function getEverClearSpoke() external view returns (IEverclearSpoke);
 
     /// @notice Returns the WETH contract instance
-    /// @return The IWETH contract interface used for wrapping/unwrapping ETH
+    /// @return IWETH The WETH contract interface used for wrapping/unwrapping ETH
     function getWeth() external view returns (IWETH);
 
     //--------------------------------------------------------------------------
     // External Functions
 
     /// @notice Retries a previously failed transfer
-    /// @param client_ The payment client address
-    /// @param recipient_ The recipient address
-    /// @param order_ The payment order details
+    /// @param  client_ The payment client address
+    /// @param  recipient_ The recipient address
+    /// @param  order_ The payment order details
     function retryFailedBridgeTransfer(
         address client_,
         address recipient_,

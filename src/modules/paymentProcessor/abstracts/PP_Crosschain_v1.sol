@@ -51,6 +51,7 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     //--------------------------------------------------------------------------
     // Storage Variables
 
+    /// @notice Payment ID incremented for each crosschain payment
     uint internal _paymentId;
 
     /// @notice Tracks all payments that could not be made to the paymentReceiver due to any reason.
@@ -65,7 +66,7 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev    Checks that the caller is an active module.
+    /// @notice Checks that the caller is an active module.
     modifier onlyModule() {
         if (!orchestrator().isModule(_msgSender())) {
             revert Module__PaymentProcessor__OnlyCallableByModule();
@@ -73,7 +74,7 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
         _;
     }
 
-    /// @dev    Checks that the client is calling for itself.
+    /// @notice Checks that the client is calling for itself.
     modifier validClient(address client) {
         if (_msgSender() != client) {
             revert Module__PaymentProcessor__CannotCallOnOtherClientsOrders();
@@ -133,56 +134,56 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     // Internal Functions
 
     /// @notice used to claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
-    /// @param  client address of the payment client.
-    /// @param  token address of the payment token.
-    /// @param  paymentReceiver address of the paymentReceiver for which the unclaimable amount will be claimed.
+    /// @param  client_ address of the payment client.
+    /// @param  token_ address of the payment token.
+    /// @param  paymentReceiver_ address of the paymentReceiver for which the unclaimable amount will be claimed.
     function _claimPreviouslyUnclaimable(
-        address client,
-        address token,
-        address paymentReceiver
+        address client_,
+        address token_,
+        address paymentReceiver_
     ) internal {
         address sender = _msgSender();
-        uint amount = _unclaimableAmountsForRecipient[client][token][sender];
-        delete _unclaimableAmountsForRecipient[client][token][sender];
+        uint amount = _unclaimableAmountsForRecipient[client_][token_][sender];
+        delete _unclaimableAmountsForRecipient[client_][token_][sender];
 
-        IERC20(token).transfer(paymentReceiver, amount);
-        emit TokensReleased(paymentReceiver, address(token), amount);
+        IERC20(token_).transfer(paymentReceiver_, amount);
+        emit TokensReleased(paymentReceiver_, address(token_), amount);
     }
 
-    /// @dev    Validate address input.
-    /// @param  addr Address to validate.
+    /// @notice Validate address input.
+    /// @param  addr_ Address to validate.
     /// @return True if address is valid.
-    function _validPaymentReceiver(address addr)
+    function _validPaymentReceiver(address addr_)
         internal
         view
         virtual
         returns (bool)
     {
         return !(
-            addr == address(0) || addr == _msgSender() || addr == address(this)
-                || addr == address(orchestrator())
-                || addr == address(orchestrator().fundingManager().token())
+            addr_ == address(0) || addr_ == _msgSender()
+                || addr_ == address(this) || addr_ == address(orchestrator())
+                || addr_ == address(orchestrator().fundingManager().token())
         );
     }
 
-    /// @dev    Validate transfer amount bigger than 0.
-    /// @param  _total uint to validate.
+    /// @notice Validate transfer amount bigger than 0.
+    /// @param  total_ uint to validate.
     /// @return True if amount is valid.
-    function _validTotal(uint _total) internal pure virtual returns (bool) {
-        return _total != 0;
+    function _validTotal(uint total_) internal pure virtual returns (bool) {
+        return total_ != 0;
     }
 
-    /// @dev    Validate payment token input.
-    /// @param  _token Address of the token to validate.
+    /// @notice Validate payment token input.
+    /// @param  token_ Address of the token to validate.
     /// @return True if address is valid.
-    function _validPaymentToken(address _token)
+    function _validPaymentToken(address token_)
         internal
         virtual
         returns (bool)
     {
-        (bool success, bytes memory data) = _token.call(
+        (bool success, bytes memory data) = token_.call(
             abi.encodeWithSelector(
-                IERC20(_token).balanceOf.selector, address(this)
+                IERC20(token_).balanceOf.selector, address(this)
             )
         );
         return success && data.length >= 32;
