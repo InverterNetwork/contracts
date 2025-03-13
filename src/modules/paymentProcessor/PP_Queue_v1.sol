@@ -596,10 +596,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         }
 
         uint processedCount;
-        while (firstId != LinkedIdList._SENTINEL && _processNextOrder(client_))
-        {
+        while (_processNextOrder(client_)) {
             ++processedCount;
-            firstId = _queue[client_].getNextId(LinkedIdList._SENTINEL);
         }
 
         emit PaymentQueueExecuted(_msgSender(), client_, processedCount);
