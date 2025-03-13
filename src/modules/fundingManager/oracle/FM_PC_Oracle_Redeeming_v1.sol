@@ -686,14 +686,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
             data: data
         });
 
-        // Add order to payment client.
-        _addPaymentOrder(order);
-
-        // Process payments through the payment processor.
-        __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
-        );
-
         // Emit event with order details.
         emit RedemptionOrderCreated(
             address(this),
@@ -707,6 +699,14 @@ contract FM_PC_Oracle_Redeeming_v1 is
             collateralRedeemAmount_,
             address(token()),
             RedemptionState.PENDING
+        );
+
+        // Add order to payment client.
+        _addPaymentOrder(order);
+
+        // Process payments through the payment processor.
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClientBase_v2(address(this))
         );
     }
 
