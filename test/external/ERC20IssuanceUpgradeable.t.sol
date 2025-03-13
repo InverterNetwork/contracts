@@ -27,6 +27,7 @@ contract ERC20IssuanceUpgradeableTest is Test {
     string constant SYMBOL = "TT";
 
     ERC20IssuanceUpgradeable_v1 token;
+    address proxyAdmin;
 
     event MinterSet(address indexed minter, bool allowed);
 
@@ -35,11 +36,14 @@ contract ERC20IssuanceUpgradeableTest is Test {
         ERC20IssuanceUpgradeable_v1 implementation =
             new ERC20IssuanceUpgradeable_v1();
 
+        // Create a separate address for the proxy admin
+        proxyAdmin = makeAddr("proxyAdmin");
+
         // Deploy a simple proxy that delegates to the implementation
         address proxy = address(
             new TransparentUpgradeableProxy(
                 address(implementation),
-                address(this),
+                proxyAdmin,
                 abi.encodeWithSelector(
                     ERC20IssuanceUpgradeable_v1.__ERC20Issuance_init.selector,
                     NAME,
