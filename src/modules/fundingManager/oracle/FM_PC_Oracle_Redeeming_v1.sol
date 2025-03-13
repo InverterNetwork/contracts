@@ -621,13 +621,17 @@ contract FM_PC_Oracle_Redeeming_v1 is
         virtual
         onlyModuleRole(QUEUE_EXECUTOR_ROLE)
     {
-        (bool success, bytes memory data) = address(__Module_orchestrator.paymentProcessor()).call(
+        (bool success, bytes memory data) = address(
+            __Module_orchestrator.paymentProcessor()
+        ).call(
             abi.encodeWithSignature(
                 "executePaymentQueue(address)", address(this)
             )
         );
         if (!success) {
-            revert Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(data);
+            revert Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(
+                data
+            );
         }
     }
 
