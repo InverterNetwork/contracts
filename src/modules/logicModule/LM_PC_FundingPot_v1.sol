@@ -49,7 +49,7 @@ contract LM_PC_FundingPot_v1 is
     // Constants
 
     /// @notice The role that allows creating funding rounds.
-    bytes32 internal constant FUNDING_POT_ADMIN_ROLE = "FUNDING_POT_ADMIN";
+    bytes32 public constant FUNDING_POT_ADMIN_ROLE = "FUNDING_POT_ADMIN";
 
     /// @notice The payment processor flag for the start timestamp.
     uint8 internal constant FLAG_START = 1;
@@ -61,11 +61,8 @@ contract LM_PC_FundingPot_v1 is
     uint8 internal constant FLAG_END = 3;
 
     // -------------------------------------------------------------------------
+
     // State
-
-    /// @notice Payment token.
-    IERC20 internal _paymentToken;
-
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -88,14 +85,6 @@ contract LM_PC_FundingPot_v1 is
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata_);
 
-        // Decode module specific init data through use of configData bytes.
-        // This value is an example value used to showcase the setters/getters
-        // and internal functions/state formatting style.
-        (address paymentToken) = abi.decode(configData_, (address));
-
-        // Set init state.
-        _paymentToken = IERC20(paymentToken);
-
         // Set the flags for the PaymentOrders (this module uses 3 flags).
         bytes32 flags;
         flags |= bytes32(1 << FLAG_START);
@@ -107,16 +96,6 @@ contract LM_PC_FundingPot_v1 is
 
     // -------------------------------------------------------------------------
     // Public - Getters
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getFundingPotAdminRole() external pure returns (bytes32 role_) {
-        return FUNDING_POT_ADMIN_ROLE;
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function getPaymentToken() external view returns (address token_) {
-        return address(_paymentToken);
-    }
 
     // -------------------------------------------------------------------------
     // Public - Mutating
