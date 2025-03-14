@@ -70,7 +70,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Give test contract the DEPOSIT_ADMIN_ROLE.
         fundingPot.grantModuleRole(
-            fundingPot.getFundingPotAdminRole(), fundingPotAdmin
+            fundingPot.FUNDING_POT_ADMIN_ROLE(), fundingPotAdmin
         );
     }
 
@@ -97,7 +97,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function test_fundingPotAdminRoleGranted() public {
         bytes32 roleId = _orchestrator.authorizer().generateRoleId(
-            address(fundingPot), fundingPot.getFundingPotAdminRole()
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
         );
         assertTrue(_orchestrator.authorizer().hasRole(roleId, fundingPotAdmin));
     }
