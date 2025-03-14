@@ -2,18 +2,15 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {ModuleTest, IModule_v1} from "test/modules/ModuleTest.sol";
+import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
-import {
-    IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBaseV2Mock,
-    ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {IERC20PaymentClientBase_v2} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {CrossChainBase_v1_Exposed} from
     "test/utils/mocks/modules/paymentProcessor/CrossChainBase_v1_Exposed.sol";
 
-//External Dependencies
+//External
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -22,8 +19,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
     //Constants
     //--------------------------------------------------------------------------
     //Mocks
-    ERC20PaymentClientBaseV2Mock paymentClient;
-    CrossChainBase_v1_Exposed public crossChainBase;
+    CrossChainBase_v1_Exposed public CrossChainBase;
 
     //--------------------------------------------------------------------------
     //Setup
@@ -31,29 +27,13 @@ contract CrossChainBase_v1_Test is ModuleTest {
         //This function is used to setup the unit test
         //Deploy the SuT
         address impl = address(new CrossChainBase_v1_Exposed());
-        crossChainBase = CrossChainBase_v1_Exposed(Clones.clone(impl));
+        CrossChainBase = CrossChainBase_v1_Exposed(Clones.clone(impl));
 
         //Setup the module to test
-        _setUpOrchestrator(crossChainBase);
-
-        //General setup for other contracts in the workflow
-        _authorizer.setIsAuthorized(address(this), true);
+        _setUpOrchestrator(CrossChainBase);
 
         //Initiate the PP with the medata and config data
-        crossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
-
-        //Setup other modules needed in the unit tests.
-        //In this case a payment client is needed to test the PP_Template_v1.
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
-        //Adding the payment client is done through a timelock mechanism
-        _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
-        vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
-        _orchestrator.executeAddModule(address(paymentClient));
-        //Init payment client
-        paymentClient.init(_orchestrator, _METADATA, bytes(""));
-        paymentClient.setIsAuthorized(address(crossChainBase), true);
-        paymentClient.setToken(_token);
+        CrossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
     }
     //--------------------------------------------------------------------------
     //Test: Initialization
@@ -63,7 +43,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
         └── Then it should set the correct orchestrator address */
 
     function testInit() public override(ModuleTest) {
-        assertEq(address(crossChainBase.orchestrator()), address(_orchestrator));
+        assertEq(address(CrossChainBase.orchestrator()), address(_orchestrator));
     }
 
     //--------------------------------------------------------------------------
@@ -77,7 +57,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
     function testSupportsInterface() public {
         // Test for ICrossChainBase_v1 interface support
         bytes4 interfaceId = type(ICrossChainBase_v1).interfaceId;
-        assertTrue(crossChainBase.supportsInterface(interfaceId));
+        assertTrue(CrossChainBase.supportsInterface(interfaceId));
     }
 
     /*  
@@ -86,7 +66,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
         └── Then it should revert with Initializable__InvalidInitialization */
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
-        crossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
+        CrossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
     }
 
     /**
@@ -97,7 +77,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
      */
     function testSupportsInterface_failsGivenUnknownInterface() public {
         bytes4 randomInterfaceId = bytes4(keccak256("random()"));
-        assertFalse(crossChainBase.supportsInterface(randomInterfaceId));
+        assertFalse(CrossChainBase.supportsInterface(randomInterfaceId));
     }
 
     //--------------------------------------------------------------------------
@@ -112,19 +92,19 @@ contract CrossChainBase_v1_Test is ModuleTest {
     function testExecuteBridgeTransfer_succeedsGivenEmptyPaymentOrder()
         public
     {
-        address[] memory setupRecipients = new address[](1);
-        setupRecipients[0] = address(1);
-        uint[] memory setupAmounts = new uint[](1);
-        setupAmounts[0] = 100 ether;
-
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(1, setupRecipients, setupAmounts);
-        paymentClient.exposed_addPaymentOrders(orders);
-
-        bytes memory executionData = abi.encode(0, 0); //maxFee and ttl setup
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: address(0),
+            paymentToken: address(0),
+            amount: 0 ether,
+            originChainId: 0,
+            targetChainId: 0,
+            flags: bytes32(0),
+            data: new bytes32[](0)
+        });
 
         bytes memory result =
-            crossChainBase.exposed_executeBridgeTransfer(orders[0]);
+            CrossChainBase.exposed_executeBridgeTransfer(order);
         assertEq(result, bytes(""));
     }
 
@@ -147,16 +127,6 @@ contract CrossChainBase_v1_Test is ModuleTest {
         );
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
             new IERC20PaymentClientBase_v2.PaymentOrder[](orderCount);
-
-        bytes32[] memory executionData = new bytes32[](6);
-
-        executionData[0] = bytes32(uint(444));
-        executionData[1] = bytes32(block.timestamp);
-        executionData[2] = bytes32(uint(0));
-        executionData[3] = bytes32(block.timestamp + 7 days);
-        executionData[4] = bytes32(uint(1)); // maxFee
-        executionData[5] = bytes32(uint(1)); // ttl
-
         for (uint i = 0; i < orderCount; i++) {
             orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: recipients[i],
@@ -164,9 +134,17 @@ contract CrossChainBase_v1_Test is ModuleTest {
                 amount: amounts[i],
                 originChainId: 0,
                 targetChainId: 0,
-                flags: bytes32(uint(0x3F)),
-                data: executionData
+                flags: bytes32(0),
+                data: new bytes32[](0)
             });
+            // orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
+            //     recipient: recipients[i],
+            //     paymentToken: address(0xabcd),
+            //     amount: amounts[i],
+            //     start: block.timestamp,
+            //     cliff: 0,
+            //     end: block.timestamp + 1 days
+            // });
         }
         return orders;
     }

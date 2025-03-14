@@ -7,31 +7,22 @@ pragma solidity ^0.8.0;
 // External Dependencies
 
 import {Clones} from "@oz/proxy/Clones.sol";
-import {IERC20Errors} from "@oz/interfaces/draft-IERC6093.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
 import "forge-std/console2.sol";
 
 // Internal Dependencies
-import {PP_Connext_Crosschain_v1} from
-    "src/modules/paymentProcessor/PP_Connext_Crosschain_v1.sol";
-import {CrossChainBase_v1} from
-    "src/modules/paymentProcessor/abstracts/CrossChainBase_v1.sol";
-import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
-import {IPP_Crosschain_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_Crosschain_v1.sol";
-import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {IPP_Connext_Crosschain_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_Connext_Crosschain_v1.sol";
+import {IPP_CrossChain_v1} from
+    "src/modules/paymentProcessor/interfaces/IPP_CrossChain_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {IPP_Connext_CrossChain_v1} from
+    "src/modules/paymentProcessor/interfaces/IPP_Connext_CrossChain_v1.sol";
 
 // Tests and Mocks
-import {CrossChainBase_v1_Exposed} from
-    "test/utils/mocks/modules/paymentProcessor/CrossChainBase_v1_Exposed.sol";
-import {PP_Connext_Crosschain_v1_Exposed} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Connext_Crosschain_v1_Exposed.sol";
+import {PP_Connext_CrossChain_v1_Exposed} from
+    "test/utils/mocks/modules/paymentProcessor/PP_Connext_CrossChain_v1_Exposed.sol";
 import {Mock_EverclearPayment} from
     "test/utils/mocks/external/Mock_EverclearPayment.sol";
 import {
@@ -41,7 +32,7 @@ import {
 import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PP_Connext_Crosschain_v1_Test is ModuleTest {
+contract PP_Connext_CrossChain_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Constants
     uint constant MINTED_SUPPLY = 1000 ether;
@@ -50,10 +41,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
     uint TARGET_CHAIN_ID;
     //--------------------------------------------------------------------------
     // Test Storage
-    PP_Connext_Crosschain_v1_Exposed public paymentProcessor;
+    PP_Connext_CrossChain_v1_Exposed public paymentProcessor;
     Mock_EverclearPayment public everclearPaymentMock;
     ERC20PaymentClientBaseV2Mock paymentClient;
-    IPP_Crosschain_v1 public crossChainBase;
+    IPP_CrossChain_v1 public CrossChainBase;
     IWETH public weth;
 
     // Bridge-related storage
@@ -76,8 +67,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         mockWeth = address(weth);
 
         // Deploy payment processor via clone
-        address impl = address(new PP_Connext_Crosschain_v1_Exposed());
-        paymentProcessor = PP_Connext_Crosschain_v1_Exposed(Clones.clone(impl));
+        address impl = address(new PP_Connext_CrossChain_v1_Exposed());
+        paymentProcessor = PP_Connext_CrossChain_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
         _authorizer.setIsAuthorized(address(this), true);
@@ -130,10 +121,10 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
                 type(ICrossChainBase_v1).interfaceId
             )
         );
-        // Test for IPP_Connext_Crosschain_v1 interface
+        // Test for IPP_Connext_CrossChain_v1 interface
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPP_Connext_Crosschain_v1).interfaceId
+                type(IPP_Connext_CrossChain_v1).interfaceId
             )
         );
         // Test for IPaymentProcessor_v1 interface
@@ -162,7 +153,7 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
             └── Then it should emit PaymentProcessed events for payment
                 └── And it should create cross-chain intent
     */
-    function testFuzz_PublicProcessPayments_succeedsGivenSingleValidPaymentOrder(
+    function testFuzz_PublicProcessPayments_worksGivenSingleValidPaymentOrder(
         address testRecipient,
         uint testAmount
     ) public {
@@ -768,8 +759,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
-            IPP_Crosschain_v1
-                .Module__PP_Crosschain__InvalidUnclaimableAmount
+            IPP_CrossChain_v1
+                .Module__PP_CrossChain__InvalidUnclaimableAmount
                 .selector
         );
         paymentProcessor.retryFailedBridgeTransfer(
@@ -828,8 +819,8 @@ contract PP_Connext_Crosschain_v1_Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPP_Crosschain_v1
-                    .Module__PP_Crosschain__MessageDeliveryFailed
+                IPP_CrossChain_v1
+                    .Module__PP_CrossChain__MessageDeliveryFailed
                     .selector,
                 ORIGIN_CHAIN_ID,
                 TARGET_CHAIN_ID,

@@ -5,7 +5,7 @@ pragma solidity 0.8.23;
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
 
 // External
 import {ERC165Upgradeable} from

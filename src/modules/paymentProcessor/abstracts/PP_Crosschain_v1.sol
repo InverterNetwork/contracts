@@ -6,7 +6,7 @@ import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {CrossChainBase_v1} from "@pp/abstracts/CrossChainBase_v1.sol";
-import {IPP_Crosschain_v1} from "@pp/interfaces/IPP_Crosschain_v1.sol";
+import {IPP_CrossChain_v1} from "@pp/interfaces/IPP_CrossChain_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -20,7 +20,7 @@ import {ERC165Upgradeable} from
  *
  * @dev     This contract serves as the base for cross-chain payment processors and provides:
  *          - Extension of CrossChainBase_v1 for cross-chain functionality
- *          - Implementation of IPP_Crosschain_v1 interface
+ *          - Implementation of IPP_CrossChain_v1 interface
  *          - Core payment validation logic
  *          - Basic security checks for payment processing
  *          - Abstract functions for bridge-specific implementations
@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *
  * @custom:standard-version 1.0.0
  */
-abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
+abstract contract PP_CrossChain_v1 is CrossChainBase_v1, IPP_CrossChain_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -44,14 +44,14 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
         override(CrossChainBase_v1)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_Crosschain_v1).interfaceId
+        return interfaceId_ == type(IPP_CrossChain_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
     //--------------------------------------------------------------------------
     // Storage Variables
 
-    /// @notice Payment ID incremented for each crosschain payment
+    /// @notice Payment ID incremented for each CrossChain payment
     uint internal _paymentId;
 
     /// @notice Tracks all payments that could not be made to the paymentReceiver due to any reason.
@@ -85,7 +85,7 @@ abstract contract PP_Crosschain_v1 is CrossChainBase_v1, IPP_Crosschain_v1 {
     // -------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IPP_Crosschain_v1
+    /// @inheritdoc IPP_CrossChain_v1
     function getPaymentId() external view returns (uint paymentId_) {
         return _paymentId;
     }

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 
 /// @notice Interface for cross-chain payment processing functionality
-interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
+interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
     // Events
     //--------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
 
     /// @notice Thrown when the unclaimable amount is invalid (e.g., zero or exceeds
     /// limits)
-    error Module__PP_Crosschain__InvalidUnclaimableAmount();
+    error Module__PP_CrossChain__InvalidUnclaimableAmount();
 
     /// @notice Thrown when the cross-chain message fails to be delivered
     /// @param  sourceChain The chain ID where the message originated
@@ -41,7 +41,7 @@ interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
     /// delivered
     /// @param  flags The flags for this transfer attempt
     /// @param  data The data for this transfer attempt
-    error Module__PP_Crosschain__MessageDeliveryFailed(
+    error Module__PP_CrossChain__MessageDeliveryFailed(
         uint sourceChain, uint destinationChain, bytes32 flags, bytes32[] data
     );
 

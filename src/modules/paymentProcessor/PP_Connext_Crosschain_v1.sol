@@ -8,12 +8,12 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
 // Internal
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 import {CrossChainBase_v1} from "@pp/abstracts/CrossChainBase_v1.sol";
-import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
-import {IPP_Connext_Crosschain_v1} from
-    "@pp/interfaces/IPP_Connext_Crosschain_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
+import {IPP_Connext_CrossChain_v1} from
+    "@pp/interfaces/IPP_Connext_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {PP_Crosschain_v1} from "@pp/abstracts/PP_Crosschain_v1.sol";
+import {PP_CrossChain_v1} from "@pp/abstracts/PP_CrossChain_v1.sol";
 import {IWETH} from "@pp/interfaces/IWETH.sol";
 import {IEverclearSpoke} from "@pp/interfaces/IEverclear.sol";
 import {IOrchestrator_v1} from
@@ -26,7 +26,7 @@ import {ERC165Upgradeable} from
  *
  * @notice  Specialized payment processor implementation for handling cross-chain payments via Connext protocol.
  *
- * @dev     This contract extends PP_Crosschain_v1 and provides:
+ * @dev     This contract extends PP_CrossChain_v1 and provides:
  *          - Integration with Connext's EverClear protocol for secure cross-chain transfers
  *          - Native token handling through WETH wrapper
  *          - Robust payment order processing and validation
@@ -45,19 +45,19 @@ import {ERC165Upgradeable} from
  *
  * @custom:standard-version 1.0.0
  */
-contract PP_Connext_Crosschain_v1 is
-    IPP_Connext_Crosschain_v1,
-    PP_Crosschain_v1
+contract PP_Connext_CrossChain_v1 is
+    IPP_Connext_CrossChain_v1,
+    PP_CrossChain_v1
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
-        override(PP_Crosschain_v1)
+        override(PP_CrossChain_v1)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_Connext_Crosschain_v1).interfaceId
+        return interfaceId_ == type(IPP_Connext_CrossChain_v1).interfaceId
             || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -102,12 +102,12 @@ contract PP_Connext_Crosschain_v1 is
     // -------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IPP_Connext_Crosschain_v1
+    /// @inheritdoc IPP_Connext_CrossChain_v1
     function getEverClearSpoke() external view returns (IEverclearSpoke) {
         return _everClearSpoke;
     }
 
-    /// @inheritdoc IPP_Connext_Crosschain_v1
+    /// @inheritdoc IPP_Connext_CrossChain_v1
     function getWeth() external view returns (IWETH) {
         return _weth;
     }
@@ -178,7 +178,7 @@ contract PP_Connext_Crosschain_v1 is
         }
     }
 
-    /// @inheritdoc IPP_Connext_Crosschain_v1
+    /// @inheritdoc IPP_Connext_CrossChain_v1
     function retryFailedBridgeTransfer(
         address client_,
         address recipient_,
@@ -190,7 +190,7 @@ contract PP_Connext_Crosschain_v1 is
         // Validate that receipient has an unclaimable amount and the order
         // amount provided is not greater than the unclaimable amount.
         if (unclaimableAmount == 0 || order_.amount > unclaimableAmount) {
-            revert Module__PP_Crosschain__InvalidUnclaimableAmount();
+            revert Module__PP_CrossChain__InvalidUnclaimableAmount();
         }
 
         // Subtract the order amount from the unclaimable amount.
@@ -210,7 +210,7 @@ contract PP_Connext_Crosschain_v1 is
 
         // If a zero intent ID is returned, revert.
         if (bytes32(bridgeData) == bytes32(0)) {
-            revert Module__PP_Crosschain__MessageDeliveryFailed(
+            revert Module__PP_CrossChain__MessageDeliveryFailed(
                 order_.originChainId,
                 order_.targetChainId,
                 order_.flags,
