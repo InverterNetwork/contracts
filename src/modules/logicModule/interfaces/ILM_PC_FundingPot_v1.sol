@@ -26,7 +26,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes hookFunction;
         bool closureMechanism;
         bool globalAccumulativeCaps;
-        bool isActive;
+        bool isActive; //@note: do we need this?
     }
 
     // -------------------------------------------------------------------------
@@ -91,8 +91,32 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already started and cannot be modified
     error Module__LM_PC_FundingPot__RoundAlreadyStarted();
 
+    /// @notice Hook function is required when a hook contract is provided
+    error Module__LM_PC_FundingPot__HookFunctionRequiredWithContract();
+
+    /// @notice Thrown when a hook contract is specified without a hook function.
+    error Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
+
+    /// @notice Thrown when a hook function is specified without a hook contract.
+    error Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction();
+
+    /// @notice Round does not exist
+    error Module__LM_PC_FundingPot__RoundNotCreated();
+
     // -------------------------------------------------------------------------
     // Public - Getters
+
+    /// @notice Retrieves the details of a specific funding round.
+    /// @param _roundId The unique identifier of the round to retrieve.
+    /// @return A struct containing the round's details.
+    function getRoundDetails(uint64 _roundId)
+        external
+        view
+        returns (Round memory);
+
+    /// @notice Retrieves the total number of funding rounds.
+    /// @return The total number of funding rounds.
+    function getRoundCount() external view returns (uint64);
 
     // -------------------------------------------------------------------------
     // Public - Mutating
