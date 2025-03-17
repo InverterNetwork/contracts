@@ -10,17 +10,23 @@ import {IERC20PaymentClientBase_v2} from
 contract CrossChainBase_v1_Exposed is CrossChainBase_v1 {
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) internal pure override returns (bytes memory) {
-        return "";
+    ) internal override returns (bytes memory) {
+        return getBridgeData(0);
     }
 
     function getBridgeData(uint paymentId)
         public
-        pure
+        view
         override
         returns (bytes memory)
     {
-        return "";
+        return _bridgeData[paymentId];
+    }
+
+    function exposed_setBridgeData(bytes memory data, uint paymentId)
+        external
+    {
+        _bridgeData[paymentId] = data;
     }
 
     function exposed_executeBridgeTransfer(

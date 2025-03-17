@@ -137,14 +137,6 @@ contract CrossChainBase_v1_Test is ModuleTest {
                 flags: bytes32(0),
                 data: new bytes32[](0)
             });
-            // orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
-            //     recipient: recipients[i],
-            //     paymentToken: address(0xabcd),
-            //     amount: amounts[i],
-            //     start: block.timestamp,
-            //     cliff: 0,
-            //     end: block.timestamp + 1 days
-            // });
         }
         return orders;
     }
