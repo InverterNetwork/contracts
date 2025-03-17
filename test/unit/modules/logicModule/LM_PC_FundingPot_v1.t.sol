@@ -52,7 +52,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // SuT
     LM_PC_FundingPot_v1_Exposed fundingPot;
-    address public fundingPotAdmin = makeAddr("FundingPotAdmin");
 
     // -------------------------------------------------------------------------
     // Setup
@@ -70,8 +69,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Give test contract the DEPOSIT_ADMIN_ROLE.
         fundingPot.grantModuleRole(
-            fundingPot.FUNDING_POT_ADMIN_ROLE(), fundingPotAdmin
+            fundingPot.FUNDING_POT_ADMIN_ROLE(), address(this)
         );
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Set the block timestamp
+        vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
     }
 
     // -------------------------------------------------------------------------
@@ -95,206 +98,261 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
-    function test_fundingPotAdminRoleGranted() public {
-        bytes32 roleId = _orchestrator.authorizer().generateRoleId(
-            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
-        );
-        assertTrue(_orchestrator.authorizer().hasRole(roleId, fundingPotAdmin));
-    }
-
     // -------------------------------------------------------------------------
     // Test External (public + external)
 
-    /* Test fuzzed createRound()
-        ├── Given a round start time is in the future
-        │   ├── And the round end time is either after the start or the round has a cap
-        │   │   └── When a new round is created with the given parameters
-        │   │       └── Then the stored round details should match the provided values
+    /* Test createRound()
+    ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given round start time is in the past
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given round end time is 0 and round cap is 0
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given round end time is set and round end time is in the past
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given hook contract is set but hook function is not set
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given hook function is set but hook contract is not set
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
     */
-    function testFuzz_createRound(
-        uint roundStart,
-        uint roundEnd,
-        uint roundCap,
-        address hookContract,
-        bytes memory hookFunction,
-        bool closureMechanism,
-        bool globalAccumulativeCaps
+
+    function testFuzzCreateRound_revertsGivenUserIsNotFundingPotAdmin(
+        address user_
     ) public {
-        vm.assume(roundStart > block.timestamp);
-        vm.assume(roundEnd > roundStart || roundCap > 0);
-        if (roundEnd > 0) {
-            vm.assume(roundEnd > roundStart);
-        }
-
-        uint64 roundId = fundingPot.createRound(
-            roundStart,
-            roundEnd,
-            roundCap,
-            hookContract,
-            hookFunction,
-            closureMechanism,
-            globalAccumulativeCaps
+        vm.assume(user_ != address(0) && user_ != address(this));
+        vm.startPrank(user_);
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
         );
-
-        (uint storedStart, uint storedEnd, uint storedCap,,,,, bool isActive) =
-            fundingPot.rounds(roundId);
-
-        assertEq(storedStart, roundStart, "Round start mismatch");
-        assertEq(storedEnd, roundEnd, "Round end mismatch");
-        assertEq(storedCap, roundCap, "Round cap mismatch");
-        assertTrue(isActive, "Round should be active");
-    }
-
-    /* Test createRound() with invalid start time
-        ├── Given a start time that is in the past
-        │   └── When attempting to create a round with this past start time
-        │       └── Then it should revert with "Round start must be in the future"
-    */
-    function test_createRound_invalidStart() public {
-        uint pastTime = block.timestamp - 1;
         vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot__RoundStartMustBeInFuture
-                .selector
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
+            )
         );
-        fundingPot.createRound(
-            pastTime, block.timestamp + 10, 1000, address(0), "", false, false
-        );
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        _callCreateRound(round);
+        vm.stopPrank();
     }
 
-    /* Test createRound() with invalid end time
-        ├── Given a future start time
-        │   └── When attempting to create a round where end time is before start time and cap is zero
-        │       └── Then it should revert with "Round must have either end time or cap"
-    */
-    function test_createRound_invalidEnd() public {
-        uint futureTime = block.timestamp + 100;
-        vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap
-                .selector
-        );
-        fundingPot.createRound(
-            futureTime, futureTime - 1, 0, address(0), "", false, false
-        );
-    }
-
-    /* Test fuzzed editRound()
-        ├── Given a round start time is in the future
-        │   ├── And the round end time is greater than zero and after the start time
-        │   │   └── When editing the round with new parameters
-        │   │       ├── Then the update should be successful
-        │   │       └── And the stored values should match the new parameters
-    */
-    function testFuzz_editRound(
-        uint roundStart,
-        uint roundEnd,
-        uint roundCap,
-        address hookContract,
-        bytes memory hookFunction,
-        bool closureMechanism,
-        bool globalAccumulativeCaps
+    function testFuzzCreateRound_revertsGivenRoundStartIsInThePast(
+        uint roundStart_
     ) public {
-        vm.assume(roundStart > block.timestamp);
-        vm.assume(roundStart < type(uint).max - 100);
-        vm.assume(roundEnd > 0);
-        vm.assume(roundEnd > roundStart);
-        vm.assume(roundEnd <= type(uint).max - 100);
-        vm.assume(roundCap <= type(uint).max - 100);
-
-        uint64 roundId = fundingPot.createRound(
-            roundStart,
-            roundEnd,
-            roundCap,
-            hookContract,
-            hookFunction,
-            closureMechanism,
-            globalAccumulativeCaps
+        vm.assume(roundStart_ < block.timestamp);
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        round.roundStart = roundStart_;
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundStartMustBeInFuture
+                    .selector
+            )
         );
-
-        uint newStart = roundStart + 100;
-        uint newEnd = roundEnd + 100;
-        uint newCap = roundCap + 100;
-
-        bool success = fundingPot.editRound(
-            roundId,
-            newStart,
-            newEnd,
-            newCap,
-            hookContract,
-            hookFunction,
-            closureMechanism,
-            globalAccumulativeCaps
-        );
-
-        assertTrue(success, "Round edit failed");
-
-        (uint storedStart, uint storedEnd, uint storedCap,,,,,) =
-            fundingPot.rounds(roundId);
-        assertEq(storedStart, newStart, "Updated round start mismatch");
-        assertEq(storedEnd, newEnd, "Updated round end mismatch");
-        assertEq(storedCap, newCap, "Updated round cap mismatch");
+        _callCreateRound(round);
     }
 
-    /* Test editRound() on nonexistent round
-        ├── Given a round does not exist
-        │   └── When attempting to edit the round
-        │       └── Then it should revert with "Round does not exist"
-    */
-    function test_editRound_nonexistent() public {
+    function testFuzzCreateRound_revertsGivenRoundEndTimeAndCapAreBothZero()
+        public
+    {
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        round.roundEnd = 0;
+        round.roundCap = 0;
         vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot__RoundDoesNotExist
-                .selector
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap
+                    .selector
+            )
         );
-        fundingPot.editRound(
-            9999,
-            block.timestamp + 100,
-            block.timestamp + 200,
-            1000,
-            address(0),
-            "",
-            false,
-            false
-        );
+        _callCreateRound(round);
     }
 
-    /* Test editRound() after round has started
-        ├── Given a round has been created with a future start time
-        │   ├── And time has advanced beyond the start time
-        │   │   └── When attempting to edit the round
-        │   │       └── Then it should revert with "Round has already started"
-    */
-    function test_editRound_afterStart() public {
-        uint64 roundId = fundingPot.createRound(
-            block.timestamp + 10,
-            block.timestamp + 100,
-            1000,
-            address(0),
-            "",
-            false,
-            false
-        );
-
-        vm.warp(block.timestamp + 11);
-
+    function testFuzzCreateRound_revertsGivenRoundEndTimeIsBeforeRoundStart(
+        uint roundEnd_
+    ) public {
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        vm.assume(roundEnd_ != 0 && roundEnd_ < round.roundStart);
+        round.roundEnd = roundEnd_;
         vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot__RoundAlreadyStarted
-                .selector
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundEndMustBeAfterStart
+                    .selector
+            )
         );
-        fundingPot.editRound(
-            roundId,
-            block.timestamp + 20,
-            block.timestamp + 200,
-            2000,
-            address(0),
-            "",
-            false,
-            false
+        _callCreateRound(round);
+    }
+
+    function testFuzzCreateRound_revertsGivenHookContractIsSetButHookFunctionIsEmpty(
+    ) public {
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        round.hookContract = address(1);
+        round.hookFunction = bytes("");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract
+                    .selector
+            )
         );
+        _callCreateRound(round);
+    }
+
+    function testFuzzCreateRound_revertsGivenHookFunctionIsSetButHookContractIsEmpty(
+    ) public {
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        round.hookContract = address(0);
+        round.hookFunction = bytes("test");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction
+                    .selector
+            )
+        );
+        _callCreateRound(round);
+    }
+
+    /* Test createRound()
+    ├── Given all the valid parameters are provided
+    │   └── When user attempts to create a round
+    │       └── Then it should not be active and should return the round id
+    */
+
+    function testFuzzCreateRound() public {
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        _callCreateRound(round);
+
+        uint64 lastRoundId = fundingPot.getRoundCount();
+        ILM_PC_FundingPot_v1.Round memory lastRound =
+            fundingPot.getRoundDetails(lastRoundId);
+
+        assertEq(lastRound.isActive, false);
+        assertEq(lastRound.roundStart, round.roundStart);
+        assertEq(lastRound.roundEnd, round.roundEnd);
+        assertEq(lastRound.roundCap, round.roundCap);
+        assertEq(lastRound.hookContract, round.hookContract);
+        assertEq(lastRound.hookFunction, round.hookFunction);
+        assertEq(lastRound.closureMechanism, round.closureMechanism);
+        assertEq(lastRound.globalAccumulativeCaps, round.globalAccumulativeCaps);
+    }
+
+    /* Test editRound()
+    ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given round does not exist
+    │   └── When user attempts to edit the round
+    │       └── Then it should revert
+    ├── Given round is active
+    │   └── When user attempts to edit the round
+    │       └── Then it should revert
+    ├── Given round start time is in the past
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given round end time is 0 and round cap is 0
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given round end time is set and round end time is in the past
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given hook contract is set but hook function is not set
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    ├── Given hook function is set but hook contract is not set
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    */
+
+    function testFuzzEditRound_revertsGivenUserIsNotFundingPotAdmin(
+        address user_
+    ) public {
+        testFuzzCreateRound();
+        vm.startPrank(user_);
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
+            )
+        );
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        _callEditRound(0, round);
+        vm.stopPrank();
+    }
+
+    function testFuzzEditRound_revertsGivenRoundIsNotCreated() public {
+        testFuzzCreateRound();
+        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+
+        uint64 roundId = fundingPot.getRoundCount();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundNotCreated
+                    .selector
+            )
+        );
+        _callEditRound(roundId + 1, round);
     }
 
     // -------------------------------------------------------------------------
     // Test: Internal Functions
+
+    // Helper Functions
+
+    // @notice Creates a default funding round
+    // @dev make the parameters fuzzable @TODO Jeffrey
+    function _createDefaultFundingRound()
+        internal
+        returns (ILM_PC_FundingPot_v1.Round memory)
+    {
+        ILM_PC_FundingPot_v1.Round memory round = ILM_PC_FundingPot_v1.Round({
+            roundStart: block.timestamp + 1 days,
+            roundEnd: block.timestamp + 2 days,
+            roundCap: 1000,
+            hookContract: address(0),
+            hookFunction: bytes(""),
+            closureMechanism: false,
+            globalAccumulativeCaps: false,
+            isActive: false
+        });
+        return round;
+    }
+
+    function _callCreateRound(ILM_PC_FundingPot_v1.Round memory round)
+        internal
+    {
+        fundingPot.createRound(
+            round.roundStart,
+            round.roundEnd,
+            round.roundCap,
+            round.hookContract,
+            round.hookFunction,
+            round.closureMechanism,
+            round.globalAccumulativeCaps
+        );
+    }
+
+    function _callEditRound(
+        uint64 roundId,
+        ILM_PC_FundingPot_v1.Round memory round
+    ) internal {
+        fundingPot.editRound(
+            roundId,
+            round.roundStart,
+            round.roundEnd,
+            round.roundCap,
+            round.hookContract,
+            round.hookFunction,
+            round.closureMechanism,
+            round.globalAccumulativeCaps
+        );
+    }
 }
