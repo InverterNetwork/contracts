@@ -333,7 +333,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
     */
 
     function testProcessPayments_succeedsGivenNoPaymentOrders() public {
-    {
         // Process payments and verify _bridgeData mapping is not updated
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -349,7 +348,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             bytes32(0)
         );
     }
-
     //--------------------------------------------------------------------------
     // Error Case Tests
 
@@ -412,9 +410,9 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         │   └── When attempting to process payment
         │       └── Then it should revert with InvalidRecipient
     */
-    function testProcessPayments_revertsGivenInvalidRecipient(
-        uint testAmount
-    ) public {
+    function testProcessPayments_revertsGivenInvalidRecipient(uint testAmount)
+        public
+    {
         vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
 
         _setupSinglePayment(address(0), testAmount, emptyExecutionData);
@@ -490,7 +488,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             └── Then it should return empty bytes
     */
     function testProcessPayments_succeedsGivenEmptyBridgeData() public {
-    {
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
         // Process payments and verify _bridgeData mapping is updated
@@ -949,7 +946,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             └── Then it should return false
     */
     function testValidPaymentOrder_revertsGivenInvalidRecipient() public {
-    {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: address(0),
@@ -969,7 +965,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             └── Then it should return false
     */
     function testValidPaymentOrder_revertsGivenInvalidToken() public {
-    {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: address(0xBEEF),
