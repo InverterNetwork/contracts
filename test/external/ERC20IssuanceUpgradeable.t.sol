@@ -25,6 +25,11 @@ contract ERC20IssuanceUpgradeableTest is Test {
     uint8 constant DECIMALS = 18;
     string constant NAME = "Test Token";
     string constant SYMBOL = "TT";
+    bytes32 private constant PROXY_ADMIN_SLOT =
+        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
+    // ================================================================================
+    // State
 
     ERC20IssuanceUpgradeable_v1 token;
     address proxyAdmin;
@@ -36,14 +41,11 @@ contract ERC20IssuanceUpgradeableTest is Test {
         ERC20IssuanceUpgradeable_v1 implementation =
             new ERC20IssuanceUpgradeable_v1();
 
-        // Create a separate address for the proxy admin
-        proxyAdmin = makeAddr("proxyAdmin");
-
         // Deploy a simple proxy that delegates to the implementation
         address proxy = address(
             new TransparentUpgradeableProxy(
                 address(implementation),
-                proxyAdmin,
+                address(this),
                 abi.encodeWithSelector(
                     ERC20IssuanceUpgradeable_v1.__ERC20Issuance_init.selector,
                     NAME,
@@ -53,6 +55,9 @@ contract ERC20IssuanceUpgradeableTest is Test {
                 )
             )
         );
+        // Get the proxy admin address contract address created when initializing the proxy
+        bytes32 proxyAdminSlot = vm.load(proxy, PROXY_ADMIN_SLOT);
+        proxyAdmin = address(uint160(uint(proxyAdminSlot)));
 
         // Cast the proxy address to the implementation type
         token = ERC20IssuanceUpgradeable_v1(proxy);

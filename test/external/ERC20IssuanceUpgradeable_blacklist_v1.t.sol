@@ -33,6 +33,9 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
     string constant NAME = "Exposed Blacklist Token";
     string constant SYMBOL = "EBLT";
 
+    bytes32 private constant PROXY_ADMIN_SLOT =
+        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
     // ================================================================================
     // State
     ERC20IssuanceUpgradeable_Blacklist_v1_Exposed token;
@@ -45,14 +48,11 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         ERC20IssuanceUpgradeable_Blacklist_v1_Exposed implementation =
             new ERC20IssuanceUpgradeable_Blacklist_v1_Exposed();
 
-        // Create a separate address for the proxy admin
-        proxyAdmin = makeAddr("proxyAdmin");
-
-        // Deploy a simple proxy that delegates to the implementation
+        // Deploy a simple proxy that delegates to the implemen`tation
         address proxy = address(
             new TransparentUpgradeableProxy(
                 address(implementation),
-                proxyAdmin,
+                address(this),
                 abi.encodeWithSelector(
                     ERC20IssuanceUpgradeable_Blacklist_v1
                         .__ERC20IssuanceBlacklist_init
@@ -64,6 +64,11 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
                 )
             )
         );
+
+        // Get the proxy admin address contract address created when initializing the proxy
+        bytes32 proxyAdminSlot = vm.load(proxy, PROXY_ADMIN_SLOT);
+        proxyAdmin = address(uint160(uint(proxyAdminSlot)));
+
         token = ERC20IssuanceUpgradeable_Blacklist_v1_Exposed(proxy);
         token.setBlacklistManager(address(this), true);
         token.setMinter(address(this), true);
@@ -189,8 +194,10 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         public
     {
         // setup
-        vm.assume(unauthorized_ != address(0));
-        vm.assume(unauthorized_ != proxyAdmin);
+        vm.assume(
+            unauthorized_ != proxyAdmin && unauthorized_ != address(this)
+                && unauthorized_ != address(0)
+        );
 
         // test modifier in place
         vm.prank(unauthorized_);
@@ -269,7 +276,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != proxyAdmin);
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
 
         // test modifier in place
         vm.prank(unauthorized_);
@@ -348,7 +355,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != proxyAdmin);
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
@@ -450,7 +457,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != proxyAdmin);
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
@@ -555,7 +562,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != proxyAdmin);
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
         vm.prank(unauthorized_);
         vm.expectRevert(
             abi.encodeWithSelector(
