@@ -99,9 +99,9 @@ contract PIM_WorkflowFactory_v1 is
             PIMConfig.issuanceTokenParams.name,
             PIMConfig.issuanceTokenParams.symbol,
             PIMConfig.issuanceTokenParams.decimals,
-            PIMConfig.issuanceTokenParams.maxSupply,
-            address(this) // assigns owner role to itself initially to manage minting rights temporarily
+            PIMConfig.issuanceTokenParams.maxSupply
         );
+        issuanceToken.setMinter(address(this), true);
 
         // assemble fundingManager config, authorizer config and deploy orchestrator
         IOrchestratorFactory_v1.ModuleConfig memory fundingManagerConfig =

@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.23;
 
-import {ERC20Issuance_Blacklist_v1} from
-    "@ex/token/ERC20Issuance_Blacklist_v1.sol";
+import {ERC20IssuanceUpgradeable_Blacklist_v1} from
+    "@ex/token/ERC20IssuanceUpgradeable_Blacklist_v1.sol";
 
 /**
- * @title ERC20Issuance_Blacklist_v1_Exposed
- * @dev Contract that exposes internal functions of ERC20Issuance_Blacklist_v1 for testing purposes
+ * @title   ERC20IssuanceUpgradeable_Blacklist_v1_Exposed
+ * @dev     Contract that exposes internal functions of
+ *          ERC20IssuanceUpgradeable_Blacklist_v1 for testing purposes
  */
-contract ERC20Issuance_Blacklist_v1_Exposed is ERC20Issuance_Blacklist_v1 {
-    constructor(
-        string memory name_,
-        string memory symbol_,
-        uint8 decimals_,
-        uint initialSupply_
-    ) ERC20Issuance_Blacklist_v1(name_, symbol_, decimals_, initialSupply_) {}
-
+contract ERC20IssuanceUpgradeable_Blacklist_v1_Exposed is
+    ERC20IssuanceUpgradeable_Blacklist_v1
+{
     /**
      * @dev Exposes the internal _update function for testing
      * @param from_ Address tokens are transferred from

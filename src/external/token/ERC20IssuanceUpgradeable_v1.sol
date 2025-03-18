@@ -5,20 +5,25 @@ pragma solidity 0.8.23;
 import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
 
 // External Dependencies
-import {ERC20, ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
-import {Ownable} from "@oz/access/Ownable.sol";
+import {
+    ERC20Upgradeable,
+    ERC20CappedUpgradeable
+} from "@oz-up/token/ERC20/extensions/ERC20CappedUpgradeable.sol";
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
 
 /**
- * @title   Inverter ERC20 Issuance Token
+ * @title   Inverter ERC20 Issuance Token (Upgradeable)
  *
- * @notice  This contract creates an {ERC20} token with a supply cap and a
- *          whitelist-based permission system for minting and burning tokens.
+ * @notice  An upgradeable ERC20 token implementation with a maximum supply cap
+ *          and controlled minting/burning through a whitelist permission system.
  *
- * @dev     The contract implements the following key functionalities:
+ * @dev     This contract implements the following key functionalities:
  *          - Role-based access control through a minter whitelist
  *          - Controlled token issuance (minting) by authorized addresses only
  *          - Controlled token redemption (burning) by authorized addresses only
  *          - Hard cap on total token supply to prevent inflation
+ *          - Support for contract upgrades through OpenZeppelin's
+ *            upgradeable pattern
  *
  * @custom:setup    This contract requires the following MANDATORY setup steps:
  *
@@ -37,14 +42,27 @@ import {Ownable} from "@oz/access/Ownable.sol";
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
+ * @custom:version  v1.0.0
+ *
+ * @custom:standard-version v1.0.0
+ *
  * @author Inverter Network
  */
-contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
+contract ERC20IssuanceUpgradeable_v1 is
+    IERC20Issuance_v1,
+    ERC20CappedUpgradeable,
+    OwnableUpgradeable
+{
     // State Variables
-    /// @dev    The mapping of allowed minters.
+    // --------------------------------------------------------------------------
+
+    /// @notice    The mapping of allowed minters.
     mapping(address => bool) public allowedMinters;
-    /// @dev    The number of decimals of the token.
-    uint8 internal immutable _decimals;
+    /// @notice    The number of decimals of the token.
+    uint8 internal _decimals;
+
+    /// @notice    Storage gap for future upgrades.
+    uint[50] private __gap;
 
     // --------------------------------------------------------------------------
     // Modifiers
@@ -58,19 +76,27 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     }
 
     // --------------------------------------------------------------------------
-    // Constructor
+    // Initializer
 
-    /// @notice Constructor for ERC20Issuance_v1.
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Initializes the ERC20IssuanceUpgradeable_v1 contract.
     /// @param  name_ The name of the token.
     /// @param  symbol_ The symbol of the token.
     /// @param  decimals_ The number of decimals of the token.
     /// @param  maxSupply_ The maximum supply of the token.
-    constructor(
+    function __ERC20Issuance_init(
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
         uint maxSupply_
-    ) ERC20(name_, symbol_) ERC20Capped(maxSupply_) Ownable(_msgSender()) {
+    ) public initializer {
+        __ERC20_init(name_, symbol_);
+        __ERC20Capped_init(maxSupply_);
+        __Ownable_init(_msgSender());
+
         _decimals = decimals_;
     }
 

@@ -3,24 +3,69 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
+// Internal
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+
+// External
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 // SuT
 import {
-    ERC20Issuance_v1,
+    ERC20IssuanceUpgradeable_v1,
     IERC20Issuance_v1,
-    ERC20Capped
-} from "@ex/token/ERC20Issuance_v1.sol";
+    ERC20CappedUpgradeable
+} from "@ex/token/ERC20IssuanceUpgradeable_v1.sol";
 
-import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
+contract ERC20IssuanceUpgradeableTest is Test {
+    // ================================================================================
+    // Constants
+    uint constant MAX_SUPPLY = type(uint).max - 1;
+    uint8 constant DECIMALS = 18;
+    string constant NAME = "Test Token";
+    string constant SYMBOL = "TT";
+    bytes32 private constant PROXY_ADMIN_SLOT =
+        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
 
-contract ERC20IssuanceTest is Test {
-    ERC20Issuance_v1 token;
+    // ================================================================================
+    // State
+
+    ERC20IssuanceUpgradeable_v1 token;
+    address proxyAdmin;
 
     event MinterSet(address indexed minter, bool allowed);
 
     function setUp() public {
-        token = new ERC20Issuance_v1("Test Token", "TT", 18, type(uint).max - 1);
+        // Deploy the implementation contract
+        ERC20IssuanceUpgradeable_v1 implementation =
+            new ERC20IssuanceUpgradeable_v1();
+
+        // Deploy a simple proxy that delegates to the implementation
+        address proxy = address(
+            new TransparentUpgradeableProxy(
+                address(implementation),
+                address(this),
+                abi.encodeWithSelector(
+                    ERC20IssuanceUpgradeable_v1.__ERC20Issuance_init.selector,
+                    NAME,
+                    SYMBOL,
+                    DECIMALS,
+                    MAX_SUPPLY
+                )
+            )
+        );
+        // Get the proxy admin address contract address created when initializing the proxy
+        bytes32 proxyAdminSlot = vm.load(proxy, PROXY_ADMIN_SLOT);
+        proxyAdmin = address(uint160(uint(proxyAdminSlot)));
+
+        // Cast the proxy address to the implementation type
+        token = ERC20IssuanceUpgradeable_v1(proxy);
         token.setMinter(address(this), true);
     }
+
+    // ================================================================================
+    // Test Init
 
     function testInit() public {
         assertEq(token.name(), "Test Token");
@@ -30,6 +75,12 @@ contract ERC20IssuanceTest is Test {
         assertEq(token.balanceOf(address(this)), 0);
         assertEq(token.owner(), address(this));
         assertEq(token.allowedMinters(address(this)), true);
+    }
+
+    function testReinitializationFails() public {
+        // Attempt to reinitialize the contract
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        token.__ERC20Issuance_init(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
     }
 
     /*
@@ -109,7 +160,7 @@ contract ERC20IssuanceTest is Test {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                ERC20Capped.ERC20ExceededCap.selector,
+                ERC20CappedUpgradeable.ERC20ExceededCap.selector,
                 excessiveSupply,
                 token.cap()
             )

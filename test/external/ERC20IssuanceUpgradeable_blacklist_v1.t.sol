@@ -4,23 +4,27 @@ pragma solidity ^0.8.0;
 // Internal
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
+// External
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 // Tests and Mocks
 import {Test} from "forge-std/Test.sol";
-import {ERC20Issuance_Blacklist_v1_Exposed} from
-    "test/external/ERC20Issuance_blacklist_v1_exposed.sol";
+import {ERC20IssuanceUpgradeable_Blacklist_v1_Exposed} from
+    "test/external/ERC20IssuanceUpgradeable_blacklist_v1_exposed.sol";
 
 // System under testing
 import {
-    ERC20Issuance_Blacklist_v1,
+    ERC20IssuanceUpgradeable_Blacklist_v1,
     IERC20Issuance_Blacklist_v1
-} from "@ex/token/ERC20Issuance_Blacklist_v1.sol";
+} from "@ex/token/ERC20IssuanceUpgradeable_Blacklist_v1.sol";
 
 /**
  * @title   ERC20Issuance_Blacklist_v1_Test
  * @dev     Test contract for ERC20Issuance_Blacklist_v1
  * @author  Zealynx Security
  */
-contract ERC20Issuance_Blacklist_v1_Test is Test {
+contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
     // ================================================================================
     // Constants
     uint constant BATCH_LIMIT = 200;
@@ -29,19 +33,45 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
     string constant NAME = "Exposed Blacklist Token";
     string constant SYMBOL = "EBLT";
 
+    bytes32 private constant PROXY_ADMIN_SLOT =
+        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
     // ================================================================================
     // State
-    ERC20Issuance_Blacklist_v1_Exposed token;
+    ERC20IssuanceUpgradeable_Blacklist_v1_Exposed token;
+    address proxyAdmin;
 
     // ================================================================================
     // Setup
     function setUp() public {
-        // Setup token
-        token = new ERC20Issuance_Blacklist_v1_Exposed(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY
+        // Deploy the implementation contract
+        ERC20IssuanceUpgradeable_Blacklist_v1_Exposed implementation =
+            new ERC20IssuanceUpgradeable_Blacklist_v1_Exposed();
+
+        // Deploy a simple proxy that delegates to the implemen`tation
+        address proxy = address(
+            new TransparentUpgradeableProxy(
+                address(implementation),
+                address(this),
+                abi.encodeWithSelector(
+                    ERC20IssuanceUpgradeable_Blacklist_v1
+                        .__ERC20IssuanceBlacklist_init
+                        .selector,
+                    NAME,
+                    SYMBOL,
+                    DECIMALS,
+                    MAX_SUPPLY
+                )
+            )
         );
-        token.setMinter(address(this), true);
+
+        // Get the proxy admin address contract address created when initializing the proxy
+        bytes32 proxyAdminSlot = vm.load(proxy, PROXY_ADMIN_SLOT);
+        proxyAdmin = address(uint160(uint(proxyAdminSlot)));
+
+        token = ERC20IssuanceUpgradeable_Blacklist_v1_Exposed(proxy);
         token.setBlacklistManager(address(this), true);
+        token.setMinter(address(this), true);
     }
 
     // ================================================================================
@@ -55,6 +85,11 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         assertEq(token.owner(), address(this));
         assertEq(token.allowedMinters(address(this)), true);
         assertEq(token.isBlacklistManager(address(this)), true);
+    }
+
+    function testReinitializationFails() public {
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        token.__ERC20IssuanceBlacklist_init(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
     }
 
     // ================================================================================
@@ -159,8 +194,10 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         public
     {
         // setup
-        vm.assume(unauthorized_ != address(0));
-        vm.assume(unauthorized_ != address(this));
+        vm.assume(
+            unauthorized_ != proxyAdmin && unauthorized_ != address(this)
+                && unauthorized_ != address(0)
+        );
 
         // test modifier in place
         vm.prank(unauthorized_);
@@ -239,7 +276,7 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != address(this));
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
 
         // test modifier in place
         vm.prank(unauthorized_);
@@ -318,7 +355,7 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != address(this));
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
@@ -420,7 +457,7 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != address(this));
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
@@ -525,7 +562,7 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != address(this));
+        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
         vm.prank(unauthorized_);
         vm.expectRevert(
             abi.encodeWithSelector(

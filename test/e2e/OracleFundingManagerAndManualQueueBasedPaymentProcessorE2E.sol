@@ -148,9 +148,9 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // First create issuance token
-        issuanceToken = new ERC20Issuance_Blacklist_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this), address(this)
-        );
+        issuanceToken =
+            new ERC20Issuance_Blacklist_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         // Create collateral token with 6 decimals to simulate USDC
         collateralToken = new ERC20Mock(
