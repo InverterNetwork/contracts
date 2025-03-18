@@ -17,7 +17,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param hookFunction Encoded function call to be executed on the `hookContract` after round closure.
     /// @param closureMechanism Indicates whether the hook closure coincides with the contribution span end.
     /// @param globalAccumulativeCaps Indicates whether contribution caps accumulate globally across rounds.
-    /// @param isActive Indicates whether the round is currently active.
     struct Round {
         uint roundStart;
         uint roundEnd;
@@ -26,7 +25,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes hookFunction;
         bool closureMechanism;
         bool globalAccumulativeCaps;
-        bool isActive; //@note: do we need this?
     }
 
     // -------------------------------------------------------------------------

@@ -134,12 +134,6 @@ contract LM_PC_FundingPot_v1 is
         bool _closureMechanism,
         bool _globalAccumulativeCaps
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint64) {
-        bool _isActive;
-        // @note: This logic is required if start time is set to block.timestamp
-        // if (_roundStart == block.timestamp) {
-        //     _isActive = true;
-        // }
-
         nextRoundId++;
 
         uint64 roundId = nextRoundId;
@@ -150,8 +144,7 @@ contract LM_PC_FundingPot_v1 is
             hookContract: _hookContract,
             hookFunction: _hookFunction,
             closureMechanism: _closureMechanism,
-            globalAccumulativeCaps: _globalAccumulativeCaps,
-            isActive: _isActive
+            globalAccumulativeCaps: _globalAccumulativeCaps
         });
 
         _validateRoundParameters(rounds[roundId]);
@@ -186,7 +179,7 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        if (block.timestamp > round.roundStart || round.isActive) {
+        if (block.timestamp > round.roundStart) {
             revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
         }
 
@@ -221,7 +214,6 @@ contract LM_PC_FundingPot_v1 is
     function _validateRoundParameters(Round memory round) internal view {
         // Validate round start time is in the future
         // @note: The below condition wont allow _roundStart == block.timestamp
-        // @note: If we allow if then _isActive should be set to true
         if (round.roundStart <= block.timestamp) {
             revert Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
         }
