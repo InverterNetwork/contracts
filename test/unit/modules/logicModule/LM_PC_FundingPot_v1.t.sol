@@ -253,19 +253,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   └── When user attempts to edit the round
     │       └── Then it should revert
     ├── Given round start time is in the past
-    │   └── When user attempts to create a round
+    │   └── When user attempts to edit a round with the above parameter
     │       └── Then it should revert
     ├── Given round end time is 0 and round cap is 0
-    │   └── When user attempts to create a round
+    │   └── When user attempts edit a round with the above parameters
     │       └── Then it should revert
     ├── Given round end time is set and round end time is in the past
-    │   └── When user attempts to create a round
+    │   └── When user attempts to edit a round with the above parameters
     │       └── Then it should revert
     ├── Given hook contract is set but hook function is not set
-    │   └── When user attempts to create a round
+    │   └── When user attempts to edit a round with the above parameters
     │       └── Then it should revert
     ├── Given hook function is set but hook contract is not set
-    │   └── When user attempts to create a round
+    │   └── When user attempts to edit a round with the above parameters
     │       └── Then it should revert
     */
 
@@ -282,14 +282,17 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
             )
         );
-        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
-        _callEditRound(0, round);
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+
+        _callEditRound(0, editedRound);
         vm.stopPrank();
     }
 
     function testFuzzEditRound_revertsGivenRoundIsNotCreated() public {
         testFuzzCreateRound();
-        ILM_PC_FundingPot_v1.Round memory round = _createDefaultFundingRound();
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
 
         uint64 roundId = fundingPot.getRoundCount();
         vm.expectRevert(
@@ -299,7 +302,196 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        _callEditRound(roundId + 1, round);
+        _callEditRound(roundId + 1, editedRound);
+    }
+
+    function testFuzzEditRound_revertsGivenRoundIsActive(uint roundStart_)
+        public
+    {
+        testFuzzCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.Round memory roundDetails =
+            fundingPot.getRoundDetails(roundId);
+
+        vm.warp(roundDetails.roundStart + 1);
+
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundAlreadyStarted
+                    .selector
+            )
+        );
+        _callEditRound(roundId, editedRound);
+    }
+
+    function testFuzzEditRound_revertsGivenRoundStartIsInThePast(
+        uint roundStart_
+    ) public {
+        testFuzzCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.assume(roundStart_ < block.timestamp);
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+        editedRound.roundStart = roundStart_;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundStartMustBeInFuture
+                    .selector
+            )
+        );
+
+        _callEditRound(roundId, editedRound);
+    }
+
+    function testFuzzEditRound_revertsGivenRoundEndTimeAndCapAreBothZero()
+        public
+    {
+        testFuzzCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+        editedRound.roundEnd = 0;
+        editedRound.roundCap = 0;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap
+                    .selector
+            )
+        );
+
+        _callEditRound(roundId, editedRound);
+    }
+
+    function testFuzzEditRound_revertsGivenRoundEndTimeIsBeforeRoundStart(
+        uint roundEnd_
+    ) public {
+        testFuzzCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+        vm.assume(roundEnd_ != 0 && roundEnd_ < editedRound.roundStart);
+        editedRound.roundEnd = roundEnd_;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundEndMustBeAfterStart
+                    .selector
+            )
+        );
+
+        _callEditRound(roundId, editedRound);
+    }
+
+    function testFuzzEditRound_revertsGivenHookContractIsSetButHookFunctionIsEmpty(
+    ) public {
+        testFuzzCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+        editedRound.hookContract = address(1);
+        editedRound.hookFunction = bytes("");
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract
+                    .selector
+            )
+        );
+
+        _callEditRound(roundId, editedRound);
+    }
+
+    function testFuzzEditRound_revertsGivenHookFunctionIsSetButHookContractIsEmpty(
+    ) public {
+        testFuzzCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+        editedRound.hookContract = address(0);
+        editedRound.hookFunction = bytes("test");
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction
+                    .selector
+            )
+        );
+
+        _callEditRound(roundId, editedRound);
+    }
+
+    /* Test editRound()
+    ├── Given a round has been created and is not active
+    │   └── When an admin provides valid parameters to edit the round
+    │       └── Then all the round details should be successfully updated
+    │           ├── roundStart should be updated to the new value
+    │           ├── roundEnd should be updated to the new value
+    │           ├── roundCap should be updated to the new value
+    │           ├── hookContract should be updated to the new value
+    │           ├── hookFunction should be updated to the new value
+    │           ├── closureMechanism should be updated to the new value
+    │           └── globalAccumulativeCaps should be updated to the new value
+    */
+
+    function testFuzzEditRound() public {
+        testFuzzCreateRound();
+        uint64 lastRoundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.Round memory editedRound =
+            _createEditedRoundParams();
+
+        _callEditRound(lastRoundId, editedRound);
+
+        ILM_PC_FundingPot_v1.Round memory updatedRound =
+            fundingPot.getRoundDetails(lastRoundId);
+
+        assertEq(
+            updatedRound.roundStart,
+            editedRound.roundStart,
+            "roundStart not updated"
+        );
+        assertEq(
+            updatedRound.roundEnd, editedRound.roundEnd, "roundEnd not updated"
+        );
+        assertEq(
+            updatedRound.roundCap, editedRound.roundCap, "roundCap not updated"
+        );
+        assertEq(
+            updatedRound.hookContract,
+            editedRound.hookContract,
+            "hookContract not updated"
+        );
+        assertEq(
+            keccak256(updatedRound.hookFunction),
+            keccak256(editedRound.hookFunction),
+            "hookFunction not updated"
+        );
+        assertEq(
+            updatedRound.closureMechanism,
+            editedRound.closureMechanism,
+            "closureMechanism not updated"
+        );
+        assertEq(
+            updatedRound.globalAccumulativeCaps,
+            editedRound.globalAccumulativeCaps,
+            "globalAccumulativeCaps not updated"
+        );
     }
 
     // -------------------------------------------------------------------------
@@ -309,23 +501,45 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // @notice Creates a default funding round
     // @dev make the parameters fuzzable @TODO Jeffrey
-    function _createDefaultFundingRound()
-        internal
-        returns (ILM_PC_FundingPot_v1.Round memory)
-    {
+    function _generateFundingRoundParams(
+        uint roundStart_,
+        uint roundEnd_,
+        uint roundCap_,
+        address hookContract_,
+        bytes memory hookFunction_,
+        bool closureMechanism_,
+        bool globalAccumulativeCaps_
+    ) internal returns (ILM_PC_FundingPot_v1.Round memory) {
         ILM_PC_FundingPot_v1.Round memory round = ILM_PC_FundingPot_v1.Round({
-            roundStart: block.timestamp + 1 days,
-            roundEnd: block.timestamp + 2 days,
-            roundCap: 1000,
-            hookContract: address(0),
-            hookFunction: bytes(""),
-            closureMechanism: false,
-            globalAccumulativeCaps: false,
+            roundStart: roundStart_,
+            roundEnd: roundEnd_,
+            roundCap: roundCap_,
+            hookContract: hookContract_,
+            hookFunction: hookFunction_,
+            closureMechanism: closureMechanism_,
+            globalAccumulativeCaps: globalAccumulativeCaps_,
             isActive: false
         });
         return round;
     }
 
+    // @notice Creates a default funding round
+    function _createDefaultFundingRound()
+        internal
+        returns (ILM_PC_FundingPot_v1.Round memory)
+    {
+        return _generateFundingRoundParams(
+            block.timestamp + 1 days,
+            block.timestamp + 2 days,
+            1000,
+            address(0),
+            bytes(""),
+            false,
+            false
+        );
+    }
+
+    // @notice calls the create round function
     function _callCreateRound(ILM_PC_FundingPot_v1.Round memory round)
         internal
     {
@@ -340,6 +554,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
+    // @notice Creates a predefined funding round with edited parameters for testing
+    function _createEditedRoundParams()
+        internal
+        returns (ILM_PC_FundingPot_v1.Round memory)
+    {
+        return _generateFundingRoundParams(
+            block.timestamp + 150,
+            block.timestamp + 250,
+            20,
+            address(0x1),
+            hex"abcd",
+            true,
+            true
+        );
+    }
+
+    // @notice calls the create round function
     function _callEditRound(
         uint64 roundId,
         ILM_PC_FundingPot_v1.Round memory round
