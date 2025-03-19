@@ -1,4 +1,4 @@
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
 import {PP_Connext_CrossChain_v1} from
     "src/modules/paymentProcessor/PP_Connext_CrossChain_v1.sol";
