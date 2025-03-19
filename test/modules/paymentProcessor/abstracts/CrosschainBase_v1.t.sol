@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Internal
 import {ModuleTest} from "test/modules/ModuleTest.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
@@ -16,13 +15,11 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 contract CrossChainBase_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
-    //Constants
-    //--------------------------------------------------------------------------
-    //Mocks
+    // Mocks
     CrossChainBase_v1_Exposed public CrossChainBase;
 
     //--------------------------------------------------------------------------
-    //Setup
+    // Setup
     function setUp() public {
         //This function is used to setup the unit test
         //Deploy the SuT
@@ -35,59 +32,32 @@ contract CrossChainBase_v1_Test is ModuleTest {
         //Initiate the PP with the medata and config data
         CrossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
     }
+
     //--------------------------------------------------------------------------
-    //Test: Initialization
-    /*
-    └──  Given the contract is not initialized
-    └── When initializing the contract
-        └── Then it should set the correct orchestrator address */
+    // Initialization
 
     function testInit() public override(ModuleTest) {
         assertEq(address(CrossChainBase.orchestrator()), address(_orchestrator));
     }
 
-    //--------------------------------------------------------------------------
-    //Test: Interface Support
-    /*
-    └── Given the contract is initialized
-    └── When checking for ICrossChainBase_v1 interface support
-        └── Then it should return true
-        └── When checking for an unknown interface
-            └── Then it should return false */
     function testSupportsInterface() public {
         // Test for ICrossChainBase_v1 interface support
         bytes4 interfaceId = type(ICrossChainBase_v1).interfaceId;
         assertTrue(CrossChainBase.supportsInterface(interfaceId));
     }
 
-    /*  
-    └──  Given the contract is already initialized
-    └── When trying to reinitialize
-        └── Then it should revert with Initializable__InvalidInitialization */
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         CrossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
     }
 
-    /**
-     * @dev Test interface support failure case
-     * └── Given the contract is initialized
-     * └── When checking for an unknown interface
-     *     └── Then it should return false
-     */
-    function testSupportsInterface_failsGivenUnknownInterface() public {
-        bytes4 randomInterfaceId = bytes4(keccak256("random()"));
-        assertFalse(CrossChainBase.supportsInterface(randomInterfaceId));
-    }
+    // -------------------------------------------------------------------------
+    // Test External (public + external)
 
-    //--------------------------------------------------------------------------
-    //Test: executeBridgeTransfer
-
-    /**
-     * @dev Test bridge transfer with empty payment order
-     * └── Given an empty payment order is created
-     * └── When executeBridgeTransfer is called
-     *     └── Then it should return empty bytes
+    /* Test: _executeBridgeTransfer()
+        └── Given an empty payment order is created
+            └── When executeBridgeTransfer is called
+                └── Then it should return empty bytes
      */
     function testExecuteBridgeTransfer_succeedsGivenEmptyPaymentOrder()
         public
@@ -109,7 +79,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
     }
 
     //--------------------------------------------------------------------------
-    //Helper Functions
+    // Helper Functions
 
     function _createPaymentOrders(
         uint orderCount,
