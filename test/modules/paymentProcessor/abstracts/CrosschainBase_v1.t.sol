@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // Internal
 import {ModuleTest} from "test/modules/ModuleTest.sol";
-import {ICrossChainBase_v1} from "@pp/interfaces/ICrosschainBase_v1.sol";
+import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {CrossChainBase_v1_Exposed} from
