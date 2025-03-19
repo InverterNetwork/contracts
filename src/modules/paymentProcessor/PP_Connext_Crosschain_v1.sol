@@ -39,7 +39,7 @@ import {ERC165Upgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
- * @author  Inverter Network
+ * @author  Audit33
  *
  * @custom:version 1.0.0
  *
@@ -65,9 +65,9 @@ contract PP_Connext_CrossChain_v1 is
     // Constants
 
     /// @notice Payment order flag for the Everclear max fee.
-    uint8 private constant FLAG_MAX_FEE = 4;
+    uint8 public constant FLAG_MAX_FEE = 4;
     /// @notice Payment order flag for the Everclear TTL.
-    uint8 private constant FLAG_TTL = 5;
+    uint8 public constant FLAG_TTL = 5;
 
     // -------------------------------------------------------------------------
     // State Variables
@@ -81,10 +81,10 @@ contract PP_Connext_CrossChain_v1 is
     // Initialization Function
 
     /**
-     * @notice Initializes the payment processor module
-     * @param orchestrator_ The orchestrator contract address
-     * @param metadata Module metadata
-     * @param configData_ ABI encoded configuration data (_everClearSpoke and WETH addresses)
+     * @notice Initializes the payment processor module.
+     * @param orchestrator_ The orchestrator contract address.
+     * @param metadata Module metadata.
+     * @param configData_ ABI encoded configuration data (_everClearSpoke and WETH addresses).
      */
     function init(
         IOrchestrator_v1 orchestrator_,
@@ -251,9 +251,9 @@ contract PP_Connext_CrossChain_v1 is
         return validParams && valid_;
     }
 
-    /// @notice Execute the cross-chain bridge transfer
-    /// @param order_ The payment order containing transfer details
-    /// @return intentId_ Data returned by the bridge implementation
+    /// @notice Execute the cross-chain bridge transfer.
+    /// @param order_ The payment order containing transfer details.
+    /// @return intentId_ Data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal override(CrossChainBase_v1) returns (bytes memory intentId_) {
@@ -284,9 +284,9 @@ contract PP_Connext_CrossChain_v1 is
         );
     }
 
-    /// @dev Creates a new cross-chain intent for payment transfer
-    /// @param order_ The payment order details
-    /// @return intentId_ ID of the created intent
+    /// @dev Creates a new cross-chain intent for payment transfer.
+    /// @param order_ The payment order details.
+    /// @return intentId_ ID of the created intent.
     function _createCrossChainIntent(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal returns (bytes32 intentId_) {
@@ -324,8 +324,8 @@ contract PP_Connext_CrossChain_v1 is
         ttl_ = uint48(uint(data_[FLAG_TTL]));
     }
 
-    /// @notice Validates the target chain ID
-    /// @param  targetChainId_ The target chain ID to validate
+    /// @notice Validates the target chain ID.
+    /// @param  targetChainId_ The target chain ID to validate.
     function _validateOriginAndTargetChainId(
         uint originChainId_,
         uint targetChainId_
