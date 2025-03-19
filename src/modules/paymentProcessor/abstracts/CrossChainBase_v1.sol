@@ -13,13 +13,16 @@ import {ERC165Upgradeable} from
 
 /**
  * @title   Cross-chain Base Contract
+ *
  * @notice  Abstract base contract providing core cross-chain functionality for payment
  *          processors.
+ *
  * @dev     This contract exposes fundamental cross-chain operations and provides:
  *          - Bridge data storage and retrieval functionality
  *          - Abstract interface for bridge transfer execution
  *          - Integration with the Module_v1 base contract
  *          - Implementation of ICrossChainBase_v1 interface
+ *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our
  *                          Security Policy at security.inverter.network or email us
@@ -62,10 +65,10 @@ abstract contract CrossChainBase_v1 is ICrossChainBase_v1, Module_v1 {
     // -------------------------------------------------------------------------
     // Internal Functions
 
-    /// @notice Execute the cross-chain bridge transfer
-    /// @dev    Override this function to implement specific bridge logic
-    /// @param  order_ The payment order containing all necessary transfer details
-    /// @return bridgeData_ Arbitrary data returned by the bridge implementation
+    /// @notice Execute the cross-chain bridge transfer.
+    /// @dev    Override this function to implement specific bridge logic.
+    /// @param  order_ The payment order containing all necessary transfer details.
+    /// @return bridgeData_ Arbitrary data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal virtual returns (bytes memory bridgeData_);

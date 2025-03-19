@@ -29,7 +29,7 @@ import {ERC165Upgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
- * @author  Inverter Network
+ * @author  Audit33
  *
  * @custom:version 1.0.0
  *
