@@ -64,7 +64,7 @@ abstract contract Module_v1 is
             || super.supportsInterface(interfaceId);
     }
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Storage
     //
     // Variables are prefixed with `__Module_`.
@@ -82,16 +82,22 @@ abstract contract Module_v1 is
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Modifiers
     //
     // Note that the modifiers declared here are available in dowstream
     // contracts too. To not make unnecessary modifiers available, this contract
     // inlines argument validations not needed in downstream contracts.
 
+    modifier locked() {
+        _checkAuthorization(_msgSender(), _msgData());
+        _;
+    }
+
     /// @dev    Modifier to guarantee function is only callable by addresses
     ///         authorized via {Orchestrator_v1}.
-    modifier onlyOrchestratorAdmin() {
+    modifier onlyOrchestratorAdmin( // @todo Do we scrap this?
+    ) {
         _checkRoleModifier(
             __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
         );
@@ -107,6 +113,7 @@ abstract contract Module_v1 is
 
     /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
+        //@todo Scrap
         _checkRoleModifier(
             __Module_orchestrator.authorizer().generateRoleId(
                 address(this), role
@@ -118,6 +125,7 @@ abstract contract Module_v1 is
 
     /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRoleAdmin(bytes32 role) {
+        // @todo Scrap
         bytes32 moduleRole = __Module_orchestrator.authorizer().generateRoleId(
             address(this), role
         );
@@ -133,6 +141,7 @@ abstract contract Module_v1 is
     ///         `__Module_` variables.
     /// @dev	Note to use function prefix `__Module_`.
     modifier onlyOrchestrator() {
+        //@todo scrap?
         _onlyOrchestratorModifier();
         _;
     }
@@ -218,7 +227,8 @@ abstract contract Module_v1 is
     // Role Management
 
     /// @inheritdoc IModule_v1
-    function grantModuleRole(bytes32 role, address target)
+    function grantModuleRole( //@todo scrap
+    bytes32 role, address target)
         external
         onlyModuleRoleAdmin(role)
     {
@@ -226,7 +236,8 @@ abstract contract Module_v1 is
     }
 
     /// @inheritdoc IModule_v1
-    function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
+    function grantModuleRoleBatched( //@todo scrap
+    bytes32 role, address[] calldata targets)
         external
         onlyModuleRoleAdmin(role)
     {
@@ -236,7 +247,8 @@ abstract contract Module_v1 is
     }
 
     /// @inheritdoc IModule_v1
-    function revokeModuleRole(bytes32 role, address target)
+    function revokeModuleRole( //@todo scrap
+    bytes32 role, address target)
         external
         onlyModuleRoleAdmin(role)
     {
@@ -244,10 +256,11 @@ abstract contract Module_v1 is
     }
 
     /// @inheritdoc IModule_v1
-    function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external
-        onlyModuleRoleAdmin(role)
-    {
+    function revokeModuleRoleBatched(
+        //@todo scrap
+        bytes32 role,
+        address[] calldata targets
+    ) external onlyModuleRoleAdmin(role) {
         __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
             role, targets
         );
@@ -296,17 +309,42 @@ abstract contract Module_v1 is
         );
     }
 
+    /// @notice Checks if the caller can call the function that implements the locked modifier.
+    /// @param  caller The address of the caller.
+    /// @param  data The data of the call.
+    function _checkAuthorization(
+        address caller,
+        bytes calldata data //@todo test
+    ) internal view {
+        // If caller cannot call the function, revert.
+        if (
+            !__Module_orchestrator.authorizer().canCall(
+                caller, address(this), bytes4(data[0:4])
+            )
+        ) {
+            revert Module__FunctionLocked();
+        }
+    }
+
     /// @dev	Checks if the caller has the specified role.
     /// @param  role The role to check.
     /// @param  addr The address to check.
-    function _checkRoleModifier(bytes32 role, address addr) internal view {
+    function _checkRoleModifier( //@todo scrap
+    bytes32 role, address addr)
+        internal
+        view
+    {
         if (!__Module_orchestrator.authorizer().checkForRole(role, addr)) {
             revert Module__CallerNotAuthorized(role, addr);
         }
     }
 
     /// @dev	Checks if the caller is the orchestrator.
-    function _onlyOrchestratorModifier() internal view {
+    function _onlyOrchestratorModifier( //@todo scrap
+    )
+        internal
+        view
+    {
         if (_msgSender() != address(__Module_orchestrator)) {
             revert Module__OnlyCallableByOrchestrator();
         }

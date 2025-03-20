@@ -54,16 +54,7 @@ contract AUT_Roles_v1 is
             || super.supportsInterface(interfaceId);
     }
 
-    //--------------------------------------------------------------------------
-    // Storage
-    /// @notice The role that is used as a placeholder for a burned admin role.
-    bytes32 public constant BURN_ADMIN_ROLE =
-        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-
-    /// @dev	Storage gap for future upgrades.
-    uint[50] private __gap;
-
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Modifiers
 
     /// @dev	Verifies that the caller is an active module.
@@ -97,7 +88,39 @@ contract AUT_Roles_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
+    /// @dev     Verifies that the roleId is already existing.
+    /// @param  roleId The id of the role.
+    modifier idExisting(bytes32 roleId) {
+        if (roleId != BURN_ADMIN_ROLE && uint(roleId) > _roleIdCounter) {
+            //@todo BurnAdmin still here
+            revert Module__Authorizer__RoleIdNotExisting();
+        }
+        _;
+    }
+
+    // ========================================================================
+    // Storage
+
+    /// @notice The role that is used as a placeholder for a burned admin role. //@todo Question: Can we also make this the public Role? Is this confusing?
+    bytes32 public constant BURN_ADMIN_ROLE =
+        0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
+    /// @notice Mapping that stores the role IDs that can be used to call functions on a target contract.
+    /// @dev    target The address of the target contract.
+    /// @dev    selector The function selector of the function to call.
+    /// @dev    roleIds The role IDs that can be used to call the function.
+    mapping(address target => mapping(bytes4 selector => bytes32[] roleIds))
+        public _keys;
+
+    /// @notice The counter for role IDs.
+    /// @dev	This is used to generate unique role IDs for each role.
+    /// @dev    Starts at 0, but is immediately incremented when a role is created.
+    uint _roleIdCounter;
+
+    /// @dev	Storage gap for future upgrades.
+    uint[48] private __gap; //@todo Question: Mapping Storage slot only 1 right?
+
+    // ========================================================================
     // Initialization
 
     /// @inheritdoc Module_v1
@@ -135,16 +158,85 @@ contract AUT_Roles_v1 is
         _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
     }
 
-    //--------------------------------------------------------------------------
-    // Public functions
+    // ========================================================================
+    // Public Getter Functions
+
+    // ------------------------------------------------------------------------
+    // Getter -  Authorization
+
+    // @todo ? function getPublicRole() public pure returns (bytes32) {
 
     /// @inheritdoc IAuthorizer_v1
-    function checkForRole(bytes32 role, address who)
-        external
+    function getFunctionKeys(address target_, bytes4 selector_)
+        public
         view
         virtual
-        returns (bool)
+        returns (bytes32[] memory keys_)
     {
+        keys_ = _keys[target_][selector_];
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function isFunctionKey(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleIdKey_ //@todo test
+    ) public view virtual returns (bool isKey_) {
+        bytes32[] memory keys_ = _keys[target_][selector_];
+        for (uint i = 0; i < keys_.length; i++) {
+            if (keys_[i] == roleIdKey_) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function canCall( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165
+        address caller_,
+        address target_,
+        bytes4 selector_ //@todo test
+    ) public view virtual returns (bool canCall_) {
+        // If caller is the admin, they can call any function.
+        if (hasRole(DEFAULT_ADMIN_ROLE, caller_)) {
+            return true;
+        }
+
+        bytes32[] memory roleIds = _keys[target_][selector_];
+        uint keyLength = roleIds.length;
+
+        // If there are no roles, the caller cannot call the function.
+        if (keyLength == 0) {
+            return false;
+        }
+
+        // Go through each role and check if the caller has it.
+        for (uint i = 0; i < keyLength; i++) {
+            if (
+                // if the role the public role (bytes32.max)
+                // or if the caller has the role
+                roleIds[i] == bytes32(type(uint).max)
+                    || hasRole(roleIds[i], caller_) //@todo check if public role should behave any different than any other role
+            ) {
+                return true;
+            }
+        }
+        // Caller does not have any of the roles, so they cannot call the function.
+        return false;
+    }
+    // ------------------------------------------------------------------------
+    // Getter -  Role Management
+
+    /// @inheritdoc IAuthorizer_v1
+    function getAdminRole() public pure returns (bytes32) {
+        return DEFAULT_ADMIN_ROLE;
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function checkForRole(
+        bytes32 role,
+        address who //@todo Scrap?
+    ) external view virtual returns (bool) {
         return hasRole(role, who);
     }
 
@@ -155,53 +247,97 @@ contract AUT_Roles_v1 is
         returns (bytes32)
     {
         // Generate Role ID from module and role
-        return keccak256(abi.encodePacked(module, role));
+        return keccak256(abi.encodePacked(module, role)); //@todo Scrap with revert?
+    }
+
+    // ========================================================================
+    // Mutating Functions
+
+    // ------------------------------------------------------------------------
+    // Mutating - Authorization
+
+    /// @inheritdoc IAuthorizer_v1
+    function addKey(
+        address target_,
+        bytes4 selector_,
+        bytes32 newRoleIdKey_ //@todo test
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) idExisting(newRoleIdKey_) {
+        // if RoleId is already a key, do nothing
+        if (isFunctionKey(target_, selector_, newRoleIdKey_)) {
+            return;
+        }
+
+        _keys[target_][selector_].push(newRoleIdKey_);
+        emit KeyAdded(target_, selector_, newRoleIdKey_);
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function grantRoleFromModule(bytes32 role, address target)
-        external
-        onlyModule(_msgSender())
+    function removeKey(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleIdKey_ //@todo test
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        bytes32[] memory keys = _keys[target_][selector_];
+        uint keysLength = keys.length;
+
+        for (uint i = 0; i < keysLength; i++) {
+            if (keys[i] == roleIdKey_) {
+                // Replace the element to be removed with the last one
+                _keys[target_][selector_][i] =
+                    _keys[target_][selector_][keysLength - 1];
+                // Remove the last element
+                _keys[target_][selector_].pop();
+
+                // Emit Event and exit the function once the value is removed
+                emit KeyRemoved(target_, selector_, roleIdKey_);
+                return;
+            }
+        }
+        // Do nothing if the value is not found
+    }
+
+    // ------------------------------------------------------------------------
+    // Mutating - Role Management
+
+    /// @inheritdoc IAuthorizer_v1
+    function createRole( //@todo test
+        string memory roleName_,
+        bytes32 respectiveAdminRole_,
+        address[] memory initialMembers_
+    )
+        public
+        virtual
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        idExisting(respectiveAdminRole_)
+        returns (bytes32 newRoleId_)
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _grantRole(roleId, target);
-    }
+        newRoleId_ = bytes32(++_roleIdCounter);
 
-    /// @inheritdoc IAuthorizer_v1
-    function grantRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external onlyModule(_msgSender()) {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        for (uint i = 0; i < targets.length; i++) {
-            _grantRole(roleId, targets[i]);
+        emit RoleCreated(newRoleId_, roleName_);
+
+        _setRoleAdmin(newRoleId_, respectiveAdminRole_);
+
+        uint length = initialMembers_.length;
+        for (uint i = 0; i < length; i++) {
+            _grantRole(newRoleId_, initialMembers_[i]);
         }
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function revokeRoleFromModule(bytes32 role, address target)
+    function labelRole( //@todo test
+    bytes32 roleId_, string memory newRoleName_)
         external
-        onlyModule(_msgSender())
+        onlyRole(DEFAULT_ADMIN_ROLE)
+        idExisting(roleId_)
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _revokeRole(roleId, target);
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external onlyModule(_msgSender()) {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        for (uint i = 0; i < targets.length; i++) {
-            _revokeRole(roleId, targets[i]);
-        }
+        emit RoleLabeled(roleId_, newRoleName_);
     }
 
     /// @inheritdoc IAuthorizer_v1
     function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
         external
         onlyRole(getRoleAdmin(roleId))
+    //@todo idExisting(roleId) implement and test
     {
         _setRoleAdmin(roleId, newAdmin);
     }
@@ -209,26 +345,103 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function burnAdminFromModuleRole(bytes32 role)
         external
-        onlyModule(_msgSender())
+        onlyModule(_msgSender()) //@todo stays?
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
     }
 
+    // ------------------------------------------------------------------------
+    // Mutating - Mixed Utility
+
     /// @inheritdoc IAuthorizer_v1
-    function grantGlobalRole(bytes32 role, address target)
+    function createRoleAndAddKeys(
+        string memory roleName_,
+        bytes32 respectiveAdminRole_,
+        address[] memory initialMembers_,
+        address[] memory targets_,
+        bytes4[][] memory selectors_
+    )
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
+        idExisting(respectiveAdminRole_)
+        returns (bytes32 newRoleId_)
     {
+        uint targetsLength = targets_.length; //@todo Keep this in like this?
+        if (targetsLength != selectors_.length) {
+            revert Module__Authorizer__InvalidInputLength();
+        }
+
+        newRoleId_ =
+            createRole(roleName_, respectiveAdminRole_, initialMembers_);
+
+        // Run through all target and selector combinations and add role id to keys
+
+        for (uint i = 0; i < targetsLength; i++) {
+            for (uint j = 0; j < selectors_[i].length; j++) {
+                addKey(targets_[i], selectors_[i][j], newRoleId_);
+            }
+        }
+    }
+    // ------------------------------------------------------------------------
+    // Mutating - Out of Order
+
+    /// @inheritdoc IAuthorizer_v1
+    function grantRoleFromModule(bytes32 role, address target)
+        external
+        onlyModule(_msgSender())
+    {
+        bytes32 roleId = generateRoleId(_msgSender(), role); //@todo Scrap with revert?
+        _grantRole(roleId, target);
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function grantRoleFromModuleBatched( //@todo Scrap with revert?
+    bytes32 role, address[] calldata targets)
+        external
+        onlyModule(_msgSender())
+    {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        for (uint i = 0; i < targets.length; i++) {
+            _grantRole(roleId, targets[i]);
+        }
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function revokeRoleFromModule(
+        bytes32 role,
+        address target //@todo Scrap with revert?
+    ) external onlyModule(_msgSender()) {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        _revokeRole(roleId, target);
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function revokeRoleFromModuleBatched( //@todo Scrap with revert?
+    bytes32 role, address[] calldata targets)
+        external
+        onlyModule(_msgSender())
+    {
+        bytes32 roleId = generateRoleId(_msgSender(), role);
+        for (uint i = 0; i < targets.length; i++) {
+            _revokeRole(roleId, targets[i]);
+        }
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function grantGlobalRole(
+        bytes32 role,
+        address target //@todo Scrap with revert?
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _grantRole(roleId, target);
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function grantGlobalRoleBatched(
+        bytes32 role,
+        address[] calldata targets //@todo Scrap with revert?
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         for (uint i = 0; i < targets.length; i++) {
             _grantRole(roleId, targets[i]);
@@ -236,44 +449,39 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function revokeGlobalRole(bytes32 role, address target)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function revokeGlobalRole(
+        bytes32 role,
+        address target //@todo Scrap with revert?
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         _revokeRole(roleId, target);
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function revokeGlobalRoleBatched(
+        bytes32 role,
+        address[] calldata targets //@todo Scrap with revert?
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         bytes32 roleId = generateRoleId(address(orchestrator()), role);
         for (uint i = 0; i < targets.length; i++) {
             _revokeRole(roleId, targets[i]);
         }
     }
 
-    /// @inheritdoc IAuthorizer_v1
-    function getAdminRole() public pure returns (bytes32) {
-        return DEFAULT_ADMIN_ROLE;
-    }
+    // ========================================================================
+    // Internal Functions
 
-    //--------------------------------------------------------------------------
-    // Overloaded and overridden functions
+    // ------------------------------------------------------------------------
+    // Internal - Upstream Function Implementations
 
     /// @notice Overrides {_revokeRole} to prevent having an empty `ADMIN` role.
     /// @param  role The id number of the role.
     /// @param  who The user we want to check on.
     /// @return bool Returns if revoke has been succesful.
-    function _revokeRole(bytes32 role, address who)
-        internal
-        virtual
-        override
-        notLastAdmin(role)
-        returns (bool)
-    {
+    function _revokeRole(
+        bytes32 role,
+        address who //@todo is this still needed?
+    ) internal virtual override notLastAdmin(role) returns (bool) {
         return super._revokeRole(role, who);
     }
 
@@ -281,10 +489,14 @@ contract AUT_Roles_v1 is
     /// @param  role The id of the role.
     /// @param  who The user we want to check on.
     /// @return bool Returns if grant has been succesful.
-    function _grantRole(bytes32 role, address who)
+    function _grantRole(
+        bytes32 role,
+        address who //@todo is this still needed?
+    )
         internal
         virtual
         override
+        //@todo idExisting(role) implement and test
         noSelfAdmin(role, who)
         returns (bool)
     {
@@ -292,7 +504,7 @@ contract AUT_Roles_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // ERC2771 Context Upgradeable
+    // Internal - ERC2771 Context Upgradeable
 
     /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
     function _msgSender()
