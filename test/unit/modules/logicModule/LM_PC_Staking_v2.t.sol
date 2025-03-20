@@ -11,10 +11,10 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // SuT
 import {
@@ -24,15 +24,15 @@ import {
     IERC20PaymentClientBase_v2
 } from "@lm/LM_PC_Staking_v2.sol";
 
-import {LM_PC_Staking_v2AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v2AccessMock.sol";
+import {LM_PC_Staking_v2_Exposed} from
+    "@mock/modules/logicModule/LM_PC_Staking_v2_Exposed.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
 contract LM_PC_Staking_v2Test is ModuleTest {
     // SuT
-    LM_PC_Staking_v2AccessMock stakingManager;
+    LM_PC_Staking_v2_Exposed stakingManager;
 
     ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
 
@@ -58,8 +58,8 @@ contract LM_PC_Staking_v2Test is ModuleTest {
 
     function setUp() public {
         // Add Module to Mock Orchestrator
-        address impl = address(new LM_PC_Staking_v2AccessMock());
-        stakingManager = LM_PC_Staking_v2AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v2_Exposed());
+        stakingManager = LM_PC_Staking_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
@@ -86,8 +86,8 @@ contract LM_PC_Staking_v2Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
 
-        address impl = address(new LM_PC_Staking_v2AccessMock());
-        stakingManager = LM_PC_Staking_v2AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_Staking_v2_Exposed());
+        stakingManager = LM_PC_Staking_v2_Exposed(Clones.clone(impl));
         _setUpOrchestrator(stakingManager);
         _authorizer.setIsAuthorized(address(this), true);
 

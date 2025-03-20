@@ -9,3 +9,6 @@
 @lm_pc/=src/modules/logicModule/paymentClient/
 @aut/=src/modules/authorizer/
 @modLib/=src/modules/lib/
+@mock/=test/mocks/
+@tool/=test/tools/
+@unit/=test/unit/

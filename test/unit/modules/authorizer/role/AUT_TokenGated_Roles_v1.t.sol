@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // SuT
 import {Test} from "forge-std/Test.sol";
 
-import {AUT_RolesV1Test} from "test/modules/authorizer/role/AUT_Roles_v1.t.sol";
+import {AUT_RolesV1Test} from "@unit/modules/authorizer/role/AUT_Roles_v1.t.sol";
 
 // SuT
 import {
@@ -26,16 +26,15 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 // Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {ERC721Mock} from "test/utils/mocks/ERC721Mock.sol";
-import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC721Mock} from "@mock/external/token/ERC721Mock.sol";
+import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
 import {FundingManagerV1Mock} from
-    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
+    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
-import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
-import {ModuleFactoryV1Mock} from
-    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
+    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
+import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
 
 // Run through the AUT_Roles_v1 tests with the AUT_TokenGated_Roles_v1
 contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {

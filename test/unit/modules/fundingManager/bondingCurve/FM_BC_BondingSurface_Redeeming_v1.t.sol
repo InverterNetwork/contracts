@@ -26,7 +26,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
@@ -39,13 +39,13 @@ import {IFM_BC_BondingSurface_Redeeming_v1} from
 import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // Mocks
 import {FM_BC_BondingSurface_RedeemingV1_Exposed} from
-    "test/modules/fundingManager/bondingCurve/utils/mocks/FM_BC_BondingSurface_RedeemingV1_Exposed.sol";
+    "@mock/modules/fundingManager/bondingCurve/FM_BC_BondingSurface_RedeemingV1_Exposed.sol";
 
 contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     string private constant NAME = "Bonding Surface Token";

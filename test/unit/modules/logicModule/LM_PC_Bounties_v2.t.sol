@@ -13,10 +13,10 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // SuT
 import {
@@ -25,12 +25,12 @@ import {
     IERC20PaymentClientBase_v2
 } from "@lm/LM_PC_Bounties_v2.sol";
 
-import {LM_PC_Bounties_v2AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_Bounties_v2AccessMock.sol";
+import {LM_PC_Bounties_v2_Exposed} from
+    "@mock/modules/logicModule/LM_PC_Bounties_v2_Exposed.sol";
 
 contract LM_PC_BountiesV1Test is ModuleTest {
     // SuT
-    LM_PC_Bounties_v2AccessMock bountyManager;
+    LM_PC_Bounties_v2_Exposed bountyManager;
 
     uint private constant _SENTINEL = type(uint).max;
 
@@ -71,8 +71,8 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
     function setUp() public {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_Bounties_v2AccessMock());
-        bountyManager = LM_PC_Bounties_v2AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_Bounties_v2_Exposed());
+        bountyManager = LM_PC_Bounties_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(bountyManager);
 

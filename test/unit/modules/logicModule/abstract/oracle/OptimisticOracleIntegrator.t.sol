@@ -5,10 +5,10 @@ import "forge-std/console.sol";
 
 // SuT
 import {OptimisticOracleIntegratorMock} from
-    "test/modules/logicModule/oracle/utils/OptimisiticOracleIntegratorMock.sol";
+    "@mock/modules/logicModule/oracle/OptimisiticOracleIntegratorMock.sol";
 
 import {OptimisticOracleV3Mock} from
-    "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
+    "@mock/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -18,10 +18,10 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // SuT
 import {

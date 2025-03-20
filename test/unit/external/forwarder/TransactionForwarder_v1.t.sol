@@ -10,19 +10,19 @@ import {
     ERC2771ForwarderUpgradeable
 } from "src/external/forwarder/TransactionForwarder_v1.sol";
 
-import {TransactionForwarderV1AccessMock} from
-    "test/utils/mocks/external/TransactionForwarderV1AccessMock.sol";
+import {TransactionForwarderV1_Exposed} from
+    "@mock/external/forwarder/TransactionForwarderV1_Exposed.sol";
 
-import {CallIntercepter} from "test/utils/mocks/external/CallIntercepter.sol";
+import {CallIntercepter} from "@tool/CallIntercepter.sol";
 
 contract TransactionForwarderV1Test is Test {
     // SuT
-    TransactionForwarderV1AccessMock forwarder;
+    TransactionForwarderV1_Exposed forwarder;
 
     event CallReceived(address intercepterAddress, bytes data, address sender);
 
     function setUp() public {
-        forwarder = new TransactionForwarderV1AccessMock();
+        forwarder = new TransactionForwarderV1_Exposed();
     }
 
     //--------------------------------------------------------------------------

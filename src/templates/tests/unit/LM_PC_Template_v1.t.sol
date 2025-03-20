@@ -6,9 +6,9 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+} from "@unit/modules/ModuleTest.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
 // External
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -18,7 +18,7 @@ import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
 import {LM_PC_Template_v1_Exposed} from

@@ -14,13 +14,13 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 import {IERC20PaymentClientBase_v2} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // SuT
 import {
@@ -34,13 +34,10 @@ import {
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
-} from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
-
-import {LM_PC_Staking_v2AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_Staking_v2AccessMock.sol";
+} from "@mock/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
 contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     // SuT

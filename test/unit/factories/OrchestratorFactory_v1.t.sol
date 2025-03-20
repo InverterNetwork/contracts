@@ -21,19 +21,18 @@ import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
-    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
-import {ModuleFactoryV1Mock} from
-    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+    "@mock/proxies/ModuleImplementationV1Mock.sol";
+import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
 import {InverterBeaconV1OwnableMock} from
-    "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
+    "@mock/proxies/InverterBeaconV1OwnableMock.sol";
 
 // External Dependencies
 import {Clones} from "@oz/proxy/Clones.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 contract OrchestratorFactoryV1Test is Test {
     // SuT

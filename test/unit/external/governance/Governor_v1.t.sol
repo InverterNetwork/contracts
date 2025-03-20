@@ -9,10 +9,10 @@ import {
 } from "src/external/governance/Governor_v1.sol";
 
 import {Governor_v1_Exposed} from
-    "test/utils/mocks/external/Governor_v1_Exposed.sol";
+    "@mock/external/governance/Governor_v1_Exposed.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // Internal Dependencies
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
@@ -22,9 +22,8 @@ import {
 } from "src/factories/interfaces/IModuleFactory_v1.sol";
 
 import {InverterBeaconV1OwnableMock} from
-    "test/utils/mocks/proxies/InverterBeaconV1OwnableMock.sol";
-import {ModuleFactoryV1Mock} from
-    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
+    "@mock/proxies/InverterBeaconV1OwnableMock.sol";
+import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
 
 // External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";

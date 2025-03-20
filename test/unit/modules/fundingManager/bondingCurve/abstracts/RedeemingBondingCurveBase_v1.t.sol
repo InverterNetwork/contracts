@@ -15,14 +15,14 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // Mocks
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -30,7 +30,7 @@ import {
     RedeemingBondingCurveBaseV1Mock,
     IRedeemingBondingCurveBase_v1
 } from
-    "test/modules/fundingManager/bondingCurve/utils/mocks/RedeemingBondingCurveBaseV1Mock.sol";
+    "@mock/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol";
 
 contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     string private constant NAME = "Bonding Curve Token";

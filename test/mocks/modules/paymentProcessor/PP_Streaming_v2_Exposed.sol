@@ -7,7 +7,7 @@ import {IERC20PaymentClientBase_v2} from
 // Internal Dependencies
 import {PP_Streaming_v2} from "@pp/PP_Streaming_v2.sol";
 
-contract PP_Streaming_v2AccessMock is PP_Streaming_v2 {
+contract PP_Streaming_v2_Exposed is PP_Streaming_v2 {
     //--------------------------------------------------------------------------
     // Getter Functions
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
 
-contract TransactionForwarderV1AccessMock is TransactionForwarder_v1 {
+contract TransactionForwarderV1_Exposed is TransactionForwarder_v1 {
     constructor() TransactionForwarder_v1() {}
 
     function original_validate(ForwardRequestData calldata request)

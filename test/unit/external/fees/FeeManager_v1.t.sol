@@ -7,7 +7,7 @@ import "forge-std/Test.sol";
 import {FeeManager_v1, IFeeManager_v1} from "@ex/fees/FeeManager_v1.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // External Dependencies
 import {Clones} from "@oz/proxy/Clones.sol";

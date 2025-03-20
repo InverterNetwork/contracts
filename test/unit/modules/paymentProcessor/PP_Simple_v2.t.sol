@@ -10,12 +10,12 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // SuT
 
-import {PP_Simple_v2AccessMock} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Simple_v2AccessMock.sol";
+import {PP_Simple_v2_Exposed} from
+    "@mock/modules/paymentProcessor/PP_Simple_v2_Exposed.sol";
 
 import {
     PP_Simple_v2,
@@ -27,14 +27,14 @@ import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 contract PP_SimpleV2Test is ModuleTest {
     // SuT
-    PP_Simple_v2AccessMock paymentProcessor;
+    PP_Simple_v2_Exposed paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -53,8 +53,8 @@ contract PP_SimpleV2Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Simple_v2AccessMock());
-        paymentProcessor = PP_Simple_v2AccessMock(Clones.clone(impl));
+        address impl = address(new PP_Simple_v2_Exposed());
+        paymentProcessor = PP_Simple_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 

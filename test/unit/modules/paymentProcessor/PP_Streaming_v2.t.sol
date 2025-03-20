@@ -10,7 +10,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // SuT
 import {IPaymentProcessor_v2} from
@@ -23,17 +23,17 @@ import {
 
 // Mocks
 
-import {PP_Streaming_v2AccessMock} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Streaming_v2AccessMock.sol";
+import {PP_Streaming_v2_Exposed} from
+    "@mock/modules/paymentProcessor/PP_Streaming_v2_Exposed.sol";
 
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
     bytes32 internal constant _START_END_CLIFF_FLAG =
@@ -43,7 +43,7 @@ contract PP_StreamingV1Test is ModuleTest {
     uint internal constant defaultEnd = 420;
 
     // SuT
-    PP_Streaming_v2AccessMock paymentProcessor;
+    PP_Streaming_v2_Exposed paymentProcessor;
 
     // Mocks
     ERC20PaymentClientBaseV2Mock paymentClient;
@@ -90,8 +90,8 @@ contract PP_StreamingV1Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new PP_Streaming_v2AccessMock());
-        paymentProcessor = PP_Streaming_v2AccessMock(Clones.clone(impl));
+        address impl = address(new PP_Streaming_v2_Exposed());
+        paymentProcessor = PP_Streaming_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentProcessor);
 

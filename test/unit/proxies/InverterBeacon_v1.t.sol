@@ -11,26 +11,26 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 // SuT
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
-import {InverterBeaconV1AccessMock} from
-    "test/utils/mocks/proxies/InverterBeaconV1AccessMock.sol";
+import {InverterBeaconV1_Exposed} from
+    "@mock/proxies/InverterBeaconV1_Exposed.sol";
 
 import {InverterReverter_v1} from
     "src/external/reverter/InverterReverter_v1.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
-    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
+    "@mock/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
-    "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
+    "@mock/proxies/ModuleImplementationV2Mock.sol";
 
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 import {Ownable} from "@oz/access/Ownable.sol";
 
 contract InverterBeaconV1Test is Test {
     // SuT
-    InverterBeaconV1AccessMock beacon;
+    InverterBeaconV1_Exposed beacon;
 
     InverterReverter_v1 reverter = new InverterReverter_v1();
 
@@ -49,7 +49,7 @@ contract InverterBeaconV1Test is Test {
     event ShutdownReversed();
 
     function setUp() public {
-        beacon = new InverterBeaconV1AccessMock(
+        beacon = new InverterBeaconV1_Exposed(
             address(reverter),
             address(this),
             0,

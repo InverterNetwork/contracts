@@ -15,34 +15,34 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // SuT
-import {ILM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
-import {LM_PC_PaymentRouter_v2AccessMock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_PaymentRouter_v2AccessMock.sol";
+import {LM_PC_PaymentRouter_v2_Exposed} from
+    "@mock/modules/logicModule/LM_PC_PaymentRouter_v2_Exposed.sol";
+import {ILM_PC_PaymentRouter_v2} from
+    "@lm/interfaces/ILM_PC_PaymentRouter_v2.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBase_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
-import {OrchestratorV1Mock} from
-    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+import {OrchestratorV1Mock} from "@mock/orchestrator/OrchestratorV1Mock.sol";
 
 import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
 
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
-} from "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
     // SuT
-    LM_PC_PaymentRouter_v2AccessMock paymentRouter;
+    LM_PC_PaymentRouter_v2_Exposed paymentRouter;
 
     address paymentPusher_user = makeAddr("paymentPusher_user");
 
@@ -67,8 +67,8 @@ contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
 
     function setUp() public virtual {
         // Add Module to Mock Orchestrator_v1
-        address impl = address(new LM_PC_PaymentRouter_v2AccessMock());
-        paymentRouter = LM_PC_PaymentRouter_v2AccessMock(Clones.clone(impl));
+        address impl = address(new LM_PC_PaymentRouter_v2_Exposed());
+        paymentRouter = LM_PC_PaymentRouter_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentRouter);
 

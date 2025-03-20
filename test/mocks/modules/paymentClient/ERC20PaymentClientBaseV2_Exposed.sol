@@ -21,9 +21,9 @@ import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
-contract ERC20PaymentClientBaseV2AccessMock is ERC20PaymentClientBase_v2 {
+contract ERC20PaymentClientBaseV2_Exposed is ERC20PaymentClientBase_v2 {
     mapping(address => bool) authorized;
 
     function init(

@@ -12,35 +12,33 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 
 // SuT
 import {
-    ERC20PaymentClientBaseV2AccessMock,
+    ERC20PaymentClientBaseV2_Exposed,
     IERC20PaymentClientBase_v2
-} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2AccessMock.sol";
+} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2_Exposed.sol";
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
-import {OrchestratorV1Mock} from
-    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+import {OrchestratorV1Mock} from "@mock/orchestrator/OrchestratorV1Mock.sol";
 
 import {
     PaymentProcessorV1Mock,
     IPaymentProcessor_v2
-} from "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+} from "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
-} from "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
 contract ERC20PaymentClientBaseV2Test is ModuleTest {
     bytes32 internal constant _START_END_CLIFF_FLAG =
         0x0000000000000000000000000000000000000000000000000000000000000007;
 
     // SuT
-    ERC20PaymentClientBaseV2AccessMock paymentClient;
+    ERC20PaymentClientBaseV2_Exposed paymentClient;
     FundingManagerV1Mock fundingManager;
 
     // Mocks
@@ -60,8 +58,8 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
     );
 
     function setUp() public {
-        address impl = address(new ERC20PaymentClientBaseV2AccessMock());
-        paymentClient = ERC20PaymentClientBaseV2AccessMock(Clones.clone(impl));
+        address impl = address(new ERC20PaymentClientBaseV2_Exposed());
+        paymentClient = ERC20PaymentClientBaseV2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(paymentClient);
 

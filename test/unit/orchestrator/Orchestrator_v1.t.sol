@@ -27,21 +27,20 @@ import {TransactionForwarder_v1} from
 import {
     FundingManagerV1Mock,
     IFundingManager_v1
-} from "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
-import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
-import {ModuleFactoryV1Mock} from
-    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
+import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
-import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
 // Errors
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 // Helper
-import {TypeSanityHelper} from "test/orchestrator/helper/TypeSanityHelper.sol";
+import {TypeSanityHelper} from "@tool/TypeSanityHelper.sol";
 
 contract OrchestratorV1Test is Test {
     // SuT

@@ -10,27 +10,24 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {OrchestratorV1Mock} from
-    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+import {OrchestratorV1Mock} from "@mock/orchestrator/OrchestratorV1Mock.sol";
 import {FeeManager_v1} from "src/external/fees/FeeManager_v1.sol";
-import {GovernorV1Mock} from "test/utils/mocks/external/GovernorV1Mock.sol";
+import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
 import {TransactionForwarder_v1} from
     "src/external/forwarder/TransactionForwarder_v1.sol";
-import {ModuleFactoryV1Mock} from
-    "test/utils/mocks/factories/ModuleFactoryV1Mock.sol";
+import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
 
 // Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 
 // Mocks
-import {OrchestratorV1Mock} from
-    "test/utils/mocks/orchestrator/OrchestratorV1Mock.sol";
+import {OrchestratorV1Mock} from "@mock/orchestrator/OrchestratorV1Mock.sol";
 import {FundingManagerV1Mock} from
-    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 // External Dependencies
 import {TransparentUpgradeableProxy} from
     "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";

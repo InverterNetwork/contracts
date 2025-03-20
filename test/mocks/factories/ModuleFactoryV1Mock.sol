@@ -12,13 +12,13 @@ import {
 
 import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
 
 import {FundingManagerV1Mock} from
-    "test/utils/mocks/modules/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 
 import {Clones} from "@oz/proxy/Clones.sol";
 

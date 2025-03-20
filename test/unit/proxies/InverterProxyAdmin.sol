@@ -20,23 +20,21 @@ import {IInverterTransparentUpgradeableProxy_v1} from
 // Mocks
 import {
     InverterTransparentUpgradeableProxy_v1,
-    InverterTransparentUpgradeableProxyV1AccessMock
-} from
-    "test/utils/mocks/proxies/InverterTransparentUpgradeableProxyV1AccessMock.sol";
-import {InverterBeaconV1Mock} from
-    "test/utils/mocks/proxies/InverterBeaconV1Mock.sol";
+    InverterTransparentUpgradeableProxyV1_Exposed
+} from "@mock/proxies/InverterTransparentUpgradeableProxyV1_Exposed.sol";
+import {InverterBeaconV1Mock} from "@mock/proxies/InverterBeaconV1Mock.sol";
 import {ModuleImplementationV1Mock} from
-    "test/utils/mocks/proxies/ModuleImplementationV1Mock.sol";
+    "@mock/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
-    "test/utils/mocks/proxies/ModuleImplementationV2Mock.sol";
+    "@mock/proxies/ModuleImplementationV2Mock.sol";
 
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@tool/OZErrors.sol";
 
 contract InverterProxyAdmin is Test {
     // SuT
     InverterProxyAdmin_v1 proxyAdmin;
     InverterTransparentUpgradeableProxy_v1 proxy;
-    InverterTransparentUpgradeableProxyV1AccessMock proxyMock;
+    InverterTransparentUpgradeableProxyV1_Exposed proxyMock;
 
     // Mocks
     InverterBeaconV1Mock beacon;
@@ -68,7 +66,7 @@ contract InverterProxyAdmin is Test {
             beacon, address(proxyAdmin), bytes("")
         );
 
-        proxyMock = new InverterTransparentUpgradeableProxyV1AccessMock(
+        proxyMock = new InverterTransparentUpgradeableProxyV1_Exposed(
             beacon, address(proxyAdmin), bytes("")
         );
     }
@@ -85,7 +83,7 @@ contract InverterProxyAdmin is Test {
         vm.expectEmit(true, true, true, true);
         emit AdminChanged(address(0), address(proxyAdmin));
 
-        proxyMock = new InverterTransparentUpgradeableProxyV1AccessMock(
+        proxyMock = new InverterTransparentUpgradeableProxyV1_Exposed(
             beacon, address(proxyAdmin), bytes("")
         );
 

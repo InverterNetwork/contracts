@@ -44,7 +44,7 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 
 // External Dependencies
 import {TransparentUpgradeableProxy} from
