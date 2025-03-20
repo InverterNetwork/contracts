@@ -5,7 +5,7 @@ import {InverterTransparentUpgradeableProxy_v1} from
 
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
-contract InverterTransparentUpgradeableProxyV1AccessMock is
+contract InverterTransparentUpgradeableProxyV1_Exposed is
     InverterTransparentUpgradeableProxy_v1
 {
     bool public upgradeToNewestVersionActive = true;

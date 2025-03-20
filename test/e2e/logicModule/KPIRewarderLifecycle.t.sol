@@ -5,10 +5,10 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {ModuleTest, IOrchestrator_v1} from "test/modules/ModuleTest.sol";
+import {ModuleTest, IOrchestrator_v1} from "@unit/modules/ModuleTest.sol";
 import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
-import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -28,7 +28,7 @@ import {OptimisticOracleV3Interface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 // Mocks
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 

@@ -9,9 +9,9 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unit/modules/ModuleTest.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
-import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -23,8 +23,8 @@ import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {LM_PC_Staking_v2, ILM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 
 // Mocks
-// import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+// import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract LM_PC_Staking_v2Lifecycle is E2ETest {

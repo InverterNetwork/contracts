@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
-contract InverterBeaconV1AccessMock is InverterBeacon_v1 {
+contract InverterBeaconV1_Exposed is InverterBeacon_v1 {
     bool useOriginal_setImplementation = true;
 
     constructor(

@@ -1,7 +1,6 @@
 pragma solidity ^0.8.0;
 
-import {InverterBeaconV1Mock} from
-    "test/utils/mocks/proxies/InverterBeaconV1Mock.sol";
+import {InverterBeaconV1Mock} from "@mock/proxies/InverterBeaconV1Mock.sol";
 
 import {Ownable2Step} from "@oz/access/Ownable2Step.sol";
 import {Context, Ownable} from "@oz/access/Ownable.sol";

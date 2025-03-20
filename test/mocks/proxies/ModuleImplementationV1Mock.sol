@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 
-import {ModuleV1Mock} from "test/utils/mocks/modules/base/ModuleV1Mock.sol";
+import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
 import {IModuleImplementationMock} from
-    "test/utils/mocks/proxies/IModuleImplementationMock.sol";
+    "@mock/proxies/IModuleImplementationMock.sol";
 
 contract ModuleImplementationV1Mock is
     ModuleV1Mock,
