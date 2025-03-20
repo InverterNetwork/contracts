@@ -2,11 +2,16 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IOrchestrator_v1} from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IOrchestratorFactory_v1} from "src/factories/interfaces/IOrchestratorFactory_v1.sol";
-import {IBondingCurveBase_v1} from "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {LM_PC_Staking_v1} from "src/modules/logicModule/LM_PC_Staking_v1.sol";
-import {LM_PC_PaymentRouter_v1} from "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v1} from
+    "src/modules/logicModule/LM_PC_PaymentRouter_v1.sol";
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Internal Dependencies
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
@@ -78,8 +83,7 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param oldMultiplier The old collateral fee multiplier
     /// @param newMultiplier The new collateral fee multiplier
     event CollateralFeeMultiplierChanged(
-        uint oldMultiplier,
-        uint newMultiplier
+        uint oldMultiplier, uint newMultiplier
     );
 
     /// @notice Event emitted when issuance fee multiplier is changed
@@ -96,8 +100,7 @@ interface IMigrating_PIM_Factory_v1 {
     /// @param oldMetadata The old staking module metadata
     /// @param newMetadata The new staking module metadata
     event StakingModuleMetadataChanged(
-        LM_PC_Staking_v1_Metadata oldMetadata,
-        LM_PC_Staking_v1_Metadata newMetadata
+        IModule_v1.Metadata oldMetadata, IModule_v1.Metadata newMetadata
     );
 
     //--------------------------------------------------------------------------
@@ -122,13 +125,6 @@ interface IMigrating_PIM_Factory_v1 {
         uint migrationThreshold;
         address dexAdapter;
         address lpTokenRecipient;
-    }
-
-    struct LM_PC_Staking_v1_Metadata {
-        uint majorVersion;
-        uint minorVersion;
-        uint patchVersion;
-        string url;
     }
 
     //--------------------------------------------------------------------------
@@ -188,34 +184,38 @@ interface IMigrating_PIM_Factory_v1 {
      * @param fundingManager The funding manager to check
      * @return lpTokenRecipient The LP token recipient
      */
-    function getLpTokenRecipient(
-        address fundingManager
-    ) external view returns (address lpTokenRecipient);
+    function getLpTokenRecipient(address fundingManager)
+        external
+        view
+        returns (address lpTokenRecipient);
 
     /**
      * @notice Returns the migration threshold
      * @param fundingManager The funding manager to check
      * @return migrationThreshold The migration threshold
      */
-    function getMigrationThreshold(
-        address fundingManager
-    ) external view returns (uint migrationThreshold);
+    function getMigrationThreshold(address fundingManager)
+        external
+        view
+        returns (uint migrationThreshold);
 
     /**
      * @notice Returns whether the issuance token is immutable
      * @param fundingManager The funding manager to check
      * @return isImmutable Whether the issuance token is immutable
      */
-    function getIsImmutable(
-        address fundingManager
-    ) external view returns (bool isImmutable);
+    function getIsImmutable(address fundingManager)
+        external
+        view
+        returns (bool isImmutable);
 
     /**
      * @notice Returns whether the issuance token has been graduated
      * @param fundingManager The funding manager to check
      * @return isGraduated Whether the issuance token has been graduated
      */
-    function getIsGraduated(
-        address fundingManager
-    ) external view returns (bool isGraduated);
+    function getIsGraduated(address fundingManager)
+        external
+        view
+        returns (bool isGraduated);
 }

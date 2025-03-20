@@ -19,12 +19,13 @@ int_types = "short"
 number_underscore = "thousands"
 ignore = ['src/generated/*', 'src/modules/fundingManager/bondingCurveFundingManager/formula/*']
 
-[profile.ci]
-fuzz = { runs = 1_024 }
-verbosity = 4
-
 [rpc_endpoints]
-mainnet = "${RPC_URL}"
-sepolia = "${SEPOLIA_RPC_URL}"
+anvil = "http://localhost:8545"
+optimism-sepolia = "https://inverter.web3no.de/main/evm/11155420"
+sepolia = "https://inverter.web3no.de/main/evm/11155111"
+
+[etherscan]
+optimism-sepolia = { key = "${ETHERSCAN_OPTIMISM_KEY}", chain = 11155420 }
+sepolia = { key = "${ETHERSCAN_KEY}", chain = 11155111 }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config

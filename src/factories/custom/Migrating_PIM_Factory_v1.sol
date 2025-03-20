@@ -69,7 +69,7 @@ contract Migrating_PIM_Factory_v1 is
     // Staking module metadata
     // @notice This is the metadata for the staking module that will be used to create the staking module for the PIM
     // @dev This is give so we can update the metadata relative to the beacon, it basically solves a dependency issue during initialization
-    LM_PC_Staking_v1_Metadata public stakingModuleMetadata;
+    IModule_v1.Metadata public stakingModuleMetadata;
 
     uint public mutableInitialMintAmount;
     uint public collateralFeeMultiplier;
@@ -137,8 +137,12 @@ contract Migrating_PIM_Factory_v1 is
         orchestratorFactory = _orchestratorFactory;
         admin = _admin;
 
-        stakingModuleMetadata = LM_PC_Staking_v1_Metadata(
-            1, 0, 0, "https://github.com/InverterNetwork/contracts"
+        stakingModuleMetadata = IModule_v1.Metadata(
+            1,
+            0,
+            0,
+            "https://github.com/InverterNetwork/contracts",
+            "LM_PC_Staking_v1"
         );
 
         mutableInitialMintAmount = DEFAULT_MUTABLE_INITIAL_MINT_AMOUNT;
@@ -290,9 +294,9 @@ contract Migrating_PIM_Factory_v1 is
     }
 
     function setStakingModuleMetadata(
-        LM_PC_Staking_v1_Metadata memory _stakingModuleMetadata
+        IModule_v1.Metadata memory _stakingModuleMetadata
     ) external onlyAdmin {
-        LM_PC_Staking_v1_Metadata memory oldMetadata = stakingModuleMetadata;
+        IModule_v1.Metadata memory oldMetadata = stakingModuleMetadata;
         stakingModuleMetadata = _stakingModuleMetadata;
         emit IMigrating_PIM_Factory_v1.StakingModuleMetadataChanged(
             oldMetadata, _stakingModuleMetadata
