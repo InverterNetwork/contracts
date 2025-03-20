@@ -290,6 +290,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         address user_
     ) public {
         testCreateRound();
+
+        uint64 roundId = fundingPot.getRoundCount();
+
         vm.startPrank(user_);
         bytes32 roleId = _authorizer.generateRoleId(
             address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
@@ -302,7 +305,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ILM_PC_FundingPot_v1.Round memory editedRound =
             _helper_createEditedRoundParams();
 
-        _helper_callEditRound(0, editedRound);
+        _helper_callEditRound(roundId, editedRound);
         vm.stopPrank();
     }
 
@@ -481,36 +484,18 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ILM_PC_FundingPot_v1.Round memory updatedRound =
             fundingPot.getRoundDetails(lastRoundId);
 
-        assertEq(
-            updatedRound.roundStart,
-            editedRound.roundStart,
-            "roundStart not updated"
-        );
-        assertEq(
-            updatedRound.roundEnd, editedRound.roundEnd, "roundEnd not updated"
-        );
-        assertEq(
-            updatedRound.roundCap, editedRound.roundCap, "roundCap not updated"
-        );
-        assertEq(
-            updatedRound.hookContract,
-            editedRound.hookContract,
-            "hookContract not updated"
-        );
+        assertEq(updatedRound.roundStart, editedRound.roundStart);
+        assertEq(updatedRound.roundEnd, editedRound.roundEnd);
+        assertEq(updatedRound.roundCap, editedRound.roundCap);
+        assertEq(updatedRound.hookContract, editedRound.hookContract);
         assertEq(
             keccak256(updatedRound.hookFunction),
-            keccak256(editedRound.hookFunction),
-            "hookFunction not updated"
+            keccak256(editedRound.hookFunction)
         );
-        assertEq(
-            updatedRound.closureMechanism,
-            editedRound.closureMechanism,
-            "closureMechanism not updated"
-        );
+        assertEq(updatedRound.closureMechanism, editedRound.closureMechanism);
         assertEq(
             updatedRound.globalAccumulativeCaps,
-            editedRound.globalAccumulativeCaps,
-            "globalAccumulativeCaps not updated"
+            editedRound.globalAccumulativeCaps
         );
     }
 
