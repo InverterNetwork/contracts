@@ -21,6 +21,27 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+/**
+ * @title   Inverter Funding Pot Module
+ *
+ * @notice  The module allows project supporters to contribute during funding rounds.
+ *
+ * @dev     Extends {ERC20PaymentClientBase_v2} and implements {ILM_PC_FundingPot_v1}.
+ *          This contract manages funding rounds with configurable parameters including
+ *          start/end times, funding caps, and hook contracts for custom logic.
+ *          Uses timestamps as flags for payment processing via FLAG_START, FLAG_CLIFF,
+ *          and FLAG_END constants.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to our Security Policy
+ *                          at security.inverter.network or email us directly!
+ *
+ * @custom:version  v1.0.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
+ *
+ * @author  Inverter Network
+ */
 contract LM_PC_FundingPot_v1 is
     ILM_PC_FundingPot_v1,
     ERC20PaymentClientBase_v2
@@ -63,9 +84,6 @@ contract LM_PC_FundingPot_v1 is
     // -------------------------------------------------------------------------
 
     // State
-
-    /// @notice Payment token.
-    IERC20 internal _paymentToken;
 
     /// @notice Stores all funding rounds by their unique ID.
     mapping(uint64 => Round) private rounds;
@@ -175,7 +193,7 @@ contract LM_PC_FundingPot_v1 is
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (bool) {
         Round storage round = rounds[_roundId];
 
-        if (round.roundStart == 0) {
+        if (round.roundEnd == 0 && round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
