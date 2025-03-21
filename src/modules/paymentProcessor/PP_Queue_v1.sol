@@ -895,9 +895,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @notice Internal function to check whether the client is valid.
     /// @param  client_ Address to validate.
     function _ensureValidClient(address client_) internal view virtual {
-        if (client_ == address(0)) {
-            revert Module__PP_Queue_InvalidClientAddress(client_);
-        }
         if (client_ != _msgSender()) {
             revert Module__PP_Queue_OnlyCallableByClient();
         }
