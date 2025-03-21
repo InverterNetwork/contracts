@@ -180,3 +180,14 @@ pre-commit: # Git pre-commit hook
 .PHONY: help
 help: # Show help for each of the Makefile recipes
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | sort | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
+
+
+.PHONY: deploy-migrating-pim-factory
+deploy-migrating-pim-factory:
+	@if [ -z "$(CHAIN_ALIAS)" ]; then \
+		eval $$(cat .env | grep DEPLOYER_PRIVATE_KEY) && \
+		DEPLOYER_PRIVATE_KEY=$$DEPLOYER_PRIVATE_KEY FACTORY_TYPE=MIGRATING forge script script/deploymentScript/CustomFactoryDeploymentScript.s.sol --rpc-url anvil --broadcast -vvv; \
+	else \
+		eval $$(cat .env | grep DEPLOYER_PRIVATE_KEY) && \
+		DEPLOYER_PRIVATE_KEY=$$DEPLOYER_PRIVATE_KEY FACTORY_TYPE=MIGRATING forge script script/deploymentScript/CustomFactoryDeploymentScript.s.sol  --rpc-url $(CHAIN_ALIAS) --verify --broadcast -vvv; \
+	fi

@@ -108,6 +108,13 @@ contract Migrating_PIM_Factory_v1 is
         _;
     }
 
+    modifier onlyAdminCanDeployMutable(bool isImmutable) {
+        if (!isImmutable && msg.sender != admin) {
+            revert IMigrating_PIM_Factory_v1.PIM_WorkflowFactory__OnlyAdmin();
+        }
+        _;
+    }
+
     //--------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------
@@ -160,6 +167,7 @@ contract Migrating_PIM_Factory_v1 is
     )
         external
         onlyAfterMainFundingManagerSet(migrationConfig_.isImmutable)
+        onlyAdminCanDeployMutable(migrationConfig_.isImmutable)
         returns (IOrchestrator_v1)
     {
         // Deploy issuance token

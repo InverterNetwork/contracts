@@ -23,9 +23,11 @@ ignore = ['src/generated/*', 'src/modules/fundingManager/bondingCurveFundingMana
 anvil = "http://localhost:8545"
 optimism-sepolia = "https://inverter.web3no.de/main/evm/11155420"
 sepolia = "https://inverter.web3no.de/main/evm/11155111"
+polygon = "https://inverter.web3no.de/main/evm/137"
 
 [etherscan]
 optimism-sepolia = { key = "${ETHERSCAN_OPTIMISM_KEY}", chain = 11155420 }
 sepolia = { key = "${ETHERSCAN_KEY}", chain = 11155111 }
+polygon = { key = "${ETHERSCAN_POLYGON_KEY}", chain = 137 }
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
