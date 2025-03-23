@@ -538,29 +538,9 @@ contract FM_PC_Oracle_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint fee_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyOrchestratorAdmin
-    {
-        _setSellFee(fee_);
-    }
-
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
     function getSellFee() public view virtual returns (uint fee_) {
         return sellFee;
-    }
-
-    /// @inheritdoc IBondingCurveBase_v1
-    function setBuyFee(uint fee_)
-        external
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyOrchestratorAdmin
-    {
-        _setBuyFee(fee_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
