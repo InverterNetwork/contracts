@@ -463,20 +463,24 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             return false;
         }
 
-        return _executePaymentTransfer(firstId, order);
+        // Execute payment transfer
+        _executePaymentTransfer(firstId, order);
+        // return true as payment has been processed
+        return true;
     }
 
-    /// @notice	Executes the actual payment transfer for an order.
+    /// @notice	Executes the actual payment transfer for an order. It sets
+    ///         the order state to PROCESSED if the transfer succeeds, otherwise
+    ///         if the transfer fails it sets the order state to FAILED. In both
+    ///         cases the order is removed from the queue.
     /// @param	orderId_ The ID of the order to process.
     /// @param	order_ The order to process.
-    /// @return	success_ True if the payment was successful.
     function _executePaymentTransfer(uint orderId_, QueuedOrder storage order_)
         internal
         virtual
-        returns (bool success_)
     {
         // Try to transfer payment from client to recipient
-        success_ = _tryPaymentTransfer(
+        bool success_ = _tryPaymentTransfer(
             order_.order_.paymentToken,
             order_.client_,
             order_.order_.recipient,

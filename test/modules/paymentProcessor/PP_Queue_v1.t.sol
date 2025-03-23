@@ -76,7 +76,6 @@ contract PP_Queue_v1_Test is ModuleTest {
         admin = makeAddr("admin");
         canceledOrdersTreasury = makeAddr("canceledOrdersTreasury");
         failedOrdersTreasury = makeAddr("failedOrdersTreasury");
-        admin = address(this);
 
         address impl = address(new PP_Queue_v1_Exposed());
         queue = PP_Queue_v1_Exposed(Clones.clone(impl));
@@ -1850,54 +1849,239 @@ contract PP_Queue_v1_Test is ModuleTest {
     }
 
     // ================================================================================
-    // Test Process Next Order Revert Given Non Standard Token
+    // Test
 
-    /* Test testProcessNextOrder_RevertGivenNonStandardToken()
-        └── Given an order with non-standard token
-            └── When processing next order
-                └── Then it should revert with Module__PP_Queue_TransferFailed.
+    /* Test: internal _lowLevelTransfer()
+        ├── Given the recipient is not valie
+        │   └── When the function _lowLevelTransfer() is called
+        │       └── Then it should return false
+        └── Given the recipient is valid
+            └── When the function _lowLevelTransfer() is called
+                └── Then it should return true
     */
-    function testProcessNextOrder_RevertGivenNonStandardToken() public {
-        address recipient_ = makeAddr("recipient");
-        uint96 amount_ = 100;
-
-        NonStandardTokenMock nonStandardToken_ = new NonStandardTokenMock();
-        nonStandardToken_.setFailTransferTo(recipient_); // Hacer que el token falle al transferir al recipient
-
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
-        IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: recipient_,
-            amount: amount_,
-            paymentToken: address(nonStandardToken_),
-            originChainId: block.chainid,
-            targetChainId: block.chainid,
-            flags: flags_,
-            data: data_
-        });
-
-        nonStandardToken_.mint(address(paymentClient), amount_);
-        paymentClient.exposed_addToOutstandingTokenAmounts(
-            address(nonStandardToken_), amount_
-        );
-        vm.startPrank(address(paymentClient));
-        nonStandardToken_.approve(address(queue), amount_);
-        uint orderId_ =
-            queue.exposed_addPaymentOrderToQueue(order_, address(paymentClient));
-        vm.stopPrank();
-
+    function testInternalLowLevelTransfer_worksGivenInvalidRecipientReturnsFalse(
+        uint amount_
+    ) public {
+        // Setup
+        address invalidRecipient_ = makeAddr("invalidRecipient");
+        vm.assume(amount_ > 0);
+        // initiate token and set fail transfer to invalid recipient
+        NonStandardTokenMock nonStandardToken = new NonStandardTokenMock();
+        nonStandardToken.setFailTransferTo(invalidRecipient_);
+        // mint tokens to payment client and approve queue to spend
+        nonStandardToken.mint(address(paymentClient), amount_);
         vm.prank(address(paymentClient));
-        bool success_ = queue.exposed_processNextOrder(address(paymentClient));
-        assertFalse(success_, "Processing should fail with non-standard token");
+        nonStandardToken.approve(address(queue), amount_);
 
-        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
-            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        // Assert pre-conditions
+        assertEq(
+            nonStandardToken.balanceOf(address(paymentClient)),
+            amount_,
+            "Payment Client should have tokens"
         );
         assertEq(
-            uint(queuedOrder_.state_),
-            uint(IPP_Queue_v1.RedemptionState.FAILED),
-            "Order should be marked as failed"
+            nonStandardToken.balanceOf(invalidRecipient_),
+            0,
+            "Invalid recipient should have no tokens"
+        );
+
+        // Test
+        bool success_ = queue.exposed_lowLevelTransfer(
+            address(_token), address(paymentClient), invalidRecipient_, amount_
+        );
+        // Assert
+        assertFalse(success_, "Transfer should fail");
+        assertEq(
+            nonStandardToken.balanceOf(address(paymentClient)),
+            amount_,
+            "Payment Client should have tokens"
+        );
+        assertEq(
+            nonStandardToken.balanceOf(invalidRecipient_),
+            0,
+            "Invalid recipient should have no tokens"
+        );
+    }
+
+    function testInternalLowLevelTransfer_worksGivenValidRecipientReturnsTrue(
+        uint amount_
+    ) public {
+        // Setup
+        address validRecipient_ = makeAddr("validRecipient");
+        vm.assume(amount_ > 0);
+        // mint tokens to payment client and approve queue to spend
+        _token.mint(address(paymentClient), amount_);
+        vm.prank(address(paymentClient));
+        _token.approve(address(queue), amount_);
+
+        // Assert pre-conditions
+        assertEq(
+            _token.balanceOf(address(paymentClient)),
+            amount_,
+            "Payment Client should have tokens"
+        );
+        assertEq(
+            _token.balanceOf(validRecipient_),
+            0,
+            "Recipient should have no tokens"
+        );
+
+        // Test
+        bool success_ = queue.exposed_lowLevelTransfer(
+            address(_token), address(paymentClient), validRecipient_, amount_
+        );
+
+        // Assert post-conditions
+        assertTrue(success_, "Transfer should succeed");
+        assertEq(
+            _token.balanceOf(address(paymentClient)),
+            0,
+            "Payment Client should have no tokens"
+        );
+        assertEq(
+            _token.balanceOf(validRecipient_),
+            amount_,
+            "Recipient should have tokens"
+        );
+    }
+
+    /* Test: internal _tryPaymentTransfer()
+        └── Given the payment processor has enough balance
+            ├── And recipient is not valid (transfer fails)
+            │   └── When the function _tryPaymentTransfer() is called
+            │       ├── Then the low level transfer should fail
+            │       ├── And the amount should be transferred to the payment processor
+            │       ├── And the amount is added to the unclaimable amounts
+            │       └── And the function should return false
+            └── And the recipient is valid (transfer succeeds)
+                └── When the function _tryPaymentTransfer() is called
+                    ├── Then the low level transfer should succeed
+                    ├── And the amount should be transferred to the recipient
+                    ├── And an event should be emitted
+                    └── And the function should return true
+    */
+    function testInternalTryPaymentTransfer_worksGivenAmountTransferredToPPAndReturnFalse(
+        uint amount_
+    ) public {
+        // Setup
+        address invalidRecipient_ = makeAddr("invalidRecipient");
+        vm.assume(amount_ > 0);
+        // initiate token and set fail transfer to invalid recipient
+        NonStandardTokenMock nonStandardToken = new NonStandardTokenMock();
+        nonStandardToken.setFailTransferTo(invalidRecipient_);
+        // mint tokens to payment client and approve queue to spend
+        nonStandardToken.mint(address(paymentClient), amount_);
+        vm.prank(address(paymentClient));
+        nonStandardToken.approve(address(queue), amount_);
+        // add tokens to outstanding amounts in payment client mock
+        paymentClient.exposed_addToOutstandingTokenAmounts(
+            address(nonStandardToken), amount_
+        );
+
+        // Assert pre-conditions
+        assertEq(
+            nonStandardToken.balanceOf(address(paymentClient)),
+            amount_,
+            "Payment Client should have tokens"
+        );
+        assertEq(
+            nonStandardToken.balanceOf(address(queue)),
+            0,
+            "Payment Processor should have no tokens"
+        );
+        assertEq(
+            paymentClient.outstandingTokenAmount(address(nonStandardToken)),
+            amount_,
+            "Payment Client should have tokens in outstanding amounts"
+        );
+
+        // Test
+        bool success_ = queue.exposed_tryPaymentTransfer(
+            address(nonStandardToken),
+            address(paymentClient),
+            invalidRecipient_,
+            amount_
+        );
+
+        // Assert post-conditions
+        assertFalse(
+            success_,
+            "Should return false as transfer to invalid recipient failed"
+        );
+
+        assertEq(
+            nonStandardToken.balanceOf(address(paymentClient)),
+            0,
+            "Payment Client should have no tokens"
+        );
+        assertEq(
+            nonStandardToken.balanceOf(address(queue)),
+            amount_,
+            "Payment Processor should have tokens"
+        );
+        assertEq(
+            paymentClient.outstandingTokenAmount(address(nonStandardToken)),
+            0,
+            "Payment Client should have no tokens in outstanding amounts"
+        );
+    }
+
+    function testInternalTryPaymentTransfer_worksGivenAmountTransferredToRecipientAndReturnTrue(
+        uint amount_
+    ) public {
+        // Setup
+        address validRecipient_ = makeAddr("validRecipient");
+        vm.assume(amount_ > 0);
+        // mint tokens to payment client and approve queue to spend
+        _token.mint(address(paymentClient), amount_);
+        vm.prank(address(paymentClient));
+        _token.approve(address(queue), amount_);
+        // add tokens to outstanding amounts in payment client mock
+        paymentClient.exposed_addToOutstandingTokenAmounts(
+            address(_token), amount_
+        );
+
+        // Assert pre-conditions
+        assertEq(
+            _token.balanceOf(address(paymentClient)),
+            amount_,
+            "Payment Client should have tokens"
+        );
+        assertEq(
+            _token.balanceOf(validRecipient_),
+            0,
+            "Recipient should have no tokens"
+        );
+        assertEq(
+            paymentClient.outstandingTokenAmount(address(_token)),
+            amount_,
+            "Payment Client should have tokens in outstanding amounts"
+        );
+
+        vm.expectEmit(true, true, true, true, address(queue));
+        emit IPaymentProcessor_v2.TokensReleased(
+            validRecipient_, address(_token), amount_
+        );
+        // Test
+        bool success_ = queue.exposed_tryPaymentTransfer(
+            address(_token), address(paymentClient), validRecipient_, amount_
+        );
+
+        // Assert post-conditions
+        assertEq(
+            _token.balanceOf(address(paymentClient)),
+            0,
+            "Payment Client should have no tokens"
+        );
+        assertEq(
+            _token.balanceOf(validRecipient_),
+            amount_,
+            "Recipient should have tokens"
+        );
+        assertEq(
+            paymentClient.outstandingTokenAmount(address(_token)),
+            0,
+            "Payment Client should have no tokens in outstanding amounts"
         );
     }
 
