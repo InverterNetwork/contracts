@@ -395,8 +395,12 @@ contract PP_SimpleV2Test is ModuleTest {
         vm.startPrank(sender);
         bool expectedValue = paymentProcessor.exposed_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
-            && paymentProcessor.exposed__validTotal(order.amount);
+        ) && paymentProcessor.exposed__validTotal(order.amount)
+            && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
+            && paymentProcessor.exposed_validOriginAndTargetChain(
+                order.originChainId, order.targetChainId
+            );
+
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
         vm.stopPrank();

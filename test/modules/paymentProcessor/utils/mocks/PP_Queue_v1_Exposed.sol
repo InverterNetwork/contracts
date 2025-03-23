@@ -82,16 +82,26 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         return _processNextOrder(client_);
     }
 
-    // function exposed_executePaymentTransfer(
-    //     uint orderId_,
-    //     IERC20PaymentClientBase_v2 client_
-    // ) public returns (bool) {
-    //     QueuedOrder storage order_ = getOrder(orderId_, client_);
-    //     return _executePaymentTransfer(orderId_, order_);
-    // }
-
     function exposed_executePaymentQueue(address client_) external {
         _executePaymentQueue(client_);
+    }
+
+    function exposed_tryPaymentTransfer(
+        address token_,
+        address client_,
+        address recipient_,
+        uint amount_
+    ) external returns (bool) {
+        return _tryPaymentTransfer(token_, client_, recipient_, amount_);
+    }
+
+    function exposed_lowLevelTransfer(
+        address token_,
+        address client_,
+        address recipient_,
+        uint amount_
+    ) external returns (bool) {
+        return _lowLevelTransfer(token_, client_, recipient_, amount_);
     }
 
     function exposed_orderExists(

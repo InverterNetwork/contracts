@@ -538,29 +538,9 @@ contract FM_PC_Oracle_Redeeming_v1 is
         emit TransferOrchestratorToken(to_, amount_);
     }
 
-    /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint fee_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyOrchestratorAdmin
-    {
-        _setSellFee(fee_);
-    }
-
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
     function getSellFee() public view virtual returns (uint fee_) {
         return sellFee;
-    }
-
-    /// @inheritdoc IBondingCurveBase_v1
-    function setBuyFee(uint fee_)
-        external
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyOrchestratorAdmin
-    {
-        _setBuyFee(fee_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
@@ -621,13 +601,17 @@ contract FM_PC_Oracle_Redeeming_v1 is
         virtual
         onlyModuleRole(QUEUE_EXECUTOR_ROLE)
     {
-        (bool success,) = address(__Module_orchestrator.paymentProcessor()).call(
+        (bool success, bytes memory data) = address(
+            __Module_orchestrator.paymentProcessor()
+        ).call(
             abi.encodeWithSignature(
                 "executePaymentQueue(address)", address(this)
             )
         );
         if (!success) {
-            revert Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed();
+            revert Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(
+                data
+            );
         }
     }
 
@@ -686,14 +670,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
             data: data
         });
 
-        // Add order to payment client.
-        _addPaymentOrder(order);
-
-        // Process payments through the payment processor.
-        __Module_orchestrator.paymentProcessor().processPayments(
-            IERC20PaymentClientBase_v2(address(this))
-        );
-
         // Emit event with order details.
         emit RedemptionOrderCreated(
             address(this),
@@ -707,6 +683,14 @@ contract FM_PC_Oracle_Redeeming_v1 is
             collateralRedeemAmount_,
             address(token()),
             RedemptionState.PENDING
+        );
+
+        // Add order to payment client.
+        _addPaymentOrder(order);
+
+        // Process payments through the payment processor.
+        __Module_orchestrator.paymentProcessor().processPayments(
+            IERC20PaymentClientBase_v2(address(this))
         );
     }
 

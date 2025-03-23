@@ -73,7 +73,7 @@ interface IFM_PC_Oracle_Redeeming_v1 is
     error Module__FM_PC_ExternalPrice_Redeeming_ThirdPartyOperationsDisabled();
 
     /// @notice	Thrown when a redemption queue execution fails.
-    error Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed();
+    error Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(bytes data);
 
     /// @notice Thrown when the project treasury address is invalid.
     error Module__FM_PC_ExternalPrice_Redeeming_InvalidProjectTreasury();
