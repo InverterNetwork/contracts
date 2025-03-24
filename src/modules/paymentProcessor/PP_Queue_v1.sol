@@ -618,6 +618,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             _lowLevelTransfer(token_, client_, recipient_, netAmount);
 
         if (success) {
+            // Emit event for releasing tokens from the payment client to
+            // the recipient.
             emit TokensReleased(recipient_, token_, netAmount);
             success_ = true;
 
@@ -625,6 +627,9 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             IERC20(token_).safeTransferFrom(
                 client_, treasury_, protocolFeeAmount
             );
+            // Emit event for releasing tokens from the payment client to
+            // the protocol treasury.
+            emit TokensReleased(treasury_, token_, protocolFeeAmount);
             // Emit event for protocol fee transfer
             emit ProtocolFeeTransferred(token_, treasury_, protocolFeeAmount);
         } else {

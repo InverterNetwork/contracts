@@ -2089,6 +2089,9 @@ contract PP_Queue_v1_Test is ModuleTest {
         emit IPaymentProcessor_v2.TokensReleased(
             validRecipient_, address(_token), netAmount
         );
+        emit IPaymentProcessor_v2.TokensReleased(
+            protocolTreasury_, address(_token), protocolFeeAmount
+        );
         emit IModule_v1.ProtocolFeeTransferred(
             address(_token), protocolTreasury_, protocolFeeAmount
         );
