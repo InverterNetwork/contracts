@@ -54,7 +54,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // -------------------------------------------------------------------------
     // Setup
-
     function setUp() public {
         // Deploy the SuT
         address impl = address(new LM_PC_FundingPot_v1_Exposed());
@@ -66,10 +65,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Initiate the Logic Module with the metadata and config data
         fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
 
-        // Give test contract the FUNDING_POT_ROLE.
-        fundingPot.grantModuleRole(
-            fundingPot.FUNDING_POT_ADMIN_ROLE(), address(this)
-        );
         _authorizer.setIsAuthorized(address(this), true);
 
         // Set the block timestamp
@@ -100,7 +95,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Test External (public + external)
 
-    /* Test fuzzed createRound()
+    /* Test createRound()
     ├── Given user does not have FUNDING_POT_ADMIN_ROLE
     │   └── When user attempts to create a round
     │       └── Then it should revert
@@ -366,7 +361,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(globalAccumulativeCaps, globalAccumulativeCaps_);
     }
 
-    /* Test fuzzed editRound()
+    /* Test editRound()
     ├── Given user does not have FUNDING_POT_ADMIN_ROLE
     │   └── When user attempts to edit a round
     │       └── Then it should revert
@@ -397,9 +392,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 └── Then it should revert  
     */
 
-    function testFuzzEditRound_revertsGivenUserIsNotFundingPotAdmin(
-        address user_
-    ) public {
+    function testEditRound_revertsGivenUserIsNotFundingPotAdmin(address user_)
+        public
+    {
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
@@ -436,7 +431,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testFuzzEditRound_revertsGivenRoundIsNotCreated() public {
+    function testEditRound_revertsGivenRoundIsNotCreated() public {
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
@@ -470,9 +465,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzEditRound_revertsGivenRoundIsActive(uint roundStart_)
-        public
-    {
+    function testEditRound_revertsGivenRoundIsActive(uint roundStart_) public {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -515,9 +508,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzEditRound_revertsGivenRoundStartIsInThePast(
-        uint roundStartP_
-    ) public {
+    function testEditRound_revertsGivenRoundStartIsInThePast(uint roundStartP_)
+        public
+    {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -553,9 +546,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzEditRound_revertsGivenRoundEndTimeAndCapAreBothZero()
-        public
-    {
+    function testEditRound_revertsGivenRoundEndTimeAndCapAreBothZero() public {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -591,7 +582,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzEditRound_revertsGivenRoundEndTimeIsBeforeRoundStart(
+    function testEditRound_revertsGivenRoundEndTimeIsBeforeRoundStart(
         uint roundEnd_
     ) public {
         testCreateRound();
@@ -628,8 +619,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzEditRound_revertsGivenHookContractIsSetButHookFunctionIsEmpty(
-    ) public {
+    function testEditRound_revertsGivenHookContractIsSetButHookFunctionIsEmpty()
+        public
+    {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -665,8 +657,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testFuzzEditRound_revertsGivenHookFunctionIsSetButHookContractIsEmpty(
-    ) public {
+    function testEditRound_revertsGivenHookFunctionIsSetButHookContractIsEmpty()
+        public
+    {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -760,33 +753,193 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(globalAccumulativeCaps, globalAccumulativeCaps_);
     }
 
-    //     // -------------------------------------------------------------------------
-    //     // Test: Internal Functions
+    /* Test setAccessCriteria()
+    ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    ├── Given round does not exist
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    ├── Given round is active
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    ├── Given AccessCriteriaId is NFT and nftContract is 0x0
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    ├── Given AccessCriteriaId is MERKLE and merkleRoot is 0x0
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    ├── Given AccessCriteriaId is LIST and allowedAddresses is empty
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    └── Given all the valid parameters are provided
+        └── When user attempts to set access criteria
+            └── Then it should not revert
+    */
 
-    //     // Helper Functions
+    function testFuzzSetAccessCriteria_revertsGivenUserDoesNotHaveFundingPotAdminRole(
+        uint8 accessCriteriaEnum_,
+        address user_
+    ) public {
+        vm.assume(accessCriteriaEnum_ >= 0 && accessCriteriaEnum_ <= 3);
+        vm.assume(user_ != address(0) && user_ != address(this));
 
-    //     // @notice Creates a default funding round
-    //     // @dev make the parameters fuzzable @TODO Jeffrey
-    //     function _generateFundingRoundParams(
-    //         uint roundStart_,
-    //         uint roundEnd_,
-    //         uint roundCap_,
-    //         address hookContract_,
-    //         bytes memory hookFunction_,
-    //         bool closureMechanism_,
-    //         bool globalAccumulativeCaps_
-    //     ) internal returns (ILM_PC_FundingPot_v1.Round memory) {
-    //         ILM_PC_FundingPot_v1.Round memory round = ILM_PC_FundingPot_v1.Round({
-    //             roundStart: roundStart_,
-    //             roundEnd: roundEnd_,
-    //             roundCap: roundCap_,
-    //             hookContract: hookContract_,
-    //             hookFunction: hookFunction_,
-    //             closureMechanism: closureMechanism_,
-    //             globalAccumulativeCaps: globalAccumulativeCaps_
-    //         });
-    //         return round;
-    //     }
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum_);
+
+        vm.startPrank(user_);
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
+            )
+        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+    }
+
+    function testFuzzSetAccessCriteria_revertsGivenRoundDoesNotExist(
+        uint8 accessCriteriaEnum
+    ) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundNotCreated
+                    .selector
+            )
+        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+    }
+
+    function testFuzzSetAccessCriteria_revertsGivenRoundIsActive(
+        uint8 accessCriteriaEnum
+    ) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundAlreadyStarted
+                    .selector
+            )
+        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+    }
+
+    function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsNFTAndNftContractIsZero(
+    ) public {
+        uint8 accessCriteriaEnum =
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.NFT);
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+        accessCriteria.nftContract = address(0);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData
+                    .selector
+            )
+        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+    }
+
+    function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsMerkleAndMerkleRootIsZero(
+    ) public {
+        uint8 accessCriteriaEnum =
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.MERKLE);
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+        accessCriteria.merkleRoot = bytes32(uint(0x0));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData
+                    .selector
+            )
+        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+    }
+
+    function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsListAndAllowedAddressesIsEmpty(
+    ) public {
+        uint8 accessCriteriaEnum =
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.LIST);
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+        accessCriteria.allowedAddresses = new address[](0);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData
+                    .selector
+            )
+        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+    }
+
+    function testFuzzSetAccessCriteria(uint8 accessCriteriaEnum) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = fundingPot.getRoundAccessCriteria(roundId, accessId);
+
+        assertEq(nftContract, accessCriteria.nftContract);
+        assertEq(merkleRoot, accessCriteria.merkleRoot);
+        assertEq(allowedAddresses, accessCriteria.allowedAddresses);
+    }
+
+    // -------------------------------------------------------------------------
+    // Test: Internal Functions
+
+    // -------------------------------------------------------------------------
+    // Helper Functions
 
     // @notice Creates a default funding round
     function _helper_createDefaultFundingRound()
@@ -878,5 +1031,63 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             closureMechanism,
             globalAccumulativeCaps
         );
+    }
+
+    function _helper_createAccessCriteria(uint8 accessCriteriaEnum)
+        internal
+        returns (ILM_PC_FundingPot_v1.AccessCriteria memory)
+    {
+        {
+            if (
+                accessCriteriaEnum
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.OPEN)
+            ) {
+                return ILM_PC_FundingPot_v1.AccessCriteria(
+                    ILM_PC_FundingPot_v1.AccessCriteriaId.OPEN,
+                    address(0x0),
+                    bytes32(uint(0x0)),
+                    new address[](0)
+                );
+            } else if (
+                accessCriteriaEnum
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.NFT)
+            ) {
+                address nftContract = address(0x1);
+
+                return ILM_PC_FundingPot_v1.AccessCriteria(
+                    ILM_PC_FundingPot_v1.AccessCriteriaId.NFT,
+                    nftContract,
+                    bytes32(uint(0x0)),
+                    new address[](0)
+                );
+            } else if (
+                accessCriteriaEnum
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.MERKLE)
+            ) {
+                bytes32 merkleRoot = bytes32(uint(0x1));
+
+                return ILM_PC_FundingPot_v1.AccessCriteria(
+                    ILM_PC_FundingPot_v1.AccessCriteriaId.MERKLE,
+                    address(0x0),
+                    merkleRoot,
+                    new address[](0)
+                );
+            } else if (
+                accessCriteriaEnum
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.LIST)
+            ) {
+                address[] memory allowedAddresses = new address[](3);
+                allowedAddresses[0] = address(0x1);
+                allowedAddresses[1] = address(0x2);
+                allowedAddresses[2] = address(0x3);
+
+                return ILM_PC_FundingPot_v1.AccessCriteria(
+                    ILM_PC_FundingPot_v1.AccessCriteriaId.LIST,
+                    address(0x0),
+                    bytes32(uint(0x0)),
+                    allowedAddresses
+                );
+            }
+        }
     }
 }
