@@ -1995,10 +1995,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint collateralFee_,
         address treasury_
     ) public {
-        vm.assume(
-            issuanceFee_ < feeManager.maxFee()
-                && collateralFee_ < feeManager.maxFee()
-        );
+        issuanceFee_ = bound(issuanceFee_, 0, feeManager.maxFee());
+        collateralFee_ = bound(collateralFee_, 0, feeManager.maxFee());
         vm.assume(treasury_ != address(0));
         // Setup
         // Set collateral fee for processPayments function
