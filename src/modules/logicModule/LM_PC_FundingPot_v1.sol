@@ -126,6 +126,8 @@ contract LM_PC_FundingPot_v1 is
     // Public - Getters
 
     /// @inheritdoc ILM_PC_FundingPot_v1
+    /// @dev    Returns the generic parameters of a round.
+
     function getRoundGenericParameters(uint64 _roundId)
         external
         view
@@ -162,6 +164,7 @@ contract LM_PC_FundingPot_v1 is
     {
         Round storage round = rounds[_roundId];
         AccessCriteria storage accessCriteria = round.accessCriterias[_id];
+        //@todo : Waht if the round is open? add a bool? check what can be done !!!
         return (
             accessCriteria.nftContract,
             accessCriteria.merkleRoot,
@@ -259,6 +262,7 @@ contract LM_PC_FundingPot_v1 is
         return true;
     }
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaForRound(
         uint64 _roundId,
         uint8 _accessId,
@@ -288,7 +292,7 @@ contract LM_PC_FundingPot_v1 is
                         && _accessCriteria.allowedAddresses.length == 0
                 )
         ) {
-            revert Module__LM_PC_FundingPot__IncorrectAccessCriteria();
+            revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
 
         round.accessCriterias[_accessId] = _accessCriteria;
@@ -308,7 +312,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         // Validate that either end time or cap is set
-        if (round.roundEnd == 0 && round.roundCap == 0) {
+        if (round.roundEnd == 0 || round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
         }
 

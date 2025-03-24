@@ -93,7 +93,10 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bool globalAccumulativeCaps
     );
 
-    /// @notice
+    /// @notice Emitted when access criteria is set for a round.
+    /// @param roundId The unique identifier of the round.
+    /// @param accessId The identifier of the access criteria.
+    /// @param accessCriteria The access criteria.
     event AccessCriteriaSet(
         uint64 indexed roundId, uint8 accessId, AccessCriteria accessCriteria
     );
@@ -131,8 +134,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round does not exist
     error Module__LM_PC_FundingPot__RoundNotCreated();
 
-    /// @notice
-    error Module__LM_PC_FundingPot__IncorrectAccessCriteria();
+    /// @notice Incorrect access criteria
+    error Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
 
     // -------------------------------------------------------------------------
     // Public - Getters
