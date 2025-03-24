@@ -95,12 +95,19 @@ contract FM_PC_Oracle_Redeeming_v1_Exposed is FM_PC_Oracle_Redeeming_v1 {
         );
     }
 
-    function exposed_getCollateralSellFeePercentage()
+    function exposed_getFunctionFeesAndTreasuryAddresses(
+        bytes4 functionSelector_
+    )
         public
         view
-        returns (uint, address)
+        returns (
+            address collateralTreasury_,
+            address issuanceTreasury_,
+            uint collateralFeePercentage_,
+            uint issuanceFeePercentage_
+        )
     {
-        return _getCollateralSellFeePercentage();
+        return _getFunctionFeesAndTreasuryAddresses(functionSelector_);
     }
 
     function exposed_sellOrder(

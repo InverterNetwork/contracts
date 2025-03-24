@@ -635,29 +635,23 @@ contract FM_PC_Oracle_Redeeming_v1 is
         // Set min amount out to 1 for price calculation
         _ensureNonZeroTradeParameters(depositAmount_, 1);
 
-        // Get protocol collateral sell fee percentage associated with the
-        // payment processor's processPayments function.
-        (
-            uint collateralSellFeePercentage,
-            /* collateralTreasury */
-        ) = _getCollateralSellFeePercentage();
-
         // Get protocol issuance sell fee percentage
         (
             /* collateralTreasury */
             ,
             /* issuanceTreasury */
             ,
-            /* collateralSellFeePercentage */
-            ,
-            uint issuanceSellFeePercentage
+            uint protocolCollateralSellFeePercentage,
+            uint protocolIssuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
             bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
         // Deduct protocol sell fee from issuance, if applicable
         (depositAmount_, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
-        _calculateNetAndSplitFees(depositAmount_, issuanceSellFeePercentage, 0);
+        _calculateNetAndSplitFees(
+            depositAmount_, protocolIssuanceSellFeePercentage, 0
+        );
 
         // Calculate redeem amount from formula
         redeemAmount_ = _redeemTokensFormulaWrapper(depositAmount_);
@@ -665,7 +659,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         // Deduct protocol and project sell fee from collateral, if applicable
         (redeemAmount_, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
         _calculateNetAndSplitFees(
-            redeemAmount_, collateralSellFeePercentage, sellFee
+            redeemAmount_, protocolCollateralSellFeePercentage, sellFee
         );
     }
 
@@ -685,9 +679,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     /// @notice Creates and emits a new redemption order.
-    /// @dev    This function wraps the `_createAndEmitOrder` internal function
-    ///         with specified parameters to handle the transaction and direct
-    ///         the proceeds.
     /// @param  receiver_ The address that will receive the redeemed tokens.
     /// @param  depositAmount_ The amount of tokens to be sold.
     /// @param  netCollateralRedeemAmount_ The net amount of collateral to be
@@ -780,20 +771,12 @@ contract FM_PC_Oracle_Redeeming_v1 is
     {
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
 
-        // Get protocol collateral sell fee percentage associated with the
-        // payment processor's processPayments function.
-        (
-            uint protocolCollateralSellFeePercentage,
-            /* collateralTreasury */
-        ) = _getCollateralSellFeePercentage();
-
         // Get protocol issuance sell fee percentage
         (
             /* protocolCollateralTreasury */
             ,
             address protocolIssuanceTreasury,
-            /* protocolCollateralSellFeePercentage */
-            ,
+            uint protocolCollateralSellFeePercentage,
             uint protocolIssuanceSellFeePercentage
         ) = _getFunctionFeesAndTreasuryAddresses(
             bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
@@ -1085,37 +1068,50 @@ contract FM_PC_Oracle_Redeeming_v1 is
         // No balance check needed.
     }
 
-    /// @notice Get the collateral sell fee percentage and treasury address
-    ///         from the payment processor and fee manager.
-    /// @dev    This function is used to get the collateral sell fee percentage
-    ///         and treasury address from the payment processor and fee manager.
-    ///         This is done because the collateral fee will be collected when the
-    ///         payment processor executes the payment queue.
-    /// @return collateralSellFeePercentage_ The collateral sell fee percentage.
-    /// @return collateralTreasury_ The collateral treasury address.
-    function _getCollateralSellFeePercentage()
+    /// @notice Retrieves fee percentages and treasury addresses for both
+    ///         collateral and issuance tokens.
+    /// @dev    Uses payment processor's `processPayments()` selector for
+    ///         collateral fees since they're collected during queue execution.
+    /// @param  selector_ The function selector for issuance fee lookup.
+    /// @return collateralTreasury_ Address receiving collateral fees.
+    /// @return issuanceTreasury_ Address receiving issuance fees.
+    /// @return collateralFeePercentage_ Percentage fee on collateral tokens.
+    /// @return issuanceFeePercentage_ Percentage fee on issuance tokens.
+    function _getFunctionFeesAndTreasuryAddresses(bytes4 selector_)
         internal
         view
-        returns (uint collateralSellFeePercentage_, address collateralTreasury_)
+        override(BondingCurveBase_v1)
+        returns (
+            address collateralTreasury_,
+            address issuanceTreasury_,
+            uint collateralFeePercentage_,
+            uint issuanceFeePercentage_
+        )
     {
+        // Function selector for the payment processor's processPayments function,
+        // which is the function fee we use to calculate the collateral sell fee.
+        // This is done because the collateral fee will be collected when the
+        // payment processor executes the payment queue.
+        bytes4 processPaymentsSelector =
+            bytes4(keccak256(bytes("processPayments(address)")));
+
         // Address of the workflows payment processor and fee manager
         address paymentProcessor =
             address(__Module_orchestrator.paymentProcessor());
         address feeManager =
             address(__Module_orchestrator.governor().getFeeManager());
 
-        // Function selector for the payment processor's processPayments function,
-        // which is the function fee we use to calculate the collateral sell fee
-        bytes4 functionSelector =
-            bytes4(keccak256(bytes("processPayments(address)")));
-
-        (collateralSellFeePercentage_, collateralTreasury_) = IFeeManager_v1(
+        (collateralFeePercentage_, collateralTreasury_) = IFeeManager_v1(
             feeManager
         ).getCollateralWorkflowFeeAndTreasury(
             address(__Module_orchestrator), // Use orchestrator of this workflow
             paymentProcessor, // Use the payment processor as module to get the fee for
-            functionSelector
+            processPaymentsSelector
         );
+
+        // Get issuance fee and treasury addresses from fee manager.
+        (issuanceFeePercentage_, issuanceTreasury_) =
+            _getFeeManagerIssuanceFeeData(selector_);
     }
 
     /// @dev    Storage gap for future upgrades.

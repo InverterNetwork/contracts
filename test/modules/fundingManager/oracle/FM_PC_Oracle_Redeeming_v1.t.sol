@@ -67,6 +67,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     // processPayments function selector
     bytes4 internal constant PROCESS_PAYMENTS_FUNCTION_SELECTOR =
         bytes4(keccak256(bytes("processPayments(address)")));
+    // sellOrder function selector
+    bytes4 internal constant SELL_ORDER_FUNCTION_SELECTOR =
+        bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")));
 
     // ============================================================================
     // State
@@ -282,26 +285,23 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             true,
             protocolIssuanceFee_
         );
-        // Test
-
+        // Calculate return values
         uint issuanceFeeAmount = depositAmount_ * protocolIssuanceFee_ / BPS;
-
         uint netIssuanceDepositAmount = depositAmount_ - issuanceFeeAmount;
-
         uint redeemAmount = fundingManager.exposed_redeemTokensFormulaWrapper(
             netIssuanceDepositAmount
         );
-
         uint protocolCollateralFeeAmount =
             redeemAmount * protocolCollateralFee_ / BPS;
         uint projectCollateralFeeAmount =
             redeemAmount * projectCollateralFee_ / BPS;
-
         uint expectedNetCollateralRedeemAmount = redeemAmount
             - protocolCollateralFeeAmount - projectCollateralFeeAmount;
 
+        // Test
         uint functionReturnValue =
             fundingManager.calculateSaleReturn(depositAmount_);
+        // Assert
         assertEq(
             functionReturnValue,
             expectedNetCollateralRedeemAmount,
@@ -1986,40 +1986,64 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: Function _getCollateralSellFeePercentage()
-        └── When the function _getCollateralSellFeePercentage() is called
-            └── Then it should return the correct collateral sell fee percentage and treasury address
+    /* Test: Function _getFunctionFeesAndTreasuryAddresses()
+        └── When the function _getFunctionFeesAndTreasuryAddresses() is called
+            └── Then it should return the correct collateral and issuance fee percentage and treasury addresses
     */
     function testInternalGetCollateralSellFeePercentage_works(
-        uint feePercentage_,
+        uint issuanceFee_,
+        uint collateralFee_,
         address treasury_
     ) public {
-        vm.assume(feePercentage_ < feeManager.maxFee());
+        vm.assume(
+            issuanceFee_ < feeManager.maxFee()
+                && collateralFee_ < feeManager.maxFee()
+        );
         vm.assume(treasury_ != address(0));
         // Setup
-
         // Set collateral fee for processPayments function
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
             address(_paymentProcessor),
             PROCESS_PAYMENTS_FUNCTION_SELECTOR,
             true,
-            feePercentage_
+            collateralFee_
+        );
+        // Set issuance fee for sellOrder function
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fundingManager),
+            SELL_ORDER_FUNCTION_SELECTOR,
+            true,
+            issuanceFee_
         );
         feeManager.setWorkflowTreasury(address(_orchestrator), treasury_);
-
         // Test
-        (uint collateralSellFeePercentage_, address collateralTreasury_) =
-            fundingManager.exposed_getCollateralSellFeePercentage();
+        (
+            address collateralTreasury_,
+            address issuanceTreasury_,
+            uint collateralFeePercentage_,
+            uint issuanceFeePercentage_
+        ) = fundingManager.exposed_getFunctionFeesAndTreasuryAddresses(
+            SELL_ORDER_FUNCTION_SELECTOR
+        );
 
         // Assert
         assertEq(
-            collateralSellFeePercentage_,
-            feePercentage_,
+            collateralFeePercentage_,
+            collateralFee_,
             "Collateral sell fee percentage is not correct"
         );
         assertEq(
             collateralTreasury_, treasury_, "Collateral treasury is not correct"
+        );
+        assertEq(
+            issuanceTreasury_, treasury_, "Issuance treasury is not correct"
+        );
+        assertEq(
+            issuanceFeePercentage_,
+            issuanceFee_,
+            "Issuance fee percentage is not correct"
         );
     }
 
