@@ -18,7 +18,10 @@ interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
     event BridgeTransferFailed(
         address indexed client_,
         address indexed recipient_,
+        address indexed paymentToken_,
         uint amount_,
+        uint originChainId_,
+        uint targetChainId_,
         bytes32 flags_,
         bytes32[] data_
     );

@@ -83,15 +83,15 @@ contract PP_Connext_CrossChain_v1 is
     /**
      * @notice Initializes the payment processor module.
      * @param orchestrator_ The orchestrator contract address.
-     * @param metadata Module metadata.
+     * @param metadata_ Module metadata_.
      * @param configData_ ABI encoded configuration data (_everClearSpoke and WETH addresses).
      */
     function init(
         IOrchestrator_v1 orchestrator_,
-        Metadata memory metadata,
+        Metadata memory metadata_,
         bytes memory configData_
     ) external override(Module_v1) initializer {
-        __Module_init(orchestrator_, metadata);
+        __Module_init(orchestrator_, metadata_);
         (address everClearSpoke_, address weth_) =
             abi.decode(configData_, (address, address));
 
@@ -103,12 +103,16 @@ contract PP_Connext_CrossChain_v1 is
     // View Functions
 
     /// @inheritdoc IPP_Connext_CrossChain_v1
-    function getEverClearSpoke() external view returns (IEverclearSpoke) {
+    function getEverClearSpoke()
+        external
+        view
+        returns (IEverclearSpoke everClearSpoke_)
+    {
         return _everClearSpoke;
     }
 
     /// @inheritdoc IPP_Connext_CrossChain_v1
-    function getWeth() external view returns (IWETH) {
+    function getWeth() external view returns (IWETH weth_) {
         return _weth;
     }
 
@@ -126,10 +130,10 @@ contract PP_Connext_CrossChain_v1 is
     // External Functions
 
     /// @inheritdoc IPaymentProcessor_v1
-    function processPayments(IERC20PaymentClientBase_v2 client) external {
+    function processPayments(IERC20PaymentClientBase_v2 client_) external {
         // Get the payment orders from the payment client.
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
-        (orders,,) = client.collectPaymentOrders();
+        (orders,,) = client_.collectPaymentOrders();
 
         // Process each payment order.
         for (uint i = 0; i < orders.length; i++) {
@@ -140,7 +144,7 @@ contract PP_Connext_CrossChain_v1 is
             }
             // Transfer the token for the order from the payment client into
             // the payment processor.
-            _transferTokenAndApproveToBridge(orders[i], address(client));
+            _transferTokenAndApproveToBridge(orders[i], address(client_));
             // Execute the bridge transfer.
             bytes memory bridgeData = _executeBridgeTransfer(orders[i]);
             // Bridge data in the Everclear implementation is the intent ID.
@@ -149,7 +153,7 @@ contract PP_Connext_CrossChain_v1 is
             if (bytes32(bridgeData) != bytes32(0)) {
                 // Emit the Payment Processor's PaymentOrderProcessed event.
                 emit PaymentOrderProcessed(
-                    address(client),
+                    address(client_),
                     orders[i].recipient,
                     orders[i].paymentToken,
                     orders[i].amount,
@@ -165,12 +169,15 @@ contract PP_Connext_CrossChain_v1 is
                 _paymentId++;
             } else {
                 // Handle failed transfer.
-                _unclaimableAmountsForRecipient[address(client)][orders[i]
+                _unclaimableAmountsForRecipient[address(client_)][orders[i]
                     .paymentToken][orders[i].recipient] += orders[i].amount;
                 emit BridgeTransferFailed(
-                    address(client),
+                    address(client_),
                     orders[i].recipient,
+                    orders[i].paymentToken,
                     orders[i].amount,
+                    orders[i].originChainId,
+                    orders[i].targetChainId,
                     orders[i].flags,
                     orders[i].data
                 );
@@ -220,13 +227,24 @@ contract PP_Connext_CrossChain_v1 is
         // Store the intent ID for the payment order.
         _bridgeData[_paymentId] = bridgeData;
         _paymentId++;
+
+        emit PaymentOrderProcessed(
+            address(client_),
+            recipient_,
+            order_.paymentToken,
+            order_.amount,
+            order_.originChainId,
+            order_.targetChainId,
+            order_.flags,
+            order_.data
+        );
     }
 
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external virtual returns (bool valid_) {
-        return _validPaymentOrder(order);
+        return _validPaymentOrder(order_);
     }
 
     // -------------------------------------------------------------------------

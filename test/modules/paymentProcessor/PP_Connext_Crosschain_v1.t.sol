@@ -8,7 +8,6 @@ pragma solidity ^0.8.0;
 
 import {Clones} from "@oz/proxy/Clones.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
-import "forge-std/console2.sol";
 
 // Internal Dependencies
 import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
@@ -181,17 +180,12 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
         assertEq(_token.balanceOf(address(mockEverClearSpoke)), testAmount);
-        console2.log(
-            "balance of mockEverClearSpoke",
-            _token.balanceOf(address(mockEverClearSpoke))
-        );
 
         bytes32 intentId = bytes32(paymentProcessor.getBridgeData(0));
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
             uint(Mock_EverclearPayment.IntentStatus.ADDED)
         );
-        console2.logBytes32(intentId);
     }
 
     /* Test single payment outstanding token amounts
@@ -550,12 +544,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-        console2.log(
-            "paymentProcessor.unclaimable(address(paymentClient), address(_token), testRecipient)",
-            paymentProcessor.unclaimable(
-                address(paymentClient), address(_token), testRecipient
-            )
         );
         // Verify failed transfer was recorded with the failing execution data
         assertEq(
@@ -1048,7 +1036,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
                 recipients[i], amounts[i], address(_token), executionData
             );
             bool isValid = paymentProcessor.validPaymentOrder(orders[i]);
-            console2.log("isValid", isValid);
             //add payment order to client
             paymentClient.exposed_addPaymentOrder(orders[i]);
         }

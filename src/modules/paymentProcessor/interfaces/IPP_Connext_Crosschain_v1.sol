@@ -17,13 +17,16 @@ interface IPP_Connext_CrossChain_v1 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // View Functions
 
-    /// @notice Returns the Everclear spoke contract instance.
-    /// @return IEverclearSpoke The Everclear contract interface.
-    function getEverClearSpoke() external view returns (IEverclearSpoke);
+    /// @notice Returns the Everclear spoke contract instance everClearSpoke_.
+    /// @return everClearSpoke_ The Everclear contract interface.
+    function getEverClearSpoke()
+        external
+        view
+        returns (IEverclearSpoke everClearSpoke_);
 
-    /// @notice Returns the WETH contract instance.
-    /// @return IWETH The WETH contract interface used for wrapping/unwrapping ETH.
-    function getWeth() external view returns (IWETH);
+    /// @notice Returns the WETH contract instance weth_.
+    /// @return weth_ The WETH contract interface used for wrapping/unwrapping ETH.
+    function getWeth() external view returns (IWETH weth_);
 
     //--------------------------------------------------------------------------
     // External Functions
