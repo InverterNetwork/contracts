@@ -83,14 +83,24 @@ contract FM_PC_Oracle_Redeeming_v1_Exposed is FM_PC_Oracle_Redeeming_v1 {
         address receiver_,
         uint depositAmount_,
         uint collateralRedeemAmount_,
-        uint projectSellFeeAmount_
+        uint projectSellFeeAmount_,
+        uint protocolSellFeeAmount_
     ) public {
         _createAndEmitOrder(
             receiver_,
             depositAmount_,
             collateralRedeemAmount_,
-            projectSellFeeAmount_
+            projectSellFeeAmount_,
+            protocolSellFeeAmount_
         );
+    }
+
+    function exposed_getCollateralSellFeePercentage()
+        public
+        view
+        returns (uint, address)
+    {
+        return _getCollateralSellFeePercentage();
     }
 
     function exposed_sellOrder(

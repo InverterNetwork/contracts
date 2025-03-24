@@ -64,6 +64,10 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     uint internal constant MAX_SELL_FEE = 500; // 5%
     bool internal constant DIRECT_OPERATIONS_ONLY = true;
 
+    // processPayments function selector
+    bytes4 internal constant PROCESS_PAYMENTS_FUNCTION_SELECTOR =
+        bytes4(keccak256(bytes("processPayments(address)")));
+
     // ============================================================================
     // State
 
@@ -241,6 +245,70 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         );
     }
 
+    /* Test: Function calculateSaleReturn()
+        └── Given a valid sell amount
+            └── When the function calculateSaleReturn() is called
+                └── Then it should return the correct sale return
+    */
+    function testCalculateSaleReturn_worksGivenValidSellAmount(
+        uint depositAmount_,
+        uint protocolIssuanceFee_,
+        uint projectCollateralFee_,
+        uint protocolCollateralFee_
+    ) public {
+        // Setup
+        depositAmount_ = bound(depositAmount_, 1e18, type(uint128).max);
+        protocolIssuanceFee_ =
+            bound(protocolIssuanceFee_, 1, feeManager.maxFee());
+        projectCollateralFee_ = bound(
+            projectCollateralFee_, 1, fundingManager.getMaxProjectSellFee()
+        );
+        protocolCollateralFee_ =
+            bound(protocolCollateralFee_, 1, feeManager.maxFee());
+
+        // Set fee percentages
+        fundingManager.exposed_setSellFee(projectCollateralFee_);
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(_paymentProcessor),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolCollateralFee_
+        );
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(fundingManager),
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)"))),
+            true,
+            protocolIssuanceFee_
+        );
+        // Test
+
+        uint issuanceFeeAmount = depositAmount_ * protocolIssuanceFee_ / BPS;
+
+        uint netIssuanceDepositAmount = depositAmount_ - issuanceFeeAmount;
+
+        uint redeemAmount = fundingManager.exposed_redeemTokensFormulaWrapper(
+            netIssuanceDepositAmount
+        );
+
+        uint protocolCollateralFeeAmount =
+            redeemAmount * protocolCollateralFee_ / BPS;
+        uint projectCollateralFeeAmount =
+            redeemAmount * projectCollateralFee_ / BPS;
+
+        uint expectedNetCollateralRedeemAmount = redeemAmount
+            - protocolCollateralFeeAmount - projectCollateralFeeAmount;
+
+        uint functionReturnValue =
+            fundingManager.calculateSaleReturn(depositAmount_);
+        assertEq(
+            functionReturnValue,
+            expectedNetCollateralRedeemAmount,
+            "Net collateral redeem amount is not correct"
+        );
+    }
+
     /* Test: Function getWhitelistRole()
         └── Given we want to get the whitelist role
             └── When the function getWhitelistRole() is called
@@ -356,18 +424,19 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint depositAmount1_ = 1e18;
         uint collateralRedeemAmount1_ = 2e18;
         uint projectSellFeeAmount1_ = 1e17;
-
+        uint protocolSellFeeAmount1_ = 1e17;
         fundingManager.exposed_createAndEmitOrder(
             receiver1_,
             depositAmount1_,
             collateralRedeemAmount1_,
-            projectSellFeeAmount1_
+            projectSellFeeAmount1_,
+            protocolSellFeeAmount1_
         );
 
         // Test - Amount should be updated after first order
         assertEq(
             fundingManager.getOpenRedemptionAmount(),
-            collateralRedeemAmount1_,
+            collateralRedeemAmount1_ + protocolSellFeeAmount1_,
             "Open redemption amount should match first collateral amount"
         );
 
@@ -376,18 +445,20 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint depositAmount2_ = 2e18;
         uint collateralRedeemAmount2_ = 3e18;
         uint projectSellFeeAmount2_ = 2e17;
-
+        uint protocolSellFeeAmount2_ = 2e17;
         fundingManager.exposed_createAndEmitOrder(
             receiver2_,
             depositAmount2_,
             collateralRedeemAmount2_,
-            projectSellFeeAmount2_
+            projectSellFeeAmount2_,
+            protocolSellFeeAmount2_
         );
 
         // Test - Amount should be updated after second order
         assertEq(
             fundingManager.getOpenRedemptionAmount(),
-            collateralRedeemAmount1_ + collateralRedeemAmount2_,
+            collateralRedeemAmount1_ + collateralRedeemAmount2_
+                + protocolSellFeeAmount1_ + protocolSellFeeAmount2_,
             "Open redemption amount should be sum of both collateral amounts"
         );
     }
@@ -403,12 +474,14 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint depositAmount1_ = 1e18;
         uint collateralRedeemAmount1_ = 2e18;
         uint projectSellFeeAmount1_ = 1e17;
+        uint protocolSellFeeAmount1_ = 1e17;
 
         fundingManager.exposed_createAndEmitOrder(
             receiver1_,
             depositAmount1_,
             collateralRedeemAmount1_,
-            projectSellFeeAmount1_
+            projectSellFeeAmount1_,
+            protocolSellFeeAmount1_
         );
 
         // Test - First order should have ID 1
@@ -419,12 +492,14 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint depositAmount2_ = 2e18;
         uint collateralRedeemAmount2_ = 3e18;
         uint projectSellFeeAmount2_ = 2e17;
+        uint protocolSellFeeAmount2_ = 2e17;
 
         fundingManager.exposed_createAndEmitOrder(
             receiver2_,
             depositAmount2_,
             collateralRedeemAmount2_,
-            projectSellFeeAmount2_
+            projectSellFeeAmount2_,
+            protocolSellFeeAmount2_
         );
 
         // Test - Second order should have ID 2
@@ -785,19 +860,22 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint depositAmount_ = 1e18;
         uint collateralRedeemAmount_ = 2e18;
         uint projectSellFeeAmount_ = 1e17;
-
+        uint protocolSellFeeAmount_ = 1e17;
         fundingManager.exposed_createAndEmitOrder(
             receiver_,
             depositAmount_,
             collateralRedeemAmount_,
-            projectSellFeeAmount_
+            projectSellFeeAmount_,
+            protocolSellFeeAmount_
         );
 
         // Setup - Mock payment processor call
         vm.startPrank(address(_orchestrator.paymentProcessor()));
 
         // Test - Call amountPaid
-        fundingManager.amountPaid(address(_token), collateralRedeemAmount_);
+        fundingManager.amountPaid(
+            address(_token), collateralRedeemAmount_ + protocolSellFeeAmount_
+        );
 
         // Test - Verify outstanding amount is reduced
         assertEq(
@@ -991,7 +1069,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         uint depositAmount_ = 1e18;
         uint collateralRedeemAmount_ = 2e18;
         uint projectSellFeeAmount_ = 1e17;
-
+        uint protocolSellFeeAmount_ = 1e17;
         // Setup payment processor with the correct interface, so the low level call
         // does not fail
         PP_Queue_ManualExecution_v1_Mock paymentProcessor =
@@ -1003,7 +1081,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             receiver_,
             depositAmount_,
             collateralRedeemAmount_,
-            projectSellFeeAmount_
+            projectSellFeeAmount_,
+            protocolSellFeeAmount_
         );
 
         // Execute
@@ -1602,7 +1681,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     function testInternalCreateAndEmitOrder_worksGivenValidParameters(
         uint depositAmount_,
         uint collateralRedeemAmount_,
-        uint projectSellFeeAmount_
+        uint projectSellFeeAmount_,
+        uint protocolSellFeeAmount_
     ) public {
         // Setup
         address receiver_ = makeAddr("receiver");
@@ -1613,6 +1693,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             bound(collateralRedeemAmount_, 1, type(uint64).max);
         projectSellFeeAmount_ =
             bound(projectSellFeeAmount_, 0, collateralRedeemAmount_);
+        protocolSellFeeAmount_ =
+            bound(protocolSellFeeAmount_, 0, collateralRedeemAmount_);
 
         // Setup - Get current values
         uint exchangeRate_ = oracle.getPriceForRedemption();
@@ -1629,6 +1711,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             exchangeRate_, // exchangeRate_
             sellFee_, // feePercentage_
             projectSellFeeAmount_, // feeAmount_
+            protocolSellFeeAmount_, // protocolFeeAmount_
             collateralRedeemAmount_, // finalRedemptionAmount_
             address(_token), // collateralToken_
             IFM_PC_Oracle_Redeeming_v1.RedemptionState.PENDING // state_
@@ -1639,13 +1722,14 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             receiver_,
             depositAmount_,
             collateralRedeemAmount_,
-            projectSellFeeAmount_
+            projectSellFeeAmount_,
+            protocolSellFeeAmount_
         );
 
         // Assert
         assertEq(
             fundingManager.getOpenRedemptionAmount(),
-            collateralRedeemAmount_,
+            collateralRedeemAmount_ + protocolSellFeeAmount_,
             "Open redemption amount not set correctly"
         );
     }
@@ -1730,13 +1814,15 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     /* Test: Function _sellOrder()
         └── Given valid input parameters
             └── And project fee is bigger than 0
+            └── And protocol fee is bigger than 0
                 └── When the function _sellOrder() is called
                     └── Then is should burn the correct amount of issuance tokens
                         └── And it should emit the correct events
     */
     function testInternalSellOrder_worksGivenValidInputParametersAndProjectBiggerThanZero(
         uint sellAmount_,
-        uint projectSellFee_
+        uint projectSellFee_,
+        uint protocolSellFee_
     ) public {
         // Setup
         address receiver_ = makeAddr("receiver");
@@ -1744,6 +1830,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Set sell fee
         projectSellFee_ =
             bound(projectSellFee_, 1, fundingManager.getMaxProjectSellFee());
+        protocolSellFee_ = bound(protocolSellFee_, 1, feeManager.maxFee());
         fundingManager.exposed_setSellFee(projectSellFee_);
         // Prepare sell condition
         _prepareBuyOrSellConditions(
@@ -1752,16 +1839,27 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             receiver_,
             address(fundingManager)
         );
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(_paymentProcessor),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolSellFee_
+        );
         // Calculate expected values
-        uint minAmountOut_ = fundingManager.calculateSaleReturn(sellAmount_);
-        uint expectedTotalCollateralTokenMovedOut_ =
-            fundingManager.exposed_redeemTokensFormulaWrapper(sellAmount_);
-        uint expectedProjectCollateralFeeAmount_ =
-            expectedTotalCollateralTokenMovedOut_ * projectSellFee_ / BPS;
-        uint expectedNetCollateralRedeemAmount_ =
-        expectedTotalCollateralTokenMovedOut_
-            - expectedProjectCollateralFeeAmount_;
 
+        // Minimum amount out for sell call
+        uint minAmountOut_ = fundingManager.calculateSaleReturn(sellAmount_);
+
+        // Calculate expected values
+        (
+            uint expectedTotalCollateralTokenMovedOut_,
+            uint expectedProjectCollateralFeeAmount_,
+            , /*expectedProtocolCollateralFeeAmount_*/
+            uint expectedNetCollateralRedeemAmount_
+        ) = _getExpectedReturnValuesSellOrder(
+            sellAmount_, projectSellFee_, protocolSellFee_
+        );
         // Test
         vm.prank(receiver_);
         // Expect events
@@ -1796,9 +1894,10 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     /* Test: Function _sellOrder()
         └── Given valid input parameters
             └── And project fee is 0
-                └── When the function _sellOrder() is called
-                    └── Then is should burn the correct amount of issuance tokens
-                        └── And it should emit the correct events
+                └── And protocol fee is 0
+                    └── When the function _sellOrder() is called
+                        └── Then is should burn the correct amount of issuance tokens
+                            └── And it should emit the correct events
     */
     function testInternalSellOrder_worksGivenValidInputParametersAndProjectIsZero(
         uint sellAmount_
@@ -1808,6 +1907,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         sellAmount_ = bound(sellAmount_, 1e18, type(uint64).max);
         // Set sell fee to zero
         uint projectSellFee = 0;
+        uint protocolSellFee = 0;
         fundingManager.exposed_setSellFee(projectSellFee);
         // Prepare sell condition
         _prepareBuyOrSellConditions(
@@ -1816,16 +1916,25 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             receiver_,
             address(fundingManager)
         );
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(_paymentProcessor),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolSellFee
+        );
         // Get min amount out for function call
         uint minAmountOut_ = fundingManager.calculateSaleReturn(sellAmount_);
 
         // Calculate expected values
-        uint expectedTotalCollateralTokenMovedOut_ =
-            fundingManager.exposed_redeemTokensFormulaWrapper(sellAmount_);
-        uint expectedProjectCollateralFeeAmount_ = 0;
-        uint expectedNetCollateralRedeemAmount_ =
-        expectedTotalCollateralTokenMovedOut_
-            - expectedProjectCollateralFeeAmount_;
+        (
+            uint expectedTotalCollateralTokenMovedOut_,
+            uint expectedProjectCollateralFeeAmount_,
+            , /*expectedProtocolCollateralFeeAmount_*/
+            uint expectedNetCollateralRedeemAmount_
+        ) = _getExpectedReturnValuesSellOrder(
+            sellAmount_, projectSellFee, protocolSellFee
+        );
 
         // Test
         vm.prank(receiver_);
@@ -1874,6 +1983,43 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Test
         fundingManager.exposed_handleCollateralTokensAfterSell(
             recipient_, amount_
+        );
+    }
+
+    /* Test: Function _getCollateralSellFeePercentage()
+        └── When the function _getCollateralSellFeePercentage() is called
+            └── Then it should return the correct collateral sell fee percentage and treasury address
+    */
+    function testInternalGetCollateralSellFeePercentage_works(
+        uint feePercentage_,
+        address treasury_
+    ) public {
+        vm.assume(feePercentage_ < feeManager.maxFee());
+        vm.assume(treasury_ != address(0));
+        // Setup
+
+        // Set collateral fee for processPayments function
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(_paymentProcessor),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            feePercentage_
+        );
+        feeManager.setWorkflowTreasury(address(_orchestrator), treasury_);
+
+        // Test
+        (uint collateralSellFeePercentage_, address collateralTreasury_) =
+            fundingManager.exposed_getCollateralSellFeePercentage();
+
+        // Assert
+        assertEq(
+            collateralSellFeePercentage_,
+            feePercentage_,
+            "Collateral sell fee percentage is not correct"
+        );
+        assertEq(
+            collateralTreasury_, treasury_, "Collateral treasury is not correct"
         );
     }
 
@@ -1941,5 +2087,36 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         newFundingManager.init(_orchestrator, _METADATA, newConfigData);
 
         return address(newFundingManager);
+    }
+
+    function _getExpectedReturnValuesSellOrder(
+        uint sellAmount_,
+        uint projectSellFee_,
+        uint protocolSellFee_
+    )
+        internal
+        view
+        returns (
+            uint expectedTotalCollateralTokenMovedOut_,
+            uint expectedProjectCollateralFeeAmount_,
+            uint expectedProtocolCollateralFeeAmount_,
+            uint expectedNetCollateralRedeemAmount_
+        )
+    {
+        // Total collateral token "moving out", i.e. total amount of collateral tokens
+        // calculated based on the sell amount - issuance token sell fee
+        expectedTotalCollateralTokenMovedOut_ =
+            fundingManager.exposed_redeemTokensFormulaWrapper(sellAmount_);
+        // Expected project collateral fee amount
+        expectedProjectCollateralFeeAmount_ =
+            expectedTotalCollateralTokenMovedOut_ * projectSellFee_ / BPS;
+        // Expected protocol collateral fee amount
+        expectedProtocolCollateralFeeAmount_ =
+            expectedTotalCollateralTokenMovedOut_ * protocolSellFee_ / BPS;
+        // Expected net collateral redeem amount, i.e. amount recipent gets
+        expectedNetCollateralRedeemAmount_ =
+        expectedTotalCollateralTokenMovedOut_
+            - expectedProjectCollateralFeeAmount_
+            - expectedProtocolCollateralFeeAmount_;
     }
 }
