@@ -9,7 +9,7 @@ import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
 /**
- * @title   External Price Oracle Funding Manager with Payment Client
+ * @title   External Price Oracle Funding Manager with Payment Client.
  *
  * @notice  A funding manager implementation that manages token issuance and
  *          redemption based on external oracle price feeds. While token
@@ -18,28 +18,28 @@ import {IRedeemingBondingCurveBase_v1} from
  *          client system.
  *
  * @dev     Inherits functionality from:
- *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface
- *          - ERC20PaymentClientBase_v2: Payment processing capabilities
- *          - RedeemingBondingCurveBase_v1: Token issuance and redemption logic
+ *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface.
+ *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
+ *          - RedeemingBondingCurveBase_v1: Token issuance and redemption logic.
  *
  *          Key features:
- *              - Oracle-driven token pricing
+ *              - Oracle-driven token pricing.
  *                Uses external price feeds to determine token value for all
- *                issuance and redemption operations
+ *                issuance and redemption operations.
  *
- *              - Token issuance and redemption
+ *              - Token issuance and redemption.
  *                Mints new tokens during purchases and burns tokens during
- *                sell operations at oracle-determined prices
+ *                sell operations at oracle-determined prices.
  *
- *              - Whitelisting system for controlled token distribution
- *                Restricts token purchases and sales to approved addresses
+ *              - Whitelisting system for controlled token distribution.
+ *                Restricts token purchases and sales to approved addresses.
  *
- *              - Queue-based redemption and payment processing
+ *              - Queue-based redemption and payment processing.
  *                Creates payment orders in a queue and sends them to the payment
  *                processor for executing token redemptions.
  *
- *              - Fee management on buy/sell operations
- *                Configurable fee structure for trading operations
+ *              - Fee management on buy/sell operations.
+ *                Configurable fee structure for trading operations.
  *
  * @custom:setup    This module requires the following MANDATORY setup steps:
  *
@@ -50,7 +50,7 @@ import {IRedeemingBondingCurveBase_v1} from
  *                                the module cannot mint or burn tokens.
  *                     - How:     The owner of the issuance token contract must
  *                                call the minter setting function to authorize
- *                                this module
+ *                                this module.
  *                     - Example: issuanceToken.setMinter(moduleAddress, true);
  *
  *                  2. Configure Oracle:
@@ -60,7 +60,7 @@ import {IRedeemingBondingCurveBase_v1} from
  *                                valuations during issuance and redemption.
  *                     - How:     The OrchestratorAdmin must first get the
  *                                deployed Oracle module's address, then call the
- *                                setter function
+ *                                setter function.
  *                     - Example: module.setOracleAddress(oracleAddress);
  *
  *                  3. Setup Whitelist:
@@ -71,8 +71,8 @@ import {IRedeemingBondingCurveBase_v1} from
  *                                distribution and compliance.
  *                     - How:     The OrchestratorAdmin (or WHITELIST_ROLE_ADMIN
  *                                if configured) must:
- *                                1. Retrieve the whitelist role identifier
- *                                2. Grant the role to desired addresses
+ *                                1. Retrieve the whitelist role identifier.
+ *                                2. Grant the role to desired addresses.
  *                     - Example: module.grantModuleRole(
  *                                module.getWhitelistRole(),
  *                                userAddress
@@ -80,11 +80,12 @@ import {IRedeemingBondingCurveBase_v1} from
  *
  *                  4. Setup Queue Executors:
  *                     - Purpose: Implements access control for authorized
- *                                addresses that can process the redemption queue.
+ *                                addresses that can process the redemption
+ *                                queue.
  *                     - How:     The OrchestratorAdmin (or
  *                                QUEUE_EXECUTOR_ROLE_ADMIN if configured) must:
- *                                1. Retrieve the executor role identifier
- *                                2. Grant the role to designated executors
+ *                                1. Retrieve the executor role identifier.
+ *                                2. Grant the role to designated executors.
  *                     - Example: module.grantModuleRole(
  *                                 module.getQueueExecutorRole(),
  *                                 executorAddress
@@ -94,20 +95,21 @@ import {IRedeemingBondingCurveBase_v1} from
  *                     - Purpose: Activates the buy/sell functionality of the
  *                                contract. Trading must be explicitly enabled.
  *                     - How:     The OrchestratorAdmin must enable both buying
- *                                and selling operations separately
+ *                                and selling operations separately.
  *                     - Example: module.openBuy();
  *                                module.openSell();
  *
  *                  OPTIONAL setup steps for enhanced administration:
  *
  *                  1. Custom Whitelist Admin:
- *                     - Purpose: Enables delegation of whitelist management to a
- *                                dedicated admin role instead of relying on the
- *                                OrchestratorAdmin. This allows for more granular
- *                                access control and operational flexibility.
+ *                     - Purpose: Enables delegation of whitelist management to
+ *                                a dedicated admin role instead of relying on
+ *                                the OrchestratorAdmin. This allows for more
+ *                                granular access control and operational
+ *                                flexibility.
  *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles
- *                                2. Transfer admin rights through the Authorizer
+ *                                1. Generate the role IDs for both roles.
+ *                                2. Transfer admin rights through the Authorizer.
  *                     - Example: authorizer.transferAdminRole(
  *                                authorizer.generateRoleId(
  *                                  moduleAddress,
@@ -120,13 +122,15 @@ import {IRedeemingBondingCurveBase_v1} from
  *                                );
  *
  *                  2. Custom Queue Executor Admin:
- *                     - Purpose: Allows delegation of queue executor management
- *                                to a dedicated admin role instead of the
- *                                OrchestratorAdmin. This allows for more granular
- *                                access control and operational flexibility.
+ *                     - Purpose: Allows delegation of queue executor
+ *                                management to a dedicated admin role instead
+ *                                of the OrchestratorAdmin. This allows for
+ *                                more granular access control and operational
+ *                                flexibility.
  *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles
- *                                2. Transfer admin rights through the Authorizer
+ *                                1. Generate the role IDs for both roles.
+ *                                2. Transfer admin rights through the
+ *                                   Authorizer.
  *                     - Example: authorizer.transferAdminRole(
  *                                authorizer.generateRoleId(
  *                                   moduleAddress,

@@ -9,29 +9,30 @@ import {IERC20PaymentClientBase_v2} from
 /**
  * @title   Queue Based Payment Processor
  *
- * @notice  A payment processor implementation that manages payment orders through
- *          a FIFO queue system. It supports automated execution of payments
- *          within the processPayments function.
+ * @notice  A payment processor implementation that manages payment orders
+ *          through a FIFO queue system. It supports automated execution of
+ *          payments within the processPayments function.
  *
  * @dev     This contract inherits from:
- *          - IPP_Queue_v1: Implementation interface
- *          - IPaymentProcessor_v2: Payment processor interface
- *          - Module_v1: Base module functionality
+ *          - IPP_Queue_v1: Implementation interface.
+ *          - IPaymentProcessor_v2: Payment processor interface.
+ *          - Module_v1: Base module functionality.
  *
  *          Key features:
- *              - FIFO queue management for payment orders
+ *              - FIFO queue management for payment orders.
  *                Orders are processed in the order they are added to the queue,
  *                first in first out.
  *
- *              - Automated payment execution through queue processing
+ *              - Automated payment execution through queue processing.
  *                The processPayments function will add orders to the queue and
  *                execute the orders right away.
  *
- *              - Payment order lifecycle management with state tracking
+ *              - Payment order lifecycle management with state tracking.
  *                The state of orders are tracked and emitted. The states are:
  *                  - PROCESSED: The order has been processed, the collateral has
  *                    been transferred to the recipient.
- *                  - CANCELLED: The order has been cancelled by the queue operator.
+ *                  - CANCELLED: The order has been cancelled by the queue
+ *                    operator.
  *                  - PENDING: The order is still in the queue.
  *                  - FAILED: The order has failed due to the transfer failing
  *                    (blacklisted address).
@@ -40,12 +41,12 @@ import {IERC20PaymentClientBase_v2} from
  *
  *                 1. Configure Queue Operators:
  *                    - Purpose: Queue operators are authorized to cancel payment
- *                               orders in the queue, and claim collateral for failed
- *                               payments.
- *                    - How:     The OrchestratorAdmin (or QUEUE_OPERATOR_ROLE_ADMIN
- *                               if configured) must:
- *                               1. Retrieve the queue operator role identifier
- *                               2. Grant the role to desired addresses
+ *                               orders in the queue, and claim collateral for
+ *                               failed payments.
+ *                    - How:     The OrchestratorAdmin (or
+ *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
+ *                               1. Retrieve the queue operator role identifier.
+ *                               2. Grant the role to desired addresses.
  *                    - Example: module.grantModuleRole(
  *                                module.getQueueOperatorRole(),
  *                                operatorAddress
@@ -54,13 +55,14 @@ import {IERC20PaymentClientBase_v2} from
  *                 OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Custom Queue Operator Admin:
- *                    - Purpose: Enables delegation of queue operator management to a
- *                               dedicated admin role instead of relying on the
- *                               OrchestratorAdmin. This allows for more granular
- *                               access control and operational flexibility.
+ *                    - Purpose: Enables delegation of queue operator management
+ *                               to a dedicated admin role instead of relying on
+ *                               the OrchestratorAdmin. This allows for more
+ *                               granular access control and operational
+ *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles
- *                               2. Transfer admin rights through the Authorizer
+ *                               1. Generate the role IDs for both roles.
+ *                               2. Transfer admin rights through the Authorizer.
  *                    - Example: authorizer.transferAdminRole(
  *                               authorizer.generateRoleId(
  *                                 moduleAddress,

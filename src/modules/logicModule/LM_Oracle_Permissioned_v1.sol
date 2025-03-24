@@ -15,41 +15,44 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Manual External Price Oracle Implementation
+ * @title   Manual External Price Oracle Implementation.
  *
  * @notice  This contract provides a manual price feed mechanism for token
  *          operations, allowing authorized users to set and update prices
  *          for both issuance (buying) and redemption (selling) operations.
  *
  * @dev     This contract inherits from:
- *          - ILM_Oracle_Permissioned_v1: Implementation interface
- *          - IOraclePrice_v1: Oracle price interface
- *          - Module_v1: Base module functionality
+ *          - ILM_Oracle_Permissioned_v1: Implementation interface.
+ *          - IOraclePrice_v1: Oracle price interface.
+ *          - Module_v1: Base module functionality.
  *
  *          Key features:
- *              - Two separate price feeds for issuance and redemption
+ *              - Two separate price feeds for issuance and redemption.
  *                The contract maintains two separate price feeds for issuance
  *                and redemption operations.
  *
- *              - Manual price setting
+ *              - Manual price setting.
  *                Prices are manually set by the price setter role and must be
  *                non-zero values.
  *
- *              - Price decimal denominations
- *                Prices are always given as amount of collateral going in/coming out.
- *                Prices are denominated in collateral token decimals. For example:
- *                - To price issuing 1 token at 1.5 collateral with 6 decimal collateral: 1_500_000
- *                - To price redeeming 1 token at 0.5 collateral with 6 decimal collateral: 500_000
+ *              - Price decimal denominations.
+ *                Prices are always given as amount of collateral going in/coming
+ *                out. Prices are denominated in collateral token decimals. For
+ *                example:
+ *                - To price issuing 1 token at 1.5 collateral with 6 decimal
+ *                  collateral: 1_500_000
+ *                - To price redeeming 1 token at 0.5 collateral with 6 decimal
+ *                  collateral: 500_000
  *
  * @custom:setup   This module requires the following MANDATORY setup steps:
  *
  *                 1. Configure Price Setter Role:
- *                    - Purpose: The price setter role is authorized to set prices
- *                               for issuance and redemption operations.
+ *                    - Purpose: The price setter role is authorized to set
+ *                               prices for issuance and redemption operations.
  *                    - How:     The OrchestratorAdmin (or PRICE_SETTER_ROLE_ADMIN
  *                               if configured) must:
- *                               1. Retrieve the price setter role identifier
- *                               2. Grant the role to desired addresses
+ *                               1. Retrieve the price setter role identifier.
+ *                               2. Grant the role to desired addresses.
  *                    - Example: module.grantModuleRole(
  *                                module.getPriceSetterRole(),
  *                                operatorAddress
@@ -58,13 +61,14 @@ import {ERC165Upgradeable} from
  *                 OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Custom Price Setter Role Admin:
- *                    - Purpose: Enables delegation of price setter role management to a
- *                               dedicated admin role instead of relying on the
- *                               OrchestratorAdmin. This allows for more granular
- *                               access control and operational flexibility.
+ *                    - Purpose: Enables delegation of price setter role
+ *                               management to a dedicated admin role instead of
+ *                               relying on the OrchestratorAdmin. This allows
+ *                               for more granular access control and operational
+ *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles
- *                               2. Transfer admin rights through the Authorizer
+ *                               1. Generate the role IDs for both roles.
+ *                               2. Transfer admin rights through the Authorizer.
  *                    - Example: authorizer.transferAdminRole(
  *                               authorizer.generateRoleId(
  *                                 moduleAddress,

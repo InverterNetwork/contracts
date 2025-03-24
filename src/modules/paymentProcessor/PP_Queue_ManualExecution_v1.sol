@@ -24,24 +24,25 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *          manual processing of payment orders in the queue.
  *
  * @dev     This contract inherits from:
- *          - IPP_Queue_ManualExecution_v1: Implementation interface
- *          - PP_Queue_v1: Queue based payment processor
+ *          - IPP_Queue_ManualExecution_v1: Implementation interface.
+ *          - PP_Queue_v1: Queue based payment processor.
  *
  *          Key features:
- *              - FIFO queue management for payment orders
+ *              - FIFO queue management for payment orders.
  *                Orders are processed in the order they are added to the queue,
  *                first in first out.
  *
- *              - Manual payment execution through queue processing
+ *              - Manual payment execution through queue processing.
  *                Process payments will only add orders to the queue and not
  *                execute them. The executePaymentQueue function will execute
  *                the orders in the queue right away.
  *
- *              - Payment order lifecycle management with state tracking
+ *              - Payment order lifecycle management with state tracking.
  *                The state of orders are tracked and emitted. The states are:
  *                  - PROCESSED: The order has been processed, the collateral has
  *                    been transferred to the recipient.
- *                  - CANCELLED: The order has been cancelled by the queue operator.
+ *                  - CANCELLED: The order has been cancelled by the queue
+ *                    operator.
  *                  - PENDING: The order is still in the queue.
  *                  - FAILED: The order has failed due to the transfer failing
  *                    (blacklisted address).
@@ -50,12 +51,12 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *
  *                 1. Configure Queue Operators:
  *                    - Purpose: Queue operators are authorized to cancel payment
- *                               orders in the queue, and claim collateral for failed
- *                               payments.
- *                    - How:     The OrchestratorAdmin (or QUEUE_OPERATOR_ROLE_ADMIN
- *                               if configured) must:
- *                               1. Retrieve the queue operator role identifier
- *                               2. Grant the role to desired addresses
+ *                               orders in the queue, and claim collateral for
+ *                               failed payments.
+ *                    - How:     The OrchestratorAdmin (or
+ *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
+ *                               1. Retrieve the queue operator role identifier.
+ *                               2. Grant the role to desired addresses.
  *                    - Example: module.grantModuleRole(
  *                                module.getQueueOperatorRole(),
  *                                operatorAddress
@@ -64,13 +65,14 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *                 OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Custom Queue Operator Admin:
- *                    - Purpose: Enables delegation of queue operator management to a
- *                               dedicated admin role instead of relying on the
- *                               OrchestratorAdmin. This allows for more granular
- *                               access control and operational flexibility.
+ *                    - Purpose: Enables delegation of queue operator management
+ *                               to a dedicated admin role instead of relying on
+ *                               the OrchestratorAdmin. This allows for more
+ *                               granular access control and operational
+ *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles
- *                               2. Transfer admin rights through the Authorizer
+ *                               1. Generate the role IDs for both roles.
+ *                               2. Transfer admin rights through the Authorizer.
  *                    - Example: authorizer.transferAdminRole(
  *                               authorizer.generateRoleId(
  *                                 moduleAddress,
