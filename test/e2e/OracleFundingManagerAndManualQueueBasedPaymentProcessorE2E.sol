@@ -88,7 +88,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     // Event signatures
     bytes32 private constant REDEMPTION_ORDER_CREATED_EVENT_SIGNATURE =
     keccak256(
-        "RedemptionOrderCreated(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,address,uint8)"
+        "RedemptionOrderCreated(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,uint256,address,uint8)"
     );
     bytes32 private constant PAYMENT_ORDER_QUEUED_EVENT_SIGNATURE = keccak256(
         "PaymentOrderQueued(uint256,address,address,address,uint256,uint256)"
@@ -130,6 +130,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         uint exchangeRate_;
         uint feePercentage_;
         uint feeAmount_;
+        uint protocolFeeAmount_;
         uint finalRedemptionAmount_;
         address collateralToken_;
         IFM_PC_Oracle_Redeeming_v1.RedemptionState state_;
@@ -576,6 +577,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                     uint exchangeRate,
                     uint feePercentage,
                     uint feeAmount,
+                    uint protocolFeeAmount,
                     uint finalRedemptionAmount,
                     address collateralToken_,
                     IFM_PC_Oracle_Redeeming_v1.RedemptionState state
@@ -583,6 +585,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                     entry.data,
                     (
                         address,
+                        uint,
                         uint,
                         uint,
                         uint,
@@ -599,6 +602,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                 data.exchangeRate_ = exchangeRate;
                 data.feePercentage_ = feePercentage;
                 data.feeAmount_ = feeAmount;
+                data.protocolFeeAmount_ = protocolFeeAmount;
                 data.finalRedemptionAmount_ = finalRedemptionAmount;
                 data.collateralToken_ = collateralToken_;
                 data.state_ = state;

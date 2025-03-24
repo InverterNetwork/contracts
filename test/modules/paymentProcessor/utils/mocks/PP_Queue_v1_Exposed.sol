@@ -104,6 +104,13 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         return _lowLevelTransfer(token_, client_, recipient_, amount_);
     }
 
+    function exposed_getProtocolFeeDetails(
+        uint totalAmount_,
+        bytes4 functionSelector_
+    ) external view returns (uint, uint, address) {
+        return _getProtocolFeeDetails(totalAmount_, functionSelector_);
+    }
+
     function exposed_orderExists(
         uint orderId_,
         IERC20PaymentClientBase_v2 client_

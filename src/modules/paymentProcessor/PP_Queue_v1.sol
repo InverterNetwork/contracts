@@ -1,40 +1,89 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.23;
 
-// -------------------------------------------------------------------------
-// External Imports
+// External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-// -------------------------------------------------------------------------
-// Internal Imports
+// Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
-import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
 /**
  * @title   Queue Based Payment Processor
  *
- * @notice  A payment processor implementation that manages payment orders through
- *          a FIFO queue system. It supports automated execution of payments
- *          within the processPayments function.
+ * @notice  A payment processor implementation that manages payment orders
+ *          through a FIFO queue system. It supports automated execution of
+ *          payments within the processPayments function.
  *
  * @dev     This contract inherits from:
- *              - IPP_Queue_v1
- *              - Module_v1
+ *          - IPP_Queue_v1: Implementation interface.
+ *          - IPaymentProcessor_v2: Payment processor interface.
+ *          - Module_v1: Base module functionality.
  *
  *          Key features:
- *              - FIFO queue management
- *              - Automated payment execution
- *              - Payment order lifecycle management
+ *              - FIFO queue management for payment orders.
+ *                Orders are processed in the order they are added to the queue,
+ *                first in first out.
  *
- *          The contract implements automated payment processing by executing
- *          the queue within processPayments.
+ *              - Automated payment execution through queue processing.
+ *                The processPayments function will add orders to the queue and
+ *                execute the orders right away.
+ *
+ *              - Payment order lifecycle management with state tracking.
+ *                The state of orders are tracked and emitted. The states are:
+ *                  - PROCESSED: The order has been processed, the collateral has
+ *                    been transferred to the recipient.
+ *                  - CANCELLED: The order has been cancelled by the queue
+ *                    operator.
+ *                  - PENDING: The order is still in the queue.
+ *                  - FAILED: The order has failed due to the transfer failing
+ *                    (blacklisted address).
+ *
+ * @custom:setup   This module requires the following MANDATORY setup steps:
+ *
+ *                 1. Configure Queue Operators:
+ *                    - Purpose: Queue operators are authorized to cancel payment
+ *                               orders in the queue, and claim collateral for
+ *                               failed payments.
+ *                    - How:     The OrchestratorAdmin (or
+ *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
+ *                               1. Retrieve the queue operator role identifier.
+ *                               2. Grant the role to desired addresses.
+ *                    - Example: module.grantModuleRole(
+ *                                module.getQueueOperatorRole(),
+ *                                operatorAddress
+ *                               );
+ *
+ *                 OPTIONAL setup steps for enhanced administration:
+ *
+ *                 1. Custom Queue Operator Admin:
+ *                    - Purpose: Enables delegation of queue operator management
+ *                               to a dedicated admin role instead of relying on
+ *                               the OrchestratorAdmin. This allows for more
+ *                               granular access control and operational
+ *                               flexibility.
+ *                    - How:     The OrchestratorAdmin must:
+ *                               1. Generate the role IDs for both roles.
+ *                               2. Transfer admin rights through the Authorizer.
+ *                    - Example: authorizer.transferAdminRole(
+ *                               authorizer.generateRoleId(
+ *                                 moduleAddress,
+ *                                 module.getQueueOperatorRole()
+ *                               ),
+ *                               authorizer.generateRoleId(
+ *                                 moduleAddress,
+ *                                 module.getQueueOperatorRoleAdmin()
+ *                                )
+ *                               );
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -86,6 +135,9 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     ///         QUEUE_OPERATOR_ROLE within the Authorizer module.
     bytes32 private constant QUEUE_OPERATOR_ROLE_ADMIN =
         "QUEUE_OPERATOR_ROLE_ADMIN";
+
+    /// @notice BPS value.
+    uint private constant BPS = 10_000;
 
     // -------------------------------------------------------------------------
     // Storage
@@ -555,12 +607,35 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         address recipient_,
         uint amount_
     ) internal virtual returns (bool success_) {
+        // Get the protocol fee amount, net amount and treasury address to sent the fee.
+        (uint protocolFeeAmount, uint netAmount, address treasury_) =
+        _getProtocolFeeDetails(
+            amount_, bytes4(keccak256(bytes("processPayments(address)")))
+        );
+
         // Try direct transfer to recipient
-        (bool success) = _lowLevelTransfer(token_, client_, recipient_, amount_);
+        (bool success) =
+            _lowLevelTransfer(token_, client_, recipient_, netAmount);
 
         if (success) {
-            emit TokensReleased(recipient_, token_, amount_);
+            // Emit event for releasing tokens from the payment client to
+            // the recipient.
+            emit TokensReleased(recipient_, token_, netAmount);
             success_ = true;
+
+            if (protocolFeeAmount > 0) {
+                // Transfer fee amount to protocol treasury.
+                IERC20(token_).safeTransferFrom(
+                    client_, treasury_, protocolFeeAmount
+                );
+                // Emit event for releasing tokens from the payment client to
+                // the protocol treasury.
+                emit TokensReleased(treasury_, token_, protocolFeeAmount);
+                // Emit event for protocol fee transfer
+                emit ProtocolFeeTransferred(
+                    token_, treasury_, protocolFeeAmount
+                );
+            }
         } else {
             // If direct transfer failed, try transferring to this module
             (success) =
@@ -944,6 +1019,46 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             revert Module__PP_Queue_InvalidTreasuryAddress(treasury_);
         }
         _failedOrdersTreasury = treasury_;
+    }
+
+    /// @notice Calculates the protocol fee amount, net amount and identifies the
+    ///         treasury address for a given function.
+    /// @dev    Retrieves the fee percentage and treasury address for the specified
+    ///         function selector, then calculates the actual fee amount based on
+    ///         the provided total amount.
+    /// @param  totalAmount_ The base amount on which to calculate the fee.
+    /// @param  functionSelector_ The function selector used to look up the
+    ///         appropriate fee data.
+    /// @return feeAmount_ The calculated protocol fee amount.
+    /// @return netAmount_ The net amount after deducting the protocol fee.
+    /// @return treasury_ The treasury address where the fee should be sent.
+    function _getProtocolFeeDetails(uint totalAmount_, bytes4 functionSelector_)
+        internal
+        view
+        virtual
+        returns (uint feeAmount_, uint netAmount_, address treasury_)
+    {
+        // Get the fee percentage and treasury address for the specified function selector.
+        (uint protocolFeePercentage, address treasuryAddress_) =
+            _getFeeManagerCollateralFeeData(functionSelector_);
+        treasury_ = treasuryAddress_;
+
+        // Revert if the fee percentage is greater than or equal to the BPS.
+        if (protocolFeePercentage >= BPS) {
+            revert Module__PP_Queue_FeeAmountToHigh(protocolFeePercentage);
+        }
+
+        // Calculate protocol fee amount if applicable
+        if (protocolFeePercentage > 0) {
+            feeAmount_ = totalAmount_ * protocolFeePercentage / BPS;
+            // Revert if calculated protocol fee amount rounded down to zero
+            if (feeAmount_ == 0) {
+                revert Module__PP_Queue_InvalidFeeAmount(feeAmount_);
+            }
+        }
+
+        // Calculate the net amount after deducting the protocol fee.
+        netAmount_ = totalAmount_ - feeAmount_;
     }
 
     /// @dev    Gap for possible future upgrades.

@@ -60,6 +60,10 @@ contract PP_Queue_v1_Test is ModuleTest {
     // Variables
 
     bytes32 public constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
+    // processPayments function selector
+    bytes4 internal constant PROCESS_PAYMENTS_FUNCTION_SELECTOR =
+        bytes4(keccak256(bytes("processPayments(address)")));
+    uint internal constant BPS = 10_000;
 
     //Role
     bytes32 internal roleIDqueue;
@@ -1953,12 +1957,15 @@ contract PP_Queue_v1_Test is ModuleTest {
             │       ├── And the amount should be transferred to the payment processor
             │       ├── And the amount is added to the unclaimable amounts
             │       └── And the function should return false
+            │       └── And the outstanding amount is updated
             └── And the recipient is valid (transfer succeeds)
                 └── When the function _tryPaymentTransfer() is called
                     ├── Then the low level transfer should succeed
                     ├── And the amount should be transferred to the recipient
                     ├── And an event should be emitted
+                    ├── And the fee is transferred to the protocol treasury
                     └── And the function should return true
+                    └── And the outstanding amount is updated
     */
     function testInternalTryPaymentTransfer_worksGivenAmountTransferredToPPAndReturnFalse(
         uint amount_
@@ -2027,11 +2034,21 @@ contract PP_Queue_v1_Test is ModuleTest {
     }
 
     function testInternalTryPaymentTransfer_worksGivenAmountTransferredToRecipientAndReturnTrue(
-        uint amount_
+        uint amount_,
+        uint protocolFee_
     ) public {
         // Setup
         address validRecipient_ = makeAddr("validRecipient");
-        vm.assume(amount_ > 0);
+        amount_ = bound(amount_, 1e18, type(uint64).max);
+        // Set protocol fee
+        protocolFee_ = bound(protocolFee_, 10, feeManager.maxFee());
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(queue),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolFee_
+        );
         // mint tokens to payment client and approve queue to spend
         _token.mint(address(paymentClient), amount_);
         vm.prank(address(paymentClient));
@@ -2040,6 +2057,11 @@ contract PP_Queue_v1_Test is ModuleTest {
         paymentClient.exposed_addToOutstandingTokenAmounts(
             address(_token), amount_
         );
+        // Get protocol treasury
+        address protocolTreasury_ = feeManager.getDefaultProtocolTreasury();
+
+        uint protocolFeeAmount = amount_ * protocolFee_ / BPS;
+        uint netAmount = amount_ - protocolFeeAmount;
 
         // Assert pre-conditions
         assertEq(
@@ -2057,10 +2079,21 @@ contract PP_Queue_v1_Test is ModuleTest {
             amount_,
             "Payment Client should have tokens in outstanding amounts"
         );
+        assertEq(
+            _token.balanceOf(protocolTreasury_),
+            0,
+            "Protocol treasury should have no tokens"
+        );
 
         vm.expectEmit(true, true, true, true, address(queue));
         emit IPaymentProcessor_v2.TokensReleased(
-            validRecipient_, address(_token), amount_
+            validRecipient_, address(_token), netAmount
+        );
+        emit IPaymentProcessor_v2.TokensReleased(
+            protocolTreasury_, address(_token), protocolFeeAmount
+        );
+        emit IModule_v1.ProtocolFeeTransferred(
+            address(_token), protocolTreasury_, protocolFeeAmount
         );
         // Test
         bool success_ = queue.exposed_tryPaymentTransfer(
@@ -2068,6 +2101,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         // Assert post-conditions
+        assertTrue(success_, "Transfer should succeed");
         assertEq(
             _token.balanceOf(address(paymentClient)),
             0,
@@ -2075,8 +2109,13 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
         assertEq(
             _token.balanceOf(validRecipient_),
-            amount_,
+            netAmount,
             "Recipient should have tokens"
+        );
+        assertEq(
+            _token.balanceOf(protocolTreasury_),
+            protocolFeeAmount,
+            "Protocol treasury should have tokens"
         );
         assertEq(
             paymentClient.outstandingTokenAmount(address(_token)),
@@ -3003,6 +3042,70 @@ contract PP_Queue_v1_Test is ModuleTest {
         paymentParameters[0] = bytes32(orderId_);
 
         return (_flags, paymentParameters);
+    }
+
+    /* Test: Function _getProtocolFeeDetails()
+        └── Given valid protocol fee amount
+            ├── And total amount is to low such that rounding results in zero fee amount
+            │   └── When the function _getProtocolFeeDetails() is called
+            │       └── Then it should revert
+            └── And total fee amount is big enough
+                └── When the function _getProtocolFeeDetails() is called
+                    └── Then it should return the correct fee amount and treasury address
+    */
+
+    function testInternalGetProtocolFeeAmountAndTreasury_revertGivenRoundingResultInZeroFeeAmount(
+    ) public {
+        uint protocolFee = 100;
+        uint totalAmount = 1;
+
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(queue),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolFee
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidFeeAmount(uint256)", 0
+            )
+        );
+        queue.exposed_getProtocolFeeDetails(
+            totalAmount, PROCESS_PAYMENTS_FUNCTION_SELECTOR
+        );
+    }
+
+    function testInternalGetProtocolFeeAmountAndTreasury_worksGivenCorrectFeeDetailsRetrieved(
+        uint protocolFee_,
+        uint totalAmount_
+    ) public {
+        protocolFee_ = bound(protocolFee_, 1, feeManager.maxFee());
+        totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
+
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(queue),
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            true,
+            protocolFee_
+        );
+
+        uint expectedFeeAmount = totalAmount_ * protocolFee_ / BPS;
+        address expectedTreasury =
+            feeManager.getWorkflowTreasuries(address(_orchestrator));
+
+        (uint feeAmount, uint netAmount, address treasury) = queue
+            .exposed_getProtocolFeeDetails(
+            totalAmount_, PROCESS_PAYMENTS_FUNCTION_SELECTOR
+        );
+
+        assertEq(feeAmount, expectedFeeAmount, "Fee amount should be correct");
+        assertEq(
+            netAmount, totalAmount_ - feeAmount, "Net amount should be correct"
+        );
+        assertEq(treasury, expectedTreasury, "Treasury should be correct");
     }
 
     // ================================================================================

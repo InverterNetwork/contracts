@@ -25,6 +25,7 @@ import {
     IERC20PaymentClientBase_v2
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {IERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
+import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -34,7 +35,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   External Price Oracle Funding Manager with Payment Client
+ * @title   External Price Oracle Funding Manager with Payment Client.
  *
  * @notice  A funding manager implementation that manages token issuance and
  *          redemption based on external oracle price feeds. While token
@@ -43,28 +44,28 @@ import {ERC165Upgradeable} from
  *          client system.
  *
  * @dev     Inherits functionality from:
- *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface
- *          - ERC20PaymentClientBase_v2: Payment processing capabilities
- *          - RedeemingBondingCurveBase_v1: Token issuance and redemption logic
+ *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface.
+ *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
+ *          - RedeemingBondingCurveBase_v1: Token issuance and redemption logic.
  *
  *          Key features:
- *              - Oracle-driven token pricing
+ *              - Oracle-driven token pricing.
  *                Uses external price feeds to determine token value for all
- *                issuance and redemption operations
+ *                issuance and redemption operations.
  *
- *              - Token issuance and redemption
+ *              - Token issuance and redemption.
  *                Mints new tokens during purchases and burns tokens during
- *                sell operations at oracle-determined prices
+ *                sell operations at oracle-determined prices.
  *
- *              - Whitelisting system for controlled token distribution
- *                Restricts token purchases and sales to approved addresses
+ *              - Whitelisting system for controlled token distribution.
+ *                Restricts token purchases and sales to approved addresses.
  *
- *              - Queue-based redemption and payment processing
+ *              - Queue-based redemption and payment processing.
  *                Creates payment orders in a queue and sends them to the payment
  *                processor for executing token redemptions.
  *
- *              - Fee management on buy/sell operations
- *                Configurable fee structure for trading operations
+ *              - Fee management on buy/sell operations.
+ *                Configurable fee structure for trading operations.
  *
  * @custom:setup    This module requires the following MANDATORY setup steps:
  *
@@ -75,7 +76,7 @@ import {ERC165Upgradeable} from
  *                                the module cannot mint or burn tokens.
  *                     - How:     The owner of the issuance token contract must
  *                                call the minter setting function to authorize
- *                                this module
+ *                                this module.
  *                     - Example: issuanceToken.setMinter(moduleAddress, true);
  *
  *                  2. Configure Oracle:
@@ -85,7 +86,7 @@ import {ERC165Upgradeable} from
  *                                valuations during issuance and redemption.
  *                     - How:     The OrchestratorAdmin must first get the
  *                                deployed Oracle module's address, then call the
- *                                setter function
+ *                                setter function.
  *                     - Example: module.setOracleAddress(oracleAddress);
  *
  *                  3. Setup Whitelist:
@@ -96,8 +97,8 @@ import {ERC165Upgradeable} from
  *                                distribution and compliance.
  *                     - How:     The OrchestratorAdmin (or WHITELIST_ROLE_ADMIN
  *                                if configured) must:
- *                                1. Retrieve the whitelist role identifier
- *                                2. Grant the role to desired addresses
+ *                                1. Retrieve the whitelist role identifier.
+ *                                2. Grant the role to desired addresses.
  *                     - Example: module.grantModuleRole(
  *                                module.getWhitelistRole(),
  *                                userAddress
@@ -105,11 +106,12 @@ import {ERC165Upgradeable} from
  *
  *                  4. Setup Queue Executors:
  *                     - Purpose: Implements access control for authorized
- *                                addresses that can process the redemption queue.
+ *                                addresses that can process the redemption
+ *                                queue.
  *                     - How:     The OrchestratorAdmin (or
  *                                QUEUE_EXECUTOR_ROLE_ADMIN if configured) must:
- *                                1. Retrieve the executor role identifier
- *                                2. Grant the role to designated executors
+ *                                1. Retrieve the executor role identifier.
+ *                                2. Grant the role to designated executors.
  *                     - Example: module.grantModuleRole(
  *                                 module.getQueueExecutorRole(),
  *                                 executorAddress
@@ -119,20 +121,21 @@ import {ERC165Upgradeable} from
  *                     - Purpose: Activates the buy/sell functionality of the
  *                                contract. Trading must be explicitly enabled.
  *                     - How:     The OrchestratorAdmin must enable both buying
- *                                and selling operations separately
+ *                                and selling operations separately.
  *                     - Example: module.openBuy();
  *                                module.openSell();
  *
  *                  OPTIONAL setup steps for enhanced administration:
  *
  *                  1. Custom Whitelist Admin:
- *                     - Purpose: Enables delegation of whitelist management to a
- *                                dedicated admin role instead of relying on the
- *                                OrchestratorAdmin. This allows for more granular
- *                                access control and operational flexibility.
+ *                     - Purpose: Enables delegation of whitelist management to
+ *                                a dedicated admin role instead of relying on
+ *                                the OrchestratorAdmin. This allows for more
+ *                                granular access control and operational
+ *                                flexibility.
  *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles
- *                                2. Transfer admin rights through the Authorizer
+ *                                1. Generate the role IDs for both roles.
+ *                                2. Transfer admin rights through the Authorizer.
  *                     - Example: authorizer.transferAdminRole(
  *                                authorizer.generateRoleId(
  *                                  moduleAddress,
@@ -145,13 +148,15 @@ import {ERC165Upgradeable} from
  *                                );
  *
  *                  2. Custom Queue Executor Admin:
- *                     - Purpose: Allows delegation of queue executor management
- *                                to a dedicated admin role instead of the
- *                                OrchestratorAdmin. This allows for more granular
- *                                access control and operational flexibility.
+ *                     - Purpose: Allows delegation of queue executor
+ *                                management to a dedicated admin role instead
+ *                                of the OrchestratorAdmin. This allows for
+ *                                more granular access control and operational
+ *                                flexibility.
  *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles
- *                                2. Transfer admin rights through the Authorizer
+ *                                1. Generate the role IDs for both roles.
+ *                                2. Transfer admin rights through the
+ *                                   Authorizer.
  *                     - Example: authorizer.transferAdminRole(
  *                                authorizer.generateRoleId(
  *                                   moduleAddress,
@@ -615,6 +620,49 @@ contract FM_PC_Oracle_Redeeming_v1 is
         }
     }
 
+    /// @inheritdoc IRedeemingBondingCurveBase_v1
+    /// @dev        Function uses the collateral sell fee from the payment processor
+    ///             function processPayments() to calculate the sale return.
+    ///             This is done because the collateral fee will be collected when the
+    ///             payment processor executes the payment queue.
+    function calculateSaleReturn(uint depositAmount_)
+        public
+        view
+        virtual
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        returns (uint redeemAmount_)
+    {
+        // Set min amount out to 1 for price calculation
+        _ensureNonZeroTradeParameters(depositAmount_, 1);
+
+        // Get protocol issuance sell fee percentage
+        (
+            /* collateralTreasury */
+            ,
+            /* issuanceTreasury */
+            ,
+            uint protocolCollateralSellFeePercentage,
+            uint protocolIssuanceSellFeePercentage
+        ) = _getFunctionFeesAndTreasuryAddresses(
+            bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
+        );
+
+        // Deduct protocol sell fee from issuance, if applicable
+        (depositAmount_, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            depositAmount_, protocolIssuanceSellFeePercentage, 0
+        );
+
+        // Calculate redeem amount from formula
+        redeemAmount_ = _redeemTokensFormulaWrapper(depositAmount_);
+
+        // Deduct protocol and project sell fee from collateral, if applicable
+        (redeemAmount_, /* protocolFeeAmount */, /* projectFeeAmount */ ) =
+        _calculateNetAndSplitFees(
+            redeemAmount_, protocolCollateralSellFeePercentage, sellFee
+        );
+    }
+
     // -------------------------------------------------------------------------
     // Internal Functions
 
@@ -631,24 +679,28 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     /// @notice Creates and emits a new redemption order.
-    /// @dev    This function wraps the `_createAndEmitOrder` internal function
-    ///         with specified parameters to handle the transaction and direct
-    ///         the proceeds.
     /// @param  receiver_ The address that will receive the redeemed tokens.
     /// @param  depositAmount_ The amount of tokens to be sold.
-    /// @param  collateralRedeemAmount_ The amount of collateral to redeem.
+    /// @param  netCollateralRedeemAmount_ The net amount of collateral to be
+    ///         received by the recipient.
     /// @param  projectCollateralFeeAmount_ The amount of redemption fee to charge.
+    /// @param  protocolCollateralFeeAmount_ The amount of protocol fee to charge.
     function _createAndEmitOrder(
         address receiver_,
         uint depositAmount_,
-        uint collateralRedeemAmount_,
-        uint projectCollateralFeeAmount_
+        uint netCollateralRedeemAmount_,
+        uint projectCollateralFeeAmount_,
+        uint protocolCollateralFeeAmount_
     ) internal virtual {
         // Generate new order ID.
         _orderId = ++_orderId;
 
-        // Update open redemption amount.
-        _addToOpenRedemptionAmount(collateralRedeemAmount_);
+        // Update open redemption amount with total collateral for redemption
+        // which should be deposited into the payment client, which includes
+        // the protocol fee amount and the net amount the recipient will receive.
+        _addToOpenRedemptionAmount(
+            netCollateralRedeemAmount_ + protocolCollateralFeeAmount_
+        );
 
         bytes32 flags;
         bytes32[] memory data;
@@ -663,7 +715,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         PaymentOrder memory order = PaymentOrder({
             recipient: receiver_,
             paymentToken: address(token()),
-            amount: collateralRedeemAmount_,
+            amount: netCollateralRedeemAmount_ + protocolCollateralFeeAmount_,
             originChainId: block.chainid,
             targetChainId: block.chainid,
             flags: flags,
@@ -680,7 +732,8 @@ contract FM_PC_Oracle_Redeeming_v1 is
             _oracle.getPriceForRedemption(),
             sellFee,
             projectCollateralFeeAmount_,
-            collateralRedeemAmount_,
+            protocolCollateralFeeAmount_,
+            netCollateralRedeemAmount_,
             address(token()),
             RedemptionState.PENDING
         );
@@ -717,9 +770,11 @@ contract FM_PC_Oracle_Redeeming_v1 is
         )
     {
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
-        // Get protocol fee percentages and treasury addresses.
+
+        // Get protocol issuance sell fee percentage
         (
-            address protocolCollateralTreasury,
+            /* protocolCollateralTreasury */
+            ,
             address protocolIssuanceTreasury,
             uint protocolCollateralSellFeePercentage,
             uint protocolIssuanceSellFeePercentage
@@ -750,9 +805,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
             protocolIssuanceTreasury, protocolIssuanceFeeAmount
         );
 
-        // Cache Collateral Token.
-        IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
-
         uint netCollateralRedeemAmount;
         // Get net amount, protocol and project fee amounts.
         (
@@ -765,12 +817,8 @@ contract FM_PC_Oracle_Redeeming_v1 is
             sellFee
         );
 
-        // Process the protocol fee.
-        _processProtocolFeeViaTransfer(
-            protocolCollateralTreasury,
-            collateralToken,
-            protocolCollateralFeeAmount
-        );
+        // Protocol Fee is not collected here, it is collected during the
+        // processing of the payment queue, in the payment processor.
 
         // Add project fee if applicable.
         if (projectCollateralFeeAmount_ > 0) {
@@ -788,7 +836,8 @@ contract FM_PC_Oracle_Redeeming_v1 is
             _receiver,
             _depositAmount,
             netCollateralRedeemAmount,
-            projectCollateralFeeAmount_
+            projectCollateralFeeAmount_,
+            protocolCollateralFeeAmount
         );
 
         // Emit event for tokens sold.
@@ -1017,6 +1066,52 @@ contract FM_PC_Oracle_Redeeming_v1 is
     ///         collateral is taken out.
     function _ensureTokenBalance(address token_) internal virtual override {
         // No balance check needed.
+    }
+
+    /// @notice Retrieves fee percentages and treasury addresses for both
+    ///         collateral and issuance tokens.
+    /// @dev    Uses payment processor's `processPayments()` selector for
+    ///         collateral fees since they're collected during queue execution.
+    /// @param  selector_ The function selector for issuance fee lookup.
+    /// @return collateralTreasury_ Address receiving collateral fees.
+    /// @return issuanceTreasury_ Address receiving issuance fees.
+    /// @return collateralFeePercentage_ Percentage fee on collateral tokens.
+    /// @return issuanceFeePercentage_ Percentage fee on issuance tokens.
+    function _getFunctionFeesAndTreasuryAddresses(bytes4 selector_)
+        internal
+        view
+        override(BondingCurveBase_v1)
+        returns (
+            address collateralTreasury_,
+            address issuanceTreasury_,
+            uint collateralFeePercentage_,
+            uint issuanceFeePercentage_
+        )
+    {
+        // Function selector for the payment processor's processPayments function,
+        // which is the function fee we use to calculate the collateral sell fee.
+        // This is done because the collateral fee will be collected when the
+        // payment processor executes the payment queue.
+        bytes4 processPaymentsSelector =
+            bytes4(keccak256(bytes("processPayments(address)")));
+
+        // Address of the workflows payment processor and fee manager
+        address paymentProcessor =
+            address(__Module_orchestrator.paymentProcessor());
+        address feeManager =
+            address(__Module_orchestrator.governor().getFeeManager());
+
+        (collateralFeePercentage_, collateralTreasury_) = IFeeManager_v1(
+            feeManager
+        ).getCollateralWorkflowFeeAndTreasury(
+            address(__Module_orchestrator), // Use orchestrator of this workflow
+            paymentProcessor, // Use the payment processor as module to get the fee for
+            processPaymentsSelector
+        );
+
+        // Get issuance fee and treasury addresses from fee manager.
+        (issuanceFeePercentage_, issuanceTreasury_) =
+            _getFeeManagerIssuanceFeeData(selector_);
     }
 
     /// @dev    Storage gap for future upgrades.
