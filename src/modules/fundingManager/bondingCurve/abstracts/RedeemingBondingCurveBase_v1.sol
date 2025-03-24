@@ -150,9 +150,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _calculateNetAndSplitFees(
             redeemAmount, collateralSellFeePercentage, sellFee
         );
-
-        // Return redeem amount
-        // return redeemAmount;
     }
 
     // -------------------------------------------------------------------------

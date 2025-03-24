@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // External Interfaces
-import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 
 // External Dependencies
 import {

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 
 /**
  * @title   ERC20 Issuance Token with Blacklist Functionality
