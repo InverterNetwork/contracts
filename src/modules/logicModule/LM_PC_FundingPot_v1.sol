@@ -126,12 +126,47 @@ contract LM_PC_FundingPot_v1 is
     // Public - Getters
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundDetails(uint64 _roundId)
+    function getRoundGenericParameters(uint64 _roundId)
         external
         view
-        returns (Round memory)
+        returns (
+            uint roundStart,
+            uint roundEnd,
+            uint roundCap,
+            address hookContract,
+            bytes memory hookFunction,
+            bool closureMechanism,
+            bool globalAccumulativeCaps
+        )
     {
-        return rounds[_roundId];
+        Round storage round = rounds[_roundId];
+        return (
+            round.roundStart,
+            round.roundEnd,
+            round.roundCap,
+            round.hookContract,
+            round.hookFunction,
+            round.closureMechanism,
+            round.globalAccumulativeCaps
+        );
+    }
+
+    function getRoundAccessCriteria(uint64 _roundId, uint64 _id)
+        external
+        view
+        returns (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        )
+    {
+        Round storage round = rounds[_roundId];
+        AccessCriteria storage accessCriteria = round.accessCriterias[_id];
+        return (
+            accessCriteria.nftContract,
+            accessCriteria.merkleRoot,
+            accessCriteria.allowedAddresses
+        );
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -155,17 +190,17 @@ contract LM_PC_FundingPot_v1 is
         nextRoundId++;
 
         uint64 roundId = nextRoundId;
-        rounds[roundId] = Round({
-            roundStart: _roundStart,
-            roundEnd: _roundEnd,
-            roundCap: _roundCap,
-            hookContract: _hookContract,
-            hookFunction: _hookFunction,
-            closureMechanism: _closureMechanism,
-            globalAccumulativeCaps: _globalAccumulativeCaps
-        });
 
-        _validateRoundParameters(rounds[roundId]);
+        Round storage round = rounds[roundId];
+        round.roundStart = _roundStart;
+        round.roundEnd = _roundEnd;
+        round.roundCap = _roundCap;
+        round.hookContract = _hookContract;
+        round.hookFunction = _hookFunction;
+        round.closureMechanism = _closureMechanism;
+        round.globalAccumulativeCaps = _globalAccumulativeCaps;
+
+        _validateRoundParameters(round);
 
         emit RoundCreated(
             roundId,
@@ -223,13 +258,49 @@ contract LM_PC_FundingPot_v1 is
 
         return true;
     }
+
+    function setAccessCriteriaForRound(
+        uint64 _roundId,
+        uint8 _accessId,
+        AccessCriteria memory _accessCriteria
+    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
+        Round storage round = rounds[_roundId];
+
+        if (round.roundEnd == 0 && round.roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundNotCreated();
+        }
+
+        if (block.timestamp > round.roundStart) {
+            revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
+        }
+
+        if (
+            (
+                _accessCriteria.accessCriteriaId == AccessCriteriaId.NFT
+                    && _accessCriteria.nftContract == address(0)
+            )
+                || (
+                    _accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE
+                        && _accessCriteria.merkleRoot == bytes32("")
+                )
+                || (
+                    _accessCriteria.accessCriteriaId == AccessCriteriaId.LIST
+                        && _accessCriteria.allowedAddresses.length == 0
+                )
+        ) {
+            revert Module__LM_PC_FundingPot__IncorrectAccessCriteria();
+        }
+
+        round.accessCriterias[_accessId] = _accessCriteria;
+        emit AccessCriteriaSet(_roundId, _accessId, _accessCriteria);
+    }
     // -------------------------------------------------------------------------
     // Internal
 
     /// @notice Validates the round parameters.
     /// @param  round The round to validate.
     /// @dev    Reverts if the round parameters are invalid.
-    function _validateRoundParameters(Round memory round) internal view {
+    function _validateRoundParameters(Round storage round) internal view {
         // Validate round start time is in the future
         // @note: The below condition wont allow _roundStart == block.timestamp
         if (round.roundStart <= block.timestamp) {

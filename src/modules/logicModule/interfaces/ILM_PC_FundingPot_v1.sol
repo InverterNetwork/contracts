@@ -17,6 +17,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param hookFunction Encoded function call to be executed on the `hookContract` after round closure.
     /// @param closureMechanism Indicates whether the hook closure coincides with the contribution span end.
     /// @param globalAccumulativeCaps Indicates whether contribution caps accumulate globally across rounds.
+    /// @param accessCriterias Mapping of access criteria IDs to their respective access criteria.
     struct Round {
         uint roundStart;
         uint roundEnd;
@@ -25,6 +26,30 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes hookFunction;
         bool closureMechanism;
         bool globalAccumulativeCaps;
+        mapping(uint64 id => AccessCriteria) accessCriterias;
+    }
+
+    /// @notice Struct used to store information about a funding round's access criteria.
+    /// @param nftContract Address of the NFT contract.
+    /// @param merkleRoot Merkle root for the access criteria.
+    /// @param allowedAddresses Mapping of addresses to their access status.
+    struct AccessCriteria {
+        AccessCriteriaId accessCriteriaId;
+        address nftContract; // NFT contract address (0x0 if unused)
+        bytes32 merkleRoot; // Merkle root (0x0 if unused)
+        address[] allowedAddresses; // Explicit allowlist
+    }
+
+    // -------------------------------------------------------------------------
+    // Enums
+
+    /// @notice Enum used to identify the type of access criteria.
+    enum AccessCriteriaId {
+        OPEN, // 0
+        NFT, // 1
+        MERKLE, // 2
+        LIST // 3
+
     }
 
     // -------------------------------------------------------------------------
@@ -68,6 +93,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bool globalAccumulativeCaps
     );
 
+    /// @notice
+    event AccessCriteriaSet(
+        uint64 indexed roundId, uint8 accessId, AccessCriteria accessCriteria
+    );
+
     // -------------------------------------------------------------------------
     // Errors
 
@@ -101,16 +131,48 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round does not exist
     error Module__LM_PC_FundingPot__RoundNotCreated();
 
+    /// @notice
+    error Module__LM_PC_FundingPot__IncorrectAccessCriteria();
+
     // -------------------------------------------------------------------------
     // Public - Getters
 
-    /// @notice Retrieves the details of a specific funding round.
+    /// @notice Retrieves the generic parameters of a specific funding round.
     /// @param _roundId The unique identifier of the round to retrieve.
-    /// @return A struct containing the round's details.
-    function getRoundDetails(uint64 _roundId)
+    /// @return roundStart The timestamp when the round starts
+    /// @return roundEnd The timestamp when the round ends
+    /// @return roundCap The maximum contribution cap for the round
+    /// @return hookContract The address of the hook contract
+    /// @return hookFunction The encoded function call for the hook
+    /// @return closureMechanism Whether hook closure coincides with contribution span end
+    /// @return globalAccumulativeCaps Whether caps accumulate globally across rounds
+    function getRoundGenericParameters(uint64 _roundId)
         external
         view
-        returns (Round memory);
+        returns (
+            uint roundStart,
+            uint roundEnd,
+            uint roundCap,
+            address hookContract,
+            bytes memory hookFunction,
+            bool closureMechanism,
+            bool globalAccumulativeCaps
+        );
+
+    /// @notice Retrieves the access criteria for a specific funding round.
+    /// @param _roundId The unique identifier of the round to retrieve.
+    /// @param _id The identifier of the access criteria to retrieve.
+    /// @return nftContract The address of the NFT contract used for access control
+    /// @return merkleRoot The merkle root used for access verification
+    /// @return allowedAddresses The list of explicitly allowed addresses
+    function getRoundAccessCriteria(uint64 _roundId, uint64 _id)
+        external
+        view
+        returns (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        );
 
     /// @notice Retrieves the total number of funding rounds.
     /// @return The total number of funding rounds.
@@ -160,4 +222,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bool _closureMechanism,
         bool _globalAccumulativeCaps
     ) external returns (bool);
+
+    /// @notice Set Access Control Check
+    function setAccessCriteriaForRound(
+        uint64 _roundId,
+        uint8 _accessId,
+        AccessCriteria memory _accessCriteria
+    ) external;
 }
