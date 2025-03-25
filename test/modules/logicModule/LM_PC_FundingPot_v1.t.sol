@@ -925,11 +925,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
 
         (
+            bool isOpen,
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
         ) = fundingPot.getRoundAccessCriteria(roundId, accessId);
 
+        assertEq(isOpen, accessCriteriaEnum == 0);
         assertEq(nftContract, accessCriteria.nftContract);
         assertEq(merkleRoot, accessCriteria.merkleRoot);
         assertEq(allowedAddresses, accessCriteria.allowedAddresses);

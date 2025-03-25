@@ -152,10 +152,11 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteria(uint64 _roundId, uint64 _id)
+    function getRoundAccessCriteria(uint64 _roundId, uint8 _id)
         external
         view
         returns (
+            bool isOpen,
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
@@ -163,12 +164,22 @@ contract LM_PC_FundingPot_v1 is
     {
         Round storage round = rounds[_roundId];
         AccessCriteria storage accessCriteria = round.accessCriterias[_id];
-        //@todo : Waht if the round is open? add a bool? check what can be done !!!
-        return (
-            accessCriteria.nftContract,
-            accessCriteria.merkleRoot,
-            accessCriteria.allowedAddresses
-        );
+
+        if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
+            return (
+                true,
+                accessCriteria.nftContract,
+                accessCriteria.merkleRoot,
+                accessCriteria.allowedAddresses
+            );
+        } else {
+            return (
+                false,
+                accessCriteria.nftContract,
+                accessCriteria.merkleRoot,
+                accessCriteria.allowedAddresses
+            );
+        }
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
