@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 // Internal
 import {PP_Connext_CrossChain_v1} from
