@@ -151,13 +151,13 @@ abstract contract PP_CrossChain_v1 is CrossChainBase_v1, IPP_CrossChain_v1 {
     }
 
     /// @notice Validate address input.
-    /// @param  addr_ Address to validate.
-    /// @return True if address is valid.
+    /// @param addr_ The address to validate
+    /// @return valid_ True if address is valid.
     function _validPaymentReceiver(address addr_)
         internal
         view
         virtual
-        returns (bool)
+        returns (bool valid_)
     {
         return !(
             addr_ == address(0) || addr_ == _msgSender()
@@ -175,18 +175,19 @@ abstract contract PP_CrossChain_v1 is CrossChainBase_v1, IPP_CrossChain_v1 {
 
     /// @notice Validate payment token input.
     /// @param  token_ Address of the token to validate.
-    /// @return True if address is valid.
+    /// @return valid_ True if token is valid.
     function _validPaymentToken(address token_)
         internal
         virtual
-        returns (bool)
+        returns (bool valid_)
     {
         (bool success, bytes memory data) = token_.call(
             abi.encodeWithSelector(
                 IERC20(token_).balanceOf.selector, address(this)
             )
         );
-        return success && data.length >= 32;
+        valid_ = success && data.length >= 32;
+        return valid_;
     }
 
     /// @dev    Gap for possible future upgrades.

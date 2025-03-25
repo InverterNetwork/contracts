@@ -287,7 +287,7 @@ contract PP_Connext_CrossChain_v1 is
     // Internal Functions
 
     /// @notice Validates the payment order.
-    /// @param order_ The payment order to validate.
+    /// @param  order_ The payment order to validate.
     /// @return valid_ True if the payment order is valid, false otherwise.
     function _validPaymentOrder(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
@@ -306,7 +306,7 @@ contract PP_Connext_CrossChain_v1 is
     }
 
     /// @notice Execute the cross-chain bridge transfer.
-    /// @param order_ The payment order containing transfer details.
+    /// @param  order_ The payment order containing transfer details.
     /// @return intentId_ Data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
@@ -338,8 +338,8 @@ contract PP_Connext_CrossChain_v1 is
         );
     }
 
-    /// @dev Creates a new cross-chain intent for payment transfer.
-    /// @param order_ The payment order details.
+    /// @notice Creates a new cross-chain intent for payment transfer.
+    /// @param  order_ The payment order details.
     /// @return intentId_ ID of the created intent.
     function _createCrossChainIntent(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
@@ -359,7 +359,7 @@ contract PP_Connext_CrossChain_v1 is
             order_.amount,
             maxFee,
             ttl,
-            "" // @note is calldata always empty? What could it be used for?
+            ""
         );
     }
 
