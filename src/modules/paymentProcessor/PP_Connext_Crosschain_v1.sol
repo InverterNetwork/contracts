@@ -112,12 +112,16 @@ contract PP_Connext_CrossChain_v1 is
     // -------------------------------------------------------------------------
     // Initialization Function
 
-    /**
-     * @notice Initializes the payment processor module.
-     * @param orchestrator_ The orchestrator contract address.
-     * @param metadata_ Module metadata_.
-     * @param configData_ ABI encoded configuration data (_everClearSpoke and WETH addresses).
-     */
+    /// @notice The module's initializer function.
+    /// @dev    CAN be overridden by downstream contract.
+    /// @dev    MUST call `__Module_init()`.
+    /// @param  orchestrator_ The orchestrator contract.
+    /// @param  metadata_ The metadata of the module.
+    /// @param  configData_ The config data of the module, comprised of:
+    ///     - address: everClearSpoke_: The Everclear spoke contract address for
+    ///       cross-chain message passing
+    ///     - address: weth_: The WETH contract address for native token wrapping
+    ///       and unwrapping operations
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
