@@ -10,11 +10,11 @@ interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
 
     /// @notice Emitted when a cross-chain transfer fails to complete.
-    /// @param client_ The address initiating the transfer.
-    /// @param recipient_ The intended recipient of the transfer.
-    /// @param amount_ The amount that failed to transfer.
-    /// @param flags_ The flags for this transfer attempt.
-    /// @param data_ The data for this transfer attempt.
+    /// @param  client_ The address initiating the transfer.
+    /// @param  recipient_ The intended recipient of the transfer.
+    /// @param  amount_ The amount that failed to transfer.
+    /// @param  flags_ The flags for this transfer attempt.
+    /// @param  data_ The data for this transfer attempt.
     event BridgeTransferFailed(
         address indexed client_,
         address indexed recipient_,
@@ -27,8 +27,8 @@ interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
     );
 
     /// @notice Emitted when a payment ID is assigned.
-    /// @param paymentId_ The payment ID.
-    /// @param data_ The data for this transfer attempt.
+    /// @param  paymentId_ The payment ID.
+    /// @param  data_ The data for this transfer attempt.
     event PaymentIdAssigned(uint indexed paymentId_, bytes32 indexed data_);
 
     // Errors

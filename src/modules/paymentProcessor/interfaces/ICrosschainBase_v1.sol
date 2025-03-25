@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-/// @title ICrossChainBase_v1
+/// @title  ICrossChainBase_v1
 /// @notice Base interface for cross-chain payment processing functionality
 interface ICrossChainBase_v1 {
     // -------------------------------------------------------------------------

@@ -6,6 +6,7 @@ import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {CrossChainBase_v1_Exposed} from "./CrossChainBase_v1_Exposed.sol";
 
 //External
@@ -72,5 +73,33 @@ contract CrossChainBase_v1_Test is ModuleTest {
         bytes memory result =
             CrossChainBase.exposed_executeBridgeTransfer(order);
         assertEq(result, bytes(""));
+    }
+
+    /* Test: getBridgeData()
+        └── Given a payment ID and bridge data are stored
+            └── When getBridgeData is called with that payment ID
+                └── Then it should return the correct bridge data
+     */
+    function testGetBridgeData() public {
+        uint paymentId = 1;
+        bytes memory expectedData = "test bridge data";
+
+        // Store the bridge data using internal mapping
+        CrossChainBase.exposed_setBridgeData(expectedData, paymentId);
+
+        // Verify the data can be retrieved
+        bytes memory retrievedData = CrossChainBase.getBridgeData(paymentId);
+        assertEq(retrievedData, expectedData);
+    }
+
+    /* Test: getBridgeData() - empty data
+        └── Given a payment ID that has no bridge data stored
+            └── When getBridgeData is called with that payment ID
+                └── Then it should return empty bytes
+     */
+    function testGetBridgeData_emptyData() public {
+        uint paymentId = 999;
+        bytes memory retrievedData = CrossChainBase.getBridgeData(paymentId);
+        assertEq(retrievedData, "");
     }
 }

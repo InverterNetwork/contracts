@@ -3,7 +3,12 @@ pragma solidity ^0.8.20;
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {IWETH} from "@pp/interfaces/IWETH.sol";
+import {IEverclearSpoke} from "@pp/interfaces/IEverclear.sol";
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {ERC165Upgradeable} from
+    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Internal
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
@@ -14,12 +19,7 @@ import {IPP_Connext_CrossChain_v1} from
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {PP_CrossChain_v1} from "@pp/abstracts/PP_CrossChain_v1.sol";
-import {IWETH} from "@pp/interfaces/IWETH.sol";
-import {IEverclearSpoke} from "@pp/interfaces/IEverclear.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {ERC165Upgradeable} from
-    "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 /**
  * @title   Connext Cross-Chain Payment Processor
