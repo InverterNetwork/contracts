@@ -10,34 +10,34 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     // Structs
 
     /// @notice Struct used to store information about a funding round.
-    /// @param  roundStart_ Timestamp indicating when the round starts.
-    /// @param  roundEnd_ Timestamp indicating when the round ends. If set to `0`, the round operates only based on `roundCap`.
-    /// @param  roundCap_ Maximum contribution cap in collateral tokens. If set to `0`, the round operates only based on `roundEnd`.
-    /// @param  hookContract_ Address of an optional hook contract to be called after round closure.
-    /// @param  hookFunction_ Encoded function call to be executed on the `hookContract` after round closure.
-    /// @param  closureMechanism_ Indicates whether the hook closure coincides with the contribution span end.
-    /// @param  globalAccumulativeCaps_ Indicates whether contribution caps accumulate globally across rounds.
-    /// @param  accessCriterias_ Mapping of access criteria IDs to their respective access criteria.
+    /// @param  roundStart Timestamp indicating when the round starts.
+    /// @param  roundEnd Timestamp indicating when the round ends. If set to `0`, the round operates only based on `roundCap`.
+    /// @param  roundCap Maximum contribution cap in collateral tokens. If set to `0`, the round operates only based on `roundEnd`.
+    /// @param  hookContract Address of an optional hook contract to be called after round closure.
+    /// @param  hookFunction Encoded function call to be executed on the `hookContract` after round closure.
+    /// @param  closureMechanism Indicates whether the hook closure coincides with the contribution span end.
+    /// @param  globalAccumulativeCaps Indicates whether contribution caps accumulate globally across rounds.
+    /// @param  accessCriterias Mapping of access criteria IDs to their respective access criteria.
     struct Round {
-        uint roundStart_;
-        uint roundEnd_;
-        uint roundCap_;
-        address hookContract_;
-        bytes hookFunction_;
-        bool closureMechanism_;
-        bool globalAccumulativeCaps_;
-        mapping(uint64 id => AccessCriteria) accessCriterias_;
+        uint roundStart;
+        uint roundEnd;
+        uint roundCap;
+        address hookContract;
+        bytes hookFunction;
+        bool closureMechanism;
+        bool globalAccumulativeCaps;
+        mapping(uint64 id => AccessCriteria) accessCriterias;
     }
 
     /// @notice Struct used to store information about a funding round's access criteria.
-    /// @param  nftContract_ Address of the NFT contract.
-    /// @param  merkleRoot_ Merkle root for the access criteria.
-    /// @param  allowedAddresses_ Mapping of addresses to their access status.
+    /// @param  nftContract Address of the NFT contract.
+    /// @param  merkleRoot Merkle root for the access criteria.
+    /// @param  allowedAddresses Mapping of addresses to their access status.
     struct AccessCriteria {
         AccessCriteriaId accessCriteriaId;
-        address nftContract_; // NFT contract address (0x0 if unused)
-        bytes32 merkleRoot_; // Merkle root (0x0 if unused)
-        address[] allowedAddresses_; // Explicit allowlist
+        address nftContract; // NFT contract address (0x0 if unused)
+        bytes32 merkleRoot; // Merkle root (0x0 if unused)
+        address[] allowedAddresses; // Explicit allowlist
     }
 
     // -------------------------------------------------------------------------
