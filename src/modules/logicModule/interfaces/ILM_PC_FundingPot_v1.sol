@@ -165,13 +165,15 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Retrieves the access criteria for a specific funding round.
     /// @param _roundId The unique identifier of the round to retrieve.
     /// @param _id The identifier of the access criteria to retrieve.
+    /// @return isOpen Whether the access criteria is open
     /// @return nftContract The address of the NFT contract used for access control
     /// @return merkleRoot The merkle root used for access verification
     /// @return allowedAddresses The list of explicitly allowed addresses
-    function getRoundAccessCriteria(uint64 _roundId, uint64 _id)
+    function getRoundAccessCriteria(uint64 _roundId, uint8 _id)
         external
         view
         returns (
+            bool isOpen,
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
