@@ -10,7 +10,6 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 contract PP_Queue_v1_Exposed is PP_Queue_v1 {
     using LinkedIdList for LinkedIdList.List;
 
-    // Override _msgSender para simplificar testing
     function _msgSender() internal view virtual override returns (address) {
         return msg.sender;
     }
@@ -58,7 +57,6 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         return _getPaymentQueueId(flags_, data_);
     }
 
-    // Función para exponer _validQueueId
     function exposed_validQueueId(uint queueId, address client_)
         external
         view
