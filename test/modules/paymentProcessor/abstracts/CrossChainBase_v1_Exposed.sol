@@ -11,27 +11,16 @@ contract CrossChainBase_v1_Exposed is CrossChainBase_v1 {
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) internal override returns (bytes memory) {
-        return getBridgeData(0);
-    }
-
-    function getBridgeData(uint paymentId)
-        public
-        view
-        override
-        returns (bytes memory)
-    {
-        return _bridgeData[paymentId];
-    }
-
-    function exposed_setBridgeData(bytes memory data, uint paymentId)
-        external
-    {
-        _bridgeData[paymentId] = data;
+        return "";
     }
 
     function exposed_executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external payable returns (bytes memory) {
         return _executeBridgeTransfer(order);
+    }
+
+    function helper_setBridgeData(bytes memory data, uint paymentId) external {
+        _bridgeData[paymentId] = data;
     }
 }

@@ -4,13 +4,13 @@ pragma solidity ^0.8.20;
 // Internal
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
-import {IEverclearSpoke} from
-    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
 // External
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
+import {IEverclearSpoke} from
+    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
 /// @notice Interface for cross-chain payment processing using Connext protocol
 interface IPP_Connext_CrossChain_v1 is IPaymentProcessor_v1 {

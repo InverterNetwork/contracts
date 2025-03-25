@@ -60,7 +60,10 @@ abstract contract CrossChainBase_v1 is ICrossChainBase_v1, Module_v1 {
         public
         view
         virtual
-        returns (bytes memory bridgeData_);
+        returns (bytes memory bridgeData_)
+    {
+        return _bridgeData[paymentId_];
+    }
 
     // -------------------------------------------------------------------------
     // Internal Functions

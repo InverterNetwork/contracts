@@ -80,16 +80,21 @@ contract CrossChainBase_v1_Test is ModuleTest {
             └── When getBridgeData is called with that payment ID
                 └── Then it should return the correct bridge data
      */
-    function testGetBridgeData() public {
-        uint paymentId = 1;
-        bytes memory expectedData = "test bridge data";
+    // @note naming of tests
+    // fuzz test
+    function testGetBridgeData_worksGivenValidData(
+        uint paymentId,
+        bytes memory data
+    ) public {
+        vm.assume(paymentId != 0);
+        vm.assume(data.length > 0);
 
         // Store the bridge data using internal mapping
-        CrossChainBase.exposed_setBridgeData(expectedData, paymentId);
+        CrossChainBase.helper_setBridgeData(data, paymentId);
 
         // Verify the data can be retrieved
         bytes memory retrievedData = CrossChainBase.getBridgeData(paymentId);
-        assertEq(retrievedData, expectedData);
+        assertEq(retrievedData, data);
     }
 
     /* Test: getBridgeData() - empty data
@@ -97,8 +102,8 @@ contract CrossChainBase_v1_Test is ModuleTest {
             └── When getBridgeData is called with that payment ID
                 └── Then it should return empty bytes
      */
-    function testGetBridgeData_emptyData() public {
-        uint paymentId = 999;
+    function testGetBridgeData_worksGivenNoData(uint paymentId) public {
+        vm.assume(paymentId != 0);
         bytes memory retrievedData = CrossChainBase.getBridgeData(paymentId);
         assertEq(retrievedData, "");
     }

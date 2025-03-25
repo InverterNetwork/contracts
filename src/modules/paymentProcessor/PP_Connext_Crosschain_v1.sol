@@ -75,7 +75,7 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  *
  * @custom:standard-version v1.0.0
  *
- * @author  Zealynx Security
+ * @author  33Audits
  */
 contract PP_Connext_CrossChain_v1 is
     IPP_Connext_CrossChain_v1,
@@ -319,8 +319,8 @@ contract PP_Connext_CrossChain_v1 is
     /// @dev    The tokens must be transferred to the payment processor first because
     ///         the bridge contract will later call this contract to execute the
     ///         cross-chain transfer.
-    /// @param order_ The payment order details.
-    /// @param client_ The payment client address.
+    /// @param  order_ The payment order details.
+    /// @param  client_ The payment client address.
     function _transferTokenAndApproveToBridge(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_,
         address client_
