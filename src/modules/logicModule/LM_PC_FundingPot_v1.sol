@@ -126,8 +126,6 @@ contract LM_PC_FundingPot_v1 is
     // Public - Getters
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    /// @dev    Returns the generic parameters of a round.
-
     function getRoundGenericParameters(uint64 _roundId)
         external
         view
@@ -153,6 +151,7 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
     function getRoundAccessCriteria(uint64 _roundId, uint64 _id)
         external
         view
@@ -228,16 +227,10 @@ contract LM_PC_FundingPot_v1 is
         bytes memory _hookFunction,
         bool _closureMechanism,
         bool _globalAccumulativeCaps
-    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (bool) {
+    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[_roundId];
 
-        if (round.roundEnd == 0 && round.roundCap == 0) {
-            revert Module__LM_PC_FundingPot__RoundNotCreated();
-        }
-
-        if (block.timestamp > round.roundStart) {
-            revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
-        }
+        _validateEditRoundParameters(round);
 
         round.roundStart = _roundStart;
         round.roundEnd = _roundEnd;
@@ -258,8 +251,6 @@ contract LM_PC_FundingPot_v1 is
             _closureMechanism,
             _globalAccumulativeCaps
         );
-
-        return true;
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -270,13 +261,7 @@ contract LM_PC_FundingPot_v1 is
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[_roundId];
 
-        if (round.roundEnd == 0 && round.roundCap == 0) {
-            revert Module__LM_PC_FundingPot__RoundNotCreated();
-        }
-
-        if (block.timestamp > round.roundStart) {
-            revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
-        }
+        _validateEditRoundParameters(round);
 
         if (
             (
@@ -331,6 +316,19 @@ contract LM_PC_FundingPot_v1 is
         if (round.hookContract == address(0) && round.hookFunction.length > 0) {
             revert
                 Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction();
+        }
+    }
+
+    /// @notice Validates the round parameters.
+    /// @param  round The round to validate.
+    /// @dev    Reverts if the round parameters are invalid.
+    function _validateEditRoundParameters(Round storage round) internal view {
+        if (round.roundEnd == 0 && round.roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundNotCreated();
+        }
+
+        if (block.timestamp > round.roundStart) {
+            revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
         }
     }
 }

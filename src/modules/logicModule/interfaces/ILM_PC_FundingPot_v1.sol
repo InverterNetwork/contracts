@@ -214,7 +214,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param _hookFunction New encoded function call
     /// @param _closureMechanism New closure mechanism setting
     /// @param _globalAccumulativeCaps New global accumulative caps setting
-    /// @return True if edit was successful
     function editRound(
         uint64 _roundId,
         uint _roundStart,
@@ -224,9 +223,13 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes memory _hookFunction,
         bool _closureMechanism,
         bool _globalAccumulativeCaps
-    ) external returns (bool);
+    ) external;
 
     /// @notice Set Access Control Check
+    /// @dev Only callable by funding pot admin and only before the round has started
+    /// @param _roundId ID of the round
+    /// @param _accessId ID of the access criteria
+    /// @param _accessCriteria Access criteria to set
     function setAccessCriteriaForRound(
         uint64 _roundId,
         uint8 _accessId,
