@@ -21,7 +21,7 @@ import {IPP_Connext_CrossChain_v1} from
 
 // Tests and Mocks
 import {PP_Connext_CrossChain_v1_Exposed} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Connext_CrossChain_v1_Exposed.sol";
+    "./PP_Connext_CrossChain_v1_Exposed.sol";
 import {Mock_EverclearPayment} from
     "test/utils/mocks/external/Mock_EverclearPayment.sol";
 import {
@@ -204,6 +204,8 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             IERC20PaymentClientBase_v2(address(paymentClient));
 
         assertEq(client.outstandingTokenAmount(address(_token)), testAmount);
+        vm.prank(address(paymentClient));
+
         paymentProcessor.processPayments(client);
         assertEq(client.outstandingTokenAmount(address(_token)), 0);
     }
@@ -258,7 +260,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
                 executionData
             );
         }
-
+        vm.prank(address(paymentClient));
         // Process payments
         paymentProcessor.processPayments(client);
 
@@ -1072,12 +1074,10 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         uint testAmount
     ) internal view {
         vm.assume(testRecipient != address(0));
-        vm.assume(testRecipient != address(msg.sender));
         vm.assume(testRecipient != address(this));
 
         vm.assume(testRecipient != address(paymentProcessor));
         vm.assume(testRecipient != address(paymentClient));
-        vm.assume(testRecipient != address(_token));
 
         vm.assume(testRecipient != address(paymentProcessor.orchestrator()));
         vm.assume(

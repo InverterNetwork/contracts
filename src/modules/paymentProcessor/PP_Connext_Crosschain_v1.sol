@@ -22,28 +22,60 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 /**
- * @title   Connext Cross-chain Payment Processor
+ * @title   Connext Cross-Chain Payment Processor
  *
- * @notice  Specialized payment processor implementation for handling cross-chain payments via Connext protocol.
+ * @notice  A payment processor implementation that enables cross-chain payments
+ *          using the Connext protocol. This module processes payment orders from
+ *          payment clients and bridges them to their target chains through
+ *          Connext's infrastructure.
  *
- * @dev     This contract extends PP_CrossChain_v1 and provides:
- *          - Integration with Connext's EverClear protocol for secure cross-chain transfers
- *          - Native token handling through WETH wrapper
- *          - Robust payment order processing and validation
- *          - Failed transfer handling with retry and cancellation mechanisms
- *          - Bridge-specific transfer logic implementation
- *          - Support for Base network (chainId: 8453)
- *          - Comprehensive transfer state tracking
+ * @dev     Inherits functionality from:
+ *          - IPP_Connext_CrossChain_v1: Implementation interface
+ *          - IPaymentProcessor_v1: Base payment processor functionality
+ *          - ICrossChainBase_v1: Cross-chain operations base
+ *
+ *          Key features:
+ *              - Cross-chain payment processing
+ *                Enables payments to be sent across different networks
+ *
+ *              - Bridge integration
+ *                Integrates with Everclear protocol for secure cross-chain transfers
+ *
+ *              - Failed transfer recovery
+ *                Provides mechanism to retry failed bridge transfers
+ *
+ *              - WETH handling
+ *                Supports native token wrapping/unwrapping for ETH transfers
+ *
+ * @custom:setup    This module requires the following MANDATORY setup steps:
+ *
+ *                  1. Initialize with Correct Parameters:
+ *                     - Purpose: The module needs proper configuration of
+ *                               Everclear spoke and WETH contract addresses
+ *                     - How:     Pass the correct addresses during initialization
+ *                     - Example: module.init(
+ *                                 orchestrator,
+ *                                 metadata,
+ *                                 abi.encode(everClearSpoke, wethAddress)
+ *                               );
+ *
+ *                  2. Payment Client Authorization:
+ *                     - Purpose: Only authorized payment clients should be able
+ *                               to process payments through this module
+ *                     - How:     The payment client must be added through the
+ *                               orchestrator's module management system
+ *                     - Example: orchestrator.initiateAddModule(clientAddress);
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
- * @author  Audit33
+ * @custom:version  v1.0.0
  *
- * @custom:version 1.0.0
+ * @custom:standard-version v1.0.0
  *
- * @custom:standard-version 1.0.0
+ * @author  Zealynx Security
  */
 contract PP_Connext_CrossChain_v1 is
     IPP_Connext_CrossChain_v1,
@@ -130,7 +162,11 @@ contract PP_Connext_CrossChain_v1 is
     // External Functions
 
     /// @inheritdoc IPaymentProcessor_v1
-    function processPayments(IERC20PaymentClientBase_v2 client_) external {
+    function processPayments(IERC20PaymentClientBase_v2 client_)
+        external
+        onlyModule
+        validClient(address(client_))
+    {
         // Get the payment orders from the payment client.
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
         (orders,,) = client_.collectPaymentOrders();
