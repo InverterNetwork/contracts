@@ -51,16 +51,14 @@ contract CrossChainBase_v1_Test is ModuleTest {
     }
 
     // -------------------------------------------------------------------------
-    // Test External (public + external)
+    // Test Internal
 
     /* Test: _executeBridgeTransfer()
-        └── Given an empty payment order is created
-            └── When executeBridgeTransfer is called
-                └── Then it should return empty bytes
+        └── Given a payment order with zero values is created
+            └── When _executeBridgeTransfer is called
+                └── Then it should return an empty bytes array
      */
-    function testExecuteBridgeTransfer_succeedsGivenEmptyPaymentOrder()
-        public
-    {
+    function testInternalExecuteBridgeTransfer_worksGivenImplemented() public {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: address(0),
