@@ -126,7 +126,7 @@ contract LM_PC_FundingPot_v1 is
     // Public - Getters
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundGenericParameters(uint64 _roundId)
+    function getRoundGenericParameters(uint64 roundId_)
         external
         view
         returns (
@@ -139,7 +139,7 @@ contract LM_PC_FundingPot_v1 is
             bool globalAccumulativeCaps
         )
     {
-        Round storage round = rounds[_roundId];
+        Round storage round = rounds[roundId_];
         return (
             round.roundStart,
             round.roundEnd,
@@ -152,7 +152,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteria(uint64 _roundId, uint8 _id)
+    function getRoundAccessCriteria(uint64 roundId_, uint8 id_)
         external
         view
         returns (
@@ -162,8 +162,8 @@ contract LM_PC_FundingPot_v1 is
             address[] memory allowedAddresses
         )
     {
-        Round storage round = rounds[_roundId];
-        AccessCriteria storage accessCriteria = round.accessCriterias[_id];
+        Round storage round = rounds[roundId_];
+        AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
         if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
             return (
@@ -192,37 +192,37 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function createRound(
-        uint _roundStart,
-        uint _roundEnd,
-        uint _roundCap,
-        address _hookContract,
-        bytes memory _hookFunction,
-        bool _closureMechanism,
-        bool _globalAccumulativeCaps
+        uint roundStart_,
+        uint roundEnd_,
+        uint roundCap_,
+        address hookContract_,
+        bytes memory hookFunction_,
+        bool closureMechanism_,
+        bool globalAccumulativeCaps_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint64) {
         nextRoundId++;
 
         uint64 roundId = nextRoundId;
 
         Round storage round = rounds[roundId];
-        round.roundStart = _roundStart;
-        round.roundEnd = _roundEnd;
-        round.roundCap = _roundCap;
-        round.hookContract = _hookContract;
-        round.hookFunction = _hookFunction;
-        round.closureMechanism = _closureMechanism;
-        round.globalAccumulativeCaps = _globalAccumulativeCaps;
+        round.roundStart = roundStart_;
+        round.roundEnd = roundEnd_;
+        round.roundCap = roundCap_;
+        round.hookContract = hookContract_;
+        round.hookFunction = hookFunction_;
+        round.closureMechanism = closureMechanism_;
+        round.globalAccumulativeCaps = globalAccumulativeCaps_;
 
         _validateRoundParameters(round);
 
         emit RoundCreated(
             roundId,
-            _roundStart,
-            _roundEnd,
-            _roundCap,
-            _hookContract,
-            _closureMechanism,
-            _globalAccumulativeCaps
+            roundStart_,
+            roundEnd_,
+            roundCap_,
+            hookContract_,
+            closureMechanism_,
+            globalAccumulativeCaps_
         );
 
         return roundId;
@@ -230,115 +230,117 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function editRound(
-        uint64 _roundId,
-        uint _roundStart,
-        uint _roundEnd,
-        uint _roundCap,
-        address _hookContract,
-        bytes memory _hookFunction,
-        bool _closureMechanism,
-        bool _globalAccumulativeCaps
+        uint64 roundId_,
+        uint roundStart_,
+        uint roundEnd_,
+        uint roundCap_,
+        address hookContract_,
+        bytes memory hookFunction_,
+        bool closureMechanism_,
+        bool globalAccumulativeCaps_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
-        Round storage round = rounds[_roundId];
+        Round storage round = rounds[roundId_];
 
         _validateEditRoundParameters(round);
 
-        round.roundStart = _roundStart;
-        round.roundEnd = _roundEnd;
-        round.roundCap = _roundCap;
-        round.hookContract = _hookContract;
-        round.hookFunction = _hookFunction;
-        round.closureMechanism = _closureMechanism;
-        round.globalAccumulativeCaps = _globalAccumulativeCaps;
+        round.roundStart = roundStart_;
+        round.roundEnd = roundEnd_;
+        round.roundCap = roundCap_;
+        round.hookContract = hookContract_;
+        round.hookFunction = hookFunction_;
+        round.closureMechanism = closureMechanism_;
+        round.globalAccumulativeCaps = globalAccumulativeCaps_;
 
         _validateRoundParameters(round);
 
         emit RoundEdited(
-            _roundId,
-            _roundStart,
-            _roundEnd,
-            _roundCap,
-            _hookContract,
-            _closureMechanism,
-            _globalAccumulativeCaps
+            roundId_,
+            roundStart_,
+            roundEnd_,
+            roundCap_,
+            hookContract_,
+            closureMechanism_,
+            globalAccumulativeCaps_
         );
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaForRound(
-        uint64 _roundId,
-        uint8 _accessId,
-        AccessCriteria memory _accessCriteria
+        uint64 roundId_,
+        uint8 accessId_,
+        AccessCriteria memory accessCriteria_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
-        Round storage round = rounds[_roundId];
+        Round storage round = rounds[roundId_];
 
         _validateEditRoundParameters(round);
 
         if (
             (
-                _accessCriteria.accessCriteriaId == AccessCriteriaId.NFT
-                    && _accessCriteria.nftContract == address(0)
+                accessCriteria_.accessCriteriaId == AccessCriteriaId.NFT
+                    && accessCriteria_.nftContract == address(0)
             )
                 || (
-                    _accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE
-                        && _accessCriteria.merkleRoot == bytes32("")
+                    accessCriteria_.accessCriteriaId == AccessCriteriaId.MERKLE
+                        && accessCriteria_.merkleRoot == bytes32("")
                 )
                 || (
-                    _accessCriteria.accessCriteriaId == AccessCriteriaId.LIST
-                        && _accessCriteria.allowedAddresses.length == 0
+                    accessCriteria_.accessCriteriaId == AccessCriteriaId.LIST
+                        && accessCriteria_.allowedAddresses.length == 0
                 )
         ) {
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
 
-        round.accessCriterias[_accessId] = _accessCriteria;
-        emit AccessCriteriaSet(_roundId, _accessId, _accessCriteria);
+        round.accessCriterias[accessId_] = accessCriteria_;
+        emit AccessCriteriaSet(roundId_, accessId_, accessCriteria_);
     }
     // -------------------------------------------------------------------------
     // Internal
 
     /// @notice Validates the round parameters.
-    /// @param  round The round to validate.
+    /// @param  round_ The round to validate.
     /// @dev    Reverts if the round parameters are invalid.
-    function _validateRoundParameters(Round storage round) internal view {
+    function _validateRoundParameters(Round storage round_) internal view {
         // Validate round start time is in the future
         // @note: The below condition wont allow _roundStart == block.timestamp
-        if (round.roundStart <= block.timestamp) {
+        if (round_.roundStart <= block.timestamp) {
             revert Module__LM_PC_FundingPot__RoundStartMustBeInFuture();
         }
 
         // Validate that either end time or cap is set
-        if (round.roundEnd == 0 || round.roundCap == 0) {
+        if (round_.roundEnd == 0 || round_.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
         }
 
         // If end time is set, validate it's after start time
-        if (round.roundEnd > 0 && round.roundEnd <= round.roundStart) {
+        if (round_.roundEnd > 0 && round_.roundEnd <= round_.roundStart) {
             revert Module__LM_PC_FundingPot__RoundEndMustBeAfterStart();
         }
 
         // Validate hook contract and function consistency
-        if (round.hookContract != address(0) && round.hookFunction.length == 0)
-        {
+        if (
+            round_.hookContract != address(0) && round_.hookFunction.length == 0
+        ) {
             revert
                 Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
         }
 
-        if (round.hookContract == address(0) && round.hookFunction.length > 0) {
+        if (round_.hookContract == address(0) && round_.hookFunction.length > 0)
+        {
             revert
                 Module__LM_PC_FundingPot__HookContractRequiredWithHookFunction();
         }
     }
 
     /// @notice Validates the round parameters.
-    /// @param  round The round to validate.
+    /// @param  round_ The round to validate.
     /// @dev    Reverts if the round parameters are invalid.
-    function _validateEditRoundParameters(Round storage round) internal view {
-        if (round.roundEnd == 0 && round.roundCap == 0) {
+    function _validateEditRoundParameters(Round storage round_) internal view {
+        if (round_.roundEnd == 0 && round_.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        if (block.timestamp > round.roundStart) {
+        if (block.timestamp > round_.roundStart) {
             revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
         }
     }
