@@ -29,7 +29,7 @@ import {ERC165Upgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
- * @author  Audit33
+ * @author  33Audits
  *
  * @custom:version 1.0.0
  *
@@ -91,14 +91,13 @@ abstract contract PP_CrossChain_v1 is CrossChainBase_v1, IPP_CrossChain_v1 {
     }
 
     /// @inheritdoc IPaymentProcessor_v1
-    function unclaimable(address client, address token, address paymentReceiver)
-        public
-        view
-        virtual
-        override
-        returns (uint amount)
-    {
-        return _unclaimableAmountsForRecipient[client][token][paymentReceiver];
+    function unclaimable(
+        address client_,
+        address token_,
+        address paymentReceiver_
+    ) public view virtual override returns (uint amount_) {
+        return
+            _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
     }
 
     //--------------------------------------------------------------------------
@@ -106,25 +105,25 @@ abstract contract PP_CrossChain_v1 is CrossChainBase_v1, IPP_CrossChain_v1 {
 
     /// @inheritdoc IPaymentProcessor_v1
     function claimPreviouslyUnclaimable(
-        address client,
-        address token,
-        address receiver
+        address client_,
+        address token_,
+        address receiver_
     ) external virtual override {
-        if (unclaimable(client, token, _msgSender()) == 0) {
+        if (unclaimable(client_, token_, _msgSender()) == 0) {
             revert Module__PaymentProcessor__NothingToClaim(
-                client, _msgSender()
+                client_, _msgSender()
             );
         }
 
-        _claimPreviouslyUnclaimable(client, token, receiver);
+        _claimPreviouslyUnclaimable(client_, token_, receiver_);
     }
 
     /// @inheritdoc IPaymentProcessor_v1
-    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
         external
         virtual
         onlyModule
-        validClient(address(client))
+        validClient(address(client_))
     {
         // Implementation depends on specific bridge requirements
         revert("Not implemented");
