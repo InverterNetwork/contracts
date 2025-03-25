@@ -1,9 +1,11 @@
 pragma solidity ^0.8.0;
 
+// Internal
 import {PP_Connext_CrossChain_v1} from
     "src/modules/paymentProcessor/PP_Connext_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+// External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 contract PP_Connext_CrossChain_v1_Exposed is PP_Connext_CrossChain_v1 {

@@ -9,7 +9,6 @@ import {IERC20PaymentClientBase_v2} from
 import {CrossChainBase_v1_Exposed} from "./CrossChainBase_v1_Exposed.sol";
 
 //External
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {Clones} from "@oz/proxy/Clones.sol";
 
 contract CrossChainBase_v1_Test is ModuleTest {
@@ -29,7 +28,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
         _setUpOrchestrator(CrossChainBase);
 
         //Initiate the PP with the medata and config data
-        CrossChainBase.init(_orchestrator, _METADATA, abi.encode(1));
+        CrossChainBase.init(_orchestrator, _METADATA, abi.encode(""));
     }
 
     //--------------------------------------------------------------------------
