@@ -73,37 +73,4 @@ contract CrossChainBase_v1_Test is ModuleTest {
             CrossChainBase.exposed_executeBridgeTransfer(order);
         assertEq(result, bytes(""));
     }
-
-    //--------------------------------------------------------------------------
-    // Helper Functions
-
-    function _createPaymentOrders(
-        uint orderCount,
-        address[] memory recipients,
-        uint[] memory amounts
-    )
-        internal
-        view
-        returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory)
-    {
-        // Sanity checks for array lengths
-        require(
-            recipients.length == orderCount && amounts.length == orderCount,
-            "Array lengths must match orderCount"
-        );
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            new IERC20PaymentClientBase_v2.PaymentOrder[](orderCount);
-        for (uint i = 0; i < orderCount; i++) {
-            orders[i] = IERC20PaymentClientBase_v2.PaymentOrder({
-                recipient: recipients[i],
-                paymentToken: address(0xabcd),
-                amount: amounts[i],
-                originChainId: 0,
-                targetChainId: 0,
-                flags: bytes32(0),
-                data: new bytes32[](0)
-            });
-        }
-        return orders;
-    }
 }
