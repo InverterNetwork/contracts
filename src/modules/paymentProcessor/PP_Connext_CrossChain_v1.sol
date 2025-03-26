@@ -1,49 +1,86 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.20;
+pragma solidity 0.8.23;
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
-
-// Internal
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
-import {CrossChainBase_v1} from "@pp/abstracts/CrossChainBase_v1.sol";
-import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
-import {IPP_Connext_CrossChain_v1} from
-    "@pp/interfaces/IPP_Connext_CrossChain_v1.sol";
-import {IERC20PaymentClientBase_v2} from
-    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {PP_CrossChain_v1} from "@pp/abstracts/PP_CrossChain_v1.sol";
-import {IWETH} from "@pp/interfaces/IWETH.sol";
-import {IEverclearSpoke} from "@pp/interfaces/IEverclear.sol";
+import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
+import {IEverclearSpoke} from
+    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+// Internal
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {CrossChainBase_v1} from
+    "src/modules/paymentProcessor/abstracts/CrossChainBase_v1.sol";
+import {ICrossChainBase_v1} from
+    "src/modules/paymentProcessor/interfaces/ICrossChainBase_v1.sol";
+import {IPP_Connext_CrossChain_v1} from
+    "src/modules/paymentProcessor/interfaces/IPP_Connext_CrossChain_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
+import {PP_CrossChain_v1} from
+    "src/modules/paymentProcessor/abstracts/PP_CrossChain_v1.sol";
+import {Module_v1} from "src/modules/base/Module_v1.sol";
+
 /**
- * @title   Connext Cross-chain Payment Processor
+ * @title   Connext Cross-Chain Payment Processor
  *
- * @notice  Specialized payment processor implementation for handling cross-chain payments via Connext protocol.
+ * @notice  A payment processor implementation that enables cross-chain payments
+ *          using the Connext protocol. This module processes payment orders from
+ *          payment clients and bridges them to their target chains through
+ *          Connext's infrastructure.
  *
- * @dev     This contract extends PP_CrossChain_v1 and provides:
- *          - Integration with Connext's EverClear protocol for secure cross-chain transfers
- *          - Native token handling through WETH wrapper
- *          - Robust payment order processing and validation
- *          - Failed transfer handling with retry and cancellation mechanisms
- *          - Bridge-specific transfer logic implementation
- *          - Support for Base network (chainId: 8453)
- *          - Comprehensive transfer state tracking
+ * @dev     Inherits functionality from:
+ *          - IPP_Connext_CrossChain_v1: Implementation interface
+ *          - IPaymentProcessor_v1: Base payment processor functionality
+ *          - ICrossChainBase_v1: Cross-chain operations base
+ *
+ *          Key features:
+ *              - Cross-chain payment processing
+ *                Enables payments to be sent across different networks
+ *
+ *              - Bridge integration
+ *                Integrates with Everclear protocol for secure cross-chain transfers
+ *
+ *              - Failed transfer recovery
+ *                Provides mechanism to retry failed bridge transfers
+ *
+ *              - WETH handling
+ *                Supports native token wrapping/unwrapping for ETH transfers
+ *
+ * @custom:setup    This module requires the following MANDATORY setup steps:
+ *
+ *                  1. Initialize with Correct Parameters:
+ *                     - Purpose: The module needs proper configuration of
+ *                               Everclear spoke and WETH contract addresses
+ *                     - How:     Pass the correct addresses during initialization
+ *                     - Example: module.init(
+ *                                 orchestrator,
+ *                                 metadata,
+ *                                 abi.encode(everClearSpoke, wethAddress)
+ *                               );
+ *
+ *                  2. Payment Client Authorization:
+ *                     - Purpose: Only authorized payment clients should be able
+ *                               to process payments through this module
+ *                     - How:     The payment client must be added through the
+ *                               orchestrator's module management system
+ *                     - Example: orchestrator.initiateAddModule(clientAddress);
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
- * @author  Audit33
+ * @custom:version  v1.0.0
  *
- * @custom:version 1.0.0
+ * @custom:standard-version v1.0.0
  *
- * @custom:standard-version 1.0.0
+ * @author  33Audits
  */
 contract PP_Connext_CrossChain_v1 is
     IPP_Connext_CrossChain_v1,
@@ -80,18 +117,22 @@ contract PP_Connext_CrossChain_v1 is
     // -------------------------------------------------------------------------
     // Initialization Function
 
-    /**
-     * @notice Initializes the payment processor module.
-     * @param orchestrator_ The orchestrator contract address.
-     * @param metadata Module metadata.
-     * @param configData_ ABI encoded configuration data (_everClearSpoke and WETH addresses).
-     */
+    /// @notice The module's initializer function.
+    /// @dev    CAN be overridden by downstream contract.
+    /// @dev    MUST call `__Module_init()`.
+    /// @param  orchestrator_ The orchestrator contract.
+    /// @param  metadata_ The metadata of the module.
+    /// @param  configData_ The config data of the module, comprised of:
+    ///     - address: everClearSpoke_: The Everclear spoke contract address for
+    ///       cross-chain message passing
+    ///     - address: weth_: The WETH contract address for native token wrapping
+    ///       and unwrapping operations
     function init(
         IOrchestrator_v1 orchestrator_,
-        Metadata memory metadata,
+        Metadata memory metadata_,
         bytes memory configData_
     ) external override(Module_v1) initializer {
-        __Module_init(orchestrator_, metadata);
+        __Module_init(orchestrator_, metadata_);
         (address everClearSpoke_, address weth_) =
             abi.decode(configData_, (address, address));
 
@@ -103,12 +144,16 @@ contract PP_Connext_CrossChain_v1 is
     // View Functions
 
     /// @inheritdoc IPP_Connext_CrossChain_v1
-    function getEverClearSpoke() external view returns (IEverclearSpoke) {
+    function getEverClearSpoke()
+        external
+        view
+        returns (IEverclearSpoke everClearSpoke_)
+    {
         return _everClearSpoke;
     }
 
     /// @inheritdoc IPP_Connext_CrossChain_v1
-    function getWeth() external view returns (IWETH) {
+    function getWeth() external view returns (IWETH weth_) {
         return _weth;
     }
 
@@ -126,10 +171,14 @@ contract PP_Connext_CrossChain_v1 is
     // External Functions
 
     /// @inheritdoc IPaymentProcessor_v1
-    function processPayments(IERC20PaymentClientBase_v2 client) external {
+    function processPayments(IERC20PaymentClientBase_v2 client_)
+        external
+        onlyModule
+        validClient(address(client_))
+    {
         // Get the payment orders from the payment client.
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
-        (orders,,) = client.collectPaymentOrders();
+        (orders,,) = client_.collectPaymentOrders();
 
         // Process each payment order.
         for (uint i = 0; i < orders.length; i++) {
@@ -140,7 +189,7 @@ contract PP_Connext_CrossChain_v1 is
             }
             // Transfer the token for the order from the payment client into
             // the payment processor.
-            _transferTokenAndApproveToBridge(orders[i], address(client));
+            _transferTokenAndApproveToBridge(orders[i], address(client_));
             // Execute the bridge transfer.
             bytes memory bridgeData = _executeBridgeTransfer(orders[i]);
             // Bridge data in the Everclear implementation is the intent ID.
@@ -149,7 +198,7 @@ contract PP_Connext_CrossChain_v1 is
             if (bytes32(bridgeData) != bytes32(0)) {
                 // Emit the Payment Processor's PaymentOrderProcessed event.
                 emit PaymentOrderProcessed(
-                    address(client),
+                    address(client_),
                     orders[i].recipient,
                     orders[i].paymentToken,
                     orders[i].amount,
@@ -165,12 +214,15 @@ contract PP_Connext_CrossChain_v1 is
                 _paymentId++;
             } else {
                 // Handle failed transfer.
-                _unclaimableAmountsForRecipient[address(client)][orders[i]
+                _unclaimableAmountsForRecipient[address(client_)][orders[i]
                     .paymentToken][orders[i].recipient] += orders[i].amount;
                 emit BridgeTransferFailed(
-                    address(client),
+                    address(client_),
                     orders[i].recipient,
+                    orders[i].paymentToken,
                     orders[i].amount,
+                    orders[i].originChainId,
+                    orders[i].targetChainId,
                     orders[i].flags,
                     orders[i].data
                 );
@@ -220,20 +272,31 @@ contract PP_Connext_CrossChain_v1 is
         // Store the intent ID for the payment order.
         _bridgeData[_paymentId] = bridgeData;
         _paymentId++;
+
+        emit PaymentOrderProcessed(
+            address(client_),
+            recipient_,
+            order_.paymentToken,
+            order_.amount,
+            order_.originChainId,
+            order_.targetChainId,
+            order_.flags,
+            order_.data
+        );
     }
 
     /// @inheritdoc IPaymentProcessor_v1
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external virtual returns (bool valid_) {
-        return _validPaymentOrder(order);
+        return _validPaymentOrder(order_);
     }
 
     // -------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Validates the payment order.
-    /// @param order_ The payment order to validate.
+    /// @param  order_ The payment order to validate.
     /// @return valid_ True if the payment order is valid, false otherwise.
     function _validPaymentOrder(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
@@ -252,7 +315,7 @@ contract PP_Connext_CrossChain_v1 is
     }
 
     /// @notice Execute the cross-chain bridge transfer.
-    /// @param order_ The payment order containing transfer details.
+    /// @param  order_ The payment order containing transfer details.
     /// @return intentId_ Data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
@@ -265,8 +328,8 @@ contract PP_Connext_CrossChain_v1 is
     /// @dev    The tokens must be transferred to the payment processor first because
     ///         the bridge contract will later call this contract to execute the
     ///         cross-chain transfer.
-    /// @param order_ The payment order details.
-    /// @param client_ The payment client address.
+    /// @param  order_ The payment order details.
+    /// @param  client_ The payment client address.
     function _transferTokenAndApproveToBridge(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_,
         address client_
@@ -284,8 +347,8 @@ contract PP_Connext_CrossChain_v1 is
         );
     }
 
-    /// @dev Creates a new cross-chain intent for payment transfer.
-    /// @param order_ The payment order details.
+    /// @notice Creates a new cross-chain intent for payment transfer.
+    /// @param  order_ The payment order details.
     /// @return intentId_ ID of the created intent.
     function _createCrossChainIntent(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
@@ -305,7 +368,7 @@ contract PP_Connext_CrossChain_v1 is
             order_.amount,
             maxFee,
             ttl,
-            "" // @note is calldata always empty? What could it be used for?
+            ""
         );
     }
 
