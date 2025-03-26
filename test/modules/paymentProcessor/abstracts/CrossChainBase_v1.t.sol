@@ -7,7 +7,8 @@ import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
-import {CrossChainBase_v1_Exposed} from "./CrossChainBase_v1_Exposed.sol";
+import {CrossChainBase_v1_Exposed} from
+    "test/modules/paymentProcessor/utils/mocks/CrossChainBase_v1_Exposed.sol";
 
 //External
 import {Clones} from "@oz/proxy/Clones.sol";
