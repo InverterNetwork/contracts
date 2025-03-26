@@ -394,7 +394,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         vm.assume(user_ != address(0) && user_ != address(this));
         testCreateRound();
-
         uint64 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params = RoundParams({

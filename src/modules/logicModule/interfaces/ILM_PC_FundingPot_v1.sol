@@ -41,6 +41,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address[] allowedAddresses; // Explicit allowlist
     }
 
+    struct AccessCriteriaPrivilages {
+        uint personalCap;
+        bool overrideCap;
+        uint start;
+        uint cliff;
+        uint end;
+    }
+
     // -------------------------------------------------------------------------
     // Enums
 
@@ -187,10 +195,31 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         external
         view
         returns (
-            bool isOpen_,
+            bool isRoundOpen_,
             address nftContract_,
             bytes32 merkleRoot_,
             address[] memory allowedAddresses_
+        );
+
+    /// @notice Retrieves the access criteria privilages for a specific funding round.
+    /// @param  roundId_ The unique identifier of the round.
+    /// @param  accessId_ The identifier of the access criteria.
+    /// @return isRoundOpen_ Whether the round is open
+    /// @return personalCap_ The personal cap for the access criteria
+    /// @return overrideCap_ Whether to override the global cap
+    /// @return start_ The start timestamp for the access criteria
+    /// @return cliff_ The cliff timestamp for the access criteria
+    /// @return end_ The end timestamp for the access criteria
+    function getRoundAccessCriteriaPrivilages(uint64 roundId_, uint8 accessId_)
+        external
+        view
+        returns (
+            bool isRoundOpen_,
+            uint personalCap_,
+            bool overrideCap_,
+            uint start_,
+            uint cliff_,
+            uint end_
         );
 
     /// @notice Retrieves the total number of funding rounds.
@@ -267,5 +296,24 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 roundId_,
         uint8 accessCriteriaId_,
         AccessCriteria memory accessCriteria_
+    ) external;
+
+    /// @notice Set Access Criteria Privilages
+    /// @dev    Only callable by funding pot admin and only before the round has started
+    /// @param  roundId_ ID of the round
+    /// @param  accessId_ ID of the access criteria
+    /// @param  personalCap_ Personal cap for the access criteria
+    /// @param  overrideCap_ Whether to override the global cap
+    /// @param  _start Start timestamp for the access criteria
+    /// @param  _cliff Cliff timestamp for the access criteria
+    /// @param  _end End timestamp for the access criteria
+    function setAccessCriteriaPrivilages(
+        uint64 roundId_,
+        uint8 accessId_,
+        uint personalCap_,
+        bool overrideCap_,
+        uint _start,
+        uint _cliff,
+        uint _end
     ) external;
 }
