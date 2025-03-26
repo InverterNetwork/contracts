@@ -89,6 +89,10 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Stores the access criteria ID for each round.
     mapping(uint64 => uint8) private roundIdtoAccessId;
+    /// @notice Stores all access criteria privilages by their unique ID.
+    mapping(
+        uint64 roundId => mapping(uint8 accessId => AccessCriteriaPrivilages)
+    ) private accessCriteriaPrivilages;
 
     /// @notice The next available round ID.
     uint64 private nextRoundId;
@@ -158,10 +162,10 @@ contract LM_PC_FundingPot_v1 is
         external
         view
         returns (
-            bool isOpen,
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
+            bool isRoundOpen_,
+            address nftContract_,
+            bytes32 merkleRoot_,
+            address[] memory allowedAddresses_
         )
     {
         Round storage round = rounds[roundId_];
@@ -177,7 +181,37 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundCount() external view returns (uint64 roundCount_) {
+    function getRoundAccessCriteriaPrivilages(uint64 roundId_, uint8 accessId_)
+        external
+        view
+        returns (
+            bool isRoundOpen_,
+            uint personalCap_,
+            bool overrideCap_,
+            uint start_,
+            uint cliff_,
+            uint end_
+        )
+    {
+        Round storage round = rounds[roundId_];
+        AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
+
+        if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
+            return (true, 0, false, 0, 0, 0);
+        }
+
+        return (
+            false,
+            accessCriteriaPrivilages[roundId_][accessId_].personalCap,
+            accessCriteriaPrivilages[roundId_][accessId_].overrideCap,
+            accessCriteriaPrivilages[roundId_][accessId_].start,
+            accessCriteriaPrivilages[roundId_][accessId_].cliff,
+            accessCriteriaPrivilages[roundId_][accessId_].end
+        );
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getRoundCount() external view returns (uint64) {
         return nextRoundId;
     }
 
@@ -319,6 +353,51 @@ contract LM_PC_FundingPot_v1 is
 
         emit AccessCriteriaEdited(roundId_, accessCriteriaId_, accessCriteria_);
     }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function setAccessCriteriaPrivilages(
+        uint64 roundId_,
+        uint8 accessId_,
+        uint personalCap_,
+        bool overrideCap_,
+        uint _start,
+        uint _cliff,
+        uint _end
+    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
+        Round storage round = rounds[roundId_];
+
+        _validateEditRoundParameters(round);
+
+        if (
+            round.accessCriterias[accessId_].accessCriteriaId
+                == AccessCriteriaId.OPEN
+        ) {
+            revert
+                Module__LM_PC_FundingPot__CannotSetPrivilagesForOpenAccessCriteria();
+        }
+        if (!_validTimes(_start, _cliff, _end)) {
+            revert Module__LM_PC_FundingPot__InvalidTimes();
+        }
+
+        AccessCriteriaPrivilages storage accessCriteriaPrivilages =
+            accessCriteriaPrivilages[roundId_][accessId_];
+
+        accessCriteriaPrivilages.personalCap = personalCap_;
+        accessCriteriaPrivilages.overrideCap = overrideCap_;
+        accessCriteriaPrivilages.start = _start;
+        accessCriteriaPrivilages.cliff = _cliff;
+        accessCriteriaPrivilages.end = _end;
+
+        emit AccessCriteriaPrivilagesSet(
+            roundId_,
+            accessId_,
+            personalCap_,
+            overrideCap_,
+            _start,
+            _cliff,
+            _end
+        );
+    }
     // -------------------------------------------------------------------------
     // Internal
 
@@ -368,5 +447,20 @@ contract LM_PC_FundingPot_v1 is
         if (block.timestamp > round_.roundStart) {
             revert Module__LM_PC_FundingPot__RoundAlreadyStarted();
         }
+    }
+
+    /// @dev    Validate uint start input.
+    /// @param  _start uint to validate.
+    /// @param  _cliff uint to validate.
+    /// @param  _end uint to validate.
+    /// @return True if uint is valid.
+    function _validTimes(uint _start, uint _cliff, uint _end)
+        internal
+        pure
+        returns (bool)
+    {
+        // _start + _cliff should be less or equal to _end
+        // this already implies that _start is not greater than _end
+        return _start + _cliff <= _end;
     }
 }
