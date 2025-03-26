@@ -35,6 +35,10 @@ import {AccessControlEnumerableUpgradeable} from
  *                          In case of any concerns or findings, please refer to our Security Policy
  *                          at security.inverter.network or email us directly!
  *
+ * @custom:version  v1.1.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
+ *
  * @author  Inverter Network
  */
 contract AUT_Roles_v1 is
@@ -88,10 +92,17 @@ contract AUT_Roles_v1 is
         _;
     }
 
+    modifier idNotDefaultAdmin(bytes32 roleId_) {
+        if (roleId_ == DEFAULT_ADMIN_ROLE) {
+            revert Module__Authorizer__CannotAddDefaultAdminRole();
+        }
+        _;
+    }
+
     /// @dev     Verifies that the roleId is already existing.
-    /// @param  roleId The id of the role.
-    modifier idExisting(bytes32 roleId) {
-        if (roleId != BURN_ADMIN_ROLE && uint(roleId) > _roleIdCounter) {
+    /// @param  roleId_ The id of the role.
+    modifier idExisting(bytes32 roleId_) {
+        if (roleId_ != BURN_ADMIN_ROLE && uint(roleId_) > _roleIdCounter) {
             //@todo BurnAdmin still here
             revert Module__Authorizer__RoleIdNotExisting();
         }
@@ -177,6 +188,11 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
+    function getRoleIdCounter() public view returns (uint roleIdCounter_) {
+        roleIdCounter_ = _roleIdCounter;
+    }
+
+    /// @inheritdoc IAuthorizer_v1
     function isFunctionKey(
         address target_,
         bytes4 selector_,
@@ -235,7 +251,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function checkForRole(
         bytes32 role,
-        address who //@todo Scrap?
+        address who //@todo Scrap? Why is this a different function from hasRole?
     ) external view virtual returns (bool) {
         return hasRole(role, who);
     }
@@ -257,11 +273,12 @@ contract AUT_Roles_v1 is
     // Mutating - Authorization
 
     /// @inheritdoc IAuthorizer_v1
-    function addKey(
-        address target_,
-        bytes4 selector_,
-        bytes32 newRoleIdKey_ //@todo test
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) idExisting(newRoleIdKey_) {
+    function addKey(address target_, bytes4 selector_, bytes32 newRoleIdKey_)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
+        idNotDefaultAdmin(newRoleIdKey_)
+        idExisting(newRoleIdKey_)
+    {
         // if RoleId is already a key, do nothing
         if (isFunctionKey(target_, selector_, newRoleIdKey_)) {
             return;
@@ -276,7 +293,10 @@ contract AUT_Roles_v1 is
         address target_,
         bytes4 selector_,
         bytes32 roleIdKey_ //@todo test
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    )
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
+    {
         bytes32[] memory keys = _keys[target_][selector_];
         uint keysLength = keys.length;
 
@@ -307,7 +327,7 @@ contract AUT_Roles_v1 is
     )
         public
         virtual
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
         idExisting(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
@@ -327,7 +347,7 @@ contract AUT_Roles_v1 is
     function labelRole( //@todo test
     bytes32 roleId_, string memory newRoleName_)
         external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
         idExisting(roleId_)
     {
         emit RoleLabeled(roleId_, newRoleName_);
@@ -337,7 +357,7 @@ contract AUT_Roles_v1 is
     function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
         external
         onlyRole(getRoleAdmin(roleId))
-    //@todo idExisting(roleId) implement and test
+    //@todo idExisting(roleId) implement and test / Do we actually want to restrict this?
     {
         _setRoleAdmin(roleId, newAdmin);
     }
@@ -363,7 +383,7 @@ contract AUT_Roles_v1 is
         bytes4[][] memory selectors_
     )
         external
-        onlyRole(DEFAULT_ADMIN_ROLE)
+        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
         idExisting(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {

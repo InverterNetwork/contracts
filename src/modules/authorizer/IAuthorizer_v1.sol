@@ -4,11 +4,31 @@ pragma solidity ^0.8.0;
 import {IAccessControlEnumerable} from
     "@oz/access/extensions/IAccessControlEnumerable.sol";
 
+/**
+ * @title   Inverter Authorizer Interface
+ *
+ * @notice  This interface enables Role-based Access Control for the
+ *          a Inverter Network Workflow.
+ *
+ * @custom:security-contact security@inverter.network
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
+ *
+ * @custom:version  v1.1.0
+ *
+ * @custom:inverter-standard-version    v0.1.0
+ *
+ * @author  Inverter Network
+ */
 interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ========================================================================
     // Errors
     /// @notice The provided initial admin address is invalid.
     error Module__Authorizer__InvalidInitialAdmin();
+
+    /// @notice The provided role ID is the default admin role.
+    error Module__Authorizer__CannotAddDefaultAdminRole();
 
     /// @notice The provided role ID is not existing.
     error Module__Authorizer__RoleIdNotExisting();
@@ -70,6 +90,10 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
         external
         view
         returns (bytes32[] memory keys_);
+
+    /// @notice Returns the number of created role IDs.
+    /// @return roleIdCounter_ The number of created role IDs.
+    function getRoleIdCounter() external view returns (uint roleIdCounter_);
 
     /// @notice Returns wether the given key is a key of the given function in the target contract.
     /// @param  target_ The address of the target contract.

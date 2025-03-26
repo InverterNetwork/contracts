@@ -54,8 +54,7 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
 
         _authorized[authorized] = true;
 
-        _roleAuthorized["0x00"][msg.sender] = true;
-        _roleAuthorized["0x02"][msg.sender] = true;
+        _roleAuthorized[0x00][msg.sender] = true;
     }
 
     function mockInit(bytes memory configData) public {
@@ -94,7 +93,7 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     }
 
     function getRoleAdmin(bytes32) external pure returns (bytes32) {
-        return "0x00"; // In this mock, all roles have the owner as admin
+        return 0x00; // In this mock, all roles have the owner as admin
     }
 
     function getRoleMember(bytes32, uint) external pure returns (address) {
@@ -117,6 +116,8 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         returns (bytes32[] memory keys_)
     {}
 
+    function getRoleIdCounter() external view returns (uint roleIdCounter_) {}
+
     function isFunctionKey(address, bytes4, bytes32)
         external
         view
@@ -133,7 +134,7 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     // Getter -  Role Management
 
     function getAdminRole() external pure returns (bytes32) {
-        return "0x00";
+        return 0x00;
     }
 
     function checkForRole(bytes32 role, address who)
