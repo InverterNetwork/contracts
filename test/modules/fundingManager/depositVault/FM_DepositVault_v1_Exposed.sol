@@ -15,7 +15,7 @@ contract FM_DepositVault_v1_Exposed is FM_DepositVault_v1 {
         _processProtocolFeeViaTransfer(_treasury, _token, _feeAmount);
     }
 
-    function exposed_validateRecipient(address receiver) external view {
-        return _validateRecipient(receiver);
+    function exposed_validateRecipient(address receiver_) external view {
+        return _validateRecipient(receiver_);
     }
 }

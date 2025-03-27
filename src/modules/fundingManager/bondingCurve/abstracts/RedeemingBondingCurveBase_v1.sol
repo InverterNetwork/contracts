@@ -150,9 +150,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _calculateNetAndSplitFees(
             redeemAmount, collateralSellFeePercentage, sellFee
         );
-
-        // Return redeem amount
-        // return redeemAmount;
     }
 
     // -------------------------------------------------------------------------
@@ -184,7 +181,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     ///         PLEASE NOTE:
     ///         The current implementation only requires that enough collateral token is held for redeeming
     ///         to be possible. No further functionality is implemented which would manages the outflow of
-    ///         collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
+    ///         collateral, e.g., restricting max Redeeming amount per user, or a Redeeming amount which
     ///         differes from the actual balance.
     ///         Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
     ///         contract for redemption.

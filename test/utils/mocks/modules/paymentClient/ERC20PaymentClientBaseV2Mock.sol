@@ -11,8 +11,8 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 
 // Internal Interfaces
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // Mocks
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
@@ -90,14 +90,14 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
         }
     }
 
-    function _ensureTokenAllowance(IPaymentProcessor_v1 spender, address _token)
+    function _ensureTokenAllowance(IPaymentProcessor_v2 spender, address _token)
         internal
         override(ERC20PaymentClientBase_v2)
     {
         token.approve(address(spender), _outstandingTokenAmounts[_token]);
     }
 
-    function _isAuthorizedPaymentProcessor(IPaymentProcessor_v1)
+    function _isAuthorizedPaymentProcessor(IPaymentProcessor_v2)
         internal
         view
         override(ERC20PaymentClientBase_v2)

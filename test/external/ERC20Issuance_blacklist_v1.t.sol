@@ -38,8 +38,10 @@ contract ERC20Issuance_Blacklist_v1_Test is Test {
     function setUp() public {
         // Setup token
         token = new ERC20Issuance_Blacklist_v1_Exposed(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this), address(this)
+            NAME, SYMBOL, DECIMALS, MAX_SUPPLY
         );
+        token.setMinter(address(this), true);
+        token.setBlacklistManager(address(this), true);
     }
 
     // ================================================================================

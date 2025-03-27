@@ -9,22 +9,138 @@ import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
 /**
- * @title   External Price Oracle Funding Manager with Payment Client
+ * @title   External Price Oracle Funding Manager with Payment Client.
  *
- * @notice  A funding manager implementation that uses external oracle price
- *          feeds for token operations. It integrates payment client
- *          functionality and supports token redemption through a bonding curve
- *          mechanism.
+ * @notice  A funding manager implementation that manages token issuance and
+ *          redemption based on external oracle price feeds. While token
+ *          issuance is processed immediately, redemption requests are added
+ *          to a queue for delayed processing through an integrated payment
+ *          client system.
  *
- * @dev     This contract inherits from:
- *              - IFM_PC_Oracle_Redeeming_v1.
- *              - ERC20PaymentClientBase_v2.
- *              - RedeemingBondingCurveBase_v1.
+ * @dev     Inherits functionality from:
+ *          - IFM_PC_Oracle_Redeeming_v1: Implementation interface.
+ *          - ERC20PaymentClientBase_v2: Payment processing capabilities.
+ *          - RedeemingBondingCurveBase_v1: Token issuance and redemption logic.
+ *
  *          Key features:
- *              - External price integration.
- *              - Payment client functionality.
- *          The contract uses external price feeds for both issuance and
- *          redemption operations, ensuring market-aligned token pricing.
+ *              - Oracle-driven token pricing.
+ *                Uses external price feeds to determine token value for all
+ *                issuance and redemption operations.
+ *
+ *              - Token issuance and redemption.
+ *                Mints new tokens during purchases and burns tokens during
+ *                sell operations at oracle-determined prices.
+ *
+ *              - Whitelisting system for controlled token distribution.
+ *                Restricts token purchases and sales to approved addresses.
+ *
+ *              - Queue-based redemption and payment processing.
+ *                Creates payment orders in a queue and sends them to the payment
+ *                processor for executing token redemptions.
+ *
+ *              - Fee management on buy/sell operations.
+ *                Configurable fee structure for trading operations.
+ *
+ * @custom:setup    This module requires the following MANDATORY setup steps:
+ *
+ *                  1. Grant Minting Permission:
+ *                     - Purpose: The module needs direct minting/burning
+ *                                capability to handle token issuance and
+ *                                redemption operations. Without this permission,
+ *                                the module cannot mint or burn tokens.
+ *                     - How:     The owner of the issuance token contract must
+ *                                call the minter setting function to authorize
+ *                                this module.
+ *                     - Example: issuanceToken.setMinter(moduleAddress, true);
+ *
+ *                  2. Configure Oracle:
+ *                     - Purpose: Since the Oracle is a separate module, it
+ *                                cannot be set during initialization. The Oracle
+ *                                provides price feed data needed for token
+ *                                valuations during issuance and redemption.
+ *                     - How:     The OrchestratorAdmin must first get the
+ *                                deployed Oracle module's address, then call the
+ *                                setter function.
+ *                     - Example: module.setOracleAddress(oracleAddress);
+ *
+ *                  3. Setup Whitelist:
+ *                     - Purpose: Implements access control for buy/sell
+ *                                functions. Only whitelisted addresses can
+ *                                participate in token buy & sell operations to
+ *                                provide a security layer for controlled token
+ *                                distribution and compliance.
+ *                     - How:     The OrchestratorAdmin (or WHITELIST_ROLE_ADMIN
+ *                                if configured) must:
+ *                                1. Retrieve the whitelist role identifier.
+ *                                2. Grant the role to desired addresses.
+ *                     - Example: module.grantModuleRole(
+ *                                module.getWhitelistRole(),
+ *                                userAddress
+ *                                );
+ *
+ *                  4. Setup Queue Executors:
+ *                     - Purpose: Implements access control for authorized
+ *                                addresses that can process the redemption
+ *                                queue.
+ *                     - How:     The OrchestratorAdmin (or
+ *                                QUEUE_EXECUTOR_ROLE_ADMIN if configured) must:
+ *                                1. Retrieve the executor role identifier.
+ *                                2. Grant the role to designated executors.
+ *                     - Example: module.grantModuleRole(
+ *                                 module.getQueueExecutorRole(),
+ *                                 executorAddress
+ *                                );
+ *
+ *                  5. Enable Trading:
+ *                     - Purpose: Activates the buy/sell functionality of the
+ *                                contract. Trading must be explicitly enabled.
+ *                     - How:     The OrchestratorAdmin must enable both buying
+ *                                and selling operations separately.
+ *                     - Example: module.openBuy();
+ *                                module.openSell();
+ *
+ *                  OPTIONAL setup steps for enhanced administration:
+ *
+ *                  1. Custom Whitelist Admin:
+ *                     - Purpose: Enables delegation of whitelist management to
+ *                                a dedicated admin role instead of relying on
+ *                                the OrchestratorAdmin. This allows for more
+ *                                granular access control and operational
+ *                                flexibility.
+ *                     - How:     The OrchestratorAdmin must:
+ *                                1. Generate the role IDs for both roles.
+ *                                2. Transfer admin rights through the Authorizer.
+ *                     - Example: authorizer.transferAdminRole(
+ *                                authorizer.generateRoleId(
+ *                                  moduleAddress,
+ *                                   module.getWhitelistRole()
+ *                                ),
+ *                                authorizer.generateRoleId(
+ *                                   moduleAddress,
+ *                                   module.getWhitelistRoleAdmin()
+ *                                 )
+ *                                );
+ *
+ *                  2. Custom Queue Executor Admin:
+ *                     - Purpose: Allows delegation of queue executor
+ *                                management to a dedicated admin role instead
+ *                                of the OrchestratorAdmin. This allows for
+ *                                more granular access control and operational
+ *                                flexibility.
+ *                     - How:     The OrchestratorAdmin must:
+ *                                1. Generate the role IDs for both roles.
+ *                                2. Transfer admin rights through the
+ *                                   Authorizer.
+ *                     - Example: authorizer.transferAdminRole(
+ *                                authorizer.generateRoleId(
+ *                                   moduleAddress,
+ *                                   module.getQueueExecutorRole()
+ *                                ),
+ *                                authorizer.generateRoleId(
+ *                                   moduleAddress,
+ *                                   module.getQueueExecutorRoleAdmin()
+ *                                 )
+ *                                );
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -73,7 +189,7 @@ interface IFM_PC_Oracle_Redeeming_v1 is
     error Module__FM_PC_ExternalPrice_Redeeming_ThirdPartyOperationsDisabled();
 
     /// @notice	Thrown when a redemption queue execution fails.
-    error Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed();
+    error Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(bytes data);
 
     /// @notice Thrown when the project treasury address is invalid.
     error Module__FM_PC_ExternalPrice_Redeeming_InvalidProjectTreasury();
@@ -125,6 +241,7 @@ interface IFM_PC_Oracle_Redeeming_v1 is
     ///         in collateral token decimals.
     /// @param	feePercentage_ Project collateral fee percentage applied.
     /// @param	feeAmount_ Project collateral fee amount collected.
+    /// @param	protocolFeeAmount_ Protocol collateral fee amount collected.
     /// @param	finalRedemptionAmount_ Final redemption amount to be received.
     /// @param	collateralToken_ Address of collateral token.
     /// @param	state_ Initial state of the order.
@@ -137,6 +254,7 @@ interface IFM_PC_Oracle_Redeeming_v1 is
         uint exchangeRate_,
         uint feePercentage_,
         uint feeAmount_,
+        uint protocolFeeAmount_,
         uint finalRedemptionAmount_,
         address collateralToken_,
         RedemptionState state_

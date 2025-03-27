@@ -8,6 +8,8 @@ import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 
 // Internal Dependencies
+import {IERC20PaymentClientBase_v1} from
+    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
@@ -322,8 +324,13 @@ abstract contract Module_v1 is
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())
-                || !ERC165Upgradeable(_msgSender()).supportsInterface(
-                    type(IERC20PaymentClientBase_v2).interfaceId
+                || (
+                    !ERC165Upgradeable(_msgSender()).supportsInterface(
+                        type(IERC20PaymentClientBase_v1).interfaceId
+                    )
+                        && !ERC165Upgradeable(_msgSender()).supportsInterface(
+                            type(IERC20PaymentClientBase_v2).interfaceId
+                        )
                 )
         ) revert Module__OnlyCallableByPaymentClient();
     }

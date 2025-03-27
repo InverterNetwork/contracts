@@ -2,25 +2,77 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
 /**
  * @title   Queue Based Payment Processor
  *
- * @notice  A payment processor implementation that manages payment orders through
- *          a FIFO queue system. It supports automated execution of payments
- *          within the processPayments function.
+ * @notice  A payment processor implementation that manages payment orders
+ *          through a FIFO queue system. It supports automated execution of
+ *          payments within the processPayments function.
  *
  * @dev     This contract inherits from:
- *              - IPP_Queue_v1.
+ *          - IPP_Queue_v1: Implementation interface.
+ *          - IPaymentProcessor_v2: Payment processor interface.
+ *          - Module_v1: Base module functionality.
+ *
  *          Key features:
- *              - FIFO queue management.
- *              - Automated payment execution.
- *              - Payment order lifecycle management.
- *          The contract implements automated payment processing by executing
- *          the queue within processPayments.
+ *              - FIFO queue management for payment orders.
+ *                Orders are processed in the order they are added to the queue,
+ *                first in first out.
+ *
+ *              - Automated payment execution through queue processing.
+ *                The processPayments function will add orders to the queue and
+ *                execute the orders right away.
+ *
+ *              - Payment order lifecycle management with state tracking.
+ *                The state of orders are tracked and emitted. The states are:
+ *                  - PROCESSED: The order has been processed, the collateral has
+ *                    been transferred to the recipient.
+ *                  - CANCELLED: The order has been cancelled by the queue
+ *                    operator.
+ *                  - PENDING: The order is still in the queue.
+ *                  - FAILED: The order has failed due to the transfer failing
+ *                    (blacklisted address).
+ *
+ * @custom:setup   This module requires the following MANDATORY setup steps:
+ *
+ *                 1. Configure Queue Operators:
+ *                    - Purpose: Queue operators are authorized to cancel payment
+ *                               orders in the queue, and claim collateral for
+ *                               failed payments.
+ *                    - How:     The OrchestratorAdmin (or
+ *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
+ *                               1. Retrieve the queue operator role identifier.
+ *                               2. Grant the role to desired addresses.
+ *                    - Example: module.grantModuleRole(
+ *                                module.getQueueOperatorRole(),
+ *                                operatorAddress
+ *                               );
+ *
+ *                 OPTIONAL setup steps for enhanced administration:
+ *
+ *                 1. Custom Queue Operator Admin:
+ *                    - Purpose: Enables delegation of queue operator management
+ *                               to a dedicated admin role instead of relying on
+ *                               the OrchestratorAdmin. This allows for more
+ *                               granular access control and operational
+ *                               flexibility.
+ *                    - How:     The OrchestratorAdmin must:
+ *                               1. Generate the role IDs for both roles.
+ *                               2. Transfer admin rights through the Authorizer.
+ *                    - Example: authorizer.transferAdminRole(
+ *                               authorizer.generateRoleId(
+ *                                 moduleAddress,
+ *                                 module.getQueueOperatorRole()
+ *                               ),
+ *                               authorizer.generateRoleId(
+ *                                 moduleAddress,
+ *                                 module.getQueueOperatorRoleAdmin()
+ *                                )
+ *                               );
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -33,7 +85,7 @@ import {IERC20PaymentClientBase_v2} from
  *
  * @author  Zealynx Security
  */
-interface IPP_Queue_v1 is IPaymentProcessor_v1 {
+interface IPP_Queue_v1 is IPaymentProcessor_v2 {
     // -------------------------------------------------------------------------
     // Type Declarations
 
@@ -172,6 +224,14 @@ interface IPP_Queue_v1 is IPaymentProcessor_v1 {
     /// @notice	Invalid payment amount.
     /// @param  amount_ The invalid amount.
     error Module__PP_Queue_InvalidAmount(uint amount_);
+
+    /// @notice	Invalid fee amount.
+    /// @param  amount_ The invalid amount.
+    error Module__PP_Queue_InvalidFeeAmount(uint amount_);
+
+    /// @notice	Fee amount to high.
+    /// @param  amount_ The fee amount.
+    error Module__PP_Queue_FeeAmountToHigh(uint amount_);
 
     /// @notice	Invalid chain ID in payment order.
     /// @param  originChainId_ The origin chain ID.

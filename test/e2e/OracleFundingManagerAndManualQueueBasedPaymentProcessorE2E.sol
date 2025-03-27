@@ -37,7 +37,7 @@ import {ERC165Upgradeable} from
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
-import {ERC20Decimals_Mock} from "test/utils/mocks/ERC20Decimals_Mock.sol";
+import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
@@ -88,7 +88,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     // Event signatures
     bytes32 private constant REDEMPTION_ORDER_CREATED_EVENT_SIGNATURE =
     keccak256(
-        "RedemptionOrderCreated(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,address,uint8)"
+        "RedemptionOrderCreated(address,uint256,address,address,uint256,uint256,uint256,uint256,uint256,uint256,address,uint8)"
     );
     bytes32 private constant PAYMENT_ORDER_QUEUED_EVENT_SIGNATURE = keccak256(
         "PaymentOrderQueued(uint256,address,address,address,uint256,uint256)"
@@ -112,7 +112,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
     address projectTreasury = makeAddr("projectTreasury");
 
     // Contracts
-    ERC20Decimals_Mock collateralToken;
+    ERC20Mock collateralToken;
     ERC20Issuance_Blacklist_v1 issuanceToken;
     FM_PC_Oracle_Redeeming_v1 fundingManager;
     PP_Queue_ManualExecution_v1 paymentProcessor;
@@ -130,6 +130,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         uint exchangeRate_;
         uint feePercentage_;
         uint feeAmount_;
+        uint protocolFeeAmount_;
         uint finalRedemptionAmount_;
         address collateralToken_;
         IFM_PC_Oracle_Redeeming_v1.RedemptionState state_;
@@ -148,12 +149,12 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // First create issuance token
-        issuanceToken = new ERC20Issuance_Blacklist_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this), address(this)
-        );
+        issuanceToken =
+            new ERC20Issuance_Blacklist_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         // Create collateral token with 6 decimals to simulate USDC
-        collateralToken = new ERC20Decimals_Mock(
+        collateralToken = new ERC20Mock(
             COLLATERAL_NAME, COLLATERAL_SYMBOL, COLLATERAL_DECIMALS
         );
 
@@ -576,6 +577,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                     uint exchangeRate,
                     uint feePercentage,
                     uint feeAmount,
+                    uint protocolFeeAmount,
                     uint finalRedemptionAmount,
                     address collateralToken_,
                     IFM_PC_Oracle_Redeeming_v1.RedemptionState state
@@ -583,6 +585,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                     entry.data,
                     (
                         address,
+                        uint,
                         uint,
                         uint,
                         uint,
@@ -599,6 +602,7 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
                 data.exchangeRate_ = exchangeRate;
                 data.feePercentage_ = feePercentage;
                 data.feeAmount_ = feeAmount;
+                data.protocolFeeAmount_ = protocolFeeAmount;
                 data.finalRedemptionAmount_ = finalRedemptionAmount;
                 data.collateralToken_ = collateralToken_;
                 data.state_ = state;
