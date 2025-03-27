@@ -123,6 +123,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 indexed roundId_, uint8 accessId_, AccessCriteria accessCriteria_
     );
 
+    /// @notice Emitted when a contribution is made to a round
+    /// @param  roundId_ The ID of the round
+    /// @param  contributor_ The address of the contributor
+    /// @param  amount_ The amount contributed
+    event ContributionMade(uint64 roundId_, address contributor_, uint amount_);
+
     // -------------------------------------------------------------------------
     // Errors
 
@@ -158,6 +164,33 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid access criteria ID.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+
+    /// @notice Round has not started yet
+    error Module__LM_PC_FundingPot__RoundHasNotStarted();
+
+    /// @notice Round has already ended
+    error Module__LM_PC_FundingPot__RoundHasEnded();
+
+    /// @notice User does not meet the NFT access criteria
+    error Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
+
+    /// @notice User does not meet the merkle proof access criteria
+    error Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
+
+    /// @notice User is not on the allowlist
+    error Module__LM_PC_FundingPot__AccessCriteriaListFailed();
+
+    /// @notice Invalid access criteria type
+    error Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
+
+    /// @notice Access not permitted
+    error Module__LM_PC_FundingPot__AccessNotPermitted();
+
+    /// @notice User has reached their personal contribution cap
+    error Module__LM_PC_FundingPot__PersonalCapReached();
+
+    /// @notice Round contribution cap has been reached
+    error Module__LM_PC_FundingPot__RoundCapReached();
 
     // -------------------------------------------------------------------------
     // Public - Getters
@@ -315,5 +348,21 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint _start,
         uint _cliff,
         uint _end
+    ) external;
+
+    /// @notice Allows a user to contribute to a specific funding round.
+    /// @dev    Verifies the contribution eligibility based on the provided Merkle proof.
+    /// @param  roundId_ The unique identifier of the funding round.
+    /// @param  amount_ The amount of tokens being contributed.
+    /// @param  accessCriteriaId_ The identifier for the access criteria to validate eligibility.
+    /// @param  contributionToken_ The address of the token used for contribution.
+    /// @param  merkleProof_ The Merkle proof used to verify the contributor's eligibility.
+
+    function contribute(
+        uint64 roundId_,
+        uint amount_,
+        uint8 accessCriteriaId_,
+        address contributionToken_,
+        bytes32[] calldata merkleProof_
     ) external;
 }

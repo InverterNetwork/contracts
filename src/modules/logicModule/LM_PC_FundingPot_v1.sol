@@ -17,9 +17,12 @@ import {
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+import {IERC721} from "@oz/token/ERC721/IERC721.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
+
+import "@oz/utils/cryptography/MerkleProof.sol";
 
 /**
  * @title   Inverter Funding Pot Module
@@ -93,6 +96,12 @@ contract LM_PC_FundingPot_v1 is
     mapping(
         uint64 roundId => mapping(uint8 accessId => AccessCriteriaPrivilages)
     ) private accessCriteriaPrivilages;
+
+    /// @notice Maps round IDs to user addresses to contribution amounts
+    mapping(uint64 => mapping(address => uint)) private userContributions;
+
+    /// @notice Maps round IDs to total contributions
+    mapping(uint64 => uint) private roundTotalContributions;
 
     /// @notice The next available round ID.
     uint64 private nextRoundId;
@@ -398,6 +407,73 @@ contract LM_PC_FundingPot_v1 is
             _end
         );
     }
+
+    function contribute(
+        uint64 roundId_,
+        uint amount_,
+        uint8 accessId_,
+        address contributionToken_,
+        bytes32[] calldata merkleProof_
+    ) external {
+        // Validate input amount.
+        if (amount_ == 0) {
+            revert Module__LM_PC_FundingPot__InvalidDepositAmount();
+        }
+
+        Round storage round = rounds[roundId_];
+
+        // Validate round exists.
+        if (round.roundEnd == 0 && round.roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundNotCreated();
+        }
+
+        // Validate round timing.
+        uint currentTime = block.timestamp;
+        if (currentTime < round.roundStart) {
+            revert Module__LM_PC_FundingPot__RoundHasNotStarted();
+        }
+        if (round.roundEnd > 0 && currentTime > round.roundEnd) {
+            revert Module__LM_PC_FundingPot__RoundHasEnded();
+        }
+
+        // Validate access criteria.
+        _validateAccessCriteria(roundId_, accessId_, merkleProof_);
+
+        // Retrieve user's previous contribution and calculate the personal cap.
+        address user = msg.sender;
+        uint userPreviousContribution = _getUserContribution(roundId_, user);
+        uint userPersonalCap = _getUserPersonalCap(roundId_, user);
+
+        if (userPreviousContribution >= userPersonalCap) {
+            revert Module__LM_PC_FundingPot__PersonalCapReached();
+        }
+
+        // Adjust contribution if it would exceed the personal cap.
+        uint userRemainingCap = userPersonalCap - userPreviousContribution;
+        uint actualContributionAmount = amount_;
+        if (amount_ > userRemainingCap) {
+            actualContributionAmount = userRemainingCap;
+        }
+
+        uint totalRoundContribution = _getTotalRoundContribution(roundId_);
+        if (round.roundCap > 0 && totalRoundContribution >= round.roundCap) {
+            revert Module__LM_PC_FundingPot__RoundCapReached();
+        }
+        uint roundRemainingCap = round.roundCap - totalRoundContribution;
+        if (actualContributionAmount > roundRemainingCap) {
+            actualContributionAmount = roundRemainingCap;
+        }
+
+        // Transfer funds.
+        IERC20(contributionToken_).safeTransferFrom(
+            user, address(this), actualContributionAmount
+        );
+
+        // Record the contribution.
+        _recordContribution(roundId_, user, actualContributionAmount);
+        emit ContributionMade(roundId_, user, actualContributionAmount);
+    }
+
     // -------------------------------------------------------------------------
     // Internal
 
@@ -462,5 +538,124 @@ contract LM_PC_FundingPot_v1 is
         // _start + _cliff should be less or equal to _end
         // this already implies that _start is not greater than _end
         return _start + _cliff <= _end;
+    }
+
+    function _validateAccessCriteria(
+        uint64 roundId_,
+        uint8 accessId_,
+        bytes32[] calldata merkleProof_
+    ) internal view {
+        Round storage round = rounds[roundId_];
+        AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
+
+        if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
+            return;
+        }
+
+        bool accessGranted = false;
+        if (accessCriteria.accessCriteriaId == AccessCriteriaId.NFT) {
+            accessGranted =
+                _checkNftOwnership(accessCriteria.nftContract, msg.sender);
+        } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE) {
+            //TODO: Should I move this into a helper function
+
+            bytes32 leaf = keccak256(abi.encodePacked(msg.sender, roundId_));
+            accessGranted = MerkleProof.verify(
+                merkleProof_, accessCriteria.merkleRoot, leaf
+            );
+        } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.LIST) {
+            accessGranted = _checkAllowedAddressList(
+                accessCriteria.allowedAddresses, msg.sender
+            );
+        }
+
+        if (!accessGranted) {
+            revert Module__LM_PC_FundingPot__AccessNotPermitted();
+        }
+    }
+
+    function _getTotalRoundContribution(uint64 roundId_)
+        internal
+        view
+        returns (uint)
+    {
+        return roundTotalContributions[roundId_];
+    }
+
+    function _getUserContribution(uint64 roundId_, address user_)
+        internal
+        view
+        returns (uint)
+    {
+        return userContributions[roundId_][user_];
+    }
+
+    function _getUserPersonalCap(uint64 roundId_, address user_)
+        internal
+        view
+        returns (uint)
+    {
+        uint basePersonalCap = 1000 ether;
+        Round storage round = rounds[roundId_];
+
+        if (round.globalAccumulativeCaps) {
+            uint unusedCapacity =
+                _getUnusedCapacityFromPreviousRounds(user_, roundId_);
+            return basePersonalCap + unusedCapacity;
+        }
+        return basePersonalCap;
+    }
+
+    function _getUnusedCapacityFromPreviousRounds(
+        address user_,
+        uint64 currentRoundId_
+    ) internal view returns (uint) {
+        uint totalUnusedCapacity = 0;
+        for (uint64 i = 1; i < currentRoundId_; i++) {
+            Round storage prevRound = rounds[i];
+            if (!prevRound.globalAccumulativeCaps) {
+                continue;
+            }
+            uint personalCap = 1000 ether;
+            uint userContribution = _getUserContribution(i, user_);
+            if (userContribution < personalCap) {
+                totalUnusedCapacity += (personalCap - userContribution);
+            }
+        }
+        return totalUnusedCapacity;
+    }
+
+    function _recordContribution(uint64 roundId_, address user_, uint amount_)
+        internal
+    {
+        userContributions[roundId_][user_] += amount_;
+        roundTotalContributions[roundId_] += amount_;
+    }
+
+    function _checkAllowedAddressList(
+        address[] memory allowedAddresses,
+        address sender
+    ) internal pure returns (bool) {
+        for (uint i = 0; i < allowedAddresses.length; i++) {
+            if (allowedAddresses[i] == sender) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function _checkNftOwnership(address nftContract_, address user_)
+        internal
+        view
+        returns (bool)
+    {
+        if (nftContract_ == address(0) || user_ == address(0)) {
+            return false;
+        }
+        try IERC721(nftContract_).balanceOf(user_) returns (uint balance) {
+            return balance > 0;
+        } catch {
+            return false;
+        }
     }
 }
