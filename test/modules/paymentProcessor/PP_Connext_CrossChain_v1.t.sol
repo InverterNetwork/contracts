@@ -22,7 +22,7 @@ import {IPP_Connext_CrossChain_v1} from
 
 // Tests and Mocks
 import {PP_Connext_CrossChain_v1_Exposed} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Connext_CrossChain_v1_Exposed.sol";
+    "test/modules/paymentProcessor/utils/mocks/PP_Connext_CrossChain_v1_Exposed.sol";
 import {Mock_EverclearPayment} from
     "test/utils/mocks/external/Mock_EverclearPayment.sol";
 import {
