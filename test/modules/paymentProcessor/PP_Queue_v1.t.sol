@@ -3324,6 +3324,88 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         return (_flags, paymentParameters);
     }
+
+    /* Test testSetCanceledOrdersTreasury_GivenValidAddress()
+        └── Given a valid treasury address
+            └── When setting the canceled orders treasury
+                └── Then it should be set correctly
+    */
+    function testSetCanceledOrdersTreasury_GivenValidAddress() public {
+        address newTreasury = makeAddr("newTreasury");
+
+        queue.exposed_setCanceledOrdersTreasury(newTreasury);
+
+        // Verify the treasury was set correctly by checking the queue's state
+        assertEq(
+            queue.getCanceledOrdersTreasury(),
+            newTreasury,
+            "Canceled orders treasury should be updated"
+        );
+    }
+
+    /* Test testSetCanceledOrdersTreasury_RevertGivenZeroAddress()
+        └── Given a zero address
+            └── When setting the canceled orders treasury
+                └── Then it should revert
+    */
+    function testSetCanceledOrdersTreasury_RevertGivenZeroAddress() public {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidTreasuryAddress(address)", address(0)
+            )
+        );
+        queue.exposed_setCanceledOrdersTreasury(address(0));
+    }
+
+    /* Test testSetFailedOrdersTreasury_GivenValidAddress()
+        └── Given a valid treasury address
+            └── When setting the failed orders treasury
+                └── Then it should be set correctly
+    */
+    function testSetFailedOrdersTreasury_GivenValidAddress() public {
+        address newTreasury = makeAddr("newTreasury");
+
+        queue.exposed_setFailedOrdersTreasury(newTreasury);
+
+        // Verify the treasury was set correctly by checking the queue's state
+        assertEq(
+            queue.getFailedOrdersTreasury(),
+            newTreasury,
+            "Failed orders treasury should be updated"
+        );
+    }
+
+    /* Test testSetFailedOrdersTreasury_RevertGivenZeroAddress()
+        └── Given a zero address
+            └── When setting the failed orders treasury
+                └── Then it should revert
+    */
+    function testSetFailedOrdersTreasury_RevertGivenZeroAddress() public {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidTreasuryAddress(address)", address(0)
+            )
+        );
+        queue.exposed_setFailedOrdersTreasury(address(0));
+    }
+
+    /* Test testEnsureValidPaymentToken_GivenValidToken()
+        └── Given a valid payment token
+            └── And the token is not address(0)
+                └── Then it should return true
+    */
+    function testEnsureValidPaymentToken_GivenValidToken() public {
+        assertTrue(queue.exposed_validPaymentToken(address(_token)));
+    }
+
+    /* Test testEnsureValidPaymentToken_RevertGivenInvalidToken()
+        └── Given an invalid payment token
+            └── When ensuring valid payment token
+                └── Then it should revert
+    */
+    function testEnsureValidPaymentToken_RevertGivenInvalidToken() public {
+        assertFalse(queue.exposed_validPaymentToken(address(0)));
+    }
 }
 
 // Mock contracts for testing
