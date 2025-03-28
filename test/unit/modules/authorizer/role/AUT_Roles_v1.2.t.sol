@@ -633,7 +633,41 @@ contract AUT_Roles_v1_Test is ModuleTest {
         └── When: labelRole is called
             └── Then: An event is emitted
     */
-    // function labelRole(bytes32 roleId_, string memory newRoleName_) external; @todo now
+    function testLabelRole_ModifierInPositionChecks() public {
+        //onlyRole(DEFAULT_ADMIN_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                _authSuT.DEFAULT_ADMIN_ROLE()
+            )
+        );
+        _authSuT.labelRole(bytes32(uint(0)), "RoleName");
+
+        //idExisting(roleId_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.labelRole(bytes32(uint(1)), "RoleName");
+    }
+
+    function testLabelRole_IdExisting(string memory newRoleName_) public {
+        // Create Role
+        vm.prank(_initialAdmin);
+        bytes32 id =
+            _authSuT.createRole("RoleName", bytes32(0), new address[](0));
+
+        // Check that event is emitted
+        vm.expectEmit(true, true, true, true);
+        emit IAuthorizer_v1.RoleLabeled(id, newRoleName_);
+
+        // Label role
+        vm.prank(_initialAdmin);
+        _authSuT.labelRole(id, newRoleName_);
+    }
 
     // function transferAdminRole(bytes32 roleId, bytes32 newAdmin) external; @todo later
 
@@ -661,9 +695,116 @@ contract AUT_Roles_v1_Test is ModuleTest {
     └── And: The given targets array and the selectors array have the same length
         └── When: createRoleAndAddKeys is called
             └── Then: The role is created
-                └── And: The keys are added to the according function locks
+            └── And: The keys are added to the according function locks
     */
     // function createRoleAndAddKeys( @todo now
+
+    function testCreateRoleAndAddKeys_ModifierInPositionCheck() public {
+        //onlyRole(DEFAULT_ADMIN_ROLE)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector,
+                address(this),
+                _authSuT.DEFAULT_ADMIN_ROLE()
+            )
+        );
+        _authSuT.createRoleAndAddKeys(
+            "RoleName",
+            bytes32(uint(0)),
+            new address[](0),
+            new address[](0),
+            new bytes4[][](0)
+        );
+
+        //idExisting(respectiveAdminRole_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.createRoleAndAddKeys(
+            "RoleName",
+            bytes32(uint(1)),
+            new address[](0),
+            new address[](0),
+            new bytes4[][](0)
+        );
+    }
+
+    function testCreateRoleAndAddKeys_RevertWhenArrayLengthsAreDifferent(
+        address[] memory targets_,
+        bytes4[][] memory selectors_
+    ) public {
+        // Make sure the arrays have different lengths
+        vm.assume(targets_.length != selectors_.length);
+
+        // Invalid Input Length
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__InvalidInputLength.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.createRoleAndAddKeys(
+            "RoleName", bytes32(uint(0)), new address[](0), targets_, selectors_
+        );
+    }
+
+    //@note This test alone takes up as much time as the others combined. Restricted the number of runs to 100
+    /// forge-config: default.fuzz.runs = 20
+    function testCreateRoleAndAddKeys_IdExisting(
+        string memory roleName_,
+        address[] memory initialMembers_,
+        address[] memory targets_,
+        bytes4[][] memory selectors_
+    ) public {
+        // Downsize arrays to reasonable size
+        vm.assume(initialMembers_.length < 1000);
+        vm.assume(targets_.length < 100);
+        vm.assume(selectors_.length <= targets_.length);
+
+        uint selectorLength = selectors_.length;
+        for (uint i = 0; i < selectorLength; i++) {
+            vm.assume(selectors_[i].length < 100);
+        }
+
+        // Make sure that selector length and target length are the same
+        if (selectorLength < targets_.length) {
+            address[] memory temp = new address[](selectorLength);
+            for (uint i = 0; i < selectorLength; i++) {
+                temp[i] = targets_[i];
+            }
+            targets_ = temp;
+        }
+
+        // Check that the role is created
+        vm.expectEmit(true, true, true, true);
+        emit IAuthorizer_v1.RoleCreated(bytes32(uint(1)), roleName_);
+
+        vm.prank(_initialAdmin);
+        _authSuT.createRoleAndAddKeys(
+            roleName_, bytes32(0), initialMembers_, targets_, selectors_
+        );
+
+        // Check that the keys are added to the function locks
+        uint targetLength = targets_.length;
+        for (uint i = 0; i < targetLength; i++) {
+            for (uint j = 0; j < selectors_[i].length; j++) {
+                assertTrue(
+                    _authSuT.isFunctionKey(
+                        targets_[i], selectors_[i][j], bytes32(uint(1))
+                    )
+                );
+            }
+        }
+    }
+
+    /* string memory roleName_,
+        bytes32 respectiveAdminRole_,
+        address[] memory initialMembers_,
+        address[] memory targets_,
+        bytes4[][] memory selectors_ */
 
     // ------------------------------------------------------------------------
     // Mutating - Out of Order //@todo later
