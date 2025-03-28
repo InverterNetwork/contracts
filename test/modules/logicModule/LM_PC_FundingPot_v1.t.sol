@@ -18,6 +18,8 @@ import {
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC721Mock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v2NFTMock.sol";
 
 // System under Test (SuT)
 import {LM_PC_FundingPot_v1_Exposed} from
@@ -46,6 +48,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     bytes32 internal constant FUNDING_POT_ADMIN_ROLE = "FUNDING_POT_ADMIN";
     address contributor_;
+
+    bytes32 PROOF_ONE =
+        0x0fd7c981d39bece61f7499702bf59b3114a90e66b51ba2c53abdf7b62986c00a;
+    bytes32 PROOF_TWO =
+        0xe5ebd1e1b5a5478a944ecab36a9a954ac3b6b8216875f6524caa7a1d87096576;
+    bytes32[] PROOF = [PROOF_ONE, PROOF_TWO];
+    bytes32 ROOT =
+        0xaa5d581231e596618465a56aa0f5870ba6e20785fe436d5bfb82b08662ccc7c4;
 
     // -------------------------------------------------------------------------
     // State
@@ -80,6 +90,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         bool globalAccumulativeCaps;
     }
 
+    ERC721Mock mockNFTContract = new ERC721Mock("NFT Mock", "NFT");
+
     // -------------------------------------------------------------------------
     // Setup
     function setUp() public {
@@ -87,8 +99,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         address impl = address(new LM_PC_FundingPot_v1_Exposed());
         fundingPot = LM_PC_FundingPot_v1_Exposed(Clones.clone(impl));
 
+        // Mint tokens to the contributor
         contributor_ = address(0xBeef);
-
         fundingPotToken.mint(contributor_, 10_000);
 
         // Setup the module to test
@@ -1117,6 +1129,117 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(allowedAddresses, newAccessCriteria.allowedAddresses);
     }
 
+    function testFuzzContributeToRound_revertsWhenNFTAccessCriteriaIsNotMet()
+        public
+    {
+        testCreateRound(1000);
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+        uint amount = 250;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(1);
+
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor_);
+        fundingPotToken.approve(address(fundingPot), amount);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__AccessCriteriaNftFailed
+                    .selector
+            )
+        );
+
+        vm.prank(contributor_);
+        fundingPot.contributeToRound(
+            roundId,
+            amount,
+            accessId,
+            address(fundingPotToken),
+            new bytes32[](0)
+        );
+    }
+
+    function testFuzzContributeToRound_revertsWhenMerkleRootAccessCriteriaIsNotMet(
+    ) public {
+        testCreateRound(1000);
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+        uint amount = 250;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(2);
+
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor_);
+        fundingPotToken.approve(address(fundingPot), amount);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed
+                    .selector
+            )
+        );
+
+        vm.prank(contributor_);
+        fundingPot.contributeToRound(
+            roundId, amount, accessId, address(fundingPotToken), PROOF
+        );
+    }
+
+    function testFuzzContributeToRound_revertsWhenAllowedListAccessCriteriaIsNotMet(
+    ) public {
+        testCreateRound(1000);
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+        uint amount = 250;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(3);
+
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor_);
+        fundingPotToken.approve(address(fundingPot), amount);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__AccessCriteriaListFailed
+                    .selector
+            )
+        );
+
+        vm.prank(contributor_);
+        fundingPot.contributeToRound(
+            roundId,
+            amount,
+            accessId,
+            address(fundingPotToken),
+            new bytes32[](0)
+        );
+    }
+
     // -------------------------------------------------------------------------
     // Test: Internal Functions
 
@@ -1171,7 +1294,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 accessCriteriaEnum
                     == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT)
             ) {
-                address nftContract = address(0x1);
+                address nftContract = address(mockNFTContract);
 
                 return ILM_PC_FundingPot_v1.AccessCriteria(
                     ILM_PC_FundingPot_v1.AccessCriteriaType.NFT,
@@ -1183,7 +1306,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 accessCriteriaEnum
                     == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE)
             ) {
-                bytes32 merkleRoot = bytes32(uint(0x1));
+                bytes32 merkleRoot = ROOT;
 
                 return ILM_PC_FundingPot_v1.AccessCriteria(
                     ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE,

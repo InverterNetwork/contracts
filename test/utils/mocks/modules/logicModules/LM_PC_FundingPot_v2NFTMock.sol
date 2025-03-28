@@ -1,44 +1,40 @@
-// // SPDX-License-Identifier: LGPL-3.0-only
-// pragma solidity 0.8.23;
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity 0.8.23;
 
-// // External Dependencies
-// import "@oz/token/ERC721/ERC721.sol";
-// import "@oz/token/ERC721/extensions/ERC721URIStorage.sol";
-// import "@oz/access/Ownable.sol";
-// import "@oz/utils/Counters.sol";
+// External Dependencies
+import "@oz/token/ERC721/ERC721.sol";
+import "@oz/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@oz/access/Ownable.sol";
 
-// contract MockNFT is ERC721URIStorage, Ownable {
-//     using Counters for Counters.Counter;
+contract ERC721Mock is ERC721URIStorage, Ownable {
+    uint private _nextTokenId;
+    string public baseURI;
 
-//     Counters.Counter private _tokenIds;
+    constructor(string memory name, string memory symbol)
+        ERC721(name, symbol)
+        Ownable(msg.sender)
+    {}
 
-//     string public baseURI;
+    function _baseURI() internal view override returns (string memory) {
+        return baseURI;
+    }
 
-//     constructor(string memory name, string memory symbol)
-//         ERC721(name, symbol)
-//         Ownable(msg.sender)
-//     {}
+    function setBaseURI(string memory newBaseURI) public onlyOwner {
+        baseURI = newBaseURI;
+    }
 
-//     function _baseURI() internal view override returns (string memory) {
-//         return baseURI;
-//     }
+    function mint(address to) public onlyOwner returns (uint) {
+        uint tokenId = _nextTokenId;
+        _safeMint(to, tokenId);
+        _nextTokenId++;
 
-//     function setBaseURI(string memory newBaseURI) public onlyOwner {
-//         baseURI = newBaseURI;
-//     }
+        return tokenId;
+    }
 
-//     function mint(address to) public onlyOwner returns (uint) {
-//         uint newTokenId = _tokenIds.current();
-//         _safeMint(to, newTokenId);
-//         _tokenIds.increment();
-
-//         return newTokenId;
-//     }
-
-//     function setTokenURI(uint tokenId, string memory tokenURI)
-//         public
-//         onlyOwner
-//     {
-//         _setTokenURI(tokenId, tokenURI);
-//     }
-// }
+    function setTokenURI(uint tokenId, string memory tokenURI)
+        public
+        onlyOwner
+    {
+        _setTokenURI(tokenId, tokenURI);
+    }
+}
