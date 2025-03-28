@@ -153,7 +153,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     ) public {
         _authSuT.changeRoleIdCounter(_roleIdCounterValue);
         if (
-            _givenRoleId != _authSuT.BURN_ADMIN_ROLE() //@todo burnadmin still here
+            _givenRoleId != _authSuT.PUBLIC_ROLE()
                 && uint(_givenRoleId) > _roleIdCounterValue
         ) {
             vm.expectRevert(
@@ -276,7 +276,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
         for (uint i = 0; i < keys.length; i++) {
-            if (keys[i] == _authSuT.BURN_ADMIN_ROLE()) {
+            if (keys[i] == _authSuT.PUBLIC_ROLE()) {
                 assertTrue(_authSuT.canCall(caller_, target, selector));
             }
         }
@@ -358,7 +358,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
                 _authSuT.DEFAULT_ADMIN_ROLE()
             )
         );
-        _authSuT.addKey(address(this), bytes4(0), bytes32(uint(1)));
+        _authSuT.addKey(address(this), bytes4(0), bytes32(uint(0)));
 
         //idNotDefaultAdmin(newRoleIdKey_)
         vm.expectRevert(
@@ -382,7 +382,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.addKey(address(this), bytes4(0), bytes32(uint(1)));
+        _authSuT.addKey(address(this), bytes4(0), bytes32(uint(2)));
     }
 
     function testAddKey_FunctionKeyAlreadyExisting(uint seed_) public {
@@ -420,7 +420,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     ) public {
         // Make sure keyRoleId_ is not the default admin role or the Public Role
         vm.assume(keyRoleId_ != _authSuT.DEFAULT_ADMIN_ROLE());
-        vm.assume(keyRoleId_ != _authSuT.BURN_ADMIN_ROLE());
+        vm.assume(keyRoleId_ != _authSuT.PUBLIC_ROLE());
 
         // Create All keys
         _authSuT.changeRoleIdCounter(type(uint).max);
@@ -478,7 +478,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
                 _authSuT.DEFAULT_ADMIN_ROLE()
             )
         );
-        _authSuT.removeKey(address(this), bytes4(0), bytes32(uint(1)));
+        _authSuT.removeKey(address(this), bytes4(0), bytes32(uint(0)));
     }
 
     function testRemoveKey_RoleKeyIsNotExisting(uint seed_, bytes32 keyRoleId_)
@@ -584,10 +584,11 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.createRole("RoleName", bytes32(uint(1)), new address[](0));
+        _authSuT.createRole("RoleName", bytes32(uint(2)), new address[](0));
     }
 
     function testCreateRole_RoleIdIsExisting(
+        string memory roleName_,
         uint seed_,
         address[] memory members_
     ) public {
@@ -602,12 +603,12 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Expect event
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.RoleCreated(expectedRoleId, "RoleName");
+        emit IAuthorizer_v1.RoleCreated(expectedRoleId, roleName_);
 
         // Create role
         vm.prank(_initialAdmin);
         bytes32 roleId = _authSuT.createRole(
-            "RoleName", bytes32(bound(seed_, 0, currentRoleIdCounter)), members_
+            roleName_, bytes32(bound(seed_, 0, currentRoleIdCounter)), members_
         );
 
         // Check that roleId is the expected roleId
@@ -651,7 +652,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.labelRole(bytes32(uint(1)), "RoleName");
+        _authSuT.labelRole(bytes32(uint(2)), "RoleName");
     }
 
     function testLabelRole_IdExisting(string memory newRoleName_) public {
@@ -725,7 +726,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.prank(_initialAdmin);
         _authSuT.createRoleAndAddKeys(
             "RoleName",
-            bytes32(uint(1)),
+            bytes32(uint(2)),
             new address[](0),
             new address[](0),
             new bytes4[][](0)
@@ -751,7 +752,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         );
     }
 
-    //@note This test alone takes up as much time as the others combined. Restricted the number of runs to 100
+    //@note This test alone takes up as much time as the others combined. Restricted the number of runs to 20
     /// forge-config: default.fuzz.runs = 20
     function testCreateRoleAndAddKeys_IdExisting(
         string memory roleName_,
@@ -760,13 +761,13 @@ contract AUT_Roles_v1_Test is ModuleTest {
         bytes4[][] memory selectors_
     ) public {
         // Downsize arrays to reasonable size
-        vm.assume(initialMembers_.length < 1000);
-        vm.assume(targets_.length < 100);
+        vm.assume(initialMembers_.length < 800); //800
+        vm.assume(targets_.length < 75); //75
         vm.assume(selectors_.length <= targets_.length);
 
         uint selectorLength = selectors_.length;
         for (uint i = 0; i < selectorLength; i++) {
-            vm.assume(selectors_[i].length < 100);
+            vm.assume(selectors_[i].length < 50); //50
         }
 
         // Make sure that selector length and target length are the same
@@ -780,10 +781,10 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Check that the role is created
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.RoleCreated(bytes32(uint(1)), roleName_);
+        emit IAuthorizer_v1.RoleCreated(bytes32(uint(2)), roleName_);
 
         vm.prank(_initialAdmin);
-        _authSuT.createRoleAndAddKeys(
+        bytes32 roleId = _authSuT.createRoleAndAddKeys(
             roleName_, bytes32(0), initialMembers_, targets_, selectors_
         );
 
@@ -793,7 +794,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             for (uint j = 0; j < selectors_[i].length; j++) {
                 assertTrue(
                     _authSuT.isFunctionKey(
-                        targets_[i], selectors_[i][j], bytes32(uint(1))
+                        targets_[i], selectors_[i][j], roleId
                     )
                 );
             }
@@ -920,7 +921,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             selectorArray
         );
 
-        _authSuT.addKey(target_, _selector4, _authSuT.BURN_ADMIN_ROLE()); //@todo burnadmin still here
+        _authSuT.addKey(target_, _selector4, _authSuT.PUBLIC_ROLE());
 
         vm.stopPrank();
     }

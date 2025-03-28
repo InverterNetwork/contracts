@@ -102,7 +102,7 @@ contract AUT_Roles_v1 is
     /// @dev     Verifies that the roleId is already existing.
     /// @param  roleId_ The id of the role.
     modifier idExisting(bytes32 roleId_) {
-        if (roleId_ != BURN_ADMIN_ROLE && uint(roleId_) > _roleIdCounter) {
+        if (roleId_ != PUBLIC_ROLE && uint(roleId_) > _roleIdCounter) {
             //@todo BurnAdmin still here
             revert Module__Authorizer__RoleIdNotExisting();
         }
@@ -116,6 +116,9 @@ contract AUT_Roles_v1 is
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
+    /// @notice The role that is used as a placeholder for a public role.
+    bytes32 public constant PUBLIC_ROLE = bytes32(uint(1));
+
     /// @notice Mapping that stores the role IDs that can be used to call functions on a target contract.
     /// @dev    target The address of the target contract.
     /// @dev    selector The function selector of the function to call.
@@ -125,11 +128,12 @@ contract AUT_Roles_v1 is
 
     /// @notice The counter for role IDs.
     /// @dev	This is used to generate unique role IDs for each role.
-    /// @dev    Starts at 0, but is immediately incremented when a role is created.
-    uint _roleIdCounter;
+    /// @dev    Starts at 1, which symbolizes two roles: PUBLIC_ROLE and DEFAULT_ADMIN_ROLE,
+    ///         but is immediately incremented when a role is created.
+    uint internal _roleIdCounter;
 
     /// @dev	Storage gap for future upgrades.
-    uint[48] private __gap; //@todo Question: Mapping Storage slot only 1 right?
+    uint[47] private __gap; //@todo Question: Mapping Storage slot only 1 right?
 
     // ========================================================================
     // Initialization
@@ -156,6 +160,9 @@ contract AUT_Roles_v1 is
         if (initialAdmin == address(0)) {
             revert Module__Authorizer__InvalidInitialAdmin();
         }
+
+        // Start with 1 to symbolize two roles: DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
+        _roleIdCounter = 1;
 
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin
         // privileges on all Modules in the contract.
@@ -196,7 +203,7 @@ contract AUT_Roles_v1 is
     function isFunctionKey(
         address target_,
         bytes4 selector_,
-        bytes32 roleIdKey_ //@todo test
+        bytes32 roleIdKey_
     ) public view virtual returns (bool isKey_) {
         bytes32[] memory keys_ = _keys[target_][selector_];
         for (uint i = 0; i < keys_.length; i++) {
@@ -209,10 +216,12 @@ contract AUT_Roles_v1 is
 
     /// @inheritdoc IAuthorizer_v1
     function canCall( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165
-        address caller_,
-        address target_,
-        bytes4 selector_ //@todo test
-    ) public view virtual returns (bool canCall_) {
+    address caller_, address target_, bytes4 selector_)
+        public
+        view
+        virtual
+        returns (bool canCall_)
+    {
         // If caller is the admin, they can call any function.
         if (hasRole(DEFAULT_ADMIN_ROLE, caller_)) {
             return true;
@@ -229,10 +238,9 @@ contract AUT_Roles_v1 is
         // Go through each role and check if the caller has it.
         for (uint i = 0; i < keyLength; i++) {
             if (
-                // if the role the public role (bytes32.max)
+                // if the role the public role
                 // or if the caller has the role
-                roleIds[i] == bytes32(type(uint).max)
-                    || hasRole(roleIds[i], caller_) //@todo check if public role should behave any different than any other role
+                roleIds[i] == PUBLIC_ROLE || hasRole(roleIds[i], caller_) //@todo check if public role should behave any different than any other role
             ) {
                 return true;
             }
@@ -289,11 +297,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function removeKey(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleIdKey_ //@todo test
-    )
+    function removeKey(address target_, bytes4 selector_, bytes32 roleIdKey_)
         public
         onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
     {
@@ -320,7 +324,7 @@ contract AUT_Roles_v1 is
     // Mutating - Role Management
 
     /// @inheritdoc IAuthorizer_v1
-    function createRole( //@todo test
+    function createRole(
         string memory roleName_,
         bytes32 respectiveAdminRole_,
         address[] memory initialMembers_
@@ -344,8 +348,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function labelRole( //@todo test
-    bytes32 roleId_, string memory newRoleName_)
+    function labelRole(bytes32 roleId_, string memory newRoleName_)
         external
         onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
         idExisting(roleId_)
