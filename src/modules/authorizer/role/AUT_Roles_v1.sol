@@ -410,85 +410,55 @@ contract AUT_Roles_v1 is
     // Mutating - Out of Order
 
     /// @inheritdoc IAuthorizer_v1
-    function grantRoleFromModule(bytes32 role, address target)
+    function grantRoleFromModule(bytes32, address) external pure {
+        revert IModule_v1.Module__FunctionDeprecated();
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function grantRoleFromModuleBatched(bytes32, address[] calldata)
         external
-        onlyModule(_msgSender())
+        pure
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role); //@todo Scrap with revert?
-        _grantRole(roleId, target);
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function grantRoleFromModuleBatched( //@todo Scrap with revert?
-    bytes32 role, address[] calldata targets)
+    function revokeRoleFromModule(bytes32, address) external pure {
+        revert IModule_v1.Module__FunctionDeprecated();
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
         external
-        onlyModule(_msgSender())
+        pure
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        for (uint i = 0; i < targets.length; i++) {
-            _grantRole(roleId, targets[i]);
-        }
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function revokeRoleFromModule(
-        bytes32 role,
-        address target //@todo Scrap with revert?
-    ) external onlyModule(_msgSender()) {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _revokeRole(roleId, target);
+    function grantGlobalRole(bytes32, address) external pure {
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function revokeRoleFromModuleBatched( //@todo Scrap with revert?
-    bytes32 role, address[] calldata targets)
+    function grantGlobalRoleBatched(bytes32, address[] calldata)
         external
-        onlyModule(_msgSender())
+        pure
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        for (uint i = 0; i < targets.length; i++) {
-            _revokeRole(roleId, targets[i]);
-        }
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function grantGlobalRole(
-        bytes32 role,
-        address target //@todo Scrap with revert?
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        bytes32 roleId = generateRoleId(address(orchestrator()), role);
-        _grantRole(roleId, target);
+    function revokeGlobalRole(bytes32, address) external pure {
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function grantGlobalRoleBatched(
-        bytes32 role,
-        address[] calldata targets //@todo Scrap with revert?
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        bytes32 roleId = generateRoleId(address(orchestrator()), role);
-        for (uint i = 0; i < targets.length; i++) {
-            _grantRole(roleId, targets[i]);
-        }
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeGlobalRole(
-        bytes32 role,
-        address target //@todo Scrap with revert?
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        bytes32 roleId = generateRoleId(address(orchestrator()), role);
-        _revokeRole(roleId, target);
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeGlobalRoleBatched(
-        bytes32 role,
-        address[] calldata targets //@todo Scrap with revert?
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        bytes32 roleId = generateRoleId(address(orchestrator()), role);
-        for (uint i = 0; i < targets.length; i++) {
-            _revokeRole(roleId, targets[i]);
-        }
+    function revokeGlobalRoleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     // ========================================================================

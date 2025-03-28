@@ -236,55 +236,35 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ------------------------------------------------------------------------
     // Mutating - Out of Order
 
-    /// @notice Used by a Module to grant a role to a user.
-    /// @param  role The identifier of the role to grant.
-    /// @param  target  The address to which to grant the role.
-    function grantRoleFromModule(bytes32 role, address target) external;
+    /// @notice This function is deprecated and will revert when called.
+    function grantRoleFromModule(bytes32, address) external pure;
 
-    /// @notice Used by a Module to grant a role to a set of users.
-    /// @param  role The identifier of the role to grant.
-    /// @param  targets  The addresses to which to grant the role.
-    function grantRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external;
+    /// @notice This function is deprecated and will revert when called.
+    function grantRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure;
 
-    /// @notice Used by a Module to revoke a role from a user.
-    /// @param  role The identifier of the role to revoke.
-    /// @param  target  The address to revoke the role from.
-    function revokeRoleFromModule(bytes32 role, address target) external;
+    /// @notice This function is deprecated and will revert when called.
+    function revokeRoleFromModule(bytes32, address) external pure;
 
-    /// @notice Used by a Module to revoke a role from a set of users.
-    /// @param  role The identifier of the role to revoke.
-    /// @param  targets  The address to revoke the role from.
-    function revokeRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external;
+    /// @notice This function is deprecated and will revert when called.
+    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure;
 
-    /// @notice Grants a global role to a target.
-    /// @param  role The role to grant.
-    /// @param  target The address to grant the role to.
-    /// @dev	Only the addresses with the Admin role should be able to call this function.
-    function grantGlobalRole(bytes32 role, address target) external;
+    /// @notice This function is deprecated and will revert when called.
+    function grantGlobalRole(bytes32, address) external pure;
 
-    /// @notice Grants a global role to a set of targets.
-    /// @param  role The role to grant.
-    /// @param  targets The addresses to grant the role to.
-    /// @dev	Only the addresses with the Admin role should be able to call this function.
-    function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
-        external;
+    /// @notice This function is deprecated and will revert when called.
+    function grantGlobalRoleBatched(bytes32, address[] calldata)
+        external
+        pure;
 
-    /// @notice Revokes a global role from a target.
-    /// @param  role The role to grant.
-    /// @param  target The address to grant the role to.
-    /// @dev	Only the addresses with the Admin role should be able to call this function.
-    function revokeGlobalRole(bytes32 role, address target) external;
+    /// @notice This function is deprecated and will revert when called.
+    function revokeGlobalRole(bytes32, address) external pure;
 
-    /// @notice Revokes a global role from a set of targets.
-    /// @param  role The role to grant.
-    /// @param  targets The addresses to grant the role to.
-    /// @dev	Only the addresses with the Admin role should be able to call this function.
-    function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
-        external;
+    /// @notice This function is deprecated and will revert when called.
+    function revokeGlobalRoleBatched(bytes32, address[] calldata)
+        external
+        pure;
 }

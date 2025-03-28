@@ -690,7 +690,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     ├── And: The given roleId is existing
     ├── And: The given targets array and the selectors array do not have the same length
     │   └── When: createRoleAndAddKeys is called
-    │       └── Then: Then it should revert (modifier in position check)//@todo to be updated
+    │       └── Then: Then it should revert
     ├── Given: Caller inhabits the default admin role
     ├── And: The given roleId is existing
     └── And: The given targets array and the selectors array have the same length
@@ -698,8 +698,6 @@ contract AUT_Roles_v1_Test is ModuleTest {
             └── Then: The role is created
             └── And: The keys are added to the according function locks
     */
-    // function createRoleAndAddKeys( @todo now
-
     function testCreateRoleAndAddKeys_ModifierInPositionCheck() public {
         //onlyRole(DEFAULT_ADMIN_ROLE)
         vm.expectRevert(
@@ -801,35 +799,120 @@ contract AUT_Roles_v1_Test is ModuleTest {
         }
     }
 
-    /* string memory roleName_,
-        bytes32 respectiveAdminRole_,
-        address[] memory initialMembers_,
-        address[] memory targets_,
-        bytes4[][] memory selectors_ */
-
     // ------------------------------------------------------------------------
     // Mutating - Out of Order //@todo later
 
     /*
-    function grantRoleFromModule(bytes32 role, address target) external;
-
-    
-    function grantRoleFromModuleBatched(
-       
-
-    function revokeRoleFromModule(bytes32 role, address target) external;
-
-    
-    function revokeRoleFromModuleBatched(
-    function grantGlobalRole(bytes32 role, address target) external;
-
-    function grantGlobalRoleBatched(bytes32 role, address[] calldata targets)
-    function revokeGlobalRole(bytes32 role, address target) external;
-
-    function revokeGlobalRoleBatched(bytes32 role, address[] calldata targets)
-        external;
-        
+    Test: grantRoleFromModule
+    └── When: grantRoleFromModule is called
+        └── Then: The function should revert with Module_FunctionDeprecated
     */
+    function testGrantRoleFromModule_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.grantRoleFromModule(bytes32(uint(0)), address(0));
+    }
+
+    /*
+    Test: grantRoleFromModuleBatched
+    └── When: grantRoleFromModuleBatched is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testGrantRoleFromModuleBatched_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.grantRoleFromModuleBatched(bytes32(uint(0)), new address[](0));
+    }
+
+    /*
+    Test: revokeRoleFromModule
+    └── When: revokeRoleFromModule is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testRevokeRoleFromModule_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.revokeRoleFromModule(bytes32(uint(0)), address(0));
+    }
+
+    /*
+    Test: revokeRoleFromModuleBatched
+    └── When: revokeRoleFromModuleBatched is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testRevokeRoleFromModuleBatched_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.revokeRoleFromModuleBatched(bytes32(uint(0)), new address[](0));
+    }
+
+    /*
+    Test: grantGlobalRole
+    └── When: grantGlobalRole is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testGrantGlobalRole_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.grantGlobalRole(bytes32(uint(0)), address(0));
+    }
+
+    /*
+    Test: grantGlobalRoleBatched
+    └── When: grantGlobalRoleBatched is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testGrantGlobalRoleBatched_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.grantGlobalRoleBatched(bytes32(uint(0)), new address[](0));
+    }
+
+    /*
+    Test: revokeGlobalRole
+    └── When: revokeGlobalRole is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testRevokeGlobalRole_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.revokeGlobalRole(bytes32(uint(0)), address(0));
+    }
+
+    /*
+    Test: revokeGlobalRoleBatched
+    └── When: revokeGlobalRoleBatched is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testRevokeGlobalRoleBatched_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.revokeGlobalRoleBatched(bytes32(uint(0)), new address[](0));
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Test Internal Functions

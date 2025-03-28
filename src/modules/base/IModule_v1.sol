@@ -71,6 +71,9 @@ interface IModule_v1 {
     /// @dev	Invalid Address.
     error Module__InvalidAddress();
 
+    /// @dev	The given function is no longer supported.
+    error Module__FunctionDeprecated();
+
     //--------------------------------------------------------------------------
     // Functions
 
@@ -111,25 +114,19 @@ interface IModule_v1 {
     /// @return The module's {Orchestrator_1}.
     function orchestrator() external view returns (IOrchestrator_v1);
 
-    /// @notice Grants a module role to a target address.
-    /// @param  role The role to grant.
-    /// @param  target The target address to grant the role to.
-    function grantModuleRole(bytes32 role, address target) external;
+    /// @notice This function is deprecated and will revert when called.
+    function grantModuleRole(bytes32, address) external pure;
 
-    /// @notice Grants a module role to multiple target addresses.
-    /// @param  role The role to grant.
-    /// @param  targets The target addresses to grant the role to.
-    function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external;
+    /// @notice This function is deprecated and will revert when called.
+    function grantModuleRoleBatched(bytes32, address[] calldata)
+        external
+        pure;
 
-    /// @notice Revokes a module role from a target address.
-    /// @param  role The role to revoke.
-    /// @param  target The target address to revoke the role from.
-    function revokeModuleRole(bytes32 role, address target) external;
+    /// @notice This function is deprecated and will revert when called.
+    function revokeModuleRole(bytes32, address) external pure;
 
-    /// @notice Revokes a module role from multiple target addresses.
-    /// @param  role The role to revoke.
-    /// @param  targets The target addresses to revoke the role from.
-    function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external;
+    /// @notice This function is deprecated and will revert when called.
+    function revokeModuleRoleBatched(bytes32, address[] calldata)
+        external
+        pure;
 }

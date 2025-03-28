@@ -146,88 +146,60 @@ contract ModuleBaseV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Role Functions
 
-    function testGrantModuleRole(bytes32 role, address addr) public {
-        vm.assume(addr != address(0));
-
-        vm.startPrank(address(this));
-
-        module.grantModuleRole(role, addr);
-
-        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
-        assertTrue(isAuthorized);
-
-        vm.stopPrank();
+    /*
+    Test: grantModuleRole
+    └── When: grantModuleRole is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testGrantModuleRole_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        module.grantModuleRole(bytes32(uint(0)), address(0));
     }
 
-    function testGrantModuleRoleBatched(bytes32 role, address[] memory addrs)
-        public
-    {
-        vm.startPrank(address(this));
-
-        for (uint i = 0; i < addrs.length; i++) {
-            vm.assume(addrs[i] != address(0));
-        }
-
-        module.grantModuleRoleBatched(role, addrs);
-
-        for (uint i = 0; i < addrs.length; i++) {
-            bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-            bool isAuthorized =
-                _authorizer.checkRoleMembership(roleId, addrs[i]);
-            assertTrue(isAuthorized);
-        }
-
-        vm.stopPrank();
+    /*
+    Test: grantModuleRoleBatched
+    └── When: grantModuleRoleBatched is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testGrantModuleRoleBatched_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        module.grantModuleRoleBatched(bytes32(uint(0)), new address[](0));
     }
 
-    function testRevokeModuleRole(bytes32 role, address addr) public {
-        vm.assume(addr != address(0));
-
-        vm.startPrank(address(this));
-
-        module.grantModuleRole(role, addr);
-
-        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-        bool isAuthorizedBefore = _authorizer.checkRoleMembership(roleId, addr);
-        assertTrue(isAuthorizedBefore);
-
-        module.revokeModuleRole(role, addr);
-
-        bool isAuthorizedAfter = _authorizer.checkRoleMembership(roleId, addr);
-        assertFalse(isAuthorizedAfter);
-
-        vm.stopPrank();
+    /*
+    Test: revokeModuleRole
+    └── When: revokeModuleRole is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testRevokeModuleRole_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        module.revokeModuleRole(bytes32(uint(0)), address(0));
     }
 
-    function testRevokeModuleRoleBatched(bytes32 role, address[] memory addrs)
-        public
-    {
-        vm.startPrank(address(this));
-
-        for (uint i = 0; i < addrs.length; i++) {
-            vm.assume(addrs[i] != address(0));
-        }
-
-        module.grantModuleRoleBatched(role, addrs);
-
-        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-
-        for (uint i = 0; i < addrs.length; i++) {
-            bool isAuthorizedBefore =
-                _authorizer.checkRoleMembership(roleId, addrs[i]);
-            assertTrue(isAuthorizedBefore);
-        }
-
-        module.revokeModuleRoleBatched(role, addrs);
-
-        for (uint i = 0; i < addrs.length; i++) {
-            bool isAuthorizedAfter =
-                _authorizer.checkRoleMembership(roleId, addrs[i]);
-            assertFalse(isAuthorizedAfter);
-        }
-
-        vm.stopPrank();
+    /*
+    Test: revokeModuleRoleBatched
+    └── When: revokeModuleRoleBatched is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+        */
+    function testRevokeModuleRoleBatched_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        module.revokeModuleRoleBatched(bytes32(uint(0)), new address[](0));
     }
 
     //--------------------------------------------------------------------------

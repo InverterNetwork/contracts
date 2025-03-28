@@ -227,43 +227,29 @@ abstract contract Module_v1 is
     // Role Management
 
     /// @inheritdoc IModule_v1
-    function grantModuleRole( //@todo scrap
-    bytes32 role, address target)
-        external
-        onlyModuleRoleAdmin(role)
-    {
-        __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
+    function grantModuleRole(bytes32, address) external pure {
+        revert Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IModule_v1
-    function grantModuleRoleBatched( //@todo scrap
-    bytes32 role, address[] calldata targets)
+    function grantModuleRoleBatched(bytes32, address[] calldata)
         external
-        onlyModuleRoleAdmin(role)
+        pure
     {
-        __Module_orchestrator.authorizer().grantRoleFromModuleBatched(
-            role, targets
-        );
+        revert Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IModule_v1
-    function revokeModuleRole( //@todo scrap
-    bytes32 role, address target)
-        external
-        onlyModuleRoleAdmin(role)
-    {
-        __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
+    function revokeModuleRole(bytes32, address) external pure {
+        revert Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IModule_v1
-    function revokeModuleRoleBatched(
-        //@todo scrap
-        bytes32 role,
-        address[] calldata targets
-    ) external onlyModuleRoleAdmin(role) {
-        __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
-            role, targets
-        );
+    function revokeModuleRoleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert Module__FunctionDeprecated();
     }
 
     //--------------------------------------------------------------------------

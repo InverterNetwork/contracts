@@ -190,42 +190,35 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         address[] memory,
         address[] memory,
         bytes4[][] memory
-    ) external returns (bytes32 newRoleId_) {}
+    ) external returns (bytes32) {}
 
     // ------------------------------------------------------------------------
     // Mutating - Out of Order
 
-    function grantRoleFromModule(bytes32 role, address target) external {
-        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
+    function grantRoleFromModule(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
     }
 
-    function grantRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external {
-        for (uint i = 0; i < targets.length; i++) {
-            _roleAuthorized[generateRoleId(_msgSender(), role)][targets[i]] =
-                true;
-        }
+    function grantRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
     }
 
-    function revokeRoleFromModule(bytes32 role, address target) external {
-        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
+    function revokeRoleFromModule(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
     }
 
-    function revokeRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external {
-        for (uint i = 0; i < targets.length; i++) {
-            _roleAuthorized[generateRoleId(_msgSender(), role)][targets[i]] =
-                false;
-        }
+    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
     }
 
-    function grantGlobalRole(bytes32 role, address target) external {
-        bytes32 roleID = generateRoleId(address(orchestrator()), role);
-        grantRole(roleID, target);
+    function grantGlobalRole(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
     }
 
     function grantGlobalRoleBatched(bytes32, address[] calldata)
@@ -235,9 +228,8 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         revert("Not implemented in Authorizer Mock");
     }
 
-    function revokeGlobalRole(bytes32 role, address target) external {
-        bytes32 roleID = generateRoleId(address(orchestrator()), role);
-        revokeRole(roleID, target);
+    function revokeGlobalRole(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
     }
 
     function revokeGlobalRoleBatched(bytes32, address[] calldata)
