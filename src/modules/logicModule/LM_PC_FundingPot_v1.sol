@@ -561,19 +561,13 @@ contract LM_PC_FundingPot_v1 is
             accessGranted =
                 _checkNftOwnership(accessCriteria.nftContract, msg.sender);
         } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE) {
-            //TODO: Should I move this into a helper function
-            bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-            accessGranted = MerkleProof.verify(
-                merkleProof_, accessCriteria.merkleRoot, leaf
+            accessGranted = _validateMerkleProof(
+                accessCriteria.merkleRoot, msg.sender, merkleProof_
             );
         } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.LIST) {
             accessGranted = _checkAllowedAddressList(
                 accessCriteria.allowedAddresses, msg.sender
             );
-        }
-
-        if (!accessGranted) {
-            revert Module__LM_PC_FundingPot__AccessNotPermitted();
         }
     }
 
@@ -673,6 +667,7 @@ contract LM_PC_FundingPot_v1 is
                 return true;
             }
         }
+        revert Module__LM_PC_FundingPot__AccessCriteriaListFailed();
         return false;
     }
 
@@ -689,10 +684,26 @@ contract LM_PC_FundingPot_v1 is
         if (nftContract_ == address(0) || user_ == address(0)) {
             return false;
         }
+
         try IERC721(nftContract_).balanceOf(user_) returns (uint balance) {
-            return balance > 0;
+            if (balance == 0) {
+                revert Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
+            }
+            return true;
         } catch {
-            return false;
+            revert Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
+        }
+    }
+
+    function _validateMerkleProof(
+        bytes32 root_,
+        address user_,
+        bytes32[] calldata merkleProof_
+    ) internal pure returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(user_));
+
+        if (!MerkleProof.verify(merkleProof_, root_, leaf)) {
+            revert Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
         }
     }
 }
