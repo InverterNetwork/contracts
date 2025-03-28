@@ -357,8 +357,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  accessCriteriaId_ The identifier for the access criteria to validate eligibility.
     /// @param  contributionToken_ The address of the token used for contribution.
     /// @param  merkleProof_ The Merkle proof used to verify the contributor's eligibility.
-
-    function contribute(
+    function contributeToRound(
         uint64 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,

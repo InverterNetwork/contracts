@@ -209,13 +209,17 @@ contract LM_PC_FundingPot_v1 is
             return (true, 0, false, 0, 0, 0);
         }
 
+        // Store the privileges in a local variable to reduce stack usage.
+        AccessCriteriaPrivilages storage privs =
+            accessCriteriaPrivilages[roundId_][accessId_];
+
         return (
             false,
-            accessCriteriaPrivilages[roundId_][accessId_].personalCap,
-            accessCriteriaPrivilages[roundId_][accessId_].overrideCap,
-            accessCriteriaPrivilages[roundId_][accessId_].start,
-            accessCriteriaPrivilages[roundId_][accessId_].cliff,
-            accessCriteriaPrivilages[roundId_][accessId_].end
+            privs.personalCap,
+            privs.overrideCap,
+            privs.start,
+            privs.cliff,
+            privs.end
         );
     }
 
@@ -408,7 +412,8 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
-    function contribute(
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function contributeToRound(
         uint64 roundId_,
         uint amount_,
         uint8 accessId_,
@@ -440,38 +445,32 @@ contract LM_PC_FundingPot_v1 is
         _validateAccessCriteria(roundId_, accessId_, merkleProof_);
 
         // Retrieve user's previous contribution and calculate the personal cap.
-        address user = msg.sender;
-        uint userPreviousContribution = _getUserContribution(roundId_, user);
-        uint userPersonalCap = _getUserPersonalCap(roundId_, user);
+        uint userPreviousContribution =
+            _getUserContribution(roundId_, msg.sender);
+        uint userPersonalCap = _getUserPersonalCap(roundId_, msg.sender);
 
-        if (userPreviousContribution >= userPersonalCap) {
+        // Revert contribution if it would exceed the personal cap.
+        uint userRemainingCap = userPersonalCap - userPreviousContribution;
+        if (amount_ > userRemainingCap) {
             revert Module__LM_PC_FundingPot__PersonalCapReached();
         }
 
-        // Adjust contribution if it would exceed the personal cap.
-        uint userRemainingCap = userPersonalCap - userPreviousContribution;
-        uint actualContributionAmount = amount_;
-        if (amount_ > userRemainingCap) {
-            actualContributionAmount = userRemainingCap;
-        }
-
         uint totalRoundContribution = _getTotalRoundContribution(roundId_);
-        if (round.roundCap > 0 && totalRoundContribution >= round.roundCap) {
+        if (
+            round.roundCap > 0
+                && totalRoundContribution + amount_ >= round.roundCap
+        ) {
             revert Module__LM_PC_FundingPot__RoundCapReached();
-        }
-        uint roundRemainingCap = round.roundCap - totalRoundContribution;
-        if (actualContributionAmount > roundRemainingCap) {
-            actualContributionAmount = roundRemainingCap;
         }
 
         // Transfer funds.
         IERC20(contributionToken_).safeTransferFrom(
-            user, address(this), actualContributionAmount
+            msg.sender, address(this), amount_
         );
 
         // Record the contribution.
-        _recordContribution(roundId_, user, actualContributionAmount);
-        emit ContributionMade(roundId_, user, actualContributionAmount);
+        _recordContribution(roundId_, msg.sender, amount_);
+        emit ContributionMade(roundId_, msg.sender, amount_);
     }
 
     // -------------------------------------------------------------------------
@@ -540,6 +539,11 @@ contract LM_PC_FundingPot_v1 is
         return _start + _cliff <= _end;
     }
 
+    /// @notice Validates access criteria for a specific round and access type
+    /// @dev    Checks if a user meets the access requirements based on the round's access criteria
+    /// @param  roundId_ The ID of the round being validated
+    /// @param  accessId_ The ID of the specific access criteria
+    /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional)
     function _validateAccessCriteria(
         uint64 roundId_,
         uint8 accessId_,
@@ -558,8 +562,7 @@ contract LM_PC_FundingPot_v1 is
                 _checkNftOwnership(accessCriteria.nftContract, msg.sender);
         } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE) {
             //TODO: Should I move this into a helper function
-
-            bytes32 leaf = keccak256(abi.encodePacked(msg.sender, roundId_));
+            bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
             accessGranted = MerkleProof.verify(
                 merkleProof_, accessCriteria.merkleRoot, leaf
             );
@@ -574,6 +577,10 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
+    /// @notice Retrieves the total contribution for a specific round
+    /// @dev    Returns the accumulated contributions for the given round
+    /// @param  roundId_ The ID of the round to check contributions for
+    /// @return The total contributions for the specified round
     function _getTotalRoundContribution(uint64 roundId_)
         internal
         view
@@ -582,6 +589,11 @@ contract LM_PC_FundingPot_v1 is
         return roundTotalContributions[roundId_];
     }
 
+    /// @notice Retrieves the contribution amount for a specific user in a round
+    /// @dev    Returns the individual user's contribution for the given round
+    /// @param  roundId_ The ID of the round to check contributions for
+    /// @param  user_ The address of the user
+    /// @return The user's contribution amount for the specified round
     function _getUserContribution(uint64 roundId_, address user_)
         internal
         view
@@ -590,12 +602,17 @@ contract LM_PC_FundingPot_v1 is
         return userContributions[roundId_][user_];
     }
 
+    /// @notice Calculates the personal contribution cap for a user in a specific round
+    /// @dev    Determines the maximum amount a user can contribute based on global or round-specific rules
+    /// @param  roundId_ The ID of the current round
+    /// @param  user_ The address of the user
+    /// @return The personal contribution cap for the user
     function _getUserPersonalCap(uint64 roundId_, address user_)
         internal
         view
         returns (uint)
     {
-        uint basePersonalCap = 1000 ether;
+        uint basePersonalCap = 500;
         Round storage round = rounds[roundId_];
 
         if (round.globalAccumulativeCaps) {
@@ -606,6 +623,11 @@ contract LM_PC_FundingPot_v1 is
         return basePersonalCap;
     }
 
+    /// @notice Calculates unused contribution capacity from previous rounds
+    /// @dev    Aggregates unused contribution caps from previous rounds with global accumulative caps
+    /// @param  user_ The address of the user
+    /// @param  currentRoundId_ The ID of the current round
+    /// @return Total unused contribution capacity from previous rounds
     function _getUnusedCapacityFromPreviousRounds(
         address user_,
         uint64 currentRoundId_
@@ -625,6 +647,11 @@ contract LM_PC_FundingPot_v1 is
         return totalUnusedCapacity;
     }
 
+    /// @notice Records a contribution for a user in a specific round
+    /// @dev    Updates the user's contribution and the total round contribution
+    /// @param  roundId_ The ID of the round
+    /// @param  user_ The address of the user making the contribution
+    /// @param  amount_ The amount of the contribution
     function _recordContribution(uint64 roundId_, address user_, uint amount_)
         internal
     {
@@ -632,6 +659,11 @@ contract LM_PC_FundingPot_v1 is
         roundTotalContributions[roundId_] += amount_;
     }
 
+    ///@notice Checks if a sender is in a list of allowed addresses
+    /// @dev    Performs a linear search to validate address inclusion
+    /// @param  allowedAddresses Array of addresses permitted to participate
+    /// @param  sender Address to check for permission
+    /// @return Boolean indicating whether the sender is in the allowed list
     function _checkAllowedAddressList(
         address[] memory allowedAddresses,
         address sender
@@ -644,6 +676,11 @@ contract LM_PC_FundingPot_v1 is
         return false;
     }
 
+    /// @notice Verifies NFT ownership for access control
+    /// @dev    Safely checks the NFT balance of a user using a try-catch block
+    /// @param  nftContract_ Address of the NFT contract
+    /// @param  user_ Address of the user to check for NFT ownership
+    /// @return Boolean indicating whether the user owns an NFT
     function _checkNftOwnership(address nftContract_, address user_)
         internal
         view
