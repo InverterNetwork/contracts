@@ -164,21 +164,14 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
-        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
-            return (
-                true,
-                accessCriteria.nftContract,
-                accessCriteria.merkleRoot,
-                accessCriteria.allowedAddresses
-            );
-        } else {
-            return (
-                false,
-                accessCriteria.nftContract,
-                accessCriteria.merkleRoot,
-                accessCriteria.allowedAddresses
-            );
-        }
+        bool isOpen =
+            (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
+        return (
+            isOpen,
+            accessCriteria.nftContract,
+            accessCriteria.merkleRoot,
+            accessCriteria.allowedAddresses
+        );
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -220,6 +213,7 @@ contract LM_PC_FundingPot_v1 is
             roundEnd_,
             roundCap_,
             hookContract_,
+            hookFunction_,
             autoClosure_,
             globalAccumulativeCaps_
         );
@@ -258,6 +252,7 @@ contract LM_PC_FundingPot_v1 is
             roundEnd_,
             roundCap_,
             hookContract_,
+            hookFunction_,
             autoClosure_,
             globalAccumulativeCaps_
         );
@@ -266,7 +261,7 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaForRound(
         uint64 roundId_,
-        uint8 accessId_,
+        uint8 accessCriteriaId_,
         AccessCriteria memory accessCriteria_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
@@ -290,8 +285,8 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
 
-        round.accessCriterias[accessId_] = accessCriteria_;
-        emit AccessCriteriaSet(roundId_, accessId_, accessCriteria_);
+        round.accessCriterias[accessCriteriaId_] = accessCriteria_;
+        emit AccessCriteriaSet(roundId_, accessCriteriaId_, accessCriteria_);
     }
     // -------------------------------------------------------------------------
     // Internal
@@ -307,7 +302,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         // Validate that either end time or cap is set
-        if (round_.roundEnd == 0 || round_.roundCap == 0) {
+        if (round_.roundEnd == 0 && round_.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundMustHaveEndTimeOrCap();
         }
 

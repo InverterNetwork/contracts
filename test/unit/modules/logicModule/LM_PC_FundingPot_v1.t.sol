@@ -44,8 +44,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Constants
 
-    bytes32 internal constant FUNDING_POT_ADMIN_ROLE = "FUNDING_POT_ADMIN";
-
     // -------------------------------------------------------------------------
     // State
 
@@ -787,7 +785,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum_);
@@ -801,7 +799,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
             )
         );
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
     }
 
     function testFuzzSetAccessCriteria_revertsGivenRoundDoesNotExist(
@@ -810,7 +810,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -822,7 +822,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
     }
 
     function testFuzzSetAccessCriteria_revertsGivenRoundIsActive(
@@ -831,7 +833,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -845,7 +847,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
     }
 
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsNFTAndNftContractIsZero(
@@ -854,7 +858,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -867,7 +871,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
     }
 
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsMerkleAndMerkleRootIsZero(
@@ -876,7 +882,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -889,7 +895,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
     }
 
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsListAndAllowedAddressesIsEmpty(
@@ -898,7 +906,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -911,26 +919,30 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
     }
 
     function testFuzzSetAccessCriteria(uint8 accessCriteriaEnum) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
 
-        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
 
         (
             bool isOpen,
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = fundingPot.getRoundAccessCriteria(roundId, accessId);
+        ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaId);
 
         assertEq(isOpen, accessCriteriaEnum == 0);
         assertEq(nftContract, accessCriteria.nftContract);

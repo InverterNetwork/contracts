@@ -63,6 +63,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundEnd_ The timestamp when the round ends.
     /// @param  roundCap_ The maximum allocation or cap for the round.
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
+    /// @param  hookFunction_ The encoded function call for the hook.
     /// @param  closureMechanism_ A boolean indicating whether a specific closure mechanism is enabled.
     /// @param  globalAccumulativeCaps_ A boolean indicating whether global accumulative caps are enforced.
     event RoundCreated(
@@ -71,6 +72,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint roundEnd_,
         uint roundCap_,
         address hookContract_,
+        bytes hookFunction_,
         bool closureMechanism_,
         bool globalAccumulativeCaps_
     );
@@ -82,6 +84,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundEnd_ The updated timestamp for when the round ends.
     /// @param  roundCap_ The updated maximum allocation or cap for the round.
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
+    /// @param  hookFunction_ The updated encoded function call for the hook.
     /// @param  closureMechanism_ A boolean indicating whether a specific closure mechanism is enabled.
     /// @param  globalAccumulativeCaps_ A boolean indicating whether global accumulative caps are enforced.
     event RoundEdited(
@@ -90,6 +93,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint roundEnd_,
         uint roundCap_,
         address hookContract_,
+        bytes hookFunction_,
         bool closureMechanism_,
         bool globalAccumulativeCaps_
     );
@@ -228,11 +232,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set Access Control Check.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
-    /// @param  accessId_ ID of the access criteria.
+    /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  accessCriteria_ Access criteria to set.
     function setAccessCriteriaForRound(
         uint64 roundId_,
-        uint8 accessId_,
+        uint8 accessCriteriaId_,
         AccessCriteria memory accessCriteria_
     ) external;
 }
