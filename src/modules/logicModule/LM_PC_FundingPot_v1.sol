@@ -82,7 +82,6 @@ contract LM_PC_FundingPot_v1 is
     uint8 internal constant FLAG_END = 3;
 
     // -------------------------------------------------------------------------
-
     // State
 
     /// @notice Stores all funding rounds by their unique ID.
@@ -135,7 +134,7 @@ contract LM_PC_FundingPot_v1 is
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         )
     {
@@ -146,7 +145,7 @@ contract LM_PC_FundingPot_v1 is
             round.roundCap,
             round.hookContract,
             round.hookFunction,
-            round.closureMechanism,
+            round.autoClosure,
             round.globalAccumulativeCaps
         );
     }
@@ -165,7 +164,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
-        if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
             return (
                 true,
                 accessCriteria.nftContract,
@@ -197,7 +196,7 @@ contract LM_PC_FundingPot_v1 is
         uint roundCap_,
         address hookContract_,
         bytes memory hookFunction_,
-        bool closureMechanism_,
+        bool autoClosure_,
         bool globalAccumulativeCaps_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint64) {
         nextRoundId++;
@@ -210,7 +209,7 @@ contract LM_PC_FundingPot_v1 is
         round.roundCap = roundCap_;
         round.hookContract = hookContract_;
         round.hookFunction = hookFunction_;
-        round.closureMechanism = closureMechanism_;
+        round.autoClosure = autoClosure_;
         round.globalAccumulativeCaps = globalAccumulativeCaps_;
 
         _validateRoundParameters(round);
@@ -221,7 +220,7 @@ contract LM_PC_FundingPot_v1 is
             roundEnd_,
             roundCap_,
             hookContract_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
 
@@ -236,7 +235,7 @@ contract LM_PC_FundingPot_v1 is
         uint roundCap_,
         address hookContract_,
         bytes memory hookFunction_,
-        bool closureMechanism_,
+        bool autoClosure_,
         bool globalAccumulativeCaps_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
@@ -248,7 +247,7 @@ contract LM_PC_FundingPot_v1 is
         round.roundCap = roundCap_;
         round.hookContract = hookContract_;
         round.hookFunction = hookFunction_;
-        round.closureMechanism = closureMechanism_;
+        round.autoClosure = autoClosure_;
         round.globalAccumulativeCaps = globalAccumulativeCaps_;
 
         _validateRoundParameters(round);
@@ -259,7 +258,7 @@ contract LM_PC_FundingPot_v1 is
             roundEnd_,
             roundCap_,
             hookContract_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -276,15 +275,15 @@ contract LM_PC_FundingPot_v1 is
 
         if (
             (
-                accessCriteria_.accessCriteriaId == AccessCriteriaId.NFT
+                accessCriteria_.accessCriteriaType == AccessCriteriaType.NFT
                     && accessCriteria_.nftContract == address(0)
             )
                 || (
-                    accessCriteria_.accessCriteriaId == AccessCriteriaId.MERKLE
+                    accessCriteria_.accessCriteriaType == AccessCriteriaType.MERKLE
                         && accessCriteria_.merkleRoot == bytes32("")
                 )
                 || (
-                    accessCriteria_.accessCriteriaId == AccessCriteriaId.LIST
+                    accessCriteria_.accessCriteriaType == AccessCriteriaType.LIST
                         && accessCriteria_.allowedAddresses.length == 0
                 )
         ) {

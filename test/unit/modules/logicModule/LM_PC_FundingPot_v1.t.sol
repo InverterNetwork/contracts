@@ -142,7 +142,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         _helper_callCreateRound(
@@ -151,7 +151,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
         vm.stopPrank();
@@ -167,7 +167,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         roundStart = roundStart_;
@@ -184,7 +184,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -198,7 +198,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         roundEnd = 0;
@@ -216,7 +216,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -230,7 +230,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         vm.assume(roundEnd_ != 0 && roundEnd_ < roundStart);
@@ -248,7 +248,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -261,7 +261,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         hookContract = address(1);
@@ -279,7 +279,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -292,7 +292,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         hookContract = address(0);
@@ -310,7 +310,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -328,7 +328,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = _helper_createDefaultFundingRound();
         _helper_callCreateRound(
@@ -337,7 +337,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
 
@@ -348,7 +348,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = fundingPot.getRoundGenericParameters(lastRoundId);
 
@@ -357,7 +357,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(roundCap, roundCap_);
         assertEq(hookContract, hookContract_);
         assertEq(hookFunction, hookFunction_);
-        assertEq(closureMechanism, closureMechanism_);
+        assertEq(autoClosure, autoClosure_);
         assertEq(globalAccumulativeCaps, globalAccumulativeCaps_);
     }
 
@@ -395,6 +395,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testEditRound_revertsGivenUserIsNotFundingPotAdmin(address user_)
         public
     {
+        vm.assume(user_ != address(0) && user_ != address(this));
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
@@ -414,7 +415,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
 
@@ -425,7 +426,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
         vm.stopPrank();
@@ -442,7 +443,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
 
@@ -460,7 +461,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -475,7 +476,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
@@ -486,7 +487,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
         vm.expectRevert(
@@ -503,7 +504,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -521,7 +522,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
         roundStart_ = roundStartP_;
@@ -541,7 +542,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -556,7 +557,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
         roundEnd_ = 0;
@@ -577,7 +578,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -594,7 +595,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
         roundEnd_ = bound(roundEnd_, 0, roundStart_ - 1);
@@ -614,7 +615,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -631,7 +632,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
         hookContract_ = address(1);
@@ -652,7 +653,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -669,7 +670,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
         hookContract_ = address(0);
@@ -690,7 +691,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -705,7 +706,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             ├── roundCap should be updated to the new value
             ├── hookContract should be updated to the new value
             ├── hookFunction should be updated to the new value
-            ├── closureMechanism should be updated to the new value
+            ├── autoClosure should be updated to the new value
             └── globalAccumulativeCaps should be updated to the new value
     */
 
@@ -719,7 +720,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         ) = _helper_createEditedRoundParams();
 
@@ -730,7 +731,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
 
@@ -740,7 +741,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint roundCap,
             address hookContract,
             bytes memory hookFunction,
-            bool closureMechanism,
+            bool autoClosure,
             bool globalAccumulativeCaps
         ) = fundingPot.getRoundGenericParameters(lastRoundId);
 
@@ -749,7 +750,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(roundCap, roundCap_);
         assertEq(hookContract, hookContract_);
         assertEq(hookFunction, hookFunction_);
-        assertEq(closureMechanism, closureMechanism_);
+        assertEq(autoClosure, autoClosure_);
         assertEq(globalAccumulativeCaps, globalAccumulativeCaps_);
     }
 
@@ -850,7 +851,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsNFTAndNftContractIsZero(
     ) public {
         uint8 accessCriteriaEnum =
-            uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.NFT);
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
@@ -872,7 +873,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsMerkleAndMerkleRootIsZero(
     ) public {
         uint8 accessCriteriaEnum =
-            uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.MERKLE);
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
@@ -894,7 +895,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsListAndAllowedAddressesIsEmpty(
     ) public {
         uint8 accessCriteriaEnum =
-            uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.LIST);
+            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
@@ -953,7 +954,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint roundCap = 1000;
         address hookContract = address(0);
         bytes memory hookFunction = bytes("");
-        bool closureMechanism = false;
+        bool autoClosure = false;
         bool globalAccumulativeCaps = false;
 
         return (
@@ -962,7 +963,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -974,7 +975,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint roundCap,
         address hookContract,
         bytes memory hookFunction,
-        bool closureMechanism,
+        bool autoClosure,
         bool globalAccumulativeCaps
     ) internal {
         fundingPot.createRound(
@@ -983,7 +984,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -998,7 +999,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint roundCap_ = 2000;
         address hookContract_ = address(0x1);
         bytes memory hookFunction_ = bytes("test");
-        bool closureMechanism_ = true;
+        bool autoClosure_ = true;
         bool globalAccumulativeCaps_ = true;
 
         return (
@@ -1007,7 +1008,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap_,
             hookContract_,
             hookFunction_,
-            closureMechanism_,
+            autoClosure_,
             globalAccumulativeCaps_
         );
     }
@@ -1020,7 +1021,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint roundCap,
         address hookContract,
         bytes memory hookFunction,
-        bool closureMechanism,
+        bool autoClosure,
         bool globalAccumulativeCaps
     ) internal {
         fundingPot.editRound(
@@ -1030,7 +1031,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundCap,
             hookContract,
             hookFunction,
-            closureMechanism,
+            autoClosure,
             globalAccumulativeCaps
         );
     }
@@ -1042,41 +1043,41 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         {
             if (
                 accessCriteriaEnum
-                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.OPEN)
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN)
             ) {
                 return ILM_PC_FundingPot_v1.AccessCriteria(
-                    ILM_PC_FundingPot_v1.AccessCriteriaId.OPEN,
+                    ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN,
                     address(0x0),
                     bytes32(uint(0x0)),
                     new address[](0)
                 );
             } else if (
                 accessCriteriaEnum
-                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.NFT)
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT)
             ) {
                 address nftContract = address(0x1);
 
                 return ILM_PC_FundingPot_v1.AccessCriteria(
-                    ILM_PC_FundingPot_v1.AccessCriteriaId.NFT,
+                    ILM_PC_FundingPot_v1.AccessCriteriaType.NFT,
                     nftContract,
                     bytes32(uint(0x0)),
                     new address[](0)
                 );
             } else if (
                 accessCriteriaEnum
-                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.MERKLE)
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE)
             ) {
                 bytes32 merkleRoot = bytes32(uint(0x1));
 
                 return ILM_PC_FundingPot_v1.AccessCriteria(
-                    ILM_PC_FundingPot_v1.AccessCriteriaId.MERKLE,
+                    ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE,
                     address(0x0),
                     merkleRoot,
                     new address[](0)
                 );
             } else if (
                 accessCriteriaEnum
-                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaId.LIST)
+                    == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST)
             ) {
                 address[] memory allowedAddresses = new address[](3);
                 allowedAddresses[0] = address(0x1);
@@ -1084,7 +1085,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 allowedAddresses[2] = address(0x3);
 
                 return ILM_PC_FundingPot_v1.AccessCriteria(
-                    ILM_PC_FundingPot_v1.AccessCriteriaId.LIST,
+                    ILM_PC_FundingPot_v1.AccessCriteriaType.LIST,
                     address(0x0),
                     bytes32(uint(0x0)),
                     allowedAddresses
