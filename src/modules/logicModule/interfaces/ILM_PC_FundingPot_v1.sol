@@ -106,6 +106,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 indexed roundId_, uint8 accessId_, AccessCriteria accessCriteria_
     );
 
+    /// @notice Emitted when access criteria is edited for a round.
+    /// @param  roundId_ The unique identifier of the round.
+    /// @param  accessId_ The identifier of the access criteria.
+    /// @param  accessCriteria_ The access criteria.
+    event AccessCriteriaEdited(
+        uint64 indexed roundId_, uint8 accessId_, AccessCriteria accessCriteria_
+    );
+
     // -------------------------------------------------------------------------
     // Errors
 
@@ -138,6 +146,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Incorrect access criteria.
     error Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+
+    /// @notice Invalid access criteria ID.
+    error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
 
     // -------------------------------------------------------------------------
     // Public - Getters
@@ -182,8 +193,16 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         );
 
     /// @notice Retrieves the total number of funding rounds.
-    /// @return The total number of funding rounds.
-    function getRoundCount() external view returns (uint64);
+    /// @return roundCount_ The total number of funding rounds.
+    function getRoundCount() external view returns (uint64 roundCount_);
+
+    /// @notice Retrieves the total number of access criteria for a specific round.
+    /// @param  roundId_ The unique identifier of the round.
+    /// @return accessCriteriaCount_ The total number of access criteria for the round.
+    function getRoundAccessCriteriaCount(uint64 roundId_)
+        external
+        view
+        returns (uint8 accessCriteriaCount_);
 
     // -------------------------------------------------------------------------
     // Public - Mutating
@@ -232,9 +251,18 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set Access Control Check.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
-    /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  accessCriteria_ Access criteria to set.
     function setAccessCriteriaForRound(
+        uint64 roundId_,
+        AccessCriteria memory accessCriteria_
+    ) external;
+
+    /// @notice Edits an existing access criteria for a round.
+    /// @dev    Only callable by funding pot admin and only before the round has started.
+    /// @param  roundId_ ID of the round.
+    /// @param  accessCriteriaId_ ID of the access criteria.
+    /// @param  accessCriteria_ New access criteria.
+    function editAccessCriteriaForRound(
         uint64 roundId_,
         uint8 accessCriteriaId_,
         AccessCriteria memory accessCriteria_

@@ -87,6 +87,9 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Stores all funding rounds by their unique ID.
     mapping(uint64 => Round) private rounds;
 
+    /// @notice Stores the access criteria ID for each round.
+    mapping(uint64 => uint8) private roundIdtoAccessId;
+
     /// @notice The next available round ID.
     uint64 private nextRoundId;
 
@@ -164,8 +167,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
-        bool isOpen =
-            (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
+        isOpen = (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
         return (
             isOpen,
             accessCriteria.nftContract,
@@ -175,8 +177,17 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundCount() external view returns (uint64) {
+    function getRoundCount() external view returns (uint64 roundCount_) {
         return nextRoundId;
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getRoundAccessCriteriaCount(uint64 roundId_)
+        public
+        view
+        returns (uint8 accessCriteriaCount_)
+    {
+        return roundIdtoAccessId[roundId_];
     }
 
     // -------------------------------------------------------------------------
@@ -261,7 +272,6 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaForRound(
         uint64 roundId_,
-        uint8 accessCriteriaId_,
         AccessCriteria memory accessCriteria_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
@@ -284,9 +294,30 @@ contract LM_PC_FundingPot_v1 is
         ) {
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
+        uint8 accessCriteriaId = roundIdtoAccessId[roundId_];
+        round.accessCriterias[accessCriteriaId] = accessCriteria_;
+
+        emit AccessCriteriaSet(roundId_, accessCriteriaId, accessCriteria_);
+
+        roundIdtoAccessId[roundId_] += 1;
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function editAccessCriteriaForRound(
+        uint64 roundId_,
+        uint8 accessCriteriaId_,
+        AccessCriteria memory accessCriteria_
+    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
+        if (accessCriteriaId_ >= roundIdtoAccessId[roundId_]) {
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+        }
+        Round storage round = rounds[roundId_];
+
+        _validateEditRoundParameters(round);
 
         round.accessCriterias[accessCriteriaId_] = accessCriteria_;
-        emit AccessCriteriaSet(roundId_, accessCriteriaId_, accessCriteria_);
+
+        emit AccessCriteriaEdited(roundId_, accessCriteriaId_, accessCriteria_);
     }
     // -------------------------------------------------------------------------
     // Internal
