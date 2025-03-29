@@ -785,7 +785,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum_);
@@ -799,9 +798,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
             )
         );
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
+        vm.stopPrank();
     }
 
     function testFuzzSetAccessCriteria_revertsGivenRoundDoesNotExist(
@@ -810,7 +808,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -822,24 +819,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
     }
 
     function testFuzzSetAccessCriteria_revertsGivenRoundIsActive(
         uint8 accessCriteriaEnum
     ) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
@@ -847,18 +843,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
     }
 
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsNFTAndNftContractIsZero(
     ) public {
         uint8 accessCriteriaEnum =
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -871,18 +865,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
     }
 
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsMerkleAndMerkleRootIsZero(
     ) public {
         uint8 accessCriteriaEnum =
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
+
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -895,18 +887,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
     }
 
     function testSetAccessCriteria_revertsGivenAccessCriteriaIdIsListAndAllowedAddressesIsEmpty(
     ) public {
         uint8 accessCriteriaEnum =
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
+
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -919,23 +909,20 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     .selector
             )
         );
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
     }
 
     function testFuzzSetAccessCriteria(uint8 accessCriteriaEnum) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 1;
+        uint8 accessCriteriaId = 0;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
 
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessCriteriaId, accessCriteria
-        );
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
 
         (
             bool isOpen,
@@ -948,6 +935,159 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(nftContract, accessCriteria.nftContract);
         assertEq(merkleRoot, accessCriteria.merkleRoot);
         assertEq(allowedAddresses, accessCriteria.allowedAddresses);
+    }
+
+    /* test editAccessCriteriaForRound()
+    ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+    │   └── When user attempts to edit access criteria
+    │       └── Then it should revert
+    ├── Given access criteria id is greater than the number of access criteria for the round
+    │   └── When user attempts to edit access criteria
+    │       └── Then it should revert
+    ├── Given round does not exist
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    ├── Given round is active
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
+    └── Given all the valid parameters are provided
+        └── When user attempts to edit access criteria
+            └── Then it should not revert
+            └── Then the access criteria should be updated
+
+    */
+
+    function testFuzzEditAccessCriteriaForRound_revertsGivenUserDoesNotHaveFundingPotAdminRole(
+        uint8 accessCriteriaEnum,
+        address user_
+    ) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(user_ != address(0) && user_ != address(this));
+
+        _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessCriteriaId = 0;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        vm.startPrank(user_);
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
+            )
+        );
+        fundingPot.editAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
+        vm.stopPrank();
+    }
+
+    function testFuzzEditAccessCriteriaForRound_revertsGivenAccessCriteriaIdIsGreaterThanAccessCriteriaForTheRound(
+        uint8 accessCriteriaEnum
+    ) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+
+        _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessCriteriaId = 1; // Invalid ID
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__InvalidAccessCriteriaId
+                    .selector
+            )
+        );
+        fundingPot.editAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
+    }
+
+    function testFuzzEditAccessCriteriaForRound_revertsGivenRoundDoesNotExist(
+        uint8 accessCriteriaEnum
+    ) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessCriteriaId = 0;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        vm.expectRevert();
+        fundingPot.editAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
+    }
+
+    function testFuzzEditAccessCriteriaForRound_revertsGivenRoundIsActive(
+        uint8 accessCriteriaEnum
+    ) public {
+        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+
+        _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessCriteriaId = 0;
+
+        // Warp to make the round active
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundAlreadyStarted
+                    .selector
+            )
+        );
+        fundingPot.editAccessCriteriaForRound(
+            roundId, accessCriteriaId, accessCriteria
+        );
+    }
+
+    function testFuzzEditAccessCriteriaForRound(
+        uint8 accessCriteriaEnumOld,
+        uint8 accessCriteriaEnumNew
+    ) public {
+        vm.assume(accessCriteriaEnumOld >= 0 && accessCriteriaEnumOld <= 3);
+        vm.assume(
+            accessCriteriaEnumNew != accessCriteriaEnumOld
+                && accessCriteriaEnumNew >= 0 && accessCriteriaEnumNew <= 3
+        );
+
+        _helper_setupRoundWithAccessCriteria(accessCriteriaEnumOld);
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessCriteriaId = 0;
+
+        // Create and apply new access criteria
+        ILM_PC_FundingPot_v1.AccessCriteria memory newAccessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnumNew);
+
+        fundingPot.editAccessCriteriaForRound(
+            roundId, accessCriteriaId, newAccessCriteria
+        );
+
+        // Verify the access criteria was updated
+        (
+            bool isOpen,
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaId);
+
+        assertEq(isOpen, accessCriteriaEnumNew == 0);
+        assertEq(nftContract, newAccessCriteria.nftContract);
+        assertEq(merkleRoot, newAccessCriteria.merkleRoot);
+        assertEq(allowedAddresses, newAccessCriteria.allowedAddresses);
     }
 
     // -------------------------------------------------------------------------
@@ -1104,5 +1244,18 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 );
             }
         }
+    }
+
+    // Helper function to set up a round with access criteria
+    function _helper_setupRoundWithAccessCriteria(uint8 accessCriteriaEnum)
+        internal
+    {
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessCriteriaEnum);
+
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
     }
 }
