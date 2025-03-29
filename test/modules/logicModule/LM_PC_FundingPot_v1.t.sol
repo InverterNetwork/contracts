@@ -1240,6 +1240,52 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
+    function testFuzzContributeToRound_revertsWhenContributionExceedsPersonalCap(
+    ) public {
+        testCreateRound(1000);
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+        uint amount = 250;
+
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(1);
+
+        fundingPot.setAccessCriteriaForRound(roundId, accessId, accessCriteria);
+
+        mockNFTContract.mint(contributor_);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor_);
+        fundingPotToken.approve(address(fundingPot), 500);
+
+        vm.prank(contributor_);
+        fundingPot.contributeToRound(
+            roundId,
+            amount,
+            accessId,
+            address(fundingPotToken),
+            new bytes32[](0)
+        );
+
+        // Attempt to contribute beyond personal cap
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__PersonalCapReached
+                    .selector
+            )
+        );
+        vm.prank(contributor_);
+
+        fundingPot.contributeToRound(
+            roundId, 251, 0, address(fundingPotToken), new bytes32[](0)
+        );
+    }
+
     // -------------------------------------------------------------------------
     // Test: Internal Functions
 
