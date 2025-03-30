@@ -46,10 +46,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Enum used to identify the type of access criteria.
     enum AccessCriteriaType {
-        OPEN, // 0
-        NFT, // 1
-        MERKLE, // 2
-        LIST // 3
+        UNSET, // 0
+        OPEN, // 1
+        NFT, // 2
+        MERKLE, // 3
+        LIST // 4
 
     }
 

@@ -97,26 +97,32 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ├── Given user does not have FUNDING_POT_ADMIN_ROLE
     │   └── When user attempts to create a round
     │       └── Then it should revert
+    │
     └── Given user has FUNDING_POT_ADMIN_ROLE
     ├── And round start < block.timestamp
     │   └── When user attempts to create a round
     │       └── Then it should revert
-    ├── And round end time == 0 
-    │   ├── And round cap == 0
-    │   │   └── When user attempts to create a round
-    │   │       └── Then it should revert
-    ├── And round end time is set 
-    │   ├── And round end != 0
-    │   ├── And round end < round start
-    │   │   └── When user attempts to create a round
-    │   │       └── Then it should revert
+    │
+    ├── And round end time == 0
+    ├── And round cap == 0
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    │
+    ├── And round end time is set
+    ├── And round end != 0
+    ├── And round end < round start
+    │   └── When user attempts to create a round
+    │       └── Then it should revert
+    │
     ├── And hook contract is set but hook function is not set
     │   └── When user attempts to create a round
     │       └── Then it should revert
+    │
     ├── And hook function is set but hook contract is not set
     │   └── When user attempts to create a round
     │       └── Then it should revert
-    └── Given all the valid parameters are provided
+    │
+    └── And all the valid parameters are provided
         └── When user attempts to create a round
             └── Then it should not be active and should return the round id
     */
@@ -317,7 +323,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ├── Given all the valid parameters are provided
         │   └── When user attempts to create a round
         │       └── Then it should not be active and should return the round id
-        */
+    */
 
     function testCreateRound() public {
         (
@@ -363,31 +369,39 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ├── Given user does not have FUNDING_POT_ADMIN_ROLE
     │   └── When user attempts to edit a round
     │       └── Then it should revert
-    ├── Given round does not exist
-    │   └── When user attempts to edit the round
-    │       └── Then it should revert
-    ├── Given round is active
-    │   └── When user attempts to edit the round
-    │       └── Then it should revert
-    ├── Given round start time is in the past
-    │   └── When user attempts to edit a round with the above parameter
-    │       └── Then it should revert
-    ├── Given round end time == 0
-    │   ├── And round cap == 0
-    │   └── When user attempts to edit a round with the above parameters
-    │       └── Then it should revert
-    ├── Given round end time is set
-    │   ├── And round end is before round start
-    │   └── When user attempts to edit the round
-    │       └── Then it should revert
-    ├── Given hook contract is set
-    │   ├── And hook function is empty
-    │   └── When user attempts to edit the round
-    │       └── Then it should revert
-    └── Given hook function is set
-        ├── And hook contract is empty
+    │
+    └── Given user has FUNDING_POT_ADMIN_ROLE
+        ├── Given round does not exist
+        │   └── When user attempts to edit the round
+        │       └── Then it should revert
+        │
+        ├── Given round is active
+        │   └── When user attempts to edit the round
+        │       └── Then it should revert
+        │
+        ├── Given round start time is in the past
+        │   └── When user attempts to edit a round with this parameter
+        │       └── Then it should revert
+        │
+        ├── Given round end time == 0 and round cap == 0
+        │   └── When user attempts to edit a round with these parameters
+        │       └── Then it should revert
+        │
+        ├── Given round end time is set and round end < round start
+        │   └── When user attempts to edit the round
+        │       └── Then it should revert
+        │
+        ├── Given hook contract is set but hook function is empty
+        │   └── When user attempts to edit the round
+        │       └── Then it should revert
+        │
+        ├── Given hook function is set but hook contract is empty
+        │   └── When user attempts to edit the round
+        │       └── Then it should revert
+        │
+        └── Given all valid parameters are provided
             └── When user attempts to edit the round
-                └── Then it should revert  
+                └── Then all round details should be successfully updated
     */
 
     function testEditRound_revertsGivenUserIsNotFundingPotAdmin(address user_)
@@ -698,7 +712,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     └── Given a round has been created
     ├── And the round is not active
     └── When an admin provides valid parameters to edit the round
-        └── Then all the round details should be successfully updated
+        └── Then all round details should be successfully updated
             ├── roundStart should be updated to the new value
             ├── roundEnd should be updated to the new value
             ├── roundCap should be updated to the new value
@@ -756,24 +770,31 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ├── Given user does not have FUNDING_POT_ADMIN_ROLE
     │   └── When user attempts to set access criteria
     │       └── Then it should revert
-    ├── Given round does not exist
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    ├── Given round is active
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    ├── Given AccessCriteriaId is NFT and nftContract is 0x0
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    ├── Given AccessCriteriaId is MERKLE and merkleRoot is 0x0
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    ├── Given AccessCriteriaId is LIST and allowedAddresses is empty
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    └── Given all the valid parameters are provided
-        └── When user attempts to set access criteria
-            └── Then it should not revert
+    │
+    └── Given user has FUNDING_POT_ADMIN_ROLE
+        ├── Given round does not exist
+        │   └── When user attempts to set access criteria
+        │       └── Then it should revert
+        │
+        ├── Given round is active
+        │   └── When user attempts to set access criteria
+        │       └── Then it should revert
+        │
+        ├── Given AccessCriteriaId is NFT and nftContract is 0x0
+        │   └── When user attempts to set access criteria
+        │       └── Then it should revert
+        │
+        ├── Given AccessCriteriaId is MERKLE and merkleRoot is 0x0
+        │   └── When user attempts to set access criteria
+        │       └── Then it should revert
+        │
+        ├── Given AccessCriteriaId is LIST and allowedAddresses is empty
+        │   └── When user attempts to set access criteria
+        │       └── Then it should revert
+        │
+        └── Given all the valid parameters are provided
+            └── When user attempts to set access criteria
+                └── Then it should not revert
     */
 
     function testFuzzSetAccessCriteria_revertsGivenUserDoesNotHaveFundingPotAdminRole(
@@ -805,7 +826,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzzSetAccessCriteria_revertsGivenRoundDoesNotExist(
         uint8 accessCriteriaEnum
     ) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
 
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -825,7 +846,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzzSetAccessCriteria_revertsGivenRoundIsActive(
         uint8 accessCriteriaEnum
     ) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
 
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
@@ -913,7 +934,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testFuzzSetAccessCriteria(uint8 accessCriteriaEnum) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
 
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
@@ -931,37 +952,41 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address[] memory allowedAddresses
         ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaId);
 
-        assertEq(isOpen, accessCriteriaEnum == 0);
+        assertEq(isOpen, accessCriteriaEnum == 1);
         assertEq(nftContract, accessCriteria.nftContract);
         assertEq(merkleRoot, accessCriteria.merkleRoot);
         assertEq(allowedAddresses, accessCriteria.allowedAddresses);
     }
 
-    /* test editAccessCriteriaForRound()
+    /* Test editAccessCriteriaForRound()
     ├── Given user does not have FUNDING_POT_ADMIN_ROLE
     │   └── When user attempts to edit access criteria
     │       └── Then it should revert
-    ├── Given access criteria id is greater than the number of access criteria for the round
-    │   └── When user attempts to edit access criteria
-    │       └── Then it should revert
-    ├── Given round does not exist
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    ├── Given round is active
-    │   └── When user attempts to set access criteria
-    │       └── Then it should revert
-    └── Given all the valid parameters are provided
-        └── When user attempts to edit access criteria
-            └── Then it should not revert
-            └── Then the access criteria should be updated
-
+    │
+    └── Given user has FUNDING_POT_ADMIN_ROLE
+        ├── Given access criteria id is greater than the number of access criteria for the round
+        │   └── When user attempts to edit access criteria
+        │       └── Then it should revert
+        │
+        ├── Given round does not exist
+        │   └── When user attempts to edit access criteria
+        │       └── Then it should revert
+        │
+        ├── Given round is active
+        │   └── When user attempts to edit access criteria
+        │       └── Then it should revert
+        │
+        └── Given all valid parameters are provided
+            └── When user attempts to edit access criteria
+                ├── Then it should not revert
+                └── Then the access criteria should be updated
     */
 
     function testFuzzEditAccessCriteriaForRound_revertsGivenUserDoesNotHaveFundingPotAdminRole(
         uint8 accessCriteriaEnum,
         address user_
     ) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
         vm.assume(user_ != address(0) && user_ != address(this));
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
@@ -989,7 +1014,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzzEditAccessCriteriaForRound_revertsGivenAccessCriteriaIdIsGreaterThanAccessCriteriaForTheRound(
         uint8 accessCriteriaEnum
     ) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
         uint64 roundId = fundingPot.getRoundCount();
@@ -1013,7 +1038,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzzEditAccessCriteriaForRound_revertsGivenRoundDoesNotExist(
         uint8 accessCriteriaEnum
     ) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
         uint64 roundId = fundingPot.getRoundCount();
         uint8 accessCriteriaId = 0;
 
@@ -1029,7 +1054,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzzEditAccessCriteriaForRound_revertsGivenRoundIsActive(
         uint8 accessCriteriaEnum
     ) public {
-        vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 3);
+        vm.assume(accessCriteriaEnum >= 1 && accessCriteriaEnum <= 4);
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
         uint64 roundId = fundingPot.getRoundCount();
@@ -1058,10 +1083,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessCriteriaEnumOld,
         uint8 accessCriteriaEnumNew
     ) public {
-        vm.assume(accessCriteriaEnumOld >= 0 && accessCriteriaEnumOld <= 3);
+        vm.assume(accessCriteriaEnumOld >= 1 && accessCriteriaEnumOld <= 4);
         vm.assume(
             accessCriteriaEnumNew != accessCriteriaEnumOld
-                && accessCriteriaEnumNew >= 0 && accessCriteriaEnumNew <= 3
+                && accessCriteriaEnumNew >= 1 && accessCriteriaEnumNew <= 4
         );
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnumOld);
@@ -1084,7 +1109,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address[] memory allowedAddresses
         ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaId);
 
-        assertEq(isOpen, accessCriteriaEnumNew == 0);
+        assertEq(isOpen, accessCriteriaEnumNew == 1);
         assertEq(nftContract, newAccessCriteria.nftContract);
         assertEq(merkleRoot, newAccessCriteria.merkleRoot);
         assertEq(allowedAddresses, newAccessCriteria.allowedAddresses);

@@ -167,7 +167,10 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
-        isOpen = (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
+        isOpen = (
+            accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET
+                || accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN
+        );
         return (
             isOpen,
             accessCriteria.nftContract,
@@ -338,7 +341,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         // If end time is set, validate it's after start time
-        if (round_.roundEnd > 0 && round_.roundEnd <= round_.roundStart) {
+        if (round_.roundEnd > 0 && round_.roundEnd < round_.roundStart) {
             revert Module__LM_PC_FundingPot__RoundEndMustBeAfterStart();
         }
 
