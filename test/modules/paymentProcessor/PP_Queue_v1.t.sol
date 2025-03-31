@@ -172,8 +172,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Setup
         _authorizer.setIsAuthorized(address(queue), true);
 
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -474,8 +473,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Initial queue size should be 0."
         );
 
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: makeAddr("recipient"),
@@ -536,7 +534,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         for (uint8 i = 0; i < numOrders_; i++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper_encodePaymentOrderData(i + 1);
+                _encodePaymentOrderData(i + 1);
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: makeAddr(string.concat("recipient", vm.toString(i))),
@@ -690,8 +688,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testGetOrder_GivenCancelledOrder() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -741,8 +738,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testGetOrder_GivenProcessedOrder() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -893,8 +889,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testQueueOperations_GivenValidInputs() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -955,8 +950,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testGetQueueHead_GivenSingleOrder() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -990,8 +984,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         // First order
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1028,8 +1021,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         // Second order with different flags/data
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1067,8 +1059,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         // First order
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1092,8 +1083,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Second order with different flags/data
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1145,8 +1135,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         // First order
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1170,8 +1159,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Second order with different flags/data
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1234,8 +1222,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testGetQueueTail_GivenSingleOrder() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1269,8 +1256,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         // First order
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1292,8 +1278,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Second order with different flags/data
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1340,8 +1325,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         // First order
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1365,8 +1349,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Second order with different flags/data
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1418,8 +1401,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         // First order
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1443,8 +1425,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.stopPrank();
 
         // Second order with different flags/data
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1535,8 +1516,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testProcessNextOrder_GivenEmptyQueue() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1601,8 +1581,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testExecutePaymentTransfer_RevertGivenInvalidOrder() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(0);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1635,8 +1614,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1682,8 +1660,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testOrderExists_GivenValidOrder() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1730,8 +1707,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testOrderExists_GivenInvalidClient() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1765,8 +1741,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testValidQueueId_GivenValidId() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2189,7 +2164,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Add orders to queue
         for (uint i_; i_ < 3; i_++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper_encodePaymentOrderData(i_ + 1);
+                _encodePaymentOrderData(i_ + 1);
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2263,7 +2238,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Add orders to queue
         for (uint i_; i_ < 3; i_++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper_encodePaymentOrderData(i_ + 1);
+                _encodePaymentOrderData(i_ + 1);
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2303,8 +2278,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Setup: Create a payment order
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2368,8 +2342,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
 
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2415,8 +2388,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
 
-        (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags1_, bytes32[] memory data1_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2464,8 +2436,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Cancelled order should return true."
         );
 
-        (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+        (bytes32 flags2_, bytes32[] memory data2_) = _encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2501,8 +2472,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testProcessNextOrder_RevertGivenInsufficientBalance() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2549,8 +2519,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testUpdateOrderState_RevertGivenInvalidTransition() public {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
-        (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+        (bytes32 flags_, bytes32[] memory data_) = _encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -3331,7 +3300,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And the token is not address(0)
                 └── Then it should return true
     */
-    function testEnsureValidPaymentToken_GivenValidToken() public {
+    function testEnsureValidPaymentToken_SucceedsGivenValidToken() public {
         assertTrue(queue.exposed_validPaymentToken(address(_token)));
     }
 
@@ -3349,7 +3318,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And data array with order ID
                 └── Then it should return true
     */
-    function testValidateFlagsAndData_GivenValidFlagsAndData() public {
+    function testValidateFlagsAndData_SucceedsGivenValidFlagsAndData() public {
         bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
         bytes32[] memory data = new bytes32[](1);
         data[0] = bytes32(uint(123)); // Some order ID
@@ -3362,7 +3331,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And empty data array
                 └── Then it should return true
     */
-    function testValidateFlagsAndData_GivenValidFlagsWithoutData() public {
+    function testValidateFlagsAndData_SucceedsGivenValidFlagsWithoutData()
+        public
+    {
         bytes32 flags = bytes32(uint(0)); // No bits set
         bytes32[] memory data = new bytes32[](0);
 
@@ -3374,7 +3345,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And empty data array
                 └── Then it should return false
     */
-    function testValidateFlagsAndData_GivenInvalidFlagsWithData() public {
+    function testValidateFlagsAndData_FailsGivenInvalidFlagsWithData() public {
         bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
         bytes32[] memory data = new bytes32[](0); // Empty data array
 
@@ -3386,7 +3357,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And empty data array
                 └── Then it should return false
     */
-    function testValidateFlagsAndData_GivenInvalidFlagsWithoutData() public {
+    function testValidateFlagsAndData_FailsGivenInvalidFlagsWithoutData()
+        public
+    {
         bytes32 flags = bytes32(uint(2)); // Set invalid bit
         bytes32[] memory data = new bytes32[](0);
 
@@ -3442,6 +3415,66 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
+    /* Test testClaimPreviouslyUnclaimable_RevertGivenNoUnclaimableAmount()
+        └── Given no unclaimable amount for the client/token/receiver combination
+            └── When attempting to claim previously unclaimable amount
+                └── Then it should revert with Module__PP_Queue_NoUnclaimableAmount
+    */
+    function testClaimPreviouslyUnclaimable_RevertGivenNoUnclaimableAmount()
+        public
+    {
+        address recipient = makeAddr("recipient");
+
+        queue.exposed_claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), recipient
+        );
+        assertEq(
+            _token.balanceOf(recipient),
+            0,
+            "Recipient should not receive any tokens"
+        );
+    }
+    /* Test testClaimPreviouslyUnclaimable_SucceedsGivenUnclaimableAmount()
+        └── Given unclaimable amount for the client/token/receiver combination
+            └── When attempting to claim previously unclaimable amount
+                └── Then it should succeed
+    */
+
+    function testClaimPreviouslyUnclaimable_SucceedsGivenUnclaimableAmount()
+        public
+    {
+        address recipient = makeAddr("recipient");
+        uint96 amount = 100;
+
+        // Setup: give tokens to payment client and approve queue to spend them
+        _setupPaymentTokenBalanceAndApproval(amount);
+
+        // Transfer tokens to the queue contract first (simulating failed payment flow)
+        vm.prank(address(paymentClient));
+        _token.transfer(address(queue), amount);
+
+        // Queue needs to approve itself to transfer its own tokens
+        vm.prank(address(queue));
+        _token.approve(address(queue), amount);
+
+        // Now add it as unclaimable
+        queue.exposed_addUnclaimableOrder(
+            _createTestPaymentOrder(recipient, amount, 1),
+            address(paymentClient)
+        );
+
+        // Try to claim
+        queue.exposed_claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), recipient
+        );
+
+        assertEq(
+            _token.balanceOf(recipient),
+            amount,
+            "Recipient should receive tokens"
+        );
+    }
+
     // ================================================================================
     // Helper Functions
 
@@ -3451,7 +3484,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint orderNum
     ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
         (bytes32 flags, bytes32[] memory data) =
-            helper_encodePaymentOrderData(orderNum);
+            _encodePaymentOrderData(orderNum);
         return IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient,
             amount: amount,
@@ -3491,7 +3524,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertEq(uint(queuedOrder.state_), uint(expectedState), "Wrong state");
     }
 
-    function helper_encodePaymentOrderData(uint orderId_)
+    function _encodePaymentOrderData(uint orderId_)
         internal
         pure
         returns (bytes32 flags_, bytes32[] memory data_)
