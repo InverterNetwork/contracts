@@ -3406,6 +3406,55 @@ contract PP_Queue_v1_Test is ModuleTest {
     function testEnsureValidPaymentToken_RevertGivenInvalidToken() public {
         assertFalse(queue.exposed_validPaymentToken(address(0)));
     }
+
+    /* Test testValidateFlagsAndData_GivenValidFlagsAndData()
+        └── Given valid flags with ORDER_ID bit set
+            └── And data array with order ID
+                └── Then it should return true
+    */
+    function testValidateFlagsAndData_GivenValidFlagsAndData() public {
+        bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
+        bytes32[] memory data = new bytes32[](1);
+        data[0] = bytes32(uint(123)); // Some order ID
+
+        assertTrue(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidateFlagsAndData_GivenValidFlagsWithoutData()
+        └── Given valid flags without ORDER_ID bit set
+            └── And empty data array
+                └── Then it should return true
+    */
+    function testValidateFlagsAndData_GivenValidFlagsWithoutData() public {
+        bytes32 flags = bytes32(uint(0)); // No bits set
+        bytes32[] memory data = new bytes32[](0);
+
+        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidateFlagsAndData_GivenInvalidFlagsWithData()
+        └── Given flags with ORDER_ID bit set
+            └── And empty data array
+                └── Then it should return false
+    */
+    function testValidateFlagsAndData_GivenInvalidFlagsWithData() public {
+        bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
+        bytes32[] memory data = new bytes32[](0); // Empty data array
+
+        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidateFlagsAndData_GivenInvalidFlagsWithoutData()
+        └── Given flags with invalid bits set
+            └── And empty data array
+                └── Then it should return false
+    */
+    function testValidateFlagsAndData_GivenInvalidFlagsWithoutData() public {
+        bytes32 flags = bytes32(uint(2)); // Set invalid bit
+        bytes32[] memory data = new bytes32[](0);
+
+        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+    }
 }
 
 // Mock contracts for testing
