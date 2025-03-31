@@ -3181,18 +3181,23 @@ contract PP_Queue_v1_Test is ModuleTest {
         address client = makeAddr("client");
         address recipient = makeAddr("recipient");
         uint amount = 100;
+        // Setup
+        address invalidRecipient = makeAddr("invalidRecipient");
+        vm.assume(amount > 0);
+        // initiate token and set fail transfer to invalid recipient
+        NonStandardTokenMock nonStandardToken = new NonStandardTokenMock();
+        nonStandardToken.setFailTransferTo(invalidRecipient);
+        // mint tokens to payment client and approve queue to spend
+        nonStandardToken.mint(address(paymentClient), amount);
+        vm.prank(address(paymentClient));
+        nonStandardToken.approve(address(queue), amount);
 
-        // Test with non-ERC20 contract
-        address nonERC20Contract = address(new NonERC20Contract());
         bool success = queue.exposed_lowLevelTransfer(
-            nonERC20Contract, client, recipient, amount
+            address(nonStandardToken), client, recipient, amount
         );
         assertFalse(success, "Transfer should fail with non-ERC20 contract");
-
-        // Test with contract that doesn't implement transferFrom
-        address invalidContract = address(new InvalidTransferContract());
         success = queue.exposed_lowLevelTransfer(
-            invalidContract, client, recipient, amount
+            address(nonStandardToken), client, recipient, amount
         );
         assertFalse(
             success, "Transfer should fail with invalid transfer contract"
@@ -3255,74 +3260,6 @@ contract PP_Queue_v1_Test is ModuleTest {
             abi.encodeWithSignature("Module__PP_Queue_OnlyCallableByClient()")
         );
         queue.exposed_ensureValidClient(client_);
-    }
-
-    // ================================================================================
-    // Helper Functions
-
-    function _createTestPaymentOrder(
-        address recipient,
-        uint96 amount,
-        uint orderNum
-    ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
-        (bytes32 flags, bytes32[] memory data) =
-            helper_encodePaymentOrderData(orderNum);
-        return IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: recipient,
-            amount: amount,
-            paymentToken: address(_token),
-            originChainId: block.chainid,
-            targetChainId: block.chainid,
-            flags: flags,
-            data: data
-        });
-    }
-
-    function _setupPaymentTokenBalanceAndApproval(uint96 amount) internal {
-        _token.mint(address(paymentClient), amount);
-        paymentClient.exposed_addToOutstandingTokenAmounts(
-            address(_token), amount
-        );
-        vm.prank(address(paymentClient));
-        _token.approve(address(queue), amount);
-    }
-
-    function _assertOrderMatch(
-        uint orderId,
-        address client,
-        address expectedRecipient,
-        uint expectedAmount,
-        IPP_Queue_v1.RedemptionState expectedState
-    ) internal {
-        IPP_Queue_v1.QueuedOrder memory queuedOrder =
-            queue.getOrder(orderId, IERC20PaymentClientBase_v2(client));
-        assertEq(
-            queuedOrder.order_.recipient, expectedRecipient, "Wrong recipient"
-        );
-        assertEq(queuedOrder.order_.amount, expectedAmount, "Wrong amount");
-        assertEq(
-            queuedOrder.order_.paymentToken, address(_token), "Wrong token"
-        );
-        assertEq(uint(queuedOrder.state_), uint(expectedState), "Wrong state");
-    }
-
-    function helper_encodePaymentOrderData(uint orderId_)
-        internal
-        pure
-        returns (bytes32 flags_, bytes32[] memory data_)
-    {
-        bytes32 _flags;
-        _flags = 0;
-
-        uint8[] memory flags = new uint8[](1); // The Module will use 1 flag
-        flags[0] = 0;
-
-        _flags |= bytes32((1 << flags[0]));
-
-        bytes32[] memory paymentParameters = new bytes32[](1);
-        paymentParameters[0] = bytes32(orderId_);
-
-        return (_flags, paymentParameters);
     }
 
     /* Test testSetCanceledOrdersTreasury_GivenValidAddress()
@@ -3455,20 +3392,121 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         assertFalse(queue.exposed_validateFlagsAndData(flags, data));
     }
-}
 
-// Mock contracts for testing
-contract NonERC20Contract {
-// This contract doesn't implement any ERC20 functions
-}
+    /* Test testValidStateTransition_RevertGivenInvalidTransition()
+        └── Given an invalid state transition
+            └── When validating the state transition
+                └── Then it should revert with Module__PP_Queue_InvalidStateTransition
+    */
+    function testValidStateTransition_RevertGivenInvalidTransition() public {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidStateTransition(uint256,uint8,uint8)",
+                1,
+                uint8(IPP_Queue_v1.RedemptionState.PROCESSED),
+                uint8(IPP_Queue_v1.RedemptionState.PENDING)
+            )
+        );
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PROCESSED,
+            IPP_Queue_v1.RedemptionState.PENDING
+        );
+    }
 
-contract InvalidTransferContract {
-    // This contract implements transferFrom but returns false
-    function transferFrom(address, address, uint)
-        external
+    /* Test testValidStateTransition_SucceedsGivenValidTransitions()
+        └── Given valid state transitions
+            └── When validating the state transitions
+                └── Then they should succeed
+    */
+    function testValidStateTransition_SucceedsGivenValidTransitions() public {
+        // PENDING -> PROCESSED
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PENDING,
+            IPP_Queue_v1.RedemptionState.PROCESSED
+        );
+
+        // PENDING -> CANCELLED
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PENDING,
+            IPP_Queue_v1.RedemptionState.CANCELLED
+        );
+
+        // PENDING -> FAILED
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PENDING,
+            IPP_Queue_v1.RedemptionState.FAILED
+        );
+    }
+
+    // ================================================================================
+    // Helper Functions
+
+    function _createTestPaymentOrder(
+        address recipient,
+        uint96 amount,
+        uint orderNum
+    ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
+        (bytes32 flags, bytes32[] memory data) =
+            helper_encodePaymentOrderData(orderNum);
+        return IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: recipient,
+            amount: amount,
+            paymentToken: address(_token),
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flags,
+            data: data
+        });
+    }
+
+    function _setupPaymentTokenBalanceAndApproval(uint96 amount) internal {
+        _token.mint(address(paymentClient), amount);
+        paymentClient.exposed_addToOutstandingTokenAmounts(
+            address(_token), amount
+        );
+        vm.prank(address(paymentClient));
+        _token.approve(address(queue), amount);
+    }
+
+    function _assertOrderMatch(
+        uint orderId,
+        address client,
+        address expectedRecipient,
+        uint expectedAmount,
+        IPP_Queue_v1.RedemptionState expectedState
+    ) internal {
+        IPP_Queue_v1.QueuedOrder memory queuedOrder =
+            queue.getOrder(orderId, IERC20PaymentClientBase_v2(client));
+        assertEq(
+            queuedOrder.order_.recipient, expectedRecipient, "Wrong recipient"
+        );
+        assertEq(queuedOrder.order_.amount, expectedAmount, "Wrong amount");
+        assertEq(
+            queuedOrder.order_.paymentToken, address(_token), "Wrong token"
+        );
+        assertEq(uint(queuedOrder.state_), uint(expectedState), "Wrong state");
+    }
+
+    function helper_encodePaymentOrderData(uint orderId_)
+        internal
         pure
-        returns (bool)
+        returns (bytes32 flags_, bytes32[] memory data_)
     {
-        return false;
+        bytes32 _flags;
+        _flags = 0;
+
+        uint8[] memory flags = new uint8[](1); // The Module will use 1 flag
+        flags[0] = 0;
+
+        _flags |= bytes32((1 << flags[0]));
+
+        bytes32[] memory paymentParameters = new bytes32[](1);
+        paymentParameters[0] = bytes32(orderId_);
+
+        return (_flags, paymentParameters);
     }
 }
