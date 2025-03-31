@@ -3474,6 +3474,52 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Recipient should receive tokens"
         );
     }
+    /* Test testValidPaymentOrder_RevertGivenInvalidTargetChain()
+        └── Given a payment order with an invalid target chain
+            └── When validating the payment order
+                └── Then it should revert with Module__PP_Queue_InvalidTargetChain
+    */
+
+    function test_validPaymentOrder_failsWithInvalidTargetChain() public {
+        address recipient = makeAddr("recipient");
+        uint96 amount = 100;
+        (bytes32 flags, bytes32[] memory data) = _encodePaymentOrderData(1);
+
+        IERC20PaymentClientBase_v2.PaymentOrder memory invalidOrder =
+        IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: recipient,
+            amount: amount,
+            paymentToken: address(_token),
+            originChainId: block.chainid,
+            targetChainId: block.chainid + 1, // Invalid target chain
+            flags: flags,
+            data: data
+        });
+
+        assertFalse(
+            queue.exposed_validPaymentOrder(invalidOrder),
+            "Payment order with invalid target chain should return false"
+        );
+    }
+    /* Test testValidPaymentOrder_SucceedsGivenValidOrder()
+        └── Given a valid payment order
+            └── When validating the payment order
+                └── Then it should return true
+    */
+
+    function test_validPaymentOrder_succeedsWithValidOrder() public {
+        address recipient = makeAddr("recipient");
+        uint96 amount = 100;
+        (bytes32 flags, bytes32[] memory data) = _encodePaymentOrderData(1);
+
+        IERC20PaymentClientBase_v2.PaymentOrder memory validOrder =
+            _createTestPaymentOrder(recipient, amount, 1);
+
+        assertTrue(
+            queue.exposed_validPaymentOrder(validOrder),
+            "Payment order with valid target chain should return true"
+        );
+    }
 
     // ================================================================================
     // Helper Functions

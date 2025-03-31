@@ -171,4 +171,10 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
     ) external {
         _claimPreviouslyUnclaimable(client_, token_, paymentReceiver_);
     }
+
+    function exposed_validPaymentOrder(
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+    ) external view returns (bool) {
+        return _validPaymentOrder(order_);
+    }
 }
