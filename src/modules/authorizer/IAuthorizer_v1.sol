@@ -52,18 +52,20 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ========================================================================
     // Events
 
-    /// @notice Emits when a key is added to a function.
+    /// @notice Emits when a function permission is added to a role.
     /// @param  target The address of the target contract.
     /// @param  fucntionSelector The selector of the function.
-    /// @param  roleIdKey The key of the role.
-    event KeyAdded(address target, bytes4 fucntionSelector, bytes32 roleIdKey);
+    /// @param  roleId The ID of the role.
+    event AccessPermissionAdded(
+        address target, bytes4 fucntionSelector, bytes32 roleId
+    );
 
-    /// @notice Emits when a key is removed from a function.
+    /// @notice Emits when a function permission is removed from a role.
     /// @param  target The address of the target contract.
     /// @param  fucntionSelector The selector of the function.
-    /// @param  roleIdKey The key of the role.
-    event KeyRemoved(
-        address target, bytes4 fucntionSelector, bytes32 roleIdKey
+    /// @param  roleId The ID of the role.
+    event AccessPermissionRemoved(
+        address target, bytes4 fucntionSelector, bytes32 roleId
     );
 
     /// @notice Emits when a role is created.
@@ -82,42 +84,40 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ------------------------------------------------------------------------
     // Getter -  Authorization
 
-    /// @notice Returns the keys of the given function in the target contract.
+    /// @notice Returns the permissions of the given function in the target contract.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
-    /// @return keys_ The keys of the function.
-    function getFunctionKeys(address target_, bytes4 selector_)
+    /// @return permissions_ The roleIds that are permissioned to call the function.
+    function getPermissions(address target_, bytes4 selector_)
         external
         view
-        returns (bytes32[] memory keys_);
+        returns (bytes32[] memory permissions_);
 
     /// @notice Returns the number of created role IDs.
     /// @return roleIdCounter_ The number of created role IDs.
     function getRoleIdCounter() external view returns (uint roleIdCounter_);
 
-    /// @notice Returns wether the given key is a key of the given function in the target contract.
+    /// @notice Returns wether the given roleId has the permission to callthe given function in the target contract.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
-    /// @param  roleIdKey_ The key that we want to check.
-    /// @return isKey_ Returns if the key is a key of the function.
-    function isFunctionKey(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleIdKey_
-    ) external view returns (bool isKey_);
+    /// @param  roleId_ The roleId that we want to check.
+    /// @return isPermissioned_ Returns if the roleId is permissioned to call the function.
+    function isPermissioned(address target_, bytes4 selector_, bytes32 roleId_)
+        external
+        view
+        returns (bool isPermissioned_);
 
-    /// @notice Checks whether an address holds the required role to execute the given function in the target contract.
+    /// @notice Checks whether the given caller address holds the required role to execute the given function in the target contract.
     /// @dev    Returns true if the address holds the Default Admin role.
-    ///         Returns true if the function keys contain the external key.
-    // @todo Adapt name of external key??
+    ///         Returns true if the function permissions contain the public role.
     /// @param  caller_ The address of the caller.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
-    /// @return canCall_ Returns if the address can call the function.
-    function canCall(address caller_, address target_, bytes4 selector_)
+    /// @return hasPermission_ Returns if the address can call the function.
+    function hasPermission(address caller_, address target_, bytes4 selector_)
         external
         view
-        returns (bool canCall_);
+        returns (bool hasPermission_);
 
     // ------------------------------------------------------------------------
     // Getter -  Role Management
@@ -126,28 +126,14 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @return The role ID.
     function getAdminRole() external view returns (bytes32);
 
-    /// @notice Checks whether an address holds the required role to execute
-    ///         the current transaction.
-    /// @dev	The calling contract needs to generate the right role ID using its
-    ///         own address and the role identifier.
-    ///         In modules, this function should be used instead of `hasRole`, as
-    ///         there are Authorizer-specific checks that need to be performed.
-    /// @param  role The identifier of the role we want to check
-    /// @param  who  The address on which to perform the check.
-    /// @return bool Returns if the address holds the role
-    function checkForRole(bytes32 role, address who)
-        external
-        view
-        returns (bool);
+    // ------------------------------------------------------------------------
+    // Getter - Out of Order
 
-    /// @notice Helper function to generate a bytes32 role hash for a module role.
-    /// @param  module The address of the module to generate the hash for.
-    /// @param  role  The ID number of the role to generate the hash for.
-    /// @return bytes32 Returns the generated role hash.
-    function generateRoleId(address module, bytes32 role)
-        external
-        pure
-        returns (bytes32);
+    /// @notice This function is deprecated and will revert when called.
+    function checkForRole(bytes32, address) external view returns (bool);
+
+    /// @notice This function is deprecated and will revert when called.
+    function generateRoleId(address, bytes32) external pure returns (bytes32);
 
     // ========================================================================
     // Mutating Functions
@@ -155,24 +141,30 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ------------------------------------------------------------------------
     // Mutating - Authorization
 
-    /// @notice Adds a new key to the given function in the target contract.
+    /// @notice Adds a new permission to the given roleId to call the given function in the target contract.
     /// @dev    Only callable by the Default Admin role.
-    /// @dev    The key must have already been created.
-    /// @dev    Does nothing if the key is already added to the function.
+    /// @dev    The roleId must have already been created.
+    /// @dev    Does nothing if the roleId permission is already added to the function.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
-    /// @param  newRoleIdKey_ The new key to add.
-    function addKey(address target_, bytes4 selector_, bytes32 newRoleIdKey_)
-        external;
+    /// @param  roleId_ The roleId that will receive the permission.
+    function addAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) external;
 
-    /// @notice Removes a key from the given function in the target contract.
+    /// @notice Removes a permission from the given roleid to call the given function in the target contract.
     /// @dev    Only callable by the Default Admin role.
-    /// @dev    Does nothing if the key is not linked to the function.
+    /// @dev    Does nothing if the roleId is not linked to the function.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
-    /// @param  roleIdKey_ The key to remove.
-    function removeKey(address target_, bytes4 selector_, bytes32 roleIdKey_)
-        external;
+    /// @param  roleId_ The roleId to remove.
+    function removeAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) external;
 
     // ------------------------------------------------------------------------
     // Mutating - Role Management
@@ -211,13 +203,13 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility
 
-    /// @notice Creates a new role, adds initial members to it and adds keys to the respective functions.
+    /// @notice Creates a new role, adds initial members to it and adds permission to call to the respective functions.
     /// @dev    Only callable by the Default Admin role.
     /// @dev    The role of the admin has to be created already.
     /// @dev    The array of targets corresponds with the two dimensional array of selectors.
     ///         The first position of targets therefor is assigned to the first position of the selector array.
     ///         The second dimension of the selector array contains all the function selectors of the target,
-    ///         which get the newly created role added as a key.
+    ///         which get the newly created role added as a permissioned role.
     /// @dev    The target contracts array have to have the same length as the selector array.
     /// @param  roleName_ The name of the role to create.
     /// @param  respectiveAdminRole_ The role ID of the admin role.
@@ -225,7 +217,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @param  targets_ The addresses of the target contracts.
     /// @param  selectors_ The selectors of the functions.
     /// @return newRoleId_ The ID of the newly created role.
-    function createRoleAndAddKeys(
+    function createRoleAndAddAccessPermissions(
         string memory roleName_,
         bytes32 respectiveAdminRole_,
         address[] memory initialMembers_,

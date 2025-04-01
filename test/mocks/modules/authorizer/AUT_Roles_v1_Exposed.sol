@@ -12,12 +12,12 @@ contract AUT_Roles_v1_Exposed is AUT_Roles_v1 {
         _roleIdCounter = newRoleIdCounterValue_;
     }
 
-    function addKey_unrestricted(
+    function addAccessPermission_unrestricted(
         address target_,
         bytes4 selector_,
-        bytes32 newRoleIdKey_
+        bytes32 roleId_
     ) external {
-        _keys[target_][selector_].push(newRoleIdKey_);
+        _permissions[target_][selector_].push(roleId_);
     }
 
     //==========================================================================

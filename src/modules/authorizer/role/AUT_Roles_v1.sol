@@ -124,7 +124,7 @@ contract AUT_Roles_v1 is
     /// @dev    selector The function selector of the function to call.
     /// @dev    roleIds The role IDs that can be used to call the function.
     mapping(address target => mapping(bytes4 selector => bytes32[] roleIds))
-        public _keys;
+        public _permissions;
 
     /// @notice The counter for role IDs.
     /// @dev	This is used to generate unique role IDs for each role.
@@ -182,16 +182,14 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Getter -  Authorization
 
-    // @todo ? function getPublicRole() public pure returns (bytes32) {
-
     /// @inheritdoc IAuthorizer_v1
-    function getFunctionKeys(address target_, bytes4 selector_)
+    function getPermissions(address target_, bytes4 selector_)
         public
         view
         virtual
-        returns (bytes32[] memory keys_)
+        returns (bytes32[] memory permissions_)
     {
-        keys_ = _keys[target_][selector_];
+        permissions_ = _permissions[target_][selector_];
     }
 
     /// @inheritdoc IAuthorizer_v1
@@ -200,14 +198,15 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function isFunctionKey(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleIdKey_
-    ) public view virtual returns (bool isKey_) {
-        bytes32[] memory keys_ = _keys[target_][selector_];
-        for (uint i = 0; i < keys_.length; i++) {
-            if (keys_[i] == roleIdKey_) {
+    function isPermissioned(address target_, bytes4 selector_, bytes32 roleId_)
+        public
+        view
+        virtual
+        returns (bool isPermissioned_)
+    {
+        bytes32[] memory permissions_ = _permissions[target_][selector_];
+        for (uint i = 0; i < permissions_.length; i++) {
+            if (permissions_[i] == roleId_) {
                 return true;
             }
         }
@@ -215,32 +214,32 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function canCall( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165
+    function hasPermission( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165
     address caller_, address target_, bytes4 selector_)
         public
         view
         virtual
-        returns (bool canCall_)
+        returns (bool hasPermission_)
     {
         // If caller is the admin, they can call any function.
         if (hasRole(DEFAULT_ADMIN_ROLE, caller_)) {
             return true;
         }
 
-        bytes32[] memory roleIds = _keys[target_][selector_];
-        uint keyLength = roleIds.length;
+        bytes32[] memory roleIds = _permissions[target_][selector_];
+        uint permissionLength = roleIds.length;
 
         // If there are no roles, the caller cannot call the function.
-        if (keyLength == 0) {
+        if (permissionLength == 0) {
             return false;
         }
 
         // Go through each role and check if the caller has it.
-        for (uint i = 0; i < keyLength; i++) {
+        for (uint i = 0; i < permissionLength; i++) {
             if (
                 // if the role the public role
                 // or if the caller has the role
-                roleIds[i] == PUBLIC_ROLE || hasRole(roleIds[i], caller_) //@todo check if public role should behave any different than any other role
+                roleIds[i] == PUBLIC_ROLE || hasRole(roleIds[i], caller_)
             ) {
                 return true;
             }
@@ -256,22 +255,22 @@ contract AUT_Roles_v1 is
         return DEFAULT_ADMIN_ROLE;
     }
 
+    // ------------------------------------------------------------------------
+    // Getter - Out of Order
+
     /// @inheritdoc IAuthorizer_v1
-    function checkForRole(
-        bytes32 role,
-        address who //@todo Scrap? Why is this a different function from hasRole?
-    ) external view virtual returns (bool) {
-        return hasRole(role, who);
+    function checkForRole(bytes32, address)
+        external
+        view
+        virtual
+        returns (bool)
+    {
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function generateRoleId(address module, bytes32 role)
-        public
-        pure
-        returns (bytes32)
-    {
-        // Generate Role ID from module and role
-        return keccak256(abi.encodePacked(module, role)); //@todo Scrap with revert?
+    function generateRoleId(address, bytes32) public pure returns (bytes32) {
+        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     // ========================================================================
@@ -281,39 +280,47 @@ contract AUT_Roles_v1 is
     // Mutating - Authorization
 
     /// @inheritdoc IAuthorizer_v1
-    function addKey(address target_, bytes4 selector_, bytes32 newRoleIdKey_)
+    function addAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    )
         public
         onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
-        idNotDefaultAdmin(newRoleIdKey_)
-        idExisting(newRoleIdKey_)
+        idNotDefaultAdmin(roleId_)
+        idExisting(roleId_)
     {
-        // if RoleId is already a key, do nothing
-        if (isFunctionKey(target_, selector_, newRoleIdKey_)) {
+        // if RoleId already has a permission, do nothing
+        if (isPermissioned(target_, selector_, roleId_)) {
             return;
         }
 
-        _keys[target_][selector_].push(newRoleIdKey_);
-        emit KeyAdded(target_, selector_, newRoleIdKey_);
+        _permissions[target_][selector_].push(roleId_);
+        emit AccessPermissionAdded(target_, selector_, roleId_);
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function removeKey(address target_, bytes4 selector_, bytes32 roleIdKey_)
+    function removeAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    )
         public
         onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
     {
-        bytes32[] memory keys = _keys[target_][selector_];
-        uint keysLength = keys.length;
+        bytes32[] memory permissions = _permissions[target_][selector_];
+        uint permissionsLength = permissions.length;
 
-        for (uint i = 0; i < keysLength; i++) {
-            if (keys[i] == roleIdKey_) {
+        for (uint i = 0; i < permissionsLength; i++) {
+            if (permissions[i] == roleId_) {
                 // Replace the element to be removed with the last one
-                _keys[target_][selector_][i] =
-                    _keys[target_][selector_][keysLength - 1];
+                _permissions[target_][selector_][i] =
+                    _permissions[target_][selector_][permissionsLength - 1];
                 // Remove the last element
-                _keys[target_][selector_].pop();
+                _permissions[target_][selector_].pop();
 
                 // Emit Event and exit the function once the value is removed
-                emit KeyRemoved(target_, selector_, roleIdKey_);
+                emit AccessPermissionRemoved(target_, selector_, roleId_);
                 return;
             }
         }
@@ -359,7 +366,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
         external
-        onlyRole(getRoleAdmin(roleId))
+        onlyRole(getRoleAdmin(roleId)) //@todo keep
     //@todo idExisting(roleId) implement and test / Do we actually want to restrict this?
     {
         _setRoleAdmin(roleId, newAdmin);
@@ -378,7 +385,7 @@ contract AUT_Roles_v1 is
     // Mutating - Mixed Utility
 
     /// @inheritdoc IAuthorizer_v1
-    function createRoleAndAddKeys(
+    function createRoleAndAddAccessPermissions(
         string memory roleName_,
         bytes32 respectiveAdminRole_,
         address[] memory initialMembers_,
@@ -390,7 +397,7 @@ contract AUT_Roles_v1 is
         idExisting(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
-        uint targetsLength = targets_.length; //@todo Keep this in like this?
+        uint targetsLength = targets_.length;
         if (targetsLength != selectors_.length) {
             revert Module__Authorizer__InvalidInputLength();
         }
@@ -398,11 +405,11 @@ contract AUT_Roles_v1 is
         newRoleId_ =
             createRole(roleName_, respectiveAdminRole_, initialMembers_);
 
-        // Run through all target and selector combinations and add role id to keys
+        // Run through all target and selector combinations and add permission to role id
 
         for (uint i = 0; i < targetsLength; i++) {
             for (uint j = 0; j < selectors_[i].length; j++) {
-                addKey(targets_[i], selectors_[i][j], newRoleId_);
+                addAccessPermission(targets_[i], selectors_[i][j], newRoleId_);
             }
         }
     }

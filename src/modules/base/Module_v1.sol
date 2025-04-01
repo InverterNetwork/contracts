@@ -89,7 +89,7 @@ abstract contract Module_v1 is
     // contracts too. To not make unnecessary modifiers available, this contract
     // inlines argument validations not needed in downstream contracts.
 
-    modifier locked() {
+    modifier permissioned() {
         _checkAuthorization(_msgSender(), _msgData());
         _;
     }
@@ -304,7 +304,7 @@ abstract contract Module_v1 is
     ) internal view {
         // If caller cannot call the function, revert.
         if (
-            !__Module_orchestrator.authorizer().canCall(
+            !__Module_orchestrator.authorizer().hasPermission(
                 caller, address(this), bytes4(data[0:4])
             )
         ) {

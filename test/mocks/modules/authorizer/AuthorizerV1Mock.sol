@@ -110,24 +110,24 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     // ------------------------------------------------------------------------
     // Getter -  Authorization
 
-    function getFunctionKeys(address, bytes4)
+    function getPermissions(address, bytes4)
         external
         view
-        returns (bytes32[] memory keys_)
+        returns (bytes32[] memory)
     {}
 
     function getRoleIdCounter() external view returns (uint roleIdCounter_) {}
 
-    function isFunctionKey(address, bytes4, bytes32)
+    function isPermissioned(address, bytes4, bytes32)
         external
         view
-        returns (bool isKey_)
+        returns (bool)
     {}
 
-    function canCall(address, address, bytes4)
+    function hasPermission(address, address, bytes4)
         external
         view
-        returns (bool canCall_)
+        returns (bool)
     {}
 
     // ------------------------------------------------------------------------
@@ -136,6 +136,9 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     function getAdminRole() external pure returns (bytes32) {
         return 0x00;
     }
+
+    // ------------------------------------------------------------------------
+    // Getter - Out of Order
 
     function checkForRole(bytes32 role, address who)
         external
@@ -159,9 +162,9 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     // ------------------------------------------------------------------------
     // Mutating - Authorization
 
-    function addKey(address, bytes4, bytes32) external {}
+    function addAccessPermission(address, bytes4, bytes32) external {}
 
-    function removeKey(address, bytes4, bytes32) external {}
+    function removeAccessPermission(address, bytes4, bytes32) external {}
 
     // ------------------------------------------------------------------------
     // Mutating - Role Management
@@ -184,7 +187,7 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility
 
-    function createRoleAndAddKeys(
+    function createRoleAndAddAccessPermissions(
         string memory,
         bytes32,
         address[] memory,

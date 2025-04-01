@@ -63,7 +63,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     bytes4 _selector1 = bytes4(keccak256("selector1()"));
     // Alice can access
     bytes4 _selector2 = bytes4(keccak256("selector2()"));
-    // No keys
+    // No Permissions
     bytes4 _selector3 = bytes4(keccak256("selector3()"));
     // Public Role can access
     bytes4 _selector4 = bytes4(keccak256("selector4()"));
@@ -177,61 +177,68 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // Getter -  Authorization
 
     /*
-    Test: getFunctionKeys
-    └── When: getFunctionKeys is called
+    Test: getPermissions
+    └── When: getPermissions is called
         └── Then: Return all Role ids that are listed for that function
     */
-    function testGetFunctionKeys(
+    function testGetPermissions(
         address target_,
         bytes4 selector_,
-        bytes32[] memory keys_
+        bytes32[] memory permissions_
     ) public {
-        for (uint i = 0; i < keys_.length; i++) {
-            _authSuT.addKey_unrestricted(target_, selector_, keys_[i]);
+        for (uint i = 0; i < permissions_.length; i++) {
+            _authSuT.addAccessPermission_unrestricted(
+                target_, selector_, permissions_[i]
+            );
         }
-        bytes32[] memory returnedKeys =
-            _authSuT.getFunctionKeys(target_, selector_);
-        assertEq(returnedKeys.length, keys_.length);
-        for (uint i = 0; i < keys_.length; i++) {
-            assertEq(returnedKeys[i], keys_[i]);
+        bytes32[] memory returnedPermissions =
+            _authSuT.getPermissions(target_, selector_);
+        assertEq(returnedPermissions.length, permissions_.length);
+        for (uint i = 0; i < permissions_.length; i++) {
+            assertEq(returnedPermissions[i], permissions_[i]);
         }
     }
 
     /*
-    Test: isFunctionKey
-    └── When: isFunctionKey is called
-        └── Then: Return true if the key is listed for that function
+    Test: isPermissioned
+    └── When: isPermissioned is called
+        └── Then: Return true if the roleId is listed for that function
     */
-    function testIsFunctionKey(
-        bytes32 key_,
+    function testIsPermissioned(
+        bytes32 roleId_,
         address target_,
         bytes4 selector_,
-        bool isKey_
+        bool isPermissioned_
     ) public {
-        if (isKey_) {
-            _authSuT.addKey_unrestricted(target_, selector_, key_);
+        if (isPermissioned_) {
+            _authSuT.addAccessPermission_unrestricted(
+                target_, selector_, roleId_
+            );
         }
-        assertEq(_authSuT.isFunctionKey(target_, selector_, key_), isKey_);
+        assertEq(
+            _authSuT.isPermissioned(target_, selector_, roleId_),
+            isPermissioned_
+        );
     }
 
     /*
-    Test: canCall
+    Test: hasPermission
     ├── Given: Caller has the Default Admin Role
-    │   └── When: canCall is called
+    │   └── When: hasPermission is called
     │       └── Then: Return true
-    ├── Given: There are no Keys for the function
-    │   └── When: canCall is called
+    ├── Given: There are no roleId permissions for the function
+    │   └── When: hasPermission is called
     │       └── Then: Return false
-    ├── Given: The keys contain the public role
-    │   └── When: canCall is called
+    ├── Given: The permissions contain the public role
+    │   └── When: hasPermission is called
     │       └── Then: Return true
-    └── Given: The caller inhabits one of the key roles
-        └── When: canCall is called
+    └── Given: The caller inhabits one of the roles that have permission
+        └── When: hasPermission is called
             └── Then: Return true
     */
-    // function canCall(address caller_, address target_, bytes4 selector_)
+    // function hasPermission(address caller_, address target_, bytes4 selector_)
 
-    function testCanCall_CallerHasDefaultAdminRole(uint seed_) public {
+    function testHasPermission_CallerHasDefaultAdminRole(uint seed_) public {
         // Create Setup with predetermined roles and function restrictions
         address target = address(uint160(seed_));
         createSetup(target);
@@ -240,12 +247,13 @@ contract AUT_Roles_v1_Test is ModuleTest {
         bytes4 selector = selectFunctionSelectorBasedOnSeed(seed_);
 
         // Check that if the caller has the default admin role, they can call any function
-        assertTrue(_authSuT.canCall(_initialAdmin, target, selector));
+        assertTrue(_authSuT.hasPermission(_initialAdmin, target, selector));
     }
 
-    function testCanCall_NoKeysForFunction(uint seed_, address caller_)
-        public
-    {
+    function testHasPermission_NoPermissionsForFunction(
+        uint seed_,
+        address caller_
+    ) public {
         // Make sure calle does not have the default admin role
         vm.assume(caller_ != _initialAdmin);
 
@@ -256,14 +264,17 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // Select function selector from setup based on seed
         bytes4 selector = selectFunctionSelectorBasedOnSeed(seed_);
 
-        // Check that the function has no keys
-        if (_authSuT.getFunctionKeys(target, selector).length == 0) {
-            // If the function has no keys, the caller should not be able to call the function
-            assertFalse(_authSuT.canCall(caller_, target, selector));
+        // Check that the function has no permissions
+        if (_authSuT.getPermissions(target, selector).length == 0) {
+            // If the function has no permissions, the caller should not be able to call the function
+            assertFalse(_authSuT.hasPermission(caller_, target, selector));
         }
     }
 
-    function testCanCall_KeyIsPublicRole(uint seed_, address caller_) public {
+    function testHasPermission_PermissionIsPublicRole(
+        uint seed_,
+        address caller_
+    ) public {
         // Make sure caller does not have the default admin role
         vm.assume(caller_ != _initialAdmin);
 
@@ -274,16 +285,15 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // Select function selector from setup based on seed
         bytes4 selector = selectFunctionSelectorBasedOnSeed(seed_);
 
-        bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
-        for (uint i = 0; i < keys.length; i++) {
-            if (keys[i] == _authSuT.PUBLIC_ROLE()) {
-                assertTrue(_authSuT.canCall(caller_, target, selector));
+        bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
+        for (uint i = 0; i < permissions.length; i++) {
+            if (permissions[i] == _authSuT.PUBLIC_ROLE()) {
+                assertTrue(_authSuT.hasPermission(caller_, target, selector));
             }
         }
     }
 
-    function testCanCall_KeyIsNotPublicRole( //@note is this a good test?
-    uint seed_, uint callerSeed_)
+    function testHasPermission_IsNotPublicRole(uint seed_, uint callerSeed_)
         public
     {
         // Fetch caller from seed
@@ -298,11 +308,11 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // Select function selector from setup based on seed
         bytes4 selector = selectFunctionSelectorBasedOnSeed(seed_);
 
-        bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
-        for (uint i = 0; i < keys.length; i++) {
+        bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
+        for (uint i = 0; i < permissions.length; i++) {
             // If the caller has the role they should be able to call the function
-            if (_authSuT.hasRole(keys[i], caller)) {
-                assertTrue(_authSuT.canCall(caller, target, selector));
+            if (_authSuT.hasRole(permissions[i], caller)) {
+                assertTrue(_authSuT.hasPermission(caller, target, selector));
             }
         }
     }
@@ -323,33 +333,33 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // Mutating - Authorization
 
     /*
-    Test: addKey
+    Test: addAccessPermission
     ├── Given: Caller does not inhabit the default admin role
-    │   └── When: addKey is called
+    │   └── When: addAccessPermission is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given newRoleIdKey is the default admin role
-    │   └── When: addKey is called
+    ├── And: The given roleId is the default admin role
+    │   └── When: addAccessPermission is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given newRoleIdKey is not existing
-    │   └── When: addKey is called
+    ├── And: The given roleId is not existing
+    │   └── When: addAccessPermission is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given newRoleIdKey is existing and not the default admin role
-    ├── And: The given newRoleIdKey is already a function key
-    │   └── When: addKey is called
+    ├── And: The given roleId is existing and not the default admin role
+    ├── And: The given roleId has already permission
+    │   └── When: addAccessPermission is called
     │       └── Then: Nothing happens
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given newRoleIdKey is existing and not the default admin role
-    └── And: The given newRoleIdKey is not a function key yet
-        └── When: addKey is called
-            └── Then: The new key is added
-                └── And: An event is emitted
+    ├── And: The given roleId is existing and not the default admin role
+    └── And: The given roleId does not have permission yet
+        └── When: addAccessPermission is called
+            └── Then: The roleId gains permission
+            └── And: An event is emitted
     */
-    // function addKey(address target_, bytes4 selector_, bytes32 newRoleIdKey_) @todo now
+    // function addAccessPermission(address target_, bytes4 selector_, bytes32 roleId_) @todo now
 
-    function testAddKey_ModifierInPostionChecks() public {
+    function testAddAccessPermission_ModifierInPostionChecks() public {
         //onlyRole(DEFAULT_ADMIN_ROLE)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -358,9 +368,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
                 _authSuT.DEFAULT_ADMIN_ROLE()
             )
         );
-        _authSuT.addKey(address(this), bytes4(0), bytes32(uint(0)));
+        _authSuT.addAccessPermission(address(this), bytes4(0), bytes32(uint(0)));
 
-        //idNotDefaultAdmin(newRoleIdKey_)
+        //idNotDefaultAdmin(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1
@@ -369,107 +379,111 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.addKey(
+        _authSuT.addAccessPermission(
             address(this),
             bytes4(0),
             bytes32(uint(0)) //Default Admin Id
         );
 
-        //idExisting(newRoleIdKey_)
+        //idExisting(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.addKey(address(this), bytes4(0), bytes32(uint(2)));
+        _authSuT.addAccessPermission(address(this), bytes4(0), bytes32(uint(2)));
     }
 
-    function testAddKey_FunctionKeyAlreadyExisting(uint seed_) public {
-        // Create All keys
+    function testAddAccessPermission_PermissionAlreadyExisting(uint seed_)
+        public
+    {
+        // Create All Role Ids
         _authSuT.changeRoleIdCounter(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
             createRandomLockRestrictions(seed_, 1);
 
-        // Fetch key array for comparison
-        bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
 
-        // Fetch one of the keys from the lock
-        bytes32 keyRoleId = keys[seed_ % keys.length];
+        // Fetch one of the permissions from the lock
+        bytes32 roleIdPermission = permissions[seed_ % permissions.length];
 
         // Try it again
         vm.prank(_initialAdmin);
-        _authSuT.addKey(target, selector, keyRoleId);
+        _authSuT.addAccessPermission(target, selector, roleIdPermission);
 
-        // Fetch key array for comparison
-        bytes32[] memory keysAfter = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissionsAfter =
+            _authSuT.getPermissions(target, selector);
 
         // Check that the array length is the same
-        assertEq(keys.length, keysAfter.length);
+        assertEq(permissions.length, permissionsAfter.length);
         // Check that the array stayed the same
-        for (uint i = 0; i < keys.length; i++) {
-            assertEq(keys[i], keysAfter[i]);
+        for (uint i = 0; i < permissions.length; i++) {
+            assertEq(permissions[i], permissionsAfter[i]);
         }
     }
 
-    function testAddKey_AddedKeyNotAlreadyExisting(
+    function testAddAccessPermission_PermissionNotAlreadyExisting(
         uint seed_,
-        bytes32 keyRoleId_
+        bytes32 roleId_
     ) public {
-        // Make sure keyRoleId_ is not the default admin role or the Public Role
-        vm.assume(keyRoleId_ != _authSuT.DEFAULT_ADMIN_ROLE());
-        vm.assume(keyRoleId_ != _authSuT.PUBLIC_ROLE());
+        // Make sure roleId_ is not the default admin role or the Public Role
+        vm.assume(roleId_ != _authSuT.DEFAULT_ADMIN_ROLE());
+        vm.assume(roleId_ != _authSuT.PUBLIC_ROLE());
 
-        // Create All keys
+        // Create All Role Ids
         _authSuT.changeRoleIdCounter(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
             createRandomLockRestrictions(seed_, 0);
 
-        // Make sure keyRoleId_ is not part of the function lock
-        vm.assume(!_authSuT.isFunctionKey(target, selector, keyRoleId_));
+        // Make sure roleId_ is not part of the function lock
+        vm.assume(!_authSuT.isPermissioned(target, selector, roleId_));
 
-        // Fetch key array for comparison
-        bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
 
         // Check that event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.KeyAdded(target, selector, keyRoleId_);
+        emit IAuthorizer_v1.AccessPermissionAdded(target, selector, roleId_);
 
-        // Add Key to function lock
+        // Add permission to roleId to function lock
         vm.prank(_initialAdmin);
-        _authSuT.addKey(target, selector, keyRoleId_);
+        _authSuT.addAccessPermission(target, selector, roleId_);
 
-        // Fetch key array for comparison
-        bytes32[] memory keysAfter = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissionsAfter =
+            _authSuT.getPermissions(target, selector);
 
         // Check that array length was adapted
-        assertEq(keysAfter.length, keys.length + 1);
+        assertEq(permissionsAfter.length, permissions.length + 1);
 
-        // Check that the key is function key
-        assertTrue(_authSuT.isFunctionKey(target, selector, keyRoleId_));
+        // Check that the role is permissioned
+        assertTrue(_authSuT.isPermissioned(target, selector, roleId_));
     }
 
     /*
-    Test: removeKey
+    Test: removeAccessPermission
     ├── Given: Caller does not inhabit the default admin role
-    │   └── When: removeKey is called
+    │   └── When: removeAccessPermission is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
-    ├── And: The given roleIdKey not a function key
-    │   └── When: removeKey is called
+    ├── And: The given roleId not a permissioned
+    │   └── When: removeAccessPermission is called
     │       └── Then: Nothing happens
     ├── Given: Caller inhabits the default admin role
-    └── And: The given roleIdKey is a function key
-        └── When: removeKey is called
-            └── Then: The key is removed
-                └── And: An event is emitted
+    └── And: The given roleId is permissioned
+        └── When: removeAccessPermission is called
+            └── Then: The permission is removed
+            └── And: An event is emitted
 
     */
-    function testRemoveKey_ModifierInPostionChecks() public {
+    function testRemoveAccessPermission_ModifierInPostionChecks() public {
         //onlyRole(DEFAULT_ADMIN_ROLE)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -478,71 +492,78 @@ contract AUT_Roles_v1_Test is ModuleTest {
                 _authSuT.DEFAULT_ADMIN_ROLE()
             )
         );
-        _authSuT.removeKey(address(this), bytes4(0), bytes32(uint(0)));
+        _authSuT.removeAccessPermission(
+            address(this), bytes4(0), bytes32(uint(0))
+        );
     }
 
-    function testRemoveKey_RoleKeyIsNotExisting(uint seed_, bytes32 keyRoleId_)
-        public
-    {
-        // Create All keys
+    function testRemoveAccessPermission_PermissionNotExisting(
+        uint seed_,
+        bytes32 roleId_
+    ) public {
+        // Create All Role Ids
         _authSuT.changeRoleIdCounter(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
             createRandomLockRestrictions(seed_, 0);
 
-        // Make sure keyRoleId_ is not part of the function lock
-        vm.assume(!_authSuT.isFunctionKey(target, selector, keyRoleId_));
+        // Make sure roleId_ is not part of the function lock
+        vm.assume(!_authSuT.isPermissioned(target, selector, roleId_));
 
-        // Fetch key array for comparison
-        bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
 
-        // Remove any key from function lock
+        // Remove any permission from function lock
         vm.prank(_initialAdmin);
-        _authSuT.removeKey(target, selector, keyRoleId_);
+        _authSuT.removeAccessPermission(target, selector, roleId_);
 
-        // Fetch key array for comparison
-        bytes32[] memory keysAfter = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissionsAfter =
+            _authSuT.getPermissions(target, selector);
 
         // Check that array length is the same
-        assertEq(keys.length, keysAfter.length);
+        assertEq(permissions.length, permissionsAfter.length);
 
         // Check that values stayed the same
-        for (uint i = 0; i < keys.length; i++) {
-            assertEq(keys[i], keysAfter[i]);
+        for (uint i = 0; i < permissions.length; i++) {
+            assertEq(permissions[i], permissionsAfter[i]);
         }
     }
 
-    function testRemoveKey_RoleKeyIsExisting(uint seed_) public {
-        // Create All keys
+    function testRemoveAccessPermission_PermissionExisting(uint seed_) public {
+        // Create All Role Ids
         _authSuT.changeRoleIdCounter(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
             createRandomLockRestrictions(seed_, 1);
 
-        // Fetch key array for comparison
-        bytes32[] memory keys = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
 
-        // Fetch one of the keys from the lock
-        bytes32 keyRoleId = keys[uint(seed_) % keys.length];
+        // Fetch one of the permissions from the lock
+        bytes32 roleIdPermission = permissions[uint(seed_) % permissions.length];
 
         // Check that event is emitted
         vm.expectEmit(true, true, true, true);
-        emit IAuthorizer_v1.KeyRemoved(target, selector, keyRoleId);
+        emit IAuthorizer_v1.AccessPermissionRemoved(
+            target, selector, roleIdPermission
+        );
 
-        // Remove key from function lock
+        // Remove permission from function lock
         vm.prank(_initialAdmin);
-        _authSuT.removeKey(target, selector, keyRoleId);
+        _authSuT.removeAccessPermission(target, selector, roleIdPermission);
 
-        // Fetch key array for comparison
-        bytes32[] memory keysAfter = _authSuT.getFunctionKeys(target, selector);
+        // Fetch permission array for comparison
+        bytes32[] memory permissionsAfter =
+            _authSuT.getPermissions(target, selector);
 
         // Check that array length is one less
-        assertEq(keys.length - 1, keysAfter.length);
+        assertEq(permissions.length - 1, permissionsAfter.length);
 
-        // Check that key is not in the restiction
-        assertFalse(_authSuT.isFunctionKey(target, selector, keyRoleId));
+        // Check that roleId is not permissioned
+        assertFalse(_authSuT.isPermissioned(target, selector, roleIdPermission));
     }
 
     // ------------------------------------------------------------------------
@@ -595,7 +616,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // Check that members_ is reasonably sized
         vm.assume(members_.length < 2500);
 
-        // Create random number of keys between 0 and half uint max
+        // Create random number of permissions between 0 and half uint max
         _authSuT.changeRoleIdCounter(bound(seed_, 0, type(uint).max / 2));
 
         uint currentRoleIdCounter = _authSuT.getRoleIdCounter();
@@ -678,27 +699,29 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // Mutating - Mixed Utility
 
     /*
-    Test: createRoleAndAddKeys
+    Test: createRoleAndAddAccessPermissions
     ├── Given: Caller does not inhabit the default admin role
-    │   └── When: createRoleAndAddKeys is called
+    │   └── When: createRoleAndAddAccessPermissions is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
     ├── And: The given roleId is not existing
-    │   └── When: createRoleAndAddKeys is called
+    │   └── When: createRoleAndAddAccessPermissions is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
     ├── And: The given roleId is existing
     ├── And: The given targets array and the selectors array do not have the same length
-    │   └── When: createRoleAndAddKeys is called
+    │   └── When: createRoleAndAddAccessPermissions is called
     │       └── Then: Then it should revert
     ├── Given: Caller inhabits the default admin role
     ├── And: The given roleId is existing
     └── And: The given targets array and the selectors array have the same length
-        └── When: createRoleAndAddKeys is called
+        └── When: createRoleAndAddAccessPermissions is called
             └── Then: The role is created
-            └── And: The keys are added to the according function locks
+            └── And: The permissions are added to the according function locks
     */
-    function testCreateRoleAndAddKeys_ModifierInPositionCheck() public {
+    function testCreateRoleAndAddAccessPermissions_ModifierInPositionCheck()
+        public
+    {
         //onlyRole(DEFAULT_ADMIN_ROLE)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -707,7 +730,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
                 _authSuT.DEFAULT_ADMIN_ROLE()
             )
         );
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "RoleName",
             bytes32(uint(0)),
             new address[](0),
@@ -722,7 +745,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "RoleName",
             bytes32(uint(2)),
             new address[](0),
@@ -731,7 +754,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         );
     }
 
-    function testCreateRoleAndAddKeys_RevertWhenArrayLengthsAreDifferent(
+    function testCreateRoleAndAddAccessPermissions_RevertWhenArrayLengthsAreDifferent(
         address[] memory targets_,
         bytes4[][] memory selectors_
     ) public {
@@ -745,14 +768,14 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "RoleName", bytes32(uint(0)), new address[](0), targets_, selectors_
         );
     }
 
     //@note This test alone takes up as much time as the others combined. Restricted the number of runs to 20
     /// forge-config: default.fuzz.runs = 20
-    function testCreateRoleAndAddKeys_IdExisting(
+    function testCreateRoleAndAddAccessPermissions_IdExisting(
         string memory roleName_,
         address[] memory initialMembers_,
         address[] memory targets_,
@@ -782,16 +805,16 @@ contract AUT_Roles_v1_Test is ModuleTest {
         emit IAuthorizer_v1.RoleCreated(bytes32(uint(2)), roleName_);
 
         vm.prank(_initialAdmin);
-        bytes32 roleId = _authSuT.createRoleAndAddKeys(
+        bytes32 roleId = _authSuT.createRoleAndAddAccessPermissions(
             roleName_, bytes32(0), initialMembers_, targets_, selectors_
         );
 
-        // Check that the keys are added to the function locks
+        // Check that the permissions are added to the function locks
         uint targetLength = targets_.length;
         for (uint i = 0; i < targetLength; i++) {
             for (uint j = 0; j < selectors_[i].length; j++) {
                 assertTrue(
-                    _authSuT.isFunctionKey(
+                    _authSuT.isPermissioned(
                         targets_[i], selectors_[i][j], roleId
                     )
                 );
@@ -932,7 +955,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     // Bob and Alice can Access selctor1
     // Alice can access selector2
-    // No keys in selector3
+    // No permissions in selector3
     // Public Role can access selector46("selector4()"));
     function createSetup(address target_) internal {
         vm.startPrank(_initialAdmin);
@@ -957,7 +980,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         selector1Array2D[0] = _selector1;
         selectorArray[0] = selector1Array2D;
 
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "Selector1Role",
             _authSuT.getAdminRole(),
             selector1Members,
@@ -970,7 +993,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         selector2Array2D[0] = _selector2;
         selectorArray[0] = selector2Array2D;
 
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "Selector2Role",
             _authSuT.getAdminRole(),
             selector2Members,
@@ -983,7 +1006,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         selector3Array2D[0] = _selector3;
         selectorArray[0] = selector3Array2D;
 
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "Selector3Role",
             _authSuT.getAdminRole(),
             selector3Members,
@@ -996,7 +1019,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         selector4Array2D[0] = _selector4;
         selectorArray[0] = selector4Array2D;
 
-        _authSuT.createRoleAndAddKeys(
+        _authSuT.createRoleAndAddAccessPermissions(
             "Selector4Role",
             _authSuT.getAdminRole(),
             selector4Members,
@@ -1004,7 +1027,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
             selectorArray
         );
 
-        _authSuT.addKey(target_, _selector4, _authSuT.PUBLIC_ROLE());
+        _authSuT.addAccessPermission(
+            target_, _selector4, _authSuT.PUBLIC_ROLE()
+        );
 
         vm.stopPrank();
     }
@@ -1044,34 +1069,34 @@ contract AUT_Roles_v1_Test is ModuleTest {
         }
     }
 
-    /// @dev needs all keys to be unlocked via _authSuT.changeRoleIdCounter(type(uint).max);
-    function createRandomLockRestrictions(uint seed_, uint minimumKeyLength_)
-        internal
-        returns (address target_, bytes4 selector_)
-    {
+    /// @dev needs all permissions to be unlocked via _authSuT.changeRoleIdCounter(type(uint).max);
+    function createRandomLockRestrictions(
+        uint seed_,
+        uint minimumPermissionLength_
+    ) internal returns (address target_, bytes4 selector_) {
         target_ = address(uint160(seed_));
         selector_ = bytes4(bytes32(seed_));
 
-        uint keyLength = seed_ % 50;
-        if (keyLength <= minimumKeyLength_) {
-            keyLength = minimumKeyLength_;
+        uint permissionLength = seed_ % 50;
+        if (permissionLength <= minimumPermissionLength_) {
+            permissionLength = minimumPermissionLength_;
         }
-        uint currentKey = seed_;
-        for (uint i = 0; i < keyLength; i++) {
-            // Increment key in a non regular way
+        uint currentPermissionRoleId = seed_;
+        for (uint i = 0; i < permissionLength; i++) {
+            // Increment id in a non regular way
             unchecked {
-                currentKey = currentKey + i * i;
+                currentPermissionRoleId = currentPermissionRoleId + i * i;
             }
-            // Key cannot be Default Admin Role
-            if (currentKey == 0) {
-                currentKey = 1;
+            // Permission cannot be for the Default Admin Role
+            if (currentPermissionRoleId == 0) {
+                currentPermissionRoleId = 1;
             }
-            // Key cannot be Public Role
-            if (currentKey == type(uint).max) {
-                currentKey = type(uint).max - 1;
+            // Permission cannot be for the Public Role
+            if (currentPermissionRoleId == type(uint).max) {
+                currentPermissionRoleId = type(uint).max - 1;
             }
             vm.prank(_initialAdmin);
-            _authSuT.addKey(target_, selector_, bytes32(uint(1)));
+            _authSuT.addAccessPermission(target_, selector_, bytes32(uint(1)));
         }
     }
 }
