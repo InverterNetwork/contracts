@@ -478,7 +478,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             order.order_.paymentToken,
             order.client_,
             _cancelledOrdersTreasury,
-            order.order_.amount
+            order.order_.amount,
+            false // don't collect protocol fee when cancelling order
         );
     }
 
@@ -536,7 +537,8 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             order_.order_.paymentToken,
             order_.client_,
             order_.order_.recipient,
-            order_.order_.amount
+            order_.order_.amount,
+            true // collect protocol fee when processing order
         );
 
         // Update order state based on transfer success
@@ -600,17 +602,21 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @param	client_ The client address.
     /// @param	recipient_ The recipient address.
     /// @param	amount_ The amount to transfer.
+    /// @param	collectProtocolFee_ Whether to collect the protocol fee.
     /// @return	success_ True if the transfer was successful.
     function _tryPaymentTransfer(
         address token_,
         address client_,
         address recipient_,
-        uint amount_
+        uint amount_,
+        bool collectProtocolFee_
     ) internal virtual returns (bool success_) {
         // Get the protocol fee amount, net amount and treasury address to sent the fee.
         (uint protocolFeeAmount, uint netAmount, address treasury_) =
         _getProtocolFeeDetails(
-            amount_, bytes4(keccak256(bytes("processPayments(address)")))
+            amount_,
+            bytes4(keccak256(bytes("processPayments(address)"))),
+            collectProtocolFee_
         );
 
         // Try direct transfer to recipient
@@ -1023,21 +1029,34 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
     /// @notice Calculates the protocol fee amount, net amount and identifies the
     ///         treasury address for a given function.
-    /// @dev    Retrieves the fee percentage and treasury address for the specified
-    ///         function selector, then calculates the actual fee amount based on
-    ///         the provided total amount.
+    /// @dev    Given the collectProtocolFee flag is true, retrieves the fee
+    ///         percentage and treasury address for the specified function
+    ///         selector, then calculates the actual fee amount based on the
+    ///         provided total amount. If the flag is false, it returns 0 for
+    ///         the fee amount and net amount is equal to total amount.
     /// @param  totalAmount_ The base amount on which to calculate the fee.
     /// @param  functionSelector_ The function selector used to look up the
     ///         appropriate fee data.
+    /// @param  collectProtocolFee_ Whether to collect the protocol fee.
     /// @return feeAmount_ The calculated protocol fee amount.
     /// @return netAmount_ The net amount after deducting the protocol fee.
     /// @return treasury_ The treasury address where the fee should be sent.
-    function _getProtocolFeeDetails(uint totalAmount_, bytes4 functionSelector_)
+    function _getProtocolFeeDetails(
+        uint totalAmount_,
+        bytes4 functionSelector_,
+        bool collectProtocolFee_
+    )
         internal
         view
         virtual
         returns (uint feeAmount_, uint netAmount_, address treasury_)
     {
+        // If protocol fee is not collected, return 0 fee amount and
+        // net amount equal to total amount.
+        if (!collectProtocolFee_) {
+            return (0, totalAmount_, address(0));
+        }
+
         // Get the fee percentage and treasury address for the specified function selector.
         (uint protocolFeePercentage, address treasuryAddress_) =
             _getFeeManagerCollateralFeeData(functionSelector_);
@@ -1051,10 +1070,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         // Calculate protocol fee amount if applicable
         if (protocolFeePercentage > 0) {
             feeAmount_ = totalAmount_ * protocolFeePercentage / BPS;
-            // Revert if calculated protocol fee amount rounded down to zero
-            if (feeAmount_ == 0) {
-                revert Module__PP_Queue_InvalidFeeAmount(feeAmount_);
-            }
         }
 
         // Calculate the net amount after deducting the protocol fee.
