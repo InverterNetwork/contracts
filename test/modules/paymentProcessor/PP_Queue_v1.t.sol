@@ -604,7 +604,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         helper_setupPaymentTokenBalanceAndApproval(amount_);
         uint orderId_ =
@@ -645,7 +645,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         amount_ = uint96(bound(uint(amount_), 1, 1e30));
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         helper_setupPaymentTokenBalanceAndApproval(amount_);
 
@@ -795,7 +795,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         helper_setupPaymentTokenBalanceAndApproval(amount_);
         uint orderId_ =
@@ -822,7 +822,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             uint96 amount_ = 100;
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order =
-                _createTestPaymentOrder(recipient_, amount_, i_ + 1);
+                helper_createTestPaymentOrder(recipient_, amount_, i_ + 1);
 
             helper_setupPaymentTokenBalanceAndApproval(amount_);
 
@@ -1513,7 +1513,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         // Setup tokens using helper
         helper_setupPaymentTokenBalanceAndApproval(amount_);
@@ -1571,7 +1571,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         // Setup tokens using helper
         helper_setupPaymentTokenBalanceAndApproval(amount_);
@@ -1804,7 +1804,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         helper_setupPaymentTokenBalanceAndApproval(amount_);
         uint orderId_ =
@@ -1840,7 +1840,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         helper_setupPaymentTokenBalanceAndApproval(amount_);
         uint orderId_ =
@@ -2140,7 +2140,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         _token.mint(address(paymentClient), amount_ * 2);
 
@@ -2668,7 +2668,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount = 1000;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory orders =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1);
         // Setup initial state
         _token.mint(address(paymentClient), amount);
         paymentClient.exposed_addToOutstandingTokenAmounts(
@@ -2728,7 +2728,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount = 1000;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory orders =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1);
 
         // Setup initial state
         _token.mint(address(paymentClient), amount);
@@ -2796,7 +2796,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         _token.mint(address(paymentClient), amount_ * 2);
 
@@ -2841,7 +2841,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+            helper_createTestPaymentOrder(recipient_, amount_, 1);
 
         _token.mint(address(paymentClient), amount_ * 2);
 
@@ -2980,7 +2980,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
         IERC20PaymentClientBase_v2.PaymentOrder memory validOrder =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1);
 
         assertTrue(
             queue.validPaymentOrder(validOrder),
@@ -2988,14 +2988,14 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         IERC20PaymentClientBase_v2.PaymentOrder memory invalidOrder =
-            _createTestPaymentOrder(address(0), amount, 1);
+            helper_createTestPaymentOrder(address(0), amount, 1);
 
         assertFalse(
             queue.validPaymentOrder(invalidOrder),
             "Payment order with zero address recipient should return false"
         );
 
-        invalidOrder = _createTestPaymentOrder(recipient, 0, 1);
+        invalidOrder = helper_createTestPaymentOrder(recipient, 0, 1);
 
         assertFalse(
             queue.validPaymentOrder(invalidOrder),
@@ -3490,7 +3490,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Now add it as unclaimable
         queue.exposed_addUnclaimableOrder(
-            _createTestPaymentOrder(recipient, amount, 1),
+            helper_createTestPaymentOrder(recipient, amount, 1),
             address(paymentClient)
         );
 
@@ -3546,7 +3546,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             helper__encodePaymentOrderData(1);
 
         IERC20PaymentClientBase_v2.PaymentOrder memory validOrder =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1);
 
         assertTrue(
             queue.exposed_validPaymentOrder(validOrder),
@@ -3557,7 +3557,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     // ================================================================================
     // Helper Functions
 
-    function _createTestPaymentOrder(
+    function helper_createTestPaymentOrder(
         address recipient,
         uint96 amount,
         uint orderNum
