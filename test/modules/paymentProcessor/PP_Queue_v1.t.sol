@@ -3097,15 +3097,10 @@ contract PP_Queue_v1_Test is ModuleTest {
                 └── Then zero chain ID should return false
     */
 
-    function testValidChainId_GivenValidAndInvalidIds(uint chainId_) public {
-        // Bound the chainId to a reasonable range to avoid overflow
+    function testInternalValidChainId_RevertsGivenInvalidIds(uint chainId_)
+        public
+    {
         chainId_ = bound(chainId_, 0, type(uint128).max);
-
-        // Test current chain ID
-        assertTrue(
-            queue.exposed_validChainId(block.chainid),
-            "Current chain ID should be valid"
-        );
 
         // Test different chain ID
         vm.assume(chainId_ != block.chainid);
@@ -3120,6 +3115,19 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
+    /* Test testValidChainId_GivenInvalidChainId()
+        └── Given an invalid chain ID
+            └── When validating the chain ID
+                └── Then it should revert
+    */
+    function testInternalValidChainId_worksGivenValidChainId() public {
+        // Test current chain ID
+        assertTrue(
+            queue.exposed_validChainId(block.chainid),
+            "Current chain ID should be valid"
+        );
+    }
+
     /* Test testLowLevelTransfer_GivenValidInputs()
         └── Given valid transfer inputs
             └── When performing low level transfer
@@ -3128,7 +3136,7 @@ contract PP_Queue_v1_Test is ModuleTest {
                 ├── Then non-contract token should fail
                 └── Then zero address token should fail
     */
-    function testLowLevelTransfer_GivenValidInputs() public {
+    function testInternalLowLevelTransfer_worksGivenValidInputs() public {
         // Setup
         address client = makeAddr("client");
         address recipient = makeAddr("recipient");
@@ -3176,7 +3184,7 @@ contract PP_Queue_v1_Test is ModuleTest {
                 ├── Then non-ERC20 contract should fail
                 └── Then invalid transfer contract should fail
     */
-    function testLowLevelTransfer_GivenInvalidToken() public {
+    function testInternalLowLevelTransfer_RevertsGivenInvalidToken() public {
         // Setup
         address client = makeAddr("client");
         address recipient = makeAddr("recipient");
@@ -3204,9 +3212,6 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    // ================================================================================
-    // Test Ensure Valid Client
-
     /* Test testEnsureValidClient_GivenValidClient()
         └── Given a valid client address that is:
             ├── Not address(0)
@@ -3215,7 +3220,9 @@ contract PP_Queue_v1_Test is ModuleTest {
                 └── When caller is the client
                     └── Then it should succeed
     */
-    function testEnsureValidClient_GivenValidClient(address client_) public {
+    function testInternalEnsureValidClient_worksGivenValidClient(
+        address client_
+    ) public {
         vm.assume(client_ != address(0));
         vm.assume(client_ != address(queue));
         vm.assume(client_ != address(_orchestrator));
@@ -3231,7 +3238,7 @@ contract PP_Queue_v1_Test is ModuleTest {
                 ├── Then it should revert with Module__PP_Queue_InvalidClientAddress for zero address
                 └── Then it should revert with Module__PP_Queue_InvalidClientAddress for queue address
     */
-    function testEnsureValidClient_RevertGivenInvalidClient() public {
+    function testInternalEnsureValidClient_RevertGivenInvalidClient() public {
         vm.expectRevert();
         queue.exposed_ensureValidClient(address(0));
 
@@ -3245,7 +3252,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When caller is not the client
                 └── Then it should revert with Module__PP_Queue_OnlyCallableByClient
     */
-    function testEnsureValidClient_RevertGivenNonClientCaller(
+    function testInternalEnsureValidClient_RevertGivenNonClientCaller(
         address client_,
         address caller_
     ) public {
@@ -3267,7 +3274,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When setting the canceled orders treasury
                 └── Then it should be set correctly
     */
-    function testSetCanceledOrdersTreasury_GivenValidAddress() public {
+    function testInternalSetCanceledOrdersTreasury_worksGivenValidAddress()
+        public
+    {
         address newTreasury = makeAddr("newTreasury");
 
         queue.exposed_setCanceledOrdersTreasury(newTreasury);
@@ -3285,7 +3294,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When setting the canceled orders treasury
                 └── Then it should revert
     */
-    function testSetCanceledOrdersTreasury_RevertGivenZeroAddress() public {
+    function testInternalSetCanceledOrdersTreasury_RevertGivenZeroAddress()
+        public
+    {
         vm.expectRevert(
             abi.encodeWithSignature(
                 "Module__PP_Queue_InvalidTreasuryAddress(address)", address(0)
@@ -3299,7 +3310,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When setting the failed orders treasury
                 └── Then it should be set correctly
     */
-    function testSetFailedOrdersTreasury_GivenValidAddress() public {
+    function testInternalSetFailedOrdersTreasury_worksGivenValidAddress()
+        public
+    {
         address newTreasury = makeAddr("newTreasury");
 
         queue.exposed_setFailedOrdersTreasury(newTreasury);
@@ -3317,7 +3330,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When setting the failed orders treasury
                 └── Then it should revert
     */
-    function testSetFailedOrdersTreasury_RevertGivenZeroAddress() public {
+    function testInternalSetFailedOrdersTreasury_RevertGivenZeroAddress()
+        public
+    {
         vm.expectRevert(
             abi.encodeWithSignature(
                 "Module__PP_Queue_InvalidTreasuryAddress(address)", address(0)
@@ -3331,7 +3346,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And the token is not address(0)
                 └── Then it should return true
     */
-    function testEnsureValidPaymentToken_SucceedsGivenValidToken() public {
+    function testInternalEnsureValidPaymentToken_worksGivenValidToken()
+        public
+    {
         assertTrue(queue.exposed_validPaymentToken(address(_token)));
     }
 
@@ -3340,7 +3357,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When ensuring valid payment token
                 └── Then it should revert
     */
-    function testEnsureValidPaymentToken_RevertGivenInvalidToken() public {
+    function testInternalEnsureValidPaymentToken_RevertGivenInvalidToken()
+        public
+    {
         assertFalse(queue.exposed_validPaymentToken(address(0)));
     }
 
@@ -3349,7 +3368,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And data array with order ID
                 └── Then it should return true
     */
-    function testValidateFlagsAndData_SucceedsGivenValidFlagsAndData() public {
+    function testInternalValidateFlagsAndData_worksGivenValidFlagsAndData()
+        public
+    {
         bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
         bytes32[] memory data = new bytes32[](1);
         data[0] = bytes32(uint(123)); // Some order ID
@@ -3362,7 +3383,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And empty data array
                 └── Then it should return true
     */
-    function testValidateFlagsAndData_SucceedsGivenValidFlagsWithoutData()
+    function testInternalValidateFlagsAndData_worksGivenValidFlagsWithoutData()
         public
     {
         bytes32 flags = bytes32(uint(0)); // No bits set
@@ -3376,7 +3397,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And empty data array
                 └── Then it should return false
     */
-    function testValidateFlagsAndData_FailsGivenInvalidFlagsWithData() public {
+    function testInternalValidateFlagsAndData_FailsGivenInvalidFlagsWithData()
+        public
+    {
         bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
         bytes32[] memory data = new bytes32[](0); // Empty data array
 
@@ -3388,9 +3411,8 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── And empty data array
                 └── Then it should return false
     */
-    function testValidateFlagsAndData_FailsGivenInvalidFlagsWithoutData()
-        public
-    {
+    function testInternalValidateFlagsAndData_FailsGivenInvalidFlagsWithoutData(
+    ) public {
         bytes32 flags = bytes32(uint(2)); // Set invalid bit
         bytes32[] memory data = new bytes32[](0);
 
@@ -3402,7 +3424,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When validating the state transition
                 └── Then it should revert with Module__PP_Queue_InvalidStateTransition
     */
-    function testValidStateTransition_RevertGivenInvalidTransition() public {
+    function testInternalValidStateTransition_RevertGivenInvalidTransition()
+        public
+    {
         vm.expectRevert(
             abi.encodeWithSignature(
                 "Module__PP_Queue_InvalidStateTransition(uint256,uint8,uint8)",
@@ -3423,7 +3447,9 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When validating the state transitions
                 └── Then they should succeed
     */
-    function testValidStateTransition_SucceedsGivenValidTransitions() public {
+    function testInternalValidStateTransition_worksGivenValidTransitions()
+        public
+    {
         // PENDING -> PROCESSED
         queue.exposed_validStateTransition(
             1,
@@ -3451,9 +3477,8 @@ contract PP_Queue_v1_Test is ModuleTest {
             └── When attempting to claim previously unclaimable amount
                 └── Then it should revert with Module__PP_Queue_NoUnclaimableAmount
     */
-    function testClaimPreviouslyUnclaimable_RevertGivenNoUnclaimableAmount()
-        public
-    {
+    function testInternalClaimPreviouslyUnclaimable_RevertGivenNoUnclaimableAmount(
+    ) public {
         address recipient = makeAddr("recipient");
 
         queue.exposed_claimPreviouslyUnclaimable(
@@ -3471,9 +3496,8 @@ contract PP_Queue_v1_Test is ModuleTest {
                 └── Then it should succeed
     */
 
-    function testClaimPreviouslyUnclaimable_SucceedsGivenUnclaimableAmount()
-        public
-    {
+    function testInternalClaimPreviouslyUnclaimable_worksGivenUnclaimableAmount(
+    ) public {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
 
@@ -3511,7 +3535,9 @@ contract PP_Queue_v1_Test is ModuleTest {
                 └── Then it should revert with Module__PP_Queue_InvalidTargetChain
     */
 
-    function test_validPaymentOrder_failsWithInvalidTargetChain() public {
+    function testInternalValidPaymentOrder_failsWithInvalidTargetChain()
+        public
+    {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
         (bytes32 flags, bytes32[] memory data) =
@@ -3539,7 +3565,7 @@ contract PP_Queue_v1_Test is ModuleTest {
                 └── Then it should return true
     */
 
-    function test_validPaymentOrder_succeedsWithValidOrder() public {
+    function testInternalValidPaymentOrder_succeedsWithValidOrder() public {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
         (bytes32 flags, bytes32[] memory data) =
@@ -3558,15 +3584,15 @@ contract PP_Queue_v1_Test is ModuleTest {
     // Helper Functions
 
     function helper_createTestPaymentOrder(
-        address recipient,
-        uint96 amount,
-        uint orderNum
+        address recipient_,
+        uint96 amount_,
+        uint orderNum_
     ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
         (bytes32 flags, bytes32[] memory data) =
-            helper__encodePaymentOrderData(orderNum);
+            helper__encodePaymentOrderData(orderNum_);
         return IERC20PaymentClientBase_v2.PaymentOrder({
-            recipient: recipient,
-            amount: amount,
+            recipient: recipient_,
+            amount: amount_,
             paymentToken: address(_token),
             originChainId: block.chainid,
             targetChainId: block.chainid,
@@ -3575,34 +3601,34 @@ contract PP_Queue_v1_Test is ModuleTest {
         });
     }
 
-    function helper_setupPaymentTokenBalanceAndApproval(uint96 amount)
+    function helper_setupPaymentTokenBalanceAndApproval(uint96 amount_)
         internal
     {
-        _token.mint(address(paymentClient), amount);
+        _token.mint(address(paymentClient), amount_);
         paymentClient.exposed_addToOutstandingTokenAmounts(
-            address(_token), amount
+            address(_token), amount_
         );
         vm.prank(address(paymentClient));
-        _token.approve(address(queue), amount);
+        _token.approve(address(queue), amount_);
     }
 
     function helper_assertOrderMatch(
-        uint orderId,
-        address client,
-        address expectedRecipient,
-        uint expectedAmount,
-        IPP_Queue_v1.RedemptionState expectedState
+        uint orderId_,
+        address client_,
+        address expectedRecipient_,
+        uint96 expectedAmount_,
+        IPP_Queue_v1.RedemptionState expectedState_
     ) internal {
         IPP_Queue_v1.QueuedOrder memory queuedOrder =
-            queue.getOrder(orderId, IERC20PaymentClientBase_v2(client));
+            queue.getOrder(orderId_, IERC20PaymentClientBase_v2(client_));
         assertEq(
-            queuedOrder.order_.recipient, expectedRecipient, "Wrong recipient"
+            queuedOrder.order_.recipient, expectedRecipient_, "Wrong recipient"
         );
-        assertEq(queuedOrder.order_.amount, expectedAmount, "Wrong amount");
+        assertEq(queuedOrder.order_.amount, expectedAmount_, "Wrong amount");
         assertEq(
             queuedOrder.order_.paymentToken, address(_token), "Wrong token"
         );
-        assertEq(uint(queuedOrder.state_), uint(expectedState), "Wrong state");
+        assertEq(uint(queuedOrder.state_), uint(expectedState_), "Wrong state");
     }
 
     function helper__encodePaymentOrderData(uint orderId_)
