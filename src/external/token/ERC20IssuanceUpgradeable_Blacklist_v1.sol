@@ -150,13 +150,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
         virtual
         onlyBlacklistManager
     {
-        if (account_ == address(0)) {
-            revert ERC20Issuance_Blacklist_ZeroAddress();
-        }
-        if (!isBlacklisted(account_)) {
-            _blacklist[account_] = true;
-            emit AddedToBlacklist(account_, _msgSender());
-        }
+        _addToBlacklist(account_);
     }
 
     /// @inheritdoc IERC20Issuance_Blacklist_v1
@@ -165,16 +159,14 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
         virtual
         onlyBlacklistManager
     {
-        if (isBlacklisted(account_)) {
-            _blacklist[account_] = false;
-            emit RemovedFromBlacklist(account_, _msgSender());
-        }
+        _removeFromBlacklist(account_);
     }
 
     /// @inheritdoc IERC20Issuance_Blacklist_v1
     function addToBlacklistBatched(address[] memory accounts_)
         external
         virtual
+        onlyBlacklistManager
     {
         uint totalAccounts = accounts_.length;
         if (totalAccounts > BATCH_LIMIT) {
@@ -183,7 +175,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
             );
         }
         for (uint i; i < totalAccounts; ++i) {
-            addToBlacklist(accounts_[i]);
+            _addToBlacklist(accounts_[i]);
         }
     }
 
@@ -191,6 +183,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     function removeFromBlacklistBatched(address[] memory accounts_)
         external
         virtual
+        onlyBlacklistManager
     {
         uint totalAccounts = accounts_.length;
         if (totalAccounts > BATCH_LIMIT) {
@@ -199,7 +192,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
             );
         }
         for (uint i; i < totalAccounts; ++i) {
-            removeFromBlacklist(accounts_[i]);
+            _removeFromBlacklist(accounts_[i]);
         }
     }
 
@@ -260,5 +253,33 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
         returns (bool)
     {
         return _blacklistManager[manager_];
+    }
+
+    /// @notice Internal function to add an address to the blacklist.
+    /// @dev    This function only updates the blacklist state if the address is
+    ///         not already blacklisted to prevent unnecessary state changes.
+    /// @param  account_ Address to add to the blacklist.
+    function _addToBlacklist(address account_) internal virtual {
+        if (account_ == address(0)) {
+            revert ERC20Issuance_Blacklist_ZeroAddress();
+        }
+        if (!isBlacklisted(account_)) {
+            _blacklist[account_] = true;
+            emit AddedToBlacklist(account_, _msgSender());
+        }
+    }
+
+    /// @notice Internal function to remove an address from the blacklist.
+    /// @dev    This function only updates the blacklist state if the address is
+    ///         currently blacklisted to prevent unnecessary state changes.
+    /// @param  account_ Address to remove from the blacklist.
+    function _removeFromBlacklist(address account_) internal virtual {
+        if (account_ == address(0)) {
+            revert ERC20Issuance_Blacklist_ZeroAddress();
+        }
+        if (isBlacklisted(account_)) {
+            _blacklist[account_] = false;
+            emit RemovedFromBlacklist(account_, _msgSender());
+        }
     }
 }
