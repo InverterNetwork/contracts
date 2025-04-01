@@ -59,7 +59,9 @@ contract CrossChainBase_v1_Test is ModuleTest {
             └── When _executeBridgeTransfer is called
                 └── Then it should return an empty bytes array
      */
-    function testInternalExecuteBridgeTransfer_worksGivenImplemented() public {
+    function testInternalExecuteBridgeTransfer_succeedsGivenImplemented()
+        public
+    {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: address(0),
@@ -83,7 +85,7 @@ contract CrossChainBase_v1_Test is ModuleTest {
      */
     // @note naming of tests
     // fuzz test
-    function testGetBridgeData_worksGivenValidData(
+    function testInternalGetBridgeData_succeedsGivenValidData(
         uint paymentId,
         bytes memory data
     ) public {
@@ -103,7 +105,9 @@ contract CrossChainBase_v1_Test is ModuleTest {
             └── When getBridgeData is called with that payment ID
                 └── Then it should return empty bytes
      */
-    function testGetBridgeData_worksGivenNoData(uint paymentId) public {
+    function testInternalGetBridgeData_succeedsGivenNoData(uint paymentId)
+        public
+    {
         vm.assume(paymentId != 0);
         bytes memory retrievedData = CrossChainBase.getBridgeData(paymentId);
         assertEq(retrievedData, "");
