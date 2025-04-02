@@ -114,7 +114,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _setUpOrchestrator(fundingPot);
 
         // Initiate the Logic Module with the metadata and config data
-        fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
+        fundingPot.init(
+            _orchestrator, _METADATA, abi.encode(address(fundingPotToken))
+        );
 
         _authorizer.setIsAuthorized(address(this), true);
 
