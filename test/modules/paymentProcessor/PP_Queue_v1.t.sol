@@ -2130,7 +2130,8 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(nonStandardToken),
             address(paymentClient),
             invalidRecipient_,
-            amount_
+            amount_,
+            false // don't collect protocol fee when cancelling
         );
 
         // Assert post-conditions
@@ -2158,7 +2159,8 @@ contract PP_Queue_v1_Test is ModuleTest {
 
     function testInternalTryPaymentTransfer_worksGivenAmountTransferredToRecipientAndReturnTrue(
         uint amount_,
-        uint protocolFee_
+        uint protocolFee_,
+        bool collectProtocolFee_
     ) public {
         // Setup
         address validRecipient_ = makeAddr("validRecipient");
@@ -2182,9 +2184,17 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
         // Get protocol treasury
         address protocolTreasury_ = feeManager.getDefaultProtocolTreasury();
-
-        uint protocolFeeAmount = amount_ * protocolFee_ / BPS;
-        uint netAmount = amount_ - protocolFeeAmount;
+        uint netAmount;
+        uint protocolFeeAmount;
+        // Calculate protocol fee amount and net amount
+        // based on if protocol fee is collected
+        if (collectProtocolFee_) {
+            protocolFeeAmount = amount_ * protocolFee_ / BPS;
+            netAmount = amount_ - protocolFeeAmount;
+        } else {
+            netAmount = amount_;
+            protocolFeeAmount = 0;
+        }
 
         // Assert pre-conditions
         assertEq(
@@ -2220,7 +2230,11 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
         // Test
         bool success_ = queue.exposed_tryPaymentTransfer(
-            address(_token), address(paymentClient), validRecipient_, amount_
+            address(_token),
+            address(paymentClient),
+            validRecipient_,
+            amount_,
+            collectProtocolFee_
         );
 
         // Assert post-conditions
@@ -3151,36 +3165,13 @@ contract PP_Queue_v1_Test is ModuleTest {
 
     /* Test: Function _getProtocolFeeDetails()
         └── Given valid protocol fee amount
-            ├── And total amount is to low such that rounding results in zero fee amount
+            ├── And the collectProtocolFee flag is true
             │   └── When the function _getProtocolFeeDetails() is called
-            │       └── Then it should revert
-            └── And total fee amount is big enough
+            │       └── Then it should return the correct fee amount and treasury address
+            └── And the collectProtocolFee flag is false
                 └── When the function _getProtocolFeeDetails() is called
-                    └── Then it should return the correct fee amount and treasury address
+                    └── Then it should return 0 for the fee and total amount as net amount
     */
-
-    function testInternalGetProtocolFeeAmountAndTreasury_revertGivenRoundingResultInZeroFeeAmount(
-    ) public {
-        uint protocolFee = 100;
-        uint totalAmount = 1;
-
-        feeManager.setCollateralWorkflowFee(
-            address(_orchestrator),
-            address(queue),
-            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
-            true,
-            protocolFee
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module__PP_Queue_InvalidFeeAmount(uint256)", 0
-            )
-        );
-        queue.exposed_getProtocolFeeDetails(
-            totalAmount, PROCESS_PAYMENTS_FUNCTION_SELECTOR
-        );
-    }
 
     function testInternalGetProtocolFeeAmountAndTreasury_worksGivenCorrectFeeDetailsRetrieved(
         uint protocolFee_,
@@ -3188,6 +3179,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     ) public {
         protocolFee_ = bound(protocolFee_, 1, feeManager.maxFee());
         totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
+        bool collectProtocolFee_ = true;
 
         feeManager.setCollateralWorkflowFee(
             address(_orchestrator),
@@ -3203,7 +3195,9 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         (uint feeAmount, uint netAmount, address treasury) = queue
             .exposed_getProtocolFeeDetails(
-            totalAmount_, PROCESS_PAYMENTS_FUNCTION_SELECTOR
+            totalAmount_,
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            collectProtocolFee_
         );
 
         assertEq(feeAmount, expectedFeeAmount, "Fee amount should be correct");
@@ -3211,6 +3205,24 @@ contract PP_Queue_v1_Test is ModuleTest {
             netAmount, totalAmount_ - feeAmount, "Net amount should be correct"
         );
         assertEq(treasury, expectedTreasury, "Treasury should be correct");
+    }
+
+    function testInternalGetProtocolFeeAmountAndTreasury_worksGivenNoFee(
+        uint totalAmount_
+    ) public {
+        totalAmount_ = bound(totalAmount_, 1e18, type(uint128).max);
+        bool collectProtocolFee_ = false;
+
+        (uint feeAmount, uint netAmount, address treasury) = queue
+            .exposed_getProtocolFeeDetails(
+            totalAmount_,
+            PROCESS_PAYMENTS_FUNCTION_SELECTOR,
+            collectProtocolFee_
+        );
+
+        assertEq(feeAmount, 0, "Fee amount should be 0");
+        assertEq(netAmount, totalAmount_, "Net amount should be correct");
+        assertEq(treasury, address(0), "Treasury should be 0 address");
     }
 
     /* Test testValidChainId_GivenValidAndInvalidIds()
