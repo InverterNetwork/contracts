@@ -123,34 +123,34 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     // Constants
 
     /// @notice    Flag position in the flags byte.
-    uint8 private constant FLAG_ORDER_ID = 0;
+    uint8 internal constant FLAG_ORDER_ID = 0;
 
     /// @notice Role identifier for queue operations.
     /// @dev    This role cancels payments in the queue.
-    bytes32 private constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
+    bytes32 internal constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
 
     /// @notice Role identifier for the admin authorized to assign the queue
     ///         operator role.
     /// @dev    This role should be set as the role admin for the
     ///         QUEUE_OPERATOR_ROLE within the Authorizer module.
-    bytes32 private constant QUEUE_OPERATOR_ROLE_ADMIN =
+    bytes32 internal constant QUEUE_OPERATOR_ROLE_ADMIN =
         "QUEUE_OPERATOR_ROLE_ADMIN";
 
     /// @notice BPS value.
-    uint private constant BPS = 10_000;
+    uint internal constant BPS = 10_000;
 
     // -------------------------------------------------------------------------
     // Storage
 
     /// @notice Queue of payment orders per client.
-    mapping(address client => LinkedIdList.List queue) private _queue;
+    mapping(address client => LinkedIdList.List queue) internal _queue;
 
     /// @notice Payment orders.
     mapping(address client => mapping(uint orderId => QueuedOrder order))
-        private _orders;
+        internal _orders;
 
     /// @notice Current order ID per client.
-    mapping(address client => uint currentOrderId) private _currentOrderId;
+    mapping(address client => uint currentOrderId) internal _currentOrderId;
 
     /// @notice Tracks all payments that could not be made to the
     ///         paymentReceiver.
@@ -160,13 +160,13 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
                 address token
                     => mapping(address receiver => uint unclaimableAmount)
             )
-    ) private _unclaimableAmountsForRecipient;
+    ) internal _unclaimableAmountsForRecipient;
 
     /// @notice Treasury address which receives the collateral of canceled orders.
-    address private _cancelledOrdersTreasury;
+    address internal _cancelledOrdersTreasury;
 
     /// @notice Treasury address which receives the collateral of failed orders.
-    address private _failedOrdersTreasury;
+    address internal _failedOrdersTreasury;
 
     // -------------------------------------------------------------------------
     // Modifiers
@@ -527,7 +527,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     ///         cases the order is removed from the queue.
     /// @param	orderId_ The ID of the order to process.
     /// @param	order_ The order to process.
-    function _executePaymentTransfer(uint orderId_, QueuedOrder storage order_)
+    function _executePaymentTransfer(uint orderId_, QueuedOrder memory order_)
         internal
         virtual
     {
