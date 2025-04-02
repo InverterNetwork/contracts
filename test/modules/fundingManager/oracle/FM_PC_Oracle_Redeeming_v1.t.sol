@@ -1259,6 +1259,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     ) public {
         // Setup
         vm.assume(recipient_ != address(0));
+        vm.assume(recipient_ != address(projectTreasury));
         vm.assume(amount_ > 0);
         _prepareBuyOrSellConditions(
             address(_token), amount_, recipient_, address(fundingManager)

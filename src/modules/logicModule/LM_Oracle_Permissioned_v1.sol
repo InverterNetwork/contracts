@@ -109,26 +109,27 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
 
     /// @notice Role identifier for accounts authorized to set prices.
     /// @dev    This role should be granted to trusted price feeders only.
-    bytes32 private constant PRICE_SETTER_ROLE = "PRICE_SETTER_ROLE";
+    bytes32 internal constant PRICE_SETTER_ROLE = "PRICE_SETTER_ROLE";
 
     /// @notice Role identifier for the admin authorized to assign the price
     ///         setter role.
     /// @dev    This role should be set as the role admin within the Authorizer
     ///         module.
-    bytes32 private constant PRICE_SETTER_ROLE_ADMIN = "PRICE_SETTER_ROLE_ADMIN";
+    bytes32 internal constant PRICE_SETTER_ROLE_ADMIN =
+        "PRICE_SETTER_ROLE_ADMIN";
 
     // -------------------------------------------------------------------------
     // State Variables
 
     /// @notice The price for issuing tokens (in collateral token decimals)
-    uint private _issuancePrice;
+    uint internal _issuancePrice;
 
     /// @notice The price for redeeming tokens (in collateral token decimals)
-    uint private _redemptionPrice;
+    uint internal _redemptionPrice;
 
     /// @notice Decimals of the collateral token (e.g., USDC with 6 decimals).
     /// @dev    This is the token used to pay/buy with.
-    uint8 private _collateralTokenDecimals;
+    uint8 internal _collateralTokenDecimals;
 
     // -------------------------------------------------------------------------
     // Initialization

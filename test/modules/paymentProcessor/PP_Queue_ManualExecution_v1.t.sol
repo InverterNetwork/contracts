@@ -19,7 +19,7 @@ import {
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 import {PP_Queue_v1_Exposed} from
-    "test/modules/paymentProcessor/utils/mocks/PP_Queue_v1_Exposed.sol";
+    "test/modules/paymentProcessor/PP_Queue_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
@@ -33,7 +33,7 @@ import {OZErrors} from "test/utils/errors/OZErrors.sol";
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
 import {PP_Queue_ManualExecution_v1_Exposed} from
-    "test/modules/paymentProcessor/utils/mocks/PP_Queue_ManualExecution_v1_Exposed.sol";
+    "test/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Exposed.sol";
 import {PP_Queue_v1_Test} from "./PP_Queue_v1.t.sol";
 
 contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
@@ -90,7 +90,7 @@ contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
         uint targetChainId = block.chainid;
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory orders =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient,
@@ -186,7 +186,7 @@ contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {
         uint targetChainId = block.chainid;
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({

@@ -20,7 +20,7 @@ import {
     IOrchestrator_v1
 } from "test/modules/ModuleTest.sol";
 import {PP_Queue_v1_Exposed} from
-    "test/modules/paymentProcessor/utils/mocks/PP_Queue_v1_Exposed.sol";
+    "test/modules/paymentProcessor/PP_Queue_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
@@ -173,7 +173,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         _authorizer.setIsAuthorized(address(queue), true);
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -189,7 +189,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         paymentClient.addPaymentOrderUnchecked(order);
 
         // Setup tokens using our new helper
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
 
         vm.prank(address(paymentClient));
         uint orderId =
@@ -203,7 +203,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         // Verify order details
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId,
             address(paymentClient),
             recipient_,
@@ -475,7 +475,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: makeAddr("recipient"),
@@ -536,7 +536,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         for (uint8 i = 0; i < numOrders_; i++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper_encodePaymentOrderData(i + 1);
+                helper__encodePaymentOrderData(i + 1);
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
                 recipient: makeAddr(string.concat("recipient", vm.toString(i))),
@@ -604,13 +604,13 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
         uint orderId_ =
             queue.exposed_addPaymentOrderToQueue(order, address(this));
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId_,
             address(this),
             recipient_,
@@ -645,15 +645,15 @@ contract PP_Queue_v1_Test is ModuleTest {
         amount_ = uint96(bound(uint(amount_), 1, 1e30));
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
 
         vm.prank(address(paymentClient));
         uint orderId_ =
             queue.exposed_addPaymentOrderToQueue(order, address(paymentClient));
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId_,
             address(paymentClient),
             recipient_,
@@ -691,7 +691,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -721,7 +721,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
         );
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId_,
             address(paymentClient),
             recipient_,
@@ -742,7 +742,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -766,7 +766,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
         queue.exposed_removeFromQueue(orderId_, address(paymentClient));
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId_,
             address(paymentClient),
             recipient_,
@@ -795,9 +795,9 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
         uint orderId_ =
             queue.exposed_addPaymentOrderToQueue(order, address(this));
 
@@ -822,9 +822,11 @@ contract PP_Queue_v1_Test is ModuleTest {
             uint96 amount_ = 100;
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order =
-                _createTestPaymentOrder(recipient_, amount_, i_ + 1);
+            helper_createTestPaymentOrder(
+                recipient_, amount_, i_ + 1, address(_token)
+            );
 
-            _setupPaymentTokenBalanceAndApproval(amount_);
+            helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
 
             vm.prank(address(paymentClient));
             orderIds_[i_] = queue.exposed_addPaymentOrderToQueue(
@@ -894,7 +896,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -956,7 +958,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -991,7 +993,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1019,7 +1021,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             firstOrderId_,
             "Head should be first order ID."
         );
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             firstOrderId_,
             address(paymentClient),
             recipient_,
@@ -1029,7 +1031,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1068,7 +1070,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1093,7 +1095,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1126,7 +1128,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Head should be second order ID."
         );
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             secondOrderId_,
             address(paymentClient),
             recipient_,
@@ -1146,7 +1148,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1171,7 +1173,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1235,7 +1237,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1270,7 +1272,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1293,7 +1295,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1321,7 +1323,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             lastOrderId_,
             "Tail should be last order ID."
         );
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             lastOrderId_,
             address(paymentClient),
             recipient_,
@@ -1341,7 +1343,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1366,7 +1368,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1399,7 +1401,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Tail should be last order ID."
         );
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             lastOrderId_,
             address(paymentClient),
             recipient_,
@@ -1419,7 +1421,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // First order
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1444,7 +1446,7 @@ contract PP_Queue_v1_Test is ModuleTest {
 
         // Second order with different flags/data
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1513,10 +1515,10 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
         // Setup tokens using helper
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
 
         vm.prank(address(paymentClient));
 
@@ -1536,7 +1538,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1559,6 +1561,127 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertFalse(success_, "Processing empty queue should fail.");
     }
 
+    /* Test: Function _executePaymentTransfer()
+        ├── Given the payment transfer succeeds
+        │   └── When the function _executePaymentTransfer() is called
+        │       ├── Then the order state is set to PROCESSED
+        │       └── And the order is removed from the queue
+        └── Given the payment transfer fails (receiver blacklisted)
+            └── When the function _executePaymentTransfer() is called
+                ├── Then the order state is set to FAILED
+                └── And the order is removed from the queue
+    */
+
+    function testInternalExecutePaymentTransfer_worksGivenStateIsProcessedAndRemovedFromQueue(
+        address recipient_,
+        uint96 amount_
+    ) public {
+        // Setup
+        recipient_ = helper_validPaymentReceiver(recipient_);
+        vm.assume(amount_ > 0);
+        uint queueId = 1;
+
+        // Create payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        helper_createTestPaymentOrder(
+            recipient_, amount_, queueId, address(_token)
+        );
+        // Mint tokens to payment client and approve PP Queue
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
+
+        // Get value for pre-assertions
+        uint orderId_ =
+            helper_addPaymentOrderToQueue(order, address(paymentClient));
+        uint queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
+        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+
+        // pre-assertions
+        assertEq(
+            uint(queuedOrder_.state_),
+            uint(IPP_Queue_v1.RedemptionState.PENDING)
+        );
+        assertEq(_token.balanceOf(recipient_), 0);
+        assertEq(queueSize_, 1);
+
+        // Test
+        queue.exposed_executePaymentTransfer(orderId_, queuedOrder_);
+
+        // Get values for post-assertions
+        queuedOrder_ = queue.getOrder(
+            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+        queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
+
+        // post-assertions
+        assertEq(
+            uint(queuedOrder_.state_),
+            uint(IPP_Queue_v1.RedemptionState.PROCESSED)
+        );
+        assertEq(_token.balanceOf(recipient_), amount_);
+        assertEq(queueSize_, 0);
+    }
+
+    function testInternalExecutePaymentTransfer_worksGivenStateIsFailedAndRemovedFromQueue(
+        address recipient_,
+        uint96 amount_
+    ) public {
+        // Setup
+        recipient_ = helper_validPaymentReceiver(recipient_);
+        vm.assume(amount_ > 0);
+        uint queueId = 1;
+
+        // Use non-standard token to blacklist recipient so the transfer state
+        // will be set to fail
+        NonStandardTokenMock nonStandardToken = new NonStandardTokenMock();
+        nonStandardToken.setFailTransferTo(recipient_);
+
+        // Create payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        helper_createTestPaymentOrder(
+            recipient_, amount_, queueId, address(nonStandardToken)
+        );
+        // Mint tokens to payment client and approve PP Queue
+        helper_setupPaymentTokenBalanceAndApproval(
+            amount_, ERC20Mock(address(nonStandardToken))
+        );
+
+        // Get value for pre-assertions
+        uint orderId_ =
+            helper_addPaymentOrderToQueue(order, address(paymentClient));
+        uint queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
+        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+
+        // pre-assertions
+        assertEq(
+            uint(queuedOrder_.state_),
+            uint(IPP_Queue_v1.RedemptionState.PENDING)
+        );
+        assertEq(nonStandardToken.balanceOf(recipient_), 0);
+        assertEq(nonStandardToken.balanceOf(address(paymentClient)), amount_);
+        assertEq(queueSize_, 1);
+
+        // Test
+        queue.exposed_executePaymentTransfer(orderId_, queuedOrder_);
+
+        // Get values for post-assertions
+        queuedOrder_ = queue.getOrder(
+            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+        queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
+
+        // post-assertions
+        assertEq(
+            uint(queuedOrder_.state_), uint(IPP_Queue_v1.RedemptionState.FAILED)
+        );
+        assertEq(nonStandardToken.balanceOf(recipient_), 0);
+        assertEq(nonStandardToken.balanceOf(address(queue)), amount_);
+        assertEq(queueSize_, 0);
+    }
+
     /* Test testExecutePaymentTransfer_GivenValidOrder()
         └── Given a valid payment order
             └── When executing transfer
@@ -1571,10 +1694,10 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
         // Setup tokens using helper
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
 
         // Add order to queue
         queue.exposed_addPaymentOrderToQueue(order, address(paymentClient));
@@ -1602,7 +1725,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(0);
+            helper__encodePaymentOrderData(0);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1636,7 +1759,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1683,7 +1806,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1731,7 +1854,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1766,7 +1889,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -1804,9 +1927,9 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
         uint orderId_ =
             queue.exposed_addPaymentOrderToQueue(order, address(paymentClient));
 
@@ -1840,9 +1963,9 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
-        _setupPaymentTokenBalanceAndApproval(amount_);
+        helper_setupPaymentTokenBalanceAndApproval(amount_, _token);
         uint orderId_ =
             queue.exposed_addPaymentOrderToQueue(order, address(paymentClient));
 
@@ -2008,7 +2131,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             address(paymentClient),
             invalidRecipient_,
             amount_,
-            false // don't collect protocol fee when cancelling order
+            false // don't collect protocol fee when cancelling
         );
 
         // Assert post-conditions
@@ -2154,7 +2277,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
         _token.mint(address(paymentClient), amount_ * 2);
 
@@ -2203,7 +2326,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Add orders to queue
         for (uint i_; i_ < 3; i_++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper_encodePaymentOrderData(i_ + 1);
+                helper__encodePaymentOrderData(i_ + 1);
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2277,7 +2400,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         // Add orders to queue
         for (uint i_; i_ < 3; i_++) {
             (bytes32 flags_, bytes32[] memory data_) =
-                helper_encodePaymentOrderData(i_ + 1);
+                helper__encodePaymentOrderData(i_ + 1);
 
             IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
             IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2318,7 +2441,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
@@ -2383,7 +2506,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2430,7 +2553,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         (bytes32 flags1_, bytes32[] memory data1_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order1_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2479,7 +2602,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         (bytes32 flags2_, bytes32[] memory data2_) =
-            helper_encodePaymentOrderData(2);
+            helper__encodePaymentOrderData(2);
         IERC20PaymentClientBase_v2.PaymentOrder memory order2_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2516,7 +2639,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2564,7 +2687,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient_ = makeAddr("recipient");
         uint96 amount_ = 100;
         (bytes32 flags_, bytes32[] memory data_) =
-            helper_encodePaymentOrderData(1);
+            helper__encodePaymentOrderData(1);
         IERC20PaymentClientBase_v2.PaymentOrder memory order_ =
         IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient_,
@@ -2682,7 +2805,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount = 1000;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory orders =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1, address(_token));
         // Setup initial state
         _token.mint(address(paymentClient), amount);
         paymentClient.exposed_addToOutstandingTokenAmounts(
@@ -2716,7 +2839,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Payment client should have no tokens"
         );
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId_,
             address(paymentClient),
             recipient,
@@ -2742,7 +2865,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount = 1000;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory orders =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1, address(_token));
 
         // Setup initial state
         _token.mint(address(paymentClient), amount);
@@ -2778,7 +2901,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             "Payment client should have no tokens"
         );
 
-        _assertOrderMatch(
+        helper_assertOrderMatch(
             orderId_,
             address(paymentClient),
             recipient,
@@ -2810,7 +2933,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
         _token.mint(address(paymentClient), amount_ * 2);
 
@@ -2855,7 +2978,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         uint96 amount_ = 100;
 
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
-            _createTestPaymentOrder(recipient_, amount_, 1);
+        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
 
         _token.mint(address(paymentClient), amount_ * 2);
 
@@ -2994,7 +3117,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         address recipient = makeAddr("recipient");
         uint96 amount = 100;
         IERC20PaymentClientBase_v2.PaymentOrder memory validOrder =
-            _createTestPaymentOrder(recipient, amount, 1);
+            helper_createTestPaymentOrder(recipient, amount, 1, address(_token));
 
         assertTrue(
             queue.validPaymentOrder(validOrder),
@@ -3002,14 +3125,15 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
 
         IERC20PaymentClientBase_v2.PaymentOrder memory invalidOrder =
-            _createTestPaymentOrder(address(0), amount, 1);
+        helper_createTestPaymentOrder(address(0), amount, 1, address(_token));
 
         assertFalse(
             queue.validPaymentOrder(invalidOrder),
             "Payment order with zero address recipient should return false"
         );
 
-        invalidOrder = _createTestPaymentOrder(recipient, 0, 1);
+        invalidOrder =
+            helper_createTestPaymentOrder(recipient, 0, 1, address(_token));
 
         assertFalse(
             queue.validPaymentOrder(invalidOrder),
@@ -3037,25 +3161,6 @@ contract PP_Queue_v1_Test is ModuleTest {
             operatorRoleAdmin_ == "QUEUE_OPERATOR_ROLE_ADMIN",
             "Queue operator role admin should be the queue address"
         );
-    }
-
-    function helper_encodePaymentOrderData(uint orderId_)
-        internal
-        pure
-        returns (bytes32 flags_, bytes32[] memory data_)
-    {
-        bytes32 _flags;
-        _flags = 0;
-
-        uint8[] memory flags = new uint8[](1); // The Module will use 1 flag
-        flags[0] = 0;
-
-        _flags |= bytes32((1 << flags[0]));
-
-        bytes32[] memory paymentParameters = new bytes32[](1);
-        paymentParameters[0] = bytes32(orderId_);
-
-        return (_flags, paymentParameters);
     }
 
     /* Test: Function _getProtocolFeeDetails()
@@ -3120,20 +3225,525 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertEq(treasury, address(0), "Treasury should be 0 address");
     }
 
-    // ================================================================================
-    // Helper Functions
+    /* Test testValidChainId_GivenValidAndInvalidIds()
+        └── Given chain IDs
+            └── When validating chain IDs
+                ├── Then current chain ID should return true
+                ├── Then different chain ID should return false
+                └── Then zero chain ID should return false
+    */
 
-    function _createTestPaymentOrder(
-        address recipient,
-        uint96 amount,
-        uint orderNum
-    ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
+    function testInternalValidChainId_RevertsGivenInvalidIds(uint chainId_)
+        public
+    {
+        chainId_ = bound(chainId_, 0, type(uint128).max);
+
+        // Test different chain ID
+        vm.assume(chainId_ != block.chainid);
+        assertFalse(
+            queue.exposed_validChainId(chainId_),
+            "Different chain ID should be invalid"
+        );
+
+        // Test zero chain ID
+        assertFalse(
+            queue.exposed_validChainId(0), "Zero chain ID should be invalid"
+        );
+    }
+
+    /* Test testValidChainId_GivenInvalidChainId()
+        └── Given an invalid chain ID
+            └── When validating the chain ID
+                └── Then it should revert
+    */
+    function testInternalValidChainId_worksGivenValidChainId() public {
+        // Test current chain ID
+        assertTrue(
+            queue.exposed_validChainId(block.chainid),
+            "Current chain ID should be valid"
+        );
+    }
+
+    /* Test testLowLevelTransfer_GivenValidInputs()
+        └── Given valid transfer inputs
+            └── When performing low level transfer
+                ├── Then successful transfer should work
+                ├── Then insufficient balance should fail
+                ├── Then non-contract token should fail
+                └── Then zero address token should fail
+    */
+    function testInternalLowLevelTransfer_worksGivenValidInputs() public {
+        // Setup
+        address client = makeAddr("client");
+        address recipient = makeAddr("recipient");
+        uint amount = 100;
+
+        // Setup token balances and allowances
+        _token.mint(client, amount);
+        vm.prank(client);
+        _token.approve(address(queue), amount);
+
+        // Test successful transfer
+        bool success = queue.exposed_lowLevelTransfer(
+            address(_token), client, recipient, amount
+        );
+        assertTrue(success, "Transfer should succeed");
+        assertEq(
+            _token.balanceOf(recipient),
+            amount,
+            "Recipient should receive amount"
+        );
+        assertEq(_token.balanceOf(client), 0, "Client balance should be zero");
+
+        // Test failed transfer (insufficient balance)
+        success = queue.exposed_lowLevelTransfer(
+            address(_token), client, recipient, amount
+        );
+        assertFalse(success, "Transfer should fail with insufficient balance");
+
+        // Test with non-contract token
+        success = queue.exposed_lowLevelTransfer(
+            address(0x789), client, recipient, amount
+        );
+        assertFalse(success, "Transfer should fail with non-contract token");
+
+        // Test with zero address
+        success = queue.exposed_lowLevelTransfer(
+            address(0), client, recipient, amount
+        );
+        assertFalse(success, "Transfer should fail with zero address token");
+    }
+
+    /* Test testLowLevelTransfer_GivenInvalidToken()
+        └── Given invalid token contracts
+            └── When performing low level transfer
+                ├── Then non-ERC20 contract should fail
+                └── Then invalid transfer contract should fail
+    */
+    function testInternalLowLevelTransfer_RevertsGivenInvalidToken() public {
+        // Setup
+        address client = makeAddr("client");
+        address recipient = makeAddr("recipient");
+        uint amount = 100;
+        // Setup
+        address invalidRecipient = makeAddr("invalidRecipient");
+        vm.assume(amount > 0);
+        // initiate token and set fail transfer to invalid recipient
+        NonStandardTokenMock nonStandardToken = new NonStandardTokenMock();
+        nonStandardToken.setFailTransferTo(invalidRecipient);
+        // mint tokens to payment client and approve queue to spend
+        nonStandardToken.mint(address(paymentClient), amount);
+        vm.prank(address(paymentClient));
+        nonStandardToken.approve(address(queue), amount);
+
+        bool success = queue.exposed_lowLevelTransfer(
+            address(nonStandardToken), client, recipient, amount
+        );
+        assertFalse(success, "Transfer should fail with non-ERC20 contract");
+        success = queue.exposed_lowLevelTransfer(
+            address(nonStandardToken), client, recipient, amount
+        );
+        assertFalse(
+            success, "Transfer should fail with invalid transfer contract"
+        );
+    }
+
+    /* Test testEnsureValidClient_GivenValidClient()
+        └── Given a valid client address that is:
+            ├── Not address(0)
+            ├── Not queue address
+            └── Not orchestrator address
+                └── When caller is the client
+                    └── Then it should succeed
+    */
+    function testInternalEnsureValidClient_worksGivenValidClient(
+        address client_
+    ) public {
+        vm.assume(client_ != address(0));
+        vm.assume(client_ != address(queue));
+        vm.assume(client_ != address(_orchestrator));
+        vm.assume(client_ != address(this));
+
+        vm.prank(client_);
+        queue.exposed_ensureValidClient(client_);
+    }
+
+    /* Test testEnsureValidClient_RevertGivenInvalidClient()
+        └── Given an invalid client address
+            └── When checking client validity
+                ├── Then it should revert with Module__PP_Queue_InvalidClientAddress for zero address
+                └── Then it should revert with Module__PP_Queue_InvalidClientAddress for queue address
+    */
+    function testInternalEnsureValidClient_RevertGivenInvalidClient() public {
+        vm.expectRevert();
+        queue.exposed_ensureValidClient(address(0));
+
+        vm.expectRevert();
+
+        queue.exposed_ensureValidClient(address(queue));
+    }
+
+    /* Test testEnsureValidClient_RevertGivenNonClientCaller()
+        └── Given a valid client address
+            └── When caller is not the client
+                └── Then it should revert with Module__PP_Queue_OnlyCallableByClient
+    */
+    function testInternalEnsureValidClient_RevertGivenNonClientCaller(
+        address client_,
+        address caller_
+    ) public {
+        vm.assume(client_ != address(0));
+        vm.assume(client_ != address(queue));
+        vm.assume(client_ != address(_orchestrator));
+        vm.assume(client_ != caller_);
+        vm.assume(caller_ != address(0));
+
+        vm.prank(caller_);
+        vm.expectRevert(
+            abi.encodeWithSignature("Module__PP_Queue_OnlyCallableByClient()")
+        );
+        queue.exposed_ensureValidClient(client_);
+    }
+
+    /* Test testSetCanceledOrdersTreasury_GivenValidAddress()
+        └── Given a valid treasury address
+            └── When setting the canceled orders treasury
+                └── Then it should be set correctly
+    */
+    function testInternalSetCanceledOrdersTreasury_worksGivenValidAddress()
+        public
+    {
+        address newTreasury = makeAddr("newTreasury");
+
+        queue.exposed_setCanceledOrdersTreasury(newTreasury);
+
+        // Verify the treasury was set correctly by checking the queue's state
+        assertEq(
+            queue.getCanceledOrdersTreasury(),
+            newTreasury,
+            "Canceled orders treasury should be updated"
+        );
+    }
+
+    /* Test testSetCanceledOrdersTreasury_RevertGivenZeroAddress()
+        └── Given a zero address
+            └── When setting the canceled orders treasury
+                └── Then it should revert
+    */
+    function testInternalSetCanceledOrdersTreasury_RevertGivenZeroAddress()
+        public
+    {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidTreasuryAddress(address)", address(0)
+            )
+        );
+        queue.exposed_setCanceledOrdersTreasury(address(0));
+    }
+
+    /* Test testSetFailedOrdersTreasury_GivenValidAddress()
+        └── Given a valid treasury address
+            └── When setting the failed orders treasury
+                └── Then it should be set correctly
+    */
+    function testInternalSetFailedOrdersTreasury_worksGivenValidAddress()
+        public
+    {
+        address newTreasury = makeAddr("newTreasury");
+
+        queue.exposed_setFailedOrdersTreasury(newTreasury);
+
+        // Verify the treasury was set correctly by checking the queue's state
+        assertEq(
+            queue.getFailedOrdersTreasury(),
+            newTreasury,
+            "Failed orders treasury should be updated"
+        );
+    }
+
+    /* Test testSetFailedOrdersTreasury_RevertGivenZeroAddress()
+        └── Given a zero address
+            └── When setting the failed orders treasury
+                └── Then it should revert
+    */
+    function testInternalSetFailedOrdersTreasury_RevertGivenZeroAddress()
+        public
+    {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidTreasuryAddress(address)", address(0)
+            )
+        );
+        queue.exposed_setFailedOrdersTreasury(address(0));
+    }
+
+    /* Test testEnsureValidPaymentToken_GivenValidToken()
+        └── Given a valid payment token
+            └── And the token is not address(0)
+                └── Then it should return true
+    */
+    function testInternalEnsureValidPaymentToken_worksGivenValidToken()
+        public
+    {
+        assertTrue(queue.exposed_validPaymentToken(address(_token)));
+    }
+
+    /* Test testEnsureValidPaymentToken_RevertGivenInvalidToken()
+        └── Given an invalid payment token
+            └── When ensuring valid payment token
+                └── Then it should revert
+    */
+    function testInternalEnsureValidPaymentToken_RevertGivenInvalidToken()
+        public
+    {
+        assertFalse(queue.exposed_validPaymentToken(address(0)));
+    }
+
+    /* Test testValidateFlagsAndData_GivenValidFlagsAndData()
+        └── Given valid flags with ORDER_ID bit set
+            └── And data array with order ID
+                └── Then it should return true
+    */
+    function testInternalValidateFlagsAndData_worksGivenValidFlagsAndData()
+        public
+    {
+        bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
+        bytes32[] memory data = new bytes32[](1);
+        data[0] = bytes32(uint(123)); // Some order ID
+
+        assertTrue(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidateFlagsAndData_GivenValidFlagsWithoutData()
+        └── Given valid flags without ORDER_ID bit set
+            └── And empty data array
+                └── Then it should return true
+    */
+    function testInternalValidateFlagsAndData_worksGivenValidFlagsWithoutData()
+        public
+    {
+        bytes32 flags = bytes32(uint(0)); // No bits set
+        bytes32[] memory data = new bytes32[](0);
+
+        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidateFlagsAndData_GivenInvalidFlagsWithData()
+        └── Given flags with ORDER_ID bit set
+            └── And empty data array
+                └── Then it should return false
+    */
+    function testInternalValidateFlagsAndData_FailsGivenInvalidFlagsWithData()
+        public
+    {
+        bytes32 flags = bytes32(uint(1)); // Set ORDER_ID bit
+        bytes32[] memory data = new bytes32[](0); // Empty data array
+
+        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidateFlagsAndData_GivenInvalidFlagsWithoutData()
+        └── Given flags with invalid bits set
+            └── And empty data array
+                └── Then it should return false
+    */
+    function testInternalValidateFlagsAndData_FailsGivenInvalidFlagsWithoutData(
+    ) public {
+        bytes32 flags = bytes32(uint(2)); // Set invalid bit
+        bytes32[] memory data = new bytes32[](0);
+
+        assertFalse(queue.exposed_validateFlagsAndData(flags, data));
+    }
+
+    /* Test testValidStateTransition_RevertGivenInvalidTransition()
+        └── Given an invalid state transition
+            └── When validating the state transition
+                └── Then it should revert with Module__PP_Queue_InvalidStateTransition
+    */
+    function testInternalValidStateTransition_RevertGivenInvalidTransition()
+        public
+    {
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module__PP_Queue_InvalidStateTransition(uint256,uint8,uint8)",
+                1,
+                uint8(IPP_Queue_v1.RedemptionState.PROCESSED),
+                uint8(IPP_Queue_v1.RedemptionState.PENDING)
+            )
+        );
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PROCESSED,
+            IPP_Queue_v1.RedemptionState.PENDING
+        );
+    }
+
+    /* Test testValidStateTransition_SucceedsGivenValidTransitions()
+        └── Given valid state transitions
+            └── When validating the state transitions
+                └── Then they should succeed
+    */
+    function testInternalValidStateTransition_worksGivenValidTransitions()
+        public
+        view
+    {
+        // PENDING -> PROCESSED
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PENDING,
+            IPP_Queue_v1.RedemptionState.PROCESSED
+        );
+
+        // PENDING -> CANCELLED
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PENDING,
+            IPP_Queue_v1.RedemptionState.CANCELLED
+        );
+
+        // PENDING -> FAILED
+        queue.exposed_validStateTransition(
+            1,
+            IPP_Queue_v1.RedemptionState.PENDING,
+            IPP_Queue_v1.RedemptionState.FAILED
+        );
+    }
+
+    /* Test testClaimPreviouslyUnclaimable_RevertGivenNoUnclaimableAmount()
+        └── Given no unclaimable amount for the client/token/receiver combination
+            └── When attempting to claim previously unclaimable amount
+                └── Then it should revert with Module__PP_Queue_NoUnclaimableAmount
+    */
+    function testInternalClaimPreviouslyUnclaimable_RevertGivenNoUnclaimableAmount(
+    ) public {
+        address recipient = makeAddr("recipient");
+
+        queue.exposed_claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), recipient
+        );
+        assertEq(
+            _token.balanceOf(recipient),
+            0,
+            "Recipient should not receive any tokens"
+        );
+    }
+    /* Test testClaimPreviouslyUnclaimable_SucceedsGivenUnclaimableAmount()
+        └── Given unclaimable amount for the client/token/receiver combination
+            └── When attempting to claim previously unclaimable amount
+                └── Then it should succeed
+    */
+
+    function testInternalClaimPreviouslyUnclaimable_worksGivenUnclaimableAmount(
+    ) public {
+        address recipient = makeAddr("recipient");
+        uint96 amount = 100;
+
+        // Setup: give tokens to payment client and approve queue to spend them
+        helper_setupPaymentTokenBalanceAndApproval(amount, _token);
+
+        // Transfer tokens to the queue contract first (simulating failed payment flow)
+        vm.prank(address(paymentClient));
+        _token.transfer(address(queue), amount);
+
+        // Queue needs to approve itself to transfer its own tokens
+        vm.prank(address(queue));
+        _token.approve(address(queue), amount);
+
+        // Now add it as unclaimable
+        queue.exposed_addUnclaimableOrder(
+            helper_createTestPaymentOrder(recipient, amount, 1, address(_token)),
+            address(paymentClient)
+        );
+
+        // Try to claim
+        queue.exposed_claimPreviouslyUnclaimable(
+            address(paymentClient), address(_token), recipient
+        );
+
+        assertEq(
+            _token.balanceOf(recipient),
+            amount,
+            "Recipient should receive tokens"
+        );
+    }
+    /* Test testValidPaymentOrder_RevertGivenInvalidTargetChain()
+        └── Given a payment order with an invalid target chain
+            └── When validating the payment order
+                └── Then it should revert with Module__PP_Queue_InvalidTargetChain
+    */
+
+    function testInternalValidPaymentOrder_failsWithInvalidTargetChain()
+        public
+    {
+        address recipient = makeAddr("recipient");
+        uint96 amount = 100;
         (bytes32 flags, bytes32[] memory data) =
-            helper_encodePaymentOrderData(orderNum);
-        return IERC20PaymentClientBase_v2.PaymentOrder({
+            helper__encodePaymentOrderData(1);
+
+        IERC20PaymentClientBase_v2.PaymentOrder memory invalidOrder =
+        IERC20PaymentClientBase_v2.PaymentOrder({
             recipient: recipient,
             amount: amount,
             paymentToken: address(_token),
+            originChainId: block.chainid,
+            targetChainId: block.chainid + 1, // Invalid target chain
+            flags: flags,
+            data: data
+        });
+
+        assertFalse(
+            queue.exposed_validPaymentOrder(invalidOrder),
+            "Payment order with invalid target chain should return false"
+        );
+    }
+    /* Test testValidPaymentOrder_SucceedsGivenValidOrder()
+        └── Given a valid payment order
+            └── When validating the payment order
+                └── Then it should return true
+    */
+
+    function testInternalValidPaymentOrder_succeedsWithValidOrder() public {
+        address recipient = makeAddr("recipient");
+        uint96 amount = 100;
+
+        IERC20PaymentClientBase_v2.PaymentOrder memory validOrder =
+            helper_createTestPaymentOrder(recipient, amount, 1, address(_token));
+
+        assertTrue(
+            queue.exposed_validPaymentOrder(validOrder),
+            "Payment order with valid target chain should return true"
+        );
+    }
+
+    // ================================================================================
+    // Helper Functions
+
+    function helper_validPaymentReceiver(address recipient_)
+        internal
+        view
+        returns (address)
+    {
+        vm.assume(
+            recipient_ != address(0) && recipient_ != address(queue)
+                && recipient_ != address(this) && recipient_ != address(_token)
+                && recipient_ != address(_orchestrator)
+                && recipient_ != address(paymentClient)
+        );
+        return recipient_;
+    }
+
+    function helper_createTestPaymentOrder(
+        address recipient_,
+        uint96 amount_,
+        uint orderNum_,
+        address token_
+    ) internal view returns (IERC20PaymentClientBase_v2.PaymentOrder memory) {
+        (bytes32 flags, bytes32[] memory data) =
+            helper__encodePaymentOrderData(orderNum_);
+        return IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: recipient_,
+            amount: amount_,
+            paymentToken: address(token_),
             originChainId: block.chainid,
             targetChainId: block.chainid,
             flags: flags,
@@ -3141,31 +3751,60 @@ contract PP_Queue_v1_Test is ModuleTest {
         });
     }
 
-    function _setupPaymentTokenBalanceAndApproval(uint96 amount) internal {
-        _token.mint(address(paymentClient), amount);
-        paymentClient.exposed_addToOutstandingTokenAmounts(
-            address(_token), amount
-        );
-        vm.prank(address(paymentClient));
-        _token.approve(address(queue), amount);
+    function helper_addPaymentOrderToQueue(
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        address client_
+    ) internal returns (uint queueId_) {
+        queueId_ = queue.exposed_addPaymentOrderToQueue(order_, client_);
     }
 
-    function _assertOrderMatch(
-        uint orderId,
-        address client,
-        address expectedRecipient,
-        uint expectedAmount,
-        IPP_Queue_v1.RedemptionState expectedState
+    function helper_setupPaymentTokenBalanceAndApproval(
+        uint96 amount_,
+        ERC20Mock token_
+    ) internal {
+        token_.mint(address(paymentClient), amount_);
+        paymentClient.exposed_addToOutstandingTokenAmounts(
+            address(token_), amount_
+        );
+        vm.prank(address(paymentClient));
+        token_.approve(address(queue), amount_);
+    }
+
+    function helper_assertOrderMatch(
+        uint orderId_,
+        address client_,
+        address expectedRecipient_,
+        uint96 expectedAmount_,
+        IPP_Queue_v1.RedemptionState expectedState_
     ) internal {
         IPP_Queue_v1.QueuedOrder memory queuedOrder =
-            queue.getOrder(orderId, IERC20PaymentClientBase_v2(client));
+            queue.getOrder(orderId_, IERC20PaymentClientBase_v2(client_));
         assertEq(
-            queuedOrder.order_.recipient, expectedRecipient, "Wrong recipient"
+            queuedOrder.order_.recipient, expectedRecipient_, "Wrong recipient"
         );
-        assertEq(queuedOrder.order_.amount, expectedAmount, "Wrong amount");
+        assertEq(queuedOrder.order_.amount, expectedAmount_, "Wrong amount");
         assertEq(
             queuedOrder.order_.paymentToken, address(_token), "Wrong token"
         );
-        assertEq(uint(queuedOrder.state_), uint(expectedState), "Wrong state");
+        assertEq(uint(queuedOrder.state_), uint(expectedState_), "Wrong state");
+    }
+
+    function helper__encodePaymentOrderData(uint orderId_)
+        internal
+        pure
+        returns (bytes32 flags_, bytes32[] memory data_)
+    {
+        bytes32 _flags;
+        _flags = 0;
+
+        uint8[] memory flags = new uint8[](1); // The Module will use 1 flag
+        flags[0] = 0;
+
+        _flags |= bytes32((1 << flags[0]));
+
+        bytes32[] memory paymentParameters = new bytes32[](1);
+        paymentParameters[0] = bytes32(orderId_);
+
+        return (_flags, paymentParameters);
     }
 }
