@@ -585,30 +585,15 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
     }
 
     /*  Test: Function _removeFromBlacklist()    
-        ├── Given the address is the zero address
-        │   └── When the function _removeFromBlacklist() is called
-        │       └── Then it should revert
-        └── Given the address is not the zero address
+        └── Given the address is blacklisted
             ├── And the address is blacklisted
             │   └── When the function _removeFromBlacklist() is called
             │       └── Then it should remove the address from the blacklist
             │           └── And it should emit an event
-            └── And the address is not blacklisted
+            └── Given the address is not blacklisted
                 └── When the function _removeFromBlacklist() is called
                     └── Then it should skip removing the address from the blacklist (idempotent)
     */
-    function testInternalRemoveFromBlacklist_revertGivenAddressIsZero()
-        public
-    {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IERC20Issuance_Blacklist_v1
-                    .ERC20Issuance_Blacklist_ZeroAddress
-                    .selector
-            )
-        );
-        token.exposed_removeFromBlacklist(address(0));
-    }
 
     function testInternalRemoveFromBlacklist_worksGivenAddressIsBlacklisted(
         address user_

@@ -274,9 +274,6 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1 is
     ///         currently blacklisted to prevent unnecessary state changes.
     /// @param  account_ Address to remove from the blacklist.
     function _removeFromBlacklist(address account_) internal virtual {
-        if (account_ == address(0)) {
-            revert ERC20Issuance_Blacklist_ZeroAddress();
-        }
         if (isBlacklisted(account_)) {
             _blacklist[account_] = false;
             emit RemovedFromBlacklist(account_, _msgSender());
