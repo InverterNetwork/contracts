@@ -33,6 +33,9 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice The provided role ID is not existing.
     error Module__Authorizer__RoleIdNotExisting();
 
+    /// @notice The admin of the provided role ID is already burned.
+    error Module__Authorizer__RoleAdminBurned();
+
     /// @notice The provided input length is not valid.
     error Module__Authorizer__InvalidInputLength();
 
@@ -77,6 +80,10 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @param  roleId The ID of the role.
     /// @param  newRoleName The new name of the role.
     event RoleLabeled(bytes32 roleId, string newRoleName);
+
+    /// @notice Emits when a role admin is burned.
+    /// @param  roleId The ID of the role for which the admin was burned.
+    event RoleAdminBurned(bytes32 roleId);
 
     // ========================================================================
     // Public Getter Functions
@@ -190,15 +197,20 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     function labelRole(bytes32 roleId_, string memory newRoleName_) external;
 
     /// @notice Transfer the admin rights to a given role.
-    /// @param  roleId The role on which to peform the admin transfer.
-    /// @param  newAdmin The new role to which to transfer admin access to.
-    function transferAdminRole(bytes32 roleId, bytes32 newAdmin) external;
+    /// @dev    Only callable by the Admin of the role.
+    /// @dev    The role has to be created already.
+    /// @dev    The admin of the roleId_ can not be burned.
+    /// @param  roleId_ The role on which to peform the admin transfer.
+    /// @param  newAdminRoleId_ The new role to which to transfer admin access to.
+    function transferAdminRole(bytes32 roleId_, bytes32 newAdminRoleId_)
+        external;
 
-    /// @notice Irreversibly burns the admin of a given role.
-    /// @param  role The role to remove admin access from.
-    /// @dev	The module itself can still grant and revoke it's own roles. This only burns third-party access to
-    ///         the role.
-    function burnAdminFromModuleRole(bytes32 role) external;
+    /// @notice    Burns the admin of the given roleId.
+    /// @dev    Only callable by the Admin of the role.
+    /// @dev    The role has to be created already.
+    /// @dev    Does nothing if the admin was already burned.
+    /// @param  roleId_ The role for which to burn the admin.
+    function burnAdminFromRole(bytes32 roleId_) external;
 
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility
@@ -243,6 +255,9 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     function revokeRoleFromModuleBatched(bytes32, address[] calldata)
         external
         pure;
+
+    /// @notice This function is deprecated and will revert when called.
+    function burnAdminFromModuleRole(bytes32) external pure;
 
     /// @notice This function is deprecated and will revert when called.
     function grantGlobalRole(bytes32, address) external pure;

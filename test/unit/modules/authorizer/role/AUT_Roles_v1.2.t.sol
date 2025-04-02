@@ -115,12 +115,6 @@ contract AUT_Roles_v1_Test is ModuleTest {
     /////////////////////////////////////////////////////////////////////////////
     // Test Modifier
 
-    //modifier onlyModule(address module) { @todo later
-
-    //modifier notLastAdmin(bytes32 role)@todo later
-
-    //modifier noSelfAdmin(bytes32 role, address who) {@todo later##
-
     //idNotDefaultAdmin
     /*
     Test: idNotDefaultAdmin Modifier
@@ -166,6 +160,17 @@ contract AUT_Roles_v1_Test is ModuleTest {
         }
         _authSuT.idExistingModifier_exposed(_givenRoleId);
     }
+
+    //@todo roleAdminNotBurned modifier
+
+    /*  /// @dev     Verifies that the admin of the given roleId is not burned.
+    /// @param  roleId_ The id of the role.
+    modifier roleAdminNotBurned(bytes32 roleId_) {
+        if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
+            revert Module__Authorizer__RoleAdminBurned();
+        }
+        _;
+    } */
 
     ///////////////////////////////////////////////////////////////////////////
     // Test External Functions
@@ -691,9 +696,190 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.labelRole(id, newRoleName_);
     }
 
-    // function transferAdminRole(bytes32 roleId, bytes32 newAdmin) external; @todo later
+    /*
+    Test: transferAdminRole
+    ├── Given: Caller is not the admin ot the role for which the admin is being transferred
+    │   └── When: transferAdminRole is called
+    │       └── Then: The function should revert
+    ├── Given: Caller is the admin of the role for which the admin is being transferred
+    ├── And: The given roleId is not existing
+    │   └── When: transferAdminRole is called
+    │       └── Then: The function should revert (modifier in position check)
+    ├── Given: Caller is the admin of the role for which the admin is being transferred
+    ├── And: The given adminRoleId is not existing
+    │   └── When: transferAdminRole is called
+    │       └── Then: The function should revert (modifier in position check)
+    ├── Given: Caller is the admin of the role for which the admin is being transferred
+    ├── And: The given roleId is existing
+        └── When: transferAdminRole is called
+            └── Then: The Admin should be transferred to the new Admin
+    */
 
-    // function burnAdminFromModuleRole(bytes32 role) external; @todo later
+    function testTransferAdminRole_OnlyRoleAdmin(
+        uint seed_,
+        bytes32 roleId_,
+        bytes32 roleAdmin_
+    ) public {
+        // Make sure roleId_ is not the default admin or the public role
+        vm.assume(uint(roleId_) > 1);
+        // make sure that roleAdmin was created before roleId
+        vm.assume(uint(roleId_) > uint(roleAdmin_));
+
+        // Create Setup
+        // Create random amount of Roles making the next created Role have the given RoleId
+        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        // Create new Role with given RoleAdmin
+        vm.prank(_initialAdmin);
+        _authSuT.createRole("RoleName", roleAdmin_, new address[](0));
+
+        // randomize if caller has the admin role or not
+        if (seed_ % 2 == 0) {
+            vm.prank(_initialAdmin);
+            _authSuT.grantRole(roleAdmin_, _bob);
+        } else {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IAccessControl.AccessControlUnauthorizedAccount.selector,
+                    address(_bob),
+                    roleAdmin_
+                )
+            );
+        }
+        vm.prank(_bob);
+        _authSuT.transferAdminRole(roleId_, roleAdmin_);
+    }
+
+    function testTransferAdminRole_ModifierInPositionChecks() public {
+        //idExisting(roleId_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.transferAdminRole(bytes32(uint(2)), bytes32(uint(0)));
+
+        //idExisting(newAdminRoleId_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.transferAdminRole(bytes32(uint(0)), bytes32(uint(2)));
+    }
+
+    function testTransferAdminRole_IdExisting(
+        bytes32 roleId_,
+        bytes32 newAdminRoleId_
+    ) public {
+        // make sure that roleAdmin was created before roleId
+        vm.assume(uint(roleId_) > uint(newAdminRoleId_));
+        // Create Setup
+        // Create random amount of Roles making the next created Role have the given RoleId
+        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        // Create new Role with given RoleAdmin
+        vm.prank(_initialAdmin);
+        _authSuT.createRole("RoleName", bytes32(0), new address[](0));
+
+        // Call transferAdminRole
+        vm.prank(_initialAdmin);
+        _authSuT.transferAdminRole(roleId_, newAdminRoleId_);
+
+        // Check that the new Admin Role is the new Admin
+        assertEq(_authSuT.getRoleAdmin(roleId_), newAdminRoleId_);
+    }
+
+    // burnAdminFromRole
+
+    /*
+    Test: burnAdminFromRole
+    ├── Given: Caller is not the admin of the role for which the admin is being burned
+    │   └── When: burnAdminFromRole is called
+    │       └── Then: The function should revert
+    ├── Given: Caller is the admin of the role for which the admin is being burned
+    ├── And: The given roleId is not existing
+    │   └── When: burnAdminFromRole is called
+    │       └── Then: The function should revert (modifier in position check)
+    ├── Given: Caller is the admin of the role for which the admin is being burned
+    └── And: The given roleId is existing
+        └── When: burnAdminFromRole is called
+            └── Then: The Admin should be burned
+    */
+
+    function testBurnAdminFromRole_OnlyRoleAdmin(
+        uint seed_,
+        bytes32 roleId_,
+        bytes32 roleAdmin_
+    ) public {
+        // Make sure roleId_ is not the default admin or the public role
+        vm.assume(uint(roleId_) > 1);
+        // make sure that roleAdmin was created before roleId
+        vm.assume(uint(roleId_) > uint(roleAdmin_));
+
+        // Create Setup
+        // Create random amount of Roles making the next created Role have the given RoleId
+        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        // Create new Role with given RoleAdmin
+        vm.prank(_initialAdmin);
+        _authSuT.createRole("RoleName", roleAdmin_, new address[](0));
+
+        // randomize if caller has the admin role or not
+        if (seed_ % 2 == 0) {
+            vm.prank(_initialAdmin);
+            _authSuT.grantRole(roleAdmin_, _bob);
+        } else {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IAccessControl.AccessControlUnauthorizedAccount.selector,
+                    address(_bob),
+                    roleAdmin_
+                )
+            );
+        }
+        vm.prank(_bob);
+        _authSuT.burnAdminFromRole(roleId_);
+    }
+
+    function testBurnAdminFromRole_ModifierInPositionChecks() public {
+        //idExisting(roleId_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.burnAdminFromRole(bytes32(uint(2)));
+    }
+
+    function testBurnAdminFromRole_IdExisting(
+        bytes32 roleId_,
+        bytes32 adminRoleId_
+    ) public {
+        // make sure that roleAdmin was created before roleId
+        vm.assume(uint(roleId_) > uint(adminRoleId_));
+        // Create Setup
+        // Create random amount of Roles making the next created Role have the given RoleId
+        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        // Create new Role with given RoleAdmin
+        vm.prank(_initialAdmin);
+        _authSuT.createRole("RoleName", adminRoleId_, new address[](0));
+
+        // Give Caller the Admin Role
+        vm.prank(_initialAdmin);
+        _authSuT.grantRole(adminRoleId_, _bob);
+
+        // Expect event
+        vm.expectEmit(true, true, true, true);
+        emit IAuthorizer_v1.RoleAdminBurned(roleId_);
+
+        // Call transferAdminRole
+        vm.prank(_bob);
+        _authSuT.burnAdminFromRole(roleId_);
+
+        // Check that the new Admin Role is the Burned Admin role
+        assertEq(_authSuT.getRoleAdmin(roleId_), _authSuT.BURN_ADMIN_ROLE());
+    }
 
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility
@@ -882,6 +1068,20 @@ contract AUT_Roles_v1_Test is ModuleTest {
     }
 
     /*
+    Test: burnAdminFromModuleRole
+    └── When: burnAdminFromModuleRole is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testBurnAdminFromModuleRole_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.burnAdminFromModuleRole(bytes32(uint(0)));
+    }
+
+    /*
     Test: grantGlobalRole
     └── When: grantGlobalRole is called
         └── Then: The function should revert with Module_FunctionDeprecated
@@ -946,9 +1146,24 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // ------------------------------------------------------------------------
     // Internal - Upstream Function Implementations
 
-    // function _revokeRole(//@todo later
+    // function _grantRole(
 
-    // function _grantRole( @todo later
+    /*
+    Test: grantRole
+    └── Given: The role id is not existing
+        └── When: grantRole is called
+            └── Then: The call reverts (modifier in position check)
+    */
+    function testGrantRole_ModifierInPositionCheck() public {
+        // idExisting(role)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        vm.prank(_initialAdmin);
+        _authSuT.grantRole(bytes32(uint(2)), _bob);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     // Helper Functions
@@ -1083,15 +1298,15 @@ contract AUT_Roles_v1_Test is ModuleTest {
         }
         uint currentPermissionRoleId = seed_;
         for (uint i = 0; i < permissionLength; i++) {
-            // Increment id in a non regular way
+            // Increment key in a non regular way
             unchecked {
                 currentPermissionRoleId = currentPermissionRoleId + i * i;
             }
-            // Permission cannot be for the Default Admin Role
+            // Key cannot be Default Admin Role
             if (currentPermissionRoleId == 0) {
                 currentPermissionRoleId = 1;
             }
-            // Permission cannot be for the Public Role
+            // Key cannot be Public Role
             if (currentPermissionRoleId == type(uint).max) {
                 currentPermissionRoleId = type(uint).max - 1;
             }

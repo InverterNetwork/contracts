@@ -61,37 +61,6 @@ contract AUT_Roles_v1 is
     // ========================================================================
     // Modifiers
 
-    /// @dev	Verifies that the caller is an active module.
-    /// @param  module The address of the module.
-    modifier onlyModule(address module) {
-        if (!orchestrator().isModule(module)) {
-            revert Module__Authorizer__NotActiveModule(module);
-        }
-        _;
-    }
-
-    /// @dev	Verifies that the admin being removed is not the last one.
-    /// @param  role The id number of the role.
-    modifier notLastAdmin(bytes32 role) {
-        if (
-            role == DEFAULT_ADMIN_ROLE
-                && getRoleMemberCount(DEFAULT_ADMIN_ROLE) <= 1
-        ) {
-            revert Module__Authorizer__AdminRoleCannotBeEmpty();
-        }
-        _;
-    }
-
-    /// @dev     Verifies that the admin being added is not the {Orchestrator_v1}.
-    /// @param  role The id number of the role.
-    /// @param  who The user we want to check on.
-    modifier noSelfAdmin(bytes32 role, address who) {
-        if (role == DEFAULT_ADMIN_ROLE && who == address(orchestrator())) {
-            revert Module__Authorizer__OrchestratorCannotHaveAdminRole();
-        }
-        _;
-    }
-
     modifier idNotDefaultAdmin(bytes32 roleId_) {
         if (roleId_ == DEFAULT_ADMIN_ROLE) {
             revert Module__Authorizer__CannotAddDefaultAdminRole();
@@ -103,7 +72,6 @@ contract AUT_Roles_v1 is
     /// @param  roleId_ The id of the role.
     modifier idExisting(bytes32 roleId_) {
         if (roleId_ != PUBLIC_ROLE && uint(roleId_) > _roleIdCounter) {
-            //@todo BurnAdmin still here
             revert Module__Authorizer__RoleIdNotExisting();
         }
         _;
@@ -364,21 +332,28 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function transferAdminRole(bytes32 roleId, bytes32 newAdmin)
+    function transferAdminRole(bytes32 roleId_, bytes32 newAdminRoleId_)
         external
-        onlyRole(getRoleAdmin(roleId)) //@todo keep
-    //@todo idExisting(roleId) implement and test / Do we actually want to restrict this?
+        onlyRole(getRoleAdmin(roleId_))
+        idExisting(roleId_)
+        idExisting(newAdminRoleId_)
     {
-        _setRoleAdmin(roleId, newAdmin);
+        _setRoleAdmin(roleId_, newAdminRoleId_);
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function burnAdminFromModuleRole(bytes32 role)
+    function burnAdminFromRole(bytes32 roleId_)
         external
-        onlyModule(_msgSender()) //@todo stays?
+        onlyRole(getRoleAdmin(roleId_))
+        idExisting(roleId_)
     {
-        bytes32 roleId = generateRoleId(_msgSender(), role);
-        _setRoleAdmin(roleId, BURN_ADMIN_ROLE);
+        // If Role Admin is Burned do nothing
+        if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
+            return;
+        }
+        // Burn Role Admin
+        _setRoleAdmin(roleId_, BURN_ADMIN_ROLE);
+        emit RoleAdminBurned(roleId_);
     }
 
     // ------------------------------------------------------------------------
@@ -443,6 +418,11 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
+    function burnAdminFromModuleRole(bytes32) external pure {
+        revert IModule_v1.Module__FunctionDeprecated();
+    }
+
+    /// @inheritdoc IAuthorizer_v1
     function grantGlobalRole(bytes32, address) external pure {
         revert IModule_v1.Module__FunctionDeprecated();
     }
@@ -474,30 +454,15 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Internal - Upstream Function Implementations
 
-    /// @notice Overrides {_revokeRole} to prevent having an empty `ADMIN` role.
-    /// @param  role The id number of the role.
-    /// @param  who The user we want to check on.
-    /// @return bool Returns if revoke has been succesful.
-    function _revokeRole(
-        bytes32 role,
-        address who //@todo is this still needed?
-    ) internal virtual override notLastAdmin(role) returns (bool) {
-        return super._revokeRole(role, who);
-    }
-
-    /// @notice Overrides {_grantRole} to prevent having the {Orchestrator_v1} having the `OWNER` role.
+    /// @notice Overrides {_grantRole} to make sure only existing roles can be granted.
     /// @param  role The id of the role.
     /// @param  who The user we want to check on.
-    /// @return bool Returns if grant has been succesful.
-    function _grantRole(
-        bytes32 role,
-        address who //@todo is this still needed?
-    )
+    /// @return bool Returns if grant has been successful.
+    function _grantRole(bytes32 role, address who)
         internal
         virtual
         override
-        //@todo idExisting(role) implement and test
-        noSelfAdmin(role, who)
+        idExisting(role)
         returns (bool)
     {
         return super._grantRole(role, who);

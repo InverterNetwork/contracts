@@ -171,7 +171,7 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
 
     function createRole(string memory, bytes32, address[] memory)
         external
-        returns (bytes32 _newRoleId)
+        returns (bytes32)
     {}
 
     function labelRole(bytes32, string memory) external {}
@@ -180,7 +180,7 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         revert("Not implemented in Authorizer Mock");
     }
 
-    function burnAdminFromModuleRole(bytes32) external pure {
+    function burnAdminFromRole(bytes32) external pure {
         revert("Not implemented in Authorizer Mock");
     }
 
@@ -217,6 +217,10 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         external
         pure
     {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function burnAdminFromModuleRole(bytes32) external pure {
         revert("Not implemented in Authorizer Mock");
     }
 
