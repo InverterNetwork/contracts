@@ -202,28 +202,28 @@ contract FM_PC_Oracle_Redeeming_v1 is
     // Constants
 
     /// @notice Role identifier for accounts who are whitelisted to buy and sell.
-    bytes32 private constant WHITELIST_ROLE = "WHITELIST_ROLE";
+    bytes32 internal constant WHITELIST_ROLE = "WHITELIST_ROLE";
 
     /// @notice Role identifier for the admin authorized to assign the whitelist
     ///         role.
     /// @dev    This role should be set as the role admin for the WHITELIST_ROLE
     ///         within the Authorizer module.
-    bytes32 private constant WHITELIST_ROLE_ADMIN = "WHITELIST_ROLE_ADMIN";
+    bytes32 internal constant WHITELIST_ROLE_ADMIN = "WHITELIST_ROLE_ADMIN";
 
     /// @notice Role identifier for accounts who are allowed to manually execute
     ///         the redemption queue.
-    bytes32 private constant QUEUE_EXECUTOR_ROLE = "QUEUE_EXECUTOR_ROLE";
+    bytes32 internal constant QUEUE_EXECUTOR_ROLE = "QUEUE_EXECUTOR_ROLE";
 
     /// @notice Role identifier for the admin authorized to assign the queue
     ///         execution role.
     ///         role.
     /// @dev    This role should be set as the role admin for the
     ///         QUEUE_EXECUTOR_ROLE within the Authorizer module.
-    bytes32 private constant QUEUE_EXECUTOR_ROLE_ADMIN =
+    bytes32 internal constant QUEUE_EXECUTOR_ROLE_ADMIN =
         "QUEUE_EXECUTOR_ROLE_ADMIN";
 
     /// @notice Flag used for the payment order.
-    uint private constant FLAG_ORDER_ID = 0;
+    uint internal constant FLAG_ORDER_ID = 0;
 
     // -------------------------------------------------------------------------
     // State Variables
@@ -231,49 +231,49 @@ contract FM_PC_Oracle_Redeeming_v1 is
     /// @notice Oracle price feed contract used for price discovery.
     /// @dev    Contract that provides external price information for token
     ///         valuation.
-    IOraclePrice_v1 private _oracle;
+    IOraclePrice_v1 internal _oracle;
 
     /// @notice Token that is accepted by this funding manager for deposits.
     /// @dev    The ERC20 token contract used for collateral in this funding
     ///         manager.
-    IERC20 private _token;
+    IERC20 internal _token;
 
     /// @notice Token decimals of the issuance token.
     /// @dev    Number of decimal places used by the issuance token for proper
     ///         decimal handling.
-    uint8 private _issuanceTokenDecimals;
+    uint8 internal _issuanceTokenDecimals;
 
     /// @notice Token decimals of the Orchestrator token.
     /// @dev    Number of decimal places used by the collateral token for proper
     ///         decimal handling.
-    uint8 private _collateralTokenDecimals;
+    uint8 internal _collateralTokenDecimals;
 
     /// @notice Maximum fee that can be charged for sell operations, in base
     ///         points.
     /// @dev    Maximum allowed project fee percentage that can be charged when
     ///         selling tokens.
-    uint private _maxProjectSellFee;
+    uint internal _maxProjectSellFee;
 
     /// @notice Maximum fee that can be charged for buy operations, in base
     ///         points.
     /// @dev    Maximum allowed project fee percentage for buying tokens.
-    uint private _maxProjectBuyFee;
+    uint internal _maxProjectBuyFee;
 
     /// @notice Order ID counter for tracking individual orders.
     /// @dev    Unique identifier for the current order being processed.
-    uint private _orderId;
+    uint internal _orderId;
 
     /// @notice Total amount of collateral tokens currently in redemption
     ///         process.
     /// @dev    Tracks the sum of all pending redemption orders.
-    uint private _openRedemptionAmount;
+    uint internal _openRedemptionAmount;
 
     /// @notice Flag indicating if direct operations are only allowed.
     bool internal _isDirectOperationsOnly;
 
     /// @notice Address of the project treasury which will receive the
     ///         collateral tokens.
-    address private _projectTreasury;
+    address internal _projectTreasury;
 
     // -------------------------------------------------------------------------
     // Modifiers

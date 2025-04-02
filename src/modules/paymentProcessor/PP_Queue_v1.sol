@@ -123,34 +123,34 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     // Constants
 
     /// @notice    Flag position in the flags byte.
-    uint8 private constant FLAG_ORDER_ID = 0;
+    uint8 internal constant FLAG_ORDER_ID = 0;
 
     /// @notice Role identifier for queue operations.
     /// @dev    This role cancels payments in the queue.
-    bytes32 private constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
+    bytes32 internal constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
 
     /// @notice Role identifier for the admin authorized to assign the queue
     ///         operator role.
     /// @dev    This role should be set as the role admin for the
     ///         QUEUE_OPERATOR_ROLE within the Authorizer module.
-    bytes32 private constant QUEUE_OPERATOR_ROLE_ADMIN =
+    bytes32 internal constant QUEUE_OPERATOR_ROLE_ADMIN =
         "QUEUE_OPERATOR_ROLE_ADMIN";
 
     /// @notice BPS value.
-    uint private constant BPS = 10_000;
+    uint internal constant BPS = 10_000;
 
     // -------------------------------------------------------------------------
     // Storage
 
     /// @notice Queue of payment orders per client.
-    mapping(address client => LinkedIdList.List queue) private _queue;
+    mapping(address client => LinkedIdList.List queue) internal _queue;
 
     /// @notice Payment orders.
     mapping(address client => mapping(uint orderId => QueuedOrder order))
-        private _orders;
+        internal _orders;
 
     /// @notice Current order ID per client.
-    mapping(address client => uint currentOrderId) private _currentOrderId;
+    mapping(address client => uint currentOrderId) internal _currentOrderId;
 
     /// @notice Tracks all payments that could not be made to the
     ///         paymentReceiver.
@@ -160,13 +160,13 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
                 address token
                     => mapping(address receiver => uint unclaimableAmount)
             )
-    ) private _unclaimableAmountsForRecipient;
+    ) internal _unclaimableAmountsForRecipient;
 
     /// @notice Treasury address which receives the collateral of canceled orders.
-    address private _cancelledOrdersTreasury;
+    address internal _cancelledOrdersTreasury;
 
     /// @notice Treasury address which receives the collateral of failed orders.
-    address private _failedOrdersTreasury;
+    address internal _failedOrdersTreasury;
 
     // -------------------------------------------------------------------------
     // Modifiers
@@ -478,8 +478,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             order.order_.paymentToken,
             order.client_,
             _cancelledOrdersTreasury,
-            order.order_.amount,
-            false // don't collect protocol fee when cancelling order
+            order.order_.amount
         );
     }
 
@@ -528,7 +527,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     ///         cases the order is removed from the queue.
     /// @param	orderId_ The ID of the order to process.
     /// @param	order_ The order to process.
-    function _executePaymentTransfer(uint orderId_, QueuedOrder storage order_)
+    function _executePaymentTransfer(uint orderId_, QueuedOrder memory order_)
         internal
         virtual
     {
@@ -537,8 +536,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             order_.order_.paymentToken,
             order_.client_,
             order_.order_.recipient,
-            order_.order_.amount,
-            true // collect protocol fee when processing order
+            order_.order_.amount
         );
 
         // Update order state based on transfer success
@@ -602,21 +600,17 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @param	client_ The client address.
     /// @param	recipient_ The recipient address.
     /// @param	amount_ The amount to transfer.
-    /// @param	collectProtocolFee_ Whether to collect the protocol fee.
     /// @return	success_ True if the transfer was successful.
     function _tryPaymentTransfer(
         address token_,
         address client_,
         address recipient_,
-        uint amount_,
-        bool collectProtocolFee_
+        uint amount_
     ) internal virtual returns (bool success_) {
         // Get the protocol fee amount, net amount and treasury address to sent the fee.
         (uint protocolFeeAmount, uint netAmount, address treasury_) =
         _getProtocolFeeDetails(
-            amount_,
-            bytes4(keccak256(bytes("processPayments(address)"))),
-            collectProtocolFee_
+            amount_, bytes4(keccak256(bytes("processPayments(address)")))
         );
 
         // Try direct transfer to recipient
@@ -1029,34 +1023,21 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
     /// @notice Calculates the protocol fee amount, net amount and identifies the
     ///         treasury address for a given function.
-    /// @dev    Given the collectProtocolFee flag is true, retrieves the fee
-    ///         percentage and treasury address for the specified function
-    ///         selector, then calculates the actual fee amount based on the
-    ///         provided total amount. If the flag is false, it returns 0 for
-    ///         the fee amount and net amount is equal to total amount.
+    /// @dev    Retrieves the fee percentage and treasury address for the specified
+    ///         function selector, then calculates the actual fee amount based on
+    ///         the provided total amount.
     /// @param  totalAmount_ The base amount on which to calculate the fee.
     /// @param  functionSelector_ The function selector used to look up the
     ///         appropriate fee data.
-    /// @param  collectProtocolFee_ Whether to collect the protocol fee.
     /// @return feeAmount_ The calculated protocol fee amount.
     /// @return netAmount_ The net amount after deducting the protocol fee.
     /// @return treasury_ The treasury address where the fee should be sent.
-    function _getProtocolFeeDetails(
-        uint totalAmount_,
-        bytes4 functionSelector_,
-        bool collectProtocolFee_
-    )
+    function _getProtocolFeeDetails(uint totalAmount_, bytes4 functionSelector_)
         internal
         view
         virtual
         returns (uint feeAmount_, uint netAmount_, address treasury_)
     {
-        // If protocol fee is not collected, return 0 fee amount and
-        // net amount equal to total amount.
-        if (!collectProtocolFee_) {
-            return (0, totalAmount_, address(0));
-        }
-
         // Get the fee percentage and treasury address for the specified function selector.
         (uint protocolFeePercentage, address treasuryAddress_) =
             _getFeeManagerCollateralFeeData(functionSelector_);
@@ -1070,6 +1051,10 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         // Calculate protocol fee amount if applicable
         if (protocolFeePercentage > 0) {
             feeAmount_ = totalAmount_ * protocolFeePercentage / BPS;
+            // Revert if calculated protocol fee amount rounded down to zero
+            if (feeAmount_ == 0) {
+                revert Module__PP_Queue_InvalidFeeAmount(feeAmount_);
+            }
         }
 
         // Calculate the net amount after deducting the protocol fee.
