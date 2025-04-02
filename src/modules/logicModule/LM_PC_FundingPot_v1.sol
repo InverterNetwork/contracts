@@ -84,9 +84,6 @@ contract LM_PC_FundingPot_v1 is
     /// @notice The payment processor flag for the end timestamp.
     uint8 internal constant FLAG_END = 3;
 
-    /// @notice Maximum amount for the base personal cap
-    uint internal constant BASE_PERSONAL_CAP = 500;
-
     // -------------------------------------------------------------------------
     // State
 
@@ -205,7 +202,7 @@ contract LM_PC_FundingPot_v1 is
         returns (
             bool isRoundOpen_,
             uint personalCap_,
-            bool overrideCap_,
+            bool overrideContributionSpan_,
             uint start_,
             uint cliff_,
             uint end_
@@ -225,7 +222,7 @@ contract LM_PC_FundingPot_v1 is
         return (
             false,
             privs.personalCap,
-            privs.overrideCap,
+            privs.overrideContributionSpan,
             privs.start,
             privs.cliff,
             privs.end
@@ -381,12 +378,17 @@ contract LM_PC_FundingPot_v1 is
         uint64 roundId_,
         uint8 accessId_,
         uint personalCap_,
-        bool overrideCap_,
+        uint capByNFT_,
+        uint capByMerkle_,
+        uint capByList_,
+        bool overrideContributionSpan_,
         uint start_,
         uint cliff_,
         uint end_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
+
+        uint highestCap = 0;
 
         _validateEditRoundParameters(round);
 
@@ -394,9 +396,39 @@ contract LM_PC_FundingPot_v1 is
             round.accessCriterias[accessId_].accessCriteriaId
                 == AccessCriteriaId.OPEN
         ) {
-            revert
-                Module__LM_PC_FundingPot__CannotSetPrivilegesForOpenAccessCriteria();
+            highestCap = personalCap_;
         }
+
+        if (
+            round.accessCriterias[accessId_].accessCriteriaId
+                == AccessCriteriaId.NFT && capByNFT_ > 0
+        ) {
+            uint nftCap = personalCap_ + capByNFT_;
+            if (nftCap > highestCap) {
+                highestCap = nftCap;
+            }
+        }
+
+        if (
+            round.accessCriterias[accessId_].accessCriteriaId
+                == AccessCriteriaId.MERKLE && capByMerkle_ > 0
+        ) {
+            uint merkleCap = personalCap_ + capByMerkle_;
+            if (merkleCap > highestCap) {
+                highestCap = merkleCap;
+            }
+        }
+
+        if (
+            round.accessCriterias[accessId_].accessCriteriaId
+                == AccessCriteriaId.LIST && capByList_ > 0
+        ) {
+            uint listCap = personalCap_ + capByList_;
+            if (listCap > highestCap) {
+                highestCap = listCap;
+            }
+        }
+
         if (!_validTimes(start_, cliff_, end_)) {
             revert Module__LM_PC_FundingPot__InvalidTimes();
         }
@@ -405,7 +437,8 @@ contract LM_PC_FundingPot_v1 is
             accessCriteriaPrivileges[roundId_][accessId_];
 
         accessCriteriaPrivileges.personalCap = personalCap_;
-        accessCriteriaPrivileges.overrideCap = overrideCap_;
+        accessCriteriaPrivileges.overrideContributionSpan =
+            overrideContributionSpan_;
         accessCriteriaPrivileges.start = start_;
         accessCriteriaPrivileges.cliff = cliff_;
         accessCriteriaPrivileges.end = end_;
@@ -414,7 +447,7 @@ contract LM_PC_FundingPot_v1 is
             roundId_,
             accessId_,
             personalCap_,
-            overrideCap_,
+            overrideContributionSpan_,
             start_,
             cliff_,
             end_
@@ -428,19 +461,9 @@ contract LM_PC_FundingPot_v1 is
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_
     ) external {
-        // Validate input amount.
-        if (amount_ == 0) {
-            revert Module__LM_PC_FundingPot__InvalidDepositAmount();
-        }
-
-        // Validate round and access criteria
-        Round storage round = _validateRoundAndAccessCriteria(
-            roundId_, accessCriteriaId_, merkleProof_
+        uint adjustedAmount = _validateRoundContribution(
+            roundId_, accessCriteriaId_, merkleProof_, amount_
         );
-
-        // Check timing and caps based on privileges
-        (uint adjustedAmount, bool canOverrideTimeAndCap) =
-            _validateTimingAndCaps(roundId_, accessCriteriaId_, amount_, round);
 
         _recordContribution(roundId_, msg.sender, adjustedAmount);
 
@@ -519,108 +542,80 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Validates the round existence and access criteria
     /// @param roundId_ ID of the round to validate
-    /// @param accessId_ ID of the access criteria to check
+    /// @param accessCriteriaId_ ID of the access criteria to check
     /// @param merkleProof_ Merkle proof for validation if needed
-    /// @return round The round storage object
-    function _validateRoundAndAccessCriteria(
+    /// @param amount_ The amount sent by the user
+    /// @return adjustedAmount The potentially adjusted contribution amount based on personal and round caps
+    function _validateRoundContribution(
         uint64 roundId_,
-        uint8 accessId_,
-        bytes32[] calldata merkleProof_
-    ) internal view returns (Round storage round) {
-        round = rounds[roundId_];
+        uint8 accessCriteriaId_,
+        bytes32[] calldata merkleProof_,
+        uint amount_
+    ) internal view returns (uint adjustedAmount) {
+        Round storage round = rounds[roundId_];
+        uint currentTime = block.timestamp;
+        uint adjustedAmount = amount_;
 
+        if (amount_ == 0) {
+            revert Module__LM_PC_FundingPot__InvalidDepositAmount();
+        }
         // Validate round exists.
         if (round.roundEnd == 0 && round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        // Validate access criteria.
-        _validateAccessCriteria(roundId_, accessId_, merkleProof_);
-
-        return round;
-    }
-
-    /// @notice Validates timing and cap constraints, adjusts amount if needed
-    /// @param roundId_ ID of the round
-    /// @param accessId_ ID of the access criteria
-    /// @param amount_ Requested contribution amount
-    /// @param round_ Round storage object
-    /// @return adjustedAmount The potentially adjusted contribution amount
-    /// @return canOverrideTimeAndCap Whether the user can override time and cap constraints
-    function _validateTimingAndCaps(
-        uint64 roundId_,
-        uint8 accessId_,
-        uint amount_,
-        Round storage round_
-    ) internal view returns (uint adjustedAmount, bool canOverrideTimeAndCap) {
-        adjustedAmount = amount_;
-
-        // Get access criteria privileges
-        AccessCriteriaPrivileges storage privileges =
-            accessCriteriaPrivileges[roundId_][accessId_];
-
-        canOverrideTimeAndCap = privileges.overrideCap;
-
-        _validateTiming(round_, privileges, canOverrideTimeAndCap);
-
-        // Handle cap validation and amount adjustment
-        adjustedAmount = _validateAndAdjustCaps(
-            roundId_, amount_, round_, privileges, canOverrideTimeAndCap
-        );
-
-        return (adjustedAmount, canOverrideTimeAndCap);
-    }
-
-    /// @notice Validates timing constraints based on privileges
-    /// @param round_ Round storage object
-    /// @param privileges_ Access criteria privileges
-    /// @param canOverrideTimeAndCap_ Whether the user can override time constraints
-    function _validateTiming(
-        Round storage round_,
-        AccessCriteriaPrivileges storage privileges_,
-        bool canOverrideTimeAndCap_
-    ) internal view {
-        if (canOverrideTimeAndCap_) {
-            return;
-        }
-
-        uint currentTime = block.timestamp;
-
-        // Check custom timing for this access level if defined
-        uint effectiveStart =
-            privileges_.start > 0 ? privileges_.start : round_.roundStart;
-        uint effectiveEnd =
-            privileges_.end > 0 ? privileges_.end : round_.roundEnd;
-
-        if (currentTime < effectiveStart) {
+        // Validate contribution timing
+        if (currentTime < round.roundStart) {
             revert Module__LM_PC_FundingPot__RoundHasNotStarted();
         }
-        if (effectiveEnd > 0 && currentTime > effectiveEnd) {
+
+        _validateAccessCriteria(roundId_, accessCriteriaId_, merkleProof_);
+
+        AccessCriteriaPrivileges storage privileges =
+            accessCriteriaPrivileges[roundId_][accessCriteriaId_];
+
+        bool canOverrideContributionSpan = privileges.overrideContributionSpan;
+
+        // Allow contributions after the round end if the user can override the contribution span
+        if (
+            round.roundEnd > 0 && currentTime > round.roundEnd
+                && !canOverrideContributionSpan
+        ) {
             revert Module__LM_PC_FundingPot__RoundHasEnded();
         }
+
+        adjustedAmount = _validateAndAdjustCaps(
+            roundId_,
+            amount_,
+            round,
+            accessCriteriaId_,
+            canOverrideContributionSpan
+        );
+
+        return adjustedAmount;
     }
 
     /// @notice Validates cap constraints and adjusts amount if needed
     /// @param roundId_ ID of the round
     /// @param amount_ Requested contribution amount
     /// @param round_ Round storage object
-    /// @param privileges_ Access criteria privileges
-    /// @param canOverrideTimeAndCap_ Whether the user can override cap constraints
+    /// @param canOverrideContributionSpan_ Whether the user can override cap constraints
     /// @return adjustedAmount The potentially adjusted contribution amount
     function _validateAndAdjustCaps(
         uint64 roundId_,
         uint amount_,
         Round storage round_,
-        AccessCriteriaPrivileges storage privileges_,
-        bool canOverrideTimeAndCap_
+        uint8 accessId_,
+        bool canOverrideContributionSpan_
     ) internal view returns (uint adjustedAmount) {
         adjustedAmount = amount_;
 
-        if (!canOverrideTimeAndCap_ && round_.roundCap > 0) {
+        if (!canOverrideContributionSpan_ && round_.roundCap > 0) {
             uint totalRoundContribution = _getTotalRoundContribution(roundId_);
             uint effectiveRoundCap = round_.roundCap;
 
-            // If global accumulative caps are enabled, add unused capacity from previous rounds
+            // If global accumulative caps are enabled,
+            // adjust the round cap to acommodate unused capacity from previous rounds
             if (round_.globalAccumulativeCaps) {
                 uint unusedCapacityFromPrevious = 0;
                 for (uint64 i = 1; i < roundId_; ++i) {
@@ -640,7 +635,7 @@ contract LM_PC_FundingPot_v1 is
                 revert Module__LM_PC_FundingPot__RoundCapReached();
             }
 
-            // Adjust for remaining round cap
+            // Allow the user to contribute up to the remaining round cap
             uint remainingRoundCap = effectiveRoundCap - totalRoundContribution;
             if (adjustedAmount > remainingRoundCap) {
                 adjustedAmount = remainingRoundCap;
@@ -649,10 +644,9 @@ contract LM_PC_FundingPot_v1 is
 
         // Check and adjust for personal cap
         uint userPreviousContribution =
-            _getUserContribution(roundId_, msg.sender);
-        uint userPersonalCap = privileges_.personalCap > 0
-            ? privileges_.personalCap
-            : _getUserPersonalCap(roundId_, msg.sender);
+            _getUserContributionToRound(roundId_, msg.sender);
+        uint userPersonalCap =
+            _getUserPersonalCapForRound(roundId_, accessId_, msg.sender);
 
         if (userPreviousContribution + adjustedAmount > userPersonalCap) {
             if (userPreviousContribution < userPersonalCap) {
@@ -663,37 +657,6 @@ contract LM_PC_FundingPot_v1 is
         }
 
         return adjustedAmount;
-    }
-
-    /// @notice Helper function to check if a user meets specific access criteria
-    /// @param accessCriteria_ The access criteria to check against
-    /// @param user_ The user address to validate
-    /// @param merkleProof_ Optional merkle proof for merkle-based validation
-    /// @return (bool, AccessCriteriaId) Returns success and the access criteria type used
-    function _checkAccessCriteriaEligibility(
-        AccessCriteria storage accessCriteria_,
-        address user_,
-        bytes32[] memory merkleProof_
-    ) internal view returns (bool, AccessCriteriaId) {
-        AccessCriteriaId criteriaId = accessCriteria_.accessCriteriaId;
-
-        if (criteriaId == AccessCriteriaId.OPEN) {
-            return (true, criteriaId);
-        }
-        bool isValid;
-        if (criteriaId == AccessCriteriaId.NFT) {
-            isValid = _checkNftOwnership(accessCriteria_.nftContract, user_);
-        } else if (criteriaId == AccessCriteriaId.MERKLE) {
-            isValid = _validateMerkleProof(
-                accessCriteria_.merkleRoot, user_, merkleProof_
-            );
-        } else if (criteriaId == AccessCriteriaId.LIST) {
-            isValid = _checkAllowedAddressList(
-                accessCriteria_.allowedAddresses, user_
-            );
-        }
-
-        return (isValid, criteriaId);
     }
 
     /// @notice Validates access criteria for a specific round and access type
@@ -713,19 +676,18 @@ contract LM_PC_FundingPot_v1 is
             return;
         }
 
-        (bool isValid, AccessCriteriaId criteriaId) =
-        _checkAccessCriteriaEligibility(
-            accessCriteria, msg.sender, merkleProof_
-        );
-
-        if (!isValid) {
-            if (criteriaId == AccessCriteriaId.NFT) {
-                revert Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
-            } else if (criteriaId == AccessCriteriaId.MERKLE) {
-                revert Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
-            } else if (criteriaId == AccessCriteriaId.LIST) {
-                revert Module__LM_PC_FundingPot__AccessCriteriaListFailed();
-            }
+        bool accessGranted = false;
+        if (accessCriteria.accessCriteriaId == AccessCriteriaId.NFT) {
+            accessGranted =
+                _checkNftOwnership(accessCriteria.nftContract, msg.sender);
+        } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE) {
+            accessGranted = _validateMerkleProof(
+                accessCriteria.merkleRoot, merkleProof_, msg.sender, roundId_
+            );
+        } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.LIST) {
+            accessGranted = _checkAllowedAddressList(
+                accessCriteria.allowedAddresses, msg.sender
+            );
         }
     }
 
@@ -746,7 +708,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  roundId_ The ID of the round to check contributions for
     /// @param  user_ The address of the user
     /// @return The user's contribution amount for the specified round
-    function _getUserContribution(uint64 roundId_, address user_)
+    function _getUserContributionToRound(uint64 roundId_, address user_)
         internal
         view
         returns (uint)
@@ -759,19 +721,23 @@ contract LM_PC_FundingPot_v1 is
     /// @param  roundId_ The ID of the current round
     /// @param  user_ The address of the user
     /// @return The personal contribution cap for the user
-    function _getUserPersonalCap(uint64 roundId_, address user_)
-        internal
-        view
-        returns (uint)
-    {
-        Round storage round = rounds[roundId_];
+    function _getUserPersonalCapForRound(
+        uint64 roundId_,
+        uint8 accessId_,
+        address user_
+    ) internal view returns (uint) {
+        AccessCriteriaPrivileges storage privileges =
+            accessCriteriaPrivileges[roundId_][accessId_];
 
+        uint personalCap = privileges.personalCap;
+
+        Round storage round = rounds[roundId_];
         if (round.globalAccumulativeCaps) {
             uint unusedCapacity =
-                _getUnusedCapacityFromPreviousRounds(user_, roundId_);
-            return BASE_PERSONAL_CAP + unusedCapacity;
+                _getUserUnusedCapacityFromPreviousRounds(user_, roundId_);
+            return personalCap + unusedCapacity;
         }
-        return BASE_PERSONAL_CAP;
+        return personalCap;
     }
 
     /// @notice Calculates unused contribution capacity from previous rounds
@@ -779,37 +745,32 @@ contract LM_PC_FundingPot_v1 is
     /// @param  user_ The address of the user
     /// @param  currentRoundId_ The ID of the current round
     /// @return Total unused contribution capacity from previous rounds
-    function _getUnusedCapacityFromPreviousRounds(
+    function _getUserUnusedCapacityFromPreviousRounds(
         address user_,
         uint64 currentRoundId_
     ) internal view returns (uint) {
         uint totalUnusedCapacity = 0;
-        bytes32[] memory emptyProof = new bytes32[](0);
 
         for (uint64 i = 1; i < currentRoundId_; ++i) {
             Round storage prevRound = rounds[i];
             if (!prevRound.globalAccumulativeCaps) continue;
 
-            uint personalCap = BASE_PERSONAL_CAP;
+            uint personalCap = 0;
 
-            // Check if there were specific privileges for this user in previous rounds
             for (uint8 j = 0; j < 4; ++j) {
                 AccessCriteria storage accessCriteria =
                     prevRound.accessCriterias[j];
-                (bool isValid,) = _checkAccessCriteriaEligibility(
-                    accessCriteria, user_, emptyProof
-                );
 
-                if (isValid) {
-                    AccessCriteriaPrivileges storage privileges =
-                        accessCriteriaPrivileges[i][j];
-                    if (privileges.personalCap > personalCap) {
-                        personalCap = privileges.personalCap;
-                    }
+                AccessCriteriaPrivileges storage privileges =
+                    accessCriteriaPrivileges[i][j];
+
+                // return only the highest personal cap from the selected access criteria
+                if (privileges.personalCap > personalCap) {
+                    personalCap = privileges.personalCap;
                 }
             }
 
-            uint userContribution = _getUserContribution(i, user_);
+            uint userContribution = _getUserContributionToRound(i, user_);
             if (userContribution < personalCap) {
                 totalUnusedCapacity += (personalCap - userContribution);
             }
@@ -863,14 +824,16 @@ contract LM_PC_FundingPot_v1 is
     /// @dev    Validates that the user's address is part of the Merkle tree
     /// @param  root_ The Merkle root to validate against
     /// @param  user_ The address of the user to check
+    /// @param  roundId_ The ID of the round to check
     /// @param  merkleProof_ The Merkle proof to verify
     /// @return Boolean indicating whether the proof is valid
     function _validateMerkleProof(
         bytes32 root_,
+        bytes32[] memory merkleProof_,
         address user_,
-        bytes32[] memory merkleProof_
+        uint64 roundId_
     ) internal pure returns (bool) {
-        bytes32 leaf = keccak256(abi.encodePacked(user_));
+        bytes32 leaf = keccak256(abi.encodePacked(user_, roundId_));
 
         if (!MerkleProof.verify(merkleProof_, root_, leaf)) {
             revert Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
