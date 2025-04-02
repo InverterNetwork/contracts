@@ -177,4 +177,11 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
     ) external view returns (bool) {
         return _validPaymentOrder(order_);
     }
+
+    function exposed_executePaymentTransfer(
+        uint orderId_,
+        QueuedOrder memory order_
+    ) external {
+        _executePaymentTransfer(orderId_, order_);
+    }
 }
