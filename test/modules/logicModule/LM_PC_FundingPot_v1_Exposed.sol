@@ -18,32 +18,32 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         return _getTotalRoundContribution(roundId_);
     }
 
-    function exposed_getUserContribution(uint64 roundId_, address user_)
+    function exposed_getUserContributionToRound(uint64 roundId_, address user_)
         external
         view
         returns (uint)
     {
-        return _getUserContribution(roundId_, user_);
+        return _getUserContributionToRound(roundId_, user_);
     }
 
     /**
      * @notice Exposes the internal _getUserPersonalCap function for testing
      */
-    function exposed_getUserPersonalCap(uint64 roundId_, address user_)
-        external
-        view
-        returns (uint)
-    {
-        return _getUserPersonalCap(roundId_, user_);
+    function exposed_getUserPersonalCapForRound(
+        uint64 roundId_,
+        uint8 accessId_,
+        address user_
+    ) external view returns (uint) {
+        return _getUserPersonalCapForRound(roundId_, accessId_, user_);
     }
 
     /**
      * @notice Exposes the internal _getUnusedCapacityFromPreviousRounds function for testing
      */
-    function exposed_getUnusedCapacityFromPreviousRounds(
+    function exposed_getUserUnusedCapacityFromPreviousRounds(
         address user_,
         uint64 currentRoundId_
     ) external view returns (uint) {
-        return _getUnusedCapacityFromPreviousRounds(user_, currentRoundId_);
+        return _getUserUnusedCapacityFromPreviousRounds(user_, currentRoundId_);
     }
 }

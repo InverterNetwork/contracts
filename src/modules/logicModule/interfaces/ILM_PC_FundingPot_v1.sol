@@ -43,7 +43,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     struct AccessCriteriaPrivileges {
         uint personalCap;
-        bool overrideCap;
+        bool overrideContributionSpan;
         uint start;
         uint cliff;
         uint end;
@@ -262,7 +262,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  accessId_ The identifier of the access criteria.
     /// @return isRoundOpen_ Whether the round is open
     /// @return personalCap_ The personal cap for the access criteria
-    /// @return overrideCap_ Whether to override the global cap
+    /// @return overrideContributionSpan_ Whether to override the round contribution span
     /// @return start_ The start timestamp for the access criteria
     /// @return cliff_ The cliff timestamp for the access criteria
     /// @return end_ The end timestamp for the access criteria
@@ -272,7 +272,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         returns (
             bool isRoundOpen_,
             uint personalCap_,
-            bool overrideCap_,
+            bool overrideContributionSpan_,
             uint start_,
             uint cliff_,
             uint end_
@@ -359,7 +359,10 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ ID of the round
     /// @param  accessId_ ID of the access criteria
     /// @param  personalCap_ Personal cap for the access criteria
-    /// @param  overrideCap_ Whether to override the global cap
+    /// @param  capByNFT_ Cap by for the NFT access criteria
+    /// @param  capByMerkle_ Cap for the Merkle root access criteria
+    /// @param  capByList_ Cap by for the List access criteria
+    /// @param  overrideContributionSpan_ Whether to override the round contribution span
     /// @param  start_ Start timestamp for the access criteria
     /// @param  cliff_ Cliff timestamp for the access criteria
     /// @param  end_ End timestamp for the access criteria
@@ -367,7 +370,10 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 roundId_,
         uint8 accessId_,
         uint personalCap_,
-        bool overrideCap_,
+        uint capByNFT_,
+        uint capByMerkle_,
+        uint capByList_,
+        bool overrideContributionSpan_,
         uint start_,
         uint cliff_,
         uint end_
