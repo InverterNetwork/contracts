@@ -41,7 +41,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address[] allowedAddresses; // Explicit allowlist
     }
 
-    struct AccessCriteriaPrivilages {
+    struct AccessCriteriaPrivileges {
         uint personalCap;
         bool overrideCap;
         uint start;
@@ -123,6 +123,24 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 indexed roundId_, uint8 accessId_, AccessCriteria accessCriteria_
     );
 
+    /// @notice Emitted when access criteria Privileges are set for a round.
+    /// @param  roundId_ The unique identifier of the round.
+    /// @param  accessId_ The identifier of the access criteria.
+    /// @param  personalCap_ The personal cap for the access criteria.
+    /// @param  overrideCap_ Whether to override the global cap.
+    /// @param  start_ The start timestamp for the access criteria.
+    /// @param  cliff_ The cliff timestamp for the access criteria.
+    /// @param  end_ The end timestamp for the access criteria.
+    event AccessCriteriaPrivilegesSet(
+        uint64 indexed roundId_,
+        uint8 accessId_,
+        uint personalCap_,
+        bool overrideCap_,
+        uint start_,
+        uint cliff_,
+        uint end_
+    );
+
     /// @notice Emitted when a contribution is made to a round
     /// @param  roundId_ The ID of the round
     /// @param  contributor_ The address of the contributor
@@ -164,6 +182,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid access criteria ID.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+    /// @notice Cannot set Privileges for open access criteria
+    error Module__LM_PC_FundingPot__CannotSetPrivilegesForOpenAccessCriteria();
+
+    /// @notice Invalid times
+    error Module__LM_PC_FundingPot__InvalidTimes();
 
     /// @notice Round has not started yet
     error Module__LM_PC_FundingPot__RoundHasNotStarted();
@@ -234,7 +257,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
             address[] memory allowedAddresses_
         );
 
-    /// @notice Retrieves the access criteria privilages for a specific funding round.
+    /// @notice Retrieves the access criteria Privileges for a specific funding round.
     /// @param  roundId_ The unique identifier of the round.
     /// @param  accessId_ The identifier of the access criteria.
     /// @return isRoundOpen_ Whether the round is open
@@ -243,7 +266,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return start_ The start timestamp for the access criteria
     /// @return cliff_ The cliff timestamp for the access criteria
     /// @return end_ The end timestamp for the access criteria
-    function getRoundAccessCriteriaPrivilages(uint64 roundId_, uint8 accessId_)
+    function getRoundAccessCriteriaPrivileges(uint64 roundId_, uint8 accessId_)
         external
         view
         returns (
@@ -331,23 +354,23 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         AccessCriteria memory accessCriteria_
     ) external;
 
-    /// @notice Set Access Criteria Privilages
+    /// @notice Set Access Criteria Privileges
     /// @dev    Only callable by funding pot admin and only before the round has started
     /// @param  roundId_ ID of the round
     /// @param  accessId_ ID of the access criteria
     /// @param  personalCap_ Personal cap for the access criteria
     /// @param  overrideCap_ Whether to override the global cap
-    /// @param  _start Start timestamp for the access criteria
-    /// @param  _cliff Cliff timestamp for the access criteria
-    /// @param  _end End timestamp for the access criteria
-    function setAccessCriteriaPrivilages(
+    /// @param  start_ Start timestamp for the access criteria
+    /// @param  cliff_ Cliff timestamp for the access criteria
+    /// @param  end_ End timestamp for the access criteria
+    function setAccessCriteriaPrivileges(
         uint64 roundId_,
         uint8 accessId_,
         uint personalCap_,
         bool overrideCap_,
-        uint _start,
-        uint _cliff,
-        uint _end
+        uint start_,
+        uint cliff_,
+        uint end_
     ) external;
 
     /// @notice Allows a user to contribute to a specific funding round.
@@ -355,13 +378,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The unique identifier of the funding round.
     /// @param  amount_ The amount of tokens being contributed.
     /// @param  accessCriteriaId_ The identifier for the access criteria to validate eligibility.
-    /// @param  contributionToken_ The address of the token used for contribution.
     /// @param  merkleProof_ The Merkle proof used to verify the contributor's eligibility.
     function contributeToRound(
         uint64 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
-        address contributionToken_,
         bytes32[] calldata merkleProof_
     ) external;
 }
