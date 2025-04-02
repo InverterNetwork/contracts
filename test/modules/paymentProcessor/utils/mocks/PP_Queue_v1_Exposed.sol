@@ -88,9 +88,12 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
         address token_,
         address client_,
         address recipient_,
-        uint amount_
+        uint amount_,
+        bool collectProtocolFee_
     ) external returns (bool) {
-        return _tryPaymentTransfer(token_, client_, recipient_, amount_);
+        return _tryPaymentTransfer(
+            token_, client_, recipient_, amount_, collectProtocolFee_
+        );
     }
 
     function exposed_lowLevelTransfer(
@@ -104,9 +107,12 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
 
     function exposed_getProtocolFeeDetails(
         uint totalAmount_,
-        bytes4 functionSelector_
+        bytes4 functionSelector_,
+        bool collectProtocolFee_
     ) external view returns (uint, uint, address) {
-        return _getProtocolFeeDetails(totalAmount_, functionSelector_);
+        return _getProtocolFeeDetails(
+            totalAmount_, functionSelector_, collectProtocolFee_
+        );
     }
 
     function exposed_orderExists(

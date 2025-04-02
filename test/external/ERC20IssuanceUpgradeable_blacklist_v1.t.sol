@@ -338,24 +338,20 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         ├── Given the caller is not the blacklist manager
         │   └── When the function addToBlacklistBatched() is called
         │       └── Then the function should revert (Modifier in place test)
-        ├── Given number of addresses is greater than BATCH_LIMIT
-        │   └── When addToBlacklistBatched() is called
-        │       └── Then it should revert
-        └── Given number of addresses is less than or equal to BATCH_LIMIT
-        ├── And all addresses are not blacklisted
-        │   └── When addToBlacklistBatched() is called
-        │       └── Then it should emit an event for each address
-        │           └── And it should add each address to the blacklist
-        └── And the list contains not blacklisted and blacklisted addresses
-            └── Then it should add the addresses that are not blacklisted
-                └── And it should skip the addresses that are already blacklisted (idempotent)
+        └── Given the caller is a blacklist manager
+            ├── And the number of addresses is greater than BATCH_LIMIT
+            │   └── When addToBlacklistBatched() is called
+            │       └── Then it should revert
+            └── And the number of addresses is less than or equal to BATCH_LIMIT
+                └── When addToBlacklistBatched() is called
+                    └── Then it should set the addresses to be blacklisted
+                        └── And it should add each address to the blacklist
     */
-
     function testAddToBlacklistBatched_worksGivenModifierInPlace(
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
+        vm.assume(unauthorized_ != address(this));
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
@@ -406,58 +402,24 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         }
     }
 
-    function testAddToBlacklistBatched_worksGivenSomeAddressesAlreadyBlacklisted(
-        uint numberOfAddresses_
-    ) public {
-        // Setup
-        numberOfAddresses_ = bound(numberOfAddresses_, 2, BATCH_LIMIT);
-        address[] memory addresses = _generateAddresses(numberOfAddresses_);
-        // Get number of addresses to blacklist, given no address is blacklisted yet
-        uint numberOfBlacklistedAddresses = numberOfAddresses_ / 2;
-        // Blacklist subset of addresses
-        addresses =
-            _blacklistNumberOfAddresses(numberOfBlacklistedAddresses, addresses);
-        // Assert pre condition
-        for (uint i; i < numberOfBlacklistedAddresses; ++i) {
-            assertTrue(
-                token.isBlacklisted(addresses[i]),
-                "Address should be blacklisted"
-            );
-        }
-
-        // Test
-        token.addToBlacklistBatched(addresses);
-
-        // assertion
-        for (uint i; i < addresses.length; ++i) {
-            assertTrue(
-                token.isBlacklisted(addresses[i]),
-                "Address should be blacklisted"
-            );
-        }
-    }
-
     /*  Test: Function removeFromBlacklistBatched()
         ├── Given the caller is not the blacklist manager
         │   └── When the function removeFromBlacklistBatched() is called
         │       └── Then the function should revert (Modifier in place test)
-        ├── Given number of addresses is greater than BATCH_LIMIT
-        │   └── When removeFromBlacklistBatched() is called
-        │       └── Then it should revert
-        └── Given number of addresses is less than or equal to BATCH_LIMIT
-        ├── And all addresses are blacklisted
-        │   └── When removeFromBlacklistBatched() is called
-        │       └── Then it should emit an event for each address
-        │           └── And it should remove each address from the blacklist
-        └── And the list contains not blacklisted and blacklisted addresses
-            ├── Then it should remove the addresses that are blacklisted
-                └── And it should skip the addresses that are already non-blacklisted (idempotent)
+        └── Given the caller is a blacklist manager
+            ├── And the number of addresses is greater than BATCH_LIMIT
+            │   └── When removeFromBlacklistBatched() is called
+            │       └── Then it should revert
+            └── And the number of addresses is less than or equal to BATCH_LIMIT
+                └── When removeFromBlacklistBatched() is called
+                    └── Then it should set the addresses to non-blacklisted
+                        └── And it should remove each address from the blacklist
     */
     function testRemoveFromBlacklistBatched_worksGivenModifierInPlace(
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != proxyAdmin && unauthorized_ != address(this));
+        vm.assume(unauthorized_ != address(this));
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
@@ -515,39 +477,6 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         }
     }
 
-    function testRemoveFromBlacklistBatched_worksGivenSomeAddressesNotBlacklisted(
-        uint numberOfAddresses_
-    ) public {
-        // Setup
-        numberOfAddresses_ = bound(numberOfAddresses_, 2, BATCH_LIMIT);
-        address[] memory addresses = _generateAddresses(numberOfAddresses_);
-        // Get number of addresses to blacklist, given no address is blacklisted yet
-        uint numberOfBlacklistedAddresses = numberOfAddresses_ / 2;
-        // Blacklist subset of addresses
-        addresses =
-            _blacklistNumberOfAddresses(numberOfBlacklistedAddresses, addresses);
-        // Assert pre condition
-        uint i = numberOfBlacklistedAddresses; // start from the first non-blacklisted address
-        for (i; i < numberOfAddresses_; ++i) {
-            assertFalse(
-                token.isBlacklisted(addresses[i]),
-                "Address should be not be blacklisted"
-            );
-            ++i;
-        }
-
-        // Test
-        token.removeFromBlacklistBatched(addresses);
-
-        // assertion
-        for (uint j; j < addresses.length; ++j) {
-            assertFalse(
-                token.isBlacklisted(addresses[j]),
-                "Address should be not be blacklisted"
-            );
-        }
-    }
-
     /*  Test: Function setBlacklistManager()
         ├── Given the caller is not the owner
         │   └── When the function setBlacklistManager() is called
@@ -596,6 +525,115 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
 
     // ================================================================================
     // Test Internal
+
+    /*  Test: Function _addToBlacklist()    
+        ├── Given the address is the zero address
+        │   └── When the function _addToBlacklist() is called
+        │       └── Then it should revert
+        └── Given the address is not the zero address
+            ├── And the address is not blacklisted
+            │   └── When the function _addToBlacklist() is called
+            │       └── Then it should add the address to the blacklist
+            │           └── And it should emit an event
+            └── And the address is blacklisted
+                └── When the function _addToBlacklist() is called
+                    └── Then it should skip adding the address to the blacklist (idempotent)
+    */
+    function testInternalAddToBlacklist_revertGivenAddressIsZero() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Issuance_Blacklist_v1
+                    .ERC20Issuance_Blacklist_ZeroAddress
+                    .selector
+            )
+        );
+        token.exposed_addToBlacklist(address(0));
+    }
+
+    function testInternalAddToBlacklist_worksGivenAddressIsNotBlacklisted(
+        address user_
+    ) public {
+        // setup
+        vm.assume(user_ != address(0));
+        // pre-condition
+        assertFalse(
+            token.isBlacklisted(user_), "User should not be blacklisted"
+        );
+        // test
+        vm.expectEmit(true, true, true, true);
+        emit IERC20Issuance_Blacklist_v1.AddedToBlacklist(user_, address(this));
+        token.exposed_addToBlacklist(user_);
+        // assertion
+        assertTrue(token.isBlacklisted(user_), "User should be blacklisted");
+    }
+
+    function testInternalAddToBlacklist_worksGivenAddressIsBlacklisted(
+        address user_
+    ) public {
+        // setup
+        vm.assume(user_ != address(0));
+        // pre-condition
+        token.addToBlacklist(user_);
+        assertTrue(token.isBlacklisted(user_), "User should be blacklisted");
+        // test
+        // start recording logs
+        vm.recordLogs();
+        token.exposed_addToBlacklist(user_);
+        // assertion
+        assertEq(vm.getRecordedLogs().length, 0, "There should be 0 log entry");
+        assertTrue(token.isBlacklisted(user_), "User should be blacklisted");
+    }
+
+    /*  Test: Function _removeFromBlacklist()    
+        └── Given the address is blacklisted
+            ├── And the address is blacklisted
+            │   └── When the function _removeFromBlacklist() is called
+            │       └── Then it should remove the address from the blacklist
+            │           └── And it should emit an event
+            └── Given the address is not blacklisted
+                └── When the function _removeFromBlacklist() is called
+                    └── Then it should skip removing the address from the blacklist (idempotent)
+    */
+
+    function testInternalRemoveFromBlacklist_worksGivenAddressIsBlacklisted(
+        address user_
+    ) public {
+        // setup
+        vm.assume(user_ != address(0));
+        // pre-condition
+        token.addToBlacklist(user_);
+        assertTrue(token.isBlacklisted(user_), "User should be blacklisted");
+        // test
+        vm.expectEmit(true, true, true, true);
+        emit IERC20Issuance_Blacklist_v1.RemovedFromBlacklist(
+            user_, address(this)
+        );
+        token.exposed_removeFromBlacklist(user_);
+        // assertion
+        assertFalse(
+            token.isBlacklisted(user_), "User should not be blacklisted"
+        );
+    }
+
+    function testInternalRemoveFromBlacklist_worksGivenAddressIsNotBlacklisted(
+        address user_
+    ) public {
+        // setup
+        vm.assume(user_ != address(0));
+        // pre-condition
+        assertFalse(
+            token.isBlacklisted(user_), "User should not be blacklisted"
+        );
+        // test
+        // start recording logs
+        vm.recordLogs();
+        token.exposed_removeFromBlacklist(user_);
+        // assertion
+        assertEq(vm.getRecordedLogs().length, 0, "There should be 0 log entry");
+        assertFalse(
+            token.isBlacklisted(user_), "User should not be blacklisted"
+        );
+    }
 
     // --------------------------------------------------------------------------------
     // Feature: Authorization for Blacklist Modification

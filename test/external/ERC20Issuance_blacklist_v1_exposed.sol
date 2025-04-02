@@ -40,4 +40,12 @@ contract ERC20Issuance_Blacklist_v1_Exposed is ERC20Issuance_Blacklist_v1 {
     function exposed_mint(address to_, uint amount_) public {
         _mint(to_, amount_);
     }
+
+    function exposed_addToBlacklist(address account_) public {
+        _addToBlacklist(account_);
+    }
+
+    function exposed_removeFromBlacklist(address account_) public {
+        _removeFromBlacklist(account_);
+    }
 }
