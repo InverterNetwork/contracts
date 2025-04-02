@@ -24,6 +24,7 @@ import {IAccessControlEnumerable} from
 interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ========================================================================
     // Errors
+
     /// @notice The provided initial admin address is invalid.
     error Module__Authorizer__InvalidInitialAdmin();
 

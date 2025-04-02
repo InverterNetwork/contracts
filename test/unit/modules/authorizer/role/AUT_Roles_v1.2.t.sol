@@ -59,6 +59,8 @@ contract AUT_Roles_v1_Test is ModuleTest {
     address _bob = makeAddr("Bob");
     address _alice = makeAddr("Alice");
 
+    // Addresses
+
     // Bob and Alice can Access
     bytes4 _selector1 = bytes4(keccak256("selector1()"));
     // Alice can access
@@ -85,9 +87,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     /*
     Test: SupportsInterface
-    ├── When: the function supportsInterface is called
-    └── And: the interfaceId is IAuthorizer_v1
-        └── Then: the function should return true
+    └── Given: The interfaceId is IAuthorizer_v1
+        └── When: the function supportsInterface is called
+            └── Then: the function should return true
     */
     function testSupportsInterface() public {
         assertTrue(_authSuT.supportsInterface(type(IAuthorizer_v1).interfaceId));

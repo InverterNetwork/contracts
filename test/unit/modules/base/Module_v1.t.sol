@@ -40,20 +40,16 @@ import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
 import {OZErrors} from "@tool/OZErrors.sol";
 
 contract ModuleBaseV1Test is ModuleTest {
+    ///////////////////////////////////////////////////////////////////////////
+    // State
+
     // SuT
     ModuleV1Mock module;
 
     bytes _CONFIGDATA = bytes("");
 
-    //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Module has been initialized.
-    /// @param  parentOrchestrator The address of the orchestrator the module is linked to.
-    /// @param  metadata The metadata of the module.
-    event ModuleInitialized(
-        address indexed parentOrchestrator, IModule_v1.Metadata metadata
-    );
+    ///////////////////////////////////////////////////////////////////////////
+    // Setup
 
     function setUp() public {
         address impl = address(new ModuleV1Mock());
@@ -62,14 +58,20 @@ contract ModuleBaseV1Test is ModuleTest {
         _setUpOrchestrator(module);
 
         vm.expectEmit(true, true, true, false);
-        emit ModuleInitialized(address(_orchestrator), _METADATA);
+        emit IModule_v1.ModuleInitialized(address(_orchestrator), _METADATA);
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
-    //--------------------------------------------------------------------------
-    // Tests: Initialization
+    ///////////////////////////////////////////////////////////////////////////
+    // Test Initialization
 
+    /*
+    Test: SupportsInterface
+    └── Given: The interfaceId is IModule_v1
+        └── When: the function supportsInterface is called
+            └── Then: the function should return true
+    */
     function testSupportsInterface() public {
         assertTrue(module.supportsInterface(type(IModule_v1).interfaceId));
     }
@@ -143,8 +145,178 @@ contract ModuleBaseV1Test is ModuleTest {
         );
     }
 
+    /////////////////////////////////////////////////////////////////////////////
+    // Test Modifier
+
     //--------------------------------------------------------------------------
-    // Role Functions
+    // Modifier
+
+    /* Test modifier onlyPaymentClient
+        ├── given the caller is not a PaymentClient
+        │   └── when the function modifierOnlyPaymentClientCheck() gets called
+        │       └── then it should revert
+        └── given the caller is a PaymentClient module
+            └── and the PaymentClient module is not registered in the Orchestrator
+                └── when the function modifierOnlyPaymentClientCheck() gets called
+                    └── then it should revert
+    */
+
+    function testOnlyPaymentClientModifier_worksGivenCallerIsNotPaymentClient(
+        address _notPaymentClient
+    ) public {
+        vm.prank(address(_notPaymentClient));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        module.modifierOnlyPaymentClientCheck();
+    }
+
+    function testOnlyPaymentClientModifier_worksGivenCallerIsPaymentClientButNotRegisteredModule(
+    ) public {
+        ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock =
+            new ERC20PaymentClientBaseV2Mock();
+
+        vm.prank(address(_erc20PaymentClientMock));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        module.modifierOnlyPaymentClientCheck();
+    }
+
+    /*
+    Test: validAddress
+    └── Given: The address is either the zero address or the module address
+        └── When: validAddress is called
+            └── Then: The function should revert
+    */
+
+    function testValidAddress(address adr) public {
+        if (adr == address(0) || adr == address(module)) {
+            vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        }
+        module.modifierOnlyValidAddressCheck(adr);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test External Functions
+
+    // ========================================================================
+    // Public Getter Functions
+
+    // ------------------------------------------------------------------------
+    // Getter - Module State
+
+    /*
+    Test: identifier
+    └── When: the function identifier is called
+        └── Then: the function should return the identifier
+    */
+    // Trivial
+    /*
+    Test: version
+    └── When: the function version is called
+        └── Then: the function should return the version
+    */
+    // Trivial
+    /*
+    Test: url
+    └── When: the function url is called
+        └── Then: the function should return the url
+    */
+    // Trivial
+    /*
+    Test: title
+    └── When: the function title is called
+        └── Then: the function should return the title
+    */
+    // Trivial
+    /*
+    Test: orchestrator
+    └── When: the function orchestrator is called
+        └── Then: the function should return the orchestrator
+    */
+    // Trivial
+
+    //--------------------------------------------------------------------------
+    // Getter - ERC2771 Context Upgradeable Overrides
+
+    //@todo This test is weird and probably needs to be moved to a different test file
+    function test_msgSender(address signer, address sender, bool fromForwarder)
+        public
+    {
+        vm.assume(sender != address(_forwarder));
+
+        // Activate the trustedForwarder connection
+        _orchestrator.flipConnectToTrustedForwarder();
+
+        // setup function signature that will trigger the _msgSender
+        bytes memory originalCallData =
+            abi.encodeWithSignature("original_msgSender()");
+
+        // this should add the 20 bytes of the address to the end of the calldata
+        bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
+
+        if (fromForwarder) {
+            sender = address(_forwarder);
+        }
+        // use call to properly use the added address at the end of the callData
+        vm.prank(sender);
+        (bool success, bytes memory returndata) =
+            address(module).call(metaTxCallData);
+
+        assertTrue(success);
+
+        // Decode the correct perceivedAddress out of the call returndata
+        address perceivedSender = abi.decode(returndata, (address));
+
+        if (fromForwarder) {
+            // If from Forwarder it should recognize the signer as the sender
+            assertEq(perceivedSender, signer);
+        } else {
+            // If not it should be the sender
+            assertEq(perceivedSender, sender);
+        }
+    }
+
+    //@todo This test is weird and probably needs to be moved to a different test file
+    function test_msgData(address signer, address sender, bool fromForwarder)
+        public
+    {
+        vm.assume(sender != address(_forwarder));
+
+        // Activate the trustedForwarder connection
+        _orchestrator.flipConnectToTrustedForwarder();
+
+        // setup function signature that will trigger the _msgData
+        bytes memory originalCallData =
+            abi.encodeWithSignature("original_msgData()");
+
+        // this should add the 20 bytes of the address to the end of the calldata
+        bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
+
+        if (fromForwarder) {
+            sender = address(_forwarder);
+        }
+        // use call to properly use the added address at the end of the callData
+        vm.prank(sender);
+        (bool success, bytes memory returndata) =
+            address(module).call(metaTxCallData);
+
+        assertTrue(success);
+
+        // Decode the correct perceivedData out of the call returndata
+        bytes memory perceivedData = abi.decode(returndata, (bytes));
+
+        if (fromForwarder) {
+            // If from Forwarder it should have clipped the data to the size before the signer was added
+            assertEq(perceivedData, originalCallData);
+        } else {
+            // If not it should be full data without the clipping
+            assertEq(perceivedData, metaTxCallData);
+        }
+    }
+
+    // ========================================================================
+    // Mutating Functions
+
+    // ------------------------------------------------------------------------
+    // Mutating - Out of Order
 
     /*
     Test: grantModuleRole
@@ -202,8 +374,11 @@ contract ModuleBaseV1Test is ModuleTest {
         module.revokeModuleRoleBatched(bytes32(uint(0)), new address[](0));
     }
 
-    //--------------------------------------------------------------------------
-    // FeeManager
+    // ========================================================================
+    // Internal Functions
+
+    // ------------------------------------------------------------------------
+    // Internal - Fees
 
     function testGetFeeManagerCollateralFeeData(bytes4 functionSelector)
         public
@@ -251,120 +426,5 @@ contract ModuleBaseV1Test is ModuleTest {
 
         assertEq(returnFee, setFee);
         assertEq(returnTreasury, treasury);
-    }
-
-    //--------------------------------------------------------------------------
-    // ERC2771
-
-    function test_msgSender(address signer, address sender, bool fromForwarder)
-        public
-    {
-        vm.assume(sender != address(_forwarder));
-
-        // Activate the trustedForwarder connection
-        _orchestrator.flipConnectToTrustedForwarder();
-
-        // setup function signature that will trigger the _msgSender
-        bytes memory originalCallData =
-            abi.encodeWithSignature("original_msgSender()");
-
-        // this should add the 20 bytes of the address to the end of the calldata
-        bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
-
-        if (fromForwarder) {
-            sender = address(_forwarder);
-        }
-        // use call to properly use the added address at the end of the callData
-        vm.prank(sender);
-        (bool success, bytes memory returndata) =
-            address(module).call(metaTxCallData);
-
-        assertTrue(success);
-
-        // Decode the correct perceivedAddress out of the call returndata
-        address perceivedSender = abi.decode(returndata, (address));
-
-        if (fromForwarder) {
-            // If from Forwarder it should recognize the signer as the sender
-            assertEq(perceivedSender, signer);
-        } else {
-            // If not it should be the sender
-            assertEq(perceivedSender, sender);
-        }
-    }
-
-    function test_msgData(address signer, address sender, bool fromForwarder)
-        public
-    {
-        vm.assume(sender != address(_forwarder));
-
-        // Activate the trustedForwarder connection
-        _orchestrator.flipConnectToTrustedForwarder();
-
-        // setup function signature that will trigger the _msgData
-        bytes memory originalCallData =
-            abi.encodeWithSignature("original_msgData()");
-
-        // this should add the 20 bytes of the address to the end of the calldata
-        bytes memory metaTxCallData = abi.encodePacked(originalCallData, signer);
-
-        if (fromForwarder) {
-            sender = address(_forwarder);
-        }
-        // use call to properly use the added address at the end of the callData
-        vm.prank(sender);
-        (bool success, bytes memory returndata) =
-            address(module).call(metaTxCallData);
-
-        assertTrue(success);
-
-        // Decode the correct perceivedData out of the call returndata
-        bytes memory perceivedData = abi.decode(returndata, (bytes));
-
-        if (fromForwarder) {
-            // If from Forwarder it should have clipped the data to the size before the signer was added
-            assertEq(perceivedData, originalCallData);
-        } else {
-            // If not it should be full data without the clipping
-            assertEq(perceivedData, metaTxCallData);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Modifier
-
-    /* Test modifier onlyPaymentClient
-        ├── given the caller is not a PaymentClient
-        │   └── when the function modifierOnlyPaymentClientCheck() gets called
-        │       └── then it should revert
-        └── given the caller is a PaymentClient module
-            └── and the PaymentClient module is not registered in the Orchestrator
-                └── when the function modifierOnlyPaymentClientCheck() gets called
-                    └── then it should revert
-    */
-
-    function testOnlyPaymentClientModifier_worksGivenCallerIsNotPaymentClient(
-        address _notPaymentClient
-    ) public {
-        vm.prank(address(_notPaymentClient));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
-        module.modifierOnlyPaymentClientCheck();
-    }
-
-    function testOnlyPaymentClientModifier_worksGivenCallerIsPaymentClientButNotRegisteredModule(
-    ) public {
-        ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock =
-            new ERC20PaymentClientBaseV2Mock();
-
-        vm.prank(address(_erc20PaymentClientMock));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
-        module.modifierOnlyPaymentClientCheck();
-    }
-
-    function testValidAddress(address adr) public {
-        if (adr == address(0) || adr == address(module)) {
-            vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
-        }
-        module.modifierOnlyValidAddressCheck(adr);
     }
 }
