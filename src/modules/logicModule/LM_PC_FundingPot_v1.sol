@@ -134,6 +134,7 @@ contract LM_PC_FundingPot_v1 is
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata_);
         address fundingPotToken;
+        (fundingPotToken) = abi.decode(configData_, (address));
         // Set the flags for the PaymentOrders (this module uses 3 flags).
         bytes32 flags;
         flags |= bytes32(1 << FLAG_START);
