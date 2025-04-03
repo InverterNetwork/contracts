@@ -65,7 +65,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundCap_ The maximum allocation or cap for the round.
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
     /// @param  hookFunction_ The encoded function call for the hook.
-    /// @param  closureMechanism_ A boolean indicating whether a specific closure mechanism is enabled.
+    /// @param  autoClosure_ A boolean indicating whether a specific closure mechanism is enabled.
     /// @param  globalAccumulativeCaps_ A boolean indicating whether global accumulative caps are enforced.
     event RoundCreated(
         uint indexed roundId_,
@@ -74,7 +74,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint roundCap_,
         address hookContract_,
         bytes hookFunction_,
-        bool closureMechanism_,
+        bool autoClosure_,
         bool globalAccumulativeCaps_
     );
 
@@ -86,7 +86,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundCap_ The updated maximum allocation or cap for the round.
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
     /// @param  hookFunction_ The updated encoded function call for the hook.
-    /// @param  closureMechanism_ A boolean indicating whether a specific closure mechanism is enabled.
+    /// @param  autoClosure_ A boolean indicating whether a specific closure mechanism is enabled.
     /// @param  globalAccumulativeCaps_ A boolean indicating whether global accumulative caps are enforced.
     event RoundEdited(
         uint indexed roundId_,
@@ -95,7 +95,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint roundCap_,
         address hookContract_,
         bytes hookFunction_,
-        bool closureMechanism_,
+        bool autoClosure_,
         bool globalAccumulativeCaps_
     );
 
@@ -161,7 +161,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return roundCap_ The maximum contribution cap for the round.
     /// @return hookContract_ The address of the hook contract.
     /// @return hookFunction_ The encoded function call for the hook.
-    /// @return closureMechanism_ Whether hook closure coincides with contribution span end.
+    /// @return autoClosure_ Whether hook closure coincides with contribution span end.
     /// @return globalAccumulativeCaps_ Whether caps accumulate globally across rounds.
     function getRoundGenericParameters(uint64 roundId_)
         external
@@ -172,18 +172,18 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
             uint roundCap_,
             address hookContract_,
             bytes memory hookFunction_,
-            bool closureMechanism_,
+            bool autoClosure_,
             bool globalAccumulativeCaps_
         );
 
     /// @notice Retrieves the access criteria for a specific funding round.
     /// @param  roundId_ The unique identifier of the round to retrieve.
-    /// @param  id_ The identifier of the access criteria to retrieve.
+    /// @param  accessCriteriaId_ The identifier of the access criteria to retrieve.
     /// @return isOpen_ Whether the access criteria is open.
     /// @return nftContract_ The address of the NFT contract used for access control.
     /// @return merkleRoot_ The merkle root used for access verification.
     /// @return allowedAddresses_ The list of explicitly allowed addresses.
-    function getRoundAccessCriteria(uint64 roundId_, uint8 id_)
+    function getRoundAccessCriteria(uint64 roundId_, uint8 accessCriteriaId_)
         external
         view
         returns (
@@ -215,7 +215,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundCap_ Maximum contribution cap in collateral tokens (0 if using roundEnd only).
     /// @param  hookContract_ Address of contract to call after round closure.
     /// @param  hookFunction_ Encoded function call for the hook.
-    /// @param  closureMechanism_ Whether hook closure coincides with contribution span end.
+    /// @param  autoClosure_ Whether hook closure coincides with contribution span end.
     /// @param  globalAccumulativeCaps_ Whether caps accumulate globally.
     /// @return The ID of the newly created round.
     function createRound(
@@ -224,7 +224,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint roundCap_,
         address hookContract_,
         bytes memory hookFunction_,
-        bool closureMechanism_,
+        bool autoClosure_,
         bool globalAccumulativeCaps_
     ) external returns (uint64);
 
@@ -236,7 +236,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundCap_ New maximum contribution cap.
     /// @param  hookContract_ New hook contract address.
     /// @param  hookFunction_ New encoded function call.
-    /// @param  closureMechanism_ New closure mechanism setting.
+    /// @param  autoClosure_ New closure mechanism setting.
     /// @param  globalAccumulativeCaps_ New global accumulative caps setting.
     function editRound(
         uint64 roundId_,
@@ -245,7 +245,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint roundCap_,
         address hookContract_,
         bytes memory hookFunction_,
-        bool closureMechanism_,
+        bool autoClosure_,
         bool globalAccumulativeCaps_
     ) external;
 
