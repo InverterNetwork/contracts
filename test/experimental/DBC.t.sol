@@ -35,14 +35,18 @@ contract DBCTest is Test {
     }
 
     function test_getTrancheDetails_givenFloorTranche() public {
-        console.log(
-            "dbc.getTrancheDetails(0).reserveCapacity",
-            dbc.getTrancheDetails(0).reserveCapacity
-        );
         assertEq(dbc.getTrancheDetails(0).reserveCapacity, 400 ether);
     }
 
     function test_getTrancheDetails_givenAnchorTranche() public {
         assertEq(dbc.getTrancheDetails(1).reserveCapacity, 1250 ether);
+    }
+
+    function test_getTrancheReserveAtSupply_givenAnchorTranche() public {
+        uint256 supply = 650 ether;
+
+        uint256 reserve = dbc.getTrancheReserveAtSupply(1, supply);
+        
+        assertEq(reserve, 125 ether);
     }
 }

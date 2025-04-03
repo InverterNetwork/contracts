@@ -20,10 +20,10 @@ contract DBC is IDBC {
         uint256 stepHeight_,
         uint256 stepsAmount_
     ) external { 
-        uint256 reserveCapacity = getTrancheReserveCapacity(
-            startingPrice_,
+        uint256 reserveCapacity = calcAreaUnderCurve(
             startSupply_,
             endSupplyExcluding_,
+            startingPrice_,
             stepHeight_,
             stepsAmount_
         );
@@ -56,19 +56,58 @@ contract DBC is IDBC {
              t.reserveCapacity
          );
     }
+    function getTrancheReserveAtSupply(
+        uint8 index_,
+        uint256 supply_
+    ) public view returns (uint256 reserve) {
+        Tranche memory t = tranches[index_];
 
-    function getTrancheReserveCapacity(
-        uint256 startingPrice_,
-        uint256 startSupply_,
-        uint256 endSupplyExcluding_,
-        uint256 stepHeight_,
-        uint256 stepsAmount_
-    ) public view returns (uint256 capacity) {
-        // if tranche consists of multiple linear steps
-        uint256 length = endSupplyExcluding_ - startSupply_;
-        uint256 height = stepHeight_ * stepsAmount_ + stepHeight_;
+        // find out in which step within the tranch are we
+        uint256 stepLength = (t.endSupplyExcluding - t.startSupply) / t.stepsAmount;
+        uint256 currentStepIdx = (supply_ - t.startSupply) / stepLength; 
+        
+        // calculate the area of the completed steps
+        uint256 endSupplyForCompletedSteps = t.startSupply + (currentStepIdx * stepLength);
+        uint256 areaForCompletedSteps = calcAreaUnderCurve(
+            t.startSupply,
+            endSupplyForCompletedSteps,
+            t.startingPrice,
+            t.stepHeight,
+            currentStepIdx
+        );
+
+        // calculate the area of the remaining step
+        uint256 length = supply_ - endSupplyForCompletedSteps;
+        uint256 roofHeight = (t.stepHeight * (currentStepIdx + 1));
+        uint256 baseHeight = t.startingPrice;
+
+        uint256 baseArea = calcRectangleArea(length, baseHeight);
+        uint256 roofArea = calcRectangleArea(length, roofHeight);
+
+        reserve = baseArea + roofArea;
+
+        return reserve;
+    }
+
+    function calcAreaUnderCurve(
+        uint256 x0,
+        uint256 x1,
+        uint256 y0,
+        uint256 stepHeight,
+        uint256 stepsAmount
+    ) public pure returns (uint256 area) {
+        uint256 length = x1 - x0;
+        uint256 height = stepHeight * stepsAmount + stepHeight;
         uint256 area = length * height / 2;
-        capacity += (area / 1 ether) + (startingPrice_ * (endSupplyExcluding_ - startSupply_) / 1 ether);
-        return capacity;
+        
+        uint256 stepArea = area / 1 ether;
+        uint256 squareArea = y0 * (x1 - x0) / 1 ether;
+
+        area = stepArea + squareArea;
+        return area;
+    }
+
+    function calcRectangleArea(uint256 x, uint256 y) public pure returns (uint256 area) {
+        area = x * y / 1 ether;
     }
 }
