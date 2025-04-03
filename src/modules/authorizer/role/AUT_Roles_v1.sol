@@ -252,12 +252,7 @@ contract AUT_Roles_v1 is
         address target_,
         bytes4 selector_,
         bytes32 roleId_
-    )
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
-        idNotDefaultAdmin(roleId_)
-        idExisting(roleId_)
-    {
+    ) public permissioned idNotDefaultAdmin(roleId_) idExisting(roleId_) {
         // if RoleId already has a permission, do nothing
         if (isPermissioned(target_, selector_, roleId_)) {
             return;
@@ -272,10 +267,7 @@ contract AUT_Roles_v1 is
         address target_,
         bytes4 selector_,
         bytes32 roleId_
-    )
-        public
-        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
-    {
+    ) public permissioned {
         bytes32[] memory permissions = _permissions[target_][selector_];
         uint permissionsLength = permissions.length;
 
@@ -306,7 +298,7 @@ contract AUT_Roles_v1 is
     )
         public
         virtual
-        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
+        permissioned
         idExisting(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
@@ -325,7 +317,7 @@ contract AUT_Roles_v1 is
     /// @inheritdoc IAuthorizer_v1
     function labelRole(bytes32 roleId_, string memory newRoleName_)
         external
-        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
+        permissioned
         idExisting(roleId_)
     {
         emit RoleLabeled(roleId_, newRoleName_);
@@ -368,7 +360,7 @@ contract AUT_Roles_v1 is
         bytes4[][] memory selectors_
     )
         external
-        onlyRole(DEFAULT_ADMIN_ROLE) //@todo do i just use locked here?
+        permissioned
         idExisting(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {

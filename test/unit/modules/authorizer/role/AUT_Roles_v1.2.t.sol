@@ -77,9 +77,17 @@ contract AUT_Roles_v1_Test is ModuleTest {
         address impl = address(new AUT_Roles_v1_Exposed());
         _authSuT = AUT_Roles_v1_Exposed(Clones.clone(impl));
 
-        _setUpOrchestrator(_authSuT);
+        // initiate orchestrator without extra Module
+        _setUpOrchestrator();
 
         _authSuT.init(_orchestrator, _METADATA, abi.encode(_initialAdmin));
+
+        // Change Authorizer of Module Test to SuT
+        _orchestrator.initiateSetAuthorizerWithTimelock(
+            IAuthorizer_v1(_authSuT)
+        );
+        vm.warp(72 hours + 1);
+        _orchestrator.executeSetAuthorizer(IAuthorizer_v1(_authSuT));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -367,13 +375,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // function addAccessPermission(address target_, bytes4 selector_, bytes32 roleId_) @todo now
 
     function testAddAccessPermission_ModifierInPostionChecks() public {
-        //onlyRole(DEFAULT_ADMIN_ROLE)
+        //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                _authSuT.DEFAULT_ADMIN_ROLE()
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
         _authSuT.addAccessPermission(address(this), bytes4(0), bytes32(uint(0)));
 
@@ -491,13 +495,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     */
     function testRemoveAccessPermission_ModifierInPostionChecks() public {
-        //onlyRole(DEFAULT_ADMIN_ROLE)
+        //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                _authSuT.DEFAULT_ADMIN_ROLE()
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
         _authSuT.removeAccessPermission(
             address(this), bytes4(0), bytes32(uint(0))
@@ -595,13 +595,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
     */
 
     function testCreateRole_ModifierInPostionChecks() public {
-        //onlyRole(DEFAULT_ADMIN_ROLE)
+        //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                _authSuT.DEFAULT_ADMIN_ROLE()
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
         _authSuT.createRole("RoleName", bytes32(uint(0)), new address[](0));
 
@@ -663,13 +659,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
             └── Then: An event is emitted
     */
     function testLabelRole_ModifierInPositionChecks() public {
-        //onlyRole(DEFAULT_ADMIN_ROLE)
+        //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                _authSuT.DEFAULT_ADMIN_ROLE()
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
         _authSuT.labelRole(bytes32(uint(0)), "RoleName");
 
@@ -910,13 +902,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
     function testCreateRoleAndAddAccessPermissions_ModifierInPositionCheck()
         public
     {
-        //onlyRole(DEFAULT_ADMIN_ROLE)
+        //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccessControl.AccessControlUnauthorizedAccount.selector,
-                address(this),
-                _authSuT.DEFAULT_ADMIN_ROLE()
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
         _authSuT.createRoleAndAddAccessPermissions(
             "RoleName",

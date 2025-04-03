@@ -111,6 +111,47 @@ abstract contract ModuleTest is Test {
         _fundingManager.setToken(IERC20(address(_token)));
     }
 
+    function _setUpOrchestrator() internal virtual {
+        // Needs to be a proxy for the notInitialized Check
+        feeManager = FeeManager_v1(
+            address(
+                new TransparentUpgradeableProxy( // based on openzeppelins TransparentUpgradeableProxy
+                    address(new FeeManager_v1()), // Implementation Address
+                    address(this), // Admin
+                    bytes("") // data field that could have been used for calls, but not necessary
+                )
+            )
+        );
+        feeManager.init(address(this), treasury, 0, 0);
+        governor.setFeeManager(address(feeManager));
+
+        address[] memory modules = new address[](0);
+
+        address impl = address(new OrchestratorV1Mock(address(_forwarder)));
+        _orchestrator = OrchestratorV1Mock(Clones.clone(impl));
+
+        impl = address(new FundingManagerV1Mock());
+        _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
+
+        impl = address(new AuthorizerV1Mock());
+        _authorizer = AuthorizerV1Mock(Clones.clone(impl));
+
+        _orchestrator.init(
+            _ORCHESTRATOR_ID,
+            address(moduleFactory),
+            modules,
+            _fundingManager,
+            _authorizer,
+            _paymentProcessor,
+            governor
+        );
+
+        _authorizer.init(_orchestrator, _METADATA, abi.encode(address(this)));
+
+        _fundingManager.init(_orchestrator, _METADATA, abi.encode(""));
+        _fundingManager.setToken(IERC20(address(_token)));
+    }
+
     //--------------------------------------------------------------------------
     // Test: Initialization
     //

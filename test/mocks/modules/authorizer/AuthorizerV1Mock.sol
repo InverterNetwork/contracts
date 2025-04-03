@@ -28,7 +28,20 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
     mapping(address => bool) private _authorized;
     mapping(bytes32 => mapping(address => bool)) private _roleAuthorized;
 
+    mapping(
+        address caller
+            => mapping(
+                address target
+                    => mapping(bytes4 functionSelector => bool permission)
+            )
+    ) internal _permissions;
+
     bool private _allAuthorized;
+    address _defaultAdmin;
+
+    function setDefaultAdmin(address who) external {
+        _defaultAdmin = who;
+    }
 
     function setIsAuthorized(address who, bool to) external {
         _authorized[who] = to;
@@ -55,6 +68,8 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         _authorized[authorized] = true;
 
         _roleAuthorized[0x00][msg.sender] = true;
+
+        _defaultAdmin = authorized;
     }
 
     function mockInit(bytes memory configData) public {
@@ -124,25 +139,17 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         returns (bool)
     {}
 
-    bool _hasPermission;
-
-    mapping(
-        address caller
-            => mapping(
-                address target
-                    => mapping(bytes4 functionSelector => bool permission)
-            )
-    ) internal _permissions;
-
-    event hasPermissionAccessed(
-        address caller_, address target_, bytes4 functionSelector_
-    );
-
     function hasPermission(
         address caller_,
         address target_,
         bytes4 functionSelector_
     ) external view returns (bool) {
+        if (_allAuthorized) {
+            return true;
+        }
+        if (caller_ == _defaultAdmin) {
+            return true;
+        }
         return _permissions[caller_][target_][functionSelector_];
     }
 
