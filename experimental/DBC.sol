@@ -43,6 +43,23 @@ contract DBC is IDBC {
         require(_trancheCount < type(uint8).max, "DBC: Max tranches reached");
         // Optional: Add validation for tranche parameters (e.g., end > start)
         require(endSupplyExcluding_ > startSupply_, "DBC: endSupply must be > startSupply");
+        
+        // Validate against previous tranche if it exists
+        if (_trancheCount > 0) {
+            Tranche storage prevTranche = tranches[_trancheCount - 1];
+                
+            // Calculate previous tranche's end price
+            uint256 prevTrancheEndPrice = prevTranche.startingPrice + 
+                (prevTranche.stepHeight * prevTranche.stepsAmount);
+                
+            // Ensure current tranche's starting price is greater than previous tranche's end price
+            require(startingPrice_ > prevTrancheEndPrice, 
+                "DBC: startingPrice must be > previous tranche's end price");
+            
+            // Validate that startSupply is >= previous tranche's endSupplyExcluding
+            require(startSupply_ >= prevTranche.endSupplyExcluding, 
+                "DBC: startSupply must be >= previous tranche's endSupply");
+        }
 
         tranches[_trancheCount] = Tranche(
             startingPrice_,
