@@ -80,6 +80,7 @@ contract ModuleV1Mock is Module_v1 {
 
     function _checkAuthorization_exposed(address caller_, bytes calldata data_)
         external
+        view
     {
         _checkAuthorization(caller_, data_);
     }

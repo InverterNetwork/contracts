@@ -171,17 +171,6 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.idExistingModifier_exposed(_givenRoleId);
     }
 
-    //@todo roleAdminNotBurned modifier
-
-    /*  /// @dev     Verifies that the admin of the given roleId is not burned.
-    /// @param  roleId_ The id of the role.
-    modifier roleAdminNotBurned(bytes32 roleId_) {
-        if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
-            revert Module__Authorizer__RoleAdminBurned();
-        }
-        _;
-    } */
-
     ///////////////////////////////////////////////////////////////////////////
     // Test External Functions
 
@@ -335,11 +324,46 @@ contract AUT_Roles_v1_Test is ModuleTest {
     // ------------------------------------------------------------------------
     // Getter -  Role Management
 
-    // function getAdminRole() external view returns (bytes32); @todo later
+    /*
+    Test: getAdminRole
+    └── When: getAdminRole is called
+        └── Then: Return the Admin Role
+    */
+    function testGetAdminRole() public {
+        assertEq(_authSuT.getAdminRole(), _authSuT.DEFAULT_ADMIN_ROLE());
+    }
 
-    // function checkForRole(bytes32 role, address who)   @todo later
+    // ------------------------------------------------------------------------
+    // Getter - Out of Order
 
-    // function generateRoleId(address module, bytes32 role) @todo later
+    // function checkForRole(bytes32 role, address who)
+    /*
+    Test: checkForRole
+    └── When: grantRoleFromModule is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testCheckForRole_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.checkForRole(bytes32(uint(0)), address(0));
+    }
+
+    /*
+    Test: generateRoleId
+    └── When: grantRoleFromModule is called
+        └── Then: The function should revert with Module_FunctionDeprecated
+    */
+    function testGenerateRoleId_Deprecated() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__FunctionDeprecated.selector
+            )
+        );
+        _authSuT.generateRoleId(address(0), bytes32(uint(0)));
+    }
 
     // ========================================================================
     // Mutating Functions
