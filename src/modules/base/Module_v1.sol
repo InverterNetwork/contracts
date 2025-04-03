@@ -96,11 +96,8 @@ abstract contract Module_v1 is
 
     /// @dev    Modifier to guarantee function is only callable by addresses
     ///         authorized via {Orchestrator_v1}.
-    modifier onlyOrchestratorAdmin( // @todo Do we scrap this?
-    ) {
-        _checkRoleModifier(
-            __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
-        );
+    modifier onlyOrchestratorAdmin() {
+        // @todo Replace with permissioned modifier
         _;
     }
 
@@ -113,36 +110,7 @@ abstract contract Module_v1 is
 
     /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
     modifier onlyModuleRole(bytes32 role) {
-        //@todo Scrap
-        _checkRoleModifier(
-            __Module_orchestrator.authorizer().generateRoleId(
-                address(this), role
-            ),
-            _msgSender()
-        );
-        _;
-    }
-
-    /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
-    modifier onlyModuleRoleAdmin(bytes32 role) {
-        // @todo Scrap
-        bytes32 moduleRole = __Module_orchestrator.authorizer().generateRoleId(
-            address(this), role
-        );
-        _checkRoleModifier(
-            __Module_orchestrator.authorizer().getRoleAdmin(moduleRole),
-            _msgSender()
-        );
-        _;
-    }
-
-    /// @dev    Modifier to guarantee function is only callable by the {Orchestrator_v1}.
-    /// @dev	onlyOrchestrator functions MUST only access the module's storage, i.e.
-    ///         `__Module_` variables.
-    /// @dev	Note to use function prefix `__Module_`.
-    modifier onlyOrchestrator() {
-        //@todo scrap?
-        _onlyOrchestratorModifier();
+        // @todo Replace with permissioned modifier
         _;
     }
 
@@ -342,19 +310,19 @@ abstract contract Module_v1 is
     // Internal - Authorization
 
     /// @notice Checks if the caller can call the function that implements the locked modifier.
-    /// @param  caller The address of the caller.
-    /// @param  data The data of the call.
-    function _checkAuthorization(
-        address caller,
-        bytes calldata data //@todo test
-    ) internal view {
+    /// @param  caller_ The address of the caller.
+    /// @param  data_ The data of the call.
+    function _checkAuthorization(address caller_, bytes calldata data_)
+        internal
+        view
+    {
         // If caller cannot call the function, revert.
         if (
             !__Module_orchestrator.authorizer().hasPermission(
-                caller, address(this), bytes4(data[0:4])
+                caller_, address(this), bytes4(data_[0:4])
             )
         ) {
-            revert Module__FunctionLocked();
+            revert Module__NotPermissioned();
         }
     }
 

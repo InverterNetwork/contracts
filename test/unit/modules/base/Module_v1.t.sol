@@ -148,10 +148,39 @@ contract ModuleBaseV1Test is ModuleTest {
     /////////////////////////////////////////////////////////////////////////////
     // Test Modifier
 
-    //--------------------------------------------------------------------------
-    // Modifier
+    /*
+    Test: permissioned
+    ├── Given: modifierPermissionedCheck is executed via call with a valid selector, but random data
+    ├── And: The call sender is randomised
+    └── And: The Caller is permissioned to call the function
+        └── When: The function modifierPermissionedCheck is called
+            └── Then: the function should not revert, because the sender and only the function selector were correctly passed
+    */
+    function testPermissioned_modifier(address caller_, bytes memory data_)
+        public
+    {
+        // Assume that the calldata is at least 4 bytes long
+        vm.assume(data_.length >= 4);
 
-    /* Test modifier onlyPaymentClient
+        bytes4 targetSelector = ModuleV1Mock.modifierPermissionedCheck.selector;
+
+        // Proof
+        _authorizer.setHasPermission(
+            caller_, address(module), targetSelector, true
+        );
+
+        // Replace the msg.data function selector with the correct one
+        for (uint i = 0; i < 4; i++) {
+            data_[i] = targetSelector[i];
+        }
+
+        // Expect no revert
+        vm.prank(caller_);
+        address(module).call(data_);
+    }
+
+    /* 
+    Test modifier onlyPaymentClient
         ├── given the caller is not a PaymentClient
         │   └── when the function modifierOnlyPaymentClientCheck() gets called
         │       └── then it should revert
@@ -399,7 +428,7 @@ contract ModuleBaseV1Test is ModuleTest {
         );
 
         (uint returnFee, address returnTreasury) =
-            module.original_getFeeManagerCollateralFeeData(functionSelector);
+            module._getFeeManagerCollateralFeeData_exposed(functionSelector);
 
         assertEq(returnFee, setFee);
         assertEq(returnTreasury, treasury);
@@ -422,9 +451,38 @@ contract ModuleBaseV1Test is ModuleTest {
         );
 
         (uint returnFee, address returnTreasury) =
-            module.original_getFeeManagerIssuanceFeeData(functionSelector);
+            module._getFeeManagerIssuanceFeeData_exposed(functionSelector);
 
         assertEq(returnFee, setFee);
         assertEq(returnTreasury, treasury);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Authorization
+
+    /*
+    Test: _checkAuthorization_
+    └── Given: Authorizer hasPermission() is mocked
+        ├── When: _checkAuthorization_ is called
+        └── And: Authorizer hasPermission() returns false
+            ├── Then: It should forward the function selector properly
+            └── And: The function should revert
+    */
+    function test_checkAuthorization_hasPermissionMocked(
+        bool hasPermission_,
+        address caller_,
+        bytes calldata data_
+    ) public {
+        vm.assume(data_.length >= 4);
+
+        _authorizer.setHasPermission(
+            caller_, address(module), bytes4(data_[0:4]), hasPermission_
+        );
+
+        if (!hasPermission_) {
+            vm.expectRevert(IModule_v1.Module__NotPermissioned.selector);
+        }
+
+        module._checkAuthorization_exposed(caller_, data_);
     }
 }

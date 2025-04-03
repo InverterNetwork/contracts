@@ -124,11 +124,36 @@ contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
         returns (bool)
     {}
 
-    function hasPermission(address, address, bytes4)
-        external
-        view
-        returns (bool)
-    {}
+    bool _hasPermission;
+
+    mapping(
+        address caller
+            => mapping(
+                address target
+                    => mapping(bytes4 functionSelector => bool permission)
+            )
+    ) internal _permissions;
+
+    event hasPermissionAccessed(
+        address caller_, address target_, bytes4 functionSelector_
+    );
+
+    function hasPermission(
+        address caller_,
+        address target_,
+        bytes4 functionSelector_
+    ) external view returns (bool) {
+        return _permissions[caller_][target_][functionSelector_];
+    }
+
+    function setHasPermission(
+        address caller_,
+        address target_,
+        bytes4 functionSelector_,
+        bool to
+    ) external {
+        _permissions[caller_][target_][functionSelector_] = to;
+    }
 
     // ------------------------------------------------------------------------
     // Getter -  Role Management

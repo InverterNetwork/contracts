@@ -27,7 +27,7 @@ interface IModule_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Module__FunctionLocked(); //@todo replace Caller not authorized
+    error Module__NotPermissioned(); //@todo replace Caller not authorized
 
     /// @notice Function is only callable by authorized caller.
     /// @param  role The role that is required.
