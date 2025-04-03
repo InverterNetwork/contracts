@@ -59,11 +59,10 @@ contract DBC is IDBC {
     function getTrancheReserveAtSupply(
         uint8 index_,
         uint256 supply_
-    ) public view returns (uint256 reserve) {
+        ) public view returns (uint256 reserve) {
         Tranche memory t = tranches[index_];
 
-        // find out in which step within the tranch are we
-        uint256 stepLength = (t.endSupplyExcluding - t.startSupply) / t.stepsAmount;
+        uint256 stepLength = getStepLength(t);
         uint256 currentStepIdx = (supply_ - t.startSupply) / stepLength; 
         
         // calculate the area of the completed steps
@@ -84,7 +83,7 @@ contract DBC is IDBC {
         uint256 baseArea = calcRectangleArea(length, baseHeight);
         uint256 roofArea = calcRectangleArea(length, roofHeight);
 
-        reserve = baseArea + roofArea;
+        reserve = baseArea + roofArea + areaForCompletedSteps;
 
         return reserve;
     }
@@ -100,14 +99,35 @@ contract DBC is IDBC {
         uint256 height = stepHeight * stepsAmount + stepHeight;
         uint256 area = length * height / 2;
         
-        uint256 stepArea = area / 1 ether;
-        uint256 squareArea = y0 * (x1 - x0) / 1 ether;
+        uint256 roofArea = area / 1 ether;
+        uint256 baseArea = y0 * (x1 - x0) / 1 ether;
 
-        area = stepArea + squareArea;
+        area = roofArea + baseArea;
         return area;
     }
 
     function calcRectangleArea(uint256 x, uint256 y) public pure returns (uint256 area) {
         area = x * y / 1 ether;
+    }
+
+    // function calculatePurchaseReturn(uint256 amountIn_, uint256 currentSupply_) public view returns (uint256) {
+    //     uint256 reserve = getTrancheReserveAtSupply(0, currentSupply_);
+    // }
+
+    function getReserveAtSupply(uint256 supply_) public view returns (uint256 reserve) {
+        for (uint8 i = 0; i < _trancheCount; i++) {
+            uint256 trancheSupply = tranches[i].endSupplyExcluding;
+
+            if(supply_ >= tranches[i].endSupplyExcluding) {
+                reserve += tranches[i].reserveCapacity;
+            } else {
+                reserve += getTrancheReserveAtSupply(i, supply_);
+            }
+        }
+        return reserve;
+    }
+
+    function getStepLength(Tranche memory t) public pure returns (uint256 stepLength) {
+        stepLength = (t.endSupplyExcluding - t.startSupply) / t.stepsAmount;
     }
 }

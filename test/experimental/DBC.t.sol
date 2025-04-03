@@ -43,10 +43,18 @@ contract DBCTest is Test {
     }
 
     function test_getTrancheReserveAtSupply_givenAnchorTranche() public {
-        uint256 supply = 650 ether;
+        uint supply = 650 ether;
 
-        uint256 reserve = dbc.getTrancheReserveAtSupply(1, supply);
-        
-        assertEq(reserve, 125 ether);
+        uint reserve = dbc.getTrancheReserveAtSupply(1, supply);
+
+        assertEq(reserve, 475 ether);
+    }
+
+    function test_getReserveAtSupply_givenAnchorTranche() public {
+        uint supply = 650 ether;
+
+        uint reserve = dbc.getReserveAtSupply(supply);
+
+        assertEq(reserve, 875 ether);
     }
 }
