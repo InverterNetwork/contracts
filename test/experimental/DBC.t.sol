@@ -13,35 +13,36 @@ contract DBCTest is Test {
         // Deploy the contract with the minimal constructor
         dbc = new DBC();
 
+        // FLOOR
         // Add first tranche using the addTranche function
         dbc.addTranche(
-            1 ether, // startingPrice
+            0, // startingPrice
             0, // startSupply
             400 ether, // endSupplyExcluding
-            0, // stepHeight
-            0 // stepsAmount
+            1 ether, // stepHeight
+            1 // stepsAmount
         );
 
+        // ANCHOR
         // Add second tranche using the addTranche function
         dbc.addTranche(
-            1.5 ether, // startingPrice
+            1 ether, // startingPrice
             400 ether, // startSupply
             900 ether, // endSupplyExcluding
             0.5 ether, // stepHeight
             5 // stepsAmount
         );
-
-        // Add third tranche using the addTranche function
-        // dbc.addTranche(
-        //     3.1 ether, // startingPrice (increased to be > previous tranche's end price of 3 ether)
-        //     2_000_000 ether, // startSupply
-        //     3_000_000 ether, // endSupplyExcluding
-        //     0.2 ether, // stepHeight
-        //     5 // stepsAmount
-        // );
     }
 
-    function test_calculatePurchaseReturn() public {
-        
+    function test_getTrancheDetails_givenFloorTranche() public {
+        console.log(
+            "dbc.getTrancheDetails(0).reserveCapacity",
+            dbc.getTrancheDetails(0).reserveCapacity
+        );
+        assertEq(dbc.getTrancheDetails(0).reserveCapacity, 400 ether);
+    }
+
+    function test_getTrancheDetails_givenAnchorTranche() public {
+        assertEq(dbc.getTrancheDetails(1).reserveCapacity, 1250 ether);
     }
 }

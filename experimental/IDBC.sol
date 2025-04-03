@@ -12,6 +12,7 @@ interface IDBC {
         uint256 endSupplyExcluding;
         uint256 stepHeight;
         uint256 stepsAmount;
+        uint256 reserveCapacity;
     }
     
     function getTranches() external view returns (uint8);
