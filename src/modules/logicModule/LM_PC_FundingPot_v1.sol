@@ -168,8 +168,7 @@ contract LM_PC_FundingPot_v1 is
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
         isOpen = (
-            accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET
-                || accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN
+           accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN
         );
         return (
             isOpen,
@@ -360,7 +359,7 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
-    /// @notice Validates the round parameters.
+    /// @notice Validates the round parameters before editing.
     /// @param  round_ The round to validate.
     /// @dev    Reverts if the round parameters are invalid.
     function _validateEditRoundParameters(Round storage round_) internal view {
