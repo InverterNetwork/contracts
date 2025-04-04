@@ -50,22 +50,22 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     /**
      * @notice Exposes the internal _validateRoundParameters function for testing
      */
-    function exposed_validateRoundParameters(Round storage round_)
-        external
-        view
-    {
-        _validateRoundParameters(round_);
-    }
+    // function exposed_validateRoundParameters(Round memory round_)
+    //     external
+    //     view
+    // {
+    //     _validateRoundParameters(round_);
+    // }
 
     /**
      * @notice Exposes the internal _validateEditRoundParameters function for testing
      */
-    function exposed_validateEditRoundParameters(Round storage round_)
-        external
-        view
-    {
-        _validateEditRoundParameters(round_);
-    }
+    // function exposed_validateEditRoundParameters(Round storage round_)
+    //     external
+    //     view
+    // {
+    //     _validateEditRoundParameters(round_);
+    // }
 
     /**
      * @notice Exposes the internal _validTimes function for testing
@@ -98,12 +98,11 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     function exposed_validateAndAdjustCaps(
         uint64 roundId_,
         uint amount_,
-        Round storage round_,
         uint8 accessId_,
         bool canOverrideContributionSpan_
     ) external view returns (uint) {
         return _validateAndAdjustCaps(
-            roundId_, amount_, round_, accessId_, canOverrideContributionSpan_
+            roundId_, amount_, accessId_, canOverrideContributionSpan_
         );
     }
 

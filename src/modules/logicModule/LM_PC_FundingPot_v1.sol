@@ -585,11 +585,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         adjustedAmount = _validateAndAdjustCaps(
-            roundId_,
-            amount_,
-            round,
-            accessCriteriaId_,
-            canOverrideContributionSpan
+            roundId_, amount_, accessCriteriaId_, canOverrideContributionSpan
         );
 
         return adjustedAmount;
@@ -598,25 +594,25 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Validates cap constraints and adjusts amount if needed
     /// @param roundId_ ID of the round
     /// @param amount_ Requested contribution amount
-    /// @param round_ Round storage object
     /// @param canOverrideContributionSpan_ Whether the user can override cap constraints
     /// @return adjustedAmount The potentially adjusted contribution amount
     function _validateAndAdjustCaps(
         uint64 roundId_,
         uint amount_,
-        Round storage round_,
         uint8 accessId_,
         bool canOverrideContributionSpan_
     ) internal view returns (uint adjustedAmount) {
         adjustedAmount = amount_;
 
-        if (!canOverrideContributionSpan_ && round_.roundCap > 0) {
+        Round storage round = rounds[roundId_];
+
+        if (!canOverrideContributionSpan_ && round.roundCap > 0) {
             uint totalRoundContribution = _getTotalRoundContribution(roundId_);
-            uint effectiveRoundCap = round_.roundCap;
+            uint effectiveRoundCap = round.roundCap;
 
             // If global accumulative caps are enabled,
             // adjust the round cap to acommodate unused capacity from previous rounds
-            if (round_.globalAccumulativeCaps) {
+            if (round.globalAccumulativeCaps) {
                 uint unusedCapacityFromPrevious = 0;
                 for (uint64 i = 1; i < roundId_; ++i) {
                     Round storage prevRound = rounds[i];
