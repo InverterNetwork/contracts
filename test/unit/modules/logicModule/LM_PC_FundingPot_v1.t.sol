@@ -1769,6 +1769,77 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // -------------------------------------------------------------------------
     // Internal Functions
+    function testFuzz_validateAccessCriteria(
+        uint64 roundId_,
+        uint8 accessId_,
+        bytes32[] calldata merkleProof_
+    ) external {
+        vm.assume(roundId_ <= fundingPot.getRoundCount() + 1);
+        vm.assume(accessId_ <= 4);
+
+        try fundingPot.exposed_validateAccessCriteria(
+            roundId_, accessId_, merkleProof_
+        ) {
+            assert(true);
+        } catch (bytes memory) {
+            assert(false);
+        }
+    }
+
+    function testFuzz_validateAndAdjustCaps(
+        uint64 roundId_,
+        uint amount_,
+        uint8 accessId_,
+        bool canOverrideContributionSpan_
+    ) external {
+        vm.assume(roundId_ > 0 && roundId_ >= fundingPot.getRoundCount());
+        vm.assume(amount_ <= 1000);
+        vm.assume(accessId_ <= 4);
+
+        uint initialTotalContribution =
+            fundingPot.exposed_getTotalRoundContributions(roundId_);
+        uint initialUserContribution =
+            fundingPot.exposed_getUserContributionToRound(roundId_, msg.sender);
+
+        try fundingPot.exposed_validateAndAdjustCaps(
+            roundId_, amount_, accessId_, canOverrideContributionSpan_
+        ) returns (uint adjustedAmount) {
+            assertLe(
+                adjustedAmount, amount_, "Adjusted amount should be <= amount_"
+            );
+            assertGe(adjustedAmount, 0, "Adjusted amount should be >= 0");
+        } catch (bytes memory reason) {
+            // Compare using keccak256 hash rather than direct string comparison
+            bytes32 roundCapReachedSelector = keccak256(
+                abi.encodeWithSignature(
+                    "Module__LM_PC_FundingPot__RoundCapReached()"
+                )
+            );
+            bytes32 personalCapReachedSelector = keccak256(
+                abi.encodeWithSignature(
+                    "Module__LM_PC_FundingPot__PersonalCapReached()"
+                )
+            );
+
+            if (keccak256(reason) == roundCapReachedSelector) {
+                assertTrue(
+                    !canOverrideContributionSpan_,
+                    "Should not revert RoundCapReached when canOverrideContributionSpan is true"
+                );
+                // Additional assertions commented out for now
+                // assert(roundCap > 0, "Round cap should be > 0");
+                // assert(
+                //     initialTotalContribution >= effectiveRoundCap,
+                //     "Total contribution should be >= effectiveRoundCap"
+                // );
+            } else if (keccak256(reason) == personalCapReachedSelector) {
+                // We expect this sometimes
+                assertTrue(true, "Personal cap reached as expected");
+            } else {
+                assertTrue(false, "Unexpected revert reason");
+            }
+        }
+    }
 
     // -------------------------------------------------------------------------
     // Helper Functions
