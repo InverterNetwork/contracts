@@ -1768,6 +1768,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     // -------------------------------------------------------------------------
+    // Internal Functions
+
+    // -------------------------------------------------------------------------
     // Helper Functions
 
     // @notice Creates a default funding round
