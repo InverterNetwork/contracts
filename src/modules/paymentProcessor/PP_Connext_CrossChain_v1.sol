@@ -6,12 +6,12 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
 import {IEverclearSpoke} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
-import {IOrchestrator_v1} from
-    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 // Internal
+import {IOrchestrator_v1} from
+    "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {CrossChainBase_v1} from
@@ -27,49 +27,28 @@ import {PP_CrossChain_v1} from
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 /**
- * @title   Connext Cross-Chain Payment Processor
+ * @title   Connext Protocol Integrated Cross-Chain Payment Processor.
  *
  * @notice  A payment processor implementation that enables cross-chain payments
- *          using the Connext protocol. This module processes payment orders from
- *          payment clients and bridges them to their target chains through
- *          Connext's infrastructure.
+ *          using the Connext protocol. This module processes payment orders created by an Inverter Payment Client
+ *          and bridges the payments to the target chain through Connext's infrastructure.
  *
  * @dev     Inherits functionality from:
- *          - IPP_Connext_CrossChain_v1: Implementation interface
- *          - IPaymentProcessor_v1: Base payment processor functionality
- *          - ICrossChainBase_v1: Cross-chain operations base
+ *          - IPP_Connext_CrossChain_v1: Implementation interface.
+ *          - PP_CrossChain_v1: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
- *                Enables payments to be sent across different networks
+ *                Enables execution of payment orders across different networks.
  *
- *              - Bridge integration
- *                Integrates with Everclear protocol for secure cross-chain transfers
+ *              - Connext Bridge integration.
+ *                Integrates with Connext protocol for secure cross-chain transfers, creating a new intent for each payment order through calling the Everclear Spoke contract.
  *
- *              - Failed transfer recovery
- *                Provides mechanism to retry failed bridge transfers
+ *              - Failed bridge transfer retry.
+ *                Provides mechanism to retry failed bridge transfers through leveraging the unclaimable amounts and providing a new payment order.
  *
- *              - WETH handling
- *                Supports native token wrapping/unwrapping for ETH transfers
- *
- * @custom:setup    This module requires the following MANDATORY setup steps:
- *
- *                  1. Initialize with Correct Parameters:
- *                     - Purpose: The module needs proper configuration of
- *                               Everclear spoke and WETH contract addresses
- *                     - How:     Pass the correct addresses during initialization
- *                     - Example: module.init(
- *                                 orchestrator,
- *                                 metadata,
- *                                 abi.encode(everClearSpoke, wethAddress)
- *                               );
- *
- *                  2. Payment Client Authorization:
- *                     - Purpose: Only authorized payment clients should be able
- *                               to process payments through this module
- *                     - How:     The payment client must be added through the
- *                               orchestrator's module management system
- *                     - Example: orchestrator.initiateAddModule(clientAddress);
+ *              - WETH handling.
+ *                Supports native token wrapping/unwrapping for ETH transfers.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -131,7 +110,7 @@ contract PP_Connext_CrossChain_v1 is
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
-    ) external override(Module_v1) initializer {
+    ) external virtual override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata_);
         (address everClearSpoke_, address weth_) =
             abi.decode(configData_, (address, address));
@@ -147,13 +126,14 @@ contract PP_Connext_CrossChain_v1 is
     function getEverClearSpoke()
         external
         view
+        virtual
         returns (IEverclearSpoke everClearSpoke_)
     {
         return _everClearSpoke;
     }
 
     /// @inheritdoc IPP_Connext_CrossChain_v1
-    function getWeth() external view returns (IWETH weth_) {
+    function getWeth() external view virtual returns (IWETH weth_) {
         return _weth;
     }
 
@@ -161,6 +141,7 @@ contract PP_Connext_CrossChain_v1 is
     function getBridgeData(uint paymentId_)
         public
         view
+        virtual
         override(CrossChainBase_v1)
         returns (bytes memory)
     {
@@ -173,6 +154,7 @@ contract PP_Connext_CrossChain_v1 is
     /// @inheritdoc IPaymentProcessor_v1
     function processPayments(IERC20PaymentClientBase_v2 client_)
         external
+        virtual
         onlyModule
         validClient(address(client_))
     {
@@ -207,7 +189,20 @@ contract PP_Connext_CrossChain_v1 is
                     orders[i].flags,
                     orders[i].data
                 );
-                emit PaymentIdAssigned(_paymentId, bytes32(bridgeData));
+                emit BridgeTransferCompleted(
+                    _paymentId,
+                    bytes32(bridgeData),
+                    orders[i].recipient,
+                    address(client_),
+                    orders[i].paymentToken,
+                    orders[i].amount,
+                    orders[i].originChainId,
+                    orders[i].targetChainId,
+                    orders[i].flags,
+                    orders[i].data
+                );
+                // @note Do we need to emit the TokensReleased event here from the PP.
+                // We're not 100% sure the bridge transfer is successful. same for the failed bridge transfer retry.
 
                 // Store the intent ID for the payment order.
                 _bridgeData[_paymentId] = bridgeData;
@@ -235,7 +230,7 @@ contract PP_Connext_CrossChain_v1 is
         address client_,
         address recipient_,
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) external {
+    ) external virtual {
         uint unclaimableAmount =
             unclaimable(client_, order_.paymentToken, recipient_);
 
@@ -319,7 +314,12 @@ contract PP_Connext_CrossChain_v1 is
     /// @return intentId_ Data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) internal override(CrossChainBase_v1) returns (bytes memory intentId_) {
+    )
+        internal
+        virtual
+        override(CrossChainBase_v1)
+        returns (bytes memory intentId_)
+    {
         bytes32 intentId = _createCrossChainIntent(order_);
         return abi.encode(intentId);
     }
@@ -333,7 +333,7 @@ contract PP_Connext_CrossChain_v1 is
     function _transferTokenAndApproveToBridge(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_,
         address client_
-    ) internal {
+    ) internal virtual {
         IERC20(order_.paymentToken).transferFrom(
             client_, address(this), order_.amount
         );
@@ -352,7 +352,7 @@ contract PP_Connext_CrossChain_v1 is
     /// @return intentId_ ID of the created intent.
     function _createCrossChainIntent(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) internal returns (bytes32 intentId_) {
+    ) internal virtual returns (bytes32 intentId_) {
         // Get the max fee and TTL from the flags and data.
         (uint24 maxFee, uint48 ttl) =
             _getEverclearMaxFeeAndTTL(order_.flags, order_.data);

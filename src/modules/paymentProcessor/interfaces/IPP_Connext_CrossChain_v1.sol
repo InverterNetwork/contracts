@@ -13,49 +13,28 @@ import {IEverclearSpoke} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
 /**
- * @title   Connext Cross-Chain Payment Processor
+ * @title   Connext Protocol Integrated Cross-Chain Payment Processor.
  *
  * @notice  A payment processor implementation that enables cross-chain payments
- *          using the Connext protocol. This module processes payment orders from
- *          payment clients and bridges them to their target chains through
- *          Connext's infrastructure.
+ *          using the Connext protocol. This module processes payment orders created by an Inverter Payment Client
+ *          and bridges the payments to the target chain through Connext's infrastructure.
  *
  * @dev     Inherits functionality from:
- *          - IPP_Connext_CrossChain_v1: Implementation interface
- *          - IPaymentProcessor_v1: Base payment processor functionality
- *          - ICrossChainBase_v1: Cross-chain operations base
+ *          - IPP_Connext_CrossChain_v1: Implementation interface.
+ *          - PP_CrossChain_v1: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
- *                Enables payments to be sent across different networks
+ *                Enables execution of payment orders across different networks.
  *
- *              - Bridge integration
- *                Integrates with Everclear protocol for secure cross-chain transfers
+ *              - Connext Bridge integration.
+ *                Integrates with Connext protocol for secure cross-chain transfers, creating a new intent for each payment order through calling the Everclear Spoke contract.
  *
- *              - Failed transfer recovery
- *                Provides mechanism to retry failed bridge transfers
+ *              - Failed bridge transfer retry.
+ *                Provides mechanism to retry failed bridge transfers through leveraging the unclaimable amounts and providing a new payment order.
  *
- *              - WETH handling
- *                Supports native token wrapping/unwrapping for ETH transfers
- *
- * @custom:setup    This module requires the following MANDATORY setup steps:
- *
- *                  1. Initialize with Correct Parameters:
- *                     - Purpose: The module needs proper configuration of
- *                               Everclear spoke and WETH contract addresses
- *                     - How:     Pass the correct addresses during initialization
- *                     - Example: module.init(
- *                                 orchestrator,
- *                                 metadata,
- *                                 abi.encode(everClearSpoke, wethAddress)
- *                               );
- *
- *                  2. Payment Client Authorization:
- *                     - Purpose: Only authorized payment clients should be able
- *                               to process payments through this module
- *                     - How:     The payment client must be added through the
- *                               orchestrator's module management system
- *                     - Example: orchestrator.initiateAddModule(clientAddress);
+ *              - WETH handling.
+ *                Supports native token wrapping/unwrapping for ETH transfers.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -68,7 +47,7 @@ import {IEverclearSpoke} from
  *
  * @author  33Audits
  */
-interface IPP_Connext_CrossChain_v1 is IPaymentProcessor_v1 {
+interface IPP_Connext_CrossChain_v1 {
     //--------------------------------------------------------------------------
     // View Functions
 
