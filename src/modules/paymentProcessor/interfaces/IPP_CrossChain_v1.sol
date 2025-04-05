@@ -5,26 +5,44 @@ pragma solidity ^0.8.0;
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 
 /**
- * @title   Cross-chain Payment Processor Base Contract
+ * @title   Cross-chain Payment Processor Base Contract.
  *
- * @notice  Abstract base contract for implementing cross-chain payment processing functionality.
+ * @notice  Abstract base contract for implementing cross-chain payment
+ *          processing functionality.
  *
- * @dev     This contract serves as the base for cross-chain payment processors and provides:
- *          - Extension of CrossChainBase_v1 for cross-chain functionality
- *          - Implementation of IPP_CrossChain_v1 interface
- *          - Core payment validation logic
- *          - Basic security checks for payment processing
- *          - Abstract functions for bridge-specific implementations
+ * @dev     Inherits functionality from:
+ *          - IPP_CrossChain_v1: Implementation interface.
+ *          - IPaymentProcessor_v1: Payment processor interface.
+ *          - Module_v1: Base module functionality.
+ *
+ *          Key features:
+ *              - Bridge Data Management
+ *                Stores and retrieves bridge-specific data for each bridge operation.
+ *
+ *              - Payment ID tracking.
+ *                Tracks the payment ID for each cross-chain payment.
+ *
+ *              - Enforces interface implementation.
+ *                Abstract bridge transfer function enforcing custom implementation in inheriting contracts.
+ *
+ *              - Unclaimable amounts tracking.
+ *                Provides functionality to claim unclaimable amounts
+ *                (failed bridge transfers) for each payment client, token,
+ *                and recipient to the current chain.
+ *
+ *              - Base cross-chain payment validation.
+ *                Implements basic validation checks for cross-chain payments.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
- *
- * @author  33Audits
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @custom:version 1.0.0
  *
  * @custom:standard-version 1.0.0
+ *
+ * @author  33Audits
  */
 interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
     // Events
@@ -49,8 +67,25 @@ interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
 
     /// @notice Emitted when a payment ID is assigned.
     /// @param  paymentId_ The payment ID.
-    /// @param  data_ The data for this transfer attempt.
-    event PaymentIdAssigned(uint indexed paymentId_, bytes32 indexed data_);
+    /// @param  intentId_ The intent ID.
+    /// @param  recipient_ The recipient of the payment.
+    /// @param  client_ The payment client that initiated the payment.
+    /// @param  paymentToken_ The token which has been bridged.
+    /// @param  amount_ The amount of tokens that have been bridged.
+    /// @param  originChainId_ The chain id of the origin chain.
+    /// @param  targetChainId_ The chain id of the target chain.
+    event BridgeTransferCompleted(
+        uint indexed paymentId_,
+        bytes32 indexed intentId_,
+        address indexed recipient_,
+        address client_,
+        address paymentToken_,
+        uint amount_,
+        uint originChainId_,
+        uint targetChainId_,
+        bytes32 flags_,
+        bytes32[] data_
+    );
 
     // Errors
     //--------------------------------------------------------------------------
@@ -60,17 +95,28 @@ interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
     error Module__PP_CrossChain__InvalidUnclaimableAmount();
 
     /// @notice Thrown when the cross-chain message fails to be delivered.
-    /// @param  sourceChain The chain ID where the message originated.
-    /// @param  destinationChain The chain ID where the message was meant to be
+    /// @param  sourceChain_ The chain ID where the message originated.
+    /// @param  destinationChain_ The chain ID where the message was meant to be
     ///         delivered.
-    /// @param  flags The flags for this transfer attempt.
-    /// @param  data The data for this transfer attempt.
+    /// @param  flags_ The flags for this transfer attempt.
+    /// @param  data_ The data for this transfer attempt.
     error Module__PP_CrossChain__MessageDeliveryFailed(
-        uint sourceChain, uint destinationChain, bytes32 flags, bytes32[] data
+        uint sourceChain_,
+        uint destinationChain_,
+        bytes32 flags_,
+        bytes32[] data_
     );
 
     // -------------------------------------------------------------------------
     // View Functions
+
+    /// @notice Get the bridge data for a given payment ID.
+    /// @param  paymentId_ The ID of the payment to get the bridge data for.
+    /// @return bridgeData_ The bridge data for the given payment ID.
+    function getBridgeData(uint paymentId_)
+        external
+        view
+        returns (bytes memory bridgeData_);
 
     /// @notice Get the current payment ID.
     /// @return paymentId_ The current payment ID.
