@@ -57,4 +57,37 @@ contract DBCTest is Test {
 
         assertEq(reserve, 875 ether);
     }
+
+    function test_calculatePurchaseReturn_givenWithinAnchorTranche() public {
+        uint issuanceSupply = 575 ether;
+        uint amountIn = 500 ether;
+
+        uint purchaseReturn = dbc.calculatePurchaseReturn2(
+            amountIn, issuanceSupply
+        );
+
+        assertEq(purchaseReturn, 191.666666666666666600 ether);
+    }
+
+    function test_calculatePurchaseReturn_givenWithinFloorTranche() public {
+        uint issuanceSupply = 100 ether;
+        uint amountIn = 200 ether;
+
+        uint purchaseReturn = dbc.calculatePurchaseReturn2(
+            amountIn, issuanceSupply
+        );
+
+        assertEq(purchaseReturn, 200 ether);
+    }
+
+        function test_calculatePurchaseReturn_givenAcrossTranches() public {
+        uint issuanceSupply = 100 ether;
+        uint amountIn = 800 ether;
+
+        uint purchaseReturn = dbc.calculatePurchaseReturn2(
+            amountIn, issuanceSupply
+        );
+
+        assertEq(purchaseReturn, 600 ether);
+    }
 }
