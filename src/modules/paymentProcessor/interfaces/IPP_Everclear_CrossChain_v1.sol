@@ -13,22 +13,22 @@ import {IEverclearSpoke} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
 /**
- * @title   Connext Protocol Integrated Cross-Chain Payment Processor.
+ * @title   Everclear Protocol Integrated Cross-Chain Payment Processor.
  *
  * @notice  A payment processor implementation that enables cross-chain payments
- *          using the Connext protocol. This module processes payment orders created by an Inverter Payment Client
- *          and bridges the payments to the target chain through Connext's infrastructure.
+ *          using the Everclear protocol. This module processes payment orders created by an Inverter Payment Client
+ *          and bridges the payments to the target chain through Everclear's infrastructure.
  *
  * @dev     Inherits functionality from:
- *          - IPP_Connext_CrossChain_v1: Implementation interface.
+ *          - IPP_Everclear_CrossChain_v1: Implementation interface.
  *          - PP_CrossChain_v1: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
  *                Enables execution of payment orders across different networks.
  *
- *              - Connext Bridge integration.
- *                Integrates with Connext protocol for secure cross-chain transfers, creating a new intent for each payment order through calling the Everclear Spoke contract.
+ *              - Everclear Bridge integration.
+ *                Integrates with Everclear protocol for secure cross-chain transfers, creating a new intent for each payment order through calling the Everclear Spoke contract.
  *
  *              - Failed bridge transfer retry.
  *                Provides mechanism to retry failed bridge transfers through leveraging the unclaimable amounts and providing a new payment order.
@@ -47,7 +47,7 @@ import {IEverclearSpoke} from
  *
  * @author  33Audits
  */
-interface IPP_Connext_CrossChain_v1 {
+interface IPP_Everclear_CrossChain_v1 {
     //--------------------------------------------------------------------------
     // View Functions
 

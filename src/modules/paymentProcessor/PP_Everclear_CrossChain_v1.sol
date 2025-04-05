@@ -18,8 +18,8 @@ import {CrossChainBase_v1} from
     "src/modules/paymentProcessor/abstracts/CrossChainBase_v1.sol";
 import {ICrossChainBase_v1} from
     "src/modules/paymentProcessor/interfaces/ICrossChainBase_v1.sol";
-import {IPP_Connext_CrossChain_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_Connext_CrossChain_v1.sol";
+import {IPP_Everclear_CrossChain_v1} from
+    "src/modules/paymentProcessor/interfaces/IPP_Everclear_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
 import {PP_CrossChain_v1} from
@@ -27,22 +27,22 @@ import {PP_CrossChain_v1} from
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 /**
- * @title   Connext Protocol Integrated Cross-Chain Payment Processor.
+ * @title   Everclear Protocol Integrated Cross-Chain Payment Processor.
  *
  * @notice  A payment processor implementation that enables cross-chain payments
- *          using the Connext protocol. This module processes payment orders created by an Inverter Payment Client
- *          and bridges the payments to the target chain through Connext's infrastructure.
+ *          using the Everclear protocol. This module processes payment orders created by an Inverter Payment Client
+ *          and bridges the payments to the target chain through Everclear's infrastructure.
  *
  * @dev     Inherits functionality from:
- *          - IPP_Connext_CrossChain_v1: Implementation interface.
+ *          - IPP_Everclear_CrossChain_v1: Implementation interface.
  *          - PP_CrossChain_v1: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
  *                Enables execution of payment orders across different networks.
  *
- *              - Connext Bridge integration.
- *                Integrates with Connext protocol for secure cross-chain transfers, creating a new intent for each payment order through calling the Everclear Spoke contract.
+ *              - Everclear Bridge integration.
+ *                Integrates with Everclear protocol for secure cross-chain transfers, creating a new intent for each payment order through calling the Everclear Spoke contract.
  *
  *              - Failed bridge transfer retry.
  *                Provides mechanism to retry failed bridge transfers through leveraging the unclaimable amounts and providing a new payment order.
@@ -61,8 +61,8 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  *
  * @author  33Audits
  */
-contract PP_Connext_CrossChain_v1 is
-    IPP_Connext_CrossChain_v1,
+contract PP_Everclear_CrossChain_v1 is
+    IPP_Everclear_CrossChain_v1,
     PP_CrossChain_v1
 {
     /// @inheritdoc ERC165Upgradeable
@@ -73,7 +73,7 @@ contract PP_Connext_CrossChain_v1 is
         override(PP_CrossChain_v1)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_Connext_CrossChain_v1).interfaceId
+        return interfaceId_ == type(IPP_Everclear_CrossChain_v1).interfaceId
             || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -122,7 +122,7 @@ contract PP_Connext_CrossChain_v1 is
     // -------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc IPP_Connext_CrossChain_v1
+    /// @inheritdoc IPP_Everclear_CrossChain_v1
     function getEverClearSpoke()
         external
         view
@@ -132,20 +132,9 @@ contract PP_Connext_CrossChain_v1 is
         return _everClearSpoke;
     }
 
-    /// @inheritdoc IPP_Connext_CrossChain_v1
+    /// @inheritdoc IPP_Everclear_CrossChain_v1
     function getWeth() external view virtual returns (IWETH weth_) {
         return _weth;
-    }
-
-    /// @inheritdoc ICrossChainBase_v1
-    function getBridgeData(uint paymentId_)
-        public
-        view
-        virtual
-        override(CrossChainBase_v1)
-        returns (bytes memory)
-    {
-        return _bridgeData[paymentId_];
     }
 
     // -------------------------------------------------------------------------
@@ -225,7 +214,7 @@ contract PP_Connext_CrossChain_v1 is
         }
     }
 
-    /// @inheritdoc IPP_Connext_CrossChain_v1
+    /// @inheritdoc IPP_Everclear_CrossChain_v1
     function retryFailedBridgeTransfer(
         address client_,
         address recipient_,
@@ -314,12 +303,7 @@ contract PP_Connext_CrossChain_v1 is
     /// @return intentId_ Data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    )
-        internal
-        virtual
-        override(CrossChainBase_v1)
-        returns (bytes memory intentId_)
-    {
+    ) internal virtual returns (bytes memory intentId_) {
         bytes32 intentId = _createCrossChainIntent(order_);
         return abi.encode(intentId);
     }
