@@ -21,7 +21,7 @@ import {IEverclearSpoke} from
  *
  * @dev     Inherits functionality from:
  *          - IPP_Everclear_CrossChain_v1: Implementation interface.
- *          - PP_CrossChain_v1: Cross-chain Payment Processor Base.
+ *          - PP_CrossChainBase_v1: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing

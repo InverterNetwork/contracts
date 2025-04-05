@@ -14,16 +14,11 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IPaymentProcessor_v1} from
     "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
-import {CrossChainBase_v1} from
-    "src/modules/paymentProcessor/abstracts/CrossChainBase_v1.sol";
-import {ICrossChainBase_v1} from
-    "src/modules/paymentProcessor/interfaces/ICrossChainBase_v1.sol";
 import {IPP_Everclear_CrossChain_v1} from
     "src/modules/paymentProcessor/interfaces/IPP_Everclear_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
-import {PP_CrossChain_v1} from
-    "src/modules/paymentProcessor/abstracts/PP_CrossChain_v1.sol";
+import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
 /**
@@ -35,7 +30,7 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  *
  * @dev     Inherits functionality from:
  *          - IPP_Everclear_CrossChain_v1: Implementation interface.
- *          - PP_CrossChain_v1: Cross-chain Payment Processor Base.
+ *          - PP_CrossChainBase_v1: Cross-chain Payment Processor Base.
  *
  *          Key features:
  *              - Cross-chain payment processing
@@ -63,14 +58,14 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  */
 contract PP_Everclear_CrossChain_v1 is
     IPP_Everclear_CrossChain_v1,
-    PP_CrossChain_v1
+    PP_CrossChainBase_v1
 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
-        override(PP_CrossChain_v1)
+        override(PP_CrossChainBase_v1)
         returns (bool)
     {
         return interfaceId_ == type(IPP_Everclear_CrossChain_v1).interfaceId
@@ -303,7 +298,12 @@ contract PP_Everclear_CrossChain_v1 is
     /// @return intentId_ Data returned by the bridge implementation.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) internal virtual returns (bytes memory intentId_) {
+    )
+        internal
+        virtual
+        override(PP_CrossChainBase_v1)
+        returns (bytes memory intentId_)
+    {
         bytes32 intentId = _createCrossChainIntent(order_);
         return abi.encode(intentId);
     }

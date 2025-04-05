@@ -6,8 +6,7 @@ import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
-import {CrossChainBase_v1} from "@pp/abstracts/CrossChainBase_v1.sol";
-import {IPP_CrossChain_v1} from "@pp/interfaces/IPP_CrossChain_v1.sol";
+import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -21,7 +20,7 @@ import {ERC165Upgradeable} from
  *          processing functionality.
  *
  * @dev     Inherits functionality from:
- *          - IPP_CrossChain_v1: Implementation interface.
+ *          - IPP_CrossChainBase_v1: Implementation interface.
  *          - IPaymentProcessor_v1: Payment processor interface.
  *          - Module_v1: Base module functionality.
  *
@@ -54,7 +53,7 @@ import {ERC165Upgradeable} from
  *
  * @author  33Audits
  */
-abstract contract PP_CrossChain_v1 is IPP_CrossChain_v1, Module_v1 {
+abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -63,7 +62,7 @@ abstract contract PP_CrossChain_v1 is IPP_CrossChain_v1, Module_v1 {
         override(Module_v1)
         returns (bool)
     {
-        return interfaceId_ == type(IPP_CrossChain_v1).interfaceId
+        return interfaceId_ == type(IPP_CrossChainBase_v1).interfaceId
             || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
@@ -108,7 +107,7 @@ abstract contract PP_CrossChain_v1 is IPP_CrossChain_v1, Module_v1 {
     // -------------------------------------------------------------------------
     // View Functions
 
-    /// @inheritdoc ICrossChainBase_v1
+    /// @inheritdoc IPP_CrossChainBase_v1
     function getBridgeData(uint paymentId_)
         public
         view
@@ -118,7 +117,7 @@ abstract contract PP_CrossChain_v1 is IPP_CrossChain_v1, Module_v1 {
         return _bridgeData[paymentId_];
     }
 
-    /// @inheritdoc IPP_CrossChain_v1
+    /// @inheritdoc IPP_CrossChainBase_v1
     function getPaymentId() external view virtual returns (uint paymentId_) {
         return _paymentId;
     }
@@ -162,8 +161,8 @@ abstract contract PP_CrossChain_v1 is IPP_CrossChain_v1, Module_v1 {
         revert("Not implemented");
     }
 
-    //--------------------------------------------------------------------------
-    // Internal Functions
+    // -------------------------------------------------------------------------
+    // Internal Functions Implemented in Downstream Contract
 
     /// @notice Execute the cross-chain bridge transfer.
     /// @dev    Override this function to implement specific bridge logic.
@@ -172,6 +171,9 @@ abstract contract PP_CrossChain_v1 is IPP_CrossChain_v1, Module_v1 {
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal virtual returns (bytes memory bridgeData_);
+
+    //--------------------------------------------------------------------------
+    // Internal Functions
 
     /// @notice used to claim the unclaimable amount of a particular `paymentReceiver` for a given payment client.
     /// @param  client_ address of the payment client.

@@ -11,7 +11,7 @@ import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
  *          processing functionality.
  *
  * @dev     Inherits functionality from:
- *          - IPP_CrossChain_v1: Implementation interface.
+ *          - IPP_CrossChainBase_v1: Implementation interface.
  *          - IPaymentProcessor_v1: Payment processor interface.
  *          - Module_v1: Base module functionality.
  *
@@ -44,7 +44,7 @@ import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
  *
  * @author  33Audits
  */
-interface IPP_CrossChain_v1 is IPaymentProcessor_v1 {
+interface IPP_CrossChainBase_v1 is IPaymentProcessor_v1 {
     // Events
     //--------------------------------------------------------------------------
 
