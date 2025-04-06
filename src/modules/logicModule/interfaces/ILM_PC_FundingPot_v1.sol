@@ -243,7 +243,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Retrieves the access criteria for a specific funding round.
     /// @param  roundId_ The unique identifier of the round to retrieve.
     /// @param  accessCriteriaId_ The identifier of the access criteria to retrieve.
-    /// @return isOpen_ Whether the access criteria is open.
+    /// @return isRoundOpen_ Whether the access criteria is open.
     /// @return nftContract_ The address of the NFT contract used for access control.
     /// @return merkleRoot_ The merkle root used for access verification.
     /// @return allowedAddresses_ The list of explicitly allowed addresses.
