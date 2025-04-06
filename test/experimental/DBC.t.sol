@@ -45,7 +45,7 @@ contract DBCTest is Test {
     function test_getTrancheReserveAtSupply_givenAnchorTranche() public {
         uint supply = 650 ether;
 
-        uint reserve = dbc.getTrancheReserveAtSupply(1, supply);
+        uint reserve = dbc.getTrancheReserveAtSupply(dbc.getTrancheDetails(1), supply);
 
         assertEq(reserve, 475 ether);
     }
@@ -62,7 +62,7 @@ contract DBCTest is Test {
         uint issuanceSupply = 575 ether;
         uint amountIn = 500 ether;
 
-        uint purchaseReturn = dbc.calculatePurchaseReturn2(
+        uint purchaseReturn = dbc.calculatePurchaseReturn(
             amountIn, issuanceSupply
         );
 
@@ -73,18 +73,18 @@ contract DBCTest is Test {
         uint issuanceSupply = 100 ether;
         uint amountIn = 200 ether;
 
-        uint purchaseReturn = dbc.calculatePurchaseReturn2(
+        uint purchaseReturn = dbc.calculatePurchaseReturn(
             amountIn, issuanceSupply
         );
 
         assertEq(purchaseReturn, 200 ether);
     }
 
-        function test_calculatePurchaseReturn_givenAcrossTranches() public {
+    function test_calculatePurchaseReturn_givenAcrossTranches() public {
         uint issuanceSupply = 100 ether;
-        uint amountIn = 800 ether;
+        uint amountIn = 900 ether;
 
-        uint purchaseReturn = dbc.calculatePurchaseReturn2(
+        uint purchaseReturn = dbc.calculatePurchaseReturn(
             amountIn, issuanceSupply
         );
 
