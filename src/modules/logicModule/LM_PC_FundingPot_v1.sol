@@ -186,7 +186,8 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
-        isOpen = (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
+        bool isOpen =
+            (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
         return (
             isOpen,
             accessCriteria.nftContract,
@@ -211,7 +212,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
 
-        if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
             return (true, 0, false, 0, 0, 0);
         }
 
@@ -393,15 +394,15 @@ contract LM_PC_FundingPot_v1 is
         _validateEditRoundParameters(round);
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaId
-                == AccessCriteriaId.OPEN
+            round.accessCriterias[accessId_].accessCriteriaType
+                == AccessCriteriaType.OPEN
         ) {
             highestCap = personalCap_;
         }
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaId
-                == AccessCriteriaId.NFT && capByNFT_ > 0
+            round.accessCriterias[accessId_].accessCriteriaType
+                == AccessCriteriaType.NFT && capByNFT_ > 0
         ) {
             uint nftCap = personalCap_ + capByNFT_;
             if (nftCap > highestCap) {
@@ -410,8 +411,8 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaId
-                == AccessCriteriaId.MERKLE && capByMerkle_ > 0
+            round.accessCriterias[accessId_].accessCriteriaType
+                == AccessCriteriaType.MERKLE && capByMerkle_ > 0
         ) {
             uint merkleCap = personalCap_ + capByMerkle_;
             if (merkleCap > highestCap) {
@@ -420,8 +421,8 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaId
-                == AccessCriteriaId.LIST && capByList_ > 0
+            round.accessCriterias[accessId_].accessCriteriaType
+                == AccessCriteriaType.LIST && capByList_ > 0
         ) {
             uint listCap = personalCap_ + capByList_;
             if (listCap > highestCap) {
@@ -668,19 +669,22 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
 
-        if (accessCriteria.accessCriteriaId == AccessCriteriaId.OPEN) {
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
             return;
         }
 
         bool accessGranted = false;
-        if (accessCriteria.accessCriteriaId == AccessCriteriaId.NFT) {
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.NFT) {
             accessGranted =
                 _checkNftOwnership(accessCriteria.nftContract, msg.sender);
-        } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.MERKLE) {
+        } else if (
+            accessCriteria.accessCriteriaType == AccessCriteriaType.MERKLE
+        ) {
             accessGranted = _validateMerkleProof(
                 accessCriteria.merkleRoot, merkleProof_, msg.sender, roundId_
             );
-        } else if (accessCriteria.accessCriteriaId == AccessCriteriaId.LIST) {
+        } else if (accessCriteria.accessCriteriaType == AccessCriteriaType.LIST)
+        {
             accessGranted = _checkAllowedAddressList(
                 accessCriteria.allowedAddresses, msg.sender
             );
