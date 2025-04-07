@@ -4,7 +4,7 @@ pragma solidity 0.8.23;
 // External Imports
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract Mock_EverclearPayment {
+contract EverclearPaymentMock {
     event IntentAdded(bytes32 intentId, uint queuePosition, Intent intent);
 
     uint public nonce;

@@ -7,24 +7,21 @@ pragma solidity ^0.8.0;
 // External Dependencies
 
 import {Clones} from "@oz/proxy/Clones.sol";
-import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
+import {IWETH} from "@pp/interfaces/IWETH.sol";
 import "forge-std/console2.sol";
 
 // Internal Dependencies
-import {ICrossChainBase_v1} from "@pp/interfaces/ICrossChainBase_v1.sol";
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
-import {IPP_CrossChain_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_CrossChain_v1.sol";
+import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {IPP_Connext_CrossChain_v1} from
-    "src/modules/paymentProcessor/interfaces/IPP_Connext_CrossChain_v1.sol";
+import {IPP_Everclear_CrossChain_v1} from
+    "@pp/interfaces/IPP_Everclear_CrossChain_v1.sol";
 
 // Tests and Mocks
-import {PP_Connext_CrossChain_v1_Exposed} from
-    "test/modules/paymentProcessor/utils/mocks/PP_Connext_CrossChain_v1_Exposed.sol";
-import {Mock_EverclearPayment} from
-    "test/utils/mocks/external/Mock_EverclearPayment.sol";
+import {PP_Everclear_CrossChain_v1_Exposed} from
+    "test/modules/paymentProcessor/PP_Everclear_CrossChain_v1_Exposed.sol";
+import {EverclearPaymentMock} from
+    "test/utils/mocks/external/EverclearPaymentMock.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock
@@ -32,19 +29,20 @@ import {
 import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {OZErrors} from "test/utils/errors/OZErrors.sol";
 
-contract PP_Connext_CrossChain_v1_Test is ModuleTest {
-    //--------------------------------------------------------------------------
+contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
+    // ============================================================================
     // Constants
+
     uint constant MINTED_SUPPLY = 1000 ether;
     uint constant ZERO_AMOUNT = 0;
-    uint ORIGIN_CHAIN_ID;
-    uint TARGET_CHAIN_ID;
-    //--------------------------------------------------------------------------
-    // Test Storage
-    PP_Connext_CrossChain_v1_Exposed public paymentProcessor;
-    Mock_EverclearPayment public everclearPaymentMock;
+
+    // ============================================================================
+    // State
+
+    PP_Everclear_CrossChain_v1_Exposed public paymentProcessor;
+    EverclearPaymentMock public everclearPaymentMock;
     ERC20PaymentClientBaseV2Mock paymentClient;
-    IPP_CrossChain_v1 public CrossChainBase;
+    IPP_CrossChainBase_v1 public CrossChainBase;
     IWETH public weth;
 
     // Bridge-related storage
@@ -52,54 +50,55 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
     address public mockEverClearSpoke;
     address public mockWeth;
 
+    // Chain IDs
+    uint ORIGIN_CHAIN_ID;
+    uint TARGET_CHAIN_ID;
+
     // Execution data storage
+    bytes32[] public EMPTY_EXECUTION_DATA = new bytes32[](6);
     uint maxFee = 0;
     uint ttl = 1;
-    bytes32[] public emptyExecutionData;
 
-    //--------------------------------------------------------------------------
-    // Setup Function
-
+    // ============================================================================
+    // Setup
     function setUp() public {
         // Deploy mock contracts and set addresses
-        everclearPaymentMock = new Mock_EverclearPayment();
+        everclearPaymentMock = new EverclearPaymentMock();
         mockEverClearSpoke = address(everclearPaymentMock);
-        mockWeth = address(weth);
+        mockWeth = address(weth); // @note what is being set here?
 
-        // Deploy payment processor via clone
-        address impl = address(new PP_Connext_CrossChain_v1_Exposed());
-        paymentProcessor = PP_Connext_CrossChain_v1_Exposed(Clones.clone(impl));
+        // Deploy and setup the payment client for testing SUT
+        address impl = address(new ERC20PaymentClientBaseV2Mock());
+        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
 
-        _setUpOrchestrator(paymentProcessor);
-        _authorizer.setIsAuthorized(address(this), true);
+        // Deploy and init the SUT
+        impl = address(new PP_Everclear_CrossChain_v1_Exposed());
+        paymentProcessor =
+            PP_Everclear_CrossChain_v1_Exposed(Clones.clone(impl));
 
-        // Initialize payment processor with config
+        // Setup the mock workflow contracts and token
+        _setUpOrchestrator(paymentClient);
+
+        // Initialize the SUT
         bytes memory configData = abi.encode(mockEverClearSpoke, mockWeth);
         paymentProcessor.init(_orchestrator, _METADATA, configData);
 
-        // Deploy and add payment client through timelock process
-        impl = address(new ERC20PaymentClientBaseV2Mock());
-        paymentClient = ERC20PaymentClientBaseV2Mock(Clones.clone(impl));
-        _orchestrator.initiateAddModuleWithTimelock(address(paymentClient));
-        vm.warp(block.timestamp + _orchestrator.MODULE_UPDATE_TIMELOCK());
-        _orchestrator.executeAddModule(address(paymentClient));
-
-        // Configure payment client
+        // Initialize payment client
         paymentClient.init(_orchestrator, _METADATA, bytes(""));
         paymentClient.setIsAuthorized(address(paymentProcessor), true);
         paymentClient.setToken(_token);
 
+        // Set the testing contract to be authorized in authorizer mock
+        _authorizer.setIsAuthorized(address(this), true);
+
+        // Set Chain IDs
         ORIGIN_CHAIN_ID = block.chainid;
         TARGET_CHAIN_ID = 1337;
-
-        emptyExecutionData = new bytes32[](6);
     }
 
-    //--------------------------------------------------------------------------
-    // Initialization Tests
+    // ============================================================================
+    // Test Init & SupportsInterface
 
-    /* Test initialization
-    */
     function testInit() public override(ModuleTest) {
         assertEq(
             address(paymentProcessor.getEverClearSpoke()), mockEverClearSpoke
@@ -107,24 +106,17 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         assertEq(address(paymentProcessor.getWeth()), mockWeth);
     }
 
-    /* Test interface support
-    */
     function testSupportsInterface() public {
-        // Test for IModule_v1 interface
-        assertTrue(
-            paymentProcessor.supportsInterface(type(IModule_v1).interfaceId)
-        );
-
-        // Test for ICrossChainBase_v1 interface
+        // Test for IPP_CrossChainBase_v1 interface
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(ICrossChainBase_v1).interfaceId
+                type(IPP_CrossChainBase_v1).interfaceId
             )
         );
-        // Test for IPP_Connext_CrossChain_v1 interface
+        // Test for IPP_Everclear_CrossChain_v1 interface
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPP_Connext_CrossChain_v1).interfaceId
+                type(IPP_Everclear_CrossChain_v1).interfaceId
             )
         );
         // Test for IPaymentProcessor_v1 interface
@@ -137,8 +129,6 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         assertFalse(paymentProcessor.supportsInterface(0xffffffff));
     }
 
-    /* Test reinitialization
-    */
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentProcessor.init(_orchestrator, _METADATA, abi.encode(1));
@@ -158,7 +148,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+        _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
 
         // Prepare expected event data
         bytes32[] memory expectedExecutionData = _getExecutionData();
@@ -175,7 +165,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             bytes32(uint(0x3F)),
             expectedExecutionData
         );
-
+        vm.prank(address(paymentClient));
         // Execute the transaction
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -189,7 +179,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         bytes32 intentId = bytes32(paymentProcessor.getBridgeData(0));
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
-            uint(Mock_EverclearPayment.IntentStatus.ADDED)
+            uint(EverclearPaymentMock.IntentStatus.ADDED)
         );
         console2.logBytes32(intentId);
     }
@@ -204,12 +194,13 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+        _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
 
         assertEq(client.outstandingTokenAmount(address(_token)), testAmount);
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
         assertEq(client.outstandingTokenAmount(address(_token)), 0);
     }
@@ -241,7 +232,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
         _createPaymentOrders(
-            numRecipients, setupRecipients, setupAmounts, emptyExecutionData
+            numRecipients, setupRecipients, setupAmounts, EMPTY_EXECUTION_DATA
         );
 
         // Get the client interface
@@ -264,7 +255,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
                 executionData
             );
         }
-
+        vm.prank(address(paymentClient));
         // Process payments
         paymentProcessor.processPayments(client);
 
@@ -274,7 +265,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
             bytes32 intentId = bytes32(paymentProcessor.getBridgeData(i));
             assertEq(
                 uint(everclearPaymentMock.status(intentId)),
-                uint(Mock_EverclearPayment.IntentStatus.ADDED)
+                uint(EverclearPaymentMock.IntentStatus.ADDED)
             );
             totalAmount += setupAmounts[i];
         }
@@ -310,7 +301,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
         _createPaymentOrders(
-            numRecipients, setupRecipients, setupAmounts, emptyExecutionData
+            numRecipients, setupRecipients, setupAmounts, EMPTY_EXECUTION_DATA
         );
 
         // Get the client interface
@@ -320,6 +311,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         assertEq(
             client.outstandingTokenAmount(address(_token)), OutstandingAmount
         );
+        vm.prank(address(paymentClient));
         // Process payments
         paymentProcessor.processPayments(client);
         assertEq(client.outstandingTokenAmount(address(_token)), 0);
@@ -334,6 +326,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
     function testProcessPayments_succeedsGivenNoPaymentOrders() public {
         // Process payments and verify _bridgeData mapping is not updated
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -366,6 +359,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Process payments
         vm.expectRevert();
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
     }
 
@@ -400,6 +394,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
                 .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                 .selector
         );
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -415,7 +410,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
     {
         vm.assume(testAmount > 0 && testAmount < MINTED_SUPPLY); // Keeping within our minted balance
 
-        _setupSinglePayment(address(0), testAmount, emptyExecutionData);
+        _setupSinglePayment(address(0), testAmount, EMPTY_EXECUTION_DATA);
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
@@ -426,6 +421,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
                 .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                 .selector
         );
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
     }
 
@@ -439,7 +435,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
     ) public {
         vm.assume(testRecipient != address(0));
 
-        _setupSinglePayment(testRecipient, 0, emptyExecutionData);
+        _setupSinglePayment(testRecipient, 0, EMPTY_EXECUTION_DATA);
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
@@ -450,6 +446,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
                 .Module__ERC20PaymentClientBase__InvalidPaymentOrder
                 .selector
         );
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
     }
 
@@ -465,10 +462,11 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+        _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
         // Get the client interface
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
+        vm.prank(address(paymentClient));
         // Process payments and verify _bridgeData mapping is updated
         paymentProcessor.processPayments(client);
         assertTrue(
@@ -479,7 +477,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         bytes32 intentId = bytes32(paymentProcessor.getBridgeData(0));
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
-            uint(Mock_EverclearPayment.IntentStatus.ADDED)
+            uint(EverclearPaymentMock.IntentStatus.ADDED)
         );
     }
 
@@ -491,6 +489,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
         // Process payments and verify _bridgeData mapping is updated
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
         assertTrue(
             keccak256(paymentProcessor.getBridgeData(0)) == keccak256(bytes("")),
@@ -519,9 +518,9 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         }
 
         // Setup - Configure payment
-        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
-
+        _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
         // Action - Process payments
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -543,7 +542,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Setup initial payment
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
 
         // First attempt with high maxFee to force failure
         everclearPaymentMock.setMockBridgeToFail(true);
@@ -604,10 +603,11 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Setup the payment and process it
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
 
         uint balanceBefore = _token.balanceOf(address(paymentProcessor));
         everclearPaymentMock.setMockBridgeToFail(true); //Force the bridge transfer to fail
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -653,8 +653,8 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         uint testAmount
     ) public {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
-
+        _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
+        vm.prank(address(paymentClient));
         // Process payment to create intent
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -695,8 +695,8 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Setup initial payment and process it
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
-
+            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -733,6 +733,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         _setupSinglePayment(testRecipient, testAmount, customExecutionData);
 
         vm.expectRevert();
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -750,11 +751,11 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
 
         vm.prank(address(paymentClient));
         vm.expectRevert(
-            IPP_CrossChain_v1
+            IPP_CrossChainBase_v1
                 .Module__PP_CrossChain__InvalidUnclaimableAmount
                 .selector
         );
@@ -776,8 +777,8 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Setup initial payment and process it
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
-
+            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
+        vm.prank(address(paymentClient));
         // Create a successful intent first
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -804,9 +805,10 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Setup failed transfer
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, emptyExecutionData);
+            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
 
         everclearPaymentMock.setMockBridgeToFail(true); //Force the bridge transfer to fail
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -814,7 +816,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         vm.prank(address(paymentClient));
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPP_CrossChain_v1
+                IPP_CrossChainBase_v1
                     .Module__PP_CrossChain__MessageDeliveryFailed
                     .selector,
                 ORIGIN_CHAIN_ID,
@@ -855,6 +857,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
 
         // Expect revert due to unsupported token
         vm.expectRevert();
+        vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
@@ -883,8 +886,8 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         }
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(3, recipients, amounts, emptyExecutionData);
-
+            _createPaymentOrders(3, recipients, amounts, EMPTY_EXECUTION_DATA);
+        vm.prank(address(paymentClient));
         // Process payments
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -926,6 +929,7 @@ contract PP_Connext_CrossChain_v1_Test is ModuleTest {
         });
 
         paymentClient.exposed_addPaymentOrder(order);
+        vm.prank(address(paymentClient));
 
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))

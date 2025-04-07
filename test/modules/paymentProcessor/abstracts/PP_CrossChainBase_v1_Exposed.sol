@@ -21,9 +21,7 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
 
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) internal override returns (bytes memory) {
-        return "";
-    }
+    ) internal override {}
 
     // ============================================================================
     // Exposed functions

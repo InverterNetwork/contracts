@@ -53,6 +53,8 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         crossChainPaymentProcessorBase.init(
             _orchestrator, _METADATA, abi.encode("")
         );
+
+        // Initialize payment client
         paymentClient.init(_orchestrator, _METADATA, bytes(""));
         paymentClient.setOrchestrator(_orchestrator);
         paymentClient.setToken(_token);
@@ -406,12 +408,8 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
             data: new bytes32[](0)
         });
 
-        // Test function call
-        bytes memory result =
-            crossChainPaymentProcessorBase.exposed_executeBridgeTransfer(order);
-
-        // Post-assert
-        assertEq(result, bytes(""), "Result should be empty bytes");
+        // Test function call: Should not revert
+        crossChainPaymentProcessorBase.exposed_executeBridgeTransfer(order);
     }
 
     /* Test: Function _claimPreviouslyUnclaimable()

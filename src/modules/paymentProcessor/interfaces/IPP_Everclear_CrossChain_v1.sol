@@ -9,7 +9,7 @@ import {IPaymentProcessor_v1} from
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
-import {IEverclearSpoke} from
+import {IEverclear} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
 /**
@@ -56,7 +56,7 @@ interface IPP_Everclear_CrossChain_v1 {
     function getEverClearSpoke()
         external
         view
-        returns (IEverclearSpoke everClearSpoke_);
+        returns (IEverclear everClearSpoke_);
 
     /// @notice Returns the WETH contract instance weth_.
     /// @return weth_ The WETH contract interface used for wrapping/unwrapping ETH.
