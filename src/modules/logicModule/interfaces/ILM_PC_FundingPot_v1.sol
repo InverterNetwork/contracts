@@ -296,14 +296,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return roundCount_ The total number of funding rounds.
     function getRoundCount() external view returns (uint64 roundCount_);
 
-    /// @notice Retrieves the total number of access criteria for a specific round.
-    /// @param  roundId_ The unique identifier of the round.
-    /// @return accessCriteriaCount_ The total number of access criteria for the round.
-    function getRoundAccessCriteriaCount(uint64 roundId_)
-        external
-        view
-        returns (uint8 accessCriteriaCount_);
-
     /// @notice Retrieves the closed status of a round
     /// @param  roundId_ The ID of the round
     /// @return The closed status of the round

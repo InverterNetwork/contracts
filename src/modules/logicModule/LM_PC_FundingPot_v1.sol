@@ -90,8 +90,6 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Stores all funding rounds by their unique ID.
     mapping(uint64 => Round) private rounds;
 
-    /// @notice Stores the access criteria ID for each round.
-    mapping(uint64 => uint8) private roundIdtoAccessId;
     /// @notice Stores all access criteria privilages by their unique ID.
     mapping(
         uint64 roundId => mapping(uint8 accessId => AccessCriteriaPrivileges)
@@ -246,15 +244,6 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteriaCount(uint64 roundId_)
-        public
-        view
-        returns (uint8 accessCriteriaCount_)
-    {
-        return roundIdtoAccessId[roundId_];
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
     function isRoundClosed(uint64 roundId_) external view returns (bool) {
         return roundClosed[roundId_];
     }
@@ -363,12 +352,10 @@ contract LM_PC_FundingPot_v1 is
         ) {
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
-        uint8 accessCriteriaId = roundIdtoAccessId[roundId_];
-        round.accessCriterias[accessCriteriaId] = accessCriteria_;
+        uint8 accessID = uint8(accessCriteria_.accessCriteriaType);
+        round.accessCriterias[accessID] = accessCriteria_;
 
-        emit AccessCriteriaSet(roundId_, accessCriteriaId, accessCriteria_);
-
-        roundIdtoAccessId[roundId_] += 1;
+        emit AccessCriteriaSet(roundId_, accessID, accessCriteria_);
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -377,10 +364,10 @@ contract LM_PC_FundingPot_v1 is
         uint8 accessCriteriaId_,
         AccessCriteria memory accessCriteria_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
-        if (accessCriteriaId_ >= roundIdtoAccessId[roundId_]) {
+        Round storage round = rounds[roundId_];
+        if (accessCriteriaId_ > 4) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
-        Round storage round = rounds[roundId_];
 
         _validateEditRoundParameters(round);
 
@@ -714,19 +701,20 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Validates access criteria for a specific round and access type
     /// @dev    Checks if a user meets the access requirements based on the round's access criteria
     /// @param  roundId_ The ID of the round being validated
-    /// @param  accessId_ The ID of the specific access criteria
+    /// @param  accessCriteriaId_ The ID of the specific access criteria
     /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional)
     function _validateAccessCriteria(
         uint64 roundId_,
-        uint8 accessId_,
+        uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_,
         address user_
     ) internal view {
         Round storage round = rounds[roundId_];
-        AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
+        AccessCriteria storage accessCriteria =
+            round.accessCriterias[accessCriteriaId_];
 
-        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
-            return;
+        if (accessCriteriaId_ > 4) {
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
         bool accessGranted = false;
