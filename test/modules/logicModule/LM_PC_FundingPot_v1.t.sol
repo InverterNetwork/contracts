@@ -1112,8 +1112,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
-
         // Approve
         vm.prank(contributor1_);
         _token.approve(address(fundingPot), 500);
@@ -1309,11 +1307,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, amount, accessId, new bytes32[](0)
         );
 
-        // Get the base personal cap from the contract
-        uint personalCap = fundingPot.exposed_getUserPersonalCapForRound(
-            roundId, accessId, contributor1_
-        );
-
         // Attempt to contribute beyond personal cap
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1324,7 +1317,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.prank(contributor1_);
 
-        uint remainingCap = personalCap - amount;
         fundingPot.contributeToRound(roundId, 251, accessId, new bytes32[](0));
     }
 
@@ -1410,7 +1402,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testContributeToRound_worksGivenUserCurrentContributionExceedsTheRoundCap(
-        uint roundCap_,
         uint8 accessCriteriaEnumOld,
         uint8 accessCriteriaEnumNew
     ) public {
@@ -1433,8 +1424,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 200, 0, 0, 0, false, 0, 0, 0
         );
 
-        (uint roundStart,, uint roundCap,,,,) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1732,9 +1722,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzz_validateAccessCriteria(
         uint64 roundId_,
         uint8 accessId_,
-        bytes32[] calldata merkleProof_,
-        address user_
-    ) external {
+        bytes32[] calldata merkleProof_
+    ) external view {
         vm.assume(roundId_ <= fundingPot.getRoundCount() + 1);
         vm.assume(accessId_ <= 4);
 
@@ -1756,11 +1745,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(roundId_ > 0 && roundId_ >= fundingPot.getRoundCount());
         vm.assume(amount_ <= 1000);
         vm.assume(accessId_ <= 4);
-
-        uint initialTotalContribution =
-            fundingPot.exposed_getTotalRoundContributions(roundId_);
-        uint initialUserContribution =
-            fundingPot.exposed_getUserContributionToRound(roundId_, msg.sender);
 
         try fundingPot.exposed_validateAndAdjustCaps(
             roundId_, amount_, accessId_, canOverrideContributionSpan_
@@ -1787,12 +1771,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     !canOverrideContributionSpan_,
                     "Should not revert RoundCapReached when canOverrideContributionSpan is true"
                 );
-                // Additional assertions commented out for now
-                // assert(roundCap > 0, "Round cap should be > 0");
-                // assert(
-                //     initialTotalContribution >= effectiveRoundCap,
-                //     "Total contribution should be >= effectiveRoundCap"
-                // );
             } else if (keccak256(reason) == personalCapReachedSelector) {
                 // We expect this sometimes
                 assertTrue(true, "Personal cap reached as expected");
@@ -1805,14 +1783,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Helper Functions
 
-    // @notice Creates a default funding round
-    function _helper_createDefaultFundingRound(uint roundCap_)
-        internal
-        returns (RoundParams memory)
-    {
-        return _defaultRoundParams;
-    }
-
     // @notice Creates edit round parameters with customizable values
     function _helper_createEditRoundParams(
         uint roundStart_,
@@ -1822,7 +1792,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         bytes memory hookFunction_,
         bool autoClosure_,
         bool globalAccumulativeCaps_
-    ) internal returns (RoundParams memory) {
+    ) internal pure returns (RoundParams memory) {
         return RoundParams({
             roundStart: roundStart_,
             roundEnd: roundEnd_,
@@ -1836,14 +1806,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function _helper_createAccessCriteria(uint8 accessCriteriaEnum)
         internal
-        returns (ILM_PC_FundingPot_v1.AccessCriteria memory)
+        view
+        returns (ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria)
     {
         {
             if (
                 accessCriteriaEnum
                     == uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN)
             ) {
-                return ILM_PC_FundingPot_v1.AccessCriteria(
+                accessCriteria = ILM_PC_FundingPot_v1.AccessCriteria(
                     ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN,
                     address(0x0),
                     bytes32(uint(0x0)),
@@ -1855,7 +1826,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             ) {
                 address nftContract = address(mockNFTContract);
 
-                return ILM_PC_FundingPot_v1.AccessCriteria(
+                accessCriteria = ILM_PC_FundingPot_v1.AccessCriteria(
                     ILM_PC_FundingPot_v1.AccessCriteriaType.NFT,
                     nftContract,
                     bytes32(uint(0x0)),
@@ -1867,7 +1838,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             ) {
                 bytes32 merkleRoot = ROOT;
 
-                return ILM_PC_FundingPot_v1.AccessCriteria(
+                accessCriteria = ILM_PC_FundingPot_v1.AccessCriteria(
                     ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE,
                     address(0x0),
                     merkleRoot,
@@ -1882,7 +1853,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 allowedAddresses[1] = address(0x2);
                 allowedAddresses[2] = address(0x3);
 
-                return ILM_PC_FundingPot_v1.AccessCriteria(
+                accessCriteria = ILM_PC_FundingPot_v1.AccessCriteria(
                     ILM_PC_FundingPot_v1.AccessCriteriaType.LIST,
                     address(0x0),
                     bytes32(uint(0x0)),
