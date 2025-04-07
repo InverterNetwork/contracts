@@ -120,7 +120,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertTrue(
             fundingPot.supportsInterface(type(ILM_PC_FundingPot_v1).interfaceId)
         );
-
     }
 
     function testReinitFails() public override(ModuleTest) {
@@ -317,7 +316,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCreateRound() public {
         RoundParams memory params = _defaultRoundParams;
-        
+
         fundingPot.createRound(
             params.roundStart,
             params.roundEnd,
@@ -329,7 +328,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         _testRoundId = fundingPot.getRoundCount();
-        
+
         // Retrieve the stored parameters
         (
             uint storedRoundStart,
@@ -587,12 +586,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint64 roundId = fundingPot.getRoundCount();
 
         // Get the current round start time
-        (uint currentRoundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
-        
+        (uint currentRoundStart,,,,,,) =
+            fundingPot.getRoundGenericParameters(roundId);
+
         // Ensure roundEnd_ is less than current round start
         vm.assume(roundEnd_ < currentRoundStart);
         vm.assume(roundEnd_ != 0);
-        
+
         RoundParams memory params = _helper_createEditRoundParams(
             currentRoundStart,
             roundEnd_,
