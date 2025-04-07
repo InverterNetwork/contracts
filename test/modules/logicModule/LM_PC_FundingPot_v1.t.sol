@@ -175,12 +175,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   └── When user attempts to create a round
     │       └── Then it should revert
     │
-    ├── And round end time == 0
+    ├── And round end time == 0 
     ├── And round cap == 0
     │   └── When user attempts to create a round
     │       └── Then it should revert
     │
-    ├── And round end time is set
+    ├── And round end time is set 
     ├── And round end != 0
     ├── And round end < round start
     │   └── When user attempts to create a round
@@ -352,7 +352,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ├── Given all the valid parameters are provided
         │   └── When user attempts to create a round
         │       └── Then it should not be active and should return the round id
-    */
+        */
 
     function testCreateRound() public {
         RoundParams memory params = _defaultRoundParams;
@@ -396,29 +396,29 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │       └── Then it should revert
     │
     └── Given user has FUNDING_POT_ADMIN_ROLE
-        ├── Given round does not exist
-        │   └── When user attempts to edit the round
-        │       └── Then it should revert
+    ├── Given round does not exist
+    │   └── When user attempts to edit the round
+    │       └── Then it should revert
         │
-        ├── Given round is active
-        │   └── When user attempts to edit the round
-        │       └── Then it should revert
+    ├── Given round is active
+    │   └── When user attempts to edit the round
+    │       └── Then it should revert
         │
-        ├── Given round start time is in the past
+    ├── Given round start time is in the past
         │   └── When user attempts to edit a round with this parameter
-        │       └── Then it should revert
+    │       └── Then it should revert
         │
         ├── Given round end time == 0 and round cap == 0
         │   └── When user attempts to edit a round with these parameters
-        │       └── Then it should revert
+    │       └── Then it should revert
         │
         ├── Given round end time is set and round end < round start
-        │   └── When user attempts to edit the round
-        │       └── Then it should revert
+    │   └── When user attempts to edit the round
+    │       └── Then it should revert
         │
         ├── Given hook contract is set but hook function is empty
-        │   └── When user attempts to edit the round
-        │       └── Then it should revert
+    │   └── When user attempts to edit the round
+    │       └── Then it should revert
         │
         ├── Given hook function is set but hook contract is empty
         │   └── When user attempts to edit the round
@@ -786,29 +786,29 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │       └── Then it should revert
     │
     └── Given user has FUNDING_POT_ADMIN_ROLE
-        ├── Given round does not exist
-        │   └── When user attempts to set access criteria
-        │       └── Then it should revert
+    ├── Given round does not exist
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
         │
-        ├── Given round is active
-        │   └── When user attempts to set access criteria
-        │       └── Then it should revert
+    ├── Given round is active
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
         │
-        ├── Given AccessCriteriaId is NFT and nftContract is 0x0
-        │   └── When user attempts to set access criteria
-        │       └── Then it should revert
+    ├── Given AccessCriteriaId is NFT and nftContract is 0x0
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
         │
-        ├── Given AccessCriteriaId is MERKLE and merkleRoot is 0x0
-        │   └── When user attempts to set access criteria
-        │       └── Then it should revert
+    ├── Given AccessCriteriaId is MERKLE and merkleRoot is 0x0
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
         │
-        ├── Given AccessCriteriaId is LIST and allowedAddresses is empty
-        │   └── When user attempts to set access criteria
-        │       └── Then it should revert
+    ├── Given AccessCriteriaId is LIST and allowedAddresses is empty
+    │   └── When user attempts to set access criteria
+    │       └── Then it should revert
         │
-        └── Given all the valid parameters are provided
-            └── When user attempts to set access criteria
-                └── Then it should not revert
+    └── Given all the valid parameters are provided
+        └── When user attempts to set access criteria
+            └── Then it should not revert
     */
 
     function testFuzzSetAccessCriteria_revertsGivenUserDoesNotHaveFundingPotAdminRole(
@@ -1072,7 +1072,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 0;
         uint amount = 250;
 
         // Warp to make the round active
@@ -1085,7 +1084,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.prank(contributor1_);
         fundingPot.contributeToRound(
-            roundId, 10, accessCriteriaId, new bytes32[](0)
+            roundId, 10, accessCriteriaEnum, new bytes32[](0)
         );
 
         vm.expectRevert(
@@ -1098,7 +1097,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.prank(contributor1_);
         fundingPot.contributeToRound(
-            roundId, amount, accessCriteriaId, new bytes32[](0)
+            roundId, amount, accessCriteriaEnum, new bytes32[](0)
         );
     }
 
@@ -1180,19 +1179,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testContributeToRound_revertsGivenNFTAccessCriteriaIsNotMet()
         public
     {
-        testCreateRound();
+        uint8 accessId = 2;
+        _helper_setupRoundWithAccessCriteria(accessId);
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+
         uint amount = 250;
 
-        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
-            _helper_createAccessCriteria(accessId);
-
-        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
-            roundId, accessId, 500, 10, 0, 0, false, 0, 0, 0
-        );
+        // _helper_callSetAccessCriteriaPrivileges(
+        //     roundId, accessId, 500, 10, 0, 0, false, 0, 0, 0
+        // );
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
@@ -1200,6 +1196,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Approve
         vm.prank(contributor1_);
         _token.approve(address(fundingPot), amount);
+
+        mockNFTContract.balanceOf(contributor1_);
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1220,7 +1218,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 2;
+        uint8 accessId = 3;
         uint amount = 250;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
@@ -1255,7 +1253,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 3;
+        uint8 accessId = 4;
         uint amount = 250;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
@@ -1747,13 +1745,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testFuzz_validateAccessCriteria(
         uint64 roundId_,
         uint8 accessId_,
-        bytes32[] calldata merkleProof_
+        bytes32[] calldata merkleProof_,
+        address user_
     ) external {
         vm.assume(roundId_ <= fundingPot.getRoundCount() + 1);
         vm.assume(accessId_ <= 4);
 
         try fundingPot.exposed_validateAccessCriteria(
-            roundId_, accessId_, merkleProof_
+            roundId_, accessId_, merkleProof_, msg.sender
         ) {
             assert(true);
         } catch (bytes memory) {

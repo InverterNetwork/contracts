@@ -103,6 +103,9 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Maps round IDs to total contributions
     mapping(uint64 => uint) private roundTotalContributions;
 
+    /// @notice Maps round IDs to closed status
+    mapping(uint64 => bool) private roundClosed;
+
     /// @notice The current round count.
     uint64 private roundCount;
 
@@ -186,14 +189,21 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[id_];
 
-        bool isOpen =
-            (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN);
-        return (
-            isOpen,
-            accessCriteria.nftContract,
-            accessCriteria.merkleRoot,
-            accessCriteria.allowedAddresses
-        );
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
+            return (
+                true,
+                accessCriteria.nftContract,
+                accessCriteria.merkleRoot,
+                accessCriteria.allowedAddresses
+            );
+        } else {
+            return (
+                false,
+                accessCriteria.nftContract,
+                accessCriteria.merkleRoot,
+                accessCriteria.allowedAddresses
+            );
+        }
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -242,6 +252,11 @@ contract LM_PC_FundingPot_v1 is
         returns (uint8 accessCriteriaCount_)
     {
         return roundIdtoAccessId[roundId_];
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function isRoundClosed(uint64 roundId_) external view returns (bool) {
+        return roundClosed[roundId_];
     }
 
     // -------------------------------------------------------------------------
@@ -463,16 +478,52 @@ contract LM_PC_FundingPot_v1 is
         bytes32[] calldata merkleProof_
     ) external {
         uint adjustedAmount = _validateRoundContribution(
-            roundId_, accessCriteriaId_, merkleProof_, amount_
+            roundId_, accessCriteriaId_, merkleProof_, amount_, msg.sender
         );
 
-        _recordContribution(roundId_, msg.sender, adjustedAmount);
+        Round storage round = rounds[roundId_];
+
+        //Record contribution
+        userContributions[roundId_][msg.sender] += adjustedAmount;
+        roundTotalContributions[roundId_] += adjustedAmount;
 
         IERC20(contributionToken).safeTransferFrom(
             msg.sender, address(this), adjustedAmount
         );
 
         emit ContributionMade(roundId_, msg.sender, adjustedAmount);
+
+        // contribution triggers automatic closure
+        if (!roundClosed[roundId_] && round.autoClosure) {
+            bool readyToClose = _checkRoundClosureConditions(roundId_);
+            if (readyToClose) {
+                _closeRound(roundId_);
+            } else {
+                revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
+            }
+        }
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function closeRound(uint64 roundId_) external {
+        Round storage round = rounds[roundId_];
+
+        // Validate round exists
+        if (round.roundEnd == 0 && round.roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundNotCreated();
+        }
+
+        // Check if round is already closed
+        if (roundClosed[roundId_]) {
+            revert Module__LM_PC_FundingPot__RoundHasEnded();
+        }
+
+        bool readyToClose = _checkRoundClosureConditions(roundId_);
+        if (readyToClose) {
+            _closeRound(roundId_);
+        } else {
+            revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -546,12 +597,14 @@ contract LM_PC_FundingPot_v1 is
     /// @param accessCriteriaId_ ID of the access criteria to check
     /// @param merkleProof_ Merkle proof for validation if needed
     /// @param amount_ The amount sent by the user
+    /// @param user_ The address of the user
     /// @return adjustedAmount The potentially adjusted contribution amount based on personal and round caps
     function _validateRoundContribution(
         uint64 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_,
-        uint amount_
+        uint amount_,
+        address user_
     ) internal view returns (uint adjustedAmount) {
         Round storage round = rounds[roundId_];
         uint currentTime = block.timestamp;
@@ -570,7 +623,9 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__RoundHasNotStarted();
         }
 
-        _validateAccessCriteria(roundId_, accessCriteriaId_, merkleProof_);
+        _validateAccessCriteria(
+            roundId_, accessCriteriaId_, merkleProof_, user_
+        );
 
         AccessCriteriaPrivileges storage privileges =
             accessCriteriaPrivileges[roundId_][accessCriteriaId_];
@@ -664,7 +719,8 @@ contract LM_PC_FundingPot_v1 is
     function _validateAccessCriteria(
         uint64 roundId_,
         uint8 accessId_,
-        bytes32[] calldata merkleProof_
+        bytes32[] calldata merkleProof_,
+        address user_
     ) internal view {
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
@@ -676,18 +732,17 @@ contract LM_PC_FundingPot_v1 is
         bool accessGranted = false;
         if (accessCriteria.accessCriteriaType == AccessCriteriaType.NFT) {
             accessGranted =
-                _checkNftOwnership(accessCriteria.nftContract, msg.sender);
+                _checkNftOwnership(accessCriteria.nftContract, user_);
         } else if (
             accessCriteria.accessCriteriaType == AccessCriteriaType.MERKLE
         ) {
             accessGranted = _validateMerkleProof(
-                accessCriteria.merkleRoot, merkleProof_, msg.sender, roundId_
+                accessCriteria.merkleRoot, merkleProof_, user_, roundId_
             );
         } else if (accessCriteria.accessCriteriaType == AccessCriteriaType.LIST)
         {
-            accessGranted = _checkAllowedAddressList(
-                accessCriteria.allowedAddresses, msg.sender
-            );
+            accessGranted =
+                _checkAllowedAddressList(accessCriteria.allowedAddresses, user_);
         }
     }
 
@@ -842,15 +897,42 @@ contract LM_PC_FundingPot_v1 is
         return true;
     }
 
-    /// @notice Records a contribution for a user in a specific round
-    /// @dev    Updates the user's contribution and the total round contribution
-    /// @param  roundId_ The ID of the round
-    /// @param  user_ The address of the user making the contribution
-    /// @param  amount_ The amount of the contribution
-    function _recordContribution(uint64 roundId_, address user_, uint amount_)
+    /// @notice Handles round closure logic
+    /// @dev    Updates round status and executes hook if needed
+    /// @param  roundId_ The ID of the round to close
+    function _closeRound(uint64 roundId_) internal {
+        Round storage round = rounds[roundId_];
+
+        // Mark round as closed
+        roundClosed[roundId_] = true;
+
+        // Execute hook if configured
+        if (round.hookContract != address(0) && round.hookFunction.length > 0) {
+            (bool success,) = round.hookContract.call(round.hookFunction);
+            if (!success) {
+                revert Module__LM_PC_FundingPot__HookExecutionFailed();
+            }
+        }
+
+        // Emit event for round closure
+        emit RoundClosed(
+            roundId_, block.timestamp, roundTotalContributions[roundId_]
+        );
+    }
+
+    /// @notice Checks if a round has reached its cap or time limit
+    /// @param  roundId_ The ID of the round to check
+    /// @return Boolean indicating if the round has reached its cap or time limit
+    function _checkRoundClosureConditions(uint64 roundId_)
         internal
+        view
+        returns (bool)
     {
-        userContributions[roundId_][user_] += amount_;
-        roundTotalContributions[roundId_] += amount_;
+        Round storage round = rounds[roundId_];
+        uint totalContribution = roundTotalContributions[roundId_];
+        bool capReached =
+            round.roundCap > 0 && totalContribution == round.roundCap;
+        bool timeEnded = round.roundEnd > 0 && block.timestamp >= round.roundEnd;
+        return capReached || timeEnded;
     }
 }
