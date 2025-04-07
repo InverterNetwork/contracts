@@ -92,7 +92,8 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Stores all access criteria privilages by their unique ID.
     mapping(
-        uint64 roundId => mapping(uint8 accessId => AccessCriteriaPrivileges)
+        uint64 roundId
+            => mapping(uint8 accessCriteriaId_ => AccessCriteriaPrivileges)
     ) private accessCriteriaPrivileges;
 
     /// @notice Maps round IDs to user addresses to contribution amounts
@@ -205,7 +206,10 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteriaPrivileges(uint64 roundId_, uint8 accessId_)
+    function getRoundAccessCriteriaPrivileges(
+        uint64 roundId_,
+        uint8 accessCriteriaId__
+    )
         external
         view
         returns (
@@ -218,7 +222,8 @@ contract LM_PC_FundingPot_v1 is
         )
     {
         Round storage round = rounds[roundId_];
-        AccessCriteria storage accessCriteria = round.accessCriterias[accessId_];
+        AccessCriteria storage accessCriteria =
+            round.accessCriterias[accessCriteriaId__];
 
         if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
             return (true, 0, false, 0, 0, 0);
@@ -226,7 +231,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Store the privileges in a local variable to reduce stack usage.
         AccessCriteriaPrivileges storage privs =
-            accessCriteriaPrivileges[roundId_][accessId_];
+            accessCriteriaPrivileges[roundId_][accessCriteriaId__];
 
         return (
             false,
@@ -352,10 +357,10 @@ contract LM_PC_FundingPot_v1 is
         ) {
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
-        uint8 accessID = uint8(accessCriteria_.accessCriteriaType);
-        round.accessCriterias[accessID] = accessCriteria_;
+        uint8 accessCriteriaId_ = uint8(accessCriteria_.accessCriteriaType);
+        round.accessCriterias[accessCriteriaId_] = accessCriteria_;
 
-        emit AccessCriteriaSet(roundId_, accessID, accessCriteria_);
+        emit AccessCriteriaSet(roundId_, accessCriteriaId_, accessCriteria_);
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -379,7 +384,7 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaPrivileges(
         uint64 roundId_,
-        uint8 accessId_,
+        uint8 accessCriteriaId__,
         uint personalCap_,
         uint capByNFT_,
         uint capByMerkle_,
@@ -396,14 +401,14 @@ contract LM_PC_FundingPot_v1 is
         _validateEditRoundParameters(round);
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaType
+            round.accessCriterias[accessCriteriaId__].accessCriteriaType
                 == AccessCriteriaType.OPEN
         ) {
             highestCap = personalCap_;
         }
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaType
+            round.accessCriterias[accessCriteriaId__].accessCriteriaType
                 == AccessCriteriaType.NFT && capByNFT_ > 0
         ) {
             uint nftCap = personalCap_ + capByNFT_;
@@ -413,7 +418,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaType
+            round.accessCriterias[accessCriteriaId__].accessCriteriaType
                 == AccessCriteriaType.MERKLE && capByMerkle_ > 0
         ) {
             uint merkleCap = personalCap_ + capByMerkle_;
@@ -423,7 +428,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         if (
-            round.accessCriterias[accessId_].accessCriteriaType
+            round.accessCriterias[accessCriteriaId__].accessCriteriaType
                 == AccessCriteriaType.LIST && capByList_ > 0
         ) {
             uint listCap = personalCap_ + capByList_;
@@ -437,7 +442,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         AccessCriteriaPrivileges storage accessCriteriaPrivileges =
-            accessCriteriaPrivileges[roundId_][accessId_];
+            accessCriteriaPrivileges[roundId_][accessCriteriaId__];
 
         accessCriteriaPrivileges.personalCap = personalCap_;
         accessCriteriaPrivileges.overrideContributionSpan =
@@ -448,7 +453,7 @@ contract LM_PC_FundingPot_v1 is
 
         emit AccessCriteriaPrivilegesSet(
             roundId_,
-            accessId_,
+            accessCriteriaId__,
             personalCap_,
             overrideContributionSpan_,
             start_,
@@ -642,7 +647,7 @@ contract LM_PC_FundingPot_v1 is
     function _validateAndAdjustCaps(
         uint64 roundId_,
         uint amount_,
-        uint8 accessId_,
+        uint8 accessCriteriaId__,
         bool canOverrideContributionSpan_
     ) internal view returns (uint adjustedAmount) {
         adjustedAmount = amount_;
@@ -684,8 +689,9 @@ contract LM_PC_FundingPot_v1 is
         // Check and adjust for personal cap
         uint userPreviousContribution =
             _getUserContributionToRound(roundId_, msg.sender);
-        uint userPersonalCap =
-            _getUserPersonalCapForRound(roundId_, accessId_, msg.sender);
+        uint userPersonalCap = _getUserPersonalCapForRound(
+            roundId_, accessCriteriaId__, msg.sender
+        );
 
         if (userPreviousContribution + adjustedAmount > userPersonalCap) {
             if (userPreviousContribution < userPersonalCap) {
@@ -766,11 +772,11 @@ contract LM_PC_FundingPot_v1 is
     /// @return The personal contribution cap for the user
     function _getUserPersonalCapForRound(
         uint64 roundId_,
-        uint8 accessId_,
+        uint8 accessCriteriaId__,
         address user_
     ) internal view returns (uint) {
         AccessCriteriaPrivileges storage privileges =
-            accessCriteriaPrivileges[roundId_][accessId_];
+            accessCriteriaPrivileges[roundId_][accessCriteriaId__];
 
         uint personalCap = privileges.personalCap;
 
