@@ -953,7 +953,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessCriteriaId = 0;
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
@@ -965,7 +964,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaId);
+        ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaEnum);
 
         assertEq(isOpen, accessCriteriaEnum == 1);
         assertEq(nftContract, accessCriteria.nftContract);
@@ -1071,35 +1070,29 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
+        // Set up a round with access criteria
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
         uint64 roundId = fundingPot.getRoundCount();
-        uint amount = 250;
 
         // Warp to make the round active
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
-        // Approve
-        vm.prank(contributor1_);
-        _token.approve(address(fundingPot), 110);
+        // Create a new access criteria to try to edit with
+        ILM_PC_FundingPot_v1.AccessCriteria memory newAccessCriteria =
+            _helper_createAccessCriteria((accessCriteriaEnum + 1) % 5); // Use a different access criteria type
 
-        vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, 10, accessCriteriaEnum, new bytes32[](0)
-        );
-
+        // Expect revert when trying to edit access criteria for an active round
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__PersonalCapReached
+                    .Module__LM_PC_FundingPot__RoundAlreadyStarted
                     .selector
             )
         );
 
-        vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessCriteriaEnum, new bytes32[](0)
-        );
+        // Attempt to edit the access criteria for the active round
+        fundingPot.editAccessCriteriaForRound(roundId, 0, newAccessCriteria);
     }
 
     function testContributeToRound_revertsGivenContributionIsBeforeRoundStart()
