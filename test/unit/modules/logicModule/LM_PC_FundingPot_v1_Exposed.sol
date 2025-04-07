@@ -85,10 +85,11 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         uint64 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_,
-        uint amount_
+        uint amount_,
+        address user_
     ) external view returns (uint) {
         return _validateRoundContribution(
-            roundId_, accessCriteriaId_, merkleProof_, amount_
+            roundId_, accessCriteriaId_, merkleProof_, amount_, user_
         );
     }
 
@@ -112,9 +113,10 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     function exposed_validateAccessCriteria(
         uint64 roundId_,
         uint8 accessId_,
-        bytes32[] calldata merkleProof_
+        bytes32[] calldata merkleProof_,
+        address user_
     ) external view {
-        _validateAccessCriteria(roundId_, accessId_, merkleProof_);
+        _validateAccessCriteria(roundId_, accessId_, merkleProof_, user_);
     }
 
     /**
@@ -148,16 +150,5 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         uint64 roundId_
     ) external pure returns (bool) {
         return _validateMerkleProof(root_, merkleProof_, user_, roundId_);
-    }
-
-    /**
-     * @notice Exposes the internal _recordContribution function for testing
-     */
-    function exposed_recordContribution(
-        uint64 roundId_,
-        address user_,
-        uint amount_
-    ) external {
-        _recordContribution(roundId_, user_, amount_);
     }
 }
