@@ -109,23 +109,27 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Emitted when access criteria is set for a round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  accessId_ The identifier of the access criteria.
+    /// @param  AccessCriteriaId The identifier of the access criteria.
     /// @param  accessCriteria_ The access criteria.
     event AccessCriteriaSet(
-        uint64 indexed roundId_, uint8 accessId_, AccessCriteria accessCriteria_
+        uint64 indexed roundId_,
+        uint8 AccessCriteriaId,
+        AccessCriteria accessCriteria_
     );
 
     /// @notice Emitted when access criteria is edited for a round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  accessId_ The identifier of the access criteria.
+    /// @param  AccessCriteriaId The identifier of the access criteria.
     /// @param  accessCriteria_ The access criteria.
     event AccessCriteriaEdited(
-        uint64 indexed roundId_, uint8 accessId_, AccessCriteria accessCriteria_
+        uint64 indexed roundId_,
+        uint8 AccessCriteriaId,
+        AccessCriteria accessCriteria_
     );
 
     /// @notice Emitted when access criteria Privileges are set for a round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  accessId_ The identifier of the access criteria.
+    /// @param  AccessCriteriaId The identifier of the access criteria.
     /// @param  personalCap_ The personal cap for the access criteria.
     /// @param  overrideCap_ Whether to override the global cap.
     /// @param  start_ The start timestamp for the access criteria.
@@ -133,7 +137,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  end_ The end timestamp for the access criteria.
     event AccessCriteriaPrivilegesSet(
         uint64 indexed roundId_,
-        uint8 accessId_,
+        uint8 AccessCriteriaId,
         uint personalCap_,
         bool overrideCap_,
         uint start_,
@@ -273,14 +277,17 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Retrieves the access criteria Privileges for a specific funding round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  accessId_ The identifier of the access criteria.
+    /// @param  AccessCriteriaId The identifier of the access criteria.
     /// @return isRoundOpen_ Whether the round is open
     /// @return personalCap_ The personal cap for the access criteria
     /// @return overrideContributionSpan_ Whether to override the round contribution span
     /// @return start_ The start timestamp for the access criteria
     /// @return cliff_ The cliff timestamp for the access criteria
     /// @return end_ The end timestamp for the access criteria
-    function getRoundAccessCriteriaPrivileges(uint64 roundId_, uint8 accessId_)
+    function getRoundAccessCriteriaPrivileges(
+        uint64 roundId_,
+        uint8 AccessCriteriaId
+    )
         external
         view
         returns (
@@ -368,7 +375,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set Access Criteria Privileges
     /// @dev    Only callable by funding pot admin and only before the round has started
     /// @param  roundId_ ID of the round
-    /// @param  accessId_ ID of the access criteria
+    /// @param  AccessCriteriaId ID of the access criteria
     /// @param  personalCap_ Personal cap for the access criteria
     /// @param  capByNFT_ Cap by for the NFT access criteria
     /// @param  capByMerkle_ Cap for the Merkle root access criteria
@@ -379,7 +386,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  end_ End timestamp for the access criteria
     function setAccessCriteriaPrivileges(
         uint64 roundId_,
-        uint8 accessId_,
+        uint8 AccessCriteriaId,
         uint personalCap_,
         uint capByNFT_,
         uint capByMerkle_,

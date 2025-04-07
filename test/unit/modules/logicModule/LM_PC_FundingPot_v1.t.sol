@@ -1108,7 +1108,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1143,7 +1143,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1177,10 +1177,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint64 roundId = fundingPot.getRoundCount();
 
         uint amount = 250;
-
-        // _helper_callSetAccessCriteriaPrivileges(
-        //     roundId, accessId, 500, 10, 0, 0, false, 0, 0, 0
-        // );
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
@@ -1217,7 +1213,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1252,7 +1248,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1289,7 +1285,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1374,7 +1370,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 100, 0, 0, false, 0, 0, 0
         );
         mockNFTContract.mint(contributor1_);
@@ -1420,7 +1416,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 200, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1458,7 +1454,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessId);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1510,7 +1506,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
 
         // Set privileges with override capability
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, 200, 0, 0, true, 0, 0, 0
         );
 
@@ -1556,7 +1552,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(1);
         fundingPot.setAccessCriteriaForRound(round1Id, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             round1Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
         mockNFTContract.mint(contributor1_);
@@ -1573,7 +1569,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         uint64 round2Id = fundingPot.getRoundCount();
         fundingPot.setAccessCriteriaForRound(round2Id, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             round2Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1635,7 +1631,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessId);
         fundingPot.setAccessCriteriaForRound(round1Id, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             round1Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1652,7 +1648,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         uint64 round2Id = fundingPot.getRoundCount();
         fundingPot.setAccessCriteriaForRound(round2Id, accessCriteria);
-        _helper_callSetAccessCriteriaPrivileges(
+        fundingPot.setAccessCriteriaPrivileges(
             round2Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
         );
 
@@ -1874,31 +1870,5 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _helper_createAccessCriteria(accessCriteriaEnum);
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
-    }
-
-    function _helper_callSetAccessCriteriaPrivileges(
-        uint64 roundId,
-        uint8 accessId,
-        uint personalCap,
-        uint capByNFT,
-        uint capByMerkle,
-        uint capByList,
-        bool canOverrideTimeConstraints,
-        uint start,
-        uint cliff,
-        uint end
-    ) internal {
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId,
-            accessId,
-            personalCap,
-            capByNFT,
-            capByMerkle,
-            capByList,
-            canOverrideTimeConstraints,
-            start,
-            cliff,
-            end
-        );
     }
 }
