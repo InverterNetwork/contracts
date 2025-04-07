@@ -545,13 +545,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testEditRound_revertsGivenRoundStartIsInThePast(uint roundStartP_)
+    function testEditRound_revertsGivenRoundStartIsInThePast(uint roundStart_)
         public
     {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
         _editedRoundParams;
-        vm.assume(roundStartP_ < block.timestamp);
+        vm.assume(roundStart_ < block.timestamp);
+        _editedRoundParams.roundStart = roundStart_;
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1436,7 +1437,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
         _helper_callSetAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 200, 0, 0, 0, false, 0, 0, 0
         );
 
         (uint roundStart,, uint roundCap,,,,) =
@@ -1658,8 +1659,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Round 2 with a different cap
         uint round2Cap = 500;
         fundingPot.createRound(
-            _defaultRoundParams.roundStart,
-            _defaultRoundParams.roundEnd,
+            _defaultRoundParams.roundStart + 3 days,
+            _defaultRoundParams.roundEnd + 3 days,
             round2Cap,
             _defaultRoundParams.hookContract,
             _defaultRoundParams.hookFunction,
@@ -1688,10 +1689,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Move to Round 2
         vm.warp(_defaultRoundParams.roundStart + 3 days + 1);
 
-        uint unusedCapacityFromRound1 = _defaultRoundParams.roundCap
-            - fundingPot.exposed_getTotalRoundContributions(round1Id);
-        uint totalAvailableCapacityRound2 = round2Cap + unusedCapacityFromRound1;
-
         // Round 2: Contributors try to use the accumulated capacity
 
         vm.startPrank(contributor2_);
@@ -1700,8 +1697,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         vm.startPrank(contributor3_);
-        _token.approve(address(fundingPot), 600);
-        fundingPot.contributeToRound(round2Id, 600, accessId, new bytes32[](0));
+        _token.approve(address(fundingPot), 300);
+        fundingPot.contributeToRound(round2Id, 300, accessId, new bytes32[](0));
         vm.stopPrank();
 
         // Verify Round 1 contributions
@@ -1720,7 +1717,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Verify Round 2 contributions
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 1000);
+        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700);
         assertEq(
             fundingPot.exposed_getUserContributionToRound(
                 round2Id, contributor2_
@@ -1731,13 +1728,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             fundingPot.exposed_getUserContributionToRound(
                 round2Id, contributor3_
             ),
-            600
+            300
         );
 
-        assertEq(
-            fundingPot.exposed_getTotalRoundContributions(round2Id),
-            totalAvailableCapacityRound2
-        );
+        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700);
     }
 
     // -------------------------------------------------------------------------
