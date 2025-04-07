@@ -4,9 +4,9 @@ pragma solidity 0.8.23;
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IPP_Template_v1} from "./IPP_Template_v1.sol";
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 
@@ -23,7 +23,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
  *          processor. The contract showcases the following:
  *          - Inherit from the Module_v1 contract to enable interaction with
  *            the Inverter workflow.
- *          - Use of the IPaymentProcessor_v1 interface to facilitate
+ *          - Use of the IPaymentProcessor_v2 interface to facilitate
  *            interaction with a payment client.
  *          - Implement custom interface which has all the public facing
  *            functions, errors, events and structs.
@@ -59,7 +59,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         returns (bool)
     {
         return interfaceId_ == type(IPP_Template_v1).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -122,18 +122,18 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // Public (Mutating)
 
-    /// @inheritdoc IPaymentProcessor_v1
-    function processPayments(IERC20PaymentClientBase_v1 client_)
+    /// @inheritdoc IPaymentProcessor_v2
+    function processPayments(IERC20PaymentClientBase_v2 client_)
         external
         clientIsValid(address(client_))
     {
-        // The IERC20PaymentClientBase_v1 client should be used to access
+        // The IERC20PaymentClientBase_v2 client should be used to access
         // created payment orders in the Logic Module (LM) implementing the
         // interface. The interface should be referenced to see the different
-        // functionalities provided by the ERC20PaymentClientBase_v1.
+        // functionalities provided by the ERC20PaymentClientBase_v2.
 
         // Collect orders from the client
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
         (orders,,) = client_.collectPaymentOrders();
 
         // Custom logic to proces the payment orders should be implemented
@@ -146,13 +146,20 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         uint amount_ = orders[0].amount * _payoutAmountMultiplier;
         _paymentId = _paymentId + 1;
 
-        // Emit event of the IPaymentProcessor_v1. This is used by Inverter's
+        // Emit event of the IPaymentProcessor_v2. This is used by Inverter's
         // Indexer.
         emit PaymentOrderProcessed(
-            address(client_), recipient_, token_, amount_, 0, 0, 0
+            address(client_),
+            recipient_,
+            token_,
+            amount_,
+            block.chainid,
+            block.chainid,
+            bytes32(0),
+            new bytes32[](0)
         );
 
-        // Transfer tokens from {IERC20PaymentClientBase_v1} to order
+        // Transfer tokens from {IERC20PaymentClientBase_v2} to order
         // recipients.
         // Please note: When processing multiple payment orders and then
         // letting the call revert as in this example might not be the best
@@ -165,13 +172,13 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         // the accounting correct.
         client_.amountPaid(token_, amount_);
 
-        // Emit event of the IPaymentProcessor_v1. This is used by Inverter's
+        // Emit event of the IPaymentProcessor_v2. This is used by Inverter's
         // Indexer.
         emit TokensReleased(recipient_, token_, amount_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client_)
+    /// @inheritdoc IPaymentProcessor_v2
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
         external
         view
         clientIsValid(address(client_))
@@ -182,7 +189,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function unclaimable(
         address, /*client_*/
         address, /*token_*/
@@ -195,7 +202,7 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         return 0;
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function claimPreviouslyUnclaimable(
         address, /*client_*/
         address, /*token_*/
@@ -204,9 +211,9 @@ contract PP_Template_v1 is IPP_Template_v1, Module_v1 {
         return;
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order_
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external view returns (bool) {
         // This function is used to validate the payment order created on the
         // client side (LM_PC) with the input required by the Payment Processor

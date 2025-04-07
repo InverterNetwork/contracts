@@ -252,30 +252,6 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testSellOrder_FailsIfNotEnoughCollateralInContract(uint amount)
-        public
-    {
-        // Setup
-        vm.assume(amount > 0);
-
-        address seller = makeAddr("seller");
-        _prepareSellConditions(seller, amount);
-
-        // we simulate the fundingManager spending some funds. It can't cover full redemption anymore.
-        _token.burn(address(bondingCurveFundingManager), 1);
-
-        vm.startPrank(seller);
-        {
-            vm.expectRevert(
-                IRedeemingBondingCurveBase_v1
-                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption
-                    .selector
-            );
-            bondingCurveFundingManager.sell(amount, amount);
-        }
-        vm.stopPrank();
-    }
-
     function testSellOrder_FailsIfReturnAmountIsLowerThanMinAmount(uint amount)
         public
     {
@@ -294,6 +270,42 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
                 .selector
         );
         bondingCurveFundingManager.sell(amount, minAmountOut);
+    }
+
+    function testSellOrder_FailsIfNotEnoughCollateralToCoverCollateralProjectFee(
+        uint amount
+    ) public {
+        // Setup
+        amount = bound(amount, 10, type(uint128).max);
+
+        address seller = makeAddr("seller");
+        _prepareSellConditions(seller, amount);
+
+        uint sellFee = 1000;
+        bondingCurveFundingManager.setSellFee(sellFee);
+
+        // Calculate fee amount
+        uint projectCollateralFeeAmount;
+        (,, projectCollateralFeeAmount) = bondingCurveFundingManager
+            .call_calculateNetAndSplitFees(amount, 0, sellFee);
+
+        // We simulate the fundingManager spending some funds.
+        // It can't cover full redemption anymore.
+        _token.burn(
+            address(bondingCurveFundingManager),
+            amount - projectCollateralFeeAmount + 1
+        );
+
+        vm.startPrank(seller);
+        {
+            vm.expectRevert(
+                IRedeemingBondingCurveBase_v1
+                    .Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee
+                    .selector
+            );
+            bondingCurveFundingManager.sell(amount, 1);
+        }
+        vm.stopPrank();
     }
 
     function test_sellOrder(
@@ -384,7 +396,8 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         assertEq(_token.balanceOf(seller), 0);
         assertEq(
             1,
-            bondingCurveFundingManager.distributeCollateralTokenFunctionCalled()
+            bondingCurveFundingManager
+                .distributeCollateralTokenAfterSellFunctionCalled()
         );
 
         assertEq(issuanceToken.balanceOf(seller), 0);
@@ -686,15 +699,9 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     //      - Approves the BondingCurve contract to spend the receipt tokens
     // This function assumes that we are using the Mock with a 0% buy fee, so the user will receive as many tokens as they deposit
     function _prepareSellConditions(address seller, uint amount) internal {
-        _token.mint(seller, amount);
+        _token.mint(address(bondingCurveFundingManager), amount);
+        issuanceToken.mint(seller, amount);
 
-        vm.startPrank(seller);
-        {
-            _token.approve(address(bondingCurveFundingManager), amount);
-            bondingCurveFundingManager.buy(amount, amount);
-
-            issuanceToken.approve(address(bondingCurveFundingManager), amount);
-        }
-        vm.stopPrank();
+        issuanceToken.approve(address(bondingCurveFundingManager), amount);
     }
 }

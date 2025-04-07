@@ -10,18 +10,18 @@ import {
 
 // SuT
 import {
-    LM_PC_RecurringPayments_v1,
-    ILM_PC_RecurringPayments_v1,
-    IERC20PaymentClientBase_v1
-} from "@lm/LM_PC_RecurringPayments_v1.sol";
+    LM_PC_RecurringPayments_v2,
+    ILM_PC_RecurringPayments_v2,
+    IERC20PaymentClientBase_v2
+} from "@lm/LM_PC_RecurringPayments_v2.sol";
 
 // Modules that are used in this E2E test
 import {
-    PP_Streaming_v1,
-    IPP_Streaming_v1,
-    IERC20PaymentClientBase_v1
-} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+    PP_Streaming_v2,
+    IPP_Streaming_v2,
+    IERC20PaymentClientBase_v2
+} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
@@ -39,6 +39,11 @@ contract RecurringPaymentManagerE2E is E2ETest {
     uint startEpoch;
     uint epochLength = 1 weeks; // 1 week;
     uint epochsAmount = 10;
+
+    // Default values for the streaming payments
+    uint defaultStart = 10;
+    uint defaultCliff = 0;
+    uint defaultEnd = 30;
 
     // Constants
     uint constant _SENTINEL = type(uint).max;
@@ -59,10 +64,10 @@ contract RecurringPaymentManagerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -78,7 +83,8 @@ contract RecurringPaymentManagerE2E is E2ETest {
         setUpStreamingPaymentProcessor();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                streamingPaymentProcessorMetadata, bytes("")
+                streamingPaymentProcessorMetadata,
+                abi.encode(defaultStart, defaultCliff, defaultEnd)
             )
         );
 
@@ -93,7 +99,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
     function test_e2e_RecurringPayments(uint paymentAmount) public {
         paymentAmount = bound(paymentAmount, 1, 1e18);
-        LM_PC_RecurringPayments_v1 recurringPaymentManager;
+        LM_PC_RecurringPayments_v2 recurringPaymentManager;
 
         //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
@@ -107,19 +113,19 @@ contract RecurringPaymentManagerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        FM_Rebasing_v1 fundingManager =
-            FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        FM_DepositVault_v1 fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         // ------------------ FROM ModuleTest.sol
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
                 ERC165Upgradeable(modulesList[i]).supportsInterface(
-                    type(ILM_PC_RecurringPayments_v1).interfaceId
+                    type(ILM_PC_RecurringPayments_v2).interfaceId
                 )
             ) {
                 recurringPaymentManager =
-                    LM_PC_RecurringPayments_v1(modulesList[i]);
+                    LM_PC_RecurringPayments_v2(modulesList[i]);
                 break;
             }
         }
@@ -167,12 +173,12 @@ contract RecurringPaymentManagerE2E is E2ETest {
 
         // 4. Let the paymentReceivers claim their vested tokens
         /// Let's first find the address of the streamingPaymentProcessor
-        PP_Streaming_v1 streamingPaymentProcessor;
+        PP_Streaming_v2 streamingPaymentProcessor;
         for (uint i; i < modulesList.length; ++i) {
-            try IPP_Streaming_v1(modulesList[i]).unclaimable(
+            try IPP_Streaming_v2(modulesList[i]).unclaimable(
                 paymentReceiver1, address(token), paymentReceiver2
             ) returns (uint) {
-                streamingPaymentProcessor = PP_Streaming_v1(modulesList[i]);
+                streamingPaymentProcessor = PP_Streaming_v2(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -180,7 +186,7 @@ contract RecurringPaymentManagerE2E is E2ETest {
         }
 
         // Checking whether we got the right address for streamingPaymentProcessor
-        IPP_Streaming_v1.Stream[] memory streams = streamingPaymentProcessor
+        IPP_Streaming_v2.Stream[] memory streams = streamingPaymentProcessor
             .viewAllPaymentOrders(
             address(recurringPaymentManager), paymentReceiver1
         );

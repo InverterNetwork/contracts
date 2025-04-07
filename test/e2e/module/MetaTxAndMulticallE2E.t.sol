@@ -13,11 +13,11 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
 import {
-    LM_PC_Bounties_v1, ILM_PC_Bounties_v1
-} from "@lm/LM_PC_Bounties_v1.sol";
+    LM_PC_Bounties_v2, ILM_PC_Bounties_v2
+} from "@lm/LM_PC_Bounties_v2.sol";
 import {
     TransactionForwarder_v1,
     ITransactionForwarder_v1,
@@ -41,10 +41,10 @@ contract MetaTxAndMulticallE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -143,7 +143,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
 
         // Check if successful
         assertEq(
-            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
+            FM_DepositVault_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
 
@@ -153,13 +153,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // The function needs a role to access it
 
         // Lets get the bountyManager address
-        LM_PC_Bounties_v1 bountyManager;
+        LM_PC_Bounties_v2 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -262,13 +262,13 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // The function needs a role to access it
 
         // Lets get the bountyManager address
-        LM_PC_Bounties_v1 bountyManager;
+        LM_PC_Bounties_v2 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
-            try ILM_PC_Bounties_v1(modulesList[i]).isExistingBountyId(0)
+            try ILM_PC_Bounties_v2(modulesList[i]).isExistingBountyId(0)
             returns (bool) {
-                bountyManager = LM_PC_Bounties_v1(modulesList[i]);
+                bountyManager = LM_PC_Bounties_v2(modulesList[i]);
                 break;
             } catch {
                 continue;
@@ -305,7 +305,7 @@ contract MetaTxAndMulticallE2E is E2ETest {
         // Check if successful
         // For the fundingmanager
         assertEq(
-            FM_Rebasing_v1(fundingManager).token().balanceOf(fundingManager),
+            FM_DepositVault_v1(fundingManager).token().balanceOf(fundingManager),
             depositAmount
         );
         // For the bountyManager

@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.3
  *
  * @author  Inverter Network
  */
@@ -184,7 +184,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     ///         PLEASE NOTE:
     ///         The current implementation only requires that enough collateral token is held for redeeming
     ///         to be possible. No further functionality is implemented which would manages the outflow of
-    ///         collateral, e.g., restricting max redeemable amount per user, or a redeemable amount which
+    ///         collateral, e.g., restricting max Redeeming amount per user, or a Redeeming amount which
     ///         differes from the actual balance.
     ///         Throws an exception if `_depositAmount` is zero or if there's insufficient collateral in the
     ///         contract for redemption.
@@ -202,7 +202,14 @@ abstract contract RedeemingBondingCurveBase_v1 is
         internal
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
+        // ------------------------------------------------------------
+        // Checks
+
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+
+        // ------------------------------------------------------------
+        // Effects
+
         // Get protocol fee percentages and treasury addresses
         (
             address collateralTreasury,
@@ -213,61 +220,69 @@ abstract contract RedeemingBondingCurveBase_v1 is
             bytes4(keccak256(bytes("_sellOrder(address,uint,uint)")))
         );
 
-        uint protocolFeeAmount;
+        uint issuanceProtocolFeeAmount;
         uint projectFeeAmount;
         uint netDeposit;
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (netDeposit, protocolFeeAmount, /* projectFee */ ) =
+        (netDeposit, issuanceProtocolFeeAmount, /* projectFee */ ) =
         _calculateNetAndSplitFees(_depositAmount, issuanceSellFeePercentage, 0);
 
-        issuanceFeeAmount = protocolFeeAmount;
+        issuanceFeeAmount = issuanceProtocolFeeAmount;
 
         // Calculate redeem amount based on upstream formula
         uint collateralRedeemAmount = _redeemTokensFormulaWrapper(netDeposit);
 
         totalCollateralTokenMovedOut = collateralRedeemAmount;
 
-        // Burn issued token from user
-        _burn(_msgSender(), _depositAmount);
-
-        // Process the protocol fee. We can re-mint some of the burned tokens, since we aren't paying out
-        // the backing collateral
-        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
-
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
-        // Require that enough collateral token is held to be redeemable
+        uint collateralProtocolFeeAmount;
+
+        // Get net amount, protocol and project fee amounts
+        (collateralRedeemAmount, collateralProtocolFeeAmount, projectFeeAmount)
+        = _calculateNetAndSplitFees(
+            collateralRedeemAmount, collateralSellFeePercentage, sellFee
+        );
+
+        // Require that enough collateral tokens are held to cover the project
+        // collateral fee.
         if (
-            (collateralRedeemAmount + projectCollateralFeeCollected)
+            projectCollateralFeeCollected + projectFeeAmount
                 > collateralToken.balanceOf(address(this))
         ) {
             revert
-                Module__RedeemingBondingCurveBase__InsufficientCollateralForRedemption(
+                Module__RedeemingBondingCurveBase__InsufficientCollateralForProjectFee(
             );
         }
-
-        // Get net amount, protocol and project fee amounts
-        (collateralRedeemAmount, protocolFeeAmount, projectFeeAmount) =
-        _calculateNetAndSplitFees(
-            collateralRedeemAmount, collateralSellFeePercentage, sellFee
-        );
-        // Process the protocol fee
-        _processProtocolFeeViaTransfer(
-            collateralTreasury, collateralToken, protocolFeeAmount
-        );
-
-        // Add project fee if applicable
-        if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
-        } // Add fee amount to total collected fee
 
         // Revert when the redeem amount is lower than minimum amount the user expects
         if (collateralRedeemAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
+        }
+
+        // ------------------------------------------------------------
+        // Interactions
+
+        // Burn issued token from user
+        _burn(_msgSender(), _depositAmount);
+
+        // Process the protocol fee on incoming issuance tokens. We can
+        // re-mint since we aren't paying out the backing collateral.
+        _processProtocolFeeViaMinting(
+            issuanceTreasury, issuanceProtocolFeeAmount
+        );
+
+        // Process protocol fee on outgoing collateral tokens
+        _processProtocolFeeViaTransfer(
+            collateralTreasury, collateralToken, collateralProtocolFeeAmount
+        );
+
+        // Process project fee if applicable
+        if (projectFeeAmount > 0) {
+            _projectFeeCollected(projectFeeAmount);
         }
 
         // Use virtual function to handle collateral tokens
@@ -280,7 +295,9 @@ abstract contract RedeemingBondingCurveBase_v1 is
     }
 
     /// @notice Virtual function to handle collateral tokens after a successful sell.
-    /// @param  _receiver  The address for which the collateral tokens will be handled.
+    /// @dev    The downstream contract is responsible for implementing checks
+    ///         to ensure the contract has the right balance.
+    /// @param  _receiver The address for which the collateral tokens will be handled.
     /// @param  _collateralTokenAmount The amount of collateral tokens to handle.
     function _handleCollateralTokensAfterSell(
         address _receiver,

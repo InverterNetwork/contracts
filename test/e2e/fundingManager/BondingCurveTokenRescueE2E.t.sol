@@ -11,7 +11,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
-import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
+import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 // SuT
 import {
@@ -50,14 +50,6 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         setUpBancorVirtualSupplyBondingCurveFundingManager();
 
         // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
-
-        IBondingCurveBase_v1.IssuanceToken memory issuanceToken_properties =
-        IBondingCurveBase_v1.IssuanceToken({
-            name: "Bonding Curve Token",
-            symbol: "BCT",
-            decimals: 18,
-            maxSupply: type(uint).max - 1
-        });
 
         issuanceToken = new ERC20Issuance_v1(
             "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
@@ -184,12 +176,12 @@ contract BondingCurveTokenRescueE2E is E2ETest {
 
         // Transfer all collateral to the new BC
 
-        LM_PC_PaymentRouter_v1(paymentRouter).grantModuleRole(
-            LM_PC_PaymentRouter_v1(paymentRouter).PAYMENT_PUSHER_ROLE(),
+        LM_PC_PaymentRouter_v2(paymentRouter).grantModuleRole(
+            LM_PC_PaymentRouter_v2(paymentRouter).PAYMENT_PUSHER_ROLE(),
             address(this)
         );
 
-        LM_PC_PaymentRouter_v1(paymentRouter).pushPayment(
+        LM_PC_PaymentRouter_v2(paymentRouter).pushPayment(
             newBondingCurve, // recipient
             address(token), // token
             // This represented the allowed amount of collateral token to be transferred

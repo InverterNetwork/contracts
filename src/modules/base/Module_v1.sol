@@ -10,6 +10,8 @@ import {IFeeManager_v1} from "@ex/fees/interfaces/IFeeManager_v1.sol";
 // Internal Dependencies
 import {IERC20PaymentClientBase_v1} from
     "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -97,7 +99,7 @@ abstract contract Module_v1 is
     }
 
     /// @dev    Modifier to guarantee function is only callable by a module registered within the
-    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v1} interface.
+    ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v2} interface.
     modifier onlyPaymentClient() {
         _onlyPaymentClientModifier();
         _;
@@ -318,12 +320,17 @@ abstract contract Module_v1 is
         }
     }
 
-    /// @dev	Checks if the caller is an {ERC20PaymentClientBase_v1} module.
+    /// @dev	Checks if the caller is an {ERC20PaymentClientBase_v2} module.
     function _onlyPaymentClientModifier() internal view {
         if (
             !__Module_orchestrator.isModule(_msgSender())
-                || !ERC165Upgradeable(_msgSender()).supportsInterface(
-                    type(IERC20PaymentClientBase_v1).interfaceId
+                || (
+                    !ERC165Upgradeable(_msgSender()).supportsInterface(
+                        type(IERC20PaymentClientBase_v1).interfaceId
+                    )
+                        && !ERC165Upgradeable(_msgSender()).supportsInterface(
+                            type(IERC20PaymentClientBase_v2).interfaceId
+                        )
                 )
         ) revert Module__OnlyCallableByPaymentClient();
     }

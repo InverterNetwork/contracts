@@ -12,8 +12,10 @@ import {
     RedeemingBondingCurveBase_v1,
     IRedeemingBondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
-import {BondingCurveBase_v1} from
-    "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
+import {
+    BondingCurveBase_v1,
+    IBondingCurveBase_v1
+} from "@fm/bondingCurve/abstracts/BondingCurveBase_v1.sol";
 
 import {IBancorFormula} from "@fm/bondingCurve/interfaces/IBancorFormula.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -85,14 +87,23 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
         distributeIssuanceTokenFunctionCalled++;
     }
 
-    uint public distributeCollateralTokenFunctionCalled;
+    uint public distributeCollateralTokenAfterSellFunctionCalled;
 
     function _handleCollateralTokensAfterSell(address, uint)
         internal
         virtual
         override
     {
-        distributeCollateralTokenFunctionCalled++;
+        distributeCollateralTokenAfterSellFunctionCalled++;
+    }
+
+    uint public distributeCollateralTokenBeforeBuyFunctionCalled;
+
+    function _handleCollateralTokensBeforeBuy(
+        address, /*_provder*/
+        uint /*_amount*/
+    ) internal virtual override {
+        distributeCollateralTokenBeforeBuyFunctionCalled++;
     }
 
     function getStaticPriceForSelling()
@@ -105,7 +116,7 @@ contract RedeemingBondingCurveBaseV1Mock is RedeemingBondingCurveBase_v1 {
     function getStaticPriceForBuying()
         external
         view
-        override(BondingCurveBase_v1)
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
         returns (uint)
     {}
 

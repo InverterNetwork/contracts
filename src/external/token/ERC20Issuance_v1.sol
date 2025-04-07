@@ -79,6 +79,14 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _burn(_from, _amount);
     }
 
+    /// @inheritdoc IERC20Issuance_v1
+    function spendAllowance(address _from, address _spender, uint _amount)
+        external
+        onlyMinter
+    {
+        _spendAllowance(_from, _spender, _amount);
+    }
+
     //------------------------------------------------------------------------------
     // Internal Functions
 

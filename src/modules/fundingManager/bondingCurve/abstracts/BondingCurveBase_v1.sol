@@ -35,7 +35,7 @@ import {ERC165Upgradeable} from
  *                          to our Security Policy at security.inverter.network
  *                          or email us directly!
  *
- * @custom:version 1.1.1
+ * @custom:version 1.1.2
  *
  * @author  Inverter Network
  */
@@ -233,15 +233,17 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         internal
         returns (uint totalIssuanceTokenMinted, uint collateralFeeAmount)
     {
+        // ------------------------------------------------------------
+        // Checks
+
         _ensureNonZeroTradeParameters(_depositAmount, _minAmountOut);
+
+        // ------------------------------------------------------------
+        // Effects
 
         // Cache Collateral Token
         IERC20 collateralToken = __Module_orchestrator.fundingManager().token();
 
-        // Transfer collateral, confirming that correct amount == allowance
-        collateralToken.safeTransferFrom(
-            _msgSender(), address(this), _depositAmount
-        );
         // Get protocol fee percentages and treasury addresses
         (
             address collateralTreasury,
@@ -253,24 +255,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         );
 
         // Get net amount, protocol and project fee amounts
-        (uint netDeposit, uint protocolFeeAmount, uint projectFeeAmount) =
-        _calculateNetAndSplitFees(
+        (
+            uint netDeposit,
+            uint collateralProtocolFeeAmount,
+            uint projectFeeAmount
+        ) = _calculateNetAndSplitFees(
             _depositAmount, collateralBuyFeePercentage, buyFee
         );
 
         // collateral Fee Amount is the combination of protocolFeeAmount plus the projectFeeAmount
-        collateralFeeAmount = protocolFeeAmount + projectFeeAmount;
-
-        // Process the protocol fee
-        _processProtocolFeeViaTransfer(
-            collateralTreasury, collateralToken, protocolFeeAmount
-        );
-
-        // Add project fee if applicable
-        if (projectFeeAmount > 0) {
-            projectCollateralFeeCollected += projectFeeAmount;
-            emit ProjectCollateralFeeAdded(projectFeeAmount);
-        }
+        collateralFeeAmount = collateralProtocolFeeAmount + projectFeeAmount;
 
         // Calculate token amount based on upstream formula
         uint issuanceTokenAmount = _issueTokensFormulaWrapper(netDeposit);
@@ -278,17 +272,39 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
         // Get net amount, protocol and project fee amounts. Currently there is no issuance project
         // fee enabled
-        (issuanceTokenAmount, protocolFeeAmount, /* projectFeeAmount */ ) =
-        _calculateNetAndSplitFees(
+        uint issuanceProtocolFeeAmount;
+        (
+            issuanceTokenAmount,
+            issuanceProtocolFeeAmount, /* projectFeeAmount */
+        ) = _calculateNetAndSplitFees(
             issuanceTokenAmount, issuanceBuyFeePercentage, 0
         );
-        // collect protocol fee on outgoing issuance token
-        _processProtocolFeeViaMinting(issuanceTreasury, protocolFeeAmount);
 
         // Revert if the token amount is lower than the minimum amount the user expects
         if (issuanceTokenAmount < _minAmountOut) {
             revert Module__BondingCurveBase__InsufficientOutputAmount();
         }
+
+        // ------------------------------------------------------------
+        // Interactions
+
+        // Handle collateral tokens before buy
+        _handleCollateralTokensBeforeBuy(_msgSender(), _depositAmount);
+
+        // Process protocol fee on incoming collateral tokens
+        _processProtocolFeeViaTransfer(
+            collateralTreasury, collateralToken, collateralProtocolFeeAmount
+        );
+
+        // Process project fee if applicable
+        if (projectFeeAmount > 0) {
+            _projectFeeCollected(projectFeeAmount);
+        }
+
+        // Process protocol fee on outgoing issuance tokens
+        _processProtocolFeeViaMinting(
+            issuanceTreasury, issuanceProtocolFeeAmount
+        );
 
         // Use virtual function to handle issuance tokens
         _handleIssuanceTokensAfterBuy(_receiver, issuanceTokenAmount);
@@ -305,6 +321,14 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         address _receiver,
         uint _issuanceTokenAmount
     ) internal virtual;
+
+    /// @notice Virtual function to handle collateral tokens before a buy.
+    /// @param  _provider The address from which the collateral tokens
+    ///         will be sent.
+    /// @param  _amount The amount of collateral tokens to handle.
+    function _handleCollateralTokensBeforeBuy(address _provider, uint _amount)
+        internal
+        virtual;
 
     /// @dev	Sets the buy transaction fee, expressed in BPS.
     /// @param  _fee The fee percentage to set for buy transactions.
@@ -413,7 +437,9 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
             // mint fee amount
             _mint(_treasury, _feeAmount);
-            emit ProtocolFeeMinted(address(this), _treasury, _feeAmount);
+            emit ProtocolFeeMinted(
+                address(issuanceToken), _treasury, _feeAmount
+            );
         }
     }
 
@@ -443,10 +469,17 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     }
 
     /// @dev    Validates the project fee.
-    function _validateProjectFee(uint _projectFee) internal pure {
+    function _validateProjectFee(uint _projectFee) internal pure virtual {
         if (_projectFee > BPS) {
             revert Module__BondingCurveBase__InvalidFeePercentage();
         }
+    }
+
+    /// @dev    Internal function to add project fee collected to the state variable
+    /// @param  _projectFeeAmount The amount of fee collected
+    function _projectFeeCollected(uint _projectFeeAmount) internal virtual {
+        projectCollateralFeeCollected += _projectFeeAmount;
+        emit ProjectCollateralFeeAdded(_projectFeeAmount);
     }
 
     /// @dev    Ensures that the deposit amount and min amount out are not zero.
@@ -479,5 +512,16 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     /// @param  _amount The amount of tokens to burn.
     function _burn(address _from, uint _amount) internal virtual {
         issuanceToken.burn(_from, _amount);
+    }
+
+    /// @dev	Spend allowance.
+    /// @param  _owner The address of the owner.
+    /// @param  _spender The address of the spender.
+    /// @param  _amount The amount of tokens to spend.
+    function _spendAllowance(address _owner, address _spender, uint _amount)
+        internal
+        virtual
+    {
+        issuanceToken.spendAllowance(_owner, _spender, _amount);
     }
 }
