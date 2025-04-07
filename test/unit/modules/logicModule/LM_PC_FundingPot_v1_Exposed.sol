@@ -48,26 +48,6 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     }
 
     /**
-     * @notice Exposes the internal _validateRoundParameters function for testing
-     */
-    // function exposed_validateRoundParameters(Round memory round_)
-    //     external
-    //     view
-    // {
-    //     _validateRoundParameters(round_);
-    // }
-
-    /**
-     * @notice Exposes the internal _validateEditRoundParameters function for testing
-     */
-    // function exposed_validateEditRoundParameters(Round storage round_)
-    //     external
-    //     view
-    // {
-    //     _validateEditRoundParameters(round_);
-    // }
-
-    /**
      * @notice Exposes the internal _validTimes function for testing
      */
     function exposed_validTimes(uint start_, uint cliff_, uint end_)
