@@ -75,9 +75,9 @@ contract BancorTests is Test {
         console.log("=================================");
         console.log("Scenario 1: Financially Conservative Approach");
 
-        uint32 RESERVE_RATIO = 160_000; // In PPM
-        uint INITIAL_RESERVE = 1_800_000e18;
-        uint SPOT_PRICE = 11e6; // relationship in PPM; 1:1 = 1_000_000
+        uint32 RESERVE_RATIO = 600_000; // In PPM
+        uint INITIAL_RESERVE = 11_200_000e18;
+        uint SPOT_PRICE = 35e5; // relationship in PPM; 1:1 = 1_000_000
         uint INITIAL_SUPPLY = _helper_getSupplyForGivenReserveAtSpotPrice(
             INITIAL_RESERVE, RESERVE_RATIO, SPOT_PRICE
         );
@@ -263,13 +263,21 @@ contract BancorTests is Test {
 
     function test_BancorFormula_LowBalancesThroughSale() public {
         uint PPM = 1_000_000;
-        uint32 RESERVE_RATIO = 160000; // In PPM
+        /*uint32 RESERVE_RATIO = 160_000; // In PPM
 
-        uint INITIAL_SUPPLY = 1022727272727272727272727;
-        uint INITIAL_RESERVE = 1800000000000000000000000;
+        uint INITIAL_SUPPLY = 1_022_727_272_727_272_727_272_727;
+        uint INITIAL_RESERVE = 1_800_000_000_000_000_000_000_000;
 
-        uint fixedStaticPrice = 11000000;
+        uint fixedStaticPrice = 11_000_000;*/
 
+        uint32 RESERVE_RATIO = 600_000; // In PPM
+        uint INITIAL_RESERVE = 1_120_000e18;
+        uint SPOT_PRICE = 35e5; // relationship in PPM; 1:1 = 1_000_000
+        uint INITIAL_SUPPLY = _helper_getSupplyForGivenReserveAtSpotPrice(
+            INITIAL_RESERVE, RESERVE_RATIO, SPOT_PRICE
+        );
+
+        uint fixedStaticPrice = SPOT_PRICE;
         /*uint supplyCalculation =
             PPM * PPM * (66_168_439_387_169_789) / (uint(RESERVE_RATIO) * 3);
 
@@ -281,7 +289,7 @@ contract BancorTests is Test {
         uint supply = INITIAL_SUPPLY;
         uint reserve = INITIAL_RESERVE;
 
-        uint sellAmount = 900000e18;
+        uint sellAmount = 90_000e18;
 
         console.log("=================================");
         console.log("TEST SALE: ");
@@ -463,6 +471,60 @@ contract BancorTests is Test {
 
             SUPPLY_BASE *= 2;
             BALANCE_BASE *= 2;
+        }
+    }
+
+    function test_BancorFormula_CloserBuyPattern() public {
+        /* They want:
+            USD as collateral
+            A spot price of 3.5 USD per CLSR at a reserve of 1.12 million
+            Supply around 550_000
+            Reserve Ration of 60%
+        */
+
+        uint PPM = 1_000_000;
+
+        uint32 RESERVE_RATIO = 580_000; // In PPM
+        uint INITIAL_RESERVE = 112_000e18;
+        uint SPOT_PRICE = 1_334_889; // relationship in PPM; 1:1 = 1_000_000
+        uint INITIAL_SUPPLY = _helper_getSupplyForGivenReserveAtSpotPrice(
+            INITIAL_RESERVE, RESERVE_RATIO, SPOT_PRICE
+        );
+
+        uint fixedStaticPrice = SPOT_PRICE;
+        uint supply = INITIAL_SUPPLY;
+        uint reserve = INITIAL_RESERVE;
+
+        uint buyAmount = 100_000e18;
+
+        for (uint i = 0; i < 10; i++) {
+            console.log("=================================");
+            console.log("TEST BUY: ");
+            console.log("=================================");
+
+            console.log("\tSupply: \t\t", supply);
+            console.log("\tReserve: \t\t ", reserve);
+            console.log("\n");
+            uint spotPrice = 1e12 * reserve / (supply * uint(RESERVE_RATIO));
+            console.log("Spot Price: \t\t", spotPrice);
+            console.log("\tSell Amount: \t", buyAmount);
+            uint receivedAmount = bancorFormula.calculatePurchaseReturn(
+                supply, reserve, RESERVE_RATIO, buyAmount
+            );
+            console.log("Received Amount after a buy: ");
+            console.log("\t\t\t\t", receivedAmount);
+
+            console.log(" New Supply: \t", supply + receivedAmount);
+            console.log(" New Reserve: \t", reserve + buyAmount);
+
+            uint newSpotPrice = 1e12 * (reserve + buyAmount)
+                / ((supply + receivedAmount) * uint(RESERVE_RATIO));
+
+            console.log("New Spot Price: \t\t", newSpotPrice);
+
+            supply = supply + receivedAmount;
+            reserve = reserve + buyAmount;
+            fixedStaticPrice = newSpotPrice;
         }
     }
 }
