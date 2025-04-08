@@ -80,7 +80,8 @@ contract PP_Everclear_CrossChain_v1 is
     /// @notice The Everclear spoke contract address.
     IEverclear internal _everClearSpoke;
     /// @notice The Everclear intent.
-    mapping(bytes32 intentId => IEverclear.Intent intent_) internal _intent;
+    mapping(bytes32 intentId => IEverclear.Intent intent_) internal
+        _intentIdToIntent;
 
     // -------------------------------------------------------------------------
     // Initialization Function
@@ -115,6 +116,16 @@ contract PP_Everclear_CrossChain_v1 is
         returns (IEverclear everClearSpoke_)
     {
         return _everClearSpoke;
+    }
+
+    /// @inheritdoc IPP_Everclear_CrossChain_v1
+    function getIntentByIntentId(bytes32 intentId_)
+        external
+        view
+        virtual
+        returns (IEverclear.Intent memory intent_)
+    {
+        return _intentIdToIntent[intentId_];
     }
 
     // -------------------------------------------------------------------------
@@ -294,11 +305,11 @@ contract PP_Everclear_CrossChain_v1 is
         );
 
         // Store the payment order ID to intent ID mapping.
-        _bridgeData[_paymentId] = abi.encodePacked(intentId_);
+        _paymentIdToBridgeData[_paymentId] = abi.encodePacked(intentId_);
         // Increment the payment order ID.
         _paymentId++;
         // Store the intent data.
-        _intent[intentId_] = IEverclear.Intent(
+        _intentIdToIntent[intentId_] = IEverclear.Intent(
             intent_.initiator,
             intent_.receiver,
             intent_.inputAsset,

@@ -47,12 +47,20 @@ interface IPP_Everclear_CrossChain_v1 {
     //--------------------------------------------------------------------------
     // View Functions
 
-    /// @notice Returns the Everclear spoke contract instance everClearSpoke_.
-    /// @return everClearSpoke_ The Everclear contract interface.
+    /// @notice Returns the Everclear spoke contract address.
+    /// @return everClearSpoke_ The Everclear contract address.
     function getEverClearSpoke()
         external
         view
         returns (IEverclear everClearSpoke_);
+
+    /// @notice Returns the Everclear intent for a given intent ID.
+    /// @param  intentId_ The intent ID.
+    /// @return intent_ The Everclear intent.
+    function getIntentByIntentId(bytes32 intentId_)
+        external
+        view
+        returns (IEverclear.Intent memory intent_);
 
     //--------------------------------------------------------------------------
     // External Functions

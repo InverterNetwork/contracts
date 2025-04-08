@@ -68,4 +68,43 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
     {
         return _validateFlagsAndData(flags, data);
     }
+
+    function exposed_processSuccessfulBridgeTransfer(
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        address client_,
+        bytes32 intentId_,
+        IEverclear.Intent memory intent_
+    ) external {
+        _processSuccessfulBridgeTransfer(order_, client_, intentId_, intent_);
+    }
+
+    function exposed_processFailedBridgeTransfer(
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_,
+        address client_
+    ) external {
+        _processFailedBridgeTransfer(order_, client_);
+    }
+
+    // =========================================================================
+    // Helper functions
+
+    function helper_setIntentIdToIntent(
+        bytes32 intentId,
+        IEverclear.Intent memory intent
+    ) external {
+        _intentIdToIntent[intentId] = IEverclear.Intent(
+            intent.initiator,
+            intent.receiver,
+            intent.inputAsset,
+            intent.outputAsset,
+            intent.maxFee,
+            intent.origin,
+            intent.nonce,
+            intent.timestamp,
+            intent.ttl,
+            intent.amount,
+            intent.destinations,
+            intent.data
+        );
+    }
 }

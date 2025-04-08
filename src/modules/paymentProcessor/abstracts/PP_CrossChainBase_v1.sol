@@ -85,7 +85,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     ) internal _unclaimableAmountsForRecipient;
 
     /// @notice Mapping of payment IDs to bridge data.
-    mapping(uint paymentId => bytes bridgeData) internal _bridgeData;
+    mapping(uint paymentId => bytes bridgeData) internal _paymentIdToBridgeData;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -110,13 +110,13 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     // View Functions
 
     /// @inheritdoc IPP_CrossChainBase_v1
-    function getBridgeData(uint paymentId_)
+    function getBridgeDataByPaymentId(uint paymentId_)
         public
         view
         virtual
         returns (bytes memory bridgeData_)
     {
-        return _bridgeData[paymentId_];
+        return _paymentIdToBridgeData[paymentId_];
     }
 
     /// @inheritdoc IPP_CrossChainBase_v1

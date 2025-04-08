@@ -103,7 +103,7 @@ interface IPP_CrossChainBase_v1 is IPaymentProcessor_v1 {
     /// @notice Get the bridge data for a given payment ID.
     /// @param  paymentId_ The ID of the payment to get the bridge data for.
     /// @return bridgeData_ The bridge data for the given payment ID.
-    function getBridgeData(uint paymentId_)
+    function getBridgeDataByPaymentId(uint paymentId_)
         external
         view
         returns (bytes memory bridgeData_);

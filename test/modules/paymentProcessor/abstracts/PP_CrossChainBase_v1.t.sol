@@ -28,13 +28,13 @@ import {PP_CrossChainBase_v1_Exposed} from
     "test/modules/paymentProcessor/abstracts/PP_CrossChainBase_v1_Exposed.sol";
 
 contract PP_CrossChainBase_v1_Test is ModuleTest {
-    // ============================================================================
+    // ========================================================================
     // State
 
     PP_CrossChainBase_v1_Exposed public crossChainPaymentProcessorBase;
     ERC20PaymentClientBaseV2Mock public paymentClient;
 
-    // ============================================================================
+    // ========================================================================
     // Setup
     function setUp() public {
         // Deploy and init the SUT
@@ -66,7 +66,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         _authorizer.setIsAuthorized(address(this), true);
     }
 
-    // ============================================================================
+    // ========================================================================
     // Test Init & SupportsInterface
 
     function testInit() public override(ModuleTest) {
@@ -95,14 +95,14 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         crossChainPaymentProcessorBase.init(_orchestrator, _METADATA, bytes(""));
     }
 
-    // ============================================================================
+    // ========================================================================
     // Test External (public + external)
 
-    /* Test: Function getBridgeData()
-        └── When the function getBridgeData() is called 
+    /* Test: Function getBridgeDataByPaymentId()
+        └── When the function getBridgeDataByPaymentId() is called 
             └── Then it should return the correct bridge data
     */
-    function testGetBridgeData_worksGivenBridgeDataReturned(
+    function testGetBridgeDataByPaymentId_worksGivenBridgeDataReturned(
         uint paymentId_,
         bytes memory bridgeData_
     ) public {
@@ -113,7 +113,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
 
         // Test function call
         bytes memory bridgeData =
-            crossChainPaymentProcessorBase.getBridgeData(paymentId_);
+            crossChainPaymentProcessorBase.getBridgeDataByPaymentId(paymentId_);
 
         // Post-assert
         assertEq(bridgeData, bridgeData_, "Bridge data should be equal");
@@ -386,7 +386,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         crossChainPaymentProcessorBase.cancelRunningPayments(paymentClient);
     }
 
-    // ============================================================================
+    // ========================================================================
     // Test Internal
 
     /* Test: Function _executeBridgeTransfer() (implementation test done in downstream contract)
@@ -671,7 +671,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         assertEq(isValid, true, "Address should be valid");
     }
 
-    // ================================================================================
+    // ========================================================================
     // Helper functions
 
     function helper_ensureNoAddressCollision(address addr_) public view {

@@ -8,7 +8,7 @@ import {IERC20PaymentClientBase_v2} from
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 
 contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
-    // ============================================================================
+    // =========================================================================
     // Implement interface and abstract functions
 
     function processPayments(IERC20PaymentClientBase_v2 client) external {}
@@ -23,7 +23,7 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
         IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) internal override {}
 
-    // ============================================================================
+    // =========================================================================
     // Exposed functions
 
     function exposed_validPaymentToken(address token) external returns (bool) {
@@ -56,11 +56,11 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
         return _executeBridgeTransfer(order);
     }
 
-    // ============================================================================
+    // =========================================================================
     // Helper functions
 
     function helper_setBridgeData(bytes memory data, uint paymentId) external {
-        _bridgeData[paymentId] = data;
+        _paymentIdToBridgeData[paymentId] = data;
     }
 
     function helper_setPaymentId(uint paymentId) external {

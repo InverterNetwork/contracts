@@ -1,41 +1,40 @@
 // SPDX-License-Identifier: UNLICENSED
-
 pragma solidity ^0.8.0;
 
-//--------------------------------------------------------------------------
-// Imports
-// External Dependencies
-
-import {Clones} from "@oz/proxy/Clones.sol";
-import "forge-std/console2.sol";
-
-// Internal Dependencies
+// Internal Imports
 import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
 import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IPP_Everclear_CrossChain_v1} from
     "@pp/interfaces/IPP_Everclear_CrossChain_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+
+// External Imports
+import {Clones} from "@oz/proxy/Clones.sol";
+import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {IEverclear} from "@pp/interfaces/IEverclear.sol";
 
 // Tests and Mocks
-import {PP_Everclear_CrossChain_v1_Exposed} from
-    "test/modules/paymentProcessor/PP_Everclear_CrossChain_v1_Exposed.sol";
+import {ModuleTest} from "test/modules/ModuleTest.sol";
 import {EverclearPaymentMock} from
     "test/utils/mocks/external/EverclearPaymentMock.sol";
-import {
-    IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBaseV2Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
-import {ModuleTest} from "test/modules/ModuleTest.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+
+// SuT
+import {PP_Everclear_CrossChain_v1_Exposed} from
+    "test/modules/paymentProcessor/PP_Everclear_CrossChain_v1_Exposed.sol";
 
 contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
-    // ============================================================================
+    // ========================================================================
     // Constants
 
     uint constant MINTED_SUPPLY = 1000 ether;
-    uint constant ZERO_AMOUNT = 0;
+    uint public constant MAX_CALLDATA_SIZE = 50_000;
+    uint32 constant EVERCLEAR_ID = 1122;
 
-    // ============================================================================
+    // ========================================================================
     // State
 
     PP_Everclear_CrossChain_v1_Exposed public paymentProcessor;
@@ -56,7 +55,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     uint FLAG_MAX_FEE = 4;
     uint FLAG_TTL = 5;
 
-    // ============================================================================
+    // ========================================================================
     // Setup
     function setUp() public {
         // Deploy mock contracts and set addresses
@@ -92,7 +91,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         TARGET_CHAIN_ID = 1337;
     }
 
-    // ============================================================================
+    // ========================================================================
     // Test Init & SupportsInterface
 
     function testInit() public override(ModuleTest) {
@@ -129,15 +128,60 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         paymentProcessor.init(_orchestrator, _METADATA, abi.encode(1));
     }
 
-    //--------------------------------------------------------------------------
-    // Payment Processing Tests
+    // ========================================================================
+    // Test External (public + external)
 
-    /* Test single payment processing
-    └── Given single valid payment order
-        └── When processing cross-chain payments
-            └── Then it should emit PaymentProcessed events for payment
-                └── And it should create cross-chain intent
+    /*  Test: Function getIntentByIntentId()
+        └── Given an intent has been stored
+            └── When the function getIntentByIntentId is called
+                └── Then it should return the intent
     */
+    function testgetIntentByIntentId_worksGivenIntentReturned(
+        bytes32 intentId_,
+        bytes32 initiator_,
+        bytes32 receiver_,
+        bytes32 inputAsset_,
+        bytes32 outputAsset_,
+        uint24 maxFee_
+    ) public {
+        // Create mock intent
+        IEverclear.Intent memory intent = IEverclear.Intent({
+            initiator: initiator_,
+            receiver: receiver_,
+            inputAsset: inputAsset_,
+            outputAsset: outputAsset_,
+            maxFee: maxFee_,
+            origin: 0,
+            nonce: 0,
+            timestamp: uint48(0),
+            ttl: uint48(0),
+            amount: 0,
+            destinations: new uint32[](0),
+            data: bytes("")
+        });
+        // Set the intent
+        paymentProcessor.helper_setIntentIdToIntent(intentId_, intent);
+
+        // Test function call
+        IEverclear.Intent memory returnedIntent =
+            paymentProcessor.getIntentByIntentId(intentId_);
+
+        // post-assert
+        // Only test some fields for validation to validate the intent is set correctly
+        assertEq(returnedIntent.initiator, initiator_);
+        assertEq(returnedIntent.receiver, receiver_);
+        assertEq(returnedIntent.inputAsset, inputAsset_);
+        assertEq(returnedIntent.outputAsset, outputAsset_);
+        assertEq(returnedIntent.maxFee, maxFee_);
+    }
+
+    /*  Test: Function processPayments()
+        └── Given single valid payment order
+            └── When processing cross-chain payments
+                └── Then it should emit PaymentProcessed events for payment
+                    └── And it should create cross-chain intent
+    */
+
     function testProcessPayments_worksGivenSingleValidPaymentOrder(
         address testRecipient,
         uint testAmount
@@ -166,23 +210,17 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
         assertEq(_token.balanceOf(address(mockEverClearSpoke)), testAmount);
-        console2.log(
-            "balance of mockEverClearSpoke",
-            _token.balanceOf(address(mockEverClearSpoke))
-        );
-
-        bytes32 intentId = bytes32(paymentProcessor.getBridgeData(0));
+        bytes32 intentId = bytes32(paymentProcessor.getBridgeDataByPaymentId(0));
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
             uint(EverclearPaymentMock.IntentStatus.ADDED)
         );
-        console2.logBytes32(intentId);
     }
 
-    /* Test single payment outstanding token amounts
-    └── Given a single valid payment order
-        └── When processing cross-chain payments
-            └── Then it should verify the outstanding token amounts
+    /*  Test: Function processPayments()
+        └── Given a single valid payment order
+            └── When processing cross-chain payments
+                └── Then it should verify the outstanding token amounts
     */
     function testProcessPayments_worksGivenOutstandingTokenAmounts(
         address testRecipient,
@@ -200,11 +238,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertEq(client.outstandingTokenAmount(address(_token)), 0);
     }
 
-    /* Test multiple payment processing
-    └── Given multiple valid payment orders
-        └── When processing cross-chain payments
-            └── Then it should emit PaymentProcessed events for each payment
-                └── And it should create multiple cross-chain intents
+    /* Test: Function processPayments()
+        └── Given multiple valid payment orders
+            └── When processing cross-chain payments
+                └── Then it should emit PaymentProcessed events for each payment
+                    └── And it should create multiple cross-chain intents
     */
     function testProcessPayments_worksGivenMultipleValidPaymentOrders(
         uint8 numRecipients,
@@ -256,7 +294,8 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         uint totalAmount = 0;
         //should be checking in the mock for valid bridge data
         for (uint i = 0; i < numRecipients; i++) {
-            bytes32 intentId = bytes32(paymentProcessor.getBridgeData(i));
+            bytes32 intentId =
+                bytes32(paymentProcessor.getBridgeDataByPaymentId(i));
             assertEq(
                 uint(everclearPaymentMock.status(intentId)),
                 uint(EverclearPaymentMock.IntentStatus.ADDED)
@@ -267,9 +306,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test multiple payment outstanding token amounts
-    └── Given multiple valid payment orders
-        └── When processing cross-chain payments
-            └── Then it should verify the outstanding token amounts for each payment
+        └── Given multiple valid payment orders
+            └── When processing cross-chain payments
+                └── Then it should verify the outstanding token amounts for each payment
     */
     function testProcessPayments_worksGivenMultipleOutstandingTokenAmounts(
         uint8 numRecipients,
@@ -311,25 +350,28 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test empty payment processing
-    └── Given no payment orders
-        └── When processing payments
-            └── Then it should complete successfully
-                └── And bridge data should remain empty
+        └── Given no payment orders
+            └── When processing payments
+                └── Then it should complete successfully
+                    └── And bridge data should remain empty
     */
 
     function testProcessPayments_succeedsGivenNoPaymentOrders() public {
-        // Process payments and verify _bridgeData mapping is not updated
+        // Process payments and verify _paymentIdToBridgeData mapping is not updated
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
         assertTrue(
-            keccak256(paymentProcessor.getBridgeData(0)) == keccak256(bytes("")),
+            keccak256(paymentProcessor.getBridgeDataByPaymentId(0))
+                == keccak256(bytes("")),
             "Bridge data should be empty"
         );
         assertEq(
             bytes32(
-                paymentProcessor.getBridgeData(paymentProcessor.getPaymentId())
+                paymentProcessor.getBridgeDataByPaymentId(
+                    paymentProcessor.getPaymentId()
+                )
             ),
             bytes32(0)
         );
@@ -363,9 +405,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test empty execution data
-        ├── Given empty execution data bytes
-        │   └── When attempting to process payment
-        │       └── Then it should revert with InvalidExecutionData
+        └── Given empty execution data bytes
+            └── When attempting to process payment
+                └── Then it should revert with InvalidExecutionData
     */
     function testProcessPayments_revertsGivenEmptyExecutionData(
         address testRecipient,
@@ -400,9 +442,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test invalid recipient
-        ├── Given a payment order with address(0) recipient
-        │   └── When attempting to process payment
-        │       └── Then it should revert with InvalidRecipient
+        └── Given a payment order with address(0) recipient
+            └── When attempting to process payment
+                └── Then it should revert with InvalidRecipient
     */
     function testProcessPayments_revertsGivenInvalidRecipient(uint testAmount)
         public
@@ -425,9 +467,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test invalid amount
-        ├── Given a payment order with zero amount
-        │   └── When attempting to process payment
-        │       └── Then it should revert with InvalidAmount
+        └── Given a payment order with zero amount
+            └── When attempting to process payment
+                └── Then it should revert with InvalidAmount
     */
     function testProcessPayments_revertsGivenInvalidAmount(
         address testRecipient
@@ -450,11 +492,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test bridge data storage
-        ├── Given a valid payment order
-        │   └── When processing payment
-        │       └── Then bridge data should not be empty
-        │           └── And intent ID should be stored correctly
-                    └── And intent status should be ADDED in Everclear spoke
+        └── Given a valid payment order
+            └── When processing payment
+                ├── Then bridge data should not be empty
+                ├── And intent ID should be stored correctly
+                └── And intent status should be ADDED in Everclear spoke
     */
     function testProcessPayments_worksGivenCorrectBridgeData(
         address testRecipient,
@@ -466,14 +508,15 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
         vm.prank(address(paymentClient));
-        // Process payments and verify _bridgeData mapping is updated
+        // Process payments and verify _paymentIdToBridgeData mapping is updated
         paymentProcessor.processPayments(client);
         assertTrue(
-            keccak256(paymentProcessor.getBridgeData(0)) != keccak256(bytes("")),
+            keccak256(paymentProcessor.getBridgeDataByPaymentId(0))
+                != keccak256(bytes("")),
             "Bridge data should not be empty"
         );
 
-        bytes32 intentId = bytes32(paymentProcessor.getBridgeData(0));
+        bytes32 intentId = bytes32(paymentProcessor.getBridgeDataByPaymentId(0));
         assertEq(
             uint(everclearPaymentMock.status(intentId)),
             uint(EverclearPaymentMock.IntentStatus.ADDED)
@@ -481,17 +524,18 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test empty bridge data
-        ── When checking bridge data with no added payments
+        └── When checking bridge data with no added payments
             └── Then it should return empty bytes
     */
     function testProcessPayments_succeedsGivenEmptyBridgeData() public {
         IERC20PaymentClientBase_v2 client =
             IERC20PaymentClientBase_v2(address(paymentClient));
-        // Process payments and verify _bridgeData mapping is updated
+        // Process payments and verify _paymentIdToBridgeData mapping is updated
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
         assertTrue(
-            keccak256(paymentProcessor.getBridgeData(0)) == keccak256(bytes("")),
+            keccak256(paymentProcessor.getBridgeDataByPaymentId(0))
+                == keccak256(bytes("")),
             "Bridge data should be empty"
         );
     }
@@ -499,9 +543,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     /* Test edge case amounts
         └── Given payment processor has exactly required amount
             └── When processing payment
-                └── Then it should process successfully
-                    └── And should emit PaymentProcessed event
-                    └── And should handle exact balance correctly
+                ├── Then it should process successfully
+                ├── And should emit PaymentProcessed event
+                └── And should handle exact balance correctly
     */
     function testProcessPayments_worksGivenEdgeCaseAmounts(
         address testRecipient,
@@ -525,11 +569,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test retry failed transfer
-    └── Given a failed transfer
-        └── When retrying with valid execution data
-            └── Then it should create a new intent
-                └── And clear the failed transfer record
+    /* Test Function retryFailedBridgeTransfer()
+        └── Given a failed transfer
+            └── When retrying with valid execution data
+                ├── Then it should create a new intent
+                ├── And clear the failed transfer record
                 └── And emit FailedTransferRetried event
     */
 
@@ -578,16 +622,18 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // 2. New intent was created (should be non-zero)
         bytes32 newIntentId = bytes32(
-            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId() - 1)
+            paymentProcessor.getBridgeDataByPaymentId(
+                paymentProcessor.getPaymentId() - 1
+            )
         );
         assertTrue(newIntentId != bytes32(0));
     }
 
     /* Test claim previously unclaimable
-    └── Given a pending transfer
-        └── When claimed by the recipient
-            └── Then it should clear the intent
-                └── And return funds to recipient
+        └── Given a pending transfer
+            └── When claimed by the recipient
+                ├── Then it should clear the intent
+                ├── And return funds to recipient
                 └── And emit UnclaimableAmountClaimed event
     */
     function testClaimUnclaimable_succeedsGivenValidPendingTransfer(
@@ -631,16 +677,18 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Verify intentId was cleared
         assertEq(
             bytes32(
-                paymentProcessor.getBridgeData(paymentProcessor.getPaymentId())
+                paymentProcessor.getBridgeDataByPaymentId(
+                    paymentProcessor.getPaymentId()
+                )
             ),
             bytes32(0)
         );
     }
 
     /* Test claim by non-recipient
-    └── Given a pending transfer
-        └── When claimed by someone other than recipient
-            └── Then it should revert with NothingToClaim
+        └── Given a pending transfer
+            └── When claimed by someone other than recipient
+                └── Then it should revert with NothingToClaim
     */
     function testClaimUnclaimable_revertsGivenNonRecipientCaller(
         address testRecipient,
@@ -672,10 +720,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test claim after processing
-    └── Given a successfully processed payment
-        └── When attempting to claim unclaimable
-            └── Then it should revert with NothingToClaim
-                └── And the intent ID should remain unchanged
+        └── Given a successfully processed payment
+            └── When attempting to claim unclaimable
+                ├── Then it should revert with NothingToClaim
+                ├── And the intent ID should remain unchanged
                 └── And the payment order should remain processed
     */
     function testClaimUnclaimable_revertsGivenProcessedTransfer(
@@ -708,9 +756,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test TTL validation
-    └── Given execution data with zero TTL
-        └── When processing payments
-            └── Then it should revert with InvalidTTL
+        └── Given execution data with zero TTL
+            └── When processing payments
+                └── Then it should revert with InvalidTTL
     */
     function testProcessPayments_revertsWithZeroTTL(
         address testRecipient,
@@ -735,10 +783,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test retry with no failed transfer record
-    └── Given a retry request for non-existent failed transfer
-        └── When retrying transfer
-            └── Then it should revert with InvalidAmount
+    /* Test Function retryFailedBridgeTransfer()
+        └── Given a retry request for non-existent failed transfer
+            └── When retrying transfer
+                └── Then it should revert with InvalidAmount
     */
     function testRetryFailedTransfer_revertsGivenNoFailedTransfer(
         address testRecipient,
@@ -760,10 +808,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test retry with existing intent
-    └── Given a retry request when intent already exists
-        └── When retrying transfer
-            └── Then it should revert with InvalidIntentId
+    /* Test Function retryFailedBridgeTransfer()
+        └── Given a retry request when intent already exists
+            └── When retrying transfer
+                └── Then it should revert with InvalidIntentId
     */
     function testRetryFailedTransfer_revertsGivenExistingIntent(
         address testRecipient,
@@ -793,9 +841,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test payment processing with unsupported token
-    └── Given a payment order with an unsupported token
-    └── When attempting to process payment
-        └── Then it should revert with UnsupportedToken
+        └── Given a payment order with an unsupported token
+        └── When attempting to process payment
+            └── Then it should revert with UnsupportedToken
     */
     function testProcessPayments_revertsGivenUnsupportedToken(
         address testRecipient,
@@ -826,11 +874,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test payment processing with duplicate recipients
-    └── Given payment orders with duplicate recipients
-    └── When processing payments
-        └── Then it should handle duplicates correctly
-            └── And update intent IDs properly
-            └── And track total amounts correctly
+        └── Given payment orders with duplicate recipients
+            └── When processing payments
+                ├── Then it should handle duplicates correctly
+                └── And update intent IDs properly
+                └── And track total amounts correctly
     */
     function testProcessPayments_succeedsGivenDuplicateRecipients(
         address testRecipient,
@@ -856,16 +904,18 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // Verify final intent ID exists
         bytes32 finalIntentId = bytes32(
-            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId() - 1)
+            paymentProcessor.getBridgeDataByPaymentId(
+                paymentProcessor.getPaymentId() - 1
+            )
         );
         assertTrue(finalIntentId != bytes32(0));
     }
 
     /* Test payment processing with varying start/end times
-    └── Given payment orders with different time configurations
-    └── When processing payments
-        └── Then it should handle valid time ranges
-            └── And revert for invalid ones
+        └── Given payment orders with different time configurations
+            └── When processing payments
+                ├── Then it should handle valid time ranges
+                └── And revert for invalid ones
     */
     function testProcessPayments_succeedsGivenVariableTimeRanges(
         address testRecipient,
@@ -897,7 +947,9 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         );
 
         bytes32 intentId = bytes32(
-            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId() - 1)
+            paymentProcessor.getBridgeDataByPaymentId(
+                paymentProcessor.getPaymentId() - 1
+            )
         );
         assertTrue(intentId != bytes32(0));
     }
@@ -905,10 +957,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Payment Order Validation Tests
 
-    /* Test invalid recipient
-    └── Given a payment order with address(0) recipient
-        └── When validating the payment order
-            └── Then it should return false
+    /* Test Function validPaymentOrder()
+        └── Given a payment order with address(0) recipient
+            └── When validating the payment order
+                └── Then it should return false
     */
     function testValidPaymentOrder_revertsGivenInvalidRecipient() public {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
@@ -924,10 +976,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
-    /* Test invalid token
-    └── Given a payment order with address(0) token
-        └── When validating the payment order
-            └── Then it should return false
+    /* Test Function validPaymentOrder()
+        └── Given a payment order with address(0) token
+            └── When validating the payment order
+                └── Then it should return false
     */
     function testValidPaymentOrder_revertsGivenInvalidToken() public {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
@@ -943,10 +995,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
-    /* Test invalid amount
-    └── Given a payment order with zero amount
-        └── When validating the payment order
-            └── Then it should return false
+    /* Test Function validPaymentOrder()
+        └── Given a payment order with zero amount
+            └── When validating the payment order
+                └── Then it should return false
     */
     function testValidPaymentOrder_revertsGivenInvalidAmount() public {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
@@ -962,10 +1014,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertEq(paymentProcessor.validPaymentOrder(order), false);
     }
 
-    /* Test valid payment order
-    └── Given a valid payment order
-        └── When validating the payment order
-            └── Then it should return true
+    /* Test Function validPaymentOrder()
+        └── Given a valid payment order
+            └── When validating the payment order
+                └── Then it should return true
     */
     function testValidPaymentOrder_succeedsGivenValidPaymentOrder() public {
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
@@ -981,12 +1033,147 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertEq(paymentProcessor.validPaymentOrder(order), true);
     }
 
-    /* Test exposed TTL and max fee extraction
-    └── Given flags and data with valid TTL and max fee
-        └── When getting TTL and max fee directly
-            └── Then it should return correct values
+    // ========================================================================
+    // Test Internal
+
+    /*   Test Function _processSuccessfulBridgeTransfer()
+        └── When the function _processSuccessfulBridgeTransfer() is called
+            ├── Then the function should emit events
+            ├── And the function should store the paymentID to IntentID
+            └── And the function should store the intent
     */
-    function testExposed_getEverclearMaxFeeAndTTL_succeedsGivenValidData(
+    function testInternalProcessSuccessfulBridgeTransfer_worksGivenValidData()
+        public
+    {
+        // Create valid intent ID and intent
+        (bytes32 intentId, IEverclear.Intent memory intent) =
+            _getValidIntentIdAndIntent();
+        // Create valid payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            address(paymentClient),
+            10 ether,
+            address(_token),
+            _getExecutionData()
+        );
+
+        // pre-assertions
+        assertEq(paymentProcessor.getPaymentId(), 0); // payment ID is 0
+        // Payment ID 0 has no bridge data
+        assertEq(paymentProcessor.getBridgeDataByPaymentId(0), bytes(""));
+        // Payment ID 0 has no intent
+        IEverclear.Intent memory preTestIntent =
+            paymentProcessor.getIntentByIntentId(intentId);
+        assertEq(preTestIntent.initiator, "");
+
+        // Test function call and emit events
+        vm.expectEmit(true, true, true, true);
+        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+            address(paymentClient),
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
+        );
+        emit IPP_CrossChainBase_v1.BridgeTransferCompleted(
+            paymentProcessor.getPaymentId(),
+            intentId,
+            order.recipient,
+            address(paymentClient),
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
+        );
+        emit IPaymentProcessor_v1.TokensReleased(
+            order.recipient, order.paymentToken, order.amount
+        );
+        paymentProcessor.exposed_processSuccessfulBridgeTransfer(
+            order, address(paymentClient), intentId, intent
+        );
+
+        // post-assertions
+        assertEq(paymentProcessor.getPaymentId(), 1);
+        IEverclear.Intent memory postTestIntent =
+            paymentProcessor.getIntentByIntentId(intentId);
+        _assertValidIntent(postTestIntent, intent);
+        assertEq(
+            paymentProcessor.getBridgeDataByPaymentId(0),
+            abi.encodePacked(intentId)
+        );
+    }
+
+    /*   Test Function _processFailedBridgeTransfer()
+        └── When the function _processFailedBridgeTransfer() is called
+            ├── Then the function store the unclaimable amount
+            └── And the function should emit and event
+    */
+    function testInternalProcessFailedBridgeTransfer_worksGivenValidData()
+        public
+    {
+        // Create valid intent ID and intent
+        (bytes32 intentId, IEverclear.Intent memory intent) =
+            _getValidIntentIdAndIntent();
+        // Create valid payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            address(paymentClient),
+            10 ether,
+            address(_token),
+            _getExecutionData()
+        );
+
+        // pre-assertions
+        assertEq(paymentProcessor.getPaymentId(), 0); // payment ID is 0
+        // Payment ID 0 has no bridge data
+        assertEq(paymentProcessor.getBridgeDataByPaymentId(0), bytes(""));
+        // Payment ID 0 has no intent
+        IEverclear.Intent memory preTestIntent =
+            paymentProcessor.getIntentByIntentId(intentId);
+        assertEq(preTestIntent.initiator, "");
+        assertEq(
+            paymentProcessor.unclaimable(
+                address(paymentClient), order.paymentToken, order.recipient
+            ),
+            0
+        );
+
+        // Test function call and emit event
+        vm.expectEmit(true, true, true, true);
+        emit IPP_CrossChainBase_v1.BridgeTransferFailed(
+            address(paymentClient),
+            order.recipient,
+            order.paymentToken,
+            order.amount,
+            order.originChainId,
+            order.targetChainId,
+            order.flags,
+            order.data
+        );
+        paymentProcessor.exposed_processFailedBridgeTransfer(
+            order, address(paymentClient)
+        );
+
+        // post-assertions
+        assertEq(
+            paymentProcessor.unclaimable(
+                address(paymentClient), order.paymentToken, order.recipient
+            ),
+            order.amount
+        );
+    }
+
+    /* Test exposed TTL and max fee extraction
+        └── Given flags and data with valid TTL and max fee
+            └── When getting TTL and max fee directly
+                └── Then it should return correct values
+    */
+    function testInternalGetEverclearMaxFeeAndTTL_worksGivenValidData(
         uint24 maxFee_,
         uint48 ttl_
     ) public {
@@ -1008,11 +1195,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed TTL and max fee extraction with short array
-    └── Given data array that's too short
-        └── When getting TTL and max fee directly
-            └── Then it should revert on array bounds
+        └── Given data array that's too short
+            └── When getting TTL and max fee directly
+                └── Then it should revert on array bounds
     */
-    function testExposed_getEverclearMaxFeeAndTTL_revertsGivenShortArray()
+    function testInternalGetEverclearMaxFeeAndTTL_revertsGivenShortArray()
         public
     {
         bytes32[] memory shortData = new bytes32[](2); // Too short array
@@ -1021,11 +1208,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed chain ID validation with valid IDs
-    └── Given origin as current chain and different target chain
-        └── When validating chain IDs directly
-            └── Then it should return true
+        └── Given origin as current chain and different target chain
+            └── When validating chain IDs directly
+                └── Then it should return true
     */
-    function testExposed_validateOriginAndTargetChainId_succeedsGivenValidChainIds(
+    function testInternalValidateOriginAndTargetChainId_worksGivenValidChainIdsReturnsTrue(
     ) public {
         bool isValid = paymentProcessor.exposed_validateOriginAndTargetChainId(
             block.chainid, // origin = current chain
@@ -1035,13 +1222,12 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed chain ID validation with wrong origin
-    └── Given origin different from current chain
-        └── When validating chain IDs directly
-            └── Then it should return false
+        └── Given origin different from current chain
+            └── When validating chain IDs directly
+                └── Then it should return false
     */
-    function testExposed_validateOriginAndTargetChainId_failsGivenWrongOrigin()
-        public
-    {
+    function testInternalValidateOriginAndTargetChainId_worksGivenWrongOriginReturnsFalse(
+    ) public {
         bool isValid = paymentProcessor.exposed_validateOriginAndTargetChainId(
             1337, // origin = wrong chain
             block.chainid // target = current chain
@@ -1050,13 +1236,12 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed chain ID validation with same chains
-    └── Given target same as current chain
-        └── When validating chain IDs directly
-            └── Then it should return false
+        └── Given target same as current chain
+            └── When validating chain IDs directly
+                └── Then it should return false
     */
-    function testExposed_validateOriginAndTargetChainId_failsGivenSameChains()
-        public
-    {
+    function testInternalValidateOriginAndTargetChainId_woksGivenSameChainsReturnsFalse(
+    ) public {
         bool isValid = paymentProcessor.exposed_validateOriginAndTargetChainId(
             block.chainid, // origin = current chain
             block.chainid // target = same as current (invalid)
@@ -1065,11 +1250,13 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed flags validation with valid data
-    └── Given flags with MAX_FEE and TTL set and matching data length
-        └── When validating flags and data directly
-            └── Then it should return true
+        └── Given flags with MAX_FEE and TTL set and matching data length
+            └── When validating flags and data directly
+                └── Then it should return true
     */
-    function testExposed_validateFlagsAndData_succeedsGivenValidData() public {
+    function testInternalValidateFlagsAndData_worksGivenValidDataReturnsTrue()
+        public
+    {
         // 0x3F = ...0011 1111 - has both MAX_FEE and TTL flags set
         bytes32 flags = bytes32(uint(0x3F));
         bytes32[] memory data = new bytes32[](6); // 6 flags are set in 0x3F
@@ -1080,13 +1267,12 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed flags validation with missing required flags
-    └── Given flags without MAX_FEE or TTL set
-        └── When validating flags and data directly
-            └── Then it should return false
+        └── Given flags without MAX_FEE or TTL set
+            └── When validating flags and data directly
+                └── Then it should return false
     */
-    function testExposed_validateFlagsAndData_failsGivenMissingRequiredFlags()
-        public
-    {
+    function testInternalValidateFlagsAndData_worksGivenMissingRequiredFlagsReturnsFalse(
+    ) public {
         // 0x03 = ...0000 0011 - missing both MAX_FEE and TTL flags
         bytes32 flags = bytes32(uint(0x03));
         bytes32[] memory data = new bytes32[](2);
@@ -1097,13 +1283,12 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     }
 
     /* Test exposed flags validation with mismatched data length
-    └── Given flags and data array with mismatched length
-        └── When validating flags and data directly
-            └── Then it should return false
+        └── Given flags and data array with mismatched length
+            └── When validating flags and data directly
+                └── Then it should return false
     */
-    function testExposed_validateFlagsAndData_failsGivenMismatchedLength()
-        public
-    {
+    function testInternalValidateFlagsAndData_worksGivenMismatchedLengthReturnsFalse(
+    ) public {
         // 0x3F = ...0011 1111 - has 6 flags set
         bytes32 flags = bytes32(uint(0x3F));
         bytes32[] memory data = new bytes32[](3); // Wrong length, should be 6
@@ -1113,8 +1298,41 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertFalse(isValid);
     }
 
-    //--------------------------------------------------------------------------
-    // Helper Functions
+    // @todo internal functions to test:
+    // _validPaymentOrder: Would test at the end of testing all the other internal functions it calls
+    // _executeBridgeTransfer: Main point to test here is the if/else logic. Maybe this can be done with
+    //      an invalid everclear mock which returns a 0 intentId.
+    // _transferTokenAndApproveToBridge: Should be straightforward.
+    //      We just need to set the open amount in the payment client and mint tokens to it so it can be transferred.
+    // _createCrossChainIntent: Not a lot we can test here. Maybe use the same mock data to be returned as I've
+    //      setup below in this test file.
+
+    // ========================================================================
+    // Helper functions
+
+    function _assertValidIntent(
+        IEverclear.Intent memory intentToBeTested_,
+        IEverclear.Intent memory intentToBeExpectedValues_
+    ) internal {
+        assertEq(
+            intentToBeTested_.initiator, intentToBeExpectedValues_.initiator
+        );
+        assertEq(intentToBeTested_.receiver, intentToBeExpectedValues_.receiver);
+        assertEq(
+            intentToBeTested_.inputAsset, intentToBeExpectedValues_.inputAsset
+        );
+        assertEq(
+            intentToBeTested_.outputAsset, intentToBeExpectedValues_.outputAsset
+        );
+        assertEq(intentToBeTested_.amount, intentToBeExpectedValues_.amount);
+        assertEq(intentToBeTested_.maxFee, intentToBeExpectedValues_.maxFee);
+        assertEq(intentToBeTested_.origin, intentToBeExpectedValues_.origin);
+        assertEq(intentToBeTested_.nonce, intentToBeExpectedValues_.nonce);
+        assertEq(
+            intentToBeTested_.timestamp, intentToBeExpectedValues_.timestamp
+        );
+        assertEq(intentToBeTested_.ttl, intentToBeExpectedValues_.ttl);
+    }
 
     function _setupSinglePayment(
         address recipient_,
@@ -1144,8 +1362,8 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             orders[i] = _createTestPaymentOrder(
                 recipients[i], amounts[i], address(_token), executionData
             );
-            bool isValid = paymentProcessor.validPaymentOrder(orders[i]);
-            console2.log("isValid", isValid);
+            paymentProcessor.validPaymentOrder(orders[i]);
+
             //add payment order to client
             paymentClient.exposed_addPaymentOrder(orders[i]);
         }
@@ -1212,5 +1430,44 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             executionData[5] = bytes32(uint(1)); // ttl
         }
         return executionData;
+    }
+
+    function _getValidIntentIdAndIntent()
+        internal
+        pure
+        returns (bytes32 intentId_, IEverclear.Intent memory intent_)
+    {
+        uint32[] memory destinations = new uint32[](1);
+        destinations[0] = 11_155_420;
+
+        // Data copied from a real intent from Everclear
+        intent_ = IEverclear.Intent({
+            initiator: bytes32(
+                uint(uint160(0xDDDeAfB492752FC64220ddB3E7C9f1d5CcCdFdF0))
+            ),
+            receiver: bytes32(
+                uint(uint160(0xDDDeAfB492752FC64220ddB3E7C9f1d5CcCdFdF0))
+            ),
+            inputAsset: bytes32(
+                uint(uint160(0xd26e3540A0A368845B234736A0700E0a5A821bBA))
+            ),
+            outputAsset: bytes32(
+                uint(uint160(0x7Fa13D6CB44164ea09dF8BCc673A8849092D435b))
+            ),
+            amount: 1_000_000_000_000_000_000,
+            maxFee: 0,
+            origin: 11_155_111,
+            nonce: 43,
+            destinations: destinations,
+            timestamp: 1_743_502_212,
+            ttl: 0,
+            data: "0x"
+        });
+
+        intentId_ = bytes32(
+            uint(
+                0xf361098677e612fef4f093113fb308e2e8eb3ff0815756a90acb3ae98fea827c
+            )
+        );
     }
 }
