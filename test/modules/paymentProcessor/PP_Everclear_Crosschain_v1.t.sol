@@ -58,6 +58,8 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     bytes32[] public EMPTY_EXECUTION_DATA = new bytes32[](6);
     uint maxFee = 0;
     uint ttl = 1;
+    uint FLAG_MAX_FEE = 4;
+    uint FLAG_TTL = 5;
 
     // ============================================================================
     // Setup
@@ -992,6 +994,140 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             data: _getExecutionData()
         });
         assertEq(paymentProcessor.validPaymentOrder(order), true);
+    }
+
+    /* Test exposed TTL and max fee extraction
+    └── Given flags and data with valid TTL and max fee
+        └── When getting TTL and max fee directly
+            └── Then it should return correct values
+    */
+    function testExposed_getEverclearMaxFeeAndTTL_succeedsGivenValidData(
+        uint24 maxFee,
+        uint48 ttl
+    ) public {
+        vm.assume(maxFee > 0);
+        vm.assume(ttl > 0);
+
+        // Create test data array with known values
+        bytes32[] memory testData = new bytes32[](6);
+        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee));
+        testData[FLAG_TTL] = bytes32(uint(ttl));
+
+        // Get values using exposed function
+        (uint24 returnedMaxFee, uint48 returnedTtl) = paymentProcessor
+            .exposed_getEverclearMaxFeeAndTTL(bytes32(uint(0x3F)), testData);
+
+        // Verify returned values match inputs
+        assertEq(returnedMaxFee, maxFee);
+        assertEq(returnedTtl, ttl);
+    }
+
+    /* Test exposed TTL and max fee extraction with short array
+    └── Given data array that's too short
+        └── When getting TTL and max fee directly
+            └── Then it should revert on array bounds
+    */
+    function testExposed_getEverclearMaxFeeAndTTL_revertsGivenShortArray()
+        public
+    {
+        bytes32[] memory shortData = new bytes32[](2); // Too short array
+        vm.expectRevert(); // Should revert when accessing out of bounds
+        paymentProcessor.exposed_getEverclearMaxFeeAndTTL(
+            bytes32(uint(0x3F)), shortData
+        );
+    }
+
+    /* Test exposed chain ID validation with valid IDs
+    └── Given origin as current chain and different target chain
+        └── When validating chain IDs directly
+            └── Then it should return true
+    */
+    function testExposed_validateOriginAndTargetChainId_succeedsGivenValidChainIds(
+    ) public {
+        bool isValid = paymentProcessor.exposed_validateOriginAndTargetChainId(
+            block.chainid, // origin = current chain
+            1337 // target = different chain
+        );
+        assertTrue(isValid);
+    }
+
+    /* Test exposed chain ID validation with wrong origin
+    └── Given origin different from current chain
+        └── When validating chain IDs directly
+            └── Then it should return false
+    */
+    function testExposed_validateOriginAndTargetChainId_failsGivenWrongOrigin()
+        public
+    {
+        bool isValid = paymentProcessor.exposed_validateOriginAndTargetChainId(
+            1337, // origin = wrong chain
+            block.chainid // target = current chain
+        );
+        assertFalse(isValid);
+    }
+
+    /* Test exposed chain ID validation with same chains
+    └── Given target same as current chain
+        └── When validating chain IDs directly
+            └── Then it should return false
+    */
+    function testExposed_validateOriginAndTargetChainId_failsGivenSameChains()
+        public
+    {
+        bool isValid = paymentProcessor.exposed_validateOriginAndTargetChainId(
+            block.chainid, // origin = current chain
+            block.chainid // target = same as current (invalid)
+        );
+        assertFalse(isValid);
+    }
+
+    /* Test exposed flags validation with valid data
+    └── Given flags with MAX_FEE and TTL set and matching data length
+        └── When validating flags and data directly
+            └── Then it should return true
+    */
+    function testExposed_validateFlagsAndData_succeedsGivenValidData() public {
+        // 0x3F = ...0011 1111 - has both MAX_FEE and TTL flags set
+        bytes32 flags = bytes32(uint(0x3F));
+        bytes32[] memory data = new bytes32[](6); // 6 flags are set in 0x3F
+
+        bool isValid =
+            paymentProcessor.exposed_validateFlagsAndData(flags, data);
+        assertTrue(isValid);
+    }
+
+    /* Test exposed flags validation with missing required flags
+    └── Given flags without MAX_FEE or TTL set
+        └── When validating flags and data directly
+            └── Then it should return false
+    */
+    function testExposed_validateFlagsAndData_failsGivenMissingRequiredFlags()
+        public
+    {
+        // 0x03 = ...0000 0011 - missing both MAX_FEE and TTL flags
+        bytes32 flags = bytes32(uint(0x03));
+        bytes32[] memory data = new bytes32[](2);
+
+        bool isValid =
+            paymentProcessor.exposed_validateFlagsAndData(flags, data);
+        assertFalse(isValid);
+    }
+
+    /* Test exposed flags validation with mismatched data length
+    └── Given flags and data array with mismatched length
+        └── When validating flags and data directly
+            └── Then it should return false
+    */
+    function testExposed_validateFlagsAndData_failsGivenMismatchedLength()
+        public
+    {
+        // 0x3F = ...0011 1111 - has 6 flags set
+        bytes32 flags = bytes32(uint(0x3F));
+        bytes32[] memory data = new bytes32[](3); // Wrong length, should be 6
+
+        bool isValid =
+            paymentProcessor.exposed_validateFlagsAndData(flags, data);
+        assertFalse(isValid);
     }
 
     //--------------------------------------------------------------------------
