@@ -46,13 +46,13 @@ interface IEverclear {
      * @return _intent The intent object
      */
     function newIntent(
-        uint32[] memory destinations,
-        address to,
-        address inputAsset,
-        address outputAsset,
-        uint amount,
-        uint24 maxFee,
-        uint48 ttl,
-        bytes calldata data
+        uint32[] memory _destinations,
+        address _receiver,
+        address _inputAsset,
+        address _outputAsset,
+        uint _amount,
+        uint24 _maxFee,
+        uint48 _ttl,
+        bytes calldata _data
     ) external returns (bytes32 _intentId, Intent memory _intent);
 }

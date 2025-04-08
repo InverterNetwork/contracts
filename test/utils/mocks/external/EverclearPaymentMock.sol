@@ -48,10 +48,10 @@ contract EverclearPaymentMock {
     ) external returns (bytes32 _intentId) {
         // Increment nonce for each new intent
         nonce++;
+        // if maxFee is 333, intentional fail
         if (_maxFee == 333) {
             return bytes32(0);
         }
-        //if data is the word "fail" intentional return bytes32(0)
         Intent memory _intent = Intent({
             initiator: msg.sender,
             receiver: _to,

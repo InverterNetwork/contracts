@@ -5,6 +5,8 @@ import {PP_Everclear_CrossChain_v1} from
     "src/modules/paymentProcessor/PP_Everclear_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IEverclear} from
+    "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
@@ -12,8 +14,8 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
     // Expose internal _executeBridgeTransfer function
     function exposed_executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) external {
-        _executeBridgeTransfer(order);
+    ) external returns (bytes memory) {
+        return _executeBridgeTransfer(order);
     }
 
     function exposed_validPaymentOrder(
@@ -26,13 +28,13 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
         IERC20PaymentClientBase_v2.PaymentOrder memory order,
         address client
     ) external {
-        return _transferTokenAndApproveToBridge(order, client);
+        _transferTokenAndApproveToBridge(order, client);
     }
 
     // Expose internal xcall function
     function exposed_createCrossChainIntent(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) external returns (bytes32) {
+    ) external returns (bytes32 intentId_, IEverclear.Intent memory intent_) {
         return _createCrossChainIntent(order);
     }
 

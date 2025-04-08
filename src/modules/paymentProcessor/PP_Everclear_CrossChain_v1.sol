@@ -191,31 +191,7 @@ contract PP_Everclear_CrossChain_v1 is
         }
 
         // Execute the bridge transfer.
-        bytes memory bridgeData = _executeBridgeTransfer(order_);
-
-        // If a zero intent ID is returned, revert.
-        if (bytes32(bridgeData) == bytes32(0)) {
-            revert Module__PP_CrossChain__MessageDeliveryFailed(
-                order_.originChainId,
-                order_.targetChainId,
-                order_.flags,
-                order_.data
-            );
-        }
-        // Store the intent ID for the payment order.
-        _bridgeData[_paymentId] = bridgeData;
-        _paymentId++;
-
-        emit PaymentOrderProcessed(
-            address(client_),
-            recipient_,
-            order_.paymentToken,
-            order_.amount,
-            order_.originChainId,
-            order_.targetChainId,
-            order_.flags,
-            order_.data
-        );
+        _executeBridgeTransfer(order_);
     }
 
     /// @inheritdoc IPaymentProcessor_v1
@@ -249,13 +225,21 @@ contract PP_Everclear_CrossChain_v1 is
 
     /// @notice Execute the cross-chain bridge transfer.
     /// @param  order_ The payment order containing transfer details.
-    /// @return intentId_ Data returned by the bridge implementation.
+    /// @return bridgeData_ The bridge data for the transfer.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) internal virtual override(PP_CrossChainBase_v1) {
+    )
+        internal
+        virtual
+        override(PP_CrossChainBase_v1)
+        returns (bytes memory bridgeData_)
+    {
         // Create a new intent
         (bytes32 intentId, IEverclear.Intent memory intent_) =
             _createCrossChainIntent(order_);
+
+        // Convert intentId to bytes for storage
+        bridgeData_ = abi.encodePacked(intentId);
 
         // If bridging is succesful
         if (intentId != bytes32(0)) {
@@ -268,7 +252,15 @@ contract PP_Everclear_CrossChain_v1 is
             _processFailedBridgeTransfer(
                 order_, address(this), intentId, intent_
             );
+            revert Module__PP_CrossChain__MessageDeliveryFailed(
+                order_.originChainId,
+                order_.targetChainId,
+                order_.flags,
+                order_.data
+            );
         }
+
+        return bridgeData_;
     }
 
     /// @notice Process a failed bridge transfer.
@@ -338,18 +330,22 @@ contract PP_Everclear_CrossChain_v1 is
         // We're not 100% sure the bridge transfer is successful. same for the failed bridge transfer retry.
 
         // Store the payment order ID to intent ID mapping.
-        _bridgeData[_paymentId] = intentId_;
+        _bridgeData[_paymentId] = abi.encodePacked(intentId_);
         // Increment the payment order ID.
         _paymentId++;
         // Store the intent data.
         _intent[intentId_] = IEverclear.Intent(
-            intent_.destinations,
-            intent_.to,
+            intent_.initiator,
+            intent_.receiver,
             intent_.inputAsset,
             intent_.outputAsset,
-            intent_.amount,
             intent_.maxFee,
+            intent_.origin,
+            intent_.nonce,
+            intent_.timestamp,
             intent_.ttl,
+            intent_.amount,
+            intent_.destinations,
             intent_.data
         );
     }
