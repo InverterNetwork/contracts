@@ -25,15 +25,39 @@ import {ERC165Upgradeable} from
 import "@oz/utils/cryptography/MerkleProof.sol";
 
 /**
- * @title   Inverter Funding Pot Module
+ * @title   Inverter Funding Pot Logic Module
  *
- * @notice  The module allows project supporters to contribute during funding rounds.
+ * @notice  Manages contribution rounds for fundraising within the Inverter Network, enabling
+ *          configurable access control, contribution limits, and automated distribution.
+ *          Supports multiple concurrent access criteria per round with customizable privileges.
  *
- * @dev     Extends {ERC20PaymentClientBase_v2} and implements {ILM_PC_FundingPot_v1}.
- *          This contract manages funding rounds with configurable parameters including
- *          start/end times, funding caps, and hook contracts for custom logic.
- *          Uses timestamps as flags for payment processing via FLAG_START, FLAG_CLIFF,
- *          and FLAG_END constants.
+ * @dev     Implements a sophisticated round-based funding system with features including:
+ *          - Configurable round parameters (start/end times, caps, hooks)
+ *          - Multiple access criteria types (NFT holding, allowlist, Merkle proof)
+ *          - Customizable privileges per access criteria
+ *          - Global accumulative caps across rounds
+ *          - Automatic and manual round closure mechanisms
+ *          - Hook system for post-round actions
+ *
+ *          DISCLAIMER: Known Limitations
+ *          1. Storage Considerations:
+ *             The contract stores significant data per round (access criteria, privileges,
+ *             contributions). While this enables flexible round configuration, it may lead
+ *             to higher gas costs as the number of rounds and contributors increases.
+ *
+ *          2. Round Management:
+ *             Rounds cannot be modified once started. This is a security feature but
+ *             requires careful initial configuration. Additionally, rounds must be created
+ *             sequentially and cannot run concurrently.
+ *
+ *          3. Access Criteria:
+ *             The contract supports multiple access criteria per round, but each address
+ *             can only contribute under one access criteria type per round. This is to
+ *             prevent double-counting of privileges and caps.
+ *
+ *          CAUTION: Administrators should carefully consider round configurations,
+ *          particularly when using global accumulative caps and multiple access criteria,
+ *          as these features interact in complex ways that affect contribution limits.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to our Security Policy

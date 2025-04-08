@@ -1236,7 +1236,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.contributeToRound(roundId, amount, accessId, PROOF);
     }
 
-    function testontributeToRound_revertsGivenAllowedListAccessCriteriaIsNotMet(
+    function testContributeToRound_revertsGivenAllowedListAccessCriteriaIsNotMet(
     ) public {
         testCreateRound();
 
@@ -1777,6 +1777,372 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     // -------------------------------------------------------------------------
+    // Test: _calculateUnusedCapacityFromPreviousRounds
+
+    function test_calculateUnusedCapacityFromPreviousRounds_returnsZeroForFirstRound(
+    ) public {
+        // First round should have no unused capacity from previous rounds
+        uint64 roundId = 1;
+        uint unusedCapacity = fundingPot
+            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId);
+        assertEq(unusedCapacity, 0);
+    }
+
+    function test_calculateUnusedCapacityFromPreviousRounds_withPartiallyUsedCap(
+    ) public {
+        // Create first round with cap 1000 but only use 600
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 1000;
+        params.globalAccumulativeCaps = true;
+
+        uint64 roundId1 = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Set access criteria and privileges
+        uint8 accessId = 0;
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessId);
+        fundingPot.setAccessCriteriaForRound(roundId1, accessCriteria);
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId1,
+            accessId,
+            1000, // personal cap high enough for test
+            0, // no NFT cap
+            0, // no merkle cap
+            0, // no list cap
+            false,
+            0, // no start
+            0, // no cliff
+            0 // no end
+        );
+
+        // Contribute 600 to first round
+        vm.warp(params.roundStart + 1);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 600);
+        fundingPot.contributeToRound(roundId1, 600, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Check unused capacity for next round (should be 400)
+        uint64 roundId2 = 2;
+        uint unusedCapacity = fundingPot
+            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId2);
+        assertEq(unusedCapacity, 400);
+    }
+
+    function test_calculateUnusedCapacityFromPreviousRounds_withMultipleRounds()
+        public
+    {
+        // Create first round with cap 1000, use 600
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 1000;
+        params.globalAccumulativeCaps = true;
+
+        uint64 roundId1 = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Set access criteria for round 1
+        uint8 accessId = 0;
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessId);
+        fundingPot.setAccessCriteriaForRound(roundId1, accessCriteria);
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId1,
+            accessId,
+            1000, // personal cap high enough for the test
+            0, // no NFT cap
+            0, // no merkle cap
+            0, // no list cap
+            false,
+            0, // no start
+            0, // no cliff
+            0 // no end
+        );
+
+        // Warp to round 1 start time and contribute
+        vm.warp(params.roundStart + 1);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 600);
+        fundingPot.contributeToRound(roundId1, 600, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Create second round with cap 2000
+        uint64 roundId2 = fundingPot.createRound(
+            params.roundStart + 2 days, // Start when first round ends
+            params.roundStart + 4 days, // End 2 days after start
+            2000, // Cap of 2000
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Set access criteria for round 2
+        fundingPot.setAccessCriteriaForRound(roundId2, accessCriteria);
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId2,
+            accessId,
+            2000, // personal cap high enough for the test
+            0, // no NFT cap
+            0, // no merkle cap
+            0, // no list cap
+            false,
+            0, // no start
+            0, // no cliff
+            0 // no end
+        );
+
+        // Warp to round 2 start time and contribute
+        vm.warp(params.roundStart + 2 days + 1);
+        vm.startPrank(contributor2_);
+        _token.approve(address(fundingPot), 1500);
+        fundingPot.contributeToRound(roundId2, 1500, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Check unused capacity for third round
+        // Round 1: 400 unused (1000-600)
+        // Round 2: 500 unused (2000-1500)
+        // Total: 900 unused
+        uint64 roundId3 = 3;
+        uint unusedCapacity = fundingPot
+            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId3);
+        assertEq(unusedCapacity, 900);
+    }
+
+    function test_calculateUnusedCapacityFromPreviousRounds_withoutGlobalAccumulativeCaps(
+    ) public {
+        // Create first round with cap 1000, use 600, but no global accumulative caps
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 1000;
+        params.globalAccumulativeCaps = false;
+
+        uint64 roundId1 = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Set access criteria and privileges
+        uint8 accessId = 0;
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessId);
+        fundingPot.setAccessCriteriaForRound(roundId1, accessCriteria);
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId1,
+            accessId,
+            1000, // personal cap high enough for test
+            0, // no NFT cap
+            0, // no merkle cap
+            0, // no list cap
+            false,
+            0, // no start
+            0, // no cliff
+            0 // no end
+        );
+
+        vm.warp(params.roundStart + 1);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 600);
+        fundingPot.contributeToRound(roundId1, 600, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Should return 0 since global accumulative caps is disabled
+        uint64 roundId2 = 2;
+        uint unusedCapacity = fundingPot
+            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId2);
+        assertEq(unusedCapacity, 0);
+    }
+
+    // -------------------------------------------------------------------------
+    // Test: _checkRoundClosureConditions
+
+    function test_checkRoundClosureConditions_whenCapReached() public {
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 1000;
+
+        uint64 roundId = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Set access criteria and privileges
+        uint8 accessId = 0;
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessId);
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId,
+            accessId,
+            1000, // personal cap equal to round cap
+            0, // no NFT cap
+            0, // no merkle cap
+            0, // no list cap
+            false,
+            0, // no start
+            0, // no cliff
+            0 // no end
+        );
+
+        // Contribute up to the cap
+        vm.warp(params.roundStart + 1);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), params.roundCap);
+        fundingPot.contributeToRound(
+            roundId, params.roundCap, accessId, new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+    }
+
+    function test_checkRoundClosureConditions_whenEndTimeReached() public {
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 1000;
+
+        uint64 roundId = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Move time past end time
+        vm.warp(params.roundEnd + 1);
+        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+    }
+
+    function test_checkRoundClosureConditions_whenNeitherConditionMet()
+        public
+    {
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 1000;
+
+        uint64 roundId = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Time is before end and no contributions
+        assertFalse(fundingPot.exposed_checkRoundClosureConditions(roundId));
+    }
+
+    function test_checkRoundClosureConditions_withNoEndTime() public {
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = 0; // No end time
+        params.roundCap = 1000;
+
+        uint64 roundId = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Set access criteria and privileges
+        uint8 accessId = 0;
+        ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
+            _helper_createAccessCriteria(accessId);
+        fundingPot.setAccessCriteriaForRound(roundId, accessCriteria);
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId,
+            accessId,
+            1000, // personal cap equal to round cap
+            0, // no NFT cap
+            0, // no merkle cap
+            0, // no list cap
+            false,
+            0, // no start
+            0, // no cliff
+            0 // no end
+        );
+
+        // Should be false initially
+        assertFalse(fundingPot.exposed_checkRoundClosureConditions(roundId));
+
+        // Should be true when cap is reached
+        vm.warp(params.roundStart + 1);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), params.roundCap);
+        fundingPot.contributeToRound(
+            roundId, params.roundCap, accessId, new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+    }
+
+    function test_checkRoundClosureConditions_withNoCap() public {
+        RoundParams memory params = _defaultRoundParams;
+        params.roundStart = block.timestamp + 1 days;
+        params.roundEnd = block.timestamp + 2 days;
+        params.roundCap = 0; // No cap
+
+        uint64 roundId = fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.globalAccumulativeCaps
+        );
+
+        // Should be false before end time
+        assertFalse(fundingPot.exposed_checkRoundClosureConditions(roundId));
+
+        // Should be true after end time
+        vm.warp(params.roundEnd + 1);
+        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+    }
+
+    // -------------------------------------------------------------------------
     // Helper Functions
 
     // @notice Creates edit round parameters with customizable values
@@ -1863,8 +2229,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function _helper_setupRoundWithAccessCriteria(uint8 accessCriteriaEnum)
         internal
     {
-        testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint64 roundId = fundingPot.createRound(
+            _defaultRoundParams.roundStart,
+            _defaultRoundParams.roundEnd,
+            _defaultRoundParams.roundCap,
+            _defaultRoundParams.hookContract,
+            _defaultRoundParams.hookFunction,
+            _defaultRoundParams.autoClosure,
+            _defaultRoundParams.globalAccumulativeCaps
+        );
 
         ILM_PC_FundingPot_v1.AccessCriteria memory accessCriteria =
             _helper_createAccessCriteria(accessCriteriaEnum);
