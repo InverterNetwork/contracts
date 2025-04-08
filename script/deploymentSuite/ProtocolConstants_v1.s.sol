@@ -55,12 +55,18 @@ contract ProtocolConstants_v1 is Script {
     uint[] public testnets = [2442, 80_002, 84_532, 11_155_111, 11_155_420];
 
     // Internal Storage for the deployment addresses (hardcoded as they don't change)
-    address private constant governorMainnet = 0x0B7c73e778d04533286752BEb7d4BA42AEa2f57D;
-    address private constant governorTestnet = 0x38D712491cC8A9B725AB867D56A4B0b25D9E0E3B;
-    address private constant orchestratorFactoryMainnet = 0x6ecA5f791d9635e4a1874cCD95564F914fBCF73d;
-    address private constant orchestratorFactoryTestnet = 0x535BdbC1D369d43fed8546024D273eE5274fFF65;
-    address private constant reverterMainnet = 0x6270b15Ac19eeC3d62920ed7f3a635a93E9C8B4C;
-    address private constant reverterTestnet = 0x54C1116BE44184619A8CB37Ef6E924f737C8F734;
+    address private constant governorMainnet =
+        0x0B7c73e778d04533286752BEb7d4BA42AEa2f57D;
+    address private constant governorTestnet =
+        0x38D712491cC8A9B725AB867D56A4B0b25D9E0E3B;
+    address private constant orchestratorFactoryMainnet =
+        0x6ecA5f791d9635e4a1874cCD95564F914fBCF73d;
+    address private constant orchestratorFactoryTestnet =
+        0x535BdbC1D369d43fed8546024D273eE5274fFF65;
+    address private constant reverterMainnet =
+        0x6270b15Ac19eeC3d62920ed7f3a635a93E9C8B4C;
+    address private constant reverterTestnet =
+        0x54C1116BE44184619A8CB37Ef6E924f737C8F734;
 
     // ------------------------------------------------------------------------
     // Important Configuration Data
