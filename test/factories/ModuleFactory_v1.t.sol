@@ -516,6 +516,49 @@ contract ModuleFactoryV1Test is Test {
         );
     }
 
+    function testSaltModuleAddressWithChainId() public {
+        // Setup
+        beacon.overrideImplementation(address(module));
+
+        // Register metadata for beacon
+        vm.prank(address(governor));
+        factory.registerMetadata(DATA, beacon);
+
+        address orchestratorFactory = makeAddr("OrchestratorFactory");
+
+        // Create a module on the current chain ID
+        uint originalChainId = block.chainid;
+        vm.prank(orchestratorFactory);
+        address moduleOnChain1 = factory.createModuleProxy(
+            DATA,
+            IOrchestrator_v1(address(0x1)),
+            workflowConfigNoIndependentUpdates
+        );
+
+        // Change the chain ID to simulate deployment on a different chain
+        uint differentChainId = originalChainId + 1;
+        vm.chainId(differentChainId);
+
+        // Create a module with the same parameters but on a different chain ID
+        vm.prank(orchestratorFactory);
+        address moduleOnChain2 = factory.createModuleProxy(
+            DATA,
+            IOrchestrator_v1(address(0x1)),
+            workflowConfigNoIndependentUpdates
+        );
+
+        // Test: Deployments on different chains should result in different addresses
+        // This verifies that the salt includes the chain ID
+        assertNotEq(
+            moduleOnChain1,
+            moduleOnChain2,
+            "Deployments on different chains should have different addresses"
+        );
+
+        // Reset chain ID to original value
+        vm.chainId(originalChainId);
+    }
+
     //--------------------------------------------------------------------------
     // Internal Helper Functions
 
