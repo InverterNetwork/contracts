@@ -8,9 +8,6 @@ import {IEverclear} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-
-import {console} from "forge-std/console.sol";
-
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -371,10 +368,6 @@ contract PP_Everclear_CrossChain_v1 is
         // Get the max fee and TTL from the flags and data.
         (uint24 maxFee, uint48 ttl) =
             _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
-        console.log("WTFFF", maxFee, ttl);
-        if (maxFee == 0 || ttl == 0) {
-            revert Module__PP_CrossChain__InvalidMaxFeeOrTTL();
-        }
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = uint32(order_.targetChainId);
         // Properly capture both return values
