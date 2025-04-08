@@ -1095,6 +1095,40 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.editAccessCriteriaForRound(roundId, 0, newAccessCriteria);
     }
 
+    /* Test: contributeToRound() unhappy paths
+    ├── Given the round has not started yet
+    │   └── When the user contributes to the round
+    │       └── Then the transaction should revert
+    │
+    ├── Given the round has ended
+    │   └── When the user contributes to the round
+    │       └── Then the transaction should revert
+    │
+    ├── Given a round has been configured with generic round configuration and access criteria
+    │   And the round has started
+    │   And the round has not ended
+    │   And the user has approved their contribution
+    │   And the total contribution cap is not yet reached
+    │   ├── Given the access criteria is an NFT
+    │   │   └── And the user does not fulfill the access criteria
+    │   │       └── When the user contributes to the round
+    │   │           └── Then the transaction should revert
+    │   │
+    │   ├── Given the access criteria is a Merkle Root
+    │   │   └── And the user does not fulfill the access criteria
+    │   │       └── When the user contributes to the round
+    │   │           └── Then the transaction should revert
+    │   │
+    │   ├── Given the access criteria is a List
+    │   │   └── And the user does not fulfill the access criteria
+    │   │       └── When the user contributes to the round
+    │   │           └── Then the transaction should revert
+    │   │
+    │   └── Given a user has already contributed up to their personal cap
+    │       └── When the user attempts to contribute again
+    │           └── Then the transaction should revert
+    */
+
     function testContributeToRound_revertsGivenContributionIsBeforeRoundStart()
         public
     {
@@ -1316,7 +1350,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.contributeToRound(roundId, 251, accessId, new bytes32[](0));
     }
 
-    /*
+    /* Test: contributeToRound() happy paths
     ├── Given a round has been configured with generic round configuration and access criteria
     │   And the round has started
     │   And the user fulfills the access criteria
