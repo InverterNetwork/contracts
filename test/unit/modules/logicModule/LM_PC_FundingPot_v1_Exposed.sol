@@ -131,4 +131,33 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     ) external pure returns (bool) {
         return _validateMerkleProof(root_, merkleProof_, user_, roundId_);
     }
+
+    /**
+     * @notice Exposes the internal _calculateUnusedCapacityFromPreviousRounds function for testing
+     */
+    function exposed_calculateUnusedCapacityFromPreviousRounds(uint64 roundId_)
+        external
+        view
+        returns (uint)
+    {
+        return _calculateUnusedCapacityFromPreviousRounds(roundId_);
+    }
+
+    /**
+     * @notice Exposes the internal _closeRound function for testing
+     */
+    function exposed_closeRound(uint64 roundId_) external {
+        _closeRound(roundId_);
+    }
+
+    /**
+     * @notice Exposes the internal _checkRoundClosureConditions function for testing
+     */
+    function exposed_checkRoundClosureConditions(uint64 roundId_)
+        external
+        view
+        returns (bool)
+    {
+        return _checkRoundClosureConditions(roundId_);
+    }
 }
