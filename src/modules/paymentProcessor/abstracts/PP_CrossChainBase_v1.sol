@@ -26,13 +26,15 @@ import {ERC165Upgradeable} from
  *
  *          Key features:
  *              - Bridge Data Management
- *                Stores and retrieves bridge-specific data for each bridge operation.
+ *                Stores and retrieves bridge-specific data for each bridge
+ *                operation.
  *
  *              - Payment ID tracking.
  *                Tracks the payment ID for each cross-chain payment.
  *
  *              - Enforces interface implementation.
- *                Abstract bridge transfer function enforcing custom implementation in inheriting contracts.
+ *                Abstract bridge transfer function enforcing custom
+ *                implementation in inheriting contracts.
  *
  *              - Unclaimable amounts tracking.
  *                Provides functionality to claim unclaimable amounts

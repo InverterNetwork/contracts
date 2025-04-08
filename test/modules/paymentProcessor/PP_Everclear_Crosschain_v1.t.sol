@@ -7,7 +7,6 @@ pragma solidity ^0.8.0;
 // External Dependencies
 
 import {Clones} from "@oz/proxy/Clones.sol";
-import {IWETH} from "@pp/interfaces/IWETH.sol";
 import "forge-std/console2.sol";
 
 // Internal Dependencies
@@ -43,12 +42,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     EverclearPaymentMock public everclearPaymentMock;
     ERC20PaymentClientBaseV2Mock paymentClient;
     IPP_CrossChainBase_v1 public CrossChainBase;
-    IWETH public weth;
 
     // Bridge-related storage
     address public mockConnextBridge;
     address public mockEverClearSpoke;
-    address public mockWeth;
 
     // Chain IDs
     uint ORIGIN_CHAIN_ID;
@@ -56,8 +53,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
     // Execution data storage
     bytes32[] public EMPTY_EXECUTION_DATA = new bytes32[](6);
-    uint maxFee = 0;
-    uint ttl = 1;
     uint FLAG_MAX_FEE = 4;
     uint FLAG_TTL = 5;
 
@@ -67,7 +62,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Deploy mock contracts and set addresses
         everclearPaymentMock = new EverclearPaymentMock();
         mockEverClearSpoke = address(everclearPaymentMock);
-        mockWeth = address(weth); // @note what is being set here?
 
         // Deploy and setup the payment client for testing SUT
         address impl = address(new ERC20PaymentClientBaseV2Mock());
@@ -82,7 +76,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         _setUpOrchestrator(paymentClient);
 
         // Initialize the SUT
-        bytes memory configData = abi.encode(mockEverClearSpoke, mockWeth);
+        bytes memory configData = abi.encode(mockEverClearSpoke);
         paymentProcessor.init(_orchestrator, _METADATA, configData);
 
         // Initialize payment client
@@ -105,7 +99,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertEq(
             address(paymentProcessor.getEverClearSpoke()), mockEverClearSpoke
         );
-        assertEq(address(paymentProcessor.getWeth()), mockWeth);
     }
 
     function testSupportsInterface() public {
@@ -232,7 +225,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
                 1 + (uint64(uint(keccak256(abi.encode(i, testAmount)))));
         }
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
         _createPaymentOrders(
             numRecipients, setupRecipients, setupAmounts, EMPTY_EXECUTION_DATA
         );
@@ -301,7 +293,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             OutstandingAmount += setupAmounts[i];
         }
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
         _createPaymentOrders(
             numRecipients, setupRecipients, setupAmounts, EMPTY_EXECUTION_DATA
         );
@@ -664,10 +655,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
 
-        bytes32 pendingIntentId = bytes32(
-            paymentProcessor.getBridgeData(paymentProcessor.getPaymentId())
-        );
-
         // Prank as non-recipient
         vm.prank(nonRecipient);
         vm.expectRevert(
@@ -698,8 +685,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         _assumeValidRecipientAndAmount(testRecipient, testAmount);
 
         // Setup initial payment and process it
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
+        _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -861,8 +847,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             amounts[i] = testAmount;
         }
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _createPaymentOrders(3, recipients, amounts, EMPTY_EXECUTION_DATA);
+        _createPaymentOrders(3, recipients, amounts, EMPTY_EXECUTION_DATA);
         vm.prank(address(paymentClient));
         // Process payments
         paymentProcessor.processPayments(
@@ -1002,24 +987,24 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             └── Then it should return correct values
     */
     function testExposed_getEverclearMaxFeeAndTTL_succeedsGivenValidData(
-        uint24 maxFee,
-        uint48 ttl
+        uint24 maxFee_,
+        uint48 ttl_
     ) public {
-        vm.assume(maxFee > 0);
-        vm.assume(ttl > 0);
+        vm.assume(maxFee_ > 0);
+        vm.assume(ttl_ > 0);
 
         // Create test data array with known values
         bytes32[] memory testData = new bytes32[](6);
-        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee));
-        testData[FLAG_TTL] = bytes32(uint(ttl));
+        testData[FLAG_MAX_FEE] = bytes32(uint(maxFee_));
+        testData[FLAG_TTL] = bytes32(uint(ttl_));
 
         // Get values using exposed function
-        (uint24 returnedMaxFee, uint48 returnedTtl) = paymentProcessor
-            .exposed_getEverclearMaxFeeAndTTL(bytes32(uint(0x3F)), testData);
+        (uint24 returnedMaxFee, uint48 returnedTtl) =
+            paymentProcessor.exposed_getEverclearMaxFeeAndTTL(testData);
 
         // Verify returned values match inputs
-        assertEq(returnedMaxFee, maxFee);
-        assertEq(returnedTtl, ttl);
+        assertEq(returnedMaxFee, maxFee_);
+        assertEq(returnedTtl, ttl_);
     }
 
     /* Test exposed TTL and max fee extraction with short array
@@ -1032,9 +1017,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     {
         bytes32[] memory shortData = new bytes32[](2); // Too short array
         vm.expectRevert(); // Should revert when accessing out of bounds
-        paymentProcessor.exposed_getEverclearMaxFeeAndTTL(
-            bytes32(uint(0x3F)), shortData
-        );
+        paymentProcessor.exposed_getEverclearMaxFeeAndTTL(shortData);
     }
 
     /* Test exposed chain ID validation with valid IDs
@@ -1134,17 +1117,17 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     // Helper Functions
 
     function _setupSinglePayment(
-        address _recipient,
-        uint _amount,
-        bytes32[] memory executionData
+        address recipient_,
+        uint amount_,
+        bytes32[] memory executionData_
     ) internal returns (IERC20PaymentClientBase_v2.PaymentOrder[] memory) {
         address[] memory setupRecipients = new address[](1);
-        setupRecipients[0] = _recipient;
+        setupRecipients[0] = recipient_;
         uint[] memory setupAmounts = new uint[](1);
-        setupAmounts[0] = _amount;
+        setupAmounts[0] = amount_;
 
         IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-        _createPaymentOrders(1, setupRecipients, setupAmounts, executionData);
+        _createPaymentOrders(1, setupRecipients, setupAmounts, executionData_);
         return orders;
     }
 

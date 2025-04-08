@@ -46,11 +46,12 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
         return _unclaimableAmountsForRecipient[client][token][recipient];
     }
 
-    function exposed_getEverclearMaxFeeAndTTL(
-        bytes32 flags,
-        bytes32[] memory data
-    ) external view returns (uint24 maxFee_, uint48 ttl_) {
-        return _getEverclearMaxFeeAndTTL(flags, data);
+    function exposed_getEverclearMaxFeeAndTTL(bytes32[] memory data)
+        external
+        view
+        returns (uint24 maxFee_, uint48 ttl_)
+    {
+        return _getEverclearMaxFeeAndTTL(data);
     }
 
     function exposed_validateOriginAndTargetChainId(
@@ -62,7 +63,7 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
 
     function exposed_validateFlagsAndData(bytes32 flags, bytes32[] memory data)
         external
-        view
+        pure
         returns (bool)
     {
         return _validateFlagsAndData(flags, data);

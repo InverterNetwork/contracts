@@ -3,7 +3,6 @@ pragma solidity 0.8.23;
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
-import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
 import {IEverclear} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 import {ERC165Upgradeable} from
@@ -40,9 +39,6 @@ import {Module_v1} from "src/modules/base/Module_v1.sol";
  *
  *              - Failed bridge transfer retry.
  *                Provides mechanism to retry failed bridge transfers through leveraging the unclaimable amounts and providing a new payment order.
- *
- *              - WETH handling.
- *                Supports native token wrapping/unwrapping for ETH transfers.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -83,8 +79,6 @@ contract PP_Everclear_CrossChain_v1 is
 
     /// @notice The Everclear spoke contract address.
     IEverclear internal _everClearSpoke;
-    /// @notice The WETH contract address.
-    IWETH internal _weth;
     /// @notice The Everclear intent.
     mapping(bytes32 intentId => IEverclear.Intent intent_) internal _intent;
 
@@ -99,19 +93,15 @@ contract PP_Everclear_CrossChain_v1 is
     /// @param  configData_ The config data of the module, comprised of:
     ///     - address: everClearSpoke_: The Everclear spoke contract address for
     ///       cross-chain message passing
-    ///     - address: weth_: The WETH contract address for native token wrapping
-    ///       and unwrapping operations
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
         bytes memory configData_
     ) external virtual override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata_);
-        (address everClearSpoke_, address weth_) =
-            abi.decode(configData_, (address, address));
+        (address everClearSpoke_) = abi.decode(configData_, (address));
 
         _everClearSpoke = IEverclear(everClearSpoke_);
-        _weth = IWETH(weth_);
     }
 
     // -------------------------------------------------------------------------
@@ -125,11 +115,6 @@ contract PP_Everclear_CrossChain_v1 is
         returns (IEverclear everClearSpoke_)
     {
         return _everClearSpoke;
-    }
-
-    /// @inheritdoc IPP_Everclear_CrossChain_v1
-    function getWeth() external view virtual returns (IWETH weth_) {
-        return _weth;
     }
 
     // -------------------------------------------------------------------------
@@ -213,8 +198,7 @@ contract PP_Everclear_CrossChain_v1 is
                 order_.originChainId, order_.targetChainId
             ) && _validateFlagsAndData(order_.flags, order_.data);
 
-        (uint48 maxFee, uint48 ttl) =
-            _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
+        (uint48 maxFee, uint48 ttl) = _getEverclearMaxFeeAndTTL(order_.data);
         bool validParams = maxFee > 0 && ttl > 0;
 
         return validParams && valid_;
@@ -225,43 +209,38 @@ contract PP_Everclear_CrossChain_v1 is
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) internal virtual override(PP_CrossChainBase_v1) {
-        // Create a new intent
+        // Create a new intent.
         (bytes32 intentId, IEverclear.Intent memory intent_) =
             _createCrossChainIntent(order_);
 
-        // If bridging is succesful
+        // If bridging is succesful.
         if (intentId != bytes32(0)) {
-            // Store bridge data and emit events
+            // Store bridge data and emit events.
             _processSuccessfulBridgeTransfer(
-                order_, msg.sender, intentId, intent_
+                order_, _msgSender(), intentId, intent_
             );
         } else {
-            // If bridging is not succesful, create an empty intent struct
-            // since we don't need the actual intent data for failed transfers
-            IEverclear.Intent memory emptyIntent;
-            _processFailedBridgeTransfer(
-                order_, msg.sender, intentId, emptyIntent
-            );
+            // Store failed transfer amount in unclaimable amounts
+            // for the recipient and emit event.
+            _processFailedBridgeTransfer(order_, _msgSender());
         }
     }
 
-    /// @notice Process a failed bridge transfer.
-    /// @dev    This function is called when the bridge transfer fails.
+    /// @notice Process a failed bridge transfer
+    /// @dev    Add the failed transfer amount to the unclaimable
+    ///         amounts for the recipient and emit event.
     /// @param  order_ The payment order containing transfer details.
     /// @param  client_ The payment client address.
-    /// @param  intentId_ The intent ID.
-    /// @param  intent_ The intent data.
     function _processFailedBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_,
-        address client_,
-        bytes32 intentId_,
-        IEverclear.Intent memory intent_
+        address client_
     ) internal virtual {
-        // Handle failed transfer.
-        _unclaimableAmountsForRecipient[address(client_)][order_.paymentToken][order_
+        // Store failed transfer amount for the recipient.
+        _unclaimableAmountsForRecipient[client_][order_.paymentToken][order_
             .recipient] += order_.amount;
+        // Emit BridgeTransferFailed event.
         emit BridgeTransferFailed(
-            address(client_),
+            client_,
             order_.recipient,
             order_.paymentToken,
             order_.amount,
@@ -272,8 +251,9 @@ contract PP_Everclear_CrossChain_v1 is
         );
     }
 
-    /// @notice Process a successful bridge transfer.
-    /// @dev    This function is called when the bridge transfer is successful.
+    /// @notice Process a successful bridge transfer
+    /// @dev    Stores the intentID, Intent and payment ID
+    ///         and emits events.
     /// @param  order_ The payment order containing transfer details.
     /// @param  client_ The payment client address.
     /// @param  intentId_ The intent ID.
@@ -308,8 +288,10 @@ contract PP_Everclear_CrossChain_v1 is
             order_.flags,
             order_.data
         );
-        // @note Do we need to emit the TokensReleased event here from the PP.
-        // We're not 100% sure the bridge transfer is successful. same for the failed bridge transfer retry.
+        // Emit PP tokens released event.
+        emit TokensReleased(
+            order_.recipient, order_.paymentToken, order_.amount
+        );
 
         // Store the payment order ID to intent ID mapping.
         _bridgeData[_paymentId] = abi.encodePacked(intentId_);
@@ -366,8 +348,7 @@ contract PP_Everclear_CrossChain_v1 is
         returns (bytes32 intentId_, IEverclear.Intent memory intent_)
     {
         // Get the max fee and TTL from the flags and data.
-        (uint24 maxFee, uint48 ttl) =
-            _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
+        (uint24 maxFee, uint48 ttl) = _getEverclearMaxFeeAndTTL(order_.data);
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = uint32(order_.targetChainId);
         // Properly capture both return values
@@ -384,12 +365,11 @@ contract PP_Everclear_CrossChain_v1 is
         return (intentId_, intent_);
     }
 
-    /// @notice Gets the Everclear max fee and TTL from the flags and data.
-    /// @param  flags_ The flags to get the max fee and TTL from.
+    /// @notice Gets the Everclear max fee and TTL from the data.
     /// @param  data_ The data to get the max fee and TTL from.
     /// @return maxFee_ The max fee.
     /// @return ttl_ The TTL.
-    function _getEverclearMaxFeeAndTTL(bytes32 flags_, bytes32[] memory data_)
+    function _getEverclearMaxFeeAndTTL(bytes32[] memory data_)
         internal
         view
         virtual

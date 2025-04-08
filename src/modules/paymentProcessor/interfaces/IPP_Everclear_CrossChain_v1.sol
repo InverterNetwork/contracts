@@ -8,7 +8,6 @@ import {IPaymentProcessor_v1} from
 // External
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
-import {IWETH} from "src/modules/paymentProcessor/interfaces/IWETH.sol";
 import {IEverclear} from
     "src/modules/paymentProcessor/interfaces/IEverclear.sol";
 
@@ -33,9 +32,6 @@ import {IEverclear} from
  *              - Failed bridge transfer retry.
  *                Provides mechanism to retry failed bridge transfers through leveraging the unclaimable amounts and providing a new payment order.
  *
- *              - WETH handling.
- *                Supports native token wrapping/unwrapping for ETH transfers.
- *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
  *                          our Security Policy at security.inverter.network or
@@ -57,10 +53,6 @@ interface IPP_Everclear_CrossChain_v1 {
         external
         view
         returns (IEverclear everClearSpoke_);
-
-    /// @notice Returns the WETH contract instance weth_.
-    /// @return weth_ The WETH contract interface used for wrapping/unwrapping ETH.
-    function getWeth() external view returns (IWETH weth_);
 
     //--------------------------------------------------------------------------
     // External Functions

@@ -674,7 +674,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     // ================================================================================
     // Helper functions
 
-    function helper_ensureNoAddressCollision(address addr_) public {
+    function helper_ensureNoAddressCollision(address addr_) public view {
         // Ensure address is not a precompile (0x1 to 0x9) or vm.etch fails
         vm.assume(uint160(addr_) > 0x9);
 

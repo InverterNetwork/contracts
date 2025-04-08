@@ -14,8 +14,8 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
     function processPayments(IERC20PaymentClientBase_v2 client) external {}
 
     function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) external returns (bool valid_) {
+        IERC20PaymentClientBase_v2.PaymentOrder memory /* order */
+    ) external pure returns (bool valid_) {
         return true;
     }
 
@@ -30,12 +30,13 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
         return _validPaymentToken(token);
     }
 
-    function exposed_validTotal(uint total) external view returns (bool) {
+    function exposed_validTotal(uint total) external pure returns (bool) {
         return _validTotal(total);
     }
 
     function exposed_validPaymentReceiver(address receiver)
         external
+        view
         returns (bool)
     {
         return _validPaymentReceiver(receiver);

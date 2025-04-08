@@ -1,7 +1,0 @@
-pragma solidity ^0.8.0;
-
-interface IWETH {
-    function deposit() external payable;
-    function withdraw(uint amount) external;
-    function approve(address spender, uint amount) external returns (bool);
-}
