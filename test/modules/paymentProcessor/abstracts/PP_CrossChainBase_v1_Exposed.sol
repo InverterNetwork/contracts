@@ -51,7 +51,7 @@ contract PP_CrossChainBase_v1_Exposed is PP_CrossChainBase_v1 {
 
     function exposed_executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) external returns (bytes memory) {
+    ) external {
         return _executeBridgeTransfer(order);
     }
 

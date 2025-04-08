@@ -14,8 +14,8 @@ contract PP_Everclear_CrossChain_v1_Exposed is PP_Everclear_CrossChain_v1 {
     // Expose internal _executeBridgeTransfer function
     function exposed_executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order
-    ) external returns (bytes memory) {
-        return _executeBridgeTransfer(order);
+    ) external {
+        _executeBridgeTransfer(order);
     }
 
     function exposed_validPaymentOrder(

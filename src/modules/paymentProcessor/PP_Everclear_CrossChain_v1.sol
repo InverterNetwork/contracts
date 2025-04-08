@@ -9,6 +9,8 @@ import {IEverclear} from
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+import {console} from "forge-std/console.sol";
+
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
@@ -157,7 +159,6 @@ contract PP_Everclear_CrossChain_v1 is
             // Transfer the token for the order from the payment client into
             // the payment processor.
             _transferTokenAndApproveToBridge(orders[i], address(client_));
-
             // Execute the bridge transfer.
             _executeBridgeTransfer(orders[i]);
         }
@@ -189,7 +190,6 @@ contract PP_Everclear_CrossChain_v1 is
         ) {
             delete _unclaimableAmountsForRecipient[client_][order_.paymentToken][recipient_];
         }
-
         // Execute the bridge transfer.
         _executeBridgeTransfer(order_);
     }
@@ -225,42 +225,27 @@ contract PP_Everclear_CrossChain_v1 is
 
     /// @notice Execute the cross-chain bridge transfer.
     /// @param  order_ The payment order containing transfer details.
-    /// @return bridgeData_ The bridge data for the transfer.
     function _executeBridgeTransfer(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    )
-        internal
-        virtual
-        override(PP_CrossChainBase_v1)
-        returns (bytes memory bridgeData_)
-    {
+    ) internal virtual override(PP_CrossChainBase_v1) {
         // Create a new intent
         (bytes32 intentId, IEverclear.Intent memory intent_) =
             _createCrossChainIntent(order_);
-
-        // Convert intentId to bytes for storage
-        bridgeData_ = abi.encodePacked(intentId);
 
         // If bridging is succesful
         if (intentId != bytes32(0)) {
             // Store bridge data and emit events
             _processSuccessfulBridgeTransfer(
-                order_, address(this), intentId, intent_
+                order_, msg.sender, intentId, intent_
             );
         } else {
-            // If bridging is not succesful
+            // If bridging is not succesful, create an empty intent struct
+            // since we don't need the actual intent data for failed transfers
+            IEverclear.Intent memory emptyIntent;
             _processFailedBridgeTransfer(
-                order_, address(this), intentId, intent_
-            );
-            revert Module__PP_CrossChain__MessageDeliveryFailed(
-                order_.originChainId,
-                order_.targetChainId,
-                order_.flags,
-                order_.data
+                order_, msg.sender, intentId, emptyIntent
             );
         }
-
-        return bridgeData_;
     }
 
     /// @notice Process a failed bridge transfer.
@@ -386,11 +371,14 @@ contract PP_Everclear_CrossChain_v1 is
         // Get the max fee and TTL from the flags and data.
         (uint24 maxFee, uint48 ttl) =
             _getEverclearMaxFeeAndTTL(order_.flags, order_.data);
-
+        console.log("WTFFF", maxFee, ttl);
+        if (maxFee == 0 || ttl == 0) {
+            revert Module__PP_CrossChain__InvalidMaxFeeOrTTL();
+        }
         uint32[] memory destinations = new uint32[](1);
         destinations[0] = uint32(order_.targetChainId);
-
-        return _everClearSpoke.newIntent(
+        // Properly capture both return values
+        (intentId_, intent_) = _everClearSpoke.newIntent(
             destinations,
             order_.recipient,
             order_.paymentToken,
@@ -400,6 +388,7 @@ contract PP_Everclear_CrossChain_v1 is
             ttl,
             ""
         );
+        return (intentId_, intent_);
     }
 
     /// @notice Gets the Everclear max fee and TTL from the flags and data.

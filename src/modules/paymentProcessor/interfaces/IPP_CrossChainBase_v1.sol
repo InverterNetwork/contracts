@@ -94,18 +94,8 @@ interface IPP_CrossChainBase_v1 is IPaymentProcessor_v1 {
     ///         limits).
     error Module__PP_CrossChain__InvalidUnclaimableAmount();
 
-    /// @notice Thrown when the cross-chain message fails to be delivered.
-    /// @param  sourceChain_ The chain ID where the message originated.
-    /// @param  destinationChain_ The chain ID where the message was meant to be
-    ///         delivered.
-    /// @param  flags_ The flags for this transfer attempt.
-    /// @param  data_ The data for this transfer attempt.
-    error Module__PP_CrossChain__MessageDeliveryFailed(
-        uint sourceChain_,
-        uint destinationChain_,
-        bytes32 flags_,
-        bytes32[] data_
-    );
+    /// @notice Thrown when maxFee or ttl is invalid.
+    error Module__PP_CrossChain__InvalidMaxFeeOrTTL();
 
     // -------------------------------------------------------------------------
     // View Functions

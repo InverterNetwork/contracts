@@ -358,7 +358,13 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             IERC20PaymentClientBase_v2(address(paymentClient));
 
         // Process payments
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20PaymentClientBase_v2
+                    .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                    .selector
+            )
+        );
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(client);
     }
@@ -547,15 +553,11 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // First attempt with high maxFee to force failure
         everclearPaymentMock.setMockBridgeToFail(true);
         vm.prank(address(paymentClient));
+        //approve the token to the payment processor
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
         );
-        console2.log(
-            "paymentProcessor.unclaimable(address(paymentClient), address(_token), testRecipient)",
-            paymentProcessor.unclaimable(
-                address(paymentClient), address(_token), testRecipient
-            )
-        );
+
         // Verify failed transfer was recorded with the failing execution data
         assertEq(
             paymentProcessor.unclaimable(
@@ -732,7 +734,13 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         customExecutionData[5] = bytes32(uint(0)); // set TTL to 0
         _setupSinglePayment(testRecipient, testAmount, customExecutionData);
 
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20PaymentClientBase_v2
+                    .Module__ERC20PaymentClientBase__InvalidPaymentOrder
+                    .selector
+            )
+        );
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
@@ -786,44 +794,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // Now try to retry (should fail because intent exists)
         vm.prank(address(paymentClient));
-        vm.expectRevert();
-        paymentProcessor.retryFailedBridgeTransfer(
-            address(paymentClient), testRecipient, orders[0]
-        );
-    }
-
-    /* Test retry with invalid execution data
-    └── Given a retry request with invalid execution data
-        └── When retrying failed transfer
-            └── Then it should revert with InvalidExecutionData
-    */
-    function testRetryFailedTransfer_revertsGivenInvalidExecutionData(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-
-        // Setup failed transfer
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
-
-        everclearPaymentMock.setMockBridgeToFail(true); //Force the bridge transfer to fail
-        vm.prank(address(paymentClient));
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-
-        vm.prank(address(paymentClient));
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IPP_CrossChainBase_v1
-                    .Module__PP_CrossChain__MessageDeliveryFailed
-                    .selector,
-                ORIGIN_CHAIN_ID,
-                TARGET_CHAIN_ID,
-                orders[0].flags,
-                orders[0].data
-            )
+            IPP_CrossChainBase_v1
+                .Module__PP_CrossChain__InvalidUnclaimableAmount
+                .selector
         );
         paymentProcessor.retryFailedBridgeTransfer(
             address(paymentClient), testRecipient, orders[0]
