@@ -78,9 +78,9 @@ contract DeployBridge is TestnetDeploymentScript {
     }
 
     function deployPIM() internal {
-        uint initialIssuuanceSupply = 122_727_272_727_272_727_272_727;
-        uint initialCollateralSupply = 3_163_408_614_166_851_161;
-        uint32 reserveRatio = 160_000;
+        uint initialIssuuanceSupply = 100_999_999_999_999_998_676;
+        uint initialCollateralSupply = 100_498_798_599;
+        uint32 reserveRatio = 1000;
 
         IERC20Issuance_v1 issuanceToken;
         IOrchestrator_v1 orchestrator;
@@ -108,8 +108,8 @@ contract DeployBridge is TestnetDeploymentScript {
             formula: impl_lib_BancorFormula,
             reserveRatioForBuying: reserveRatio,
             reserveRatioForSelling: reserveRatio,
-            buyFee: 0,
-            sellFee: 0,
+            buyFee: 100,
+            sellFee: 100,
             buyIsOpen: true,
             sellIsOpen: true,
             initialIssuanceSupply: initialIssuuanceSupply,
@@ -181,3 +181,11 @@ contract DeployBridge is TestnetDeploymentScript {
         console2.log("Orchestrator Address: ", address(orchestrator));
     }
 }
+
+// forge script script/deploymentScript/DeployBridge.s.sol --rpc-url mainnet --broadcast
+
+// forge script script/deploymentScript/DeployReceiver.s.sol --rpc-url http://localhost:8546 --broadcast
+
+// forge script script/deploymentScript/TokenBridgeSettings.s.sol --rpc-url mainnet --broadcast
+
+// forge script script/deploymentScript/Buy.s.sol --rpc-url mainnet --broadcast
