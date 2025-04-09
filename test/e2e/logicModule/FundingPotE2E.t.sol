@@ -27,6 +27,7 @@ import {
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
