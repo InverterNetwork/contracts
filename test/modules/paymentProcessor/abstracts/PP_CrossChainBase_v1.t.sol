@@ -421,17 +421,13 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     */
     function testInternalClaimPreviouslyUnclaimable_worksGivenUnclaimableAmountIsClaimed(
         address client_,
-        address token_,
         address paymentReceiver_,
         uint unclaimableAmount_
     ) public {
         // Validate test inputs
         vm.assume(unclaimableAmount_ > 0);
-        helper_ensureNoAddressCollision(token_);
         helper_ensureNoAddressCollision(paymentReceiver_);
-
-        // Set the mock token address to fuzzed address
-        helper_setContractBytecodeToAddress(token_, address(_token).code);
+        helper_ensureNoAddressCollision(client_);
 
         // Mint tokens to payment processor
         _token.mint(address(crossChainPaymentProcessorBase), unclaimableAmount_);
@@ -688,12 +684,5 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
                 && addr_ != address(_paymentProcessor)
                 && addr_ != address(_authorizer)
         );
-    }
-
-    function helper_setContractBytecodeToAddress(
-        address addr_,
-        bytes memory code_
-    ) public {
-        vm.etch(addr_, code_);
     }
 }

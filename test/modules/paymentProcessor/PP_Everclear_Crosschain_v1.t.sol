@@ -1042,9 +1042,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             ├── And the function should store the paymentID to IntentID
             └── And the function should store the intent
     */
-    function testInternalProcessSuccessfulBridgeTransfer_worksGivenValidData()
-        public
-    {
+    function testInternalProcessSuccessfulBridgeTransfer_works() public {
         // Create valid intent ID and intent
         (bytes32 intentId, IEverclear.Intent memory intent) =
             _getValidIntentIdAndIntent();
@@ -1064,10 +1062,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Payment ID 0 has no intent
         IEverclear.Intent memory preTestIntent =
             paymentProcessor.getIntentByIntentId(intentId);
-        assertEq(
-            preTestIntent.initiator,
-            bytes32(uint(uint160(address(paymentProcessor))))
-        );
+        assertEq(preTestIntent.initiator, bytes32(0));
 
         // Test function call and emit events
         vm.expectEmit(true, true, true, true);
@@ -1116,9 +1111,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             ├── Then the function store the unclaimable amount
             └── And the function should emit and event
     */
-    function testInternalProcessFailedBridgeTransfer_worksGivenValidData()
-        public
-    {
+    function testInternalProcessFailedBridgeTransfer_works() public {
         // Create valid intent ID and intent
         (bytes32 intentId, IEverclear.Intent memory intent) =
             _getValidIntentIdAndIntent();
@@ -1138,10 +1131,8 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Payment ID 0 has no intent
         IEverclear.Intent memory preTestIntent =
             paymentProcessor.getIntentByIntentId(intentId);
-        assertEq(
-            preTestIntent.initiator,
-            bytes32(uint(uint160(address(paymentProcessor))))
-        );
+        assertEq(preTestIntent.initiator, bytes32(0));
+        // There is no unclaimable amount for recipient
         assertEq(
             paymentProcessor.unclaimable(
                 address(paymentClient), order.paymentToken, order.recipient
