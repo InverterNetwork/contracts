@@ -33,7 +33,6 @@ import {ERC165Upgradeable} from
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
-import {console2} from "forge-std/console2.sol";
 
 contract FundingPotE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
@@ -126,7 +125,7 @@ contract FundingPotE2E is E2ETest {
         // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
     }
 
-    function init() private {
+    function test_e2e_FundingPotLifecycle() public {
         //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------
@@ -150,7 +149,11 @@ contract FundingPotE2E is E2ETest {
         paymentProcessor =
             PP_Streaming_v2(address(orchestrator.paymentProcessor()));
 
-        // Get the funding pot
+        // Define payment processor
+        PP_Streaming_v2 paymentProcessor =
+            PP_Streaming_v2(address(orchestrator.paymentProcessor()));
+
+        // Get modules list
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
@@ -163,12 +166,12 @@ contract FundingPotE2E is E2ETest {
             }
         }
 
-        // Set up the bonding curve
-        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
-    }
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
+        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
+            address(orchestrator.fundingManager())
+        );
 
-    function test_e2e_FundingPotLifecycle() public {
-        init();
+        issuanceToken.setMinter(address(fundingManager), true);
 
         // 2. Grant FUNDING_POT_ADMIN_ROLE to this contract for configuring rounds
         fundingPot.grantModuleRole(
