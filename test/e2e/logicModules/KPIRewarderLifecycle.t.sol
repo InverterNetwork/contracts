@@ -13,10 +13,9 @@ import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
-import {FM_Rebasing_v1} from
-    "src/modules/fundingManager/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 
-import {PP_Simple_v1, IPaymentProcessor_v1} from "@pp/PP_Simple_v1.sol";
+import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
 
 import {
     LM_PC_KPIRewarder_v2,
@@ -82,7 +81,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     IOrchestrator_v1 orchestrator;
-    FM_Rebasing_v1 fundingManager;
+    FM_DepositVault_v1 fundingManager;
     LM_PC_KPIRewarder_v2 kpiRewarder;
 
     ERC20Mock USDC;
@@ -183,10 +182,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(rewardToken))
+                depositVaultMetadata, abi.encode(address(rewardToken))
             )
         );
 
@@ -228,6 +227,10 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
     }
 
     function test_e2e_LM_PC_KPIRewarder_v2Lifecycle() public {
+        // NOTE: Temporary skip if the rpc is failing.
+        if (skipTestsWithFailingRpc) {
+            return;
+        }
         //--------------------------------------------------------------------------
         // Orchestrator Initialization
         //--------------------------------------------------------------------------
@@ -241,7 +244,8 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
         orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        fundingManager = FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         // Get the kpiRewarder module
         address[] memory modulesList = orchestrator.listModules();

@@ -16,8 +16,8 @@ import {
 } from "src/orchestrator/Orchestrator_v1.sol";
 
 // Modules that are used in this E2E test
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 import {
@@ -47,10 +47,10 @@ contract OrchestratorE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -128,7 +128,7 @@ contract OrchestratorE2E is E2ETest {
         );
 
         address newFundingManager = moduleFactory.createAndInitModule(
-            rebasingFundingManagerMetadata,
+            depositVaultMetadata,
             orchestrator,
             abi.encode(address(orchestrator.fundingManager().token())),
             workflowConfig
@@ -154,12 +154,12 @@ contract OrchestratorE2E is E2ETest {
 
         // Replace the old modules with the new ones
         orchestrator.initiateSetPaymentProcessorWithTimelock(
-            IPaymentProcessor_v1(newPaymentProcessor)
+            IPaymentProcessor_v2(newPaymentProcessor)
         );
         vm.warp(block.timestamp + timelock);
 
         orchestrator.executeSetPaymentProcessor(
-            IPaymentProcessor_v1(newPaymentProcessor)
+            IPaymentProcessor_v2(newPaymentProcessor)
         );
         orchestrator.initiateSetFundingManagerWithTimelock(
             IFundingManager_v1(newFundingManager)
