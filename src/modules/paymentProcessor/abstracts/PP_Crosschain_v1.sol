@@ -3,9 +3,9 @@ pragma solidity 0.8.23;
 
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 
 import {CrosschainBase_v1} from "./CrosschainBase_v1.sol";
@@ -30,7 +30,7 @@ import {IPP_Crosschain_v1} from "../interfaces/IPP_Crosschain_v1.sol";
  * @dev     This contract is used to showcase a basic setup for a payment processor. The contract showcases the
  *          following:
  *          - Inherit from the Module_v1 contract to enable interaction with the Inverter workflow.
- *          - Use of the IPaymentProcessor_v1 interface to facilitate interaction with a payment client.
+ *          - Use of the IPaymentProcessor_v2 interface to facilitate interaction with a payment client.
  *          - Implement custom interface which has all the public facing functions, errors, events and structs.
  *          - Pre-defined layout for all contract functions, modifiers, state variables etc.
  *          - Use of the ERC165Upgradeable contract to check for interface support.
@@ -86,14 +86,14 @@ abstract contract PP_Crosschain_v1 is CrosschainBase_v1, IPP_Crosschain_v1 {
 
     /// @notice Process payments for a given payment client
     /// @param client The payment client to process payments for
-    function processPayments(IERC20PaymentClientBase_v1 client)
+    function processPayments(IERC20PaymentClientBase_v2 client)
         external
         virtual
-        override(IPaymentProcessor_v1)
+        override(IPaymentProcessor_v2)
     {}
 
-    /// @inheritdoc IPaymentProcessor_v1
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
+    /// @inheritdoc IPaymentProcessor_v2
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
         external
         onlyModule
         validClient(address(client))
@@ -102,7 +102,7 @@ abstract contract PP_Crosschain_v1 is CrosschainBase_v1, IPP_Crosschain_v1 {
         revert("Not implemented");
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function claimPreviouslyUnclaimable(
         address client,
         address token,
@@ -112,7 +112,7 @@ abstract contract PP_Crosschain_v1 is CrosschainBase_v1, IPP_Crosschain_v1 {
         revert("Not implemented");
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function unclaimable(address client, address token, address paymentReceiver)
         public
         view
@@ -122,9 +122,9 @@ abstract contract PP_Crosschain_v1 is CrosschainBase_v1, IPP_Crosschain_v1 {
         return 0;
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external returns (bool) {
         return _validPaymentReceiver(order.recipient)
             && _validTotal(order.amount)

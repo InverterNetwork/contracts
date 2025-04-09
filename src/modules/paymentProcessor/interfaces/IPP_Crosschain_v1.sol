@@ -2,15 +2,15 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-interface IPP_Crosschain_v1 is IPaymentProcessor_v1 {
+interface IPP_Crosschain_v1 is IPaymentProcessor_v2 {
     /// @notice Thrown when the cross-chain message fails to be delivered
     /// @param sourceChain The chain ID where the message originated
     /// @param destinationChain The chain ID where the message was meant to be delivered

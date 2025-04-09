@@ -4,8 +4,8 @@ import {CrosschainBase_v1} from
     "src/modules/paymentProcessor/abstracts/CrosschainBase_v1.sol";
 import {ICrossChainBase_v1} from
     "src/modules/paymentProcessor/interfaces/ICrosschainBase_v1.sol";
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {PP_Crosschain_v1} from
     "src/modules/paymentProcessor/abstracts/PP_Crosschain_v1.sol";
@@ -41,7 +41,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     /// @param order The payment order containing all necessary transfer details
     /// @return bridgeData Arbitrary data returned by the bridge implementation
     function _executeBridgeTransfer(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        IERC20PaymentClientBase_v2.PaymentOrder memory order,
         bytes memory executionData
     ) internal override returns (bytes memory) {
         //@notice call the connextBridgeLogic to execute the bridge transfer
@@ -49,12 +49,12 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
         return abi.encode(intentId);
     }
 
-    function processPayments(IERC20PaymentClientBase_v1 client)
+    function processPayments(IERC20PaymentClientBase_v2 client)
         external
         override
     {
         // Collect orders from the client
-        IERC20PaymentClientBase_v1.PaymentOrder[] memory orders;
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders;
         (orders,,) = client.collectPaymentOrders();
 
         for (uint i = 0; i < orders.length; i++) {
@@ -78,7 +78,7 @@ contract PP_Connext_Crosschain_v1 is PP_Crosschain_v1 {
     }
 
     function xcall(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order,
+        IERC20PaymentClientBase_v2.PaymentOrder memory order,
         bytes memory executionData
     ) internal returns (bytes32 intentId) {
         // Decode any additional parameters from executionData

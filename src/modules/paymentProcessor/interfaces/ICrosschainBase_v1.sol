@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 // Internal Dependencies
 
 // External Dependencies
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
 interface ICrossChainBase_v1 {
     //--------------------------------------------------------------------------

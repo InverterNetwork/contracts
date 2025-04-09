@@ -18,10 +18,10 @@ import {Clones} from "@oz/proxy/Clones.sol";
 //Tests and Mocks
 // import cr
 import {
-    IERC20PaymentClientBase_v1,
-    ERC20PaymentClientBaseV1Mock,
+    IERC20PaymentClientBase_v2,
+    ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV1Mock.sol";
+} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 //import exposed
 import {CrosschainBase_v1_Exposed} from "./CrosschainBase_v1_Exposed.sol";
 
@@ -29,9 +29,9 @@ import {CrosschainBase_v1_Exposed} from "./CrosschainBase_v1_Exposed.sol";
 // import {
 //     IPP_CrossChain_v1,
 //     PP_CrossChain_v1,
-//     IPaymentProcessor_v1
+//     IPaymentProcessor_v2
 // } from "src/templates/modules/PP_Template_v1.sol";
-import {IPaymentProcessor_v1} from
+import {IPaymentProcessor_v2} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {ICrossChainBase_v1} from
     "src/modules/paymentProcessor/interfaces/ICrosschainBase_v1.sol";
@@ -62,7 +62,7 @@ contract CrosschainBase_v1_Test is ModuleTest {
     //State
 
     //Mocks
-    ERC20PaymentClientBaseV1Mock paymentClient;
+    ERC20PaymentClientBaseV2Mock paymentClient;
 
     //System under test (SuT)
     CrosschainBase_v1 public paymentProcessor;
