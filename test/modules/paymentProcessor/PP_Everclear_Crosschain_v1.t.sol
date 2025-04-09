@@ -1304,6 +1304,22 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertFalse(isValid);
     }
 
+    /* Test Function _validPaymentOrder() comprehensively
+        └── Given a payment order with various configurations
+            └── When validating the payment order
+                ├── Then it should return true for valid orders
+                └── And it should return false for invalid orders
+    */
+    function testInternalValidPaymentOrder_worksGivenValidPaymentOrder()
+        public
+    {
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            address(0xBEEF), 10 ether, address(_token), _getExecutionData()
+        );
+        assertEq(paymentProcessor.validPaymentOrder(order), true);
+    }
+
     /* Test Function _executeBridgeTransfer()
         └── Given a valid payment order
             └── When the bridge transfer fails
