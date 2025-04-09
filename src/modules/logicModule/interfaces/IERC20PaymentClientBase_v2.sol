@@ -40,15 +40,17 @@ interface IERC20PaymentClientBase_v2 {
     // MASTER LIST OF PAYMENT ORDER FLAGS
 
     /*
-    | Flag | Variable type | Name       | Description                         |
-    |------|---------------|------------|-------------------------------------|
-    | 0    | uint256       | orderID    | ID of the order within the client.  |
-    | 1    | uint256       | start      | Start date of the streaming period. | 
-    | 2    | uint256       | cliff      | Duration of the cliff period.       |
-    | 3    | uint256       | end        | Due Date of the order               |
-    | ...  | ...           | ...        | (yet unassigned)                    |
-    | 255  | .             | .          | (Max Value).                        | 
-    |------|---------------|------------|-------------------------------------|
+    | Flag | Type    | Name     | Description                        |
+    |------|---------|----------|------------------------------------|
+    | 0    | uint256 | orderID  | ID of the order within the client  |
+    | 1    | uint256 | start    | Start date of the streaming period | 
+    | 2    | uint256 | cliff    | Duration of the cliff period       |
+    | 3    | uint256 | end      | Due Date of the order              |
+    | 4    | uint256 | maxFee   | Maximum fee                        |
+    | 5    | uint256 | TTL      | Time-to-live                       |
+    | ...  | ...     | ...      | (yet unassigned)                   |
+    | 255  | .       | .        | (Max Value)                        | 
+    |------|---------|----------|------------------------------------|
     */
 
     //--------------------------------------------------------------------------
