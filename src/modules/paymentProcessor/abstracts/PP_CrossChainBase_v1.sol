@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // Internal
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
@@ -21,7 +21,7 @@ import {ERC165Upgradeable} from
  *
  * @dev     Inherits functionality from:
  *          - IPP_CrossChainBase_v1: Implementation interface.
- *          - IPaymentProcessor_v1: Payment processor interface.
+ *          - IPaymentProcessor_v2: Payment processor interface.
  *          - Module_v1: Base module functionality.
  *
  *          Key features:
@@ -65,7 +65,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         returns (bool)
     {
         return interfaceId_ == type(IPP_CrossChainBase_v1).interfaceId
-            || interfaceId_ == type(IPaymentProcessor_v1).interfaceId
+            || interfaceId_ == type(IPaymentProcessor_v2).interfaceId
             || super.supportsInterface(interfaceId_);
     }
 
@@ -124,7 +124,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         return _paymentId;
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function unclaimable(
         address client_,
         address token_,
@@ -137,7 +137,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     //--------------------------------------------------------------------------
     // External Functions
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function claimPreviouslyUnclaimable(
         address client_,
         address token_,
@@ -152,7 +152,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         _claimPreviouslyUnclaimable(client_, token_, receiver_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function cancelRunningPayments(IERC20PaymentClientBase_v2 client_)
         external
         virtual

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Imports
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IPP_Everclear_CrossChain_v1} from
@@ -113,10 +113,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
                 type(IPP_Everclear_CrossChain_v1).interfaceId
             )
         );
-        // Test for IPaymentProcessor_v1 interface
+        // Test for IPaymentProcessor_v2 interface
         assertTrue(
             paymentProcessor.supportsInterface(
-                type(IPaymentProcessor_v1).interfaceId
+                type(IPaymentProcessor_v2).interfaceId
             )
         );
         // Test for a non-supported interface (using a random interface ID)
@@ -194,7 +194,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // Expect event with specific parameters
         vm.expectEmit(true, true, true, true);
-        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+        emit IPaymentProcessor_v2.PaymentOrderProcessed(
             address(paymentClient),
             testRecipient,
             address(_token),
@@ -276,7 +276,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Expect events for each payment
         for (uint i = 0; i < numRecipients; i++) {
             vm.expectEmit(true, true, true, true);
-            emit IPaymentProcessor_v1.PaymentOrderProcessed(
+            emit IPaymentProcessor_v2.PaymentOrderProcessed(
                 address(paymentClient),
                 setupRecipients[i],
                 address(_token),
@@ -707,7 +707,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         vm.prank(nonRecipient);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__NothingToClaim
                     .selector,
                 address(paymentClient),
@@ -743,7 +743,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         vm.prank(testRecipient);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__NothingToClaim
                     .selector,
                 address(paymentClient),
@@ -1066,7 +1066,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
 
         // Test function call and emit events
         vm.expectEmit(true, true, true, true);
-        emit IPaymentProcessor_v1.PaymentOrderProcessed(
+        emit IPaymentProcessor_v2.PaymentOrderProcessed(
             address(paymentClient),
             order.recipient,
             order.paymentToken,
@@ -1088,7 +1088,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
             order.flags,
             order.data
         );
-        emit IPaymentProcessor_v1.TokensReleased(
+        emit IPaymentProcessor_v2.TokensReleased(
             order.recipient, order.paymentToken, order.amount
         );
         paymentProcessor.exposed_processSuccessfulBridgeTransfer(

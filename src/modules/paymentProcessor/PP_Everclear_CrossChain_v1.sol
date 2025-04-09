@@ -10,8 +10,8 @@ import {ERC165Upgradeable} from
 // Internal
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 import {IPP_Everclear_CrossChain_v1} from
     "src/modules/paymentProcessor/interfaces/IPP_Everclear_CrossChain_v1.sol";
 import {IERC20PaymentClientBase_v2} from
@@ -131,7 +131,7 @@ contract PP_Everclear_CrossChain_v1 is
     // -------------------------------------------------------------------------
     // External Functions
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function processPayments(IERC20PaymentClientBase_v2 client_)
         external
         virtual
@@ -187,7 +187,7 @@ contract PP_Everclear_CrossChain_v1 is
         _executeBridgeTransfer(order_);
     }
 
-    /// @inheritdoc IPaymentProcessor_v1
+    /// @inheritdoc IPaymentProcessor_v2
     function validPaymentOrder(
         IERC20PaymentClientBase_v2.PaymentOrder memory order_
     ) external virtual returns (bool valid_) {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Internal imports
 import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
 import {IPP_CrossChainBase_v1} from "@pp/interfaces/IPP_CrossChainBase_v1.sol";
-import {IPaymentProcessor_v1} from "@pp/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
@@ -85,7 +85,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         );
         assertTrue(
             crossChainPaymentProcessorBase.supportsInterface(
-                type(IPaymentProcessor_v1).interfaceId
+                type(IPaymentProcessor_v2).interfaceId
             )
         );
     }
@@ -176,7 +176,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     ) public {
         vm.expectRevert(
             abi.encodeWithSelector(
-                IPaymentProcessor_v1
+                IPaymentProcessor_v2
                     .Module__PaymentProcessor__NothingToClaim
                     .selector,
                 client_,
@@ -267,7 +267,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(addr);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                 .selector
         );
@@ -280,7 +280,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(addr);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                 .selector
         );
@@ -293,7 +293,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(addr);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__CannotCallOnOtherClientsOrders
                 .selector
         );
@@ -314,7 +314,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(fundingManager);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__OnlyCallableByModule
                 .selector
         );
@@ -328,7 +328,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(paymentProcessor);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__OnlyCallableByModule
                 .selector
         );
@@ -342,7 +342,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(authorizer);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__OnlyCallableByModule
                 .selector
         );
@@ -365,7 +365,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
         // Test function call
         vm.prank(addr_);
         vm.expectRevert(
-            IPaymentProcessor_v1
+            IPaymentProcessor_v2
                 .Module__PaymentProcessor__OnlyCallableByModule
                 .selector
         );

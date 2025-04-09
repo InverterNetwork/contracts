@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 // Internal
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // External
 import {IERC20PaymentClientBase_v2} from
