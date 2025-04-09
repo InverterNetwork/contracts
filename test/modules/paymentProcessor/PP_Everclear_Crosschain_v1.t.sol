@@ -1460,15 +1460,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         );
     }
 
-    // @todo internal functions to test:
-    // _validPaymentOrder: Would test at the end of testing all the other internal functions it calls
-    // _executeBridgeTransfer: Main point to test here is the if/else logic. Maybe this can be done with
-    //      an invalid everclear mock which returns a 0 intentId.
-    // _transferTokenAndApproveToBridge: Should be straightforward.
-    //      We just need to set the open amount in the payment client and mint tokens to it so it can be transferred.
-    // _createCrossChainIntent: Not a lot we can test here. Maybe use the same mock data to be returned as I've
-    //      setup below in this test file.
-
     // ========================================================================
     // Helper functions
 
