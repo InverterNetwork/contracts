@@ -43,10 +43,10 @@ contract VotingRoleManagerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 

@@ -14,7 +14,7 @@ import {
 } from "test/e2e/E2ETest.sol";
 
 // Modules that are used in this E2E test
-import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {
     LM_PC_Bounties_v2,
     ILM_PC_Bounties_v2,
@@ -43,10 +43,10 @@ contract RoleAuthorizerE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         // FundingManager
-        setUpRebasingFundingManager();
+        setUpDepositVaultFundingManager();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                rebasingFundingManagerMetadata, abi.encode(address(token))
+                depositVaultMetadata, abi.encode(address(token))
             )
         );
 
@@ -88,8 +88,8 @@ contract RoleAuthorizerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
-        FM_Rebasing_v1 fundingManager =
-            FM_Rebasing_v1(address(orchestrator.fundingManager()));
+        FM_DepositVault_v1 fundingManager =
+            FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
         AUT_Roles_v1 authorizer =
             AUT_Roles_v1(address(orchestrator.authorizer()));

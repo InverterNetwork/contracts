@@ -12,20 +12,20 @@ import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
-import {IPaymentProcessor_v1} from
-    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
+import {IPaymentProcessor_v2} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 import {IGovernor_v1} from "@ex/governance/interfaces/IGovernor_v1.sol";
 
 contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     IERC20 public token;
-    IPaymentProcessor_v1 public paymentProcessor;
+    IPaymentProcessor_v2 public paymentProcessor;
     IFundingManager_v1 public fundingManager;
     IGovernor_v1 public governor;
 
     function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external {}
 
     function cancelPaymentProcessorUpdate(
-        IPaymentProcessor_v1 paymentProcessor_
+        IPaymentProcessor_v2 paymentProcessor_
     ) external {}
 
     function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
@@ -65,7 +65,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         address[] calldata,
         IFundingManager_v1,
         IAuthorizer_v1,
-        IPaymentProcessor_v1,
+        IPaymentProcessor_v2,
         IGovernor_v1
     ) external {}
 
@@ -78,7 +78,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
     ) external {}
 
     function initiateSetPaymentProcessorWithTimelock(
-        IPaymentProcessor_v1 paymentProcessor_
+        IPaymentProcessor_v2 paymentProcessor_
     ) external {}
 
     function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external {}
@@ -89,7 +89,7 @@ contract OrchestratorV1AccessMock is IOrchestrator_v1 {
         fundingManager = fundingManager_;
     }
 
-    function executeSetPaymentProcessor(IPaymentProcessor_v1 paymentProcessor_)
+    function executeSetPaymentProcessor(IPaymentProcessor_v2 paymentProcessor_)
         external
     {
         paymentProcessor = paymentProcessor_;

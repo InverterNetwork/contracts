@@ -15,6 +15,8 @@ contract ERC20Mock is ERC20 {
 
     bytes public callData;
 
+    uint8 internal _decimals = 18;
+
     constructor(string memory _name, string memory _symbol)
         ERC20(_name, _symbol)
     {}
@@ -68,7 +70,11 @@ contract ERC20Mock is ERC20 {
     }
 
     function decimals() public view virtual override returns (uint8) {
-        return 18;
+        return _decimals;
+    }
+
+    function setDecimals(uint8 newDecimals) public virtual {
+        _decimals = newDecimals;
     }
 
     function transferFrom(address from, address to, uint amount)
