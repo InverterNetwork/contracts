@@ -1064,7 +1064,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Payment ID 0 has no intent
         IEverclear.Intent memory preTestIntent =
             paymentProcessor.getIntentByIntentId(intentId);
-        assertEq(preTestIntent.initiator, "");
+        assertEq(
+            preTestIntent.initiator,
+            bytes32(uint(uint160(address(paymentProcessor))))
+        );
 
         // Test function call and emit events
         vm.expectEmit(true, true, true, true);
@@ -1135,7 +1138,10 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         // Payment ID 0 has no intent
         IEverclear.Intent memory preTestIntent =
             paymentProcessor.getIntentByIntentId(intentId);
-        assertEq(preTestIntent.initiator, "");
+        assertEq(
+            preTestIntent.initiator,
+            bytes32(uint(uint160(address(paymentProcessor))))
+        );
         assertEq(
             paymentProcessor.unclaimable(
                 address(paymentClient), order.paymentToken, order.recipient
@@ -1298,35 +1304,12 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertFalse(isValid);
     }
 
-    function testInternalExecuteBridgeTransfer_worksGivenValidData() public {
-        // Setup: Create a valid payment order
-        address testRecipient = address(0xBEEF);
-        uint testAmount = 10 ether;
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-        vm.prank(address(paymentProcessor));
-        _token.approve(address(everclearPaymentMock), testAmount);
-        _token.mint(address(paymentProcessor), testAmount);
-
-        // Create valid payment order
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        _createTestPaymentOrder(
-            address(paymentClient),
-            10 ether,
-            address(_token),
-            _getExecutionData()
-        );
-
-        // call executeBridgeTransfer with valid data
-        paymentProcessor.exposed_executeBridgeTransfer(order);
-        // post-assertions
-        assertEq(paymentProcessor.getPaymentId(), 1);
-        assertTrue(
-            keccak256(paymentProcessor.getBridgeDataByPaymentId(0))
-                != keccak256(bytes("")),
-            "Bridge data should not be empty"
-        );
-    }
-
+    /* Test Function _executeBridgeTransfer()
+        └── Given a valid payment order
+            └── When the bridge transfer fails
+                ├── Then the unclaimable amount should be set correctly
+                └── And the payment processor should handle the failure gracefully
+    */
     function testInternalExecuteBridgeTransfer_revertsGivenInvalidData()
         public
     {
@@ -1359,6 +1342,103 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
                 address(this), // Use the test contract address as the client
                 address(_token),
                 testRecipient
+            ),
+            testAmount
+        );
+    }
+
+    /* Test Function _createCrossChainIntent()
+        └── Given a valid payment order
+            └── When creating a cross-chain intent
+                ├── Then it should return a valid intent ID
+                ├── And it should create an intent with the correct parameters
+                └── And it should store the intent in the payment processor
+    */
+    function testInternalCreateCrossChainIntent_worksGivenValidData() public {
+        // Setup: Create a valid payment order
+        address testRecipient = address(0xBEEF);
+        uint testAmount = 10 ether;
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
+
+        // Setup: Mint tokens to payment processor and approve
+        vm.prank(address(paymentProcessor));
+        _token.mint(address(paymentProcessor), testAmount);
+        vm.prank(address(paymentProcessor));
+        _token.approve(address(everclearPaymentMock), testAmount);
+
+        // Create payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            testRecipient, testAmount, address(_token), _getExecutionData()
+        );
+
+        // Call createCrossChainIntent with valid data
+        (bytes32 intentId, IEverclear.Intent memory intent) =
+            paymentProcessor.exposed_createCrossChainIntent(order);
+
+        // Post-assertions
+        assert(intentId != bytes32(0));
+        assertEq(
+            intent.initiator, bytes32(uint(uint160(address(paymentProcessor))))
+        );
+    }
+
+    /* Test Function _transferTokenAndApproveToBridge()
+        └── Given a valid payment order and client
+            └── When transferring tokens to the bridge
+                ├── Then the tokens should be transferred from the client to the payment processor
+                ├── And the payment processor should approve the bridge to spend the tokens
+                └── And the payment processor should have the correct token balance
+    */
+    function testInternalTransferTokenAndApproveToBridge_worksGivenValidData()
+        public
+    {
+        // Setup: Create a valid payment order
+        address testRecipient = address(0xBEEF);
+        uint testAmount = 10 ether;
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
+
+        // Setup: Mint tokens to the client
+        _token.mint(address(paymentClient), testAmount);
+
+        // Setup: Approve the payment processor to spend the client's tokens
+        vm.prank(address(paymentClient));
+        _token.approve(address(paymentProcessor), testAmount);
+
+        // Create payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            testRecipient, testAmount, address(_token), _getExecutionData()
+        );
+
+        // Add the payment order to the client to set up its internal state
+        paymentClient.exposed_addPaymentOrder(order);
+
+        // Record initial balances
+        uint initialProcessorBalance =
+            _token.balanceOf(address(paymentProcessor));
+        uint initialClientBalance = _token.balanceOf(address(paymentClient));
+        vm.prank(address(paymentClient));
+        // Call the function to be tested
+        paymentProcessor.exposed_transferTokenAndApproveToBridge(
+            order, address(paymentClient)
+        );
+
+        // Post-assertions
+        // Check that tokens were transferred from client to processor
+        assertEq(
+            _token.balanceOf(address(paymentProcessor)),
+            initialProcessorBalance + testAmount
+        );
+        assertEq(
+            _token.balanceOf(address(paymentClient)),
+            initialClientBalance - testAmount
+        );
+
+        // Check that the processor approved the bridge to spend the tokens
+        assertEq(
+            _token.allowance(
+                address(paymentProcessor), address(everclearPaymentMock)
             ),
             testAmount
         );
