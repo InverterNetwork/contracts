@@ -34,6 +34,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  nftContract Address of the NFT contract.
     /// @param  merkleRoot Merkle root for the access criteria.
     /// @param  allowedAddresses Mapping of addresses to their access status.
+    // TODO change array to mapping
     struct AccessCriteria {
         AccessCriteriaType accessCriteriaType;
         address nftContract; // NFT contract address (0x0 if unused)
@@ -111,6 +112,8 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The unique identifier of the round.
     /// @param  AccessCriteriaId The identifier of the access criteria.
     /// @param  accessCriteria_ The access criteria.
+
+    // TODO remove last parameter
     event AccessCriteriaSet(
         uint64 indexed roundId_,
         uint8 AccessCriteriaId,
@@ -121,6 +124,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The unique identifier of the round.
     /// @param  AccessCriteriaId The identifier of the access criteria.
     /// @param  accessCriteria_ The access criteria.
+    // TODO remove last parameter
     event AccessCriteriaEdited(
         uint64 indexed roundId_,
         uint8 AccessCriteriaId,
@@ -341,6 +345,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookFunction_ New encoded function call.
     /// @param  autoClosure_ New closure mechanism setting.
     /// @param  globalAccumulativeCaps_ New global accumulative caps setting.
+    /// TODO allow admin to pass nft merkle root and list of allowed addresses
     function editRound(
         uint64 roundId_,
         uint roundStart_,
@@ -356,6 +361,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
     /// @param  accessCriteria_ Access criteria to set.
+    /// TODO allow admin to pass nft merkle root and list of allowed addresses
     function setAccessCriteriaForRound(
         uint64 roundId_,
         AccessCriteria memory accessCriteria_

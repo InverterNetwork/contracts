@@ -200,16 +200,20 @@ contract LM_PC_FundingPot_v1 is
             round.globalAccumulativeCaps
         );
     }
-
+    /// TODO should either have a param for a specifc address
+    /// and return whether they have access or not
+    /// or should not return anything related to allowed addresses
+    /// Though I think the first option is better
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteria(uint64 roundId_, uint8 id_)
+
+    function getRoundAccessCriteria(uint64 roundId_, uint8 id_, address user_)
         external
         view
         returns (
             bool isRoundOpen_,
             address nftContract_,
             bytes32 merkleRoot_,
-            address[] memory allowedAddresses_
+            bool hasAccess_
         )
     {
         Round storage round = rounds[roundId_];
@@ -220,7 +224,8 @@ contract LM_PC_FundingPot_v1 is
                 true,
                 accessCriteria.nftContract,
                 accessCriteria.merkleRoot,
-                accessCriteria.allowedAddresses
+                //// This is wrong but gives you an idea of what you need to do
+                accessCriteria.allowedAddresses[user_]
             );
         } else {
             return (
@@ -358,8 +363,10 @@ contract LM_PC_FundingPot_v1 is
             globalAccumulativeCaps_
         );
     }
-
+    // TODO should take in nft merkle root and list of allowed addresses
+    // SHould loop through the array and set the access criteria for each address to true in the mapping
     /// @inheritdoc ILM_PC_FundingPot_v1
+
     function setAccessCriteriaForRound(
         uint64 roundId_,
         AccessCriteria memory accessCriteria_
@@ -369,6 +376,7 @@ contract LM_PC_FundingPot_v1 is
         _validateEditRoundParameters(round);
 
         if (
+            /// TODO this would just check that the array being passed in is empty
             (
                 accessCriteria_.accessCriteriaType == AccessCriteriaType.NFT
                     && accessCriteria_.nftContract == address(0)
@@ -874,6 +882,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  allowedAddresses_ Array of addresses permitted to participate
     /// @param  sender_ Address to check for permission
     /// @return Boolean indicating whether the sender is in the allowed list
+    /// TODO should check for address in mapping instead of looping through array
     function _checkAllowedAddressList(
         address[] memory allowedAddresses_,
         address sender_

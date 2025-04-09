@@ -142,6 +142,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             true,
             true
         );
+
+        ///TODO : add array here for allowed addresses
     }
 
     // -------------------------------------------------------------------------
