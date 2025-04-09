@@ -1298,6 +1298,72 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         assertFalse(isValid);
     }
 
+    function testInternalExecuteBridgeTransfer_worksGivenValidData() public {
+        // Setup: Create a valid payment order
+        address testRecipient = address(0xBEEF);
+        uint testAmount = 10 ether;
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
+        vm.prank(address(paymentProcessor));
+        _token.approve(address(everclearPaymentMock), testAmount);
+        _token.mint(address(paymentProcessor), testAmount);
+
+        // Create valid payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            address(paymentClient),
+            10 ether,
+            address(_token),
+            _getExecutionData()
+        );
+
+        // call executeBridgeTransfer with valid data
+        paymentProcessor.exposed_executeBridgeTransfer(order);
+        // post-assertions
+        assertEq(paymentProcessor.getPaymentId(), 1);
+        assertTrue(
+            keccak256(paymentProcessor.getBridgeDataByPaymentId(0))
+                != keccak256(bytes("")),
+            "Bridge data should not be empty"
+        );
+    }
+
+    function testInternalExecuteBridgeTransfer_revertsGivenInvalidData()
+        public
+    {
+        // Setup: Create a valid payment order
+        address testRecipient = address(0xBEEF);
+        uint testAmount = 10 ether;
+        _assumeValidRecipientAndAmount(testRecipient, testAmount);
+
+        // Setup: Mint tokens to payment processor and approve
+        vm.prank(address(paymentProcessor));
+        _token.mint(address(paymentProcessor), testAmount);
+        vm.prank(address(paymentProcessor));
+        _token.approve(address(everclearPaymentMock), testAmount);
+
+        // Setup: Set mock bridge to fail
+        everclearPaymentMock.setMockBridgeToFail(true);
+
+        // Create payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        _createTestPaymentOrder(
+            testRecipient, testAmount, address(_token), _getExecutionData()
+        );
+
+        // Call executeBridgeTransfer with invalid data
+        paymentProcessor.exposed_executeBridgeTransfer(order);
+
+        // Check unclaimable amount with the correct client address
+        assertEq(
+            paymentProcessor.unclaimable(
+                address(this), // Use the test contract address as the client
+                address(_token),
+                testRecipient
+            ),
+            testAmount
+        );
+    }
+
     // @todo internal functions to test:
     // _validPaymentOrder: Would test at the end of testing all the other internal functions it calls
     // _executeBridgeTransfer: Main point to test here is the if/else logic. Maybe this can be done with
