@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity ^0.8.0;
+pragma solidity 0.8.23;
 
 // Internal
 import {LM_PC_FundingPot_v1} from
