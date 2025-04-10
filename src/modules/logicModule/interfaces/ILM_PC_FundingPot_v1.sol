@@ -34,12 +34,11 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  nftContract Address of the NFT contract.
     /// @param  merkleRoot Merkle root for the access criteria.
     /// @param  allowedAddresses Mapping of addresses to their access status.
-    // TODO change array to mapping
     struct AccessCriteria {
         AccessCriteriaType accessCriteriaType;
         address nftContract; // NFT contract address (0x0 if unused)
         bytes32 merkleRoot; // Merkle root (0x0 if unused)
-        address[] allowedAddresses; // Explicit allowlist
+        mapping(address user => bool isAllowed) allowedAddresses; // Mapping of allowed addresses
     }
 
     struct AccessCriteriaPrivileges {
@@ -111,25 +110,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Emitted when access criteria is set for a round.
     /// @param  roundId_ The unique identifier of the round.
     /// @param  AccessCriteriaId The identifier of the access criteria.
-    /// @param  accessCriteria_ The access criteria.
-
-    // TODO remove last parameter
-    event AccessCriteriaSet(
-        uint64 indexed roundId_,
-        uint8 AccessCriteriaId,
-        AccessCriteria accessCriteria_
-    );
+    event AccessCriteriaSet(uint64 indexed roundId_, uint8 AccessCriteriaId);
 
     /// @notice Emitted when access criteria is edited for a round.
     /// @param  roundId_ The unique identifier of the round.
     /// @param  AccessCriteriaId The identifier of the access criteria.
-    /// @param  accessCriteria_ The access criteria.
-    // TODO remove last parameter
-    event AccessCriteriaEdited(
-        uint64 indexed roundId_,
-        uint8 AccessCriteriaId,
-        AccessCriteria accessCriteria_
-    );
+    event AccessCriteriaEdited(uint64 indexed roundId_, uint8 AccessCriteriaId);
 
     /// @notice Emitted when access criteria Privileges are set for a round.
     /// @param  roundId_ The unique identifier of the round.
@@ -265,18 +251,23 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Retrieves the access criteria for a specific funding round.
     /// @param  roundId_ The unique identifier of the round to retrieve.
     /// @param  accessCriteriaId_ The identifier of the access criteria to retrieve.
+    /// @param  user_ The address of the user to check access for.
     /// @return isRoundOpen_ Whether the access criteria is open.
     /// @return nftContract_ The address of the NFT contract used for access control.
     /// @return merkleRoot_ The merkle root used for access verification.
-    /// @return allowedAddresses_ The list of explicitly allowed addresses.
-    function getRoundAccessCriteria(uint64 roundId_, uint8 accessCriteriaId_)
+    /// @return hasAccess_ The list of explicitly allowed addresses.
+    function getRoundAccessCriteria(
+        uint64 roundId_,
+        uint8 accessCriteriaId_,
+        address user_
+    )
         external
         view
         returns (
             bool isRoundOpen_,
             address nftContract_,
             bytes32 merkleRoot_,
-            address[] memory allowedAddresses_
+            bool hasAccess_
         );
 
     /// @notice Retrieves the access criteria Privileges for a specific funding round.
@@ -345,7 +336,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookFunction_ New encoded function call.
     /// @param  autoClosure_ New closure mechanism setting.
     /// @param  globalAccumulativeCaps_ New global accumulative caps setting.
-    /// TODO allow admin to pass nft merkle root and list of allowed addresses
     function editRound(
         uint64 roundId_,
         uint roundStart_,
@@ -360,22 +350,31 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set Access Control Check.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
-    /// @param  accessCriteria_ Access criteria to set.
-    /// TODO allow admin to pass nft merkle root and list of allowed addresses
+    /// @param  accessCriteriaId_ ID of the access criteria.
+    /// @param  nftContract_ Address of the NFT contract.
+    /// @param  merkleRoot_ Merkle root for the access criteria.
+    /// @param  allowedAddresses_ List of explicitly allowed addresses.
     function setAccessCriteriaForRound(
         uint64 roundId_,
-        AccessCriteria memory accessCriteria_
+        uint8 accessCriteriaId_,
+        address nftContract_,
+        bytes32 merkleRoot_,
+        address[] memory allowedAddresses_
     ) external;
 
     /// @notice Edits an existing access criteria for a round.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
     /// @param  accessCriteriaId_ ID of the access criteria.
-    /// @param  accessCriteria_ New access criteria.
+    /// @param  nftContract_ Address of the NFT contract.
+    /// @param  merkleRoot_ Merkle root for the access criteria.
+    /// @param  allowedAddresses_ List of explicitly allowed addresses.
     function editAccessCriteriaForRound(
         uint64 roundId_,
         uint8 accessCriteriaId_,
-        AccessCriteria memory accessCriteria_
+        address nftContract_,
+        bytes32 merkleRoot_,
+        address[] memory allowedAddresses_
     ) external;
 
     /// @notice Set Access Criteria Privileges

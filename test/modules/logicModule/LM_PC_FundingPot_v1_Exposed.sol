@@ -100,16 +100,6 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     }
 
     /**
-     * @notice Exposes the internal _checkAllowedAddressList function for testing
-     */
-    function exposed_checkAllowedAddressList(
-        address[] memory allowedAddresses_,
-        address sender_
-    ) external pure returns (bool) {
-        return _checkAllowedAddressList(allowedAddresses_, sender_);
-    }
-
-    /**
      * @notice Exposes the internal _checkNftOwnership function for testing
      */
     function exposed_checkNftOwnership(address nftContract_, address user_)
