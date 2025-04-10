@@ -203,7 +203,7 @@ contract LM_PC_Staking_v2 is
         virtual
         nonReentrant
         validAmount(amount)
-        permissioned //@todo adapt interface + test
+        permissioned
     {
         address sender = _msgSender();
 
@@ -220,7 +220,7 @@ contract LM_PC_Staking_v2 is
         virtual
         nonReentrant
         validAmount(amount)
-        permissioned //@todo adapt interface + test
+        permissioned //@todo adapt test
     {
         address sender = _msgSender();
         // Update rewardValue, updatedTimestamp and earned values
@@ -248,7 +248,7 @@ contract LM_PC_Staking_v2 is
         external
         virtual
         nonReentrant
-        permissioned //@todo adapt interface + test
+        permissioned //@todo adapt test
     {
         address recipient = _msgSender();
 
@@ -259,7 +259,7 @@ contract LM_PC_Staking_v2 is
     /// @inheritdoc ILM_PC_Staking_v2
     function setRewards(uint amount, uint duration)
         external
-        permissioned //@todo adapt interface + test
+        permissioned //@todo adapt test
     {
         _setRewards(amount, duration);
     }

@@ -40,31 +40,17 @@ contract LM_PC_Staking_v2Test is ModuleTest {
     uint internal initialStakerMaxAmount = 100;
     uint internal tokenMultiplicator = 1e18;
 
-    // Events
-
-    event RewardSet(
-        uint rewardAmount, uint duration, uint newRewardRate, uint newRewardsEnd
-    );
-    event Staked(address indexed user, uint amount);
-    event Unstaked(address indexed user, uint amount);
-    event RewardsDistributed(address indexed user, uint amount);
-    event Updated(
-        address indexed triggerAddress,
-        uint rewardValue,
-        uint lastUpdate,
-        uint earnedRewards
-    );
-    event StakingTokenSet(address indexed token);
-
     function setUp() public {
         // Add Module to Mock Orchestrator
         address impl = address(new LM_PC_Staking_v2_Exposed());
         stakingManager = LM_PC_Staking_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(stakingManager);
-        _authorizer.setIsAuthorized(address(this), true);
+        // Every caller has permission for every premissioned function
+        _authorizer.setAllAuthorized(true);
+
         vm.expectEmit(true, true, true, true);
-        emit StakingTokenSet(address(stakingToken));
+        emit ILM_PC_Staking_v2.StakingTokenSet(address(stakingToken));
         stakingManager.init(
             _orchestrator, _METADATA, abi.encode(address(stakingToken))
         );
@@ -247,7 +233,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         uint expectedEarnings = stakingManager.getEarned(staker);
 
         vm.expectEmit(true, true, true, true);
-        emit Staked(staker, stakeAmount);
+        emit ILM_PC_Staking_v2.Staked(staker, stakeAmount);
 
         vm.prank(staker);
         stakingManager.stake(stakeAmount);
@@ -274,6 +260,19 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         );
 
         stakingManager.stake(0);
+
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        stakingManager.stake(1);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // Check for reentrancy
 
@@ -344,7 +343,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         uint expectedEarnings = stakingManager.getEarned(staker);
 
         vm.expectEmit(true, true, true, true);
-        emit Unstaked(staker, unstakeAmount);
+        emit ILM_PC_Staking_v2.Unstaked(staker, unstakeAmount);
 
         // Withdraw
         vm.prank(staker);
@@ -374,6 +373,19 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         );
 
         stakingManager.unstake(0);
+
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        stakingManager.unstake(1);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // Check for reentrancy
 
@@ -453,7 +465,9 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit RewardSet(amount, duration, expectedRewardRate, expectedRewardsEnd);
+        emit ILM_PC_Staking_v2.RewardSet(
+            amount, duration, expectedRewardRate, expectedRewardsEnd
+        );
 
         stakingManager.setRewards(amount, duration);
 
@@ -482,7 +496,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         }
 
         vm.expectEmit(true, true, true, true);
-        emit RewardSet(
+        emit ILM_PC_Staking_v2.RewardSet(
             secondAmount, secondDuration, expectedRewardRate, expectedRewardsEnd
         );
 
@@ -493,17 +507,15 @@ contract LM_PC_Staking_v2Test is ModuleTest {
     }
 
     function testSetRewardsModifierInPosition() public {
-        // onlyOrchestratorAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                address(0xBEEF)
-            )
-        );
+        // permissioned
 
-        vm.prank(address(0xBEEF));
-        stakingManager.setRewards(1, 1);
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        stakingManager.stake(1);
 
         // validAmount
         vm.expectRevert(
@@ -543,7 +555,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
                 stakingManager.direct_calculateRewardValue();
         }
         vm.expectEmit(true, true, true, false);
-        emit Updated(
+        emit ILM_PC_Staking_v2.Updated(
             trigger, expectedRewards, stakingManager.getLastUpdate(), 0
         );
 
@@ -640,7 +652,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         stakingManager.direct_update(user);
 
         vm.expectEmit(true, true, true, true);
-        emit RewardsDistributed(user, expectedPayout);
+        emit ILM_PC_Staking_v2.RewardsDistributed(user, expectedPayout);
 
         stakingManager.direct_distributeRewards(user);
 

@@ -373,7 +373,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     /*
     Test: addAccessPermission
-    ├── Given: Caller does not inhabit the default admin role
+    ├── Given: Caller does not inhabit the permissioned Role
     │   └── When: addAccessPermission is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
@@ -504,7 +504,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     /*
     Test: removeAccessPermission
-    ├── Given: Caller does not inhabit the default admin role
+    ├── Given: Caller does not inhabit the permissioned Role
     │   └── When: removeAccessPermission is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
@@ -602,7 +602,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     /*
     Test: createRole
-    ├── Given: Caller does not inhabit the default admin role
+    ├── Given: Caller does not inhabit the permissioned Role
     │   └── When: createRole is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
@@ -904,7 +904,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     /*
     Test: createRoleAndAddAccessPermissions
-    ├── Given: Caller does not inhabit the default admin role
+    ├── Given: Caller does not inhabit the permissioned Role
     │   └── When: createRoleAndAddAccessPermissions is called
     │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
