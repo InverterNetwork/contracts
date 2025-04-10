@@ -17,7 +17,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
-import {TestnetDeploymentScript} from "./TestnetDeploymentScript.s.sol";
+import {TestnetDeploymentScript} from "../TestnetDeploymentScript.s.sol";
 
 contract DeployBridge is TestnetDeploymentScript {
     // Governor_v1 InverterBeaconProxy_v1
@@ -32,6 +32,15 @@ contract DeployBridge is TestnetDeploymentScript {
         0,
         "https://github.com/InverterNetwork/contracts",
         "LM_FM_IssuanceTokenBridge_v1"
+    );
+
+    IModule_v1.Metadata public bancorCCRedeemingFundingManagerMetadata =
+    IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "FM_BC_CC_Bancor_Redeeming_VS_v1"
     );
 
     function run() public override {
@@ -55,7 +64,15 @@ contract DeployBridge is TestnetDeploymentScript {
             )
         );
 
-        IInverterBeacon_v1 beacon = IInverterBeacon_v1(
+        address impl_mod_FM_BC_CC_Bancor_Redeeming_VS_v1 =
+        deployAndLogWithCreate2(
+            "FM_BC_CC_Bancor_Redeeming_VS_v1",
+            vm.getCode(
+                "FM_BC_CC_Bancor_Redeeming_VS_v1.sol:FM_BC_CC_Bancor_Redeeming_VS_v1"
+            )
+        );
+
+        IInverterBeacon_v1 beaconBridge = IInverterBeacon_v1(
             proxyAndBeaconDeployer.deployInverterBeacon(
                 bancorIssuanceTokenBridgeMetadata.title,
                 inverterReverter,
@@ -67,11 +84,26 @@ contract DeployBridge is TestnetDeploymentScript {
             )
         );
 
+        IInverterBeacon_v1 beaconCC = IInverterBeacon_v1(
+            proxyAndBeaconDeployer.deployInverterBeacon(
+                bancorCCRedeemingFundingManagerMetadata.title,
+                inverterReverter,
+                governor,
+                impl_mod_FM_BC_CC_Bancor_Redeeming_VS_v1,
+                bancorCCRedeemingFundingManagerMetadata.majorVersion,
+                bancorCCRedeemingFundingManagerMetadata.minorVersion,
+                bancorCCRedeemingFundingManagerMetadata.patchVersion
+            )
+        );
+
         // Register the module in the Governor
         vm.startBroadcast(deployerPrivateKey);
         {
             governorProxy.registerMetadataInModuleFactory(
-                bancorIssuanceTokenBridgeMetadata, beacon
+                bancorIssuanceTokenBridgeMetadata, beaconBridge
+            );
+            governorProxy.registerMetadataInModuleFactory(
+                bancorCCRedeemingFundingManagerMetadata, beaconCC
             );
         }
         vm.stopBroadcast();
@@ -124,7 +156,7 @@ contract DeployBridge is TestnetDeploymentScript {
 
         // Funding Manager: Metadata, token address
         fundingManagerConfig = IOrchestratorFactory_v1.ModuleConfig(
-            bancorRedeemingVirtualSupplyFundingManagerMetadata,
+            bancorCCRedeemingFundingManagerMetadata,
             abi.encode(
                 address(issuanceToken),
                 bcProperties,
@@ -181,11 +213,3 @@ contract DeployBridge is TestnetDeploymentScript {
         console2.log("Orchestrator Address: ", address(orchestrator));
     }
 }
-
-// forge script script/deploymentScript/DeployBridge.s.sol --rpc-url mainnet --broadcast
-
-// forge script script/deploymentScript/DeployReceiver.s.sol --rpc-url http://localhost:8546 --broadcast
-
-// forge script script/deploymentScript/TokenBridgeSettings.s.sol --rpc-url mainnet --broadcast
-
-// forge script script/deploymentScript/Buy.s.sol --rpc-url mainnet --broadcast

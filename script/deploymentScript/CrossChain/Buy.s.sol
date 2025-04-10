@@ -10,13 +10,13 @@ import {IBondingCurveBase_v1} from
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {LM_FM_IssuanceTokenBridge_v1} from
-    "../../src/exp/LM_FM_IssuenceTokenBridge_v1.sol";
+    "../../../src/exp/LM_FM_IssuenceTokenBridge_v1.sol";
 
 contract BuyScript is ProtocolConstants_v1 {
     address private fundingManager;
 
     function run() external {
-        fundingManager = address(0x301B26831bc208b572C20D36d82C47B561CaB1BF);
+        fundingManager = address(0x75b33Fbe47f287D4C335e6dc0F6c9004dB487a13);
         IBondingCurveBase_v1 bondingCurve = IBondingCurveBase_v1(fundingManager);
         ERC20Mock erc20Mock =
             ERC20Mock(0x4A679253410272dd5232B3Ff7cF5dbB88f295319);
