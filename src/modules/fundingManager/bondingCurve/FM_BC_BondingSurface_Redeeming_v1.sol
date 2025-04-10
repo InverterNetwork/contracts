@@ -265,13 +265,13 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     // Mutating Functions
 
     // ------------------------------------------------------------------------
-    // Mutating - OnlyOrchestratorAdmin Functions
+    // Mutating - Permissioned Functions
 
     /// @inheritdoc IFM_BC_BondingSurface_Redeeming_v1
     function setCapitalRequired(uint newCapitalRequired_)
         public
         virtual
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         _setCapitalRequired(newCapitalRequired_);
     }
@@ -280,7 +280,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
         virtual
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         _setBasePriceMultiplier(newBasePriceMultiplier_);
     }

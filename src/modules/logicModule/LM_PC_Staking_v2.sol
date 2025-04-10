@@ -203,6 +203,7 @@ contract LM_PC_Staking_v2 is
         virtual
         nonReentrant
         validAmount(amount)
+        permissioned //@todo adapt interface + test
     {
         address sender = _msgSender();
 
@@ -219,6 +220,7 @@ contract LM_PC_Staking_v2 is
         virtual
         nonReentrant
         validAmount(amount)
+        permissioned //@todo adapt interface + test
     {
         address sender = _msgSender();
         // Update rewardValue, updatedTimestamp and earned values
@@ -242,7 +244,12 @@ contract LM_PC_Staking_v2 is
     }
 
     /// @inheritdoc ILM_PC_Staking_v2
-    function claimRewards() external virtual nonReentrant {
+    function claimRewards()
+        external
+        virtual
+        nonReentrant
+        permissioned //@todo adapt interface + test
+    {
         address recipient = _msgSender();
 
         _update(recipient);
@@ -252,13 +259,13 @@ contract LM_PC_Staking_v2 is
     /// @inheritdoc ILM_PC_Staking_v2
     function setRewards(uint amount, uint duration)
         external
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         _setRewards(amount, duration);
     }
 
     //--------------------------------------------------------------------------
-    // Private Functions
+    // Internal Functions
 
     /// @dev	Stakes tokens.
     /// @param  depositFor The address of the user.

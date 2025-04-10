@@ -205,7 +205,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Template_v1
     function processDeposit(address user_, uint start_, uint cliff_, uint end_)
         external
-        onlyModuleRole(DEPOSIT_ADMIN_ROLE)
+        permissioned //@todo adapt interface + test
     {
         uint amount = _depositedAmounts[user_];
 

@@ -59,7 +59,7 @@ abstract contract OptimisticOracleIntegrator is
     // Constants
 
     /// @dev	The role that is allowed to assert data.
-    bytes32 public constant ASSERTER_ROLE = keccak256("DATA_ASSERTER");
+    bytes32 public constant ASSERTER_ROLE = keccak256("DATA_ASSERTER"); // @todo scrap
 
     //==========================================================================
     // Storage
@@ -136,20 +136,23 @@ abstract contract OptimisticOracleIntegrator is
     /// @inheritdoc IOptimisticOracleIntegrator
     function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         public
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         _setDefaultCurrencyAndBond(_newCurrency, _newBond);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
-    function setOptimisticOracle(address _newOO) public onlyOrchestratorAdmin {
+    function setOptimisticOracle(address _newOO)
+        public
+        permissioned //@todo adapt interface + test
+    {
         _setOptimisticOracle(_newOO);
     }
 
     /// @inheritdoc IOptimisticOracleIntegrator
     function setDefaultAssertionLiveness(uint64 _newLiveness)
         public
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         _setDefaultAssertionLiveness(_newLiveness);
     }
@@ -204,7 +207,7 @@ abstract contract OptimisticOracleIntegrator is
     function assertDataFor(bytes32 dataId, bytes32 data_, address asserter)
         public
         virtual
-        onlyModuleRole(ASSERTER_ROLE)
+        permissioned //@todo adapt interface + test
         returns (bytes32 assertionId)
     {
         asserter = asserter == address(0) ? _msgSender() : asserter;

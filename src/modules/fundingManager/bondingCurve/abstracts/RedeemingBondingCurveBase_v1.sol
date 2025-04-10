@@ -85,34 +85,50 @@ abstract contract RedeemingBondingCurveBase_v1 is
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        sellingIsEnabled
+        sellingIsEnabled // @todo adapt Modifier
         validReceiver(_receiver)
+        permissioned //@todo adapt interface + test
     {
         _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
     function sell(uint _depositAmount, uint _minAmountOut) public virtual {
+        //@todo do we split this for different potential roles?
         sellTo(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     // -------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
+    // Permissioned Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function openSell() external virtual onlyOrchestratorAdmin {
+    function openSell()
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
+        //@todo scrap?
         sellIsOpen = true;
         emit SellingEnabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function closeSell() external virtual onlyOrchestratorAdmin {
+    function closeSell()
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
+        //@todo scrap?
         sellIsOpen = false;
         emit SellingDisabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint _fee) external virtual onlyOrchestratorAdmin {
+    function setSellFee(uint _fee)
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
         _setSellFee(_fee);
     }
 

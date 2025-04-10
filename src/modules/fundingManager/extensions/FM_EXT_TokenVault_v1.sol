@@ -61,7 +61,7 @@ contract FM_EXT_TokenVault_v1 is IFM_EXT_TokenVault_v1, Module_v1 {
     function withdraw(address token_, uint amount_, address recipient_)
         external
         virtual
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
         validAddress(token_)
         amountIsValid(amount_)
         validAddress(recipient_)

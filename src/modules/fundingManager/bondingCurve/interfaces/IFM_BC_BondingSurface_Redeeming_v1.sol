@@ -135,7 +135,7 @@ interface IFM_BC_BondingSurface_Redeeming_v1 is
     // Public Mutating Functions
 
     // ------------------------------------------------------------------------
-    // Mutating - OnlyOrchestratorAdmin Functions
+    // Mutating - Permissioned Functions
 
     /// @notice Update the capital required used for the bonding curve.
     /// @param  newCapitalRequired_ The new capital required.

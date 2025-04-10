@@ -169,7 +169,7 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     function setLiquidityVaultControllerContract(address lvc_) external;
 
     // -------------------------------------------------------------------------
-    // Mutating - OnlyOrchestratorAdmin Functions
+    // Mutating - Permissioned Functions
 
     /// @notice Sets the token vault address.
     /// @dev    Only callable by OrchestratorAdmin.

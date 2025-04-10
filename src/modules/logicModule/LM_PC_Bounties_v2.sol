@@ -235,11 +235,11 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     uint internal constant _SENTINEL = type(uint).max;
 
     /// @dev	Role for the bounty issuer.
-    bytes32 public constant BOUNTY_ISSUER_ROLE = "BOUNTY_ISSUER";
+    bytes32 public constant BOUNTY_ISSUER_ROLE = "BOUNTY_ISSUER"; //@todo scrap
     /// @dev	Role for the claimant.
-    bytes32 public constant CLAIMANT_ROLE = "CLAIMANT";
+    bytes32 public constant CLAIMANT_ROLE = "CLAIMANT"; // @todo scrap
     /// @dev	Role for the verifier.
-    bytes32 public constant VERIFIER_ROLE = "VERIFIER";
+    bytes32 public constant VERIFIER_ROLE = "VERIFIER"; // @todo scrap
 
     //--------------------------------------------------------------------------
     // Storage
@@ -344,7 +344,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes calldata details
     )
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned //@todo adapt interface + test
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -358,7 +358,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes[] calldata detailArray
     )
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned //@todo adapt interface + test
         validArrayLengths(
             minimumPayoutAmounts.length,
             maximumPayoutAmounts.length,
@@ -384,7 +384,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned //@todo adapt interface + test
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -396,7 +396,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function lockBounty(uint bountyId)
         external
-        onlyModuleRole(BOUNTY_ISSUER_ROLE)
+        permissioned //@todo adapt interface + test
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -412,7 +412,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes calldata details
     )
         external
-        onlyModuleRole(CLAIMANT_ROLE)
+        permissioned //@todo adapt interface + test
         validBountyId(bountyId)
         notLocked(bountyId)
         returns (uint id)
@@ -455,7 +455,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
-        onlyModuleRole(CLAIMANT_ROLE)
+        permissioned //@todo adapt interface + test
     {
         _validContributorsForBounty(
             contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
@@ -490,6 +490,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
+        permissioned //@todo adapt interface + test
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
@@ -503,7 +504,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
-        onlyModuleRole(VERIFIER_ROLE)
+        permissioned //@todo adapt interface + test
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)

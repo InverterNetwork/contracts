@@ -94,23 +94,10 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @dev    Modifier to guarantee function is only callable by addresses
-    ///         authorized via {Orchestrator_v1}.
-    modifier onlyOrchestratorAdmin() {
-        // @todo Replace with permissioned modifier
-        _;
-    }
-
     /// @dev    Modifier to guarantee function is only callable by a module registered within the
     ///         workflows's {Orchestrator_v1} and the module is implementing the {IERC20PaymentClientBase_v2} interface.
     modifier onlyPaymentClient() {
         _onlyPaymentClientModifier();
-        _;
-    }
-
-    /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
-    modifier onlyModuleRole(bytes32 role) {
-        // @todo Replace with permissioned modifier
         _;
     }
 

@@ -172,7 +172,11 @@ contract LM_PC_KPIRewarder_v2 is
         uint assertedValue,
         address asserter,
         uint targetKPI
-    ) public onlyModuleRole(ASSERTER_ROLE) returns (bytes32 assertionId) {
+    )
+        public
+        permissioned //@todo adapt interface + test
+        returns (bytes32 assertionId)
+    {
         // ==================================================================
         // Pre-check
 
@@ -220,7 +224,7 @@ contract LM_PC_KPIRewarder_v2 is
     /// @dev    Top up funds to pay the optimistic oracle fee
     function depositFeeFunds(uint amount)
         external
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
         nonReentrant
         validAmount(amount)
     {
@@ -234,7 +238,11 @@ contract LM_PC_KPIRewarder_v2 is
         bool _continuous,
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
-    ) external onlyOrchestratorAdmin returns (uint) {
+    )
+        external
+        permissioned //@todo adapt interface + test
+        returns (uint)
+    {
         uint _numOfTranches = _trancheValues.length;
 
         if (_numOfTranches < 1 || _numOfTranches > 20) {
@@ -288,6 +296,7 @@ contract LM_PC_KPIRewarder_v2 is
         external
         override
         nonReentrant
+        permissioned //@todo adapt interface + test
         validAmount(amount)
     {
         // ==================================================================
@@ -309,7 +318,7 @@ contract LM_PC_KPIRewarder_v2 is
     /// @inheritdoc ILM_PC_KPIRewarder_v2
     function deleteStuckAssertion(bytes32 assertionId)
         public
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
         if (assertionData[assertionId].dataId == bytes32(0x0)) {
@@ -340,10 +349,11 @@ contract LM_PC_KPIRewarder_v2 is
     // Optimistic Oracle Overrides:
 
     /// @inheritdoc OptimisticOracleV3CallbackRecipientInterface
-    function assertionResolvedCallback(
-        bytes32 assertionId,
-        bool assertedTruthfully
-    ) public override {
+    function assertionResolvedCallback( //@todo do we need to add anything here?
+    bytes32 assertionId, bool assertedTruthfully)
+        public
+        override
+    {
         // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
         if (assertionData[assertionId].dataId == bytes32(0x0)) {
             revert Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(

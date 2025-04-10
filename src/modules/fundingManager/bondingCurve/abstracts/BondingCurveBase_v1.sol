@@ -101,32 +101,46 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         virtual
         buyingIsEnabled
         validReceiver(_receiver)
+        permissioned //@todo adapt interface + test
     {
         _buyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IBondingCurveBase_v1
     function buy(uint _depositAmount, uint _minAmountOut) public virtual {
+        //@todo do we split this for different potential roles?
         buyFor(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     // -------------------------------------------------------------------------
-    // OnlyOrchestrator Functions
+    // Permissioned Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    function openBuy() external virtual onlyOrchestratorAdmin {
+    function openBuy()
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
         buyIsOpen = true;
         emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function closeBuy() external virtual onlyOrchestratorAdmin {
+    function closeBuy()
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
         buyIsOpen = false;
         emit BuyingDisabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function setBuyFee(uint _fee) external virtual onlyOrchestratorAdmin {
+    function setBuyFee(uint _fee)
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
         _setBuyFee(_fee);
     }
 
@@ -171,7 +185,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
         public
         virtual
         validReceiver(_receiver)
-        onlyOrchestratorAdmin
+        permissioned //@todo adapt interface + test
     {
         if (_amount > projectCollateralFeeCollected) {
             revert Module__BondingCurveBase__InvalidWithdrawAmount();
