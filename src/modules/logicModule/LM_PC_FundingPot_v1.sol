@@ -200,12 +200,8 @@ contract LM_PC_FundingPot_v1 is
             round.globalAccumulativeCaps
         );
     }
-    /// TODO should either have a param for a specifc address
-    /// and return whether they have access or not
-    /// or should not return anything related to allowed addresses
-    /// Though I think the first option is better
-    /// @inheritdoc ILM_PC_FundingPot_v1
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
     function getRoundAccessCriteria(uint64 roundId_, uint8 id_, address user_)
         external
         view
@@ -224,15 +220,14 @@ contract LM_PC_FundingPot_v1 is
                 true,
                 accessCriteria.nftContract,
                 accessCriteria.merkleRoot,
-                //// This is wrong but gives you an idea of what you need to do
-                accessCriteria.allowedAddresses[user_]
+                true
             );
         } else {
             return (
                 false,
                 accessCriteria.nftContract,
                 accessCriteria.merkleRoot,
-                accessCriteria.allowedAddresses
+                accessCriteria.allowedAddresses[user_]
             );
         }
     }
@@ -363,46 +358,58 @@ contract LM_PC_FundingPot_v1 is
             globalAccumulativeCaps_
         );
     }
-    // TODO should take in nft merkle root and list of allowed addresses
-    // SHould loop through the array and set the access criteria for each address to true in the mapping
-    /// @inheritdoc ILM_PC_FundingPot_v1
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaForRound(
         uint64 roundId_,
-        AccessCriteria memory accessCriteria_
+        uint8 accessCriteriaId_,
+        address nftContract_,
+        bytes32 merkleRoot_,
+        address[] calldata allowedAddresses_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
         _validateEditRoundParameters(round);
 
         if (
-            /// TODO this would just check that the array being passed in is empty
             (
-                accessCriteria_.accessCriteriaType == AccessCriteriaType.NFT
-                    && accessCriteria_.nftContract == address(0)
+                accessCriteriaId_ == uint8(AccessCriteriaType.NFT)
+                    && nftContract_ == address(0)
             )
                 || (
-                    accessCriteria_.accessCriteriaType == AccessCriteriaType.MERKLE
-                        && accessCriteria_.merkleRoot == bytes32("")
+                    accessCriteriaId_ == uint8(AccessCriteriaType.MERKLE)
+                        && merkleRoot_ == bytes32("")
                 )
                 || (
-                    accessCriteria_.accessCriteriaType == AccessCriteriaType.LIST
-                        && accessCriteria_.allowedAddresses.length == 0
+                    accessCriteriaId_ == uint8(AccessCriteriaType.LIST)
+                        && allowedAddresses_.length == 0
                 )
         ) {
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
-        uint8 accessCriteriaId_ = uint8(accessCriteria_.accessCriteriaType);
-        round.accessCriterias[accessCriteriaId_] = accessCriteria_;
 
-        emit AccessCriteriaSet(roundId_, accessCriteriaId_, accessCriteria_);
+        AccessCriteriaType accessCriteriaType =
+            AccessCriteriaType(accessCriteriaId_);
+        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
+            accessCriteriaType;
+        round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
+        round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
+
+        for (uint i = 0; i < allowedAddresses_.length; i++) {
+            round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
+            = true;
+        }
+
+        emit AccessCriteriaSet(roundId_, accessCriteriaId_);
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function editAccessCriteriaForRound(
         uint64 roundId_,
         uint8 accessCriteriaId_,
-        AccessCriteria memory accessCriteria_
+        address nftContract_,
+        bytes32 merkleRoot_,
+        address[] calldata allowedAddresses_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
         if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
@@ -411,9 +418,19 @@ contract LM_PC_FundingPot_v1 is
 
         _validateEditRoundParameters(round);
 
-        round.accessCriterias[accessCriteriaId_] = accessCriteria_;
+        AccessCriteriaType accessCriteriaType =
+            AccessCriteriaType(accessCriteriaId_);
+        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
+            accessCriteriaType;
+        round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
+        round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
 
-        emit AccessCriteriaEdited(roundId_, accessCriteriaId_, accessCriteria_);
+        for (uint i = 0; i < allowedAddresses_.length; i++) {
+            round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
+            = true;
+        }
+
+        emit AccessCriteriaEdited(roundId_, accessCriteriaId_);
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -784,8 +801,12 @@ contract LM_PC_FundingPot_v1 is
             );
         } else if (accessCriteria.accessCriteriaType == AccessCriteriaType.LIST)
         {
-            return
-                _checkAllowedAddressList(accessCriteria.allowedAddresses, user_);
+            if (!accessCriteria.allowedAddresses[user_]) {
+                revert Module__LM_PC_FundingPot__AccessCriteriaListFailed();
+                return false;
+            }
+
+            return true;
         }
 
         // For OPEN access criteria type, no validation needed
@@ -875,25 +896,6 @@ contract LM_PC_FundingPot_v1 is
             }
         }
         return totalUnusedCapacity;
-    }
-
-    ///@notice Checks if a sender is in a list of allowed addresses
-    /// @dev    Performs a linear search to validate address inclusion
-    /// @param  allowedAddresses_ Array of addresses permitted to participate
-    /// @param  sender_ Address to check for permission
-    /// @return Boolean indicating whether the sender is in the allowed list
-    /// TODO should check for address in mapping instead of looping through array
-    function _checkAllowedAddressList(
-        address[] memory allowedAddresses_,
-        address sender_
-    ) internal pure returns (bool) {
-        uint lengthOfAddresses = allowedAddresses_.length;
-        for (uint i = 0; i < lengthOfAddresses; ++i) {
-            if (allowedAddresses_[i] == sender_) {
-                return true;
-            }
-        }
-        revert Module__LM_PC_FundingPot__AccessCriteriaListFailed();
     }
 
     /// @notice Verifies NFT ownership for access control
