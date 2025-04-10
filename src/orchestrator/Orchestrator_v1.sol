@@ -70,6 +70,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @dev	Modifier to guarantee function is only callable by the admin of the workflow
     ///         address.
     modifier onlyOrchestratorAdmin() {
+        //@todo change to permissioned
         bytes32 adminRole = authorizer.getAdminRole();
 
         if (!authorizer.hasRole(adminRole, _msgSender())) {

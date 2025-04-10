@@ -55,6 +55,7 @@ abstract contract ModuleManagerBase_v1 is
 
     /// @dev    Modifier to guarantee function is only callable by authorized address.
     modifier __ModuleManager_onlyAuthorized() {
+        //@todo replace with permissioned in upstream contract
         if (!__ModuleManager_isAuthorized(_msgSender())) {
             revert ModuleManagerBase__CallerNotAuthorized();
         }
@@ -232,7 +233,7 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // onlyOrchestratorAdmin Functions
+    // Permissioned Functions
 
     /// @notice Cancels an initiated update for a module.
     /// @dev	Only callable by authorized address.

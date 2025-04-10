@@ -150,7 +150,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Mutating - Authorization
 
     /// @notice Adds a new permission to the given roleId to call the given function in the target contract.
-    /// @dev    Only callable by the Default Admin role.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    The roleId must have already been created.
     /// @dev    Does nothing if the roleId permission is already added to the function.
     /// @param  target_ The address of the target contract.
@@ -163,7 +163,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     ) external;
 
     /// @notice Removes a permission from the given roleid to call the given function in the target contract.
-    /// @dev    Only callable by the Default Admin role.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    Does nothing if the roleId is not linked to the function.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
@@ -178,7 +178,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Mutating - Role Management
 
     /// @notice Creates a new role and adds initial members to it.
-    /// @dev    Only callable by the Default Admin role.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    The role if of the admin has to be created already.
     /// @param  roleName_ The name of the role to create.
     /// @param  respectiveAdminRole_ The role ID of the admin role.
@@ -191,7 +191,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     ) external returns (bytes32 _newRoleId);
 
     /// @notice Changes the name of a role.
-    /// @dev    Only callable by the Default Admin role.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    The role has to be created already.
     /// @param  roleId_ The ID of the role to change the name of.
     /// @param  newRoleName_ The new name of the role.
@@ -217,7 +217,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Mutating - Mixed Utility
 
     /// @notice Creates a new role, adds initial members to it and adds permission to call to the respective functions.
-    /// @dev    Only callable by the Default Admin role.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    The role of the admin has to be created already.
     /// @dev    The array of targets corresponds with the two dimensional array of selectors.
     ///         The first position of targets therefor is assigned to the first position of the selector array.

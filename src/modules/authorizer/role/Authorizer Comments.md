@@ -1,5 +1,17 @@
 # Comments authorizer Update
 
+# todo
+
+- Finish test for transferAdminRole and burnAdminFromRole
+- Adapt Module implementation
+- test for new modifier and changes
+- adapt permissioned modifier in authorizer
+- Test permissioned modifier in module
+- Adapt All modules with new permissioned modifier
+- Adapt Orchestrator permissioned structure
+- Adapt tests for that
+- Adapt E2E tests
+
 ## Did do:
 
 - Restructured the File into Role Management and Authorization

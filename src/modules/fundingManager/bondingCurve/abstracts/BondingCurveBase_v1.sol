@@ -116,21 +116,13 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Permissioned Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    function openBuy()
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function openBuy() external virtual permissioned {
         buyIsOpen = true;
         emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function closeBuy()
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function closeBuy() external virtual permissioned {
         buyIsOpen = false;
         emit BuyingDisabled();
     }

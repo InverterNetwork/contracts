@@ -135,8 +135,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @inheritdoc IAUT_TokenGated_Roles_v1
     function makeRoleTokenGatedFromModule(bytes32 role)
         public
-        onlyModule(_msgSender())
-        onlyEmptyRole(generateRoleId(_msgSender(), role))
+        onlyEmptyRole(generateRoleId(_msgSender(), role)) //@todo scrap
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
 
@@ -149,7 +148,8 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         bytes32 role,
         address token,
         uint threshold
-    ) external onlyModule(_msgSender()) {
+    ) external {
+        //@todo scrap
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setThreshold(roleId, token, threshold);
         _grantRole(roleId, token);
@@ -158,7 +158,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     /// @inheritdoc IAUT_TokenGated_Roles_v1
     function setThresholdFromModule(bytes32 role, address token, uint threshold)
         public
-        onlyModule(_msgSender())
+    //@todo scrap
     {
         bytes32 roleId = generateRoleId(_msgSender(), role);
         _setThreshold(roleId, token, threshold);
