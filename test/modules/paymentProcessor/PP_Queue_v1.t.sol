@@ -2770,6 +2770,67 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
+    /*    Test: function cancelPaymentOrderThroughQueueId()
+        └── Given the canceledOrdeTreasury address is blacklisted
+            └── When the function cancelPaymentOrderThroughQueueId() is called
+                └── Then it should revert
+    */
+    function testCancelPaymentOrderThroughQueueId_RevertGivenBlacklistedCanceledOrdersTreasury(
+        address recipient_,
+        uint96 amount_
+    ) public {
+        // Setup
+        recipient_ = helper_validPaymentReceiver(recipient_);
+        vm.assume(amount_ > 0);
+        uint queueId = 1;
+
+        // Use non-standard token to blacklist canceledOrdersTreasury so the transfer
+        // will fail and revert the function
+        NonStandardTokenMock nonStandardToken = new NonStandardTokenMock();
+        nonStandardToken.setFailTransferTo(canceledOrdersTreasury);
+
+        // Create payment order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order =
+        helper_createTestPaymentOrder(
+            recipient_, amount_, queueId, address(nonStandardToken)
+        );
+        // Mint tokens to payment client and approve PP Queue
+        helper_setupPaymentTokenBalanceAndApproval(
+            amount_, ERC20Mock(address(nonStandardToken))
+        );
+
+        // Get value for pre-assertions
+        uint orderId_ =
+            helper_addPaymentOrderToQueue(order, address(paymentClient));
+        uint queueSize_ = queue.getQueueSizeForClient(address(paymentClient));
+        IPP_Queue_v1.QueuedOrder memory queuedOrder_ = queue.getOrder(
+            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+
+        // pre-assertions
+        assertEq(
+            uint(queuedOrder_.state_),
+            uint(IPP_Queue_v1.RedemptionState.PENDING)
+        );
+        assertEq(nonStandardToken.balanceOf(recipient_), 0);
+        assertEq(nonStandardToken.balanceOf(address(paymentClient)), amount_);
+        assertEq(queueSize_, 1);
+
+        // Test
+        vm.expectRevert(
+            abi.encodeWithSignature(
+                "Module_PP_Queue_PaymentFailed(address,address,address,uint256)",
+                address(paymentClient),
+                canceledOrdersTreasury,
+                address(nonStandardToken),
+                amount_
+            )
+        );
+        queue.cancelPaymentOrderThroughQueueId(
+            orderId_, IERC20PaymentClientBase_v2(address(paymentClient))
+        );
+    }
+
     /* Test testPublicCancelPayments_failsGivenNonModuleCaller() function
         ├── Given a caller that is not a module
         │   └── When cancelRunningPayments is called

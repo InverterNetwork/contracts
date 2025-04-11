@@ -481,6 +481,16 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
             order.order_.amount,
             false // don't collect protocol fee when cancelling order
         );
+        if (!success_) {
+            // If tranfer to the treasury fails than this would mean that the treasury
+            // is blacklisted, which shouldn't happen.
+            revert Module_PP_Queue_PaymentFailed(
+                order.client_,
+                _cancelledOrdersTreasury,
+                order.order_.paymentToken,
+                order.order_.amount
+            );
+        }
     }
 
     // -------------------------------------------------------------------------
