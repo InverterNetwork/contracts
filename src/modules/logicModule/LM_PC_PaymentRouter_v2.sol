@@ -58,7 +58,7 @@ contract LM_PC_PaymentRouter_v2 is
     // Storage
 
     /// @dev	The role that allows the pushing of payments.
-    bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER"; //@todo scrap
+    bytes32 public constant PAYMENT_PUSHER_ROLE = "PAYMENT_PUSHER"; //@todo How do we scrap these?
 
     uint8 public constant FLAG_START = 1;
     uint8 public constant FLAG_CLIFF = 2;
@@ -93,10 +93,7 @@ contract LM_PC_PaymentRouter_v2 is
         uint start,
         uint cliff,
         uint end
-    )
-        public
-        permissioned //@todo adapt interface + test
-    {
+    ) public permissioned {
         bytes32 flags;
         bytes32[] memory data;
 
@@ -136,10 +133,7 @@ contract LM_PC_PaymentRouter_v2 is
         uint start,
         uint cliff,
         uint end
-    )
-        public
-        permissioned //@todo adapt interface + test
-    {
+    ) public permissioned {
         // Validate all arrays have the same length
         if (
             recipients.length != numOfOrders
