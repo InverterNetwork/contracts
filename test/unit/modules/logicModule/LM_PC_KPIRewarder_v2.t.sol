@@ -61,55 +61,6 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     uint feeTokenBond;
 
     //=========================================================================================
-    // Events for emission testing
-
-    event Staked(address indexed user, uint amount);
-    event DataAsserted(
-        bytes32 indexed dataId,
-        bytes32 data,
-        address indexed asserter,
-        bytes32 indexed assertionId
-    );
-    event DataAssertionResolved(
-        bool assertedTruthfully,
-        bytes32 indexed dataId,
-        bytes32 data,
-        address indexed asserter,
-        bytes32 indexed assertionId
-    );
-    event RewardSet(
-        uint amount, uint duration, uint rewardRate, uint rewardsEnd
-    );
-
-    event KPICreated(
-        uint indexed KPI_Id,
-        uint numOfTranches,
-        uint totalKPIRewards,
-        bool continuous,
-        uint[] trancheValues,
-        uint[] trancheRewards
-    );
-
-    event RewardRoundConfigured(
-        bytes32 indexed assertionId,
-        uint creationTime,
-        uint assertedValue,
-        uint indexed KpiToUse
-    );
-
-    event PaymentOrderAdded(
-        address indexed recipient,
-        address indexed token,
-        uint amount,
-        uint originChainId,
-        uint targetChainId,
-        bytes32 flags,
-        bytes32[] data
-    );
-
-    event DeletedStuckAssertion(bytes32 indexed assertionId);
-
-    //=========================================================================================
     // Setup
 
     function setUp() public {
@@ -124,7 +75,8 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
 
         _setUpOrchestrator(kpiManager);
 
-        _authorizer.setIsAuthorized(address(this), true);
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         bytes memory configData = abi.encode(
             address(stakingToken),
@@ -312,7 +264,7 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
             vm.startPrank(cappedUsers[i]);
             stakingToken.approve(address(kpiManager), cappedAmounts[i]);
             vm.expectEmit(true, true, true, true, address(kpiManager));
-            emit Staked(cappedUsers[i], cappedAmounts[i]);
+            emit ILM_PC_Staking_v2.Staked(cappedUsers[i], cappedAmounts[i]);
             kpiManager.stake(cappedAmounts[i]);
             totalUserFunds += cappedAmounts[i];
             vm.stopPrank();
@@ -343,10 +295,6 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
         else createDummyIncontinuousKPI();
 
         // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
-
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
@@ -361,7 +309,7 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
         // SuT
 
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit DataAsserted(
+        emit IOptimisticOracleIntegrator.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(valueToAssert),
             MOCK_ASSERTER_ADDRESS,
@@ -379,6 +327,8 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
 
 /*
 postAssertionTest
+├── when the caller is not permissioned
+│   └── it should revert (modifier in position check)
 ├── when the Asserter is the Module itself
 │   └── when the default currency is the same as the staking token
 │        └── it should revert  
@@ -397,6 +347,20 @@ postAssertionTest
 */
 
 contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
+    function test_ModifierInPositionCheck() external {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        kpiManager.postAssertion(
+            MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
+        );
+    }
+
     function test_RevertWhen_TheBondConfigurationIsInvalid() external {
         // Since the setup has a correct KPI MAnager, we create a new one with stakingToken == FeeToken
 
@@ -457,9 +421,6 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         createDummyIncontinuousKPI();
 
         // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
@@ -472,7 +433,7 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
 
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit DataAsserted(
+        emit IOptimisticOracleIntegrator.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
@@ -519,9 +480,6 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         createDummyIncontinuousKPI();
 
         // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
@@ -533,7 +491,7 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
 
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit DataAsserted(
+        emit IOptimisticOracleIntegrator.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
@@ -541,7 +499,9 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         ); // we don't know the last one
 
         vm.expectEmit(false, true, true, true, address(kpiManager));
-        emit RewardRoundConfigured(0x0, block.timestamp, 100, 0); // we don't know the generated ID
+        emit ILM_PC_KPIRewarder_v2.RewardRoundConfigured(
+            0x0, block.timestamp, 100, 0
+        ); // we don't know the generated ID
 
         bytes32 assertionId = kpiManager.postAssertion(
             MOCK_ASSERTION_DATA_ID, 100, MOCK_ASSERTER_ADDRESS, 0
@@ -584,9 +544,6 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         createDummyIncontinuousKPI();
 
         // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken)) - 1
@@ -614,6 +571,8 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
 
 /*
 createKPITest
+├── when the caller is not permissioned
+│   └── it should revert (modifier in position check)
 ├── when the number of tranches is 0
 │   └── it should revert
 ├── when the number of tranches is bigger than 20
@@ -629,6 +588,18 @@ createKPITest
 */
 
 contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
+    function test_ModifierInPositionCheck() external {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        kpiManager.createKPI(true, new uint[](0), new uint[](0));
+    }
+
     function test_RevertWhen_TheNumberOfTranchesIs0() external {
         // it should revert
 
@@ -736,7 +707,7 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         }
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit KPICreated(
+        emit ILM_PC_KPIRewarder_v2.KPICreated(
             0,
             numOfTranches,
             totalRewards,
@@ -764,6 +735,8 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
 
 /*
 stakeTest
+├── when the caller is not permissioned
+│   └── it should revert (modifier in position check)
 ├── when the staked amount is 0
 │   └── it should revert
 ├── when there is an unresolved assertion live
@@ -775,6 +748,18 @@ stakeTest
     └── it should stake the funds
 */
 contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
+    function test_ModifierInPositionCheck() external {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        kpiManager.stake(0);
+    }
+
     function test_RevertWhen_TheStakedAmountIs0() external {
         // it should revert
 
@@ -801,9 +786,6 @@ contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
         createDummyIncontinuousKPI();
 
         // prepare  bond and asserter authorization
-        kpiManager.grantModuleRole(
-            kpiManager.ASSERTER_ROLE(), MOCK_ASSERTER_ADDRESS
-        );
         feeToken.mint(
             address(MOCK_ASSERTER_ADDRESS),
             ooV3.getMinimumBond(address(feeToken))
@@ -816,7 +798,7 @@ contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
 
         // SuT
         vm.expectEmit(true, false, false, false, address(kpiManager));
-        emit DataAsserted(
+        emit IOptimisticOracleIntegrator.DataAsserted(
             MOCK_ASSERTION_DATA_ID,
             bytes32(MOCK_ASSERTED_VALUE),
             MOCK_ASSERTER_ADDRESS,
@@ -919,7 +901,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         vm.expectEmit(true, true, true, true, address(kpiManager));
         // vm.expectEmit(false, false, false, false);
 
-        emit DataAssertionResolved(
+        emit IOptimisticOracleIntegrator.DataAssertionResolved(
             false,
             MOCK_ASSERTION_DATA_ID,
             bytes32(assertedIntermediateValue),
@@ -963,7 +945,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit DataAssertionResolved(
+        emit IOptimisticOracleIntegrator.DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
             bytes32(assertedIntermediateValue),
@@ -972,7 +954,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(250e32, 1, 250e32, block.timestamp + 1);
+        emit ILM_PC_Staking_v2.RewardSet(250e32, 1, 250e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
@@ -1014,7 +996,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(
+                emit IERC20PaymentClientBase_v2.PaymentOrderAdded(
                     users[i],
                     address(_token),
                     earnedReward,
@@ -1055,7 +1037,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         vm.startPrank(address(ooV3));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit DataAssertionResolved(
+        emit IOptimisticOracleIntegrator.DataAssertionResolved(
             true,
             MOCK_ASSERTION_DATA_ID,
             bytes32(assertedIntermediateValue),
@@ -1064,7 +1046,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
         );
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit RewardSet(200e32, 1, 200e32, block.timestamp + 1);
+        emit ILM_PC_Staking_v2.RewardSet(200e32, 1, 200e32, block.timestamp + 1);
 
         kpiManager.assertionResolvedCallback(createdID, true);
         vm.stopPrank();
@@ -1105,7 +1087,7 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
 
             if (earnedReward > 0) {
                 vm.expectEmit(true, true, true, true, address(kpiManager));
-                emit PaymentOrderAdded(
+                emit IERC20PaymentClientBase_v2.PaymentOrderAdded(
                     users[i],
                     address(_token),
                     earnedReward,
@@ -1209,6 +1191,8 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
 
 /*
     testDeleteStuckAssertion
+    ├── When the caller is not permissioned
+    │   └── It should revert (modifier in position check)
     ├── When the assertion isn't stored locally
     │    └── It should revert
     |── When the assertion hasn't expired yet
@@ -1225,6 +1209,18 @@ contract LM_PC_KPIRewarder_v2_assertionresolvedCallbackTest is
 contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
     LM_PC_KPIRewarder_v2Test
 {
+    function test_ModifierInPositionCheck() external {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        kpiManager.deleteStuckAssertion(0);
+    }
+
     function test_RevertWhen_TheAssertionIsntStoredLocally(bytes32 assertionId)
         external
     {
@@ -1327,7 +1323,7 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
         feeToken.burn(address(ooV3), ooV3.getMinimumBond(address(feeToken)));
 
         vm.expectEmit(true, true, true, true, address(kpiManager));
-        emit DeletedStuckAssertion(createdID);
+        emit ILM_PC_KPIRewarder_v2.DeletedStuckAssertion(createdID);
         kpiManager.deleteStuckAssertion(createdID);
 
         // Check assertion data is deleted

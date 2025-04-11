@@ -172,11 +172,7 @@ contract LM_PC_KPIRewarder_v2 is
         uint assertedValue,
         address asserter,
         uint targetKPI
-    )
-        public
-        permissioned //@todo adapt interface + test
-        returns (bytes32 assertionId)
-    {
+    ) public permissioned returns (bytes32 assertionId) {
         // ==================================================================
         // Pre-check
 
@@ -224,7 +220,7 @@ contract LM_PC_KPIRewarder_v2 is
     /// @dev    Top up funds to pay the optimistic oracle fee
     function depositFeeFunds(uint amount)
         external
-        permissioned //@todo adapt interface + test
+        permissioned //@todo allow everybody by default?
         nonReentrant
         validAmount(amount)
     {
@@ -238,11 +234,7 @@ contract LM_PC_KPIRewarder_v2 is
         bool _continuous,
         uint[] calldata _trancheValues,
         uint[] calldata _trancheRewards
-    )
-        external
-        permissioned //@todo adapt interface + test
-        returns (uint)
-    {
+    ) external permissioned returns (uint) {
         uint _numOfTranches = _trancheValues.length;
 
         if (_numOfTranches < 1 || _numOfTranches > 20) {
@@ -296,7 +288,7 @@ contract LM_PC_KPIRewarder_v2 is
         external
         override
         nonReentrant
-        permissioned //@todo adapt interface + test
+        permissioned
         validAmount(amount)
     {
         // ==================================================================
@@ -316,10 +308,7 @@ contract LM_PC_KPIRewarder_v2 is
     }
 
     /// @inheritdoc ILM_PC_KPIRewarder_v2
-    function deleteStuckAssertion(bytes32 assertionId)
-        public
-        permissioned //@todo adapt interface + test
-    {
+    function deleteStuckAssertion(bytes32 assertionId) public permissioned {
         // Ensure the assertionId exists in this contract (since malicious assertions could callback this contract)
         if (assertionData[assertionId].dataId == bytes32(0x0)) {
             revert Module__LM_PC_KPIRewarder_v2__NonExistentAssertionId(
