@@ -14,41 +14,79 @@ import {ICrossChainDispatcher} from "src/exp/CrossChainDispatcher.sol";
 contract FM_BC_CC_Bancor_Redeeming_VS_v1 is
     FM_BC_Bancor_Redeeming_VirtualSupply_v1
 {
-    ICrossChainDispatcher public dispatcher;
+    /// @notice Thrown when the dispatcher is invalid.
+    error InvalidDispatcher();
 
-    function setDispatcher(address _dispatcher) public virtual {
-        require(address(_dispatcher) != address(0), "Invalid dispatcher");
-        dispatcher = ICrossChainDispatcher(_dispatcher);
+    /// @notice Thrown when the receiver is invalid.
+    error InvalidReceiver();
+
+    /// @notice Thrown when the issuance token amount is invalid.
+    error InvalidIssuanceTokenAmount();
+
+    /// @notice Thrown when the target chain ID is invalid.
+    error InvalidTargetChainId();
+
+    ICrossChainDispatcher internal _dispatcher;
+
+    event DispatcherSet(address indexed dispatcher);
+
+    function setDispatcher(address dispatcher_) public virtual {
+        if (address(dispatcher_) == address(0)) {
+            revert InvalidDispatcher();
+        }
+
+        _dispatcher = ICrossChainDispatcher(dispatcher_);
+
+        emit DispatcherSet(dispatcher_);
     }
 
     function buyForCrossChain(
-        address _receiver,
-        uint _depositAmount,
-        uint _minAmountOut,
-        uint32 targetChainId
-    ) public virtual validReceiver(_receiver) buyingIsEnabled {
-        (uint amountIssued, uint collateralFeeAmount) =
-            _buyOrder(_receiver, _depositAmount, _minAmountOut);
-        _addVirtualIssuanceAmount(amountIssued);
-        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
+        address receiver_,
+        uint depositAmount_,
+        uint minAmountOut_,
+        uint32 targetChainId_
+    ) public virtual validReceiver(receiver_) buyingIsEnabled {
+        if (address(_dispatcher) == address(0)) {
+            revert InvalidDispatcher();
+        }
 
-        _mintCrossChain(_receiver, amountIssued, targetChainId);
+        (uint amountIssued, uint collateralFeeAmount) =
+            _buyOrder(receiver_, depositAmount_, minAmountOut_);
+        _addVirtualIssuanceAmount(amountIssued);
+        _addVirtualCollateralAmount(depositAmount_ - collateralFeeAmount);
+
+        _mintCrossChain(receiver_, amountIssued, targetChainId_);
     }
 
     function _mintCrossChain(
-        address _receiver,
-        uint _issuanceTokenAmount,
-        uint32 targetChainId
+        address receiver_,
+        uint issuanceTokenAmount_,
+        uint32 targetChainId_
     ) internal virtual {
-        dispatcher.dispatchMint(_receiver, _issuanceTokenAmount, targetChainId);
+        if (address(receiver_) == address(0)) {
+            revert InvalidReceiver();
+        }
+        if (issuanceTokenAmount_ == 0) {
+            revert InvalidIssuanceTokenAmount();
+        }
+        if (targetChainId_ == 0) {
+            revert InvalidTargetChainId();
+        }
+        if (address(_dispatcher) == address(0)) {
+            revert InvalidDispatcher();
+        }
+
+        _dispatcher.dispatchMint(
+            receiver_, issuanceTokenAmount_, targetChainId_
+        );
     }
 
     /// @notice Handles issuance tokens by minting them to the receiver.
     /// @param  _receiver The address that will receive the bought tokens.
     /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
     function _handleIssuanceTokensAfterBuy(
-        address _receiver,
-        uint _issuanceTokenAmount
+        address receiver_,
+        uint issuanceTokenAmount_
     ) internal virtual override {
         //_mint(_receiver, _issuanceTokenAmount);
     }

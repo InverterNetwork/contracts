@@ -13,28 +13,65 @@ import {ICrossChainAdapter} from "src/exp/CrossChainDispatcher.sol";
 contract HyperlaneAdapter is ICrossChainAdapter {
     using TypeCasts for address;
 
-    IMailbox public immutable mailbox;
-    address public immutable remoteMinter;
+    error InvalidReceiver(address receiver_);
+    error InvalidAmount(uint amount_);
+    error InvalidTargetChainId(uint32 targetChainId_);
+    error InvalidMailbox();
+    error InvalidRemoteMinter();
+
+    IMailbox public immutable _mailbox;
+    address public immutable _remoteMinter;
+
+    event SentMintMessage(
+        address indexed receiver_,
+        address indexed remoteMinter_,
+        uint amount_,
+        uint32 targetChainId_
+    );
 
     constructor(address mailbox_, address remoteMinter_) {
-        require(address(mailbox_) != address(0), "Invalid mailbox");
-        require(address(remoteMinter_) != address(0), "Invalid remote minter");
+        if (address(mailbox_) == address(0)) {
+            revert InvalidMailbox();
+        }
+        if (address(remoteMinter_) == address(0)) {
+            revert InvalidRemoteMinter();
+        }
 
-        mailbox = IMailbox(mailbox_);
-        remoteMinter = remoteMinter_;
+        _mailbox = IMailbox(mailbox_);
+        _remoteMinter = remoteMinter_;
     }
 
+    /**
+     * @notice Sends a mint message to the remote minter
+     * @param receiver_ The address of the receiver on the remote chain
+     * @param amount_ The amount of tokens to mint
+     * @param targetChainId_ The target chain ID
+     */
     function sendMintMessage(
-        address receiver,
-        uint amount,
-        uint32 targetChainId
+        address receiver_,
+        uint amount_,
+        uint32 targetChainId_
     ) external override {
-        mailbox.dispatch(
-            targetChainId,
-            remoteMinter.addressToBytes32(),
+        if (address(receiver_) == address(0)) {
+            revert InvalidReceiver(receiver_);
+        }
+
+        if (amount_ == 0) {
+            revert InvalidAmount(amount_);
+        }
+
+        if (targetChainId_ == 0) {
+            revert InvalidTargetChainId(targetChainId_);
+        }
+
+        _mailbox.dispatch(
+            targetChainId_,
+            _remoteMinter.addressToBytes32(),
             TokenMessage.format(
-                receiver.addressToBytes32(), amount, "INVERTER_ISSUANCE"
+                receiver_.addressToBytes32(), amount_, "INVERTER_ISSUANCE"
             )
         );
+
+        emit SentMintMessage(receiver_, _remoteMinter, amount_, targetChainId_);
     }
 }

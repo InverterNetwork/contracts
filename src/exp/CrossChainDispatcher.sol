@@ -3,42 +3,57 @@ pragma solidity 0.8.23;
 
 interface ICrossChainAdapter {
     function sendMintMessage(
-        address receiver,
-        uint amount,
-        uint32 targetChainId
+        address receiver_,
+        uint amount_,
+        uint32 targetChainId_
     ) external;
 }
 
 interface ICrossChainDispatcher {
-    function dispatchMint(address receiver, uint amount, uint32 targetChainId)
-        external;
+    function dispatchMint(
+        address receiver_,
+        uint amount_,
+        uint32 targetChainId_
+    ) external;
 }
 
 contract CrossChainDispatcher is ICrossChainDispatcher {
     address public owner;
 
-    mapping(uint32 => ICrossChainAdapter) public adapters;
+    error Unauthorized();
+    error InvalidAdapter();
 
-    event AdapterRegistered(uint32 indexed chainId, address indexed adapter);
+    mapping(uint32 => ICrossChainAdapter) internal _adapters;
+
+    event AdapterRegistered(uint32 indexed chainId_, address indexed adapter_);
 
     constructor() {
         owner = msg.sender;
     }
 
-    function registerAdapter(uint32 chainId, address adapter) external {
-        // require(msg.sender == owner, "Unauthorized");
-        require(address(adapter) != address(0), "Invalid adapter");
-        adapters[chainId] = ICrossChainAdapter(adapter);
-        emit AdapterRegistered(chainId, adapter);
+    function registerAdapter(uint32 chainId_, address adapter_) external {
+        if (msg.sender != owner) {
+            revert Unauthorized();
+        }
+        if (address(adapter_) == address(0)) {
+            revert InvalidAdapter();
+        }
+        _adapters[chainId_] = ICrossChainAdapter(adapter_);
+
+        emit AdapterRegistered(chainId_, adapter_);
     }
 
-    function dispatchMint(address receiver, uint amount, uint32 targetChainId)
-        external
-    {
-        ICrossChainAdapter adapter = adapters[targetChainId];
-        require(
-            address(adapter) != address(0), "No adapter registered for chain"
-        );
-        adapter.sendMintMessage(receiver, amount, targetChainId);
+    function dispatchMint(
+        address receiver_,
+        uint amount_,
+        uint32 targetChainId_
+    ) external {
+        ICrossChainAdapter adapter = _adapters[targetChainId_];
+
+        if (address(adapter) == address(0)) {
+            revert InvalidAdapter();
+        }
+
+        adapter.sendMintMessage(receiver_, amount_, targetChainId_);
     }
 }

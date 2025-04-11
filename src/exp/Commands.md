@@ -35,7 +35,7 @@ hyperlane core deploy
 You can also run a relayer in the background with
 
 ```
-hyperlane relayer --chains anvilchain1,anvilchain2
+hyperlane relayer --chains anvilchain1,anvilchain2 --verbosity trace
 ```
 
 ```
