@@ -66,12 +66,15 @@ contract FM_BC_CC_Bancor_Redeeming_VS_v1 is
         if (address(receiver_) == address(0)) {
             revert InvalidReceiver();
         }
+
         if (issuanceTokenAmount_ == 0) {
             revert InvalidIssuanceTokenAmount();
         }
+
         if (targetChainId_ == 0) {
             revert InvalidTargetChainId();
         }
+
         if (address(_dispatcher) == address(0)) {
             revert InvalidDispatcher();
         }
@@ -82,8 +85,8 @@ contract FM_BC_CC_Bancor_Redeeming_VS_v1 is
     }
 
     /// @notice Handles issuance tokens by minting them to the receiver.
-    /// @param  _receiver The address that will receive the bought tokens.
-    /// @param  _issuanceTokenAmount The amount of issuance tokens to handle.
+    /// @param  receiver_ The address that will receive the bought tokens.
+    /// @param  issuanceTokenAmount_ The amount of issuance tokens to handle.
     function _handleIssuanceTokensAfterBuy(
         address receiver_,
         uint issuanceTokenAmount_
