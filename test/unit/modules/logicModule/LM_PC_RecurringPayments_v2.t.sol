@@ -50,7 +50,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         recurringPaymentManager = LM_PC_RecurringPayments_v2(Clones.clone(impl));
 
         _setUpOrchestrator(recurringPaymentManager);
-        _authorizer.setIsAuthorized(address(this), true);
+        _authorizer.setAllAuthorized(true);
     }
 
     //--------------------------------------------------------------------------
@@ -252,16 +252,18 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         // Warp to a reasonable time
         vm.warp(2 weeks);
 
-        // onlyOrchestratorAdmin
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                address(0xBEEF)
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
-        vm.prank(address(0xBEEF)); // Not Authorized
+        vm.prank(address(0xB0B));
         recurringPaymentManager.addRecurringPayment(1, 2 weeks, address(0xBEEF));
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // validAmount
         vm.expectRevert(
@@ -379,15 +381,14 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(1 weeks)
         );
 
-        // onlyOrchestratorAdmin
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                address(0xBEEF)
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
-        vm.prank(address(0xBEEF)); // Not Authorized
+        vm.prank(address(0xB0B));
         recurringPaymentManager.removeRecurringPayment(0, 1);
     }
 

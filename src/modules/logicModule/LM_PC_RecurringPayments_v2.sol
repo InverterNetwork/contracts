@@ -219,7 +219,7 @@ contract LM_PC_RecurringPayments_v2 is
         address recipient
     )
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validAmount(amount)
         validStartEpoch(startEpoch)
         validRecipient(recipient)
@@ -251,7 +251,7 @@ contract LM_PC_RecurringPayments_v2 is
     /// @inheritdoc ILM_PC_RecurringPayments_v2
     function removeRecurringPayment(uint prevId, uint id)
         external
-        permissioned //@todo adapt interface + test
+        permissioned
     {
         // trigger to resolve the given Payment
         _triggerFor(id, _paymentList.getNextId(id));
@@ -271,7 +271,7 @@ contract LM_PC_RecurringPayments_v2 is
     /// @inheritdoc ILM_PC_RecurringPayments_v2
     function trigger()
         external
-        permissioned //@todo adapt interface + test
+        permissioned //@todo do we restrict this? not tested yet
     {
         _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
     }
@@ -279,7 +279,7 @@ contract LM_PC_RecurringPayments_v2 is
     /// @inheritdoc ILM_PC_RecurringPayments_v2
     function triggerFor(uint startId, uint endId)
         external
-        permissioned //@todo adapt interface + test
+        permissioned //@todo do we restrict this? not tested yet
         validId(startId)
         validId(endId)
         startIdBeforeEndId(startId, endId)
