@@ -33,17 +33,6 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     bytes32 private constant _FLAGS_SET =
         0x000000000000000000000000000000000000000000000000000000000000000a;
 
-    event RecurringPaymentAdded(
-        uint indexed recurringPaymentId,
-        uint amount,
-        uint startEpoch,
-        uint lastTriggeredEpoch,
-        address recipient
-    );
-    event RecurringPaymentRemoved(uint indexed recurringPaymentId);
-    event RecurringPaymentsTriggered(uint indexed currentEpoch);
-    event EpochLengthSet(uint epochLength);
-
     function setUp() public {
         // Add Module to Mock Orchestrator_v1
         address impl = address(new LM_PC_RecurringPayments_v2());
@@ -73,7 +62,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         );
 
         vm.expectEmit(true, true, true, true);
-        emit EpochLengthSet(1 weeks);
+        emit ILM_PC_RecurringPayments_v2.EpochLengthSet(1 weeks);
 
         // Init Module wrongly
         recurringPaymentManager.init(
@@ -206,7 +195,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         startEpoch = bound(startEpoch, currentEpoch, type(uint).max);
 
         vm.expectEmit(true, true, true, true);
-        emit RecurringPaymentAdded(
+        emit ILM_PC_RecurringPayments_v2.RecurringPaymentAdded(
             1, // Id starts at 1
             amount,
             startEpoch,
@@ -226,7 +215,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint length = bound(amount, 1, 30); // Reasonable amount
         for (uint i = 2; i < length + 2; i++) {
             vm.expectEmit(true, true, true, true);
-            emit RecurringPaymentAdded(
+            emit ILM_PC_RecurringPayments_v2.RecurringPaymentAdded(
                 i, // Id starts at 1
                 1,
                 currentEpoch,
@@ -317,7 +306,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             uint id = i + 1; // Note that id's start at 1.
 
             vm.expectEmit(true, true, true, true);
-            emit RecurringPaymentRemoved(id);
+            emit ILM_PC_RecurringPayments_v2.RecurringPaymentRemoved(id);
 
             recurringPaymentManager.removeRecurringPayment(_SENTINEL, id);
             assertEq(
@@ -359,10 +348,12 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
             // Check if trigger was called
             vm.expectEmit(true, true, true, true);
-            emit RecurringPaymentsTriggered(currentEpoch);
+            emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+                currentEpoch
+            );
 
             vm.expectEmit(true, true, true, true);
-            emit RecurringPaymentRemoved(id);
+            emit ILM_PC_RecurringPayments_v2.RecurringPaymentRemoved(id);
 
             recurringPaymentManager.removeRecurringPayment(prevId, id);
             assertEq(
@@ -421,7 +412,9 @@ contract LM_PC_RecurringV1Test is ModuleTest {
 
         // Payout created Payments via trigger
         vm.expectEmit(true, true, true, true);
-        emit RecurringPaymentsTriggered(currentEpoch);
+        emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+            currentEpoch
+        );
         recurringPaymentManager.trigger();
 
         ILM_PC_RecurringPayments_v2.RecurringPayment[] memory
@@ -456,7 +449,9 @@ contract LM_PC_RecurringV1Test is ModuleTest {
             );
             currentEpoch = recurringPaymentManager.getCurrentEpoch();
             vm.expectEmit(true, true, true, true);
-            emit RecurringPaymentsTriggered(currentEpoch);
+            emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+                currentEpoch
+            );
             recurringPaymentManager.trigger();
 
             currentRecurringPayments = fetchRecurringPayments();
@@ -519,7 +514,9 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         uint currentEpoch = recurringPaymentManager.getCurrentEpoch();
 
         vm.expectEmit(true, true, true, true);
-        emit RecurringPaymentsTriggered(currentEpoch);
+        emit ILM_PC_RecurringPayments_v2.RecurringPaymentsTriggered(
+            currentEpoch
+        );
         recurringPaymentManager.triggerFor(startId, endId);
 
         // Get currentPayments and filter them
