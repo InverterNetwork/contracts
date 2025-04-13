@@ -109,42 +109,44 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Emitted when access criteria is set for a round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  AccessCriteriaId The identifier of the access criteria.
-    event AccessCriteriaSet(uint64 indexed roundId_, uint8 AccessCriteriaId);
+    /// @param  accessCriteriaId_ The identifier of the access criteria.
+    event AccessCriteriaSet(uint64 indexed roundId_, uint8 accessCriteriaId_);
 
     /// @notice Emitted when access criteria is edited for a round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  AccessCriteriaId The identifier of the access criteria.
-    event AccessCriteriaEdited(uint64 indexed roundId_, uint8 AccessCriteriaId);
+    /// @param  accessCriteriaId_ The identifier of the access criteria.
+    event AccessCriteriaEdited(
+        uint64 indexed roundId_, uint8 accessCriteriaId_
+    );
 
-    /// @notice Emitted when access criteria Privileges are set for a round.
+    /// @notice Emitted when access criteria privileges are set for a round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  AccessCriteriaId The identifier of the access criteria.
+    /// @param  accessCriteriaId_ The identifier of the access criteria.
     /// @param  personalCap_ The personal cap for the access criteria.
-    /// @param  overrideCap_ Whether to override the global cap.
-    /// @param  start_ The start timestamp for the access criteria.
-    /// @param  cliff_ The cliff timestamp for the access criteria.
-    /// @param  end_ The end timestamp for the access criteria.
+    /// @param  overrideContributionSpan_ Whether to override the round contribution span.
+    /// @param  start_ The start timestamp for for when the linear vesting starts.
+    /// @param  cliff_ The time in seconds from start time at which the unlock starts.
+    /// @param  end_ The end timestamp for when the linear vesting ends.
     event AccessCriteriaPrivilegesSet(
         uint64 indexed roundId_,
-        uint8 AccessCriteriaId,
+        uint8 accessCriteriaId_,
         uint personalCap_,
-        bool overrideCap_,
+        bool overrideContributionSpan_,
         uint start_,
         uint cliff_,
         uint end_
     );
 
-    /// @notice Emitted when a contribution is made to a round
-    /// @param  roundId_ The ID of the round
-    /// @param  contributor_ The address of the contributor
-    /// @param  amount_ The amount contributed
+    /// @notice Emitted when a contribution is made to a round.
+    /// @param  roundId_ The ID of the round.
+    /// @param  contributor_ The address of the contributor.
+    /// @param  amount_ The amount contributed.
     event ContributionMade(uint64 roundId_, address contributor_, uint amount_);
 
-    /// @notice Emitted when a round is closed
-    /// @param  roundId_ The ID of the round
-    /// @param  timestamp_ The timestamp when the round was closed
-    /// @param  totalContributions_ The total contributions collected in the round
+    /// @notice Emitted when a round is closed.
+    /// @param  roundId_ The ID of the round.
+    /// @param  timestamp_ The timestamp when the round was closed.
+    /// @param  totalContributions_ The total contributions collected in the round.
     event RoundClosed(
         uint64 roundId_, uint timestamp_, uint totalContributions_
     );
@@ -184,43 +186,43 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid access criteria ID.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
-    /// @notice Cannot set Privileges for open access criteria
+    /// @notice Cannot set Privileges for open access criteria.
     error Module__LM_PC_FundingPot__CannotSetPrivilegesForOpenAccessCriteria();
 
-    /// @notice Invalid times
+    /// @notice Invalid times.
     error Module__LM_PC_FundingPot__InvalidTimes();
 
-    /// @notice Round has not started yet
+    /// @notice Round has not started yet.
     error Module__LM_PC_FundingPot__RoundHasNotStarted();
 
-    /// @notice Round has already ended
+    /// @notice Round has already ended.
     error Module__LM_PC_FundingPot__RoundHasEnded();
 
-    /// @notice User does not meet the NFT access criteria
+    /// @notice User does not meet the NFT access criteria.
     error Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
 
-    /// @notice User does not meet the merkle proof access criteria
+    /// @notice User does not meet the merkle proof access criteria.
     error Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
 
-    /// @notice User is not on the allowlist
+    /// @notice User is not on the allowlist.
     error Module__LM_PC_FundingPot__AccessCriteriaListFailed();
 
-    /// @notice Invalid access criteria type
+    /// @notice Invalid access criteria type.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
 
-    /// @notice Access not permitted
+    /// @notice Access not permitted.
     error Module__LM_PC_FundingPot__AccessNotPermitted();
 
-    /// @notice User has reached their personal contribution cap
+    /// @notice User has reached their personal contribution cap.
     error Module__LM_PC_FundingPot__PersonalCapReached();
 
-    /// @notice Round contribution cap has been reached
+    /// @notice Round contribution cap has been reached.
     error Module__LM_PC_FundingPot__RoundCapReached();
 
-    /// @notice Round Closure conditions are not met
+    /// @notice Round Closure conditions are not met.
     error Module__LM_PC_FundingPot__ClosureConditionsNotMet();
 
-    /// @notice Hook execution failed
+    /// @notice Hook execution failed.
     error Module__LM_PC_FundingPot__HookExecutionFailed();
 
     // -------------------------------------------------------------------------
@@ -252,7 +254,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The unique identifier of the round to retrieve.
     /// @param  accessCriteriaId_ The identifier of the access criteria to retrieve.
     /// @param  user_ The address of the user to check access for.
-    /// @return isRoundOpen_ Whether the access criteria is open.
+    /// @return isRoundOpen_ Whether anyone can contribute as part of the access criteria.
     /// @return nftContract_ The address of the NFT contract used for access control.
     /// @return merkleRoot_ The merkle root used for access verification.
     /// @return hasAccess_ The list of explicitly allowed addresses.
@@ -270,18 +272,18 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
             bool hasAccess_
         );
 
-    /// @notice Retrieves the access criteria Privileges for a specific funding round.
+    /// @notice Retrieves the access criteria privileges for a specific funding round.
     /// @param  roundId_ The unique identifier of the round.
-    /// @param  AccessCriteriaId The identifier of the access criteria.
-    /// @return isRoundOpen_ Whether the round is open
-    /// @return personalCap_ The personal cap for the access criteria
-    /// @return overrideContributionSpan_ Whether to override the round contribution span
-    /// @return start_ The start timestamp for the access criteria
-    /// @return cliff_ The cliff timestamp for the access criteria
-    /// @return end_ The end timestamp for the access criteria
+    /// @param  accessCriteriaId_ The identifier of the access criteria.
+    /// @return isRoundOpen_ Whether anyone can contribute as part of the access criteria.
+    /// @return personalCap_ The personal cap for the access criteria.
+    /// @return overrideContributionSpan_ Whether to override the round contribution span.
+    /// @return start_ The start timestamp for the access criteria.
+    /// @return cliff_ The cliff timestamp for the access criteria.
+    /// @return end_ The end timestamp for the access criteria.
     function getRoundAccessCriteriaPrivileges(
         uint64 roundId_,
-        uint8 AccessCriteriaId
+        uint8 accessCriteriaId_
     )
         external
         view
@@ -298,9 +300,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return roundCount_ The total number of funding rounds.
     function getRoundCount() external view returns (uint64 roundCount_);
 
-    /// @notice Retrieves the closed status of a round
-    /// @param  roundId_ The ID of the round
-    /// @return The closed status of the round
+    /// @notice Retrieves the closed status of a round.
+    /// @param  roundId_ The ID of the round.
+    /// @return The closed status of the round.
     function isRoundClosed(uint64 roundId_) external view returns (bool);
 
     // -------------------------------------------------------------------------
@@ -377,21 +379,21 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address[] memory allowedAddresses_
     ) external;
 
-    /// @notice Set Access Criteria Privileges
-    /// @dev    Only callable by funding pot admin and only before the round has started
-    /// @param  roundId_ ID of the round
-    /// @param  AccessCriteriaId ID of the access criteria
-    /// @param  personalCap_ Personal cap for the access criteria
-    /// @param  capByNFT_ Cap by for the NFT access criteria
-    /// @param  capByMerkle_ Cap for the Merkle root access criteria
-    /// @param  capByList_ Cap by for the List access criteria
-    /// @param  overrideContributionSpan_ Whether to override the round contribution span
-    /// @param  start_ Start timestamp for the access criteria
-    /// @param  cliff_ Cliff timestamp for the access criteria
-    /// @param  end_ End timestamp for the access criteria
+    /// @notice Set access criteria privileges.
+    /// @dev    Only callable by funding pot admin and only before the round has started.
+    /// @param  roundId_ ID of the round.
+    /// @param  accessCriteriaId_ ID of the access criteria.
+    /// @param  personalCap_ Personal cap for the access criteria.
+    /// @param  capByNFT_ Cap by for the NFT access criteria.
+    /// @param  capByMerkle_ Cap for the Merkle root access criteria.
+    /// @param  capByList_ Cap by for the List access criteria.
+    /// @param  overrideContributionSpan_ Whether to override the round contribution span.
+    /// @param  start_ Start timestamp for the access criteria.
+    /// @param  cliff_ Cliff timestamp for the access criteria.
+    /// @param  end_ End timestamp for the access criteria.
     function setAccessCriteriaPrivileges(
         uint64 roundId_,
-        uint8 AccessCriteriaId,
+        uint8 accessCriteriaId_,
         uint personalCap_,
         uint capByNFT_,
         uint capByMerkle_,
@@ -415,7 +417,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes32[] calldata merkleProof_
     ) external;
 
-    /// @notice Closes a round
-    /// @param  roundId_ The ID of the round to close
+    /// @notice Closes a round.
+    /// @param  roundId_ The ID of the round to close.
     function closeRound(uint64 roundId_) external;
 }
