@@ -192,4 +192,12 @@ contract PP_Queue_v1_Exposed is PP_Queue_v1 {
     ) external {
         _claimPreviouslyUnclaimable(client_, token_, paymentReceiver_);
     }
+
+    // Helper functions
+
+    function helper_initiateQueueForPaymentClient(address paymentClient_)
+        external
+    {
+        _queue[paymentClient_].init();
+    }
 }
