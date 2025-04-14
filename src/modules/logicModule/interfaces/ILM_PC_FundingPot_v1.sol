@@ -41,6 +41,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         mapping(address user => bool isAllowed) allowedAddresses; // Mapping of allowed addresses
     }
 
+    /// @notice Struct used to store information about a funding round's access criteria privileges.
+    /// @param  personalCap Personal cap for the access criteria.
+    /// @param  overrideContributionSpan Whether to override the round contribution span.
+    /// @param  start The start timestamp for for when the linear vesting starts.
+    /// @param  cliff The time in seconds from start time at which the unlock starts.
+    /// @param  end The end timestamp for when the linear vesting ends.
     struct AccessCriteriaPrivileges {
         uint personalCap;
         bool overrideContributionSpan;

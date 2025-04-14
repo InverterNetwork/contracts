@@ -522,20 +522,20 @@ contract LM_PC_FundingPot_v1 is
         bytes32[] calldata merkleProof_
     ) external {
         uint adjustedAmount = _validateRoundContribution(
-            roundId_, accessCriteriaId_, merkleProof_, amount_, msg.sender
+            roundId_, accessCriteriaId_, merkleProof_, amount_, _msgSender()
         );
 
         Round storage round = rounds[roundId_];
 
         //Record contribution
-        userContributions[roundId_][msg.sender] += adjustedAmount;
+        userContributions[roundId_][_msgSender()] += adjustedAmount;
         roundTotalContributions[roundId_] += adjustedAmount;
 
         IERC20(contributionToken).safeTransferFrom(
-            msg.sender, address(this), adjustedAmount
+            _msgSender(), address(this), adjustedAmount
         );
 
-        emit ContributionMade(roundId_, msg.sender, adjustedAmount);
+        emit ContributionMade(roundId_, _msgSender(), adjustedAmount);
 
         // contribution triggers automatic closure
         if (!roundClosed[roundId_] && round.autoClosure) {
@@ -731,9 +731,9 @@ contract LM_PC_FundingPot_v1 is
 
         // Check and adjust for personal cap
         uint userPreviousContribution =
-            _getUserContributionToRound(roundId_, msg.sender);
+            _getUserContributionToRound(roundId_, _msgSender());
         uint userPersonalCap = _getUserPersonalCapForRound(
-            roundId_, accessCriteriaId__, msg.sender
+            roundId_, accessCriteriaId__, _msgSender()
         );
 
         if (userPreviousContribution + adjustedAmount > userPersonalCap) {
@@ -803,7 +803,6 @@ contract LM_PC_FundingPot_v1 is
         {
             if (!accessCriteria.allowedAddresses[user_]) {
                 revert Module__LM_PC_FundingPot__AccessCriteriaListFailed();
-                return false;
             }
 
             return true;
