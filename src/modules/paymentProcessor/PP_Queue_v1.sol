@@ -501,7 +501,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function _processNextOrder(address client_)
         internal
         virtual
-        clientIsValid(client_)
         returns (bool success_)
     {
         uint firstId = _queue[client_].getNextId(LinkedIdList._SENTINEL);
@@ -513,8 +512,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
         // Skip if order is not in PENDING state.
         if (order.state_ != RedemptionState.PENDING) {
-            _removeFromQueue(firstId, client_);
-            return false;
+            revert Module__PP_Queue_InvalidState();
         }
 
         // Check token balance and allowance.
