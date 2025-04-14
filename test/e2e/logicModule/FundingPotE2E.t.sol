@@ -24,8 +24,6 @@ import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol"
 import {
     LM_PC_Bounties_v2, ILM_PC_Bounties_v2
 } from "@lm/LM_PC_Bounties_v2.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
@@ -125,7 +123,7 @@ contract FundingPotE2E is E2ETest {
         // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
     }
 
-    function test_e2e_FundingPotLifecycle() public {
+    function init() private {
         //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------
@@ -153,7 +151,7 @@ contract FundingPotE2E is E2ETest {
         PP_Streaming_v2 paymentProcessor =
             PP_Streaming_v2(address(orchestrator.paymentProcessor()));
 
-        // Get modules list
+        // Get the funding pot
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {
             if (
@@ -166,12 +164,12 @@ contract FundingPotE2E is E2ETest {
             }
         }
 
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
-        FM_BC_Bancor_Redeeming_VirtualSupply_v1(
-            address(orchestrator.fundingManager())
-        );
+        // Set up the bonding curve
+        issuanceToken.setMinter(address(bondingCurveFundingManager), true);
+    }
 
-        issuanceToken.setMinter(address(fundingManager), true);
+    function test_e2e_FundingPotLifecycle() public {
+        init();
 
         // 2. Grant FUNDING_POT_ADMIN_ROLE to this contract for configuring rounds
         fundingPot.grantModuleRole(
