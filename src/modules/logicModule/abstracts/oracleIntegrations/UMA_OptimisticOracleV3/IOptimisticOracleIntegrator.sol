@@ -98,22 +98,26 @@ interface IOptimisticOracleIntegrator is
     // Setter Functions
 
     /// @notice Sets the default currency and amount for the bond.
+    /// @dev    Function access controlled by authorizer.
     /// @param  _newCurrency The address of the new default currency.
     /// @param  _newBond The new bond amount.
     function setDefaultCurrencyAndBond(address _newCurrency, uint _newBond)
         external;
 
     /// @notice Sets the OptimisticOracleV3 instance where assertions will be published to.
+    /// @dev    Function access controlled by authorizer.
     /// @param  _newOO The address of the new OptimisticOracleV3 instance.
     function setOptimisticOracle(address _newOO) external;
 
     /// @notice Sets the default time assertions will be open for dispute.
+    /// @dev    Function access controlled by authorizer.
     /// @param  _newLiveness The new liveness in seconds.
     function setDefaultAssertionLiveness(uint64 _newLiveness) external;
 
     // State mutating functions
 
     /// @notice Asserts data for a specific dataId on behalf of an asserter address.
+    /// @dev    Function access controlled by authorizer.
     /// @param  dataId The id of the data to assert.
     /// @param  data The data to assert.
     /// @param  asserter The address doing the asserter. If zero defaults to _msgSender().
