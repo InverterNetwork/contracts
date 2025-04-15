@@ -41,7 +41,7 @@ interface IFM_EXT_TokenVault_v1 {
     // Public Mutating Functions
 
     /// @notice Allows for withdrawal of reserve tokens.
-    /// @dev    This function is only callable by the orchestrator admin.
+    /// @dev    Function access controlled by authorizer.
     /// @param  token_ The token to withdraw.
     /// @param  amount_ The amount of tokens to withdraw.
     /// @param  recipient_ The address to send the tokens to.
