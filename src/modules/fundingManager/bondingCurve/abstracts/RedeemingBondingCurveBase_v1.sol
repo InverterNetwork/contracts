@@ -85,7 +85,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         sellingIsEnabled
         validReceiver(_receiver)
     {
@@ -96,7 +96,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
     function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         sellingIsEnabled
     {
         _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
@@ -106,31 +106,19 @@ abstract contract RedeemingBondingCurveBase_v1 is
     // Permissioned Functions
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function openSell()
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function openSell() external virtual permissioned {
         sellIsOpen = true;
         emit SellingEnabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function closeSell()
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function closeSell() external virtual permissioned {
         sellIsOpen = false;
         emit SellingDisabled();
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function setSellFee(uint _fee)
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function setSellFee(uint _fee) external virtual permissioned {
         _setSellFee(_fee);
     }
 
