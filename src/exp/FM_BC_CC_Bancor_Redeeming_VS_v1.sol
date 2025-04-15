@@ -28,7 +28,7 @@ contract FM_BC_CC_Bancor_Redeeming_VS_v1 is
 
     ICrossChainDispatcher internal _dispatcher;
 
-    event DispatcherSet(address indexed dispatcher);
+    event DispatcherSet(address indexed dispatcher_);
 
     function setDispatcher(address dispatcher_) public virtual {
         if (address(dispatcher_) == address(0)) {

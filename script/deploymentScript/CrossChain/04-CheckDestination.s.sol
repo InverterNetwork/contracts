@@ -14,7 +14,7 @@ contract DeployReceiverScript is ProtocolConstants_v1 {
         ERC20Issuance_v1 issuanceToken;
 
         issuanceToken =
-            ERC20Issuance_v1(0x5FbDB2315678afecb367f032d93F642f64180aa3);
+            ERC20Issuance_v1(0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1);
 
         uint balance = ERC20Issuance_v1(issuanceToken).balanceOf(deployer);
 

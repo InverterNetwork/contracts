@@ -17,6 +17,11 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 
+import {FM_BC_CC_Bancor_Redeeming_VS_v1} from
+    "src/exp/FM_BC_CC_Bancor_Redeeming_VS_v1.sol";
+import {CrossChainDispatcher} from "src/exp/CrossChainDispatcher.sol";
+import {HyperlaneAdapter} from "src/exp/HyperlaneAdapter.sol";
+
 import {TestnetDeploymentScript} from "../TestnetDeploymentScript.s.sol";
 
 contract DeployBridge is TestnetDeploymentScript {
@@ -43,7 +48,7 @@ contract DeployBridge is TestnetDeploymentScript {
         "FM_BC_CC_Bancor_Redeeming_VS_v1"
     );
 
-    function run() public override {
+    function run(address mailbox, address messageReceiver) public {
         super.run();
 
         governorProxy = IGovernor_v1(governor);
@@ -53,7 +58,10 @@ contract DeployBridge is TestnetDeploymentScript {
         }
 
         registerModule();
-        deployPIM();
+
+        address _fundingManager = deployPIM();
+
+        deployDispatcher(mailbox, messageReceiver, _fundingManager);
     }
 
     function registerModule() internal {
@@ -109,7 +117,7 @@ contract DeployBridge is TestnetDeploymentScript {
         vm.stopBroadcast();
     }
 
-    function deployPIM() internal {
+    function deployPIM() internal returns (address) {
         uint initialIssuuanceSupply = 100_999_999_999_999_998_676;
         uint initialCollateralSupply = 100_498_798_599;
         uint32 reserveRatio = 1000;
@@ -211,5 +219,29 @@ contract DeployBridge is TestnetDeploymentScript {
         console2.log("Token Issuance: ", address(issuanceToken));
         console2.log("Orchestrator Token: ", address(mockCollateralToken));
         console2.log("Orchestrator Address: ", address(orchestrator));
+
+        return (fundingManager);
+    }
+
+    function deployDispatcher(
+        address mailbox,
+        address messageReceiver,
+        address fundingManager_
+    ) internal {
+        vm.startBroadcast(deployerPrivateKey);
+        {
+            CrossChainDispatcher dispatcher = new CrossChainDispatcher();
+            HyperlaneAdapter adapter =
+                new HyperlaneAdapter(mailbox, messageReceiver);
+            dispatcher.registerAdapter(31_338, address(adapter));
+
+            FM_BC_CC_Bancor_Redeeming_VS_v1(fundingManager_).setDispatcher(
+                address(dispatcher)
+            );
+
+            console2.log("Dispatcher Address: ", address(dispatcher));
+            console2.log("Hyperlane Adapter Address: ", address(adapter));
+        }
+        vm.stopBroadcast();
     }
 }

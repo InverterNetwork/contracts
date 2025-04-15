@@ -28,10 +28,6 @@ contract DeployReceiverScript is ProtocolConstants_v1 {
 
         console2.log("Deployer: ", deployer);
         console2.log("Issuance Token: ", address(issuanceToken));
-        console2.log("Factory: ", address(factory));
-
-        uint balance = ERC20Issuance_v1(issuanceToken).balanceOf(deployer);
-
-        console2.log("Balance: ", balance);
+        console2.log("CrossChain Token Factory: ", address(factory));
     }
 }

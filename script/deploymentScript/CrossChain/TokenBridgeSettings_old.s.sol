@@ -17,9 +17,9 @@ import {CrossChainDispatcher} from "src/exp/CrossChainDispatcher.sol";
 import {HyperlaneAdapter} from "src/exp/HyperlaneAdapter.sol";
 
 contract TokenBridgeSettingsScript is ProtocolConstants_v1 {
-    address destinationMailbox = 0xf4B146FbA71F41E0592668ffbF264F1D186b2Ca8;
-    address receiver = 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512;
-    address fundingManager = 0x75b33Fbe47f287D4C335e6dc0F6c9004dB487a13;
+    address destinationMailbox = 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318;
+    address receiver = 0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44;
+    address fundingManager = 0xaF7A2FDa02238C6988DE4c66dB2Db1F68927C0A5;
 
     function run() external {
         // LM_FM_IssuanceTokenBridge_v1 bridge = LM_FM_IssuanceTokenBridge_v1(
