@@ -114,7 +114,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _setUpOrchestrator(fundingPot);
 
         // Initiate the Logic Module with the metadata and config data
-        fundingPot.init(_orchestrator, _METADATA, abi.encode(address(_token)));
+        fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -1604,6 +1604,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessId = 1;
 
         uint firstAmount = 400;
+        uint personalCap = 500;
 
         (
             address nftContract,
@@ -1615,7 +1616,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, personalCap, 0, 0, 0, false, 0, 0, 0
         );
 
         mockNFTContract.mint(contributor1_);
@@ -1633,11 +1634,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, firstAmount, accessId, new bytes32[](0)
         );
 
-        // Get the personal cap
-        uint personalCap = fundingPot.exposed_getUserPersonalCapForRound(
-            roundId, accessId, contributor1_
-        );
-
         uint secondAmount = 200;
 
         vm.prank(contributor1_);
@@ -1648,6 +1644,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint totalContribution = fundingPot.exposed_getUserContributionToRound(
             roundId, contributor1_
         );
+
         assertEq(totalContribution, personalCap);
     }
 
@@ -1698,9 +1695,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testContributeToRound_worksGivenPersonalCapAccumulation() public {
-        _defaultRoundParams.globalAccumulativeCaps = true; // global accumulative caps enabled
-
-        // Create Round 1
+        _defaultRoundParams.globalAccumulativeCaps = true;
         fundingPot.createRound(
             _defaultRoundParams.roundStart,
             _defaultRoundParams.roundEnd,
@@ -1713,22 +1708,26 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint64 round1Id = fundingPot.getRoundCount();
 
-        uint8 accessId = 1;
+        uint8 accessCriteriaId = 1;
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId);
-
+        ) = _helper_createAccessCriteria(accessCriteriaId);
         fundingPot.setAccessCriteriaForRound(
-            round1Id, accessId, nftContract, merkleRoot, allowedAddresses
+            round1Id,
+            accessCriteriaId,
+            nftContract,
+            merkleRoot,
+            allowedAddresses
         );
+
         fundingPot.setAccessCriteriaPrivileges(
-            round1Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            round1Id, accessCriteriaId, 500, 0, 0, 0, false, 0, 0, 0
         );
+
         mockNFTContract.mint(contributor1_);
 
-        // Create Round 2
         fundingPot.createRound(
             _defaultRoundParams.roundStart + 3 days,
             _defaultRoundParams.roundEnd + 3 days,
@@ -1739,47 +1738,54 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.globalAccumulativeCaps
         );
         uint64 round2Id = fundingPot.getRoundCount();
+
         fundingPot.setAccessCriteriaForRound(
-            round2Id, accessId, nftContract, merkleRoot, allowedAddresses
+            round2Id, accessCriteriaId, address(0), bytes32(0), allowedAddresses
         );
+
+        // Set personal cap of 400 for round 2
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            round2Id, accessCriteriaId, 400, 0, 0, 0, false, 0, 0, 0
         );
 
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), 1500);
-
-        // Contribute to Round 1
         vm.warp(_defaultRoundParams.roundStart + 1);
-        uint round1Contribution = 200;
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 1000);
         fundingPot.contributeToRound(
-            round1Id, round1Contribution, accessId, new bytes32[](0)
+            round1Id, 200, accessCriteriaId, new bytes32[](0)
         );
 
-        // Move to Round 2
+        // Warp to round 2
         vm.warp(_defaultRoundParams.roundStart + 3 days + 1);
 
-        // Calculate unused capacity from Round 1
-        uint personalCap = fundingPot.exposed_getUserPersonalCapForRound(
-            round1Id, accessId, contributor1_
-        );
+        // Create unspent capacity structure
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCaps =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        unspentCaps[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round1Id,
+            accessCriteriaId: accessCriteriaId,
+            merkleProof: new bytes32[](0)
+        });
 
+        // Contribute to round 2 with unspent capacity from round 1
         fundingPot.contributeToRound(
-            round2Id, personalCap, accessId, new bytes32[](0)
+            round2Id, 700, accessCriteriaId, new bytes32[](0), unspentCaps
         );
         vm.stopPrank();
 
+        // Verify contributions are recorded correctly
         assertEq(
             fundingPot.exposed_getUserContributionToRound(
                 round1Id, contributor1_
             ),
-            round1Contribution
+            200
         );
+
         assertEq(
             fundingPot.exposed_getUserContributionToRound(
                 round2Id, contributor1_
             ),
-            personalCap
+            700
         );
     }
 
@@ -1912,25 +1918,30 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         }
     }
 
-    function testFuzz_validateAndAdjustCaps(
+    function testFuzz_validateAndAdjustCapsWithUnspentCap(
         uint64 roundId_,
         uint amount_,
         uint8 accessId_,
-        bool canOverrideContributionSpan_
+        bool canOverrideContributionSpan_,
+        uint unspentPersonalCap_
     ) external {
         vm.assume(roundId_ > 0 && roundId_ >= fundingPot.getRoundCount());
         vm.assume(amount_ <= 1000);
         vm.assume(accessId_ <= 4);
+        vm.assume(unspentPersonalCap_ >= 0);
 
-        try fundingPot.exposed_validateAndAdjustCaps(
-            roundId_, amount_, accessId_, canOverrideContributionSpan_
+        try fundingPot.exposed_validateAndAdjustCapsWithUnspentCap(
+            roundId_,
+            amount_,
+            accessId_,
+            canOverrideContributionSpan_,
+            unspentPersonalCap_
         ) returns (uint adjustedAmount) {
             assertLe(
                 adjustedAmount, amount_, "Adjusted amount should be <= amount_"
             );
             assertGe(adjustedAmount, 0, "Adjusted amount should be >= 0");
         } catch (bytes memory reason) {
-            // Compare using keccak256 hash rather than direct string comparison
             bytes32 roundCapReachedSelector = keccak256(
                 abi.encodeWithSignature(
                     "Module__LM_PC_FundingPot__RoundCapReached()"
@@ -1948,230 +1959,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                     "Should not revert RoundCapReached when canOverrideContributionSpan is true"
                 );
             } else if (keccak256(reason) == personalCapReachedSelector) {
-                // We expect this sometimes
                 assertTrue(true, "Personal cap reached as expected");
             } else {
                 assertTrue(false, "Unexpected revert reason");
             }
         }
-    }
-
-    // -------------------------------------------------------------------------
-    // Test: _calculateUnusedCapacityFromPreviousRounds
-
-    function test_calculateUnusedCapacityFromPreviousRounds_returnsZeroForFirstRound(
-    ) public {
-        // First round should have no unused capacity from previous rounds
-        uint64 roundId = 1;
-        uint unusedCapacity = fundingPot
-            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId);
-        assertEq(unusedCapacity, 0);
-    }
-
-    function test_calculateUnusedCapacityFromPreviousRounds_withPartiallyUsedCap(
-    ) public {
-        // Create first round with cap 1000 but only use 600
-        RoundParams memory params = _defaultRoundParams;
-        params.roundStart = block.timestamp + 1 days;
-        params.roundEnd = block.timestamp + 2 days;
-        params.roundCap = 1000;
-        params.globalAccumulativeCaps = true;
-
-        uint64 roundId1 = fundingPot.createRound(
-            params.roundStart,
-            params.roundEnd,
-            params.roundCap,
-            params.hookContract,
-            params.hookFunction,
-            params.autoClosure,
-            params.globalAccumulativeCaps
-        );
-
-        // Set access criteria and privileges
-        uint8 accessId = 0;
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId);
-        fundingPot.setAccessCriteriaForRound(
-            roundId1, accessId, nftContract, merkleRoot, allowedAddresses
-        );
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId1,
-            accessId,
-            1000, // personal cap high enough for test
-            0, // no NFT cap
-            0, // no merkle cap
-            0, // no list cap
-            false,
-            0, // no start
-            0, // no cliff
-            0 // no end
-        );
-
-        // Contribute 600 to first round
-        vm.warp(params.roundStart + 1);
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), 600);
-        fundingPot.contributeToRound(roundId1, 600, accessId, new bytes32[](0));
-        vm.stopPrank();
-
-        // Check unused capacity for next round (should be 400)
-        uint64 roundId2 = 2;
-        uint unusedCapacity = fundingPot
-            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId2);
-        assertEq(unusedCapacity, 400);
-    }
-
-    function test_calculateUnusedCapacityFromPreviousRounds_withMultipleRounds()
-        public
-    {
-        // Create first round with cap 1000, use 600
-        RoundParams memory params = _defaultRoundParams;
-        params.roundStart = block.timestamp + 1 days;
-        params.roundEnd = block.timestamp + 2 days;
-        params.roundCap = 1000;
-        params.globalAccumulativeCaps = true;
-
-        uint64 roundId1 = fundingPot.createRound(
-            params.roundStart,
-            params.roundEnd,
-            params.roundCap,
-            params.hookContract,
-            params.hookFunction,
-            params.autoClosure,
-            params.globalAccumulativeCaps
-        );
-
-        // Set access criteria for round 1
-        uint8 accessId = 0;
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId);
-        fundingPot.setAccessCriteriaForRound(
-            roundId1, accessId, nftContract, merkleRoot, allowedAddresses
-        );
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId1,
-            accessId,
-            1000, // personal cap high enough for the test
-            0, // no NFT cap
-            0, // no merkle cap
-            0, // no list cap
-            false,
-            0, // no start
-            0, // no cliff
-            0 // no end
-        );
-
-        // Warp to round 1 start time and contribute
-        vm.warp(params.roundStart + 1);
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), 600);
-        fundingPot.contributeToRound(roundId1, 600, accessId, new bytes32[](0));
-        vm.stopPrank();
-
-        // Create second round with cap 2000
-        uint64 roundId2 = fundingPot.createRound(
-            params.roundStart + 2 days, // Start when first round ends
-            params.roundStart + 4 days, // End 2 days after start
-            2000, // Cap of 2000
-            params.hookContract,
-            params.hookFunction,
-            params.autoClosure,
-            params.globalAccumulativeCaps
-        );
-
-        // Set access criteria for round 2
-        fundingPot.setAccessCriteriaForRound(
-            roundId2, accessId, nftContract, merkleRoot, allowedAddresses
-        );
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId2,
-            accessId,
-            2000, // personal cap high enough for the test
-            0, // no NFT cap
-            0, // no merkle cap
-            0, // no list cap
-            false,
-            0, // no start
-            0, // no cliff
-            0 // no end
-        );
-
-        // Warp to round 2 start time and contribute
-        vm.warp(params.roundStart + 2 days + 1);
-        vm.startPrank(contributor2_);
-        _token.approve(address(fundingPot), 1500);
-        fundingPot.contributeToRound(roundId2, 1500, accessId, new bytes32[](0));
-        vm.stopPrank();
-
-        // Check unused capacity for third round
-        // Round 1: 400 unused (1000-600)
-        // Round 2: 500 unused (2000-1500)
-        // Total: 900 unused
-        uint64 roundId3 = 3;
-        uint unusedCapacity = fundingPot
-            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId3);
-        assertEq(unusedCapacity, 900);
-    }
-
-    function test_calculateUnusedCapacityFromPreviousRounds_withoutGlobalAccumulativeCaps(
-    ) public {
-        // Create first round with cap 1000, use 600, but no global accumulative caps
-        RoundParams memory params = _defaultRoundParams;
-        params.roundStart = block.timestamp + 1 days;
-        params.roundEnd = block.timestamp + 2 days;
-        params.roundCap = 1000;
-        params.globalAccumulativeCaps = false;
-
-        uint64 roundId1 = fundingPot.createRound(
-            params.roundStart,
-            params.roundEnd,
-            params.roundCap,
-            params.hookContract,
-            params.hookFunction,
-            params.autoClosure,
-            params.globalAccumulativeCaps
-        );
-
-        // Set access criteria and privileges
-        uint8 accessId = 0;
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId);
-        fundingPot.setAccessCriteriaForRound(
-            roundId1, accessId, nftContract, merkleRoot, allowedAddresses
-        );
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId1,
-            accessId,
-            1000, // personal cap high enough for test
-            0, // no NFT cap
-            0, // no merkle cap
-            0, // no list cap
-            false,
-            0, // no start
-            0, // no cliff
-            0 // no end
-        );
-
-        vm.warp(params.roundStart + 1);
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), 600);
-        fundingPot.contributeToRound(roundId1, 600, accessId, new bytes32[](0));
-        vm.stopPrank();
-
-        // Should return 0 since global accumulative caps is disabled
-        uint64 roundId2 = 2;
-        uint unusedCapacity = fundingPot
-            .exposed_calculateUnusedCapacityFromPreviousRounds(roundId2);
-        assertEq(unusedCapacity, 0);
     }
 
     // -------------------------------------------------------------------------
