@@ -85,17 +85,21 @@ abstract contract RedeemingBondingCurveBase_v1 is
     function sellTo(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        sellingIsEnabled // @todo adapt Modifier
-        validReceiver(_receiver)
         permissioned //@todo adapt interface + test
+        sellingIsEnabled
+        validReceiver(_receiver)
     {
         _sellOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
-    function sell(uint _depositAmount, uint _minAmountOut) public virtual {
-        //@todo do we split this for different potential roles?
-        sellTo(_msgSender(), _depositAmount, _minAmountOut);
+    function sell(uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        permissioned //@todo adapt interface + test
+        sellingIsEnabled
+    {
+        _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     // -------------------------------------------------------------------------
@@ -107,7 +111,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
         virtual
         permissioned //@todo adapt interface + test
     {
-        //@todo scrap?
         sellIsOpen = true;
         emit SellingEnabled();
     }
@@ -118,7 +121,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
         virtual
         permissioned //@todo adapt interface + test
     {
-        //@todo scrap?
         sellIsOpen = false;
         emit SellingDisabled();
     }
