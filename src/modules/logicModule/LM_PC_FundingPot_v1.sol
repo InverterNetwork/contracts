@@ -729,8 +729,6 @@ contract LM_PC_FundingPot_v1 is
             bool readyToClose = _checkRoundClosureConditions(roundId_);
             if (readyToClose) {
                 _closeRound(roundId_);
-            } else {
-                revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
             }
         }
     }
