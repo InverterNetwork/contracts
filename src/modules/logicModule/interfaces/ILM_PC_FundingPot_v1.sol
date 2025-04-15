@@ -55,6 +55,16 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint end;
     }
 
+    /// @notice Struct used to specify previous round's access criteria for carry-over capacity
+    /// @param roundId The ID of the previous round
+    /// @param accessCriteriaId The ID of the access criteria in that round
+    /// @param merkleProof The Merkle proof needed to validate eligibility (if needed)
+    struct UnspentPersonalRoundCap {
+        uint64 roundId;
+        uint8 accessCriteriaId;
+        bytes32[] merkleProof;
+    }
+
     // -------------------------------------------------------------------------
     // Enums
 
@@ -421,6 +431,20 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_
+    ) external;
+
+    /// @notice Allows a user to contribute to a round with unused capacity from previous rounds
+    /// @param roundId_ The ID of the round to contribute to
+    /// @param amount_ The amount to contribute
+    /// @param accessCriteriaId_ The ID of the access criteria to use for this contribution
+    /// @param merkleProof_ The Merkle proof for validation if needed
+    /// @param unspentPersonalRoundCaps_ Array of previous rounds and access criteria to calculate unused capacity from
+    function contributeToRound(
+        uint64 roundId_,
+        uint amount_,
+        uint8 accessCriteriaId_,
+        bytes32[] calldata merkleProof_,
+        UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
     ) external;
 
     /// @notice Closes a round.
