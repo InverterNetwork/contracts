@@ -99,7 +99,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         buyingIsEnabled
         validReceiver(_receiver)
     {
@@ -110,7 +110,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         buyingIsEnabled
     {
         _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
@@ -120,31 +120,19 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     // Permissioned Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    function openBuy()
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function openBuy() external virtual permissioned {
         buyIsOpen = true;
         emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function closeBuy()
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function closeBuy() external virtual permissioned {
         buyIsOpen = false;
         emit BuyingDisabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function setBuyFee(uint _fee)
-        external
-        virtual
-        permissioned //@todo adapt interface + test
-    {
+    function setBuyFee(uint _fee) external virtual permissioned {
         _setBuyFee(_fee);
     }
 
@@ -188,7 +176,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function withdrawProjectCollateralFee(address _receiver, uint _amount)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         validReceiver(_receiver)
     {
         if (_amount > projectCollateralFeeCollected) {
