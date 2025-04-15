@@ -276,10 +276,7 @@ contract PP_Streaming_v2 is Module_v1, IPP_Streaming_v2 {
     function removeAllPaymentReceiverPayments(
         address client,
         address paymentReceiver
-    )
-        external
-        permissioned //@todo adapt interface + test
-    {
+    ) external permissioned {
         if (
             _findAddressInActiveStreams(client, paymentReceiver)
                 == type(uint).max
@@ -296,10 +293,7 @@ contract PP_Streaming_v2 is Module_v1, IPP_Streaming_v2 {
         address client,
         address paymentReceiver,
         uint streamId
-    )
-        external
-        permissioned //@todo adapt interface + test
-    {
+    ) external permissioned {
         // First, we give the streamed funds from this specific streamId to the beneficiary
         _claimForSpecificStream(client, paymentReceiver, streamId);
 
@@ -442,9 +436,10 @@ contract PP_Streaming_v2 is Module_v1, IPP_Streaming_v2 {
             && _validOriginAndTargetChain(order.originChainId, order.targetChainId);
     }
 
+    /// @inheritdoc IPP_Streaming_v2
     function setStreamingDefaults(uint newStart_, uint newCliff_, uint newEnd_)
         external
-        permissioned //@todo adapt interface + test
+        permissioned
     {
         _setDefaultTimes(newStart_, newCliff_, newEnd_);
     }

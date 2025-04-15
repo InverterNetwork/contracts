@@ -100,7 +100,8 @@ contract PP_StreamingV1Test is ModuleTest {
 
         paymentProcessor.init(_orchestrator, _METADATA, configData);
 
-        _authorizer.setIsAuthorized(address(this), true);
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // Set up PaymentClient Correctöy
         impl = address(new ERC20PaymentClientBaseV2Mock());
@@ -807,6 +808,21 @@ contract PP_StreamingV1Test is ModuleTest {
         );
     }
 
+    // @todo why is nothing tested here? gitblame? I really hope its not me xD
+    function testRemoveAllPaymentReceiverPayments_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        paymentProcessor.removeAllPaymentReceiverPayments(
+            address(0), address(0)
+        );
+    }
+
     uint initialNumWallets;
     uint initialPaymentReceiverBalance;
     uint initialStreamIdAtIndex1;
@@ -1070,6 +1086,20 @@ contract PP_StreamingV1Test is ModuleTest {
         assertEq(
             (finalPaymentReceiverBalance - initialPaymentReceiverBalance),
             total3
+        );
+    }
+
+    function testRemovePaymentFromSpecificStream_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        paymentProcessor.removePaymentForSpecificStream(
+            address(0), address(0), 0
         );
     }
 
@@ -2204,6 +2234,18 @@ contract PP_StreamingV1Test is ModuleTest {
         paymentProcessor.setStreamingDefaults(
             defaultStart, defaultCliff, defaultEnd
         );
+    }
+
+    function testSetStreamingDefaults_ModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        paymentProcessor.setStreamingDefaults(0, 0, 0);
     }
 
     function test_getProcessorFlags() public {
