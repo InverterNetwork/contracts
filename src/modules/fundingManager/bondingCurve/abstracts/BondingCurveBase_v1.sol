@@ -99,30 +99,42 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function buyFor(address _receiver, uint _depositAmount, uint _minAmountOut)
         public
         virtual
+        permissioned //@todo adapt interface + test
         buyingIsEnabled
         validReceiver(_receiver)
-        permissioned //@todo adapt interface + test
     {
         _buyOrder(_receiver, _depositAmount, _minAmountOut);
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function buy(uint _depositAmount, uint _minAmountOut) public virtual {
-        //@todo do we split this for different potential roles?
-        buyFor(_msgSender(), _depositAmount, _minAmountOut);
+    function buy(uint _depositAmount, uint _minAmountOut)
+        public
+        virtual
+        permissioned //@todo adapt interface + test
+        buyingIsEnabled
+    {
+        _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
     }
 
     // -------------------------------------------------------------------------
     // Permissioned Functions
 
     /// @inheritdoc IBondingCurveBase_v1
-    function openBuy() external virtual permissioned {
+    function openBuy()
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
         buyIsOpen = true;
         emit BuyingEnabled();
     }
 
     /// @inheritdoc IBondingCurveBase_v1
-    function closeBuy() external virtual permissioned {
+    function closeBuy()
+        external
+        virtual
+        permissioned //@todo adapt interface + test
+    {
         buyIsOpen = false;
         emit BuyingDisabled();
     }
@@ -176,8 +188,8 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
     function withdrawProjectCollateralFee(address _receiver, uint _amount)
         public
         virtual
-        validReceiver(_receiver)
         permissioned //@todo adapt interface + test
+        validReceiver(_receiver)
     {
         if (_amount > projectCollateralFeeCollected) {
             revert Module__BondingCurveBase__InvalidWithdrawAmount();

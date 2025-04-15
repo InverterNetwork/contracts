@@ -98,6 +98,7 @@ interface IBondingCurveBase_v1 {
     // Functions
 
     /// @notice Buy tokens on behalf of a specified receiver address.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Redirects to the internal function `_buyOrder` by passing the receiver address and deposit amount.
     /// @param  _receiver The address that will receive the bought tokens.
     /// @param  _depositAmount The amount of collateral token deposited.
@@ -106,24 +107,25 @@ interface IBondingCurveBase_v1 {
         external;
 
     /// @notice Buy tokens for the sender's address.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Redirects to the internal function `_buyOrder` by passing the sender's address and deposit amount.
     /// @param  _depositAmount The amount of collateral token depoisited.
     /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
     function buy(uint _depositAmount, uint _minAmountOut) external;
 
     /// @notice Opens the buying functionality for the token.
-    /// @dev    Only callable by the {Orchestrator_v1} admin.
-    ///         Reverts if buying is already open.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    Reverts if buying is already open.
     function openBuy() external;
 
     /// @notice Closes the buying functionality for the token.
-    /// @dev    Only callable by the {Orchestrator_v1} admin.
-    ///         Reverts if buying is already closed.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    Reverts if buying is already closed.
     function closeBuy() external;
 
     /// @notice Sets the fee percentage for buying tokens, payed in collateral.
-    /// @dev    Only callable by the {Orchestrator_v1} admin.
-    ///         The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    The fee cannot exceed 10000 basis points. Reverts if an invalid fee is provided.
     /// @param  _fee The fee in basis points.
     function setBuyFee(uint _fee) external;
 
@@ -141,6 +143,7 @@ interface IBondingCurveBase_v1 {
         returns (uint mintAmount);
 
     /// @notice Withdraw project collateral fee to the receiver address.
+    /// @dev    Function access controlled by authorizer.
     /// @param  _receiver The address that will receive the fee.
     /// @param  _amount The amount of fee to withdraw.
     function withdrawProjectCollateralFee(address _receiver, uint _amount)
