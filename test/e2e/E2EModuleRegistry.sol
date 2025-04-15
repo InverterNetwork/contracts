@@ -28,6 +28,8 @@ import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v1} from
     "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+import {PP_Connext_CrossChain_v1} from
+    "src/modules/paymentProcessor/PP_Connext_CrossChain_v1.sol";
 
 // Beacon
 import {
@@ -363,6 +365,50 @@ contract E2EModuleRegistry is Test {
         gov.registerMetadataInModuleFactory(
             streamingPaymentProcessorMetadata,
             IInverterBeacon_v1(streamingPaymentProcessorBeacon)
+        );
+    }
+
+    // PP_Connext_CrossChain_v1
+
+    PP_Connext_CrossChain_v1 connextPaymentProcessorImpl;
+
+    InverterBeacon_v1 connextPaymentProcessorBeacon;
+
+    IModule_v1.Metadata connextPaymentProcessorMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/payment-processor",
+        "PP_Connext_CrossChain_v1"
+    );
+
+    /*
+    IOrchestratorFactory_v1.ModuleConfig connextPaymentProcessorFactoryConfig =
+    IOrchestratorFactory_v1.ModuleConfig(
+    connextPaymentProcessorMetadata,
+    abi.encode(everClearSpoke, weth)  
+    );
+    */
+
+    function setUpConnextPaymentProcessor() internal {
+        // Deploy module implementations.
+        connextPaymentProcessorImpl = new PP_Connext_CrossChain_v1();
+
+        // Deploy module beacons.
+        connextPaymentProcessorBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            connextPaymentProcessorMetadata.majorVersion,
+            address(connextPaymentProcessorImpl),
+            connextPaymentProcessorMetadata.minorVersion,
+            connextPaymentProcessorMetadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            connextPaymentProcessorMetadata,
+            IInverterBeacon_v1(connextPaymentProcessorBeacon)
         );
     }
 
