@@ -344,7 +344,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes calldata details
     )
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validPayoutAmounts(minimumPayoutAmount, maximumPayoutAmount)
         returns (uint id)
     {
@@ -358,7 +358,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes[] calldata detailArray
     )
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validArrayLengths(
             minimumPayoutAmounts.length,
             maximumPayoutAmounts.length,
@@ -384,7 +384,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function updateBounty(uint bountyId, bytes calldata details)
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -396,7 +396,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function lockBounty(uint bountyId)
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validBountyId(bountyId)
         notLocked(bountyId)
     {
@@ -412,7 +412,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         bytes calldata details
     )
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validBountyId(bountyId)
         notLocked(bountyId)
         returns (uint id)
@@ -452,10 +452,10 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
         Contributor[] calldata contributors
     )
         external
+        permissioned
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
-        permissioned //@todo adapt interface + test
     {
         _validContributorsForBounty(
             contributors, _bountyRegistry[_claimRegistry[claimId].bountyId]
@@ -490,7 +490,6 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function updateClaimDetails(uint claimId, bytes calldata details)
         external
-        permissioned //@todo adapt interface + test
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)
@@ -504,7 +503,7 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Bounties_v2
     function verifyClaim(uint claimId, Contributor[] calldata contributors)
         external
-        permissioned //@todo adapt interface + test
+        permissioned
         validClaimId(claimId)
         notClaimed(claimId)
         notLocked(_claimRegistry[claimId].bountyId)

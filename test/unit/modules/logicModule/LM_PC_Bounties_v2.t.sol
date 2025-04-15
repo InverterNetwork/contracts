@@ -43,32 +43,6 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     ILM_PC_Bounties_v2.Contributor[] DEFAULT_CONTRIBUTORS;
     ILM_PC_Bounties_v2.Contributor[] INVALID_CONTRIBUTORS;
 
-    event BountyAdded(
-        uint indexed bountyId,
-        uint minimumPayoutAmount,
-        uint maximumPayoutAmount,
-        bytes details
-    );
-
-    event BountyUpdated(uint indexed bountyId, bytes details);
-
-    event BountyLocked(uint indexed bountyId);
-
-    event ClaimAdded(
-        uint indexed claimId,
-        uint indexed bountyId,
-        ILM_PC_Bounties_v2.Contributor[] contributors,
-        bytes details
-    );
-
-    event ClaimContributorsUpdated(
-        uint indexed claimId, ILM_PC_Bounties_v2.Contributor[] contributors
-    );
-
-    event ClaimDetailsUpdated(uint indexed claimId, bytes details);
-
-    event ClaimVerified(uint indexed claimId);
-
     function setUp() public {
         // Add Module to Mock Orchestrator_v1
         address impl = address(new LM_PC_Bounties_v2_Exposed());
@@ -76,7 +50,8 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         _setUpOrchestrator(bountyManager);
 
-        _authorizer.setIsAuthorized(address(this), true);
+        // Every caller has permission for every premissioned function
+        _authorizer.setAllAuthorized(true);
 
         DEFAULT_CONTRIBUTORS.push(ALICE);
         DEFAULT_CONTRIBUTORS.push(BOB);
@@ -451,7 +426,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         //Check that internal function is in position
 
         vm.expectEmit(true, true, true, true);
-        emit BountyAdded(1, minimumPayoutAmount, maximumPayoutAmount, details);
+        emit ILM_PC_Bounties_v2.BountyAdded(
+            1, minimumPayoutAmount, maximumPayoutAmount, details
+        );
 
         bountyManager.addBounty(
             minimumPayoutAmount, maximumPayoutAmount, details
@@ -459,26 +436,24 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     }
 
     function testAddBountyModifierInPosition() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bountyManager.addBounty(0, 0, bytes(""));
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
         // validPayoutAmounts
         vm.expectRevert(
             ILM_PC_Bounties_v2
                 .Module__LM_PC_Bounty__InvalidPayoutAmounts
                 .selector
-        );
-        bountyManager.addBounty(0, 0, bytes(""));
-
-        // Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
-
-        // onlyBountyAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
-                ),
-                address(this)
-            )
         );
         bountyManager.addBounty(0, 0, bytes(""));
     }
@@ -508,7 +483,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         for (uint i = 0; i < batchSize; i++) {
             vm.expectEmit(true, true, true, true);
-            emit BountyAdded(
+            emit ILM_PC_Bounties_v2.BountyAdded(
                 1 + i, minimumPayoutAmount, maximumPayoutAmount, details
             );
         }
@@ -531,6 +506,21 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bytes[] memory details = new bytes[](1);
         details[0] = bytes("");
 
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bountyManager.addBountyBatch(
+            new uint[](0), maximumPayoutAmounts, details
+        );
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
         // validArrayLengths
         vm.expectRevert(
             ILM_PC_Bounties_v2
@@ -550,26 +540,98 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.addBountyBatch(
             minimumPayoutAmounts, maximumPayoutAmounts, details
         );
+    }
+
+    //-----------------------------------------
+    // UpdateBounty
+
+    function testUpdateBounty(bytes calldata details) public {
+        uint id = bountyManager.addBounty(1, 1, bytes(""));
+
+        vm.expectEmit(true, true, true, true);
+        emit ILM_PC_Bounties_v2.BountyUpdated(1, details);
+
+        bountyManager.updateBounty(id, details);
+
+        assertEqualBounty(id, 1, 1, details, false);
+    }
+
+    function testUpdateBountyModifierInPosition() public {
+        bountyManager.addBounty(1, 1, bytes(""));
+
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bountyManager.updateBounty(1, bytes(""));
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // validBountyId
+        vm.expectRevert(
+            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__InvalidBountyId.selector
+        );
+        bountyManager.updateBounty(0, bytes(""));
 
         // Set this address to not authorized to test the roles correctly
         _authorizer.setIsAuthorized(address(this), false);
 
-        // Set maximumPayoutAmounts[0] correctly
-        maximumPayoutAmounts[0] = 2;
+        // notLocked
+        bountyManager.lockBounty(1);
 
-        // onlyBountyAdmin
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
-                ),
-                address(this)
-            )
+            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__BountyLocked.selector
         );
-        bountyManager.addBountyBatch(
-            minimumPayoutAmounts, maximumPayoutAmounts, details
+        bountyManager.updateBounty(1, bytes(""));
+    }
+
+    //-----------------------------------------
+    // LockBounty
+
+    function testLockBounty() public {
+        uint id = bountyManager.addBounty(1, 1, bytes(""));
+
+        vm.expectEmit(true, true, true, true);
+        emit ILM_PC_Bounties_v2.BountyLocked(1);
+
+        bountyManager.lockBounty(1);
+
+        assertEqualBounty(id, 1, 1, bytes(""), true);
+    }
+
+    function testLockBountyModifierInPosition() public {
+        bountyManager.addBounty(1, 1, bytes(""));
+
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
+        vm.prank(address(0xB0B));
+        bountyManager.lockBounty(1);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // validBountyId
+        vm.expectRevert(
+            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__InvalidBountyId.selector
+        );
+        bountyManager.lockBounty(0);
+
+        // NotLocked
+        bountyManager.lockBounty(1);
+        vm.expectRevert(
+            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__BountyLocked.selector
+        );
+        bountyManager.lockBounty(1);
     }
 
     //-----------------------------------------
@@ -600,7 +662,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         for (uint i = 0; i < times; i++) {
             vm.expectEmit(true, true, true, true);
             // id starts at 2 because the id counter starts at 1 and addBounty increases it by 1 again
-            emit ClaimAdded(i + 2, 1, contribs, details);
+            emit ILM_PC_Bounties_v2.ClaimAdded(i + 2, 1, contribs, details);
 
             id = bountyManager.addClaim(1, contribs, details);
             assertEqualClaim(id, 1, contribs, details, false);
@@ -614,6 +676,19 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
     function testAddClaimModifierInPosition() public {
         bountyManager.addBounty(1, 1, bytes(""));
+
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // validBountyId
         vm.expectRevert(
@@ -636,116 +711,6 @@ contract LM_PC_BountiesV1Test is ModuleTest {
             ILM_PC_Bounties_v2.Module__LM_PC_Bounty__BountyLocked.selector
         );
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
-
-        // Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
-
-        // onlyClaimAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.CLAIMANT_ROLE()
-                ),
-                address(this)
-            )
-        );
-        bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
-    }
-
-    //-----------------------------------------
-    // UpdateBounty
-
-    function testUpdateBounty(bytes calldata details) public {
-        uint id = bountyManager.addBounty(1, 1, bytes(""));
-
-        vm.expectEmit(true, true, true, true);
-        emit BountyUpdated(1, details);
-
-        bountyManager.updateBounty(id, details);
-
-        assertEqualBounty(id, 1, 1, details, false);
-    }
-
-    function testUpdateBountyModifierInPosition() public {
-        bountyManager.addBounty(1, 1, bytes(""));
-
-        // validBountyId
-        vm.expectRevert(
-            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__InvalidBountyId.selector
-        );
-        bountyManager.updateBounty(0, bytes(""));
-
-        // Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
-
-        // onlyBountyAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
-                ),
-                address(this)
-            )
-        );
-        bountyManager.updateBounty(1, bytes(""));
-        // Reset this address to authorized
-        _authorizer.setIsAuthorized(address(this), true);
-
-        // notLocked
-        bountyManager.lockBounty(1);
-
-        vm.expectRevert(
-            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__BountyLocked.selector
-        );
-        bountyManager.updateBounty(1, bytes(""));
-    }
-
-    //-----------------------------------------
-    // UpdateBounty
-
-    function testLockBounty() public {
-        uint id = bountyManager.addBounty(1, 1, bytes(""));
-
-        vm.expectEmit(true, true, true, true);
-        emit BountyLocked(1);
-
-        bountyManager.lockBounty(1);
-
-        assertEqualBounty(id, 1, 1, bytes(""), true);
-    }
-
-    function testLockBountyModifierInPosition() public {
-        bountyManager.addBounty(1, 1, bytes(""));
-
-        // validBountyId
-        vm.expectRevert(
-            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__InvalidBountyId.selector
-        );
-        bountyManager.lockBounty(0);
-
-        // NotLocked
-        bountyManager.lockBounty(1);
-        vm.expectRevert(
-            ILM_PC_Bounties_v2.Module__LM_PC_Bounty__BountyLocked.selector
-        );
-        bountyManager.lockBounty(1);
-
-        // Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
-
-        // onlyBountyAdmin
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
-                ),
-                address(this)
-            )
-        );
-        bountyManager.lockBounty(0);
     }
 
     //-----------------------------------------
@@ -771,7 +736,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint id = bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimContributorsUpdated(id, contribs);
+        emit ILM_PC_Bounties_v2.ClaimContributorsUpdated(id, contribs);
 
         bountyManager.updateClaimContributors(id, contribs);
 
@@ -803,6 +768,19 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes("")); // Id 3
         bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); // Id 4
 
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
         // validClaimId
         vm.expectRevert(
             ILM_PC_Bounties_v2.Module__LM_PC_Bounty__InvalidClaimId.selector
@@ -816,24 +794,6 @@ contract LM_PC_BountiesV1Test is ModuleTest {
                 .selector
         );
         bountyManager.updateClaimContributors(2, INVALID_CONTRIBUTORS);
-
-        // onlyClaimAdmin
-        _authorizer.setIsAuthorized(address(this), false); // No access address
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.CLAIMANT_ROLE()
-                ),
-                address(this)
-            )
-        );
-        bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
-        // Reset this address to authorized
-        _authorizer.setIsAuthorized(address(this), true);
-
-        // Reset this address to be authorized to test correctly
-        _authorizer.setIsAuthorized(address(this), true);
 
         bountyManager.lockBounty(1);
 
@@ -862,7 +822,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.addClaim(1, DEFAULT_CONTRIBUTORS, bytes(""));
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimDetailsUpdated(2, details);
+        emit ILM_PC_Bounties_v2.ClaimDetailsUpdated(2, details);
         vm.prank(DEFAULT_CONTRIBUTORS[0].addr);
         bountyManager.updateClaimDetails(2, details);
 
@@ -935,7 +895,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint claimId = bountyManager.addClaim(bountyId, contribs, details);
 
         vm.expectEmit(true, true, true, true);
-        emit ClaimVerified(claimId);
+        emit ILM_PC_Bounties_v2.ClaimVerified(claimId);
 
         bountyManager.verifyClaim(claimId, contribs);
 
@@ -980,23 +940,18 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         bountyManager.addBounty(1, 100_000_000, bytes("")); // Id 3
         bountyManager.addClaim(3, DEFAULT_CONTRIBUTORS, bytes("")); // Id 4
 
-        // Set this address to not authorized to test the roles correctly
-        _authorizer.setIsAuthorized(address(this), false);
+        // permissioned
 
-        // onlyVerifyAdmin
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(bountyManager), bountyManager.VERIFIER_ROLE()
-                ),
-                address(this)
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
+        vm.prank(address(0xB0B));
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);
 
-        // Reset this address to authorized
-        _authorizer.setIsAuthorized(address(this), true);
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // validClaimId
         vm.expectRevert(
@@ -1068,7 +1023,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         uint id;
         for (uint i; i < testAmount; i++) {
             vm.expectEmit(true, true, true, true);
-            emit BountyAdded(
+            emit ILM_PC_Bounties_v2.BountyAdded(
                 i + 1, minimumPayoutAmount, maximumPayoutAmount, details
             );
 
