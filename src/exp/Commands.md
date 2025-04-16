@@ -62,9 +62,9 @@ You can run minting on anvilchain1 and it will trigger minting on destination ch
 You can check the balance on anvilchain2.
 
 ```
-forge script script/deploymentScript/CrossChain/04-Mint.s.sol --rpc-url mainnet --broadcast
+forge script script/deploymentScript/CrossChain/03-Mint.s.sol --rpc-url mainnet --broadcast
 
-forge script script/deploymentScript/CrossChain/05-CheckDestination.s.sol --rpc-url http://localhost:8546 --broadcast
+forge script script/deploymentScript/CrossChain/04-CheckDestination.s.sol --rpc-url http://localhost:8546 --broadcast
 ```
 
 # Reference
