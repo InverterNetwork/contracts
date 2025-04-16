@@ -15,6 +15,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
@@ -77,39 +79,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     address admin_address = address(0xA1BA);
     address non_admin_address = address(0xB0B);
 
-    event Transfer(address indexed from, address indexed to, uint value);
-
-    event TokensBought(
-        address indexed receiver,
-        uint depositAmount,
-        uint receivedAmount,
-        address buyer
-    );
-    event VirtualCollateralAmountAdded(uint amountAdded, uint newSupply);
-    event VirtualCollateralAmountSubtracted(
-        uint amountSubtracted, uint newSupply
-    );
-    event VirtualIssuanceAmountSubtracted(
-        uint amountSubtracted, uint newSupply
-    );
-    event VirtualIssuanceAmountAdded(uint amountAdded, uint newSupply);
-    event TokensSold(
-        address indexed receiver,
-        uint depositAmount,
-        uint receivedAmount,
-        address seller
-    );
-    event BuyReserveRatioSet(
-        uint32 newBuyReserveRatio, uint32 oldBuyReserveRatio
-    );
-    event SellReserveRatioSet(
-        uint32 newSellReserveRatio, uint32 oldSellReserveRatio
-    );
-    event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
-    event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
-    event TransferOrchestratorToken(address indexed to, uint amount);
-    event OrchestratorTokenSet(address indexed token, uint8 decimals);
-
     function setUp() public virtual {
         // Deploy contracts
         issuanceToken = new ERC20Issuance_v1(
@@ -139,10 +108,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+        // Every caller has permission for every premissioned function
+        _authorizer.setAllAuthorized(true);
 
         vm.expectEmit(true, true, true, true);
-        emit OrchestratorTokenSet(address(_token), DECIMALS);
+        emit IFundingManager_v1.OrchestratorTokenSet(address(_token), DECIMALS);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -388,23 +358,25 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Execution
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
-        emit Transfer(buyer, address(bondingCurveFundingManager), amount);
+        emit IERC20.Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(true, true, true, true, address(issuanceToken));
-        emit Transfer(address(0), buyer, formulaReturn);
+        emit IERC20.Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, formulaReturn, buyer);
+        emit IBondingCurveBase_v1.TokensBought(
+            buyer, amount, formulaReturn, buyer
+        );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceAmountAdded(
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountAdded(
             formulaReturn, (INITIAL_ISSUANCE_SUPPLY + formulaReturn)
         );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualCollateralAmountAdded(
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralAmountAdded(
             amount, (INITIAL_COLLATERAL_SUPPLY + amount)
         );
         bondingCurveFundingManager.buy(amount, formulaReturn);
@@ -466,23 +438,25 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Execution
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
-        emit Transfer(buyer, address(bondingCurveFundingManager), amount);
+        emit IERC20.Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(true, true, true, true, address(issuanceToken));
-        emit Transfer(address(0), buyer, formulaReturn);
+        emit IERC20.Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, formulaReturn, buyer);
+        emit IBondingCurveBase_v1.TokensBought(
+            buyer, amount, formulaReturn, buyer
+        );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceAmountAdded(
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountAdded(
             formulaReturn, (INITIAL_ISSUANCE_SUPPLY + formulaReturn)
         );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualCollateralAmountAdded(
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralAmountAdded(
             buyAmountMinusFee, (INITIAL_COLLATERAL_SUPPLY + buyAmountMinusFee)
         );
         bondingCurveFundingManager.buy(amount, formulaReturn);
@@ -729,7 +703,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectEmit(true, true, true, true, address(_token));
-            emit Transfer(
+            emit IERC20.Transfer(
                 address(bondingCurveFundingManager),
                 address(seller),
                 normalized_formulaReturn
@@ -737,19 +711,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit TokensSold(
+            emit IRedeemingBondingCurveBase_v1.TokensSold(
                 seller, userSellAmount, normalized_formulaReturn, seller
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualIssuanceAmountSubtracted(
+            emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountSubtracted(
                 userSellAmount, newVirtualIssuanceSupply - userSellAmount
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualCollateralAmountSubtracted(
+            emit IVirtualCollateralSupplyBase_v1
+                .VirtualCollateralAmountSubtracted(
                 normalized_formulaReturn,
                 newVirtualCollateral - normalized_formulaReturn
             );
@@ -838,7 +813,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectEmit(true, true, true, true, address(_token));
-            emit Transfer(
+            emit IERC20.Transfer(
                 address(bondingCurveFundingManager),
                 address(seller),
                 sellAmountMinusFee
@@ -846,17 +821,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit TokensSold(seller, userSellAmount, sellAmountMinusFee, seller);
+            emit IRedeemingBondingCurveBase_v1.TokensSold(
+                seller, userSellAmount, sellAmountMinusFee, seller
+            );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualIssuanceAmountSubtracted(
+            emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountSubtracted(
                 userSellAmount, newVirtualIssuanceSupply - userSellAmount
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualCollateralAmountSubtracted(
+            emit IVirtualCollateralSupplyBase_v1
+                .VirtualCollateralAmountSubtracted(
                 normalized_formulaReturn,
                 newVirtualCollateral - normalized_formulaReturn
             );
@@ -1255,7 +1233,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceSupplySet(_newSupply, INITIAL_ISSUANCE_SUPPLY);
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceSupplySet(
+            _newSupply, INITIAL_ISSUANCE_SUPPLY
+        );
         bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(), _newSupply
@@ -1331,7 +1311,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit VirtualCollateralSupplySet(_newSupply, INITIAL_COLLATERAL_SUPPLY);
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralSupplySet(
+            _newSupply, INITIAL_COLLATERAL_SUPPLY
+        );
         bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(), _newSupply
@@ -1402,7 +1384,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit BuyReserveRatioSet(_newRatio, RESERVE_RATIO_FOR_BUYING);
+        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BuyReserveRatioSet(
+            _newRatio, RESERVE_RATIO_FOR_BUYING
+        );
         bondingCurveFundingManager.setReserveRatioForBuying(_newRatio);
         assertEq(
             bondingCurveFundingManager.call_reserveRatioForBuying(), _newRatio
@@ -1476,7 +1460,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit SellReserveRatioSet(_newRatio, RESERVE_RATIO_FOR_SELLING);
+        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v1.SellReserveRatioSet(
+            _newRatio, RESERVE_RATIO_FOR_SELLING
+        );
         bondingCurveFundingManager.setReserveRatioForSelling(_newRatio);
         assertEq(
             bondingCurveFundingManager.call_reserveRatioForSelling(), _newRatio
@@ -1727,7 +1713,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(address(_erc20PaymentClientMock));
         {
             vm.expectEmit(true, true, true, true);
-            emit TransferOrchestratorToken(to, amount);
+            emit IFundingManager_v1.TransferOrchestratorToken(to, amount);
 
             bondingCurveFundingManager.transferOrchestratorToken(to, amount);
         }
