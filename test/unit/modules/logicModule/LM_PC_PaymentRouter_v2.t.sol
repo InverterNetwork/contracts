@@ -15,11 +15,11 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // SuT
 import {LM_PC_PaymentRouter_v2_Exposed} from
-    "@mock/modules/logicModule/LM_PC_PaymentRouter_v2_Exposed.sol";
+    "@mocks/modules/logicModule/LM_PC_PaymentRouter_v2_Exposed.sol";
 import {ILM_PC_PaymentRouter_v2} from
     "@lm/interfaces/ILM_PC_PaymentRouter_v2.sol";
 import {
@@ -28,17 +28,17 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
-import {OrchestratorV1Mock} from "@mock/orchestrator/OrchestratorV1Mock.sol";
+import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
 import {PP_Simple_v2, IPaymentProcessor_v2} from "@pp/PP_Simple_v2.sol";
 
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
-} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+} from "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
     // SuT

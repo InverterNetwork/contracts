@@ -13,10 +13,10 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
@@ -26,7 +26,7 @@ import {
 } from "@lm/LM_PC_Bounties_v2.sol";
 
 import {LM_PC_Bounties_v2_Exposed} from
-    "@mock/modules/logicModule/LM_PC_Bounties_v2_Exposed.sol";
+    "@mocks/modules/logicModule/LM_PC_Bounties_v2_Exposed.sol";
 
 contract LM_PC_BountiesV1Test is ModuleTest {
     // SuT

@@ -22,7 +22,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
@@ -35,16 +35,16 @@ import {
     IRedeemingBondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
 import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
-    "@mock/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 import {RedeemingBondingCurveBaseV1Test} from
-    "@unit/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
+    "@unitTest/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
 
 /*   
     Since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:

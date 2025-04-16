@@ -26,14 +26,14 @@ import {TransactionForwarder_v1} from
 // Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
-import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
+import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
 import {FundingManagerV1Mock} from
-    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+    "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
-import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
-import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {GovernorV1Mock} from "@mocks/external/governance/GovernorV1Mock.sol";
+import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
 
 contract AUT_RolesV1Test is Test {
     // Mocks

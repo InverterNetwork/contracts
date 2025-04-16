@@ -16,18 +16,18 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
 import {
     BondingCurveBaseV1Mock,
     IBondingCurveBase_v1
 } from
-    "@mock/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 contract BondingCurveBaseV1Test is ModuleTest {

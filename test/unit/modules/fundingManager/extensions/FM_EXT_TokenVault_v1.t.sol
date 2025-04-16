@@ -8,14 +8,14 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
-} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
-import {OZErrors} from "@tool/OZErrors.sol";
+} from "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // External
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
@@ -28,7 +28,7 @@ import {
     IFM_EXT_TokenVault_v1
 } from "@fm/extensions/FM_EXT_TokenVault_v1.sol";
 import {FM_EXT_TokenVault_v1_Exposed} from
-    "@mock/modules/fundingManager/extensions/FM_EXT_TokenVault_v1_Exposed.sol";
+    "@mocks/modules/fundingManager/extensions/FM_EXT_TokenVault_v1_Exposed.sol";
 
 contract FM_EXT_TokenVault_v1_Test is ModuleTest {
     // SuT

@@ -4,26 +4,26 @@ pragma solidity ^0.8.0;
 import "forge-std/console.sol";
 
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // SuT
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IFM_DepositVault_v1} from
     "@fm/depositVault/interfaces/IFM_DepositVault_v1.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {FM_DepositVault_v1_Exposed} from
-    "@mock/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
+    "@mocks/modules/fundingManager/depositVault/FM_DepositVault_v1_Exposed.sol";
 
 // Internal Dependencies
 import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";

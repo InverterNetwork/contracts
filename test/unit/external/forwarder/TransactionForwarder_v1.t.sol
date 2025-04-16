@@ -11,9 +11,9 @@ import {
 } from "src/external/forwarder/TransactionForwarder_v1.sol";
 
 import {TransactionForwarderV1_Exposed} from
-    "@mock/external/forwarder/TransactionForwarderV1_Exposed.sol";
+    "@mocks/external/forwarder/TransactionForwarderV1_Exposed.sol";
 
-import {CallIntercepter} from "@tool/CallIntercepter.sol";
+import {CallIntercepter} from "@testUtilities/CallIntercepter.sol";
 
 contract TransactionForwarderV1Test is Test {
     // SuT

@@ -10,7 +10,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // SuT
 import {IPaymentProcessor_v2} from
@@ -24,16 +24,16 @@ import {
 // Mocks
 
 import {PP_Streaming_v2_Exposed} from
-    "@mock/modules/paymentProcessor/PP_Streaming_v2_Exposed.sol";
+    "@mocks/modules/paymentProcessor/PP_Streaming_v2_Exposed.sol";
 
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract PP_StreamingV1Test is ModuleTest {
     bytes32 internal constant _START_END_CLIFF_FLAG =

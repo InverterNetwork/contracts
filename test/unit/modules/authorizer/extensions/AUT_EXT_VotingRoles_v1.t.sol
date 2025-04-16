@@ -18,7 +18,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // Internal Dependencies
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
@@ -29,16 +29,16 @@ import {IOrchestrator_v1} from
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Mocks
-import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {FundingManagerV1Mock} from
-    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+    "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
-import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
     // SuT

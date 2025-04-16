@@ -15,7 +15,7 @@ import {IPaymentProcessor_v2} from
     "src/modules/paymentProcessor/IPaymentProcessor_v2.sol";
 
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
     ERC20Mock token;

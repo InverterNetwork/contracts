@@ -21,7 +21,7 @@ import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
@@ -30,12 +30,12 @@ import {
     ModuleTest,
     IModule_v1
 } from
-    "@unit/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
+    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
 import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
-    "@mock/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
 import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock} from
-    "@mock/modules/fundingManager/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
-import {OZErrors} from "@tool/OZErrors.sol";
+    "@mocks/modules/fundingManager/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
     FM_BC_Bancor_Redeeming_VirtualSupplyV1Test

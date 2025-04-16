@@ -12,19 +12,19 @@ import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol";
 
 import {InverterBeaconV1_Exposed} from
-    "@mock/proxies/InverterBeaconV1_Exposed.sol";
+    "@mocks/proxies/InverterBeaconV1_Exposed.sol";
 
 import {InverterReverter_v1} from
     "src/external/reverter/InverterReverter_v1.sol";
 
 // Mocks
 import {ModuleImplementationV1Mock} from
-    "@mock/proxies/ModuleImplementationV1Mock.sol";
+    "@mocks/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
-    "@mock/proxies/ModuleImplementationV2Mock.sol";
+    "@mocks/proxies/ModuleImplementationV2Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 import {Ownable} from "@oz/access/Ownable.sol";
 

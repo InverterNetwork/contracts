@@ -6,8 +6,8 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
-import {OZErrors} from "@tool/OZErrors.sol";
+} from "@unitTest/modules/ModuleTest.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // External
@@ -16,11 +16,11 @@ import {Clones} from "@oz/proxy/Clones.sol";
 // Tests and Mocks
 import {FM_Template_v1_Exposed} from
     "src/templates/tests/unit/FM_Template_v1_Exposed.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock
-} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
 import {IFM_Template_v1} from "src/templates/modules/IFM_Template_v1.sol";
