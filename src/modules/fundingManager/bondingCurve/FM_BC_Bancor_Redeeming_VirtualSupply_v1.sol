@@ -217,9 +217,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        permissioned
+        buyingIsEnabled
         validReceiver(_receiver)
-        buyingIsEnabled //@todo adapt modifier
-        permissioned //@todo adapt interface + test
     {
         (uint amountIssued, uint collateralFeeAmount) =
             _buyOrder(_receiver, _depositAmount, _minAmountOut);
@@ -236,16 +236,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         Transactions exceeding this limit will be reverted.
     /// @param  _depositAmount The amount of collateral token depoisited.
     /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function buy(
-        uint _depositAmount,
-        uint _minAmountOut // @todo do we split this for potential different roles
-    )
+    function buy(uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        permissioned
         buyingIsEnabled //@todo adapt modifier
     {
-        buyFor(_msgSender(), _depositAmount, _minAmountOut);
+        (uint amountIssued, uint collateralFeeAmount) =
+            _buyOrder(_msgSender(), _depositAmount, _minAmountOut);
+        _addVirtualIssuanceAmount(amountIssued);
+        _addVirtualCollateralAmount(_depositAmount - collateralFeeAmount);
     }
 
     /// @notice Redeem tokens and direct the proceeds to a specified receiver address. This function is subject
@@ -262,9 +263,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
+        permissioned
+        sellingIsEnabled
         validReceiver(_receiver)
-        sellingIsEnabled //@todo adapt modifier
-        permissioned //@todo adapt interface + test
     {
         (uint redeemAmount, uint issuanceFeeAmount) =
             _sellOrder(_receiver, _depositAmount, _minAmountOut);
@@ -281,16 +282,17 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     ///         100,000,000. Transactions exceeding this limit will be reverted.
     /// @param  _depositAmount The amount of issued token depoisited.
     /// @param  _minAmountOut The minimum acceptable amount the user expects to receive from the transaction.
-    function sell(
-        uint _depositAmount,
-        uint _minAmountOut //@todo do we split this to enable different roles?
-    )
+    function sell(uint _depositAmount, uint _minAmountOut)
         public
         virtual
         override(RedeemingBondingCurveBase_v1)
-        sellingIsEnabled //@todo adapt modfier
+        permissioned
+        sellingIsEnabled
     {
-        sellTo(_msgSender(), _depositAmount, _minAmountOut);
+        (uint redeemAmount, uint issuanceFeeAmount) =
+            _sellOrder(_msgSender(), _depositAmount, _minAmountOut);
+        _subVirtualIssuanceAmount(_depositAmount - issuanceFeeAmount);
+        _subVirtualCollateralAmount(redeemAmount);
     }
 
     // -------------------------------------------------------------------------
@@ -376,28 +378,12 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     // -------------------------------------------------------------------------
     // Permissioned Functions
 
-    /// @inheritdoc IFundingManager_v1
-    function transferOrchestratorToken(
-        address to_,
-        uint amount_ //@todo reposition
-    ) external virtual onlyPaymentClient {
-        if (
-            amount_
-                > token().balanceOf(address(this)) - projectCollateralFeeCollected
-        ) {
-            revert InvalidOrchestratorTokenWithdrawAmount();
-        }
-        token().safeTransfer(to_, amount_);
-
-        emit TransferOrchestratorToken(to_, amount_);
-    }
-
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
     function setVirtualIssuanceSupply(uint virtualSupply_)
         external
         virtual
         override(VirtualIssuanceSupplyBase_v1)
-        permissioned //@todo adapt interface + test
+        permissioned
         onlyWhenCurveInteractionsAreClosed
     {
         _setVirtualIssuanceSupply(virtualSupply_);
@@ -408,7 +394,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         external
         virtual
         override(VirtualCollateralSupplyBase_v1)
-        permissioned //@todo adapt interface + test
+        permissioned
         onlyWhenCurveInteractionsAreClosed
     {
         _setVirtualCollateralSupply(virtualSupply_);
@@ -418,7 +404,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function setReserveRatioForBuying(uint32 reserveRatio_)
         external
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         onlyWhenCurveInteractionsAreClosed
     {
         _setReserveRatioForBuying(reserveRatio_);
@@ -428,10 +414,30 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     function setReserveRatioForSelling(uint32 reserveRatio_)
         external
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
         onlyWhenCurveInteractionsAreClosed
     {
         _setReserveRatioForSelling(reserveRatio_);
+    }
+
+    // -------------------------------------------------------------------------
+    // PaymentClient Functions
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to_, uint amount_)
+        external
+        virtual
+        onlyPaymentClient
+    {
+        if (
+            amount_
+                > token().balanceOf(address(this)) - projectCollateralFeeCollected
+        ) {
+            revert InvalidOrchestratorTokenWithdrawAmount();
+        }
+        token().safeTransfer(to_, amount_);
+
+        emit TransferOrchestratorToken(to_, amount_);
     }
 
     // -------------------------------------------------------------------------

@@ -40,7 +40,7 @@ interface IVirtualIssuanceSupplyBase_v1 {
     /// @notice Sets the virtual issuance supply to a new value.
     /// @dev    This function calls the internal function `_setVirtualIssuanceSupply`.
     ///         The function must be implemented by the downstream contract. The downstream contract should
-    ///         manage access control for setting the supply.
+    ///         manage access control for setting the supply. //@todo downstream contract access control? Where should I add this comment?     /// @dev    Function access controlled by authorizer.
     /// @param  _virtualSupply The new value to set for the virtual issuance supply.
     function setVirtualIssuanceSupply(uint _virtualSupply) external;
 

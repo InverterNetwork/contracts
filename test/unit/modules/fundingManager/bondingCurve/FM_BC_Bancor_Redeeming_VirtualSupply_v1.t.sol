@@ -220,6 +220,100 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Public Functions
 
+    /*
+    Test: buyFor Modifier Checks
+    ├── Given: buyer is not permissioned
+    │   └── When: buyFor is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is not enabled
+    │   └── When: buyFor is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is enabled
+    └── And: receiver is invalid
+        └── When: buyFor is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testBuyFor_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+
+        // Open up Buy again
+        bondingCurveFundingManager.openBuy();
+
+        // validReceiver
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidRecipient
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+    }
+
+    /*
+    Test: buy Modifier Checks
+    ├── Given: buyer is not permissioned
+    │   └── When: buy is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is not enabled
+        └── When: buy is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testBuy_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.buy(0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.buy(0, 0);
+    }
+
     /* Test buy and _virtualSupplyBuyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
@@ -531,6 +625,101 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(to), formulaReturn);
+    }
+
+    /*
+    Test: sellTo Modifier Checks
+    ├── Given: seller is not permissioned
+    │   └── When: sellTo is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    ├── And: buysellinging is not enabled
+    │   └── When: sellTo is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    ├── And: selling is enabled
+    └── And: receiver is invalid
+        └── When: sellTo is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testsellTo_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+
+        // Open up Buy again
+        bondingCurveFundingManager.openSell();
+
+        // validReceiver
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidRecipient
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+    }
+
+    /*
+    Test: sell Modifier Checks
+    ├── Given: seller is not permissioned
+    │   └── When: sell is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    └── And: buysellinging is not enabled
+        └── When: sell is called
+            └── Then: it should revert (modifier in position check)
+    
+    */
+
+    function testsell_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.sell(0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.sell(0, 0);
     }
 
     /* Test sell and _virtualSupplySellOrder function
@@ -1151,10 +1340,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // OnlyOrchestrator Functions
 
     /* Test setVirtualIssuanceSupply and _setVirtualIssuanceSupply function
-        ├── given caller is not the Orchestrator_v1 admin
+        ├── given caller is not permissioned
         │   └── when the function setVirtualIssuanceSupply() is called
         │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
-        └── given the caller is the Orchestrator_v1 admin
+        └── given the caller is permissioned
             ├── and the buy | sell curve are still open (modifier test)
             │   └── when the function_setVirtualIssuanceSupply() is called
             │       └── then it should revert
@@ -1170,19 +1359,18 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                         └── and it should emit an event
     */
 
-    function testSetVirtualIssuanceSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
-        uint _newSupply
-    ) public {
-        vm.assume(_newSupply != 0);
+    function testSetVirtualIssuanceSupply_PermissionedModifierInPlace()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                non_admin_address
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
-        vm.prank(non_admin_address);
-        bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setVirtualIssuanceSupply(0);
     }
 
     function testSetVirtualIssuanceSupply_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
@@ -1243,10 +1431,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setVirtualCollateralSupply and _setVirtualCollateralSupply function
-        ├── given caller is not the Orchestrator_v1 admin
+        ├── given caller is not permissioned
         │   └── when the function setVirtualCollateralSupply() is called
         │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
-        └── given the caller is the Orchestrator_v1 admin
+        └── given the caller is permissioned
             ├── and the buy | sell curve are still open (modifier test)
             │   └── when the setVirtualCollateralSupply() is called
             │       └── then it should revert
@@ -1259,19 +1447,18 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                         └── and it should emit an event
     */
 
-    function testSetVirtualCollateralSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
-        uint _newSupply
-    ) public {
-        vm.assume(_newSupply != 0);
+    function testSetVirtualCollateralSupply_permissionedModifierInPlace()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                non_admin_address
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
-        vm.prank(non_admin_address);
-        bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setVirtualCollateralSupply(0);
     }
 
     function testSetVirtualCollateralSupply_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
@@ -1321,8 +1508,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setReserveRatioForBuying and _setReserveRatioForBuying function
-        ├── when caller is not the Orchestrator_v1 admin
-        │       └── it should revert (tested in base Module tests)
+        ├── when caller is not permissioned
+        │       └── it should revert (modifier in position test)
         └── when caller is the Orchestrator_v1 admin
                 ├── when buy | sell is still open (modifier test)
                 │       └── it should revert
@@ -1337,6 +1524,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
+
+    function testSetReserveRatioForBuying_permissionedModifierInPosition()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setReserveRatioForBuying(0);
+    }
 
     function testSetReserveRatioForBuying_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
     ) public {
@@ -1397,9 +1598,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Test reserve ratio changes
 
     /* Test setReserveRatioForSelling and _setReserveRatioForSelling function
-        ├── when caller is not the Orchestrator_v1 admin
-        │       └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
+        ├── when caller is not permissioned
+        │       └── it should revert (modifier in position)
+        └── when caller is permissioned
                 ├── when buy | sell is still open (modifier test)
                 │       └── it should revert
                 ├── when reserve ratio is  0% 
@@ -1413,6 +1614,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
+
+    function testSetReserveRatioForSelling_permissionedModifierInPosition()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setReserveRatioForSelling(0);
+    }
 
     function testSetReserveRatioForSelling_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
     ) public {

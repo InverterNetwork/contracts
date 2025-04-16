@@ -111,14 +111,14 @@ interface IFM_BC_Bancor_Redeeming_VirtualSupply_v1 {
 
     /// @notice Set the reserve ratio used for issuing tokens on a bonding
     ///         curve.
-    /// @dev	This function can only be called by the {Orchestrator_v1} admin.
+    /// @dev    Function access controlled by authorizer.
     /// @param  reserveRatio_ The new reserve ratio for buying, expressed in
     ///         PPM.
     function setReserveRatioForBuying(uint32 reserveRatio_) external;
 
     /// @notice Set the reserve ratio used for redeeming tokens on a bonding
     ///         curve.
-    /// @dev	This function can only be called by the {Orchestrator_v1} admin.
+    /// @dev    Function access controlled by authorizer.
     /// @param  reserveRatio_ The new reserve ratio for selling, expressed in
     ///         PPM.
     function setReserveRatioForSelling(uint32 reserveRatio_) external;
