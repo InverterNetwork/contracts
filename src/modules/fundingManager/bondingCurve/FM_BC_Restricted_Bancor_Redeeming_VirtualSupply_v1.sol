@@ -41,9 +41,8 @@ import {
  *
  * @author  Inverter Network
  */
-contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1
-{
+contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 is //@todo Do we scrap this contract?
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1 {
     // -------------------------------------------------------------------------
     // Errors
 
