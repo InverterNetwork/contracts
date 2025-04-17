@@ -1234,7 +1234,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 500, false, 0, 0, 0
         );
 
         // Approve
@@ -1274,7 +1274,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 500, false, 0, 0, 0
         );
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
@@ -1349,7 +1349,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 500, false, 0, 0, 0
         );
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
@@ -1389,7 +1389,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 500, false, 0, 0, 0
         );
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
@@ -1431,7 +1431,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 500, false, 0, 0, 0
         );
 
         mockNFTContract.mint(contributor1_);
@@ -1521,7 +1521,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 100, 0, 0, false, 0, 0, 0
+            roundId, accessId, 500, false, 0, 0, 0
         );
         mockNFTContract.mint(contributor1_);
 
@@ -1572,7 +1572,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 200, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, 200, false, 0, 0, 0
         );
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
@@ -1616,7 +1616,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, personalCap, 0, 0, 0, false, 0, 0, 0
+            roundId, accessId, personalCap, false, 0, 0, 0
         );
 
         mockNFTContract.mint(contributor1_);
@@ -1669,7 +1669,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Set privileges with override capability
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, 200, 0, 0, true, 0, 0, 0
+            roundId, accessId, 500, true, 0, 0, 0
         );
 
         mockNFTContract.mint(contributor1_);
@@ -1723,7 +1723,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         fundingPot.setAccessCriteriaPrivileges(
-            round1Id, accessCriteriaId, 500, 0, 0, 0, false, 0, 0, 0
+            round1Id, accessCriteriaId, 500, false, 0, 0, 0
         );
 
         mockNFTContract.mint(contributor1_);
@@ -1745,7 +1745,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Set personal cap of 400 for round 2
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessCriteriaId, 400, 0, 0, 0, false, 0, 0, 0
+            round2Id, accessCriteriaId, 400, false, 0, 0, 0
         );
 
         vm.warp(_defaultRoundParams.roundStart + 1);
@@ -1816,7 +1816,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             round1Id, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            round1Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            round1Id, accessId, 500, false, 0, 0, 0
         );
 
         // Round 2 with a different cap
@@ -1835,7 +1835,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             round2Id, accessId, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, 500, 0, 0, 0, false, 0, 0, 0
+            round2Id, accessId, 500, false, 0, 0, 0
         );
 
         // Round 1: Multiple users contribute, but don't reach the cap
@@ -1999,9 +1999,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId,
             accessId,
             1000, // personal cap equal to round cap
-            0, // no NFT cap
-            0, // no merkle cap
-            0, // no list cap
             false,
             0, // no start
             0, // no cliff
@@ -2093,9 +2090,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId,
             accessId,
             1000, // personal cap equal to round cap
-            0, // no NFT cap
-            0, // no merkle cap
-            0, // no list cap
             false,
             0, // no start
             0, // no cliff

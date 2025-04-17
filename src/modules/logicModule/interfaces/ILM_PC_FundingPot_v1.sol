@@ -167,6 +167,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 roundId_, uint timestamp_, uint totalContributions_
     );
 
+    /// @notice Emitted when addresses are removed from an access criteria's allowed list.
+    /// @param  roundId_ The ID of the round.
+    /// @param  accessCriteriaId_ The ID of the access criteria.
+    /// @param  addressesRemoved_ The addresses that were removed from the allowlist.
+    event AccessCriteriaAddressesRemoved(
+        uint64 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
+    );
+
     // -------------------------------------------------------------------------
     // Errors
 
@@ -291,7 +299,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Retrieves the access criteria privileges for a specific funding round.
     /// @param  roundId_ The unique identifier of the round.
     /// @param  accessCriteriaId_ The identifier of the access criteria.
-    /// @return isRoundOpen_ Whether anyone can contribute as part of the access criteria.
     /// @return personalCap_ The personal cap for the access criteria.
     /// @return overrideContributionSpan_ Whether to override the round contribution span.
     /// @return start_ The start timestamp for the access criteria.
@@ -304,7 +311,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         external
         view
         returns (
-            bool isRoundOpen_,
             uint personalCap_,
             bool overrideContributionSpan_,
             uint start_,
@@ -395,14 +401,22 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address[] memory allowedAddresses_
     ) external;
 
+    /// @notice Removes addresses from the allowed list for a specific access criteria.
+    /// @dev    Only callable by funding pot admin and only before the round has started.
+    /// @param  roundId_ ID of the round.
+    /// @param  accessCriteriaId_ ID of the access criteria.
+    /// @param  addressesToRemove_ List of addresses to remove from the allowed list.
+    function removeAccessCriteriaAddressesForRound(
+        uint64 roundId_,
+        uint8 accessCriteriaId_,
+        address[] calldata addressesToRemove_
+    ) external;
+
     /// @notice Set access criteria privileges.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
     /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  personalCap_ Personal cap for the access criteria.
-    /// @param  capByNFT_ Cap by for the NFT access criteria.
-    /// @param  capByMerkle_ Cap for the Merkle root access criteria.
-    /// @param  capByList_ Cap by for the List access criteria.
     /// @param  overrideContributionSpan_ Whether to override the round contribution span.
     /// @param  start_ Start timestamp for the access criteria.
     /// @param  cliff_ Cliff timestamp for the access criteria.
@@ -411,9 +425,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 roundId_,
         uint8 accessCriteriaId_,
         uint personalCap_,
-        uint capByNFT_,
-        uint capByMerkle_,
-        uint capByList_,
         bool overrideContributionSpan_,
         uint start_,
         uint cliff_,
