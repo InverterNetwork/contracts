@@ -271,7 +271,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function setCapitalRequired(uint newCapitalRequired_)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
     {
         _setCapitalRequired(newCapitalRequired_);
     }
@@ -280,7 +280,7 @@ contract FM_BC_BondingSurface_Redeeming_v1 is
     function setBasePriceMultiplier(uint newBasePriceMultiplier_)
         public
         virtual
-        permissioned //@todo adapt interface + test
+        permissioned
     {
         _setBasePriceMultiplier(newBasePriceMultiplier_);
     }
