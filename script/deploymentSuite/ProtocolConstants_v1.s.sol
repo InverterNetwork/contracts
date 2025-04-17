@@ -3,6 +3,8 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Script.sol";
 
+import {OrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
+
 /**
  * @title Inverter Protocol Deployment Constants
  *
@@ -34,12 +36,37 @@ contract ProtocolConstants_v1 is Script {
         vm.envAddress("DETERMINISTIC_FACTORY_ADDRESS");
 
     // ------------------------------------------------------------------------
-    // Deployment Salt
+    // Deployment Details
     // ------------------------------------------------------------------------
 
     string public constant factorySaltString = "inverter-deployment-1";
 
     bytes32 public factorySalt = keccak256(abi.encodePacked(factorySaltString));
+
+    // Deployment Addresses for Key Contracts needed for Protocol Updates/Maintenance
+    address public deployedOrchestratorFactory;
+    address public deployedModuleFactory;
+    address public deployedGovernor;
+    address public deployedReverter;
+
+    // Chain IDs for Networks with Deployments
+    // If the current chainid is not part of any array, we assume that we are working locally.
+    uint[] public mainnets = [10, 137, 1101];
+    uint[] public testnets = [2442, 80_002, 84_532, 11_155_111, 11_155_420];
+
+    // Internal Storage for the deployment addresses (hardcoded as they don't change)
+    address private constant governorMainnet =
+        0x0B7c73e778d04533286752BEb7d4BA42AEa2f57D;
+    address private constant governorTestnet =
+        0x38D712491cC8A9B725AB867D56A4B0b25D9E0E3B;
+    address private constant orchestratorFactoryMainnet =
+        0x6ecA5f791d9635e4a1874cCD95564F914fBCF73d;
+    address private constant orchestratorFactoryTestnet =
+        0x535BdbC1D369d43fed8546024D273eE5274fFF65;
+    address private constant reverterMainnet =
+        0x6270b15Ac19eeC3d62920ed7f3a635a93E9C8B4C;
+    address private constant reverterTestnet =
+        0x54C1116BE44184619A8CB37Ef6E924f737C8F734;
 
     // ------------------------------------------------------------------------
     // Important Configuration Data
@@ -52,6 +79,14 @@ contract ProtocolConstants_v1 is Script {
 
     // Governor
     uint public governor_timelockPeriod = 1 weeks;
+
+    // Function to load the protocol constants
+    function loadDeployedContracts() public {
+        deployedOrchestratorFactory = getDeployedOrchestratorFactory();
+        deployedModuleFactory = getDeployedModuleFactory();
+        deployedGovernor = getDeployedGovernor();
+        deployedReverter = getDeployedReverter();
+    }
 
     // Function to log data in a readable format
     function logProtocolMultisigsAndAddresses() public view {
@@ -84,5 +119,82 @@ contract ProtocolConstants_v1 is Script {
         );
         console2.log("\tGovernor:");
         console2.log("\t\tTimelock Period: %s seconds", governor_timelockPeriod);
+    }
+
+    function getDeployedOrchestratorFactory() public view returns (address) {
+        uint chainId = block.chainid;
+
+        // Mainnet Deployments
+        for (uint i = 0; i < mainnets.length; i++) {
+            if (chainId == mainnets[i]) {
+                return orchestratorFactoryMainnet;
+            }
+        }
+
+        // Testnet Deployments
+        for (uint i = 0; i < testnets.length; i++) {
+            if (chainId == testnets[i]) {
+                return orchestratorFactoryTestnet;
+            }
+        }
+
+        // Set to 0 for Local Deployments
+        return 0x0000000000000000000000000000000000000000;
+    }
+
+    function getDeployedModuleFactory() public view returns (address) {
+        if (
+            deployedOrchestratorFactory
+                != 0x0000000000000000000000000000000000000000
+        ) {
+            OrchestratorFactory_v1 orchestratorFactory =
+                OrchestratorFactory_v1(deployedOrchestratorFactory);
+            return address(orchestratorFactory.moduleFactory());
+        }
+
+        // Set to 0 for Local Deployments
+        return 0x0000000000000000000000000000000000000000;
+    }
+
+    function getDeployedGovernor() public view returns (address) {
+        uint chainId = block.chainid;
+
+        // Mainnet Deployments
+        for (uint i = 0; i < mainnets.length; i++) {
+            if (chainId == mainnets[i]) {
+                return governorMainnet;
+            }
+        }
+
+        // Testnet Deployments
+        for (uint i = 0; i < testnets.length; i++) {
+            if (chainId == testnets[i]) {
+                return governorTestnet;
+            }
+        }
+
+        // Set to 0 for Local Deployments
+        return 0x0000000000000000000000000000000000000000;
+    }
+
+    function getDeployedReverter() public view returns (address) {
+        uint chainId = block.chainid;
+
+        // Mainnet Deployments
+        for (uint i = 0; i < mainnets.length; i++) {
+            if (chainId == mainnets[i]) {
+                return reverterMainnet;
+            }
+        }
+
+        // Testnet Deployments
+        for (uint i = 0; i < testnets.length; i++) {
+            if (chainId == testnets[i]) {
+                return reverterTestnet;
+            }
+        }
+
+        // Set to 0 for Local Deployments
+        return 0x0000000000000000000000000000000000000000;
     }
 }
