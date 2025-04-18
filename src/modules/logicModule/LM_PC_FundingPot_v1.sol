@@ -196,18 +196,14 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteria(
-        uint64 roundId_,
-        uint8 accessCriteriaId_,
-        address user_
-    )
+    function getRoundAccessCriteria(uint64 roundId_, uint8 accessCriteriaId_)
         external
         view
         returns (
             bool isRoundOpen_,
             address nftContract_,
             bytes32 merkleRoot_,
-            bool hasAccess_
+            bool isList_
         )
     {
         Round storage round = rounds[roundId_];
@@ -221,12 +217,20 @@ contract LM_PC_FundingPot_v1 is
                 accessCriteria.merkleRoot,
                 true
             );
+        } else if (accessCriteria.accessCriteriaType == AccessCriteriaType.LIST)
+        {
+            return (
+                false,
+                accessCriteria.nftContract,
+                accessCriteria.merkleRoot,
+                true
+            );
         } else {
             return (
                 false,
                 accessCriteria.nftContract,
                 accessCriteria.merkleRoot,
-                accessCriteria.allowedAddresses[user_]
+                false
             );
         }
     }
@@ -275,6 +279,63 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function isRoundClosed(uint64 roundId_) external view returns (bool) {
         return roundIdToClosedStatus[roundId_];
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getUserEligibility(
+        uint64 roundId_,
+        bytes32[] memory merkleProof_,
+        address user_
+    ) external view returns (RoundUserEligibility memory eligibility) {
+        Round storage round = rounds[roundId_];
+
+        if (round.roundEnd == 0 && round.roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundNotCreated();
+        }
+
+        for (uint8 i = 0; i <= MAX_ACCESS_CRITERIA_ID; i++) {
+            AccessCriteria storage accessCriteria = round.accessCriterias[i];
+
+            if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
+                continue;
+            }
+
+            bool isEligible = _checkAccessCriteriaEligibility(
+                roundId_, i, merkleProof_, user_
+            );
+
+            if (isEligible) {
+                eligibility.isEligible = true;
+
+                if (accessCriteria.accessCriteriaType == AccessCriteriaType.NFT)
+                {
+                    eligibility.isNftHolder = true;
+                } else if (
+                    accessCriteria.accessCriteriaType
+                        == AccessCriteriaType.MERKLE
+                ) {
+                    eligibility.isInMerkleTree = true;
+                } else if (
+                    accessCriteria.accessCriteriaType == AccessCriteriaType.LIST
+                ) {
+                    eligibility.isInAllowlist = true;
+                }
+
+                // Check personal cap and contribution span override
+                AccessCriteriaPrivileges storage privileges =
+                    roundItToAccessCriteriaIdToPrivileges[roundId_][i];
+
+                if (privileges.personalCap > eligibility.highestPersonalCap) {
+                    eligibility.highestPersonalCap = privileges.personalCap;
+                }
+
+                if (privileges.overrideContributionSpan) {
+                    eligibility.canOverrideContributionSpan = true;
+                }
+            }
+        }
+
+        return eligibility;
     }
 
     // -------------------------------------------------------------------------
@@ -430,7 +491,7 @@ contract LM_PC_FundingPot_v1 is
         emit AccessCriteriaEdited(roundId_, accessCriteriaId_);
     }
 
-    function removeAccessCriteriaAddressesForRound(
+    function removeAllowlistedAddresses(
         uint64 roundId_,
         uint8 accessCriteriaId_,
         address[] calldata addressesToRemove_
@@ -447,7 +508,7 @@ contract LM_PC_FundingPot_v1 is
             = false;
         }
 
-        emit AccessCriteriaAddressesRemoved(
+        emit AllowlistedAddressesRemoved(
             roundId_, accessCriteriaId_, addressesToRemove_
         );
     }

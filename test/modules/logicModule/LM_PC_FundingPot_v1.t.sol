@@ -1024,16 +1024,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         (
             bool isOpen,
-            address retreivedNftContract,
-            bytes32 retreivedMerkleRoot,
+            address retrievedNftContract,
+            bytes32 retrievedMerkleRoot,
             bool hasAccess
-        ) = fundingPot.getRoundAccessCriteria(
-            roundId, accessCriteriaEnum, address(0x2)
-        );
+        ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaEnum);
 
         assertEq(isOpen, accessCriteriaEnum == 1);
-        assertEq(retreivedNftContract, nftContract);
-        assertEq(retreivedMerkleRoot, merkleRoot);
+        assertEq(retrievedNftContract, nftContract);
+        assertEq(retrievedMerkleRoot, merkleRoot);
         if (accessCriteriaEnum == 1 || accessCriteriaEnum == 4) {
             assertTrue(hasAccess);
         } else {
