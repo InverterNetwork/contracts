@@ -65,6 +65,22 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes32[] merkleProof;
     }
 
+    /// @notice Struct to represent a user's complete eligibility information for a round
+    /// @param  isEligible Whether the user is eligible for the round through any criteria
+    /// @param  isNftHolder Whether the user is eligible through NFT holding
+    /// @param  isInMerkleTree Whether the user is eligible through Merkle proof
+    /// @param  isInAllowlist Whether the user is eligible through allowlist
+    /// @param  highestPersonalCap The highest personal cap the user can access
+    /// @param  canOverrideContributionSpan Whether the user has any criteria that can override contribution span
+    struct RoundUserEligibility {
+        bool isEligible;
+        bool isNftHolder;
+        bool isInMerkleTree;
+        bool isInAllowlist;
+        uint highestPersonalCap;
+        bool canOverrideContributionSpan;
+    }
+
     // -------------------------------------------------------------------------
     // Enums
 
@@ -171,7 +187,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The ID of the round.
     /// @param  accessCriteriaId_ The ID of the access criteria.
     /// @param  addressesRemoved_ The addresses that were removed from the allowlist.
-    event AccessCriteriaAddressesRemoved(
+    event AllowlistedAddressesRemoved(
         uint64 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
     );
 
@@ -277,23 +293,18 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Retrieves the access criteria for a specific funding round.
     /// @param  roundId_ The unique identifier of the round to retrieve.
     /// @param  accessCriteriaId_ The identifier of the access criteria to retrieve.
-    /// @param  user_ The address of the user to check access for.
     /// @return isRoundOpen_ Whether anyone can contribute as part of the access criteria.
     /// @return nftContract_ The address of the NFT contract used for access control.
     /// @return merkleRoot_ The merkle root used for access verification.
-    /// @return hasAccess_ The list of explicitly allowed addresses.
-    function getRoundAccessCriteria(
-        uint64 roundId_,
-        uint8 accessCriteriaId_,
-        address user_
-    )
+    /// @return isList_ If the access criteria is a list, this will be true.
+    function getRoundAccessCriteria(uint64 roundId_, uint8 accessCriteriaId_)
         external
         view
         returns (
             bool isRoundOpen_,
             address nftContract_,
             bytes32 merkleRoot_,
-            bool hasAccess_
+            bool isList_
         );
 
     /// @notice Retrieves the access criteria privileges for a specific funding round.
@@ -326,6 +337,17 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The ID of the round.
     /// @return The closed status of the round.
     function isRoundClosed(uint64 roundId_) external view returns (bool);
+
+    /// @notice Gets eligibility information for a user in a specific round
+    /// @param  roundId_ The ID of the round to check eligibility for
+    /// @param  merkleProof_ The Merkle proof for validation if needed
+    /// @param  user_ The address of the user to check
+    /// @return eligibility Complete eligibility information for the user
+    function getUserEligibility(
+        uint64 roundId_,
+        bytes32[] memory merkleProof_,
+        address user_
+    ) external view returns (RoundUserEligibility memory eligibility);
 
     // -------------------------------------------------------------------------
     // Public - Mutating
@@ -406,7 +428,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ ID of the round.
     /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  addressesToRemove_ List of addresses to remove from the allowed list.
-    function removeAccessCriteriaAddressesForRound(
+    function removeAllowlistedAddresses(
         uint64 roundId_,
         uint8 accessCriteriaId_,
         address[] calldata addressesToRemove_
