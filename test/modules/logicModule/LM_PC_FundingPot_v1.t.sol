@@ -20,6 +20,8 @@ import {
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {ERC721Mock} from
     "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v2NFTMock.sol";
+import {LM_PC_FundingPot_v1ERC20Mock} from
+    "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v1ERC20Mock.sol";
 
 // System under Test (SuT)
 import {LM_PC_FundingPot_v1_Exposed} from
@@ -93,9 +95,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     ERC721Mock mockNFTContract = new ERC721Mock("NFT Mock", "NFT");
+    LM_PC_FundingPot_v1ERC20Mock issuanceERC20Token =
+        new LM_PC_FundingPot_v1ERC20Mock("ERC20 Mock", "ERC20");
 
     // -------------------------------------------------------------------------
     // Setup
+
     function setUp() public {
         // Deploy the SuT
         address impl = address(new LM_PC_FundingPot_v1_Exposed());
@@ -1898,6 +1903,67 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     // -------------------------------------------------------------------------
+    // Test: closeRound()
+
+    function testCloseRound_testWorks() public {
+        fundingPot.setIssuanceToken(address(issuanceERC20Token));
+
+        testCreateRound();
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+        uint amount = 1000;
+
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessId);
+
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId, accessId, 1000, false, 0, 0, 0
+        );
+        mockNFTContract.mint(contributor1_);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor1_);
+        _token.approve(address(fundingPot), 1000);
+
+        vm.prank(contributor1_);
+        fundingPot.contributeToRound(
+            roundId, amount, accessId, new bytes32[](0)
+        );
+
+        uint totalContributions =
+            fundingPot.exposed_getTotalRoundContributions(roundId);
+
+        assertEq(totalContributions, amount);
+
+        uint personalContributions = fundingPot
+            .exposed_getUserContributionToRound(roundId, contributor1_);
+        assertEq(personalContributions, amount);
+
+        fundingPot.closeRound(roundId);
+
+        console2.log("-----------------CLOSE ROUND------------");
+        console2.log(
+            "balnce of issuanceToken: ",
+            issuanceERC20Token.balanceOf(address(fundingPot))
+        );
+        console2.log(
+            "balnce of contributor1: ",
+            issuanceERC20Token.balanceOf(contributor1_)
+        );
+    }
+
+    // -------------------------------------------------------------------------
+
     // Internal Functions
     function testFuzz_validateAccessCriteria(
         uint64 roundId_,

@@ -14,6 +14,8 @@ import {
     ERC20PaymentClientBase_v2,
     Module_v1
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -23,6 +25,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 import "@oz/utils/cryptography/MerkleProof.sol";
+import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 /**
  * @title   Inverter Funding Pot Logic Module
@@ -132,6 +135,19 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Maps round IDs to closed status
     mapping(uint64 => bool) private roundIdToClosedStatus;
+
+    /// @notice Maps round IDs to bonding curve tokens bought
+    mapping(uint64 => uint) private roundTokensBought;
+
+    /// @notice Maps round IDs to contributors recipients
+    mapping(uint64 => EnumerableSet.AddressSet) private contributorsByRound;
+
+    /// @notice Maps round IDs to user addresses to contribution amounts by access criteria
+    mapping(uint64 => mapping(address => mapping(uint8 => uint))) private
+        userContributionsByAccessCriteria;
+
+    /// @notice The token that is being issued by the funding pot.
+    address public issuanceToken;
 
     /// @notice The current round count.
     uint64 private roundCount;
@@ -339,6 +355,10 @@ contract LM_PC_FundingPot_v1 is
 
     // -------------------------------------------------------------------------
     // Public - Mutating
+
+    function setIssuanceToken(address issuanceToken_) external {
+        issuanceToken = issuanceToken_;
+    }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function createRound(
@@ -631,6 +651,25 @@ contract LM_PC_FundingPot_v1 is
         bool readyToClose = _checkRoundClosureConditions(roundId_);
         if (readyToClose) {
             _closeRound(roundId_);
+
+            uint totalContributions = _getTotalRoundContribution(roundId_);
+
+            // address fundingManager =
+            //     address(__Module_orchestrator.fundingManager());
+            // address issuanceToken =
+            //     address(IBondingCurveBase_v1(fundingManager).getIssuanceToken());
+
+            uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
+            IBondingCurveBase_v1(issuanceToken).buyFor(
+                address(this), totalContributions, 0
+            );
+            uint balanceAfter = IERC20(issuanceToken).balanceOf(address(this));
+
+            uint tokensBought = balanceAfter - balanceBefore;
+            roundTokensBought[roundId_] = tokensBought;
+
+            // TODO: Create payment orders for all contributors based on their access criteria
+            _createPaymentOrdersForContributors(roundId_);
         } else {
             revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
         }
@@ -765,10 +804,14 @@ contract LM_PC_FundingPot_v1 is
         // Record contribution
         roundIdToUserToContribution[roundId_][_msgSender()] += adjustedAmount;
         roundIdToTotalContributions[roundId_] += adjustedAmount;
+        userContributionsByAccessCriteria[roundId_][_msgSender()][accessCriteriaId_]
+        += adjustedAmount;
 
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), adjustedAmount
         );
+
+        EnumerableSet.add(contributorsByRound[roundId_], _msgSender());
 
         emit ContributionMade(roundId_, _msgSender(), adjustedAmount);
 
@@ -777,6 +820,28 @@ contract LM_PC_FundingPot_v1 is
             bool readyToClose = _checkRoundClosureConditions(roundId_);
             if (readyToClose) {
                 _closeRound(roundId_);
+
+                uint totalContributions = _getTotalRoundContribution(roundId_);
+
+                // address fundingManager =
+                //     address(__Module_orchestrator.fundingManager());
+                // address issuanceToken = address(
+                //     IBondingCurveBase_v1(fundingManager).getIssuanceToken()
+                // );
+
+                uint balanceBefore =
+                    IERC20(issuanceToken).balanceOf(address(this));
+                IBondingCurveBase_v1(issuanceToken).buyFor(
+                    address(this), totalContributions, 0
+                );
+                uint balanceAfter =
+                    IERC20(issuanceToken).balanceOf(address(this));
+
+                uint tokensBought = balanceAfter - balanceBefore;
+                roundTokensBought[roundId_] = tokensBought;
+
+                // Create payment orders for all contributors based on their access criteria
+                _createPaymentOrdersForContributors(roundId_);
             }
         }
     }
@@ -991,7 +1056,7 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
-    /// @notice Verifies a Merkle proof for access control
+    /// @notice Verifies a Merkle p roof for access control
     /// @dev    Validates that the user's address is part of the Merkle tree
     /// @param  root_ The Merkle root to validate against
     /// @param  user_ The address of the user to check
@@ -1035,6 +1100,131 @@ contract LM_PC_FundingPot_v1 is
         emit RoundClosed(
             roundId_, block.timestamp, roundIdToTotalContributions[roundId_]
         );
+    }
+
+    /// @notice Creates payment orders for all contributors in a round based on their access criteria
+    /// @dev    Loops through all contributors and creates payment orders with appropriate vesting schedules
+    /// @param  roundId_ The ID of the round to create payment orders for
+    function _createPaymentOrdersForContributors(uint64 roundId_) internal {
+        Round storage round = rounds[roundId_];
+        uint totalContributions = roundIdToTotalContributions[roundId_];
+        uint tokensBought = roundTokensBought[roundId_];
+
+        if (totalContributions == 0 || tokensBought == 0) return;
+
+        address[] memory contributors =
+            EnumerableSet.values(contributorsByRound[roundId_]);
+        // address issuanceToken = address(
+        //     IBondingCurveBase_v1(
+        //         address(__Module_orchestrator.fundingManager())
+        //     ).getIssuanceToken()
+        // );
+
+        for (uint i = 0; i < contributors.length; i++) {
+            address contributor = contributors[i];
+            uint contributorTotal =
+                roundIdToUserToContribution[roundId_][contributor];
+
+            // Skip if no contribution
+            if (contributorTotal == 0) continue;
+
+            // Calculate tokens for this contributor proportionally
+            uint contributorTokens =
+                (contributorTotal * tokensBought) / totalContributions;
+
+            // Find which access criteria this contributor used and create appropriate payment order
+            for (
+                uint8 accessCriteriaId = 0;
+                accessCriteriaId <= MAX_ACCESS_CRITERIA_ID;
+                accessCriteriaId++
+            ) {
+                uint contributionByAccessCriteria =
+                userContributionsByAccessCriteria[roundId_][contributor][accessCriteriaId];
+
+                // Skip if no contribution under this access criteria
+                if (contributionByAccessCriteria == 0) continue;
+
+                // Get privileges for this access criteria
+                AccessCriteriaPrivileges storage privileges =
+                roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId];
+
+                // Calculate tokens for this specific access criteria contribution
+                uint tokensForThisAccessCriteria = (
+                    contributionByAccessCriteria * tokensBought
+                ) / totalContributions;
+
+                // Determine vesting parameters
+                uint start = privileges.overrideContributionSpan
+                    ? privileges.start
+                    : round.roundEnd;
+                uint cliff =
+                    privileges.overrideContributionSpan ? privileges.cliff : 0;
+                uint end = privileges.overrideContributionSpan
+                    ? privileges.end
+                    : round.roundEnd;
+
+                // If no override and no end time specified, use current time
+                if (start == 0) start = block.timestamp;
+                if (end == 0) end = block.timestamp;
+
+                // Prepare flags and data for the payment order
+                bytes32 flags = 0;
+                bytes32[] memory data = new bytes32[](3); // For start, cliff, and end
+                uint8 flagCount = 0;
+
+                // Set start flag (flag 1)
+                if (start > 0) {
+                    flags |= bytes32(uint(1) << 1); // Flag 1 for start
+                    data[flagCount] = bytes32(start);
+                    flagCount++;
+                }
+
+                // Set cliff flag (flag 2)
+                if (cliff > 0) {
+                    flags |= bytes32(uint(1) << 2); // Flag 2 for cliff
+                    data[flagCount] = bytes32(cliff);
+                    flagCount++;
+                }
+
+                // Set end flag (flag 3)
+                if (end > 0) {
+                    flags |= bytes32(uint(1) << 3); // Flag 3 for end
+                    data[flagCount] = bytes32(end);
+                    flagCount++;
+                }
+
+                // Resize data array to match actual flag count
+                bytes32[] memory finalData = new bytes32[](flagCount);
+                for (uint8 j = 0; j < flagCount; j++) {
+                    finalData[j] = data[j];
+                }
+
+                // Create payment order
+                IERC20PaymentClientBase_v2.PaymentOrder memory paymentOrder =
+                IERC20PaymentClientBase_v2.PaymentOrder({
+                    recipient: contributor,
+                    paymentToken: issuanceToken,
+                    amount: tokensForThisAccessCriteria,
+                    originChainId: 0, // Assuming same chain
+                    targetChainId: 0, // Assuming same chain
+                    flags: flags,
+                    data: finalData
+                });
+
+                // Submit payment order to payment processor
+                _addPaymentOrder(paymentOrder);
+
+                emit PaymentOrderCreated(
+                    roundId_,
+                    contributor,
+                    accessCriteriaId,
+                    tokensForThisAccessCriteria,
+                    start,
+                    cliff,
+                    end
+                );
+            }
+        }
     }
 
     /// @notice Checks if a round has reached its cap or time limit
