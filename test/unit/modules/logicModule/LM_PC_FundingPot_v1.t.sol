@@ -1905,7 +1905,184 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Test: closeRound()
 
-    function testCloseRound_testWorks() public {
+    /*
+    ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+    │   └── When user attempts to close a round
+    │       └── Then it should revert with Module__CallerNotAuthorized
+    │
+    ├── Given round does not exist
+    │   └── When user attempts to close the round
+    │       └── Then it should revert with Module__LM_PC_FundingPot__RoundNotCreated
+    │
+    ├── Given round is already closed
+    │   └── When user attempts to close the round again
+    │       └── Then it should revert with Module__LM_PC_FundingPot__RoundHasEnded
+    │
+    ├── Given round has started but not ended
+    │   └── And round cap has not been reached
+    │   └── And user has contributed successfully
+    │   └── When user attempts to close the round
+    │       └── Then it should not revert and round should be closed
+    │       └── And payment orders should be created correctly
+    │
+    ├── Given round has ended (by time)
+    │   └── And user has contributed during active round
+    │   └── When user attempts to close the round
+    │       └── Then it should not revert and round should be closed
+    │       └── And payment orders should be created correctly
+    │
+    ├── Given round cap has been reached
+    │   └── And user has contributed up to the cap
+    │   └── When user attempts to close the round
+    │       └── Then it should not revert and round should be closed
+    │       └── And payment orders should be created correctly
+    │
+    └── Given multiple users contributed before round ended or cap reached
+    └── When round is closed
+        └── Then it should not revert and round should be closed
+        └── And payment orders should be created for all contributors
+    */
+    function testCloseRound_revertsGivenUserIsNotFundingPotAdmin(address user_)
+        public
+    {
+        vm.assume(user_ != address(0) && user_ != address(this));
+
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.startPrank(user_);
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+        );
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector, roleId, user_
+            )
+        );
+        fundingPot.closeRound(roundId);
+        vm.stopPrank();
+    }
+
+    function testCloseRound_revertsGivenRoundDoesNotExist() public {
+        uint64 nonExistentRoundId = 999;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundNotCreated
+                    .selector
+            )
+        );
+        fundingPot.closeRound(nonExistentRoundId);
+    }
+
+    function testCloseRound_revertsGivenRoundIsAlreadyClosed() public {
+        testCloseRound_worksGivenRoundCapHasBeenReached();
+        // Try to close it again
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundHasEnded
+                    .selector
+            )
+        );
+        fundingPot.closeRound(roundId);
+    }
+
+    function testCloseRound_worksGivenRoundHasStartedButNotEnded() public {
+        fundingPot.setIssuanceToken(address(issuanceERC20Token));
+
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        // Set up access criteria
+        uint8 accessId = 1;
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessId);
+
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId, accessId, 1000, false, 0, 0, 0
+        );
+
+        // Warp to round start
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Make a contribution
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 1000);
+        fundingPot.contributeToRound(roundId, 1000, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Close the round
+        fundingPot.closeRound(roundId);
+
+        // Verify round is closed
+        assertEq(fundingPot.isRoundClosed(roundId), true);
+
+        // Verify payment orders
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+            fundingPot.paymentOrders();
+        assertEq(orders.length, 1);
+        assertEq(orders[0].amount, 1000);
+    }
+
+    function testCloseRound_worksGivenRoundHasEnded() public {
+        fundingPot.setIssuanceToken(address(issuanceERC20Token));
+
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        // Set up access criteria
+        uint8 accessId = 1;
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessId);
+
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId, accessId, 1000, false, 0, 0, 0
+        );
+
+        // Make a contribution
+        (uint roundStart, uint roundEnd,,,,,) =
+            fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 500);
+        fundingPot.contributeToRound(roundId, 500, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Warp to after round end
+        vm.warp(roundEnd + 1);
+
+        // Close the round
+        fundingPot.closeRound(roundId);
+
+        // Verify round is closed
+        assertEq(fundingPot.isRoundClosed(roundId), true);
+
+        // Verify payment orders
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+            fundingPot.paymentOrders();
+        assertEq(orders.length, 1);
+        assertEq(orders[0].amount, 500);
+    }
+
+    function testCloseRound_worksGivenRoundCapHasBeenReached() public {
         fundingPot.setIssuanceToken(address(issuanceERC20Token));
 
         testCreateRound();
@@ -1940,26 +2117,79 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, amount, accessId, new bytes32[](0)
         );
 
-        uint totalContributions =
-            fundingPot.exposed_getTotalRoundContributions(roundId);
+        assertEq(fundingPot.isRoundClosed(roundId), false);
+        fundingPot.closeRound(roundId);
+        assertEq(fundingPot.isRoundClosed(roundId), true);
 
-        assertEq(totalContributions, amount);
+        // Get the payment orders and store them in a variable
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+            fundingPot.paymentOrders();
 
-        uint personalContributions = fundingPot
-            .exposed_getUserContributionToRound(roundId, contributor1_);
-        assertEq(personalContributions, amount);
+        assertEq(orders.length, 1);
 
+        // // Now you can use the orders array
+        // console2.log("Number of payment orders:", orders.length);
+
+        // If you want to log details of each order
+        for (uint i = 0; i < orders.length; i++) {
+            console2.log("Order", i, "recipient:", orders[i].recipient);
+            console2.log("Order", i, "amount:", orders[i].amount);
+            console2.logBytes32(orders[i].flags);
+            // Log other fields as needed
+        }
+    }
+
+    function testCloseRound_worksWithMultipleContributors() public {
+        fundingPot.setIssuanceToken(address(issuanceERC20Token));
+
+        testCreateRound();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        // Set up access criteria
+        uint8 accessId = 0; // Using OPEN access criteria for simplicity
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessId);
+
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId, accessId, 1000, false, 0, 0, 0
+        );
+
+        // Warp to round start
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Multiple contributors
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 500);
+        fundingPot.contributeToRound(roundId, 500, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        vm.startPrank(contributor2_);
+        _token.approve(address(fundingPot), 200);
+        fundingPot.contributeToRound(roundId, 200, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        vm.startPrank(contributor3_);
+        _token.approve(address(fundingPot), 300);
+        fundingPot.contributeToRound(roundId, 300, accessId, new bytes32[](0));
+        vm.stopPrank();
+
+        // Close the round
         fundingPot.closeRound(roundId);
 
-        console2.log("-----------------CLOSE ROUND------------");
-        console2.log(
-            "balnce of issuanceToken: ",
-            issuanceERC20Token.balanceOf(address(fundingPot))
-        );
-        console2.log(
-            "balnce of contributor1: ",
-            issuanceERC20Token.balanceOf(contributor1_)
-        );
+        // Verify round is closed
+        assertEq(fundingPot.isRoundClosed(roundId), true);
+
+        // Verify payment orders
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+            fundingPot.paymentOrders();
+        assertEq(orders.length, 3);
     }
 
     // -------------------------------------------------------------------------
