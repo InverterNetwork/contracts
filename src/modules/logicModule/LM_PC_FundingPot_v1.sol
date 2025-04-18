@@ -144,7 +144,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Maps round IDs to user addresses to contribution amounts by access criteria
     mapping(uint64 => mapping(address => mapping(uint8 => uint))) private
-        userContributionsByAccessCriteria;
+        roundIdTouserContributionsByAccessCriteria;
 
     /// @notice The token that is being issued by the funding pot.
     address public issuanceToken;
@@ -635,7 +635,10 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function closeRound(uint64 roundId_) external {
+    function closeRound(uint64 roundId_)
+        external
+        onlyModuleRole(FUNDING_POT_ADMIN_ROLE)
+    {
         Round storage round = rounds[roundId_];
 
         // Validate round exists
@@ -804,7 +807,7 @@ contract LM_PC_FundingPot_v1 is
         // Record contribution
         roundIdToUserToContribution[roundId_][_msgSender()] += adjustedAmount;
         roundIdToTotalContributions[roundId_] += adjustedAmount;
-        userContributionsByAccessCriteria[roundId_][_msgSender()][accessCriteriaId_]
+        roundIdTouserContributionsByAccessCriteria[roundId_][_msgSender()][accessCriteriaId_]
         += adjustedAmount;
 
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
@@ -1139,7 +1142,7 @@ contract LM_PC_FundingPot_v1 is
                 accessCriteriaId++
             ) {
                 uint contributionByAccessCriteria =
-                userContributionsByAccessCriteria[roundId_][contributor][accessCriteriaId];
+                roundIdTouserContributionsByAccessCriteria[roundId_][contributor][accessCriteriaId];
 
                 // Skip if no contribution under this access criteria
                 if (contributionByAccessCriteria == 0) continue;
@@ -1156,7 +1159,7 @@ contract LM_PC_FundingPot_v1 is
                 // Determine vesting parameters
                 uint start = privileges.overrideContributionSpan
                     ? privileges.start
-                    : round.roundEnd;
+                    : round.roundStart;
                 uint cliff =
                     privileges.overrideContributionSpan ? privileges.cliff : 0;
                 uint end = privileges.overrideContributionSpan
@@ -1211,7 +1214,7 @@ contract LM_PC_FundingPot_v1 is
                     data: finalData
                 });
 
-                // Submit payment order to payment processor
+                // Add payment order to payment processor
                 _addPaymentOrder(paymentOrder);
 
                 emit PaymentOrderCreated(
