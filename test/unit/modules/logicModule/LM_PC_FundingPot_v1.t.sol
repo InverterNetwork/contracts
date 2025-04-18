@@ -1936,11 +1936,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   └── When user attempts to close the round
     │       └── Then it should not revert and round should be closed
     │       └── And payment orders should be created correctly
-    │
+    -── Given round cap has been reached
+    │   └── And the round is set up for autoclosure
+    │   └── And user has contributed up to the cap
+    │       └── Then it should not revert and round should be closed
+    │       └── And payment orders should be created correctly
     └── Given multiple users contributed before round ended or cap reached
-    └── When round is closed
-        └── Then it should not revert and round should be closed
-        └── And payment orders should be created for all contributors
+        └── When round is closed
+            └── Then it should not revert and round should be closed
+            └── And payment orders should be created for all contributors
     */
     function testCloseRound_revertsGivenUserIsNotFundingPotAdmin(address user_)
         public
@@ -2126,17 +2130,50 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             fundingPot.paymentOrders();
 
         assertEq(orders.length, 1);
+    }
 
-        // // Now you can use the orders array
-        // console2.log("Number of payment orders:", orders.length);
+    function testCloseRound_worksGivenRoundisAutoClosure() public {
+        fundingPot.setIssuanceToken(address(issuanceERC20Token));
 
-        // If you want to log details of each order
-        for (uint i = 0; i < orders.length; i++) {
-            console2.log("Order", i, "recipient:", orders[i].recipient);
-            console2.log("Order", i, "amount:", orders[i].amount);
-            console2.logBytes32(orders[i].flags);
-            // Log other fields as needed
-        }
+        testEditRound();
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
+        uint amount = 2000;
+
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessId);
+
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId, accessId, 2000, false, 0, 0, 0
+        );
+        mockNFTContract.mint(contributor1_);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor1_);
+        _token.approve(address(fundingPot), 2000);
+
+        vm.prank(contributor1_);
+        fundingPot.contributeToRound(
+            roundId, amount, accessId, new bytes32[](0)
+        );
+
+        assertEq(fundingPot.isRoundClosed(roundId), true);
+
+        // Get the payment orders and store them in a variable
+        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
+            fundingPot.paymentOrders();
+
+        assertEq(orders.length, 1);
     }
 
     function testCloseRound_worksWithMultipleContributors() public {
