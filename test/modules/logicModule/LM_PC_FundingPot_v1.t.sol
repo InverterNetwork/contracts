@@ -119,7 +119,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _setUpOrchestrator(fundingPot);
 
         // Initiate the Logic Module with the metadata and config data
-        fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
+        fundingPot.init(
+            _orchestrator, _METADATA, abi.encode(address(issuanceERC20Token))
+        ); // @note: The address of issuancetoken is being passed for testing purpose as of now, We arent actually sure how to use the mock contract alongside the fundingpot contract.
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -1996,8 +1998,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testCloseRound_worksGivenRoundHasStartedButNotEnded() public {
-        fundingPot.setIssuanceToken(address(issuanceERC20Token));
-
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -2040,8 +2040,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testCloseRound_worksGivenRoundHasEnded() public {
-        fundingPot.setIssuanceToken(address(issuanceERC20Token));
-
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
@@ -2087,8 +2085,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testCloseRound_worksGivenRoundCapHasBeenReached() public {
-        fundingPot.setIssuanceToken(address(issuanceERC20Token));
-
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
@@ -2133,8 +2129,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testCloseRound_worksGivenRoundisAutoClosure() public {
-        fundingPot.setIssuanceToken(address(issuanceERC20Token));
-
         testEditRound();
 
         uint64 roundId = fundingPot.getRoundCount();
@@ -2177,8 +2171,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testCloseRound_worksWithMultipleContributors() public {
-        fundingPot.setIssuanceToken(address(issuanceERC20Token));
-
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 

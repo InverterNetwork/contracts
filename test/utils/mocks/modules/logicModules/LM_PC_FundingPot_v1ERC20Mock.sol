@@ -9,4 +9,12 @@ contract LM_PC_FundingPot_v1ERC20Mock is ERC20 {
     function buyFor(address to, uint value, uint minTokens) public {
         _mint(to, value);
     }
+
+    function token() public view returns (address) {
+        return address(this);
+    }
+
+    function getIssuanceToken() public view returns (address) {
+        return address(this);
+    }
 }
