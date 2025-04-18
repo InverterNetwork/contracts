@@ -191,6 +191,24 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint64 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
     );
 
+    /// @notice Emitted when a payment order is created.
+    /// @param  roundId_ The ID of the round.
+    /// @param  contributor_ The address of the contributor.
+    /// @param  accessCriteriaId_ The ID of the access criteria.
+    /// @param  tokensForThisAccessCriteria_ The amount of tokens contributed for this access criteria.
+    /// @param  start_ The start timestamp for for when the linear vesting starts.
+    /// @param  cliff_ The time in seconds from start time at which the unlock starts.
+    /// @param  end_ The end timestamp for when the linear vesting ends.
+    event PaymentOrderCreated(
+        uint64 roundId_,
+        address contributor_,
+        uint8 accessCriteriaId_,
+        uint tokensForThisAccessCriteria_,
+        uint start_,
+        uint cliff_,
+        uint end_
+    );
+
     // -------------------------------------------------------------------------
     // Errors
 
