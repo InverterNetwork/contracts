@@ -655,21 +655,8 @@ contract LM_PC_FundingPot_v1 is
         if (readyToClose) {
             _closeRound(roundId_);
 
-            uint totalContributions = _getTotalRoundContribution(roundId_);
-
-            // address fundingManager =
-            //     address(__Module_orchestrator.fundingManager());
-            // address issuanceToken =
-            //     address(IBondingCurveBase_v1(fundingManager).getIssuanceToken());
-
-            uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
-            IBondingCurveBase_v1(issuanceToken).buyFor(
-                address(this), totalContributions, 0
-            );
-            uint balanceAfter = IERC20(issuanceToken).balanceOf(address(this));
-
-            uint tokensBought = balanceAfter - balanceBefore;
-            roundTokensBought[roundId_] = tokensBought;
+            // Buy the bonding curve token
+            _buyBondingCurveToken(roundId_);
 
             // TODO: Create payment orders for all contributors based on their access criteria
             _createPaymentOrdersForContributors(roundId_);
@@ -824,24 +811,8 @@ contract LM_PC_FundingPot_v1 is
             if (readyToClose) {
                 _closeRound(roundId_);
 
-                uint totalContributions = _getTotalRoundContribution(roundId_);
-
-                // address fundingManager =
-                //     address(__Module_orchestrator.fundingManager());
-                // address issuanceToken = address(
-                //     IBondingCurveBase_v1(fundingManager).getIssuanceToken()
-                // );
-
-                uint balanceBefore =
-                    IERC20(issuanceToken).balanceOf(address(this));
-                IBondingCurveBase_v1(issuanceToken).buyFor(
-                    address(this), totalContributions, 0
-                );
-                uint balanceAfter =
-                    IERC20(issuanceToken).balanceOf(address(this));
-
-                uint tokensBought = balanceAfter - balanceBefore;
-                roundTokensBought[roundId_] = tokensBought;
+                // Buy the bonding curve token
+                _buyBondingCurveToken(roundId_);
 
                 // Create payment orders for all contributors based on their access criteria
                 _createPaymentOrdersForContributors(roundId_);
@@ -1228,6 +1199,25 @@ contract LM_PC_FundingPot_v1 is
                 );
             }
         }
+    }
+
+    function _buyBondingCurveToken(uint64 roundId_) internal {
+        uint totalContributions = _getTotalRoundContribution(roundId_);
+
+        // address fundingManager =
+        //     address(__Module_orchestrator.fundingManager());
+        // address issuanceToken = address(
+        //     IBondingCurveBase_v1(fundingManager).getIssuanceToken()
+        // );
+
+        uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
+        IBondingCurveBase_v1(issuanceToken).buyFor(
+            address(this), totalContributions, 0
+        );
+        uint balanceAfter = IERC20(issuanceToken).balanceOf(address(this));
+
+        uint tokensBought = balanceAfter - balanceBefore;
+        roundTokensBought[roundId_] = tokensBought;
     }
 
     /// @notice Checks if a round has reached its cap or time limit
