@@ -642,12 +642,10 @@ contract LM_PC_FundingPot_v1 is
     {
         Round storage round = rounds[roundId_];
 
-        // Validate round exists
         if (round.roundEnd == 0 && round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        // Check if round is already closed
         if (roundIdToClosedStatus[roundId_]) {
             revert Module__LM_PC_FundingPot__RoundHasEnded();
         }
@@ -656,10 +654,8 @@ contract LM_PC_FundingPot_v1 is
         if (readyToClose) {
             _closeRound(roundId_);
 
-            // Buy the bonding curve token
             _buyBondingCurveToken(roundId_);
 
-            // TODO: Create payment orders for all contributors based on their access criteria
             _createPaymentOrdersForContributors(roundId_);
         } else {
             revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
@@ -727,8 +723,6 @@ contract LM_PC_FundingPot_v1 is
         pure
         returns (bool)
     {
-        // start_ + cliff_ should be less or equal to end_
-        // this already implies that start_ is not greater than end_
         return start_ + cliff_ <= end_;
     }
 
@@ -752,12 +746,10 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         uint currentTime = block.timestamp;
 
-        // Validate round exists
         if (round.roundEnd == 0 && round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        // Validate contribution timing
         if (currentTime < round.roundStart) {
             revert Module__LM_PC_FundingPot__RoundHasNotStarted();
         }
@@ -766,7 +758,6 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
-        // Validate access criteria
         _validateAccessCriteria(
             roundId_, accessCriteriaId_, merkleProof_, _msgSender()
         );
@@ -775,7 +766,6 @@ contract LM_PC_FundingPot_v1 is
             roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
         bool canOverrideContributionSpan = privileges.overrideContributionSpan;
 
-        // Allow contributions after the round end if the user can override the contribution span
         if (
             round.roundEnd > 0 && currentTime > round.roundEnd
                 && !canOverrideContributionSpan
@@ -792,7 +782,6 @@ contract LM_PC_FundingPot_v1 is
             unspentPersonalCap_
         );
 
-        // Record contribution
         roundIdToUserToContribution[roundId_][_msgSender()] += adjustedAmount;
         roundIdToTotalContributions[roundId_] += adjustedAmount;
         roundIdTouserContributionsByAccessCriteria[roundId_][_msgSender()][accessCriteriaId_]
@@ -812,10 +801,8 @@ contract LM_PC_FundingPot_v1 is
             if (readyToClose) {
                 _closeRound(roundId_);
 
-                // Buy the bonding curve token
                 _buyBondingCurveToken(roundId_);
 
-                // Create payment orders for all contributors based on their access criteria
                 _createPaymentOrdersForContributors(roundId_);
             }
         }
@@ -1022,12 +1009,10 @@ contract LM_PC_FundingPot_v1 is
         try IERC721(nftContract_).balanceOf(user_) returns (uint balance) {
             if (balance == 0) {
                 return false;
-                // revert Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
             }
             return true;
         } catch {
             return false;
-            // revert Module__LM_PC_FundingPot__AccessCriteriaNftFailed();
         }
     }
 
@@ -1048,7 +1033,6 @@ contract LM_PC_FundingPot_v1 is
 
         if (!MerkleProof.verify(merkleProof_, root_, leaf)) {
             return false;
-            // revert Module__LM_PC_FundingPot__AccessCriteriaMerkleFailed();
         }
 
         return true;
@@ -1060,10 +1044,8 @@ contract LM_PC_FundingPot_v1 is
     function _closeRound(uint64 roundId_) internal {
         Round storage round = rounds[roundId_];
 
-        // Mark round as closed
         roundIdToClosedStatus[roundId_] = true;
 
-        // Execute hook if configured
         if (round.hookContract != address(0) && round.hookFunction.length > 0) {
             (bool success,) = round.hookContract.call(round.hookFunction);
             if (!success) {
@@ -1071,7 +1053,6 @@ contract LM_PC_FundingPot_v1 is
             }
         }
 
-        // Emit event for round closure
         emit RoundClosed(
             roundId_, block.timestamp, roundIdToTotalContributions[roundId_]
         );
@@ -1103,14 +1084,12 @@ contract LM_PC_FundingPot_v1 is
             uint contributorTotal =
                 roundIdToUserToContribution[roundId_][contributor];
 
-            // Skip if no contribution
             if (contributorTotal == 0) continue;
 
             // Calculate tokens for this contributor proportionally
             uint contributorTokens =
                 (contributorTotal * tokensBought) / totalContributions;
 
-            // Find which access criteria this contributor used and create appropriate payment order
             for (
                 uint8 accessCriteriaId = 0;
                 accessCriteriaId <= MAX_ACCESS_CRITERIA_ID;
@@ -1119,19 +1098,15 @@ contract LM_PC_FundingPot_v1 is
                 uint contributionByAccessCriteria =
                 roundIdTouserContributionsByAccessCriteria[roundId_][contributor][accessCriteriaId];
 
-                // Skip if no contribution under this access criteria
                 if (contributionByAccessCriteria == 0) continue;
 
-                // Get privileges for this access criteria
                 AccessCriteriaPrivileges storage privileges =
                 roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId];
 
-                // Calculate tokens for this specific access criteria contribution
                 uint tokensForThisAccessCriteria = (
                     contributionByAccessCriteria * tokensBought
                 ) / totalContributions;
 
-                // Determine vesting parameters
                 uint start = privileges.overrideContributionSpan
                     ? privileges.start
                     : round.roundStart;
@@ -1141,55 +1116,47 @@ contract LM_PC_FundingPot_v1 is
                     ? privileges.end
                     : round.roundEnd;
 
-                // If no override and no end time specified, use current time
                 if (start == 0) start = block.timestamp;
                 if (end == 0) end = block.timestamp;
 
-                // Prepare flags and data for the payment order
                 bytes32 flags = 0;
                 bytes32[] memory data = new bytes32[](3); // For start, cliff, and end
                 uint8 flagCount = 0;
 
-                // Set start flag (flag 1)
                 if (start > 0) {
                     flags |= bytes32(uint(1) << 1); // Flag 1 for start
                     data[flagCount] = bytes32(start);
                     flagCount++;
                 }
 
-                // Set cliff flag (flag 2)
                 if (cliff > 0) {
                     flags |= bytes32(uint(1) << 2); // Flag 2 for cliff
                     data[flagCount] = bytes32(cliff);
                     flagCount++;
                 }
 
-                // Set end flag (flag 3)
                 if (end > 0) {
                     flags |= bytes32(uint(1) << 3); // Flag 3 for end
                     data[flagCount] = bytes32(end);
                     flagCount++;
                 }
 
-                // Resize data array to match actual flag count
                 bytes32[] memory finalData = new bytes32[](flagCount);
                 for (uint8 j = 0; j < flagCount; j++) {
                     finalData[j] = data[j];
                 }
 
-                // Create payment order
                 IERC20PaymentClientBase_v2.PaymentOrder memory paymentOrder =
                 IERC20PaymentClientBase_v2.PaymentOrder({
                     recipient: contributor,
                     paymentToken: issuanceToken,
                     amount: tokensForThisAccessCriteria,
-                    originChainId: 0, // Assuming same chain
-                    targetChainId: 0, // Assuming same chain
+                    originChainId: block.chainid,
+                    targetChainId: block.chainid,
                     flags: flags,
                     data: finalData
                 });
 
-                // Add payment order to payment processor
                 _addPaymentOrder(paymentOrder);
 
                 emit PaymentOrderCreated(
