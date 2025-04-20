@@ -139,4 +139,20 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     {
         return _checkRoundClosureConditions(roundId_);
     }
+
+    /**
+     * @notice Exposes the internal _buyBondingCurveToken function for testing
+     */
+    function exposed_buyBondingCurveToken(uint64 roundId_) external {
+        return _buyBondingCurveToken(roundId_);
+    }
+
+    /**
+     * @notice Exposes the internal _createPaymentOrdersForContributors function for testing
+     */
+    function exposed_createPaymentOrdersForContributors(uint64 roundId_)
+        external
+    {
+        return _createPaymentOrdersForContributors(roundId_);
+    }
 }
