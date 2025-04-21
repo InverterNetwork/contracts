@@ -438,6 +438,10 @@ contract LM_PC_FundingPot_v1 is
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
+        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+        }
+
         _validateEditRoundParameters(round);
 
         if (
