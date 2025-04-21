@@ -284,58 +284,57 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function getUserEligibility(
         uint64 roundId_,
+        uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
-    ) external view returns (RoundUserEligibility memory eligibility) {
+    )
+        external
+        view
+        returns (bool isEligible, uint remainingAmountAllowedToContribute)
+    {
+        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+        }
+
         Round storage round = rounds[roundId_];
 
         if (round.roundEnd == 0 && round.roundCap == 0) {
             revert Module__LM_PC_FundingPot__RoundNotCreated();
         }
 
-        for (uint8 i = 0; i <= MAX_ACCESS_CRITERIA_ID; i++) {
-            AccessCriteria storage accessCriteria = round.accessCriterias[i];
+        AccessCriteria storage accessCriteria =
+            round.accessCriterias[accessCriteriaId_];
 
-            if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
-                continue;
-            }
-
-            bool isEligible = _checkAccessCriteriaEligibility(
-                roundId_, i, merkleProof_, user_
-            );
-
-            if (isEligible) {
-                eligibility.isEligible = true;
-
-                if (accessCriteria.accessCriteriaType == AccessCriteriaType.NFT)
-                {
-                    eligibility.isNftHolder = true;
-                } else if (
-                    accessCriteria.accessCriteriaType
-                        == AccessCriteriaType.MERKLE
-                ) {
-                    eligibility.isInMerkleTree = true;
-                } else if (
-                    accessCriteria.accessCriteriaType == AccessCriteriaType.LIST
-                ) {
-                    eligibility.isInAllowlist = true;
-                }
-
-                // Check personal cap and contribution span override
-                AccessCriteriaPrivileges storage privileges =
-                    roundItToAccessCriteriaIdToPrivileges[roundId_][i];
-
-                if (privileges.personalCap > eligibility.highestPersonalCap) {
-                    eligibility.highestPersonalCap = privileges.personalCap;
-                }
-
-                if (privileges.overrideContributionSpan) {
-                    eligibility.canOverrideContributionSpan = true;
-                }
-            }
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
+            return (false, 0);
         }
 
-        return eligibility;
+        isEligible = _checkAccessCriteriaEligibility(
+            roundId_, accessCriteriaId_, merkleProof_, user_
+        );
+
+        if (isEligible) {
+            AccessCriteriaPrivileges storage privileges =
+            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            uint userPersonalCap = privileges.personalCap;
+            uint userContribution = _getUserContributionToRound(roundId_, user_);
+
+            uint personalCapRemaining = userPersonalCap > userContribution
+                ? userPersonalCap - userContribution
+                : 0;
+
+            uint totalContributions = roundIdToTotalContributions[roundId_];
+            uint roundCapRemaining = round.roundCap > totalContributions
+                ? round.roundCap - totalContributions
+                : 0;
+
+            remainingAmountAllowedToContribute = personalCapRemaining
+                < roundCapRemaining ? personalCapRemaining : roundCapRemaining;
+
+            return (true, remainingAmountAllowedToContribute);
+        } else {
+            return (false, 0);
+        }
     }
 
     // -------------------------------------------------------------------------
