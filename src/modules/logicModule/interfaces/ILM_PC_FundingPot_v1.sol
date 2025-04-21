@@ -340,14 +340,20 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Gets eligibility information for a user in a specific round
     /// @param  roundId_ The ID of the round to check eligibility for
+    /// @param  accessCriteriaId_ The ID of the access criteria to check eligibility for
     /// @param  merkleProof_ The Merkle proof for validation if needed
     /// @param  user_ The address of the user to check
-    /// @return eligibility Complete eligibility information for the user
+    /// @return isEligible Whether the user is eligible for the round through any criteria
+    /// @return remainingAmountAllowedToContribute The remaining contribution the user can make
     function getUserEligibility(
         uint64 roundId_,
+        uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
-    ) external view returns (RoundUserEligibility memory eligibility);
+    )
+        external
+        view
+        returns (bool isEligible, uint remainingAmountAllowedToContribute);
 
     // -------------------------------------------------------------------------
     // Public - Mutating
