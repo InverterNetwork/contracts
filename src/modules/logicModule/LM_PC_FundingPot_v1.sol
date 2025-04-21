@@ -275,7 +275,7 @@ contract LM_PC_FundingPot_v1 is
         AccessCriteria storage accessCriteria =
             round.accessCriterias[accessCriteriaId__];
 
-        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
+        if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
             return (0, false, 0, 0, 0);
         }
 

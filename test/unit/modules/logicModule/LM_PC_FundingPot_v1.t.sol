@@ -2001,7 +2001,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
-        // Set up access criteria
         uint8 accessId = 1;
         (
             address nftContract,
@@ -2043,7 +2042,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
         uint64 roundId = fundingPot.getRoundCount();
 
-        // Set up access criteria
         uint8 accessId = 1;
         (
             address nftContract,
@@ -2088,7 +2086,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessId = 2;
         uint amount = 1000;
 
         (
@@ -2103,6 +2101,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
         );
+
         mockNFTContract.mint(contributor1_);
 
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
@@ -2132,7 +2131,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testEditRound();
 
         uint64 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 1;
+        uint8 accessId = 2;
         uint amount = 2000;
 
         (
@@ -2144,6 +2143,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteriaForRound(
             roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
+
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 2000, false, 0, 0, 0
         );
@@ -2175,7 +2175,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint64 roundId = fundingPot.getRoundCount();
 
         // Set up access criteria
-        uint8 accessId = 0; // Using OPEN access criteria for simplicity
+        uint8 accessId = 1;
         (
             address nftContract,
             bytes32 merkleRoot,
@@ -2309,7 +2309,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Set access criteria and privileges
-        uint8 accessId = 0;
+        uint8 accessId = 1;
         (
             address nftContract,
             bytes32 merkleRoot,
@@ -2400,7 +2400,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Set access criteria and privileges
-        uint8 accessId = 0;
+        uint8 accessId = 1;
         (
             address nftContract,
             bytes32 merkleRoot,
