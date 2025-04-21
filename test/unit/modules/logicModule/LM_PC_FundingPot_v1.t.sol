@@ -2458,6 +2458,50 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
     }
 
+    // Test exposed internal function closeRound
+    function test_closeRound_WhenCapReached() public {
+        testCreateRound();
+
+        uint64 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 2;
+        uint amount = 1000;
+
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessId);
+
+        fundingPot.setAccessCriteriaForRound(
+            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            roundId, accessId, 1000, false, 0, 0, 0
+        );
+
+        mockNFTContract.mint(contributor1_);
+
+        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        vm.warp(roundStart + 1);
+
+        // Approve
+        vm.prank(contributor1_);
+        _token.approve(address(fundingPot), 1000);
+
+        vm.prank(contributor1_);
+        fundingPot.contributeToRound(
+            roundId, amount, accessId, new bytes32[](0)
+        );
+
+        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+
+        fundingPot.exposed_closeRound(roundId);
+        fundingPot.exposed_buyBondingCurveToken(roundId);
+        fundingPot.exposed_createPaymentOrdersForContributors(roundId);
+
+        assertTrue(fundingPot.isRoundClosed(roundId));
+    }
+
     // -------------------------------------------------------------------------
     // Helper Functions
 
