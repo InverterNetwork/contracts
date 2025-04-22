@@ -211,6 +211,20 @@ contract FundingPotE2E is E2ETest {
             address(0),
             bytes32(0),
             allowedAddresses
+<<<<<<< HEAD
+=======
+        );
+
+        // Round 2
+        uint64 round2Id = fundingPot.createRound(
+            block.timestamp + 1, // start
+            block.timestamp + 60 days, // end
+            2e18, // cap
+            address(0), // no hook
+            bytes(""), // no hook function
+            false, // auto closure
+            false // no global caps
+>>>>>>> 85ef0139 (fix: compile issues)
         );
 
         // Add access criteria to round 2
@@ -229,7 +243,11 @@ contract FundingPotE2E is E2ETest {
         fundingPot.setAccessCriteriaPrivileges(
             round1Id,
             0, // accessCriteriaId
+<<<<<<< HEAD
             500e18, // personalCap
+=======
+            1_000_000_000_000_000_000, // personalCap
+>>>>>>> 85ef0139 (fix: compile issues)
             true, // overrideContributionSpan
             block.timestamp, // start
             0, // cliff
@@ -239,7 +257,11 @@ contract FundingPotE2E is E2ETest {
         fundingPot.setAccessCriteriaPrivileges(
             round2Id,
             0, // accessCriteriaId
+<<<<<<< HEAD
             750e18, // personalCap
+=======
+            1_000_000_000_000_000_000, // personalCap
+>>>>>>> 85ef0139 (fix: compile issues)
             true, // overrideContributionSpan
             block.timestamp, // start
             0, // cliff
