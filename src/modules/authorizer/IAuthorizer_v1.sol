@@ -58,18 +58,18 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
 
     /// @notice Emits when a function permission is added to a role.
     /// @param  target The address of the target contract.
-    /// @param  fucntionSelector The selector of the function.
+    /// @param  functionSelector The selector of the function.
     /// @param  roleId The ID of the role.
     event AccessPermissionAdded(
-        address target, bytes4 fucntionSelector, bytes32 roleId
+        address target, bytes4 functionSelector, bytes32 roleId
     );
 
     /// @notice Emits when a function permission is removed from a role.
     /// @param  target The address of the target contract.
-    /// @param  fucntionSelector The selector of the function.
+    /// @param  functionSelector The selector of the function.
     /// @param  roleId The ID of the role.
     event AccessPermissionRemoved(
-        address target, bytes4 fucntionSelector, bytes32 roleId
+        address target, bytes4 functionSelector, bytes32 roleId
     );
 
     /// @notice Emits when a role is created.
