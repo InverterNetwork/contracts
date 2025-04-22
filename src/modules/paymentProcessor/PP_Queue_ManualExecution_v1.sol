@@ -122,7 +122,7 @@ contract PP_Queue_ManualExecution_v1 is
     uint[50] private __gap;
 
     // -------------------------------------------------------------------------
-    // Public
+    // Public Mutating Functions
 
     /// @inheritdoc IPaymentProcessor_v2
     function processPayments(IERC20PaymentClientBase_v2 client_)
