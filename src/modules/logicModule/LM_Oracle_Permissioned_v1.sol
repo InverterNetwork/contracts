@@ -92,6 +92,9 @@ import {ERC165Upgradeable} from
  * @author  Zealynx Security
  */
 contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
+    // -------------------------------------------------------------------------
+    // ERC165
+
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId)
         public
@@ -158,35 +161,8 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
         _collateralTokenDecimals = IERC20Metadata(collateralToken).decimals();
     }
 
-    // -------------------------------------------------------------------------
-    // External Functions
-
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setIssuancePrice(uint price_)
-        external
-        virtual
-        onlyModuleRole(PRICE_SETTER_ROLE)
-    {
-        _setIssuancePrice(price_);
-    }
-
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setRedemptionPrice(uint price_)
-        external
-        virtual
-        onlyModuleRole(PRICE_SETTER_ROLE)
-    {
-        _setRedemptionPrice(price_);
-    }
-
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setIssuanceAndRedemptionPrice(
-        uint issuancePrice_,
-        uint redemptionPrice_
-    ) external virtual onlyModuleRole(PRICE_SETTER_ROLE) {
-        _setIssuancePrice(issuancePrice_);
-        _setRedemptionPrice(redemptionPrice_);
-    }
+    //--------------------------------------------------------------------------
+    // Public View Functions
 
     /// @inheritdoc ILM_Oracle_Permissioned_v1
     function getCollateralTokenDecimals()
@@ -221,6 +197,35 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
         returns (bytes32)
     {
         return PRICE_SETTER_ROLE_ADMIN;
+    }
+    //--------------------------------------------------------------------------
+    // Public Mutating Functions
+
+    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    function setIssuancePrice(uint price_)
+        external
+        virtual
+        onlyModuleRole(PRICE_SETTER_ROLE)
+    {
+        _setIssuancePrice(price_);
+    }
+
+    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    function setRedemptionPrice(uint price_)
+        external
+        virtual
+        onlyModuleRole(PRICE_SETTER_ROLE)
+    {
+        _setRedemptionPrice(price_);
+    }
+
+    /// @inheritdoc ILM_Oracle_Permissioned_v1
+    function setIssuanceAndRedemptionPrice(
+        uint issuancePrice_,
+        uint redemptionPrice_
+    ) external virtual onlyModuleRole(PRICE_SETTER_ROLE) {
+        _setIssuancePrice(issuancePrice_);
+        _setRedemptionPrice(redemptionPrice_);
     }
 
     //--------------------------------------------------------------------------
