@@ -275,6 +275,9 @@ contract FM_PC_Oracle_Redeeming_v1 is
     ///         collateral tokens.
     address internal _projectTreasury;
 
+    /// @dev    Storage gap for future upgrades.
+    uint[50] private __gap;
+
     // -------------------------------------------------------------------------
     // Modifiers
 
@@ -1113,7 +1116,4 @@ contract FM_PC_Oracle_Redeeming_v1 is
         (issuanceFeePercentage_, issuanceTreasury_) =
             _getFeeManagerIssuanceFeeData(selector_);
     }
-
-    /// @dev    Storage gap for future upgrades.
-    uint[50] private __gap;
 }

@@ -139,7 +139,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @notice BPS value.
     uint internal constant BPS = 10_000;
 
-    // -------------------------------------------------------------------------
+    // ---------------------------------------------------------------------
     // Storage
 
     /// @notice Queue of payment orders per client.
@@ -167,6 +167,9 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
     /// @notice Treasury address which receives the collateral of failed orders.
     address internal _failedOrdersTreasury;
+
+    /// @dev    Gap for possible future upgrades.
+    uint[50] private __gap;
 
     // -------------------------------------------------------------------------
     // Modifiers
@@ -1083,7 +1086,4 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         // Calculate the net amount after deducting the protocol fee.
         netAmount_ = totalAmount_ - feeAmount_;
     }
-
-    /// @dev    Gap for possible future upgrades.
-    uint[50] private __gap;
 }

@@ -131,6 +131,9 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     /// @dev    This is the token used to pay/buy with.
     uint8 internal _collateralTokenDecimals;
 
+    /// @dev    Storage gap for upgradeable contracts.
+    uint[50] private __gap;
+
     // -------------------------------------------------------------------------
     // Initialization
 
@@ -238,7 +241,4 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
         _redemptionPrice = price_;
         emit RedemptionPriceSet(price_, _msgSender());
     }
-
-    /// @dev    Storage gap for upgradeable contracts.
-    uint[50] private __gap;
 }
