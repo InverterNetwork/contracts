@@ -241,7 +241,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
         permissioned
-        buyingIsEnabled //@todo adapt modifier
+        buyingIsEnabled
     {
         (uint amountIssued, uint collateralFeeAmount) =
             _buyOrder(_msgSender(), _depositAmount, _minAmountOut);

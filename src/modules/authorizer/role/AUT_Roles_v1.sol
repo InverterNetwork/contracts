@@ -80,7 +80,7 @@ contract AUT_Roles_v1 is
     // ========================================================================
     // Storage
 
-    /// @notice The role that is used as a placeholder for a burned admin role. //@todo Question: Can we also make this the public Role? Is this confusing?
+    /// @notice The role that is used as a placeholder for a burned admin role.
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
@@ -182,7 +182,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function hasPermission( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165
+    function hasPermission( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165 and Authorizer reference contracts
     address caller_, address target_, bytes4 selector_)
         public
         view

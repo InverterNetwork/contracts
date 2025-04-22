@@ -27,12 +27,12 @@ interface IModule_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Module__NotPermissioned(); //@todo replace Caller not authorized
+    error Module__NotPermissioned();
 
     /// @notice Function is only callable by authorized caller.
     /// @param  role The role that is required.
     /// @param  caller The address that is required to have the role.
-    error Module__CallerNotAuthorized(bytes32 role, address caller);
+    error Module__CallerNotAuthorized(bytes32 role, address caller); //@todo scrap
 
     /// @notice Function is only callable by a {IERC20PaymentClientBase_v2}.
     error Module__OnlyCallableByPaymentClient();

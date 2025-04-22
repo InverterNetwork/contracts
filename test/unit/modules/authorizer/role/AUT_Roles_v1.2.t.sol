@@ -396,7 +396,6 @@ contract AUT_Roles_v1_Test is ModuleTest {
             └── Then: The roleId gains permission
             └── And: An event is emitted
     */
-    // function addAccessPermission(address target_, bytes4 selector_, bytes32 roleId_) @todo now
 
     function testAddAccessPermission_ModifierInPostionChecks() public {
         //permissioned
@@ -678,7 +677,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     │   └── When: labelRole is called
     │       └── Then: Then it should revert (modifier in position check)//@todo Do we want to restrict that?
     ├── Given: Caller inhabits the default admin role
-    └── And: The given roleId is existing //@todo check this
+    └── And: The given roleId is existing
         └── When: labelRole is called
             └── Then: An event is emitted
     */
@@ -1023,7 +1022,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     }
 
     // ------------------------------------------------------------------------
-    // Mutating - Out of Order //@todo later
+    // Mutating - Out of Order
 
     /*
     Test: grantRoleFromModule
