@@ -78,9 +78,6 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @notice Emits when the token vault gets updated.
     event TokenVaultSet(address tokenVault);
 
-    /// @notice Emits when buy and sell restriction is set.
-    event BuyAndSellIsRestricted();
-
     /// @notice Emits when buy and sell restriction is removed.
     event BuyAndSellIsUnrestricted();
 
@@ -118,8 +115,10 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @return tokenVault_ The address of the token vault.
     function getTokenVault() external view returns (address tokenVault_);
 
-    /// @notice Returns whether buy and sell is restricted.
-    /// @return buyAndSellIsRestricted_ Whether buy and sell is restricted.
+    // ------------------------------------------------------------------------
+    // Getter - Out of Order
+
+    /// @notice This function is deprecated and will revert when called.
     function isBuyAndSellRestricted()
         external
         view
@@ -128,51 +127,54 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     // ========================================================================
     // Public Mutating Functions
 
-    // Mutating - Token Manipulation Functions
+    // -------------------------------------------------------------------------
+    // Mutating - Permissioned Functions
 
     /// @notice Burn amount of tokens from message sender.
+    /// @dev    Function access controlled by authorizer.
     /// @param  amount_ Amount token to be burned.
     function burnIssuanceToken(uint amount_) external;
 
     /// @notice Burn `amount` tokens belonging to `owner`.
+    /// @dev    Function access controlled by authorizer.
     /// @param  owner_ Address whose tokens will be burnt.
     /// @param  amount_ Burn amount.
     function burnIssuanceTokenFor(address owner_, uint amount_) external;
 
-    // -------------------------------------------------------------------------
-    // Mutating - OnlyCoverManager Functions
-
-    /// @notice Restricts buying and selling functionalities to the
-    ///         CURVE_INTERACTION_ROLE.
-    /// @dev    Only callable by the COVER_MANAGER_ROLE.
-    function restrictBuyAndSell() external;
-
-    /// @notice Unrestricts buying and selling functionalities to the
-    ///         CURVE_INTERACTION_ROLE.
-    /// @dev    Only callable by the COVER_MANAGER_ROLE.
-    function unrestrictBuyAndSell() external;
-
-    /// @notice Allows the COVER_MANAGER_ROLE to seize assets from this pool.
-    /// @dev    As the COVER_MANAGER_ROLE has ability to basically rug
-    ///         the projects, a timelock and max.
-    ///         seizable percentage has been added.
+    /// @notice Seizes assets from this pool.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    This function has a timelock and max.
+    ///         seizable percentage to prevent rugging the projects.
     /// @param  amount_ Number of tokens to be removed from the pool.
     function seize(uint amount_) external;
 
     /// @notice Adjust the seize percentage, which is seizable from the
     ///         contract.
+    /// @dev    Function access controlled by authorizer.
     /// @param  seize_ The seize in percentage, expressed as BPS.
     function adjustSeize(uint64 seize_) external;
 
     /// @notice Sets a new liquidity valut controller address.
+    /// @dev    Function access controlled by authorizer.
     /// @param  lvc_ Address of the liquidity vault controller.
     function setLiquidityVaultControllerContract(address lvc_) external;
 
-    // -------------------------------------------------------------------------
-    // Mutating - Permissioned Functions
+    /// @notice Sets the Repayable amount.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  amount_ The new Repayable amount.
+    function setRepayableAmount(uint amount_) external;
 
     /// @notice Sets the token vault address.
-    /// @dev    Only callable by OrchestratorAdmin.
+    /// @dev    Function access controlled by authorizer.
     /// @param  tokenVault_ The address of the token vault.
     function setTokenVault(address tokenVault_) external;
+
+    // ------------------------------------------------------------------------
+    // Mutating - Out of Order
+
+    /// @notice This function is deprecated and will revert when called.
+    function restrictBuyAndSell() external;
+
+    /// @notice This function is deprecated and will revert when called.
+    function unrestrictBuyAndSell() external;
 }
