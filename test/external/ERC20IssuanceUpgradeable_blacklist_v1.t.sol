@@ -351,7 +351,7 @@ contract ERC20IssuanceUpgradeable_Blacklist_v1_Test is Test {
         address unauthorized_
     ) public {
         // setup
-        vm.assume(unauthorized_ != address(this));
+        vm.assume(unauthorized_ != address(this) && unauthorized_ != proxyAdmin);
         address[] memory addresses = _generateAddresses(BATCH_LIMIT);
 
         // test modifier in place
