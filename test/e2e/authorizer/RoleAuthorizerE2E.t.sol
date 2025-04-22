@@ -21,12 +21,13 @@ import {
     IERC20PaymentClientBase_v2
 } from "@lm/LM_PC_Bounties_v2.sol";
 
-contract RoleAuthorizerE2E is E2ETest {
+contract RoleAuthorizerE2E1 is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
 
     // E2E Test Variables
-    address orchestratorAdmin = makeAddr("orchestratorAdmin");
+    address initialAdmin = makeAddr("initialAdmin");
+    address bountyIssuer = makeAddr("bountyIssuer");
     address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
@@ -54,7 +55,8 @@ contract RoleAuthorizerE2E is E2ETest {
         setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                roleAuthorizerMetadata, abi.encode(address(this))
+                roleAuthorizerMetadata,
+                abi.encode(initialAdmin) //this sets the given address to be the initialAdmin
             )
         );
 
@@ -75,7 +77,7 @@ contract RoleAuthorizerE2E is E2ETest {
         );
     }
 
-    function test_e2e_RoleAuthorizer() public {
+    function test_e2e_RoleAuthorizer(address caller_) public {
         //--------------------------------------------------------------------------
         // Orchestrator_v1 Initialization
         //--------------------------------------------------------------------------
@@ -109,34 +111,125 @@ contract RoleAuthorizerE2E is E2ETest {
         }
 
         //--------------------------------------------------------------------------
-        // Assign Bounty Manager Roles
+        // Create Bounty Manager Roles
         //--------------------------------------------------------------------------
 
-        // we authorize the Admin to create  bounties
-        bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ISSUER_ROLE(), address(orchestratorAdmin)
-        );
+        // This subsection divider is to prevent stack too deep errors
+        {
+            // First we define new Roles that we want to have in the system
+            // and assign initial members to them
 
-        // we authorize the manager to verify bounty claims
-        bountyManager.grantModuleRole(
-            bountyManager.VERIFIER_ROLE(), bountyVerifier
-        );
+            // BOUNTY_ISSUER Role
+            // Lets start with the Bounty Issuer Role
+            // For that we define a name
+            string memory roleName = "BOUNTY_ISSUER";
+            // We define which role will be the admin of the new role
+            // (Admin Roles can add and remove members to that role)
+            // In this case we will use the initial admin role (number 0)
+            bytes32 roleAdmin = authorizer.getAdminRole(); // Alternatively bytes32(uint(0))
 
-        // we authorize the bountySubmitter to submit bounty claims
-        bountyManager.grantModuleRole(
-            bountyManager.CLAIMANT_ROLE(), address(bountySubmitter)
-        );
+            // We define the initial members of the role
+            address[] memory roleMembers = new address[](1);
+            roleMembers[0] = bountyIssuer;
 
-        // Since we deploy the orchestrator, with address(this) as admin,
-        // we now assign them to two external addresses. In production these will be directly set on deployment.
+            // With the above defined values we can now create the role
+            // We save the Id of the role in a variable
+            // The function is initally only callable by the initial admin
+            // but can be adapted like any other permissioned function (see down below)
+            vm.prank(initialAdmin);
+            bytes32 bountyIssuerRoleId =
+                authorizer.createRole(roleName, roleAdmin, roleMembers);
 
-        // we grant admin role to adminAddress
-        bytes32 adminRole = authorizer.getAdminRole();
-        authorizer.grantRole(adminRole, address(orchestratorAdmin));
-        authorizer.renounceRole(adminRole, address(this));
-        assertTrue(authorizer.hasRole(adminRole, orchestratorAdmin));
-        assertEq(authorizer.getRoleMemberCount(adminRole), 1);
+            // Public Role (Bounty Submitter)
+            // For the Bounty Submitter we choose the public role
+            // Which allows anyone to join the role
+            // We fetch the roleId of the public role from the authorizer
+            bytes32 bountySubmitterRoleId = authorizer.PUBLIC_ROLE(); // Alternatively bytes32(uint(1))
 
+            //--------------------------------------------------------------------------
+            // Define Role Permissions
+            //--------------------------------------------------------------------------
+
+            // Now lets define the permissions for the roles
+            // Starting with the Bounty Issuer Role
+            // For this we will use the addAccessPermission function in the authorizer
+
+            // First we define the target and function selector
+            // The target is the address of the bountyManager
+            address target = address(bountyManager);
+            // The function selector is the addBounty function
+            bytes4 selector = bountyManager.addBounty.selector;
+            // With the previously created role and respective id
+            // We can now add the permission to the bounty issuer role
+            vm.prank(initialAdmin);
+            authorizer.addAccessPermission(target, selector, bountyIssuerRoleId);
+
+            // Lets check that the role holder is permissioned to call the function
+            assertTrue(authorizer.hasPermission(bountyIssuer, target, selector));
+
+            // Now lets add the Permission Bounty Submitter Role
+            // The selector here is the addClaim function
+            selector = bountyManager.addClaim.selector;
+            // As we defined before we want to make the function have public access
+            // so we use the public role as the given roleId
+            vm.prank(initialAdmin);
+            authorizer.addAccessPermission(
+                target, selector, bountySubmitterRoleId
+            );
+
+            // Now we check that the address bountySubmitter, which we never set as
+            // a member of the BOUNTY_ISSUER role, has the permission to call the function
+            assertTrue(
+                authorizer.hasPermission(bountySubmitter, target, selector)
+            );
+
+            //--------------------------------------------------------------------------
+            // Creating Roles and Defining Role Permissions in the same Call
+            //--------------------------------------------------------------------------
+
+            // BOUNTY_VERIFIER Role
+            // For the creation of the BOUNTY_VERIFIER Role we will use
+            // the combined function createRoleAndAddAccessPermissions
+            // Which allows us to create and assign roles and permissions
+            // at the same time
+
+            // We define the role name
+            roleName = "BOUNTY_VERIFIER";
+            // We define the role admin
+            roleAdmin = authorizer.getAdminRole();
+            // We define the initial members of the role
+            roleMembers = new address[](1);
+            roleMembers[0] = bountyVerifier;
+
+            // Now we need to create two arrays
+            // The first one defines the contracts for which we want to assign permissions
+            address[] memory targets = new address[](1);
+            // We take the address of the bountyManager here
+            targets[0] = address(bountyManager);
+            // The second one defines the selectors for which we want to assign permissions
+            // This is a two dimensional array, where the first dimension is defines
+            // the target contract for which we want to assign permissions and the second
+            // dimension defines the function selectors of the target contract
+            // In this case we want only the bountyManager functions, so we define the
+            // array to be of length 1
+            bytes4[][] memory selectors = new bytes4[][](1);
+            // And we define the single bountyManager function verifyClaim(), so we
+            // define the array to be of length 1 again
+            selectors[0] = new bytes4[](1);
+            // In case we wanted to select multiple functions, we would define the array
+            // to be the size of the number of functions we want to modify permissions for
+            // With that we can add the selector
+            selectors[0][0] = bountyManager.verifyClaim.selector;
+
+            vm.prank(initialAdmin);
+            bytes32 bountyVerifierRoleId = authorizer
+                .createRoleAndAddAccessPermissions(
+                roleName, roleAdmin, roleMembers, targets, selectors
+            );
+
+            // Now we check that the role has been created
+            assertTrue(authorizer.hasRole(bountyVerifierRoleId, bountyVerifier));
+        }
         //--------------------------------------------------------------------------
         // Set up seed deposit and initial deposit by users
         //--------------------------------------------------------------------------
@@ -165,7 +258,7 @@ contract RoleAuthorizerE2E is E2ETest {
         uint maximumPayoutAmount = 500e18;
         bytes memory details = "This is a test bounty";
 
-        vm.prank(orchestratorAdmin);
+        vm.prank(bountyIssuer);
         uint bountyId = bountyManager.addBounty(
             minimumPayoutAmount, maximumPayoutAmount, details
         );
