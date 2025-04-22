@@ -116,6 +116,12 @@ contract PP_Queue_ManualExecution_v1 is
     }
 
     // -------------------------------------------------------------------------
+    // Storage
+
+    /// @dev    Gap for possible future upgrades.
+    uint[50] private __gap;
+
+    // -------------------------------------------------------------------------
     // Public
 
     /// @inheritdoc IPaymentProcessor_v2
@@ -146,7 +152,4 @@ contract PP_Queue_ManualExecution_v1 is
     {
         _executePaymentQueue(address(client_));
     }
-
-    /// @dev    Gap for possible future upgrades.
-    uint[50] private __gap;
 }
