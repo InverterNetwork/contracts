@@ -32,6 +32,8 @@ import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
+import {console2} from "forge-std/console2.sol";
+
 contract FundingPotE2E is E2ETest {
     // Module Configurations for the current E2E test. Should be filled during setUp() call.
     IOrchestratorFactory_v1.ModuleConfig[] moduleConfigurations;
@@ -211,20 +213,6 @@ contract FundingPotE2E is E2ETest {
             address(0),
             bytes32(0),
             allowedAddresses
-<<<<<<< HEAD
-=======
-        );
-
-        // Round 2
-        uint64 round2Id = fundingPot.createRound(
-            block.timestamp + 1, // start
-            block.timestamp + 60 days, // end
-            2e18, // cap
-            address(0), // no hook
-            bytes(""), // no hook function
-            false, // auto closure
-            false // no global caps
->>>>>>> 85ef0139 (fix: compile issues)
         );
 
         // Add access criteria to round 2
@@ -243,11 +231,7 @@ contract FundingPotE2E is E2ETest {
         fundingPot.setAccessCriteriaPrivileges(
             round1Id,
             0, // accessCriteriaId
-<<<<<<< HEAD
             500e18, // personalCap
-=======
-            1_000_000_000_000_000_000, // personalCap
->>>>>>> 85ef0139 (fix: compile issues)
             true, // overrideContributionSpan
             block.timestamp, // start
             0, // cliff
@@ -257,11 +241,7 @@ contract FundingPotE2E is E2ETest {
         fundingPot.setAccessCriteriaPrivileges(
             round2Id,
             0, // accessCriteriaId
-<<<<<<< HEAD
             750e18, // personalCap
-=======
-            1_000_000_000_000_000_000, // personalCap
->>>>>>> 85ef0139 (fix: compile issues)
             true, // overrideContributionSpan
             block.timestamp, // start
             0, // cliff
