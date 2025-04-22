@@ -184,6 +184,14 @@ contract FM_PC_Oracle_Redeeming_v1 is
     ERC20PaymentClientBase_v2,
     RedeemingBondingCurveBase_v1
 {
+    // -------------------------------------------------------------------------
+    // Libraries
+
+    using SafeERC20 for IERC20;
+
+    // -------------------------------------------------------------------------
+    // ERC165
+
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -195,8 +203,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
             || interfaceId_ == type(IFundingManager_v1).interfaceId
             || super.supportsInterface(interfaceId_);
     }
-
-    using SafeERC20 for IERC20;
 
     // -------------------------------------------------------------------------
     // Constants
@@ -361,7 +367,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     // -------------------------------------------------------------------------
-    // View Functions
+    // Public View Functions
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
     function getWhitelistRole() public pure virtual returns (bytes32 role_) {
@@ -465,110 +471,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
         return address(_oracle);
     }
 
-    // -------------------------------------------------------------------------
-    // External Functions
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function depositReserve(uint amount_) external virtual {
-        if (amount_ == 0) {
-            revert Module__FM_PC_ExternalPrice_Redeeming_InvalidAmount();
-        }
-
-        // Transfer collateral from sender to FM.
-        IERC20(token()).safeTransferFrom(_msgSender(), address(this), amount_);
-
-        emit ReserveDeposited(_msgSender(), amount_);
-    }
-
-    // -------------------------------------------------------------------------
-    // Public Functions
-
-    /// @inheritdoc BondingCurveBase_v1
-    function buy(uint collateralAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-    {
-        super.buyFor(_msgSender(), collateralAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc BondingCurveBase_v1
-    function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-        thirdPartyOperationsEnabled
-    {
-        super.buyFor(receiver_, depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc RedeemingBondingCurveBase_v1
-    function sell(uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-    {
-        super.sellTo(_msgSender(), depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc RedeemingBondingCurveBase_v1
-    function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-        thirdPartyOperationsEnabled
-    {
-        super.sellTo(receiver_, depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc IERC20PaymentClientBase_v2
-    function amountPaid(address token_, uint amount_)
-        public
-        virtual
-        override(ERC20PaymentClientBase_v2, IERC20PaymentClientBase_v2)
-    {
-        _deductFromOpenRedemptionAmount(amount_);
-        super.amountPaid(token_, amount_);
-    }
-
-    /// @inheritdoc IFundingManager_v1
-    function transferOrchestratorToken(address to_, uint amount_)
-        external
-        virtual
-        onlyPaymentClient
-    {
-        token().safeTransfer(to_, amount_);
-
-        emit TransferOrchestratorToken(to_, amount_);
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getSellFee() public view virtual returns (uint fee_) {
-        return sellFee;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function setProjectTreasury(address projectTreasury_)
-        external
-        virtual
-        onlyOrchestratorAdmin
-    {
-        _setProjectTreasury(projectTreasury_);
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function setOracleAddress(address oracle_)
-        external
-        virtual
-        onlyOrchestratorAdmin
-    {
-        _setOracleAddress(oracle_);
-    }
-
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
     function getBuyFee() public view virtual returns (uint buyFee_) {
         return buyFee;
@@ -595,32 +497,8 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function setIsDirectOperationsOnly(bool isDirectOperationsOnly_)
-        public
-        virtual
-        onlyOrchestratorAdmin
-    {
-        _setIsDirectOperationsOnly(isDirectOperationsOnly_);
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function executeRedemptionQueue()
-        external
-        virtual
-        onlyModuleRole(QUEUE_EXECUTOR_ROLE)
-    {
-        (bool success, bytes memory data) = address(
-            __Module_orchestrator.paymentProcessor()
-        ).call(
-            abi.encodeWithSignature(
-                "executePaymentQueue(address)", address(this)
-            )
-        );
-        if (!success) {
-            revert Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(
-                data
-            );
-        }
+    function getSellFee() public view virtual returns (uint fee_) {
+        return sellFee;
     }
 
     /// @inheritdoc IRedeemingBondingCurveBase_v1
@@ -664,6 +542,131 @@ contract FM_PC_Oracle_Redeeming_v1 is
         _calculateNetAndSplitFees(
             redeemAmount_, protocolCollateralSellFeePercentage, sellFee
         );
+    }
+
+    // -------------------------------------------------------------------------
+    // Public Mutating Functions
+
+    /// @inheritdoc BondingCurveBase_v1
+    function buy(uint collateralAmount_, uint minAmountOut_)
+        public
+        virtual
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        onlyModuleRole(WHITELIST_ROLE)
+    {
+        super.buyFor(_msgSender(), collateralAmount_, minAmountOut_);
+    }
+
+    /// @inheritdoc BondingCurveBase_v1
+    function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
+        public
+        virtual
+        override(BondingCurveBase_v1, IBondingCurveBase_v1)
+        onlyModuleRole(WHITELIST_ROLE)
+        thirdPartyOperationsEnabled
+    {
+        super.buyFor(receiver_, depositAmount_, minAmountOut_);
+    }
+
+    /// @inheritdoc RedeemingBondingCurveBase_v1
+    function sell(uint depositAmount_, uint minAmountOut_)
+        public
+        virtual
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        onlyModuleRole(WHITELIST_ROLE)
+    {
+        super.sellTo(_msgSender(), depositAmount_, minAmountOut_);
+    }
+
+    /// @inheritdoc RedeemingBondingCurveBase_v1
+    function sellTo(address receiver_, uint depositAmount_, uint minAmountOut_)
+        public
+        virtual
+        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
+        onlyModuleRole(WHITELIST_ROLE)
+        thirdPartyOperationsEnabled
+    {
+        super.sellTo(receiver_, depositAmount_, minAmountOut_);
+    }
+
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    function depositReserve(uint amount_) external virtual {
+        if (amount_ == 0) {
+            revert Module__FM_PC_ExternalPrice_Redeeming_InvalidAmount();
+        }
+
+        // Transfer collateral from sender to FM.
+        IERC20(token()).safeTransferFrom(_msgSender(), address(this), amount_);
+
+        emit ReserveDeposited(_msgSender(), amount_);
+    }
+
+    /// @inheritdoc IERC20PaymentClientBase_v2
+    function amountPaid(address token_, uint amount_)
+        public
+        virtual
+        override(ERC20PaymentClientBase_v2, IERC20PaymentClientBase_v2)
+    {
+        _deductFromOpenRedemptionAmount(amount_);
+        super.amountPaid(token_, amount_);
+    }
+
+    /// @inheritdoc IFundingManager_v1
+    function transferOrchestratorToken(address to_, uint amount_)
+        external
+        virtual
+        onlyPaymentClient
+    {
+        token().safeTransfer(to_, amount_);
+
+        emit TransferOrchestratorToken(to_, amount_);
+    }
+
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    function setProjectTreasury(address projectTreasury_)
+        external
+        virtual
+        onlyOrchestratorAdmin
+    {
+        _setProjectTreasury(projectTreasury_);
+    }
+
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    function setOracleAddress(address oracle_)
+        external
+        virtual
+        onlyOrchestratorAdmin
+    {
+        _setOracleAddress(oracle_);
+    }
+
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    function setIsDirectOperationsOnly(bool isDirectOperationsOnly_)
+        public
+        virtual
+        onlyOrchestratorAdmin
+    {
+        _setIsDirectOperationsOnly(isDirectOperationsOnly_);
+    }
+
+    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
+    function executeRedemptionQueue()
+        external
+        virtual
+        onlyModuleRole(QUEUE_EXECUTOR_ROLE)
+    {
+        (bool success, bytes memory data) = address(
+            __Module_orchestrator.paymentProcessor()
+        ).call(
+            abi.encodeWithSignature(
+                "executePaymentQueue(address)", address(this)
+            )
+        );
+        if (!success) {
+            revert Module__FM_PC_ExternalPrice_Redeeming_QueueExecutionFailed(
+                data
+            );
+        }
     }
 
     // -------------------------------------------------------------------------
