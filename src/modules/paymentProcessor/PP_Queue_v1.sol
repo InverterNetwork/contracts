@@ -189,7 +189,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     }
 
     // -------------------------------------------------------------------------
-    // Initialize
+    // Initialization Function
 
     /// @notice The module's initializer function.
     /// @dev	CAN be overridden by downstream contract.
@@ -331,6 +331,23 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         return QUEUE_OPERATOR_ROLE_ADMIN;
     }
 
+    /// @inheritdoc IPaymentProcessor_v2
+    function unclaimable(
+        address client_,
+        address token_,
+        address paymentReceiver_
+    ) public view virtual returns (uint amount_) {
+        amount_ =
+            _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
+    }
+
+    /// @inheritdoc IPaymentProcessor_v2
+    function validPaymentOrder(
+        IERC20PaymentClientBase_v2.PaymentOrder memory order_
+    ) external view virtual returns (bool isValid_) {
+        return _validPaymentOrder(order_);
+    }
+
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
@@ -383,33 +400,16 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function unclaimable(
-        address client_,
-        address token_,
-        address paymentReceiver_
-    ) public view virtual returns (uint amount_) {
-        amount_ =
-            _unclaimableAmountsForRecipient[client_][token_][paymentReceiver_];
-    }
-
-    /// @inheritdoc IPaymentProcessor_v2
     function claimPreviouslyUnclaimable(
         address client_,
         address token_,
         address receiver_
     ) external virtual {
-        if (unclaimable(client_, token_, receiver_) == 0) {
+        if (unclaimable(client_, token_, _msgSender()) == 0) {
             revert Module__PaymentProcessor__NothingToClaim(client_, receiver_);
         }
 
         _claimPreviouslyUnclaimable(client_, token_, receiver_);
-    }
-
-    /// @inheritdoc IPaymentProcessor_v2
-    function validPaymentOrder(
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) external view virtual returns (bool isValid_) {
-        return _validPaymentOrder(order_);
     }
 
     /// @inheritdoc IPP_Queue_v1
@@ -665,9 +665,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
                     client_, recipient_, token_, amount_
                 );
             }
-
-            _unclaimableAmountsForRecipient[client_][token_][recipient_] +=
-                amount_;
+            _addToUnclaimableAmount(client_, token_, recipient_, amount_);
 
             emit UnclaimableAmountAdded(client_, token_, recipient_, amount_);
 

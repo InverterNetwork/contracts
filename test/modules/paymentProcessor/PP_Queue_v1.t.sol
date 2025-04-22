@@ -2318,6 +2318,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         vm.prank(address(queue));
         _token.approve(address(queue), amount_);
 
+        vm.prank(recipient_);
         queue.claimPreviouslyUnclaimable(
             address(paymentClient), address(_token), recipient_
         );
@@ -2385,6 +2386,7 @@ contract PP_Queue_v1_Test is ModuleTest {
             vm.prank(address(queue));
             _token.approve(address(queue), amounts_[i_]);
 
+            vm.prank(recipients_[i_]);
             queue.claimPreviouslyUnclaimable(
                 address(paymentClient), address(_token), recipients_[i_]
             );
