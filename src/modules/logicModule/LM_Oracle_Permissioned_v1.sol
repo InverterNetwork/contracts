@@ -138,7 +138,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     uint[50] private __gap;
 
     // -------------------------------------------------------------------------
-    // Initialization
+    // Initialization Function
 
     /// @notice The module's initializer function.
     /// @dev	CAN be overridden by downstream contract.
@@ -198,6 +198,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     {
         return PRICE_SETTER_ROLE_ADMIN;
     }
+
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
