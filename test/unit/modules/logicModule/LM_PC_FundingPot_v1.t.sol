@@ -2760,7 +2760,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
 
     // Internal Functions
-
     function testFuzz_validateAndAdjustCapsWithUnspentCap(
         uint32 roundId_,
         uint amount_,
