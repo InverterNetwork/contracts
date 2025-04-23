@@ -23,7 +23,7 @@ import {TransparentUpgradeableProxy} from
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract DeployAndSetupQueueBasedPIM is DeploymentScript {
+contract DeployAndSetupYieldBearingStableWorkflow is DeploymentScript {
     // Issuance Token
     ERC20IssuanceUpgradeable_Blacklist_v1 internal _issuanceToken;
     string internal _tokenName;
@@ -77,9 +77,9 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
     LM_Oracle_Permissioned_v1 internal _oracleModule;
 
     function run() public override {
-        console2.log("\n================================");
-        console2.log("  DEPLOYING USP WORKFLOW");
-        console2.log("  ======================\n");
+        console2.log("\n===============================================");
+        console2.log("  DEPLOYING YIELD BEARING STABLE WORKFLOW");
+        console2.log("  =======================================\n");
 
         // Load and validate deployment variables
         _loadAndValidateDeploymentVariables();
@@ -96,13 +96,13 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
         // Set workflow admin
         _setupWorkflowAdmin();
 
-        console2.log("================================");
-        console2.log("  DEPLOYMENT SUMMARY");
-        console2.log("================================");
-        console2.log("  Status: SUCCESSFUL");
-        console2.log("  Chain ID: ", block.chainid);
-        console2.log("  All contracts deployed and configured");
-        console2.log("================================\n");
+        console2.log("================================================");
+        console2.log("                DEPLOYMENT SUMMARY               ");
+        console2.log("================================================");
+        console2.log("                Status: SUCCESSFUL               ");
+        console2.log("             Chain ID: ", block.chainid);
+        console2.log("      All contracts deployed and configured      ");
+        console2.log("================================================\n");
     }
 
     // -------------------------------------------------------------------------
@@ -137,11 +137,12 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
 
         // Store issuance token
         _issuanceToken = ERC20IssuanceUpgradeable_Blacklist_v1(proxy);
-        _logAddress("  [OK] Issuance token deployed at:", proxy);
+        console2.log("  [OK] Issuance token deployed successfully");
+        _logAddress("  Issuance token deployed at", proxy);
     }
 
     function _deployWorkflow() internal {
-        console2.log("Workflow Deployment");
+        console2.log("\nWorkflow Deployment");
         console2.log("-------------------");
         // ---------------------------------------------------------------------
         // Deploy workflow
@@ -206,7 +207,7 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
         console2.log("Administrative Setup");
         console2.log("--------------------");
 
-        console2.log("  Setting up workflow admin...");
+        console2.log("Setting up workflow admin...");
         vm.startBroadcast(deployerPrivateKey);
         _authorizer.grantRole(_authorizer.getAdminRole(), _workflowAdmin);
         require(
@@ -214,11 +215,11 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
                 == true,
             "Workflow admin not set correctly"
         );
-        console2.log("  * Workflow admin: ", _workflowAdmin);
         console2.log("  [OK] Workflow admin configured");
+        console2.log("  Workflow admin: ", _workflowAdmin);
 
         // Revoke admin role from deployer
-        console2.log("  Revoking admin role from deployer...");
+        console2.log("\n  Revoking admin role from deployer...");
         _authorizer.revokeRole(_authorizer.getAdminRole(), deployer);
         require(
             _authorizer.checkForRole(_authorizer.getAdminRole(), deployer)
@@ -746,13 +747,13 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
     }
 
     function _validateValidChainId(uint chainId_) internal view {
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId_ == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId_ == deployedMainnets[i]) {
                 return;
             }
         }
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId_ == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId_ == deployedTestnets[i]) {
                 return;
             }
         }
