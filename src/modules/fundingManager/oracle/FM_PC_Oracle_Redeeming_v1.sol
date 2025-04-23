@@ -438,7 +438,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
         virtual
         returns (uint amount_)
     {
-        return _outstandingTokenAmounts[address(_token)];
+        return _openRedemptionAmount;
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
