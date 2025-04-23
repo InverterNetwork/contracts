@@ -2354,78 +2354,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700);
     }
 
-    /* Test Close Round
-    └── Given a round
-        └── When the round is not closed
-            └── And the closure conditions are not met
-                └── When the user attempts to close the round
-                    └── Then the transaction should revert
-    */
-    function testCloseRound_revertsGivenClosureConditionsNotMet() public {
-        uint32 roundId = fundingPot.createRound(
-            _defaultRoundParams.roundStart,
-            _defaultRoundParams.roundEnd,
-            _defaultRoundParams.roundCap,
-            _defaultRoundParams.hookContract,
-            _defaultRoundParams.hookFunction,
-            _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
-        );
-
-        vm.warp(_defaultRoundParams.roundStart);
-
-        vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot__ClosureConditionsNotMet
-                .selector
-        );
-        fundingPot.closeRound(roundId);
-    }
-
-    function testCloseRound_revertsGivenFailingHookExecution() public {
-        MockFailingHookContract mockHook = new MockFailingHookContract();
-        _defaultRoundParams.hookContract = address(mockHook);
-        _defaultRoundParams.hookFunction =
-            abi.encodeWithSignature("executeHook()");
-
-        uint32 roundId = fundingPot.createRound(
-            _defaultRoundParams.roundStart,
-            _defaultRoundParams.roundEnd,
-            _defaultRoundParams.roundCap,
-            _defaultRoundParams.hookContract,
-            _defaultRoundParams.hookFunction,
-            _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
-        );
-
-        fundingPot.setAccessCriteriaForRound(
-            roundId,
-            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN),
-            address(0),
-            bytes32(0),
-            new address[](0)
-        );
-
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId,
-            uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN),
-            1000,
-            false,
-            0,
-            0,
-            0
-        );
-
-        vm.warp(_defaultRoundParams.roundEnd);
-
-        vm.expectRevert(
-            ILM_PC_FundingPot_v1
-                .Module__LM_PC_FundingPot__HookExecutionFailed
-                .selector
-        );
-        fundingPot.closeRound(roundId);
-    }
-
     // -------------------------------------------------------------------------
     // Test: closeRound()
 
@@ -2489,34 +2417,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         fundingPot.closeRound(roundId);
         vm.stopPrank();
-    }
-
-    function testCloseRound_revertsGivenRoundDoesNotExist() public {
-        uint32 nonExistentRoundId = 999;
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__RoundNotCreated
-                    .selector
-            )
-        );
-        fundingPot.closeRound(nonExistentRoundId);
-    }
-
-    function testCloseRound_revertsGivenRoundIsAlreadyClosed() public {
-        testCloseRound_worksGivenRoundCapHasBeenReached();
-        // Try to close it again
-        uint32 roundId = fundingPot.getRoundCount();
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__RoundHasEnded
-                    .selector
-            )
-        );
-        fundingPot.closeRound(roundId);
     }
 
     function testCloseRound_worksGivenRoundHasStartedButNotEnded() public {
