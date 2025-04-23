@@ -78,8 +78,8 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
 
     function run() public override {
         console2.log("\n================================");
-        console2.log("  DEPLOYING QUEUE BASED PIM");
-        console2.log("  =========================\n");
+        console2.log("  DEPLOYING USP WORKFLOW");
+        console2.log("  ======================\n");
 
         // Load and validate deployment variables
         _loadAndValidateDeploymentVariables();
