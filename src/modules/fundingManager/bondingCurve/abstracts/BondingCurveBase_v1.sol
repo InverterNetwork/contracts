@@ -8,7 +8,7 @@ import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // External Interfaces
-import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -484,7 +484,7 @@ abstract contract BondingCurveBase_v1 is IBondingCurveBase_v1, Module_v1 {
 
     /// @dev    Ensures that the deposit amount and min amount out are not zero.
     /// @param  _depositAmount Deposit amount.
-    /// @param  _minAmountOut Minimum amount out.`
+    /// @param  _minAmountOut Minimum amount out.
     function _ensureNonZeroTradeParameters(
         uint _depositAmount,
         uint _minAmountOut

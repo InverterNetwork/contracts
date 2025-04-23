@@ -34,7 +34,8 @@ contract LM_PC_Staking_v2Test is ModuleTest {
     // SuT
     LM_PC_Staking_v2AccessMock stakingManager;
 
-    ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
+    ERC20Mock stakingToken =
+        new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
 
     // Variables
     uint internal initialStakerMaxAmount = 100;

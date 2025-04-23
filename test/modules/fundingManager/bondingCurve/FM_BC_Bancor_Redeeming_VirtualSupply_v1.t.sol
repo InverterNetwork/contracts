@@ -112,9 +112,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     function setUp() public virtual {
         // Deploy contracts
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
@@ -1506,9 +1505,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -1531,9 +1530,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -1555,9 +1554,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setIssuanceToken(

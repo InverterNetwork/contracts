@@ -150,9 +150,6 @@ abstract contract RedeemingBondingCurveBase_v1 is
         _calculateNetAndSplitFees(
             redeemAmount, collateralSellFeePercentage, sellFee
         );
-
-        // Return redeem amount
-        // return redeemAmount;
     }
 
     // -------------------------------------------------------------------------
@@ -200,6 +197,7 @@ abstract contract RedeemingBondingCurveBase_v1 is
         uint _minAmountOut
     )
         internal
+        virtual
         returns (uint totalCollateralTokenMovedOut, uint issuanceFeeAmount)
     {
         // ------------------------------------------------------------

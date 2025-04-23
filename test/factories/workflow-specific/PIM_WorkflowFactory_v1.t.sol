@@ -12,7 +12,8 @@ import {IOrchestratorFactory_v1} from
     "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 import {IPIM_WorkflowFactory_v1} from
     "src/factories/interfaces/IPIM_WorkflowFactory_v1.sol";
-import {IERC20Issuance_v1} from "src/external/token/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from
+    "src/external/token/interfaces/IERC20Issuance_v1.sol";
 import {ERC20Issuance_v1} from "src/external/token/ERC20Issuance_v1.sol";
 import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
     "@fm/bondingCurve/interfaces/IFM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
