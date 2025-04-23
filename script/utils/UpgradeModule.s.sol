@@ -176,7 +176,7 @@ contract UpgradeModule is Script, ProtocolConstants_v1 {
 
         // If the used network is mainnet, we skip this step, as this only works
         // on testnets or locally. On mainnets we need to use the multisig.
-        if (!currentNetworkIsMainnet()) {
+        if (currentNetworkIsMainnet()) {
             console2.log(
                 "\tSkipping step, on mainnets the upgrade needs to be manually finalized in Multisig"
             );
