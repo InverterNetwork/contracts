@@ -61,17 +61,4 @@ interface IPP_Everclear_CrossChain_v1 {
         external
         view
         returns (IEverclear.Intent memory intent_);
-
-    //--------------------------------------------------------------------------
-    // External Functions
-
-    /// @notice Retries a previously failed transfer.
-    /// @param  client_ The payment client address.
-    /// @param  recipient_ The recipient address.
-    /// @param  order_ The payment order details.
-    function retryFailedBridgeTransfer(
-        address client_,
-        address recipient_,
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) external;
 }

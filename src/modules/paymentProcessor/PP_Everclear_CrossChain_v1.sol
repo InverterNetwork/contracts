@@ -19,6 +19,9 @@ import {IERC20PaymentClientBase_v2} from
 import {PP_CrossChainBase_v1} from "@pp/abstracts/PP_CrossChainBase_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 
+// Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
 /**
  * @title   Everclear Protocol Integrated Cross-Chain Payment Processor.
  *
@@ -55,6 +58,13 @@ contract PP_Everclear_CrossChain_v1 is
     IPP_Everclear_CrossChain_v1,
     PP_CrossChainBase_v1
 {
+    //--------------------------------------------------------------------------
+    // Libraries
+    using SafeERC20 for IERC20;
+
+    //--------------------------------------------------------------------------
+    // ERC165 Interface
+
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -71,6 +81,7 @@ contract PP_Everclear_CrossChain_v1 is
 
     /// @notice Payment order flag for the Everclear max fee.
     uint8 public constant FLAG_MAX_FEE = 4;
+
     /// @notice Payment order flag for the Everclear TTL.
     uint8 public constant FLAG_TTL = 5;
 
@@ -79,9 +90,13 @@ contract PP_Everclear_CrossChain_v1 is
 
     /// @notice The Everclear spoke contract address.
     IEverclear internal _everClearSpoke;
+
     /// @notice The Everclear intent.
     mapping(bytes32 intentId => IEverclear.Intent intent_) internal
         _intentIdToIntent;
+
+    /// @dev    Gap for possible future upgrades.
+    uint[50] private __gap;
 
     // -------------------------------------------------------------------------
     // Initialization Function
@@ -129,7 +144,7 @@ contract PP_Everclear_CrossChain_v1 is
     }
 
     // -------------------------------------------------------------------------
-    // External Functions
+    // Public Mutating Functions
 
     /// @inheritdoc IPaymentProcessor_v2
     function processPayments(IERC20PaymentClientBase_v2 client_)
@@ -155,36 +170,6 @@ contract PP_Everclear_CrossChain_v1 is
             // Execute the bridge transfer.
             _executeBridgeTransfer(orders[i]);
         }
-    }
-
-    /// @inheritdoc IPP_Everclear_CrossChain_v1
-    function retryFailedBridgeTransfer(
-        address client_,
-        address recipient_,
-        IERC20PaymentClientBase_v2.PaymentOrder memory order_
-    ) external virtual {
-        uint unclaimableAmount =
-            unclaimable(client_, order_.paymentToken, recipient_);
-
-        // Validate that receipient has an unclaimable amount and the order
-        // amount provided is not greater than the unclaimable amount.
-        if (unclaimableAmount == 0 || order_.amount > unclaimableAmount) {
-            revert Module__PP_CrossChain__InvalidUnclaimableAmount();
-        }
-
-        // Subtract the order amount from the unclaimable amount.
-        _unclaimableAmountsForRecipient[client_][order_.paymentToken][recipient_]
-        -= order_.amount;
-
-        // Delete the unclaimable amount mapping entry if the amount is 0.
-        if (
-            _unclaimableAmountsForRecipient[client_][order_.paymentToken][recipient_]
-                == 0
-        ) {
-            delete _unclaimableAmountsForRecipient[client_][order_.paymentToken][recipient_];
-        }
-        // Execute the bridge transfer.
-        _executeBridgeTransfer(order_);
     }
 
     /// @inheritdoc IPaymentProcessor_v2
@@ -335,7 +320,7 @@ contract PP_Everclear_CrossChain_v1 is
         IERC20PaymentClientBase_v2.PaymentOrder memory order_,
         address client_
     ) internal virtual {
-        IERC20(order_.paymentToken).transferFrom(
+        IERC20(order_.paymentToken).safeTransferFrom(
             client_, address(this), order_.amount
         );
         // Update the amount paid on the payment client side.
@@ -423,7 +408,4 @@ contract PP_Everclear_CrossChain_v1 is
             && (flagsValue & (1 << FLAG_MAX_FEE)) != 0
             && (flagsValue & (1 << FLAG_TTL)) != 0;
     }
-
-    /// @dev    Gap for possible future upgrades.
-    uint[50] private __gap;
 }

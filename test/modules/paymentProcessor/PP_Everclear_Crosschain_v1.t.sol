@@ -569,66 +569,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         );
     }
 
-    /* Test Function retryFailedBridgeTransfer()
-        └── Given a failed transfer
-            └── When retrying with valid execution data
-                ├── Then it should create a new intent
-                ├── And clear the failed transfer record
-                └── And emit FailedTransferRetried event
-    */
-
-    function testRetryFailedTransfer_succeedsGivenValidFailedTransfer(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-
-        // Setup initial payment
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
-
-        // First attempt with high maxFee to force failure
-        everclearPaymentMock.setMockBridgeToFail(true);
-        vm.prank(address(paymentClient));
-        //approve the token to the payment processor
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-
-        // Verify failed transfer was recorded with the failing execution data
-        assertEq(
-            paymentProcessor.unclaimable(
-                address(paymentClient), address(_token), testRecipient
-            ),
-            testAmount
-        );
-
-        // Now retry with proper execution data
-        everclearPaymentMock.setMockBridgeToFail(false);
-
-        vm.prank(address(paymentClient));
-        paymentProcessor.retryFailedBridgeTransfer(
-            address(paymentClient), testRecipient, orders[0]
-        );
-
-        // Verify:
-        // 1. Failed transfer record was cleared
-        assertEq(
-            paymentProcessor.unclaimable(
-                address(paymentClient), address(_token), testRecipient
-            ),
-            0
-        );
-
-        // 2. New intent was created (should be non-zero)
-        bytes32 newIntentId = bytes32(
-            paymentProcessor.getBridgeDataByPaymentId(
-                paymentProcessor.getPaymentId() - 1
-            )
-        );
-        assertTrue(newIntentId != bytes32(0));
-    }
-
     /* Test claim previously unclaimable
         └── Given a pending transfer
             └── When claimed by the recipient
@@ -780,63 +720,6 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
         vm.prank(address(paymentClient));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-    }
-
-    /* Test Function retryFailedBridgeTransfer()
-        └── Given a retry request for non-existent failed transfer
-            └── When retrying transfer
-                └── Then it should revert with InvalidAmount
-    */
-    function testRetryFailedTransfer_revertsGivenNoFailedTransfer(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
-
-        vm.prank(address(paymentClient));
-        vm.expectRevert(
-            IPP_CrossChainBase_v1
-                .Module__PP_CrossChain__InvalidUnclaimableAmount
-                .selector
-        );
-        paymentProcessor.retryFailedBridgeTransfer(
-            address(paymentClient), testRecipient, orders[0]
-        );
-    }
-
-    /* Test Function retryFailedBridgeTransfer()
-        └── Given a retry request when intent already exists
-            └── When retrying transfer
-                └── Then it should revert with InvalidIntentId
-    */
-    function testRetryFailedTransfer_revertsGivenExistingIntent(
-        address testRecipient,
-        uint testAmount
-    ) public {
-        _assumeValidRecipientAndAmount(testRecipient, testAmount);
-
-        // Setup initial payment and process it
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            _setupSinglePayment(testRecipient, testAmount, EMPTY_EXECUTION_DATA);
-        vm.prank(address(paymentClient));
-        // Create a successful intent first
-        paymentProcessor.processPayments(
-            IERC20PaymentClientBase_v2(address(paymentClient))
-        );
-
-        // Now try to retry (should fail because intent exists)
-        vm.prank(address(paymentClient));
-        vm.expectRevert(
-            IPP_CrossChainBase_v1
-                .Module__PP_CrossChain__InvalidUnclaimableAmount
-                .selector
-        );
-        paymentProcessor.retryFailedBridgeTransfer(
-            address(paymentClient), testRecipient, orders[0]
         );
     }
 
