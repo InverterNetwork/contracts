@@ -800,16 +800,12 @@ contract DeployAndSetupYieldBearingStableWorkflow is DeploymentScript {
         require(_projectTreasury != address(0), "Project treasury not set");
 
         _buyFeeInBps = vm.envUint("BUY_FEE_IN_BPS");
-        require(_buyFeeInBps >= 0, "Buy fee not set");
 
         _maxBuyFeeInBps = vm.envUint("MAX_BUY_FEE_IN_BPS");
-        require(_maxBuyFeeInBps >= 0, "Max buy fee not set");
 
         _sellFeeInBps = vm.envUint("SELL_FEE_IN_BPS");
-        require(_sellFeeInBps >= 0, "Sell fee not set");
 
         _maxSellFeeInBps = vm.envUint("MAX_SELL_FEE_IN_BPS");
-        require(_maxSellFeeInBps >= 0, "Max sell fee not set");
 
         _isDirectOperationOnly = vm.envBool("IS_DIRECT_OPERATION_ONLY_BOOL");
 

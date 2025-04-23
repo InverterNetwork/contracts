@@ -11,8 +11,8 @@ This document provides instructions for deploying workflows within the Inverter 
 Follow these steps to deploy the Yield Bearing Stable Token workflow:
 
 1.  **Prepare Environment File:**
-    *   Duplicate the example environment file: `dev.env.yieldBearingStableWorkflow`
-    *   Rename the duplicated file to: `.env.yieldBearingStableWorkflow` (removing the `dev.` prefix).
+    *   Duplicate the example environment file: `dev.yieldBearingStableWorkflow.env`
+    *   Rename the duplicated file to: `yieldBearingStableWorkflow.env` (removing the `dev.` prefix).
 
 2.  **Configure Deployment Variables:**
     *   Open the new `.env.yieldBearingStableWorkflow` file.
@@ -24,7 +24,7 @@ Follow these steps to deploy the Yield Bearing Stable Token workflow:
 3.  **Load Environment Variables:**
     *   Source the environment file in your terminal session. This loads the variables you configured in the previous step.
         ```bash
-        source script/workflowDeploymentAndSetupScripts/.env.yieldBearingStableWorkflow
+        source script/workflowDeploymentAndSetupScripts/yieldBearingStableWorkflow.env
         ```
 
 4.  **Deploy and Verify the Workflow:**
