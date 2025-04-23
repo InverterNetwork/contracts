@@ -47,9 +47,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @dev	Reverts if caller is not the module itself.
     modifier onlySelf() {
         if (_msgSender() != address(this)) {
-            revert Module__CallerNotAuthorized(
-                bytes32("onlySelf"), _msgSender()
-            );
+            revert Module__VotingRoleManager__NoSelfCall();
         }
         _;
     }

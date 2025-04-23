@@ -495,11 +495,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__NoSelfCall
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not Module
             if (i % 3 == 0) {
@@ -516,11 +514,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
 
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__NoSelfCall
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not Module
             if (i % 3 == 0) {
@@ -1188,11 +1184,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _newQ = 1;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__NoSelfCall
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not orchestrator
             _votingRoles.setThreshold(_newQ);
@@ -1293,11 +1287,9 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         uint _newDuration = 5 days;
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
-                abi.encodeWithSelector(
-                    IModule_v1.Module__CallerNotAuthorized.selector,
-                    bytes32("onlySelf"),
-                    users[i]
-                )
+                IAUT_EXT_VotingRoles_v1
+                    .Module__VotingRoleManager__NoSelfCall
+                    .selector
             );
             vm.prank(users[i]); // authorized, but not orchestrator
             _votingRoles.setVotingDuration(_newDuration);
