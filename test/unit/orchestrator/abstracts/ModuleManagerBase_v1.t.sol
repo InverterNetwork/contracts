@@ -242,35 +242,6 @@ contract ModuleManagerBaseV1Test is Test {
         moduleManager.call_executeAddModule(module);
     }
 
-    function testInitiateAddModuleWithTimelock_FailsIfCallerNotAuthorized()
-        public
-    {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-    }
-
-    function testExecuteAddModule_FailsIfCallerNotAuthorized() public {
-        address module = address(new ModuleV1Mock());
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_executeAddModule(module);
-    }
-
     function testExecuteAddModule_FailsIfModuleLimitIsExceeded() public {
         uint modulesUntilLimit = MAX_MODULES - moduleManager.modulesSize();
         address[] memory modules = new address[](modulesUntilLimit + 1);
@@ -464,42 +435,6 @@ contract ModuleManagerBaseV1Test is Test {
         assertEq(moduleManager.listModules().length, 0);
     }
 
-    function testInitiateRemoveModuleWithTimelock_FailsIfCallerNotAuthorized()
-        public
-    {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-        vm.warp(block.timestamp + timelock);
-        moduleManager.call_executeAddModule(module);
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_initiateRemoveModuleWithTimelock(module);
-    }
-
-    function testExecuteRemoveModule_FailsIfCallerNotAuthorized() public {
-        address module = address(new ModuleV1Mock());
-
-        moduleManager.call_initiateAddModuleWithTimelock(module);
-        vm.warp(block.timestamp + timelock);
-        moduleManager.call_executeAddModule(module);
-
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_initiateRemoveModuleWithTimelock(module);
-    }
-
     function testInitiateRemoveModuleWithTimelock_FailsIfNotModule() public {
         address module = address(new ModuleV1Mock());
 
@@ -513,28 +448,14 @@ contract ModuleManagerBaseV1Test is Test {
     // Tests: cancelModuleUpdate()
     /*
         Test cancelModuleUpdate() function
-        ├── Given the caller of the function is not authorized
-        │   └── When the function cancelModuleUpdate() gets called
-        │       └── Then it should revert
         ├── Given no update has been initated for the module
         │   └── When the function cancelModuleUpdate() gets called
         │       └── Then it should revert
-        └── Given caller is authorized & module update has been initiated
+        └── Given module update has been initiated
             └── When the function cancelModuleUpdate() gets called
                 └── Then it should cancel the update
                     └── And it should emit an event
     */
-    function testCancelModuleUpdate_failsGivenCallerNotAuthorized() public {
-        address module = address(new ModuleV1Mock());
-        moduleManager.__ModuleManager_setIsAuthorized(address(this), false);
-
-        vm.expectRevert(
-            IModuleManagerBase_v1
-                .ModuleManagerBase__CallerNotAuthorized
-                .selector
-        );
-        moduleManager.call_cancelModuleUpdate(module);
-    }
 
     function testCancelModuleUpdate_failsGivenModuleUpdateNotInitated()
         public
