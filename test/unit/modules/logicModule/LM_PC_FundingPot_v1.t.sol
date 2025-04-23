@@ -22,6 +22,8 @@ import {ERC721Mock} from
     "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v2NFTMock.sol";
 import {LM_PC_FundingPot_v1ERC20Mock} from
     "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v1ERC20Mock.sol";
+import {IBondingCurveBase_v1} from
+    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // System under Test (SuT)
 import {LM_PC_FundingPot_v1_Exposed} from
@@ -95,8 +97,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     ERC721Mock mockNFTContract = new ERC721Mock("NFT Mock", "NFT");
-    LM_PC_FundingPot_v1ERC20Mock issuanceERC20Token =
-        new LM_PC_FundingPot_v1ERC20Mock("ERC20 Mock", "ERC20");
+    address issuanceERC20MockToken;
 
     // -------------------------------------------------------------------------
     // Setup
@@ -119,9 +120,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _setUpOrchestrator(fundingPot);
 
         // Initiate the Logic Module with the metadata and config data
-        fundingPot.init(
-            _orchestrator, _METADATA, abi.encode(address(issuanceERC20Token))
-        ); // @note: The address of issuancetoken is being passed for testing purpose as of now, We arent actually sure how to use the mock contract alongside the fundingpot contract.
+        fundingPot.init(_orchestrator, _METADATA, abi.encode(""));
 
         _authorizer.setIsAuthorized(address(this), true);
 
@@ -149,6 +148,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             true,
             true
         );
+
+        issuanceERC20MockToken = IBondingCurveBase_v1(
+            address(_orchestrator.fundingManager())
+        ).getIssuanceToken();
     }
 
     // -------------------------------------------------------------------------
