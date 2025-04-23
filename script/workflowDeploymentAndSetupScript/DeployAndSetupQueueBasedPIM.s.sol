@@ -364,7 +364,18 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
                 _fundingManager.getWhitelistRoleAdmin()
             )
         );
-        // @todo how to check if admin role has been set correctly
+        require(
+            _authorizer.getRoleAdmin(
+                _authorizer.generateRoleId(
+                    address(_fundingManager), _fundingManager.getWhitelistRole()
+                )
+            )
+                == _authorizer.generateRoleId(
+                    address(_fundingManager),
+                    _fundingManager.getWhitelistRoleAdmin()
+                ),
+            "Admin role for whitelist role not set correctly"
+        );
 
         // Set Queue Executor Role
         _fundingManager.grantModuleRole(
@@ -408,7 +419,19 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
                 _fundingManager.getQueueExecutorRoleAdmin()
             )
         );
-        // @todo how to check if admin role has been set correctly
+        require(
+            _authorizer.getRoleAdmin(
+                _authorizer.generateRoleId(
+                    address(_fundingManager),
+                    _fundingManager.getQueueExecutorRole()
+                )
+            )
+                == _authorizer.generateRoleId(
+                    address(_fundingManager),
+                    _fundingManager.getQueueExecutorRoleAdmin()
+                ),
+            "Admin role for queue executor role not set correctly"
+        );
         vm.stopBroadcast();
     }
 
@@ -458,7 +481,17 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
                 address(_oracleModule), _oracleModule.getPriceSetterRoleAdmin()
             )
         );
-        // @todo how to check if admin role has been set correctly
+        require(
+            _authorizer.getRoleAdmin(
+                _authorizer.generateRoleId(
+                    address(_oracleModule), _oracleModule.getPriceSetterRole()
+                )
+            )
+                == _authorizer.generateRoleId(
+                    address(_oracleModule), _oracleModule.getPriceSetterRoleAdmin()
+                ),
+            "Admin role for price setter role not set correctly"
+        );
         vm.stopBroadcast();
     }
 
