@@ -144,9 +144,6 @@ contract LM_PC_FundingPot_v1 is
     mapping(uint64 => mapping(address => mapping(uint8 => uint))) private
         roundIdTouserContributionsByAccessCriteria;
 
-    /// @notice Bancor Bonding Curve Funding Manager
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1 bancorFM;
-
     /// @notice The current round count.
     uint64 private roundCount;
 
@@ -178,9 +175,6 @@ contract LM_PC_FundingPot_v1 is
         flags |= bytes32(1 << FLAG_END);
 
         __ERC20PaymentClientBase_v2_init(flags);
-
-        address bancorFMaddress = abi.decode(configData_, (address));
-        bancorFM = FM_BC_Bancor_Redeeming_VirtualSupply_v1(bancorFMaddress);
     }
 
     // -------------------------------------------------------------------------
@@ -1067,13 +1061,11 @@ contract LM_PC_FundingPot_v1 is
         address[] memory contributors =
             EnumerableSet.values(contributorsByRound[roundId_]);
 
-        // address issuanceToken = address(
-        //     IBondingCurveBase_v1(
-        //         address(__Module_orchestrator.fundingManager())
-        //     ).getIssuanceToken()
-        // );
-        //@note: This is for testing purpose, the above snippet should be used to fetch the token address, talk to Fabi!
-        address issuanceToken = bancorFM.getIssuanceToken();
+        address issuanceToken = address(
+            IBondingCurveBase_v1(
+                address(__Module_orchestrator.fundingManager())
+            ).getIssuanceToken()
+        );
 
         for (uint i = 0; i < contributors.length; i++) {
             address contributor = contributors[i];
@@ -1171,13 +1163,11 @@ contract LM_PC_FundingPot_v1 is
     function _buyBondingCurveToken(uint64 roundId_) internal {
         uint totalContributions = _getTotalRoundContribution(roundId_);
 
-        // address issuanceToken = address(
-        //     IBondingCurveBase_v1(
-        //         address(__Module_orchestrator.fundingManager())
-        //     ).getIssuanceToken()
-        // );
-
-        address issuanceToken = bancorFM.getIssuanceToken();
+        address issuanceToken = address(
+            IBondingCurveBase_v1(
+                address(__Module_orchestrator.fundingManager())
+            ).getIssuanceToken()
+        );
 
         uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
         IBondingCurveBase_v1(issuanceToken).buyFor(
