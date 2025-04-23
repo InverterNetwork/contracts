@@ -57,7 +57,7 @@ contract ProtocolConstants_v1 is Script {
     // 137 = Polygon PoS
     // 1101 = Polygon zkEVM
     // 43114 = Avalanche C-Chain
-    uint[] public mainnets = [10, 137, 1101, 43_114];
+    uint[] public deployedMainnets = [10, 137, 1101, 43_114];
 
     // Testnets
     // 2442 = Polygon zkEVM Cardona
@@ -65,7 +65,8 @@ contract ProtocolConstants_v1 is Script {
     // 84532 = Base Sepolia
     // 11155111 = Sepolia
     // 11155420 = OP Sepolia
-    uint[] public testnets = [2442, 80_002, 84_532, 11_155_111, 11_155_420];
+    uint[] public deployedTestnets =
+        [2442, 80_002, 84_532, 11_155_111, 11_155_420];
 
     // Internal Storage for the deployment addresses
     // Note: As we deploy via a deterministic factory with the same salt across
@@ -140,15 +141,15 @@ contract ProtocolConstants_v1 is Script {
         uint chainId = block.chainid;
 
         // Mainnet Deployments
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
                 return orchestratorFactoryMainnet;
             }
         }
 
         // Testnet Deployments
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
                 return orchestratorFactoryTestnet;
             }
         }
@@ -175,15 +176,15 @@ contract ProtocolConstants_v1 is Script {
         uint chainId = block.chainid;
 
         // Mainnet Deployments
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
                 return governorMainnet;
             }
         }
 
         // Testnet Deployments
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
                 return governorTestnet;
             }
         }
@@ -196,15 +197,15 @@ contract ProtocolConstants_v1 is Script {
         uint chainId = block.chainid;
 
         // Mainnet Deployments
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
                 return reverterMainnet;
             }
         }
 
         // Testnet Deployments
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
                 return reverterTestnet;
             }
         }
