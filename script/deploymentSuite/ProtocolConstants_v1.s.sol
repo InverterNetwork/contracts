@@ -51,7 +51,20 @@ contract ProtocolConstants_v1 is Script {
 
     // Chain IDs for Networks with Deployments
     // If the current chain id is not part of any array, we assume that we are working locally.
-    uint[] public mainnets = [10, 137, 1101];
+
+    // Mainnets
+    // 10 = Optimism
+    // 137 = Polygon PoS
+    // 1101 = Polygon zkEVM
+    // 43114 = Avalanche C-Chain
+    uint[] public mainnets = [10, 137, 1101, 43_114];
+
+    // Testnets
+    // 2442 = Polygon zkEVM Cardona
+    // 80002 = Polygon Amoy
+    // 84532 = Base Sepolia
+    // 11155111 = Sepolia
+    // 11155420 = OP Sepolia
     uint[] public testnets = [2442, 80_002, 84_532, 11_155_111, 11_155_420];
 
     // Internal Storage for the deployment addresses
