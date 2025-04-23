@@ -869,10 +869,8 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
         // Workflow config
         // ---------------------------------------------------------------------
         _independentUpdateBool = vm.envBool("INDEPENDENT_UPDATE_BOOL");
-        if (_independentUpdateBool) {
-            _independentUpdateAdmin =
-                vm.envAddress("INDEPENDENT_UPDATE_ADMIN_ADDRESS");
-        }
+        _independentUpdateAdmin =
+            vm.envAddress("INDEPENDENT_UPDATE_ADMIN_ADDRESS");
 
         console2.log("  [OK] Environment variables loaded and validated");
     }
