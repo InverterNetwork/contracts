@@ -50,11 +50,27 @@ contract ProtocolConstants_v1 is Script {
     address public deployedReverter;
 
     // Chain IDs for Networks with Deployments
-    // If the current chainid is not part of any array, we assume that we are working locally.
-    uint[] public mainnets = [10, 137, 1101];
-    uint[] public testnets = [2442, 80_002, 84_532, 11_155_111, 11_155_420];
+    // If the current chain id is not part of any array, we assume that we are working locally.
 
-    // Internal Storage for the deployment addresses (hardcoded as they don't change)
+    // Mainnets
+    // 10 = Optimism
+    // 137 = Polygon PoS
+    // 1101 = Polygon zkEVM
+    // 43114 = Avalanche C-Chain
+    uint[] public deployedMainnets = [10, 137, 1101, 43_114];
+
+    // Testnets
+    // 2442 = Polygon zkEVM Cardona
+    // 80002 = Polygon Amoy
+    // 84532 = Base Sepolia
+    // 11155111 = Sepolia
+    // 11155420 = OP Sepolia
+    uint[] public deployedTestnets =
+        [2442, 80_002, 84_532, 11_155_111, 11_155_420];
+
+    // Internal Storage for the deployment addresses
+    // Note: As we deploy via a deterministic factory with the same salt across
+    //       all networks, we can use the same address for all network types.
     address private constant governorMainnet =
         0x0B7c73e778d04533286752BEb7d4BA42AEa2f57D;
     address private constant governorTestnet =
@@ -125,15 +141,15 @@ contract ProtocolConstants_v1 is Script {
         uint chainId = block.chainid;
 
         // Mainnet Deployments
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
                 return orchestratorFactoryMainnet;
             }
         }
 
         // Testnet Deployments
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
                 return orchestratorFactoryTestnet;
             }
         }
@@ -160,15 +176,15 @@ contract ProtocolConstants_v1 is Script {
         uint chainId = block.chainid;
 
         // Mainnet Deployments
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
                 return governorMainnet;
             }
         }
 
         // Testnet Deployments
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
                 return governorTestnet;
             }
         }
@@ -181,20 +197,47 @@ contract ProtocolConstants_v1 is Script {
         uint chainId = block.chainid;
 
         // Mainnet Deployments
-        for (uint i = 0; i < mainnets.length; i++) {
-            if (chainId == mainnets[i]) {
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
                 return reverterMainnet;
             }
         }
 
         // Testnet Deployments
-        for (uint i = 0; i < testnets.length; i++) {
-            if (chainId == testnets[i]) {
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
                 return reverterTestnet;
             }
         }
 
         // Set to 0 for Local Deployments
         return 0x0000000000000000000000000000000000000000;
+    }
+
+    function currentNetworkIsMainnet() public view returns (bool) {
+        // Checks whether the current network is a mainnet
+        uint chainId = block.chainid;
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function currentNetworkIsTestnet() public view returns (bool) {
+        // Checks whether the current network is a testnet
+        uint chainId = block.chainid;
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function currentNetworkIsLocal() public view returns (bool) {
+        // Checks whether the current network is neither a mainnet nor a testnet
+        return !currentNetworkIsMainnet() && !currentNetworkIsTestnet();
     }
 }
