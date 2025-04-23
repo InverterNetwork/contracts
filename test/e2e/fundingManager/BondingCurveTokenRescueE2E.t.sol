@@ -10,6 +10,8 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -103,12 +105,23 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
+        AUT_Roles_v1 authorizer =
+            AUT_Roles_v1(address(orchestrator.authorizer()));
+
         FM_BC_Bancor_Redeeming_VirtualSupply_v1 fundingManager =
         FM_BC_Bancor_Redeeming_VirtualSupply_v1(
             address(orchestrator.fundingManager())
         );
 
         issuanceToken.setMinter(address(fundingManager), true);
+
+        // Set up Roles
+        // Make buy public
+        authorizer.addAccessPermission(
+            address(fundingManager),
+            fundingManager.buy.selector,
+            authorizer.PUBLIC_ROLE()
+        );
 
         // Mint some tokens to alice in order to fund the fundingmanager.
 
@@ -176,11 +189,6 @@ contract BondingCurveTokenRescueE2E is E2ETest {
 
         // Transfer all collateral to the new BC
 
-        LM_PC_PaymentRouter_v2(paymentRouter).grantModuleRole(
-            LM_PC_PaymentRouter_v2(paymentRouter).PAYMENT_PUSHER_ROLE(),
-            address(this)
-        );
-
         LM_PC_PaymentRouter_v2(paymentRouter).pushPayment(
             newBondingCurve, // recipient
             address(token), // token
@@ -222,6 +230,14 @@ contract BondingCurveTokenRescueE2E is E2ETest {
         assertEq(oldIssuanceSupply, fundingManager.getVirtualIssuanceSupply());
         assertEq(
             oldCollateralSupply, fundingManager.getVirtualCollateralSupply()
+        );
+
+        // Assign new Permissions to the new BC
+
+        authorizer.addAccessPermission(
+            address(fundingManager),
+            fundingManager.buy.selector,
+            authorizer.PUBLIC_ROLE()
         );
 
         // Bob performs a buy
