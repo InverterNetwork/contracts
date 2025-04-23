@@ -50,11 +50,13 @@ contract ProtocolConstants_v1 is Script {
     address public deployedReverter;
 
     // Chain IDs for Networks with Deployments
-    // If the current chainid is not part of any array, we assume that we are working locally.
+    // If the current chain id is not part of any array, we assume that we are working locally.
     uint[] public mainnets = [10, 137, 1101];
     uint[] public testnets = [2442, 80_002, 84_532, 11_155_111, 11_155_420];
 
-    // Internal Storage for the deployment addresses (hardcoded as they don't change)
+    // Internal Storage for the deployment addresses
+    // Note: As we deploy via a deterministic factory with the same salt across
+    //       all networks, we can use the same address for all network types.
     address private constant governorMainnet =
         0x0B7c73e778d04533286752BEb7d4BA42AEa2f57D;
     address private constant governorTestnet =
