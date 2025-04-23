@@ -213,4 +213,31 @@ contract ProtocolConstants_v1 is Script {
         // Set to 0 for Local Deployments
         return 0x0000000000000000000000000000000000000000;
     }
+
+    function currentNetworkIsMainnet() public view returns (bool) {
+        // Checks whether the current network is a mainnet
+        uint chainId = block.chainid;
+        for (uint i = 0; i < deployedMainnets.length; i++) {
+            if (chainId == deployedMainnets[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function currentNetworkIsTestnet() public view returns (bool) {
+        // Checks whether the current network is a testnet
+        uint chainId = block.chainid;
+        for (uint i = 0; i < deployedTestnets.length; i++) {
+            if (chainId == deployedTestnets[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function currentNetworkIsLocal() public view returns (bool) {
+        // Checks whether the current network is neither a mainnet nor a testnet
+        return !currentNetworkIsMainnet() && !currentNetworkIsTestnet();
+    }
 }
