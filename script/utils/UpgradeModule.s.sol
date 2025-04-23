@@ -186,7 +186,7 @@ contract UpgradeModule is Script, ProtocolConstants_v1 {
             );
             console2.log("\tto implementation\n\t\t%s", implementation);
             console2.log("\twith version\n\t\t%s", version);
-            console2.log("\tin the governor at\n\t\t%s", deployedGovernor); 
+            console2.log("\tin the governor at\n\t\t%s", deployedGovernor);
             console2.log("----------------------------------------");
             console2.log(
                 "Deployment complete, Module will be ready to be used once finalized via the Multisig!"
