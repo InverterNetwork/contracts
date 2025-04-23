@@ -11,7 +11,7 @@ import {
     IOrchestrator_v1
 } from "@unit/modules/ModuleTest.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
-import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -120,6 +120,9 @@ contract LM_PC_Staking_v2Lifecycle is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
+        AUT_Roles_v1 authorizer =
+            AUT_Roles_v1(address(orchestrator.authorizer()));
+
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
@@ -137,12 +140,24 @@ contract LM_PC_Staking_v2Lifecycle is E2ETest {
             }
         }
 
+        // Make stake and unstake public
+        authorizer.addAccessPermission(
+            address(stakingManager),
+            stakingManager.stake.selector,
+            authorizer.PUBLIC_ROLE()
+        );
+        authorizer.addAccessPermission(
+            address(stakingManager),
+            stakingManager.unstake.selector,
+            authorizer.PUBLIC_ROLE()
+        );
+
         // Warp to reasonable time
         vm.warp(52 weeks);
 
         // ----------------
 
-        // 1. deopsit some funds to fundingManager
+        // 1. deposit some funds to fundingManager
         uint initialDeposit = amount1 + amount2 + amount3 * 2;
         rewardToken.mint(address(this), initialDeposit);
         rewardToken.approve(address(fundingManager), initialDeposit);
