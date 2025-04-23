@@ -101,7 +101,7 @@ contract AUT_Roles_v1 is
     uint internal _roleIdCounter;
 
     /// @dev	Storage gap for future upgrades.
-    uint[47] private __gap; //@todo Question: Mapping Storage slot only 1 right?
+    uint[47] private __gap;
 
     // ========================================================================
     // Initialization
@@ -182,8 +182,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function hasPermission( //@todo with added interface function the interfaceid changes for IAuthorizer_v1 -> Implications for ERC165 and Authorizer reference contracts
-    address caller_, address target_, bytes4 selector_)
+    function hasPermission(address caller_, address target_, bytes4 selector_)
         public
         view
         virtual
