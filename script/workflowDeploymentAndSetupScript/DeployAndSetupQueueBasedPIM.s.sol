@@ -71,10 +71,10 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
     IOrchestrator_v1 internal _orchestrator;
 
     // Workflow Modules
-    FM_PC_Oracle_Redeeming_v1 _fundingManager;
-    AUT_Roles_v1 _authorizer;
-    PP_Queue_ManualExecution_v1 _paymentProcessor;
-    LM_Oracle_Permissioned_v1 _oracleModule;
+    FM_PC_Oracle_Redeeming_v1 internal _fundingManager;
+    AUT_Roles_v1 internal _authorizer;
+    PP_Queue_ManualExecution_v1 internal _paymentProcessor;
+    LM_Oracle_Permissioned_v1 internal _oracleModule;
 
     function run() public override {
         console2.log("\n================================");
