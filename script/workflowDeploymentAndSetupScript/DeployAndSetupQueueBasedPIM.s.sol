@@ -208,14 +208,10 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
 
         console2.log("  Setting up workflow admin...");
         vm.startBroadcast(deployerPrivateKey);
-        _authorizer.grantGlobalRole(_authorizer.getAdminRole(), _workflowAdmin);
+        _authorizer.grantRole(_authorizer.getAdminRole(), _workflowAdmin);
         require(
-            _authorizer.checkForRole(
-                _authorizer.generateRoleId(
-                    address(_orchestrator), _authorizer.getAdminRole()
-                ),
-                _workflowAdmin
-            ) == true,
+            _authorizer.checkForRole(_authorizer.getAdminRole(), _workflowAdmin)
+                == true,
             "Workflow admin not set correctly"
         );
         console2.log("  * Workflow admin: ", _workflowAdmin);
@@ -223,14 +219,10 @@ contract DeployAndSetupQueueBasedPIM is DeploymentScript {
 
         // Revoke admin role from deployer
         console2.log("  Revoking admin role from deployer...");
-        _authorizer.revokeGlobalRole(_authorizer.getAdminRole(), deployer);
+        _authorizer.revokeRole(_authorizer.getAdminRole(), deployer);
         require(
-            _authorizer.checkForRole(
-                _authorizer.generateRoleId(
-                    address(_orchestrator), _authorizer.getAdminRole()
-                ),
-                deployer
-            ) == false,
+            _authorizer.checkForRole(_authorizer.getAdminRole(), deployer)
+                == false,
             "Admin role not revoked from deployer"
         );
         vm.stopBroadcast();
