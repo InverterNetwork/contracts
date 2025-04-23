@@ -13,6 +13,9 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+// Libraries
+import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
+
 /**
  * @title   Cross-chain Payment Processor Base Contract.
  *
@@ -56,6 +59,14 @@ import {ERC165Upgradeable} from
  * @author  33Audits
  */
 abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
+    //--------------------------------------------------------------------------
+    // Libraries
+
+    using SafeERC20 for IERC20;
+
+    //--------------------------------------------------------------------------
+    // ERC165 Interface
+
     /// @inheritdoc ERC165Upgradeable
     function supportsInterface(bytes4 interfaceId_)
         public
@@ -86,6 +97,9 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
 
     /// @notice Mapping of payment IDs to bridge data.
     mapping(uint paymentId => bytes bridgeData) internal _paymentIdToBridgeData;
+
+    /// @dev    Gap for possible future upgrades.
+    uint[50] private __gap;
 
     //--------------------------------------------------------------------------
     // Modifiers
@@ -135,7 +149,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // External Functions
+    // Public Mutating Functions
 
     /// @inheritdoc IPaymentProcessor_v2
     function claimPreviouslyUnclaimable(
@@ -189,7 +203,7 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         uint amount = _unclaimableAmountsForRecipient[client_][token_][sender];
         delete _unclaimableAmountsForRecipient[client_][token_][sender];
 
-        IERC20(token_).transfer(paymentReceiver_, amount);
+        IERC20(token_).safeTransfer(paymentReceiver_, amount);
         emit TokensReleased(paymentReceiver_, address(token_), amount);
     }
 
@@ -237,7 +251,4 @@ abstract contract PP_CrossChainBase_v1 is IPP_CrossChainBase_v1, Module_v1 {
         valid_ = success && data.length >= 32;
         return valid_;
     }
-
-    /// @dev    Gap for possible future upgrades.
-    uint[50] private __gap;
 }
