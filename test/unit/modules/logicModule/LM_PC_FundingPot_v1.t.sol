@@ -2033,12 +2033,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify round is closed
         assertEq(fundingPot.isRoundClosed(roundId), true);
-
-        // Verify payment orders
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            fundingPot.paymentOrders();
-        assertEq(orders.length, 1);
-        assertEq(orders[0].amount, 1000);
     }
 
     function testCloseRound_worksGivenRoundHasEnded() public {
@@ -2077,12 +2071,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify round is closed
         assertEq(fundingPot.isRoundClosed(roundId), true);
-
-        // Verify payment orders
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            fundingPot.paymentOrders();
-        assertEq(orders.length, 1);
-        assertEq(orders[0].amount, 500);
     }
 
     function testCloseRound_worksGivenRoundCapHasBeenReached() public {
@@ -2122,12 +2110,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(fundingPot.isRoundClosed(roundId), false);
         fundingPot.closeRound(roundId);
         assertEq(fundingPot.isRoundClosed(roundId), true);
-
-        // Get the payment orders and store them in a variable
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            fundingPot.paymentOrders();
-
-        assertEq(orders.length, 1);
     }
 
     function testCloseRound_worksGivenRoundisAutoClosure() public {
@@ -2165,12 +2147,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         assertEq(fundingPot.isRoundClosed(roundId), true);
-
-        // Get the payment orders and store them in a variable
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            fundingPot.paymentOrders();
-
-        assertEq(orders.length, 1);
     }
 
     function testCloseRound_worksWithMultipleContributors() public {
@@ -2217,13 +2193,138 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Verify round is closed
         assertEq(fundingPot.isRoundClosed(roundId), true);
-
-        // Verify payment orders
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            fundingPot.paymentOrders();
-        assertEq(orders.length, 3);
     }
 
+    //-------------------------------------------------------------------------
+
+    /* Test createPaymentOrdersForContributorsBatch()
+    ├── Given round does not exist
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should revert with Module__LM_PC_FundingPot__RoundNotCreated
+    │
+    ├── Given round is not closed
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should revert with Module__LM_PC_FundingPot__RoundNotClosed
+    │
+    ├── Given start index is greater than the number of contributors
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should revert with Module__LM_PC_FundingPot__InvalidBatchParameters
+    │
+    ├── Given batch size is zero
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should revert with Module__LM_PC_FundingPot__InvalidBatchParameters
+    │
+    ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+    │   └── Given the round is configured with autoClosure
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should revert with Module__CallerNotAuthorized
+    │
+    ├── Given a closed round with autoClosure
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should not revert and payment orders should be created
+    │           └── And the payment orders should have correct token amounts
+    │
+    ├── Given a closed round with manualClosure
+    │   └── When funding pot admin attempts to create payment orders in batch
+    │       └── Then it should not revert and payment orders should be created
+    │           └── And the payment orders should have correct token amounts
+    */
+
+    function testCreatePaymentOrdersForContributorsBatch_revertsGivenRoundDoesNotExist(
+    ) public {
+        uint64 nonExistentRoundId = 999;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundNotCreated
+                    .selector
+            )
+        );
+        fundingPot.createPaymentOrdersForContributorsBatch(
+            nonExistentRoundId, 1
+        );
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_revertsGivenRoundIsNotClosed(
+    ) public {
+        testContributeToRound_worksGivenAllConditionsMet();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundNotClosed
+                    .selector
+            )
+        );
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsGreaterThanContributorCount(
+    ) public {
+        testCloseRound_worksWithMultipleContributors();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__InvalidBatchParameters
+                    .selector
+            )
+        );
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 999);
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsZero(
+    ) public {
+        testCloseRound_worksWithMultipleContributors();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__InvalidBatchParameters
+                    .selector
+            )
+        );
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 0);
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_revertsGivenUserDoesNotHaveFundingPotAdminRole(
+    ) public {
+        testCloseRound_worksWithMultipleContributors();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        vm.startPrank(contributor1_);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector,
+                fundingPot.FUNDING_POT_ADMIN_ROLE(),
+                contributor1_
+            )
+        );
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
+        vm.stopPrank();
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsAutoClosure(
+    ) public {
+        testCloseRound_worksGivenRoundisAutoClosure();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
+        assertEq(fundingPot.paymentOrders().length, 1);
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsManualClosure(
+    ) public {
+        testCloseRound_worksWithMultipleContributors();
+        uint64 roundId = fundingPot.getRoundCount();
+
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 3);
+        assertEq(fundingPot.paymentOrders().length, 3);
+    }
     // -------------------------------------------------------------------------
 
     // Internal Functions
@@ -2498,9 +2599,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
 
+        uint startIndex = 0;
+        uint batchSize = 1;
         fundingPot.exposed_closeRound(roundId);
         fundingPot.exposed_buyBondingCurveToken(roundId);
-        fundingPot.exposed_createPaymentOrdersForContributors(roundId);
+        fundingPot.exposed_createPaymentOrdersForContributors(
+            roundId, startIndex, batchSize
+        );
 
         assertTrue(fundingPot.isRoundClosed(roundId));
     }

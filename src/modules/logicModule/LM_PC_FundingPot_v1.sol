@@ -150,6 +150,9 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
+    // Add a mapping to track the next unprocessed index for each round
+    mapping(uint64 => uint) private roundIdToNextUnprocessedIndex;
+
     // -------------------------------------------------------------------------
     // Modifiers
 
@@ -646,10 +649,53 @@ contract LM_PC_FundingPot_v1 is
 
             _buyBondingCurveToken(roundId_);
 
-            _createPaymentOrdersForContributors(roundId_);
+            // Payment orders will be created separately via processContributorBatch
         } else {
             revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
         }
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function createPaymentOrdersForContributorsBatch(
+        uint64 roundId_,
+        uint batchSize_
+    ) external {
+        Round storage round = rounds[roundId_];
+
+        // Check if round exists
+        if (round.roundEnd == 0 && round.roundCap == 0) {
+            revert Module__LM_PC_FundingPot__RoundNotCreated();
+        }
+
+        // Check if round is closed
+        if (!roundIdToClosedStatus[roundId_]) {
+            revert Module__LM_PC_FundingPot__RoundNotClosed();
+        }
+
+        address[] memory contributors =
+            EnumerableSet.values(contributorsByRound[roundId_]);
+        uint contributorCount = contributors.length;
+
+        // Check batch size is not zero
+        if (batchSize_ == 0 || batchSize_ > contributorCount) {
+            revert Module__LM_PC_FundingPot__InvalidBatchParameters();
+        }
+
+        // If autoClosure is false, only admin can process contributors
+        if (!round.autoClosure) {
+            _checkRoleModifier(FUNDING_POT_ADMIN_ROLE, _msgSender());
+        }
+
+        uint startIndex = roundIdToNextUnprocessedIndex[roundId_];
+        _createPaymentOrdersForContributors(roundId_, startIndex, batchSize_);
+
+        // Update the next unprocessed index
+        uint endIndex = startIndex + batchSize_;
+        if (endIndex > contributorCount) {
+            endIndex = contributorCount;
+        }
+
+        roundIdToNextUnprocessedIndex[roundId_] = endIndex;
     }
 
     // -------------------------------------------------------------------------
@@ -792,8 +838,6 @@ contract LM_PC_FundingPot_v1 is
                 _closeRound(roundId_);
 
                 _buyBondingCurveToken(roundId_);
-
-                _createPaymentOrdersForContributors(roundId_);
             }
         }
     }
@@ -1048,10 +1092,16 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
-    /// @notice Creates payment orders for all contributors in a round based on their access criteria
-    /// @dev    Loops through all contributors and creates payment orders with appropriate vesting schedules
+    /// @notice Creates payment orders for contributors in a round based on their access criteria
+    /// @dev    Processes a batch of contributors to handle gas limit concerns
     /// @param  roundId_ The ID of the round to create payment orders for
-    function _createPaymentOrdersForContributors(uint64 roundId_) internal {
+    /// @param  startIndex_ The starting index in the contributors array
+    /// @param  batchSize_ The number of contributors to process in this batch
+    function _createPaymentOrdersForContributors(
+        uint64 roundId_,
+        uint startIndex_,
+        uint batchSize_
+    ) internal {
         Round storage round = rounds[roundId_];
         uint totalContributions = roundIdToTotalContributions[roundId_];
         uint tokensBought = roundTokensBought[roundId_];
@@ -1060,6 +1110,17 @@ contract LM_PC_FundingPot_v1 is
 
         address[] memory contributors =
             EnumerableSet.values(contributorsByRound[roundId_]);
+        uint contributorCount = contributors.length;
+
+        if (startIndex_ >= contributorCount) {
+            revert Module__LM_PC_FundingPot__InvalidStartIndex();
+        }
+
+        // Calculate the end index (don't exceed array bounds)
+        uint endIndex = startIndex_ + batchSize_;
+        if (endIndex > contributorCount) {
+            endIndex = contributorCount;
+        }
 
         address issuanceToken = address(
             IBondingCurveBase_v1(
@@ -1067,7 +1128,7 @@ contract LM_PC_FundingPot_v1 is
             ).getIssuanceToken()
         );
 
-        for (uint i = 0; i < contributors.length; i++) {
+        for (uint i = startIndex_; i < endIndex; i++) {
             address contributor = contributors[i];
             uint contributorTotal =
                 roundIdToUserToContribution[roundId_][contributor];
@@ -1154,6 +1215,8 @@ contract LM_PC_FundingPot_v1 is
                 );
             }
         }
+
+        emit ContributorBatchProcessed(roundId_, startIndex_, endIndex);
     }
 
     function _buyBondingCurveToken(uint64 roundId_) internal {
