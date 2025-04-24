@@ -77,7 +77,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     // Mocks
     AUT_TokenGated_Roles_v1 _authorizer;
     Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
-    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
+    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK", 18);
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
     GovernorV1Mock internal _governor = new GovernorV1Mock();
@@ -90,7 +90,7 @@ contract TokenGatedAUT_RoleV1Test is Test {
     address CLOE = address(0xc10e); // example person
 
     ERC20Mock internal roleToken =
-        new ERC20Mock("Inverters With Benefits", "IWB");
+        new ERC20Mock("Inverters With Benefits", "IWB", 18);
     ERC721Mock internal roleNft =
         new ERC721Mock("detrevnI epA thcaY bulC", "EPA");
 

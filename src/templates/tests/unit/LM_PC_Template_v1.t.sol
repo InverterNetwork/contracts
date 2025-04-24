@@ -16,8 +16,7 @@ import {Clones} from "@oz/proxy/Clones.sol";
 // Tests and Mocks
 import {
     IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBaseV2Mock,
-    ERC20Mock
+    ERC20PaymentClientBaseV2Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
@@ -59,7 +58,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     function setUp() public {
         // Setup the payment token
-        paymentToken = new ERC20Mock("Payment Token", "PT");
+        paymentToken = new ERC20Mock("Payment Token", "PT", 18);
 
         // Deploy the SuT
         address impl = address(new LM_PC_Template_v1_Exposed());

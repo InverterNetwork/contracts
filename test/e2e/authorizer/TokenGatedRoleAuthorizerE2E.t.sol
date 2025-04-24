@@ -27,7 +27,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
     address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
-    ERC20Mock gatingToken = new ERC20Mock("Gating Token", "GATOR");
+    ERC20Mock gatingToken = new ERC20Mock("Gating Token", "GATOR", 18);
 
     function setUp() public override {
         // Setup common E2E framework

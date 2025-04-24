@@ -29,8 +29,10 @@ import {FundingManagerV1Mock} from
     "test/utils/mocks/modules/FundingManagerV1Mock.sol";
 import {AuthorizerV1Mock} from "test/utils/mocks/modules/AuthorizerV1Mock.sol";
 import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+import {
+    PaymentProcessorV1Mock,
+    IPaymentProcessor_v2
+} from "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
 // External Dependencies
 import {TransparentUpgradeableProxy} from
     "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -44,7 +46,7 @@ abstract contract ModuleTest is Test {
     // Mocks
     FundingManagerV1Mock _fundingManager;
     AuthorizerV1Mock _authorizer;
-    ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK");
+    ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK", 18);
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
 
     GovernorV1Mock governor = new GovernorV1Mock();
@@ -252,5 +254,17 @@ abstract contract ModuleTest is Test {
         _orchestrator.initiateAddModuleWithTimelock(_logicModule);
         vm.warp(block.timestamp + 73 hours);
         _orchestrator.executeAddModule(_logicModule);
+    }
+
+    function _addPaymentProcessorToOrchestrator(address paymentProcessor_)
+        internal
+    {
+        _orchestrator.initiateSetPaymentProcessorWithTimelock(
+            IPaymentProcessor_v2(paymentProcessor_)
+        );
+        vm.warp(block.timestamp + 73 hours);
+        _orchestrator.executeSetPaymentProcessor(
+            IPaymentProcessor_v2(paymentProcessor_)
+        );
     }
 }

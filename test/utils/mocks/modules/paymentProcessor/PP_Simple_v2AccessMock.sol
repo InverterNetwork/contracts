@@ -20,6 +20,13 @@ contract PP_Simple_v2AccessMock is PP_Simple_v2 {
         return _validTotal(_total);
     }
 
+    function exposed_validOriginAndTargetChain(
+        uint originChainId,
+        uint targetChainId
+    ) external view returns (bool) {
+        return _validOriginAndTargetChain(originChainId, targetChainId);
+    }
+
     function exposed_validPaymentToken(address _token)
         external
         returns (bool)

@@ -18,9 +18,8 @@ contract ERC20IssuanceTest is Test {
     event MinterSet(address indexed minter, bool allowed);
 
     function setUp() public {
-        token = new ERC20Issuance_v1(
-            "Test Token", "TT", 18, type(uint).max - 1, address(this)
-        );
+        token = new ERC20Issuance_v1("Test Token", "TT", 18, type(uint).max - 1);
+        token.setMinter(address(this), true);
     }
 
     function testInit() public {

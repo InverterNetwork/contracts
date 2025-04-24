@@ -16,4 +16,5 @@ lcov.info
 .env
 
 .DS_Store
-test/.DS_Store
+test/.DS_Storescripts.md
+scripts.md

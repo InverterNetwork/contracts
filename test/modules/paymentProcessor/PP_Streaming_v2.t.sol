@@ -2096,7 +2096,7 @@ contract PP_StreamingV1Test is ModuleTest {
         assertEq(paymentProcessor.exposed_validPaymentToken(randomToken), false);
 
         // ERC20 addresses are valid
-        ERC20Mock actualToken = new ERC20Mock("Test", "TST");
+        ERC20Mock actualToken = new ERC20Mock("Test", "TST", 18);
 
         vm.prank(sender);
         assertEq(

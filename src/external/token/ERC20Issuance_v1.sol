@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 // External Interfaces
-import {IERC20Issuance_v1} from "@ex/token/IERC20Issuance_v1.sol";
+import {IERC20Issuance_v1} from "@ex/token/interfaces/IERC20Issuance_v1.sol";
 
 // External Dependencies
 import {ERC20, ERC20Capped} from "@oz/token/ERC20/extensions/ERC20Capped.sol";
@@ -11,17 +11,31 @@ import {Ownable} from "@oz/access/Ownable.sol";
 /**
  * @title   Inverter ERC20 Issuance Token
  *
- * @notice  This contract creates an {ERC20} token with a supply cap and a whitelist-gated functionality
- *          to mint and burn tokens.
+ * @notice  This contract creates an {ERC20} token with a supply cap and a
+ *          whitelist-based permission system for minting and burning tokens.
  *
- * @dev     The contract implements functionalities for:
- *          - Managing a whitelist of allowed minters.
- *          - Minting and burning tokens by members of said whitelist.
- *          - Enforcing a supply cap on minted tokens.
+ * @dev     The contract implements the following key functionalities:
+ *          - Role-based access control through a minter whitelist
+ *          - Controlled token issuance (minting) by authorized addresses only
+ *          - Controlled token redemption (burning) by authorized addresses only
+ *          - Hard cap on total token supply to prevent inflation
+ *
+ * @custom:setup    This contract requires the following MANDATORY setup steps:
+ *
+ *                  Set Minter:
+ *                     - Purpose: The contract needs a minter to handle token
+ *                                minting and burning operations. Without this
+ *                                permission, the workflow cannot mint or burn
+ *                                tokens.
+ *                     - How:     The owner of the contract must call the
+ *                                setMinter function to authorize the Funding
+ *                                Manager of the workflow
+ *                     - Example: token.setMinter(fundingManagerAddress, true);
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @author Inverter Network
  */
@@ -32,7 +46,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
     /// @dev    The number of decimals of the token.
     uint8 internal immutable _decimals;
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Modifiers
 
     /// @dev    Modifier to guarantee the caller is a minter.
@@ -43,21 +57,24 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _;
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Constructor
 
+    /// @notice Constructor for ERC20Issuance_v1.
+    /// @param  name_ The name of the token.
+    /// @param  symbol_ The symbol of the token.
+    /// @param  decimals_ The number of decimals of the token.
+    /// @param  maxSupply_ The maximum supply of the token.
     constructor(
         string memory name_,
         string memory symbol_,
         uint8 decimals_,
-        uint maxSupply_,
-        address initialAdmin_
-    ) ERC20(name_, symbol_) ERC20Capped(maxSupply_) Ownable(initialAdmin_) {
-        _setMinter(initialAdmin_, true);
+        uint maxSupply_
+    ) ERC20(name_, symbol_) ERC20Capped(maxSupply_) Ownable(_msgSender()) {
         _decimals = decimals_;
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // External Functions
 
     function decimals() public view override returns (uint8) {
@@ -87,7 +104,7 @@ contract ERC20Issuance_v1 is IERC20Issuance_v1, ERC20Capped, Ownable {
         _spendAllowance(_from, _spender, _amount);
     }
 
-    //------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Internal Functions
 
     /// @notice Sets the minting rights of an address.

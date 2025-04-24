@@ -40,7 +40,7 @@ contract AUT_RolesV1Test is Test {
     // Mocks
     AUT_Roles_v1 _authorizer;
     Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
-    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
+    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK", 18);
     FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
     GovernorV1Mock internal _governor = new GovernorV1Mock();
