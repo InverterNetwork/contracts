@@ -655,7 +655,7 @@ contract PP_CrossChainBase_v1_Test is ModuleTest {
     function testInternalValidPaymentToken_worksGivenReturnsTrueIfAddressHasERC20Interface(
     ) public {
         // Create and initialize a new ERC20 token
-        ERC20Mock token = new ERC20Mock("Test", "TST");
+        ERC20Mock token = new ERC20Mock("Test", "TST", 18);
         token.mint(address(this), 1000);
 
         // Test function call
