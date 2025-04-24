@@ -10,7 +10,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+import {Orchestrator_v1_Exposed} from
+    "@mock/orchestrator/Orchestrator_v1_Exposed.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Internal Interfaces
@@ -44,7 +45,7 @@ import {TypeSanityHelper} from "@tool/TypeSanityHelper.sol";
 
 contract OrchestratorV1Test is Test {
     // SuT
-    Orchestrator_v1 orchestrator;
+    Orchestrator_v1_Exposed orchestrator;
 
     // Helper
     TypeSanityHelper types;
@@ -58,18 +59,6 @@ contract OrchestratorV1Test is Test {
     ERC20Mock token;
     TransactionForwarder_v1 forwarder;
 
-    event AuthorizerUpdated(address indexed _address);
-    event FundingManagerUpdated(address indexed _address);
-    event PaymentProcessorUpdated(address indexed _address);
-    event OrchestratorInitialized(
-        uint indexed orchestratorId_,
-        address fundingManager,
-        address authorizer,
-        address paymentProcessor,
-        address[] modules,
-        address governor
-    );
-
     function setUp() public {
         fundingManager = new FundingManagerV1Mock();
         authorizer = new AuthorizerV1Mock();
@@ -79,10 +68,16 @@ contract OrchestratorV1Test is Test {
         forwarder = new TransactionForwarder_v1();
         token = new ERC20Mock("TestToken", "TST");
 
-        address impl = address(new Orchestrator_v1(address(forwarder)));
-        orchestrator = Orchestrator_v1(Clones.clone(impl));
+        address impl = address(new Orchestrator_v1_Exposed(address(forwarder)));
+        orchestrator = Orchestrator_v1_Exposed(Clones.clone(impl));
 
         types = new TypeSanityHelper(address(orchestrator));
+
+        // Actually link the Authorizer to the Orchestrator
+        orchestrator.setup_authorizer(address(authorizer));
+
+        // Every caller has permission for every premissioned function
+        authorizer.setAllAuthorized(true);
     }
 
     //--------------------------------------------------------------------------
@@ -146,7 +141,7 @@ contract OrchestratorV1Test is Test {
 
         // Now we test correct initialization
         vm.expectEmit(true, true, true, false);
-        emit OrchestratorInitialized(
+        emit IOrchestrator_v1.OrchestratorInitialized(
             orchestratorId,
             address(fundingManager),
             address(authorizer),
@@ -206,8 +201,97 @@ contract OrchestratorV1Test is Test {
     }
 
     //--------------------------------------------------------------------------
+    // Tests: Modifiers
+
+    /*
+    Test: permissioned
+    ├── Given: modifierPermissionedCheck is executed via call with a valid selector, but random data
+    ├── And: The call sender is randomised
+    └── And: The Caller is permissioned to call the function
+        └── When: The function modifierPermissionedCheck is called
+            └── Then: the function should not revert, because the sender and only the function selector were correctly passed
+    */
+    function testPermissioned_modifier(address caller_, bytes memory data_)
+        public
+    {
+        // Assume that the calldata is at least 4 bytes long
+        vm.assume(data_.length >= 4);
+
+        bytes4 targetSelector =
+            Orchestrator_v1_Exposed.modifierPermissionedCheck.selector;
+
+        // Proof
+        authorizer.setHasPermission(
+            caller_, address(orchestrator), targetSelector, true
+        );
+
+        // Replace the msg.data function selector with the correct one
+        for (uint i = 0; i < 4; i++) {
+            data_[i] = targetSelector[i];
+        }
+
+        // Expect no revert
+        vm.prank(caller_);
+        address(orchestrator).call(data_);
+    }
+
+    //--------------------------------------------------------------------------
     // Tests: Replacing the three base modules: authorizer, funding manager,
     //        payment processor
+
+    /* 
+    Test: initiateSetAuthorizerWithTimelock Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: initiateSetAuthorizerWithTimelock is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testInitiateSetAuthorizerWithTimelock_ModifierInPositionChecks()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+
+        vm.prank(address(0xB0B));
+        orchestrator.initiateSetAuthorizerWithTimelock(
+            IAuthorizer_v1(address(0))
+        );
+    }
+
+    /*
+    Test: executeSetAuthorizer Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: executeSetAuthorizer is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testExecuteSetAuthorizer_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.prank(address(0xB0B));
+        orchestrator.executeSetAuthorizer(IAuthorizer_v1(address(0)));
+    }
+
+    /*
+    Test: cancelAuthorizerUpdate Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: cancelAuthorizerUpdate is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testCancelAuthorizerUpdate_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.prank(address(0xB0B));
+        orchestrator.cancelAuthorizerUpdate(IAuthorizer_v1(address(0)));
+    }
 
     function testInitiateAndExecuteSetAuthorizer(
         uint orchestratorId,
@@ -226,8 +310,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
-
         // Create new authorizer module
         AuthorizerV1Mock newAuthorizer = new AuthorizerV1Mock();
 
@@ -238,7 +320,7 @@ contract OrchestratorV1Test is Test {
 
         // set the new authorizer module
         vm.expectEmit(true, true, true, true);
-        emit AuthorizerUpdated(address(newAuthorizer));
+        emit IOrchestrator_v1.AuthorizerUpdated(address(newAuthorizer));
         orchestrator.executeSetAuthorizer(newAuthorizer);
 
         assertTrue(orchestrator.authorizer() == newAuthorizer);
@@ -269,8 +351,6 @@ contract OrchestratorV1Test is Test {
             paymentProcessor,
             governor
         );
-
-        authorizer.setIsAuthorized(address(this), true);
 
         // Create new authorizer module
         address newAuthorizer = address(0x8888);
@@ -305,8 +385,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
-
         // Create new authorizer module
         address newAuthorizer = address(0x8888);
 
@@ -322,6 +400,59 @@ contract OrchestratorV1Test is Test {
             IAuthorizer_v1(newAuthorizer)
         );
         assertTrue(orchestrator.authorizer() == authorizer);
+    }
+
+    /*
+    Test: initiateSetFundingManagerWithTimelock Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: initiateSetFundingManagerWithTimelock is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testInitiateSetFundingManagerWithTimelock_ModifierInPositionChecks(
+    ) public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+
+        vm.prank(address(0xB0B));
+        orchestrator.initiateSetFundingManagerWithTimelock(
+            IFundingManager_v1(address(0))
+        );
+    }
+
+    /*
+    Test: executeSetFundingManager Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: executeSetFundingManager is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testExecuteSetFundingManager_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.prank(address(0xB0B));
+        orchestrator.executeSetFundingManager(IFundingManager_v1(address(0)));
+    }
+
+    /*
+    Test: cancelFundingManagerUpdate Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: cancelFundingManagerUpdate is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testCancelFundingManagerUpdate_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.prank(address(0xB0B));
+        orchestrator.cancelFundingManagerUpdate(IFundingManager_v1(address(0)));
     }
 
     function testInitiateAndExecuteSetFundingManager(
@@ -341,7 +472,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
         FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
@@ -355,7 +485,7 @@ contract OrchestratorV1Test is Test {
 
         // set the new funding manager module
         vm.expectEmit(true, true, true, true);
-        emit FundingManagerUpdated(address(newFundingManager));
+        emit IOrchestrator_v1.FundingManagerUpdated(address(newFundingManager));
         orchestrator.executeSetFundingManager(newFundingManager);
         assertTrue(orchestrator.fundingManager() == newFundingManager);
         assertTrue(
@@ -380,7 +510,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
         FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
@@ -418,7 +547,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
         FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
@@ -455,7 +583,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
         FundingManagerV1Mock(address(orchestrator.fundingManager())).setToken(
             IERC20(address(0xA11CE))
         );
@@ -476,6 +603,65 @@ contract OrchestratorV1Test is Test {
         orchestrator.initiateSetFundingManagerWithTimelock(newFundingManager);
     }
 
+    /*
+    Test: initiateSetPaymentProcessorWithTimelock Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: initiateSetPaymentProcessorWithTimelock is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testInitiateSetPaymentProcessorWithTimelock_ModifierInPositionChecks(
+    ) public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+
+        vm.prank(address(0xB0B));
+        orchestrator.initiateSetPaymentProcessorWithTimelock(
+            IPaymentProcessor_v2(address(0))
+        );
+    }
+
+    /*
+    Test: executeSetPaymentProcessor Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: executeSetPaymentProcessor is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testExecuteSetPaymentProcessor_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.prank(address(0xB0B));
+        orchestrator.executeSetPaymentProcessor(
+            IPaymentProcessor_v2(address(0))
+        );
+    }
+
+    /*
+    Test: cancelPaymentProcessorUpdate Modifier Checks
+    └── Given: caller is not permissioned
+        └── When: cancelPaymentProcessorUpdate is called
+            └── Then: it should revert (modifier in position check)
+    */
+    function testCancelPaymentProcessorUpdate_ModifierInPositionChecks()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        authorizer.setAllAuthorized(false);
+        vm.expectRevert(IOrchestrator_v1.Orchestrator__NotPermissioned.selector);
+        vm.prank(address(0xB0B));
+        orchestrator.cancelPaymentProcessorUpdate(
+            IPaymentProcessor_v2(address(0))
+        );
+    }
+
     function testInitiateAndExecuteSetPaymentProcessor(
         uint orchestratorId,
         uint moduleAmount
@@ -492,8 +678,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
-
         // Create new payment processor module
         PaymentProcessorV1Mock newPaymentProcessor =
             new PaymentProcessorV1Mock();
@@ -505,7 +689,9 @@ contract OrchestratorV1Test is Test {
 
         // set the new payment processor module
         vm.expectEmit(true, true, true, true);
-        emit PaymentProcessorUpdated(address(newPaymentProcessor));
+        emit IOrchestrator_v1.PaymentProcessorUpdated(
+            address(newPaymentProcessor)
+        );
         orchestrator.executeSetPaymentProcessor(newPaymentProcessor);
         assertTrue(orchestrator.paymentProcessor() == newPaymentProcessor);
     }
@@ -526,8 +712,6 @@ contract OrchestratorV1Test is Test {
             paymentProcessor,
             governor
         );
-
-        authorizer.setIsAuthorized(address(this), true);
 
         // Create new payment processor module
         address newPaymentProcessor = address(0x8888);
@@ -563,8 +747,6 @@ contract OrchestratorV1Test is Test {
             paymentProcessor,
             governor
         );
-
-        authorizer.setIsAuthorized(address(this), true);
 
         // Create new payment processor module
         address newPaymentProcessor = address(0x8888);
@@ -608,7 +790,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
         address currentAuthorizer = address(orchestrator.authorizer());
 
         vm.expectRevert(
@@ -683,7 +864,6 @@ contract OrchestratorV1Test is Test {
             governor
         );
 
-        authorizer.setIsAuthorized(address(this), true);
         address currentAuthorizer = address(orchestrator.authorizer());
 
         vm.expectRevert(
@@ -733,6 +913,40 @@ contract OrchestratorV1Test is Test {
                 .selector
         );
         orchestrator.executeRemoveModule(currentPaymentProcessor);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Authorization
+
+    /*
+    Test: _checkAuthorization_
+    └── Given: Authorizer hasPermission() is mocked
+        ├── When: _checkAuthorization_ is called
+        └── And: Authorizer hasPermission() returns false
+            ├── Then: It should forward the function selector properly
+            └── And: The function should revert
+    */
+    function test_checkAuthorization_hasPermissionMocked(
+        bool hasPermission_,
+        address caller_,
+        bytes calldata data_
+    ) public {
+        vm.assume(data_.length >= 4);
+
+        // Turn off that every caller has permission for every premissioned function
+        authorizer.setAllAuthorized(false);
+
+        authorizer.setHasPermission(
+            caller_, address(orchestrator), bytes4(data_[0:4]), hasPermission_
+        );
+
+        if (!hasPermission_) {
+            vm.expectRevert(
+                IOrchestrator_v1.Orchestrator__NotPermissioned.selector
+            );
+        }
+
+        orchestrator._checkAuthorization_exposed(caller_, data_);
     }
 
     //--------------------------------------------------------------------------
