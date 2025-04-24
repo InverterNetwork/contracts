@@ -11,11 +11,11 @@ This document provides instructions for deploying workflows within the Inverter 
 Follow these steps to deploy the Yield Bearing Stable Token workflow:
 
 1.  **Prepare Environment File:**
-    *   Duplicate the example environment file: `dev.yieldBearingStableWorkflow.env`
-    *   Rename the duplicated file to: `yieldBearingStableWorkflow.env` (removing the `dev.` prefix).
+    *   Duplicate the example environment file: `example.dev.navBasedPimWorkflow.env`
+    *   Rename the duplicated file to: `dev.navBasedPimWorkflow.env` (removing the `example.` prefix).
 
 2.  **Configure Deployment Variables:**
-    *   Open the new `.env.yieldBearingStableWorkflow` file.
+    *   Open the new `.env.navBasedPimWorkflow` file.
     *   Locate the **Workflow Deployment Parameters** section.
     *   Replace all placeholder/demo values in this section with your actual deployment-specific variables.
     *   Locate the **Etherscan API Keys** section.
@@ -24,7 +24,7 @@ Follow these steps to deploy the Yield Bearing Stable Token workflow:
 3.  **Load Environment Variables:**
     *   Source the environment file in your terminal session. This loads the variables you configured in the previous step.
         ```bash
-        source script/workflowDeploymentAndSetupScripts/yieldBearingStableWorkflow.env
+        source script/workflowDeploymentAndSetupScripts/dev.navBasedPimWorkflow.env
         ```
 
 4.  **Deploy and Verify the Workflow:**
@@ -36,7 +36,7 @@ Follow these steps to deploy the Yield Bearing Stable Token workflow:
 
     *   Run the following command:
         ```bash
-        forge script script/workflowDeploymentAndSetupScripts/DeployAndSetupYieldBearingStableWorkflow.s.sol \
+        forge script script/workflowDeploymentAndSetupScripts/DeployAndSetupNavBasedPimWorkflow.s.sol \
           --rpc-url $OPTIMISM_SEPOLIA_RPC_URL \
           -vvv \
           --broadcast \

@@ -14,7 +14,7 @@ lcov.info
 
 # Dotenv file
 .env
-.env.yieldBearingStableWorkflow
+dev.navBasedPimWorkflow.env
 
 .DS_Store
 test/.DS_Storescripts.md

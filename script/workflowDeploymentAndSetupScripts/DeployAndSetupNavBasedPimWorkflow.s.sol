@@ -23,7 +23,7 @@ import {TransparentUpgradeableProxy} from
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
-contract DeployAndSetupYieldBearingStableWorkflow is DeploymentScript {
+contract DeployAndSetupNavBasedPimWorkflow is DeploymentScript {
     // Issuance Token
     ERC20IssuanceUpgradeable_Blacklist_v1 internal _issuanceToken;
     string internal _tokenName;
@@ -78,8 +78,8 @@ contract DeployAndSetupYieldBearingStableWorkflow is DeploymentScript {
 
     function run() public override {
         console2.log("\n===============================================");
-        console2.log("  DEPLOYING YIELD BEARING STABLE WORKFLOW");
-        console2.log("  =======================================\n");
+        console2.log("  DEPLOYING NAV BASED PIM WORKFLOW");
+        console2.log("  ================================\n");
 
         // Load and validate deployment variables
         _loadAndValidateDeploymentVariables();
