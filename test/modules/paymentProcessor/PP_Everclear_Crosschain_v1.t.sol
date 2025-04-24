@@ -996,8 +996,7 @@ contract PP_Everclear_CrossChain_v1_Test is ModuleTest {
     */
     function testInternalProcessFailedBridgeTransfer_works() public {
         // Create valid intent ID and intent
-        (bytes32 intentId, IEverclear.Intent memory intent) =
-            _getValidIntentIdAndIntent();
+        (bytes32 intentId,) = _getValidIntentIdAndIntent();
         // Create valid payment order
         IERC20PaymentClientBase_v2.PaymentOrder memory order =
         _createTestPaymentOrder(

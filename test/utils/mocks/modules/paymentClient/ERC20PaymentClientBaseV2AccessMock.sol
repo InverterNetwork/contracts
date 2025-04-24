@@ -95,6 +95,7 @@ contract ERC20PaymentClientBaseV2AccessMock is ERC20PaymentClientBase_v2 {
 
     function exposed_assemblePaymentConfig(bytes32[] memory flagValues_)
         external
+        view
         returns (bytes32 flags_, bytes32[] memory data_)
     {
         return _assemblePaymentConfig(flagValues_);
