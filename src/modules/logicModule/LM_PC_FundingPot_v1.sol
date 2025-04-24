@@ -1102,7 +1102,6 @@ contract LM_PC_FundingPot_v1 is
         uint startIndex_,
         uint batchSize_
     ) internal {
-        Round storage round = rounds[roundId_];
         uint totalContributions = roundIdToTotalContributions[roundId_];
         uint tokensBought = roundTokensBought[roundId_];
 
@@ -1145,78 +1144,120 @@ contract LM_PC_FundingPot_v1 is
 
                 if (contributionByAccessCriteria == 0) continue;
 
-                AccessCriteriaPrivileges storage privileges =
-                roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId];
-
                 uint tokensForThisAccessCriteria = (
                     contributionByAccessCriteria * tokensBought
                 ) / totalContributions;
 
-                uint start = privileges.overrideContributionSpan
-                    ? privileges.start
-                    : round.roundStart;
-                uint cliff =
-                    privileges.overrideContributionSpan ? privileges.cliff : 0;
-                uint end = privileges.overrideContributionSpan
-                    ? privileges.end
-                    : round.roundEnd;
-
-                if (start == 0) start = block.timestamp;
-                if (end == 0) end = block.timestamp;
-
-                bytes32 flags = 0;
-                bytes32[] memory data = new bytes32[](3); // For start, cliff, and end
-                uint8 flagCount = 0;
-
-                if (start > 0) {
-                    flags |= bytes32(1 << FLAG_START);
-                    data[flagCount] = bytes32(start);
-                    flagCount++;
-                }
-
-                if (cliff > 0) {
-                    flags |= bytes32(1 << FLAG_CLIFF);
-                    data[flagCount] = bytes32(cliff);
-                    flagCount++;
-                }
-
-                if (end > 0) {
-                    flags |= bytes32(1 << FLAG_END);
-                    data[flagCount] = bytes32(end);
-                    flagCount++;
-                }
-
-                bytes32[] memory finalData = new bytes32[](flagCount);
-                for (uint8 j = 0; j < flagCount; j++) {
-                    finalData[j] = data[j];
-                }
-
-                IERC20PaymentClientBase_v2.PaymentOrder memory paymentOrder =
-                IERC20PaymentClientBase_v2.PaymentOrder({
-                    recipient: contributor,
-                    paymentToken: issuanceToken,
-                    amount: tokensForThisAccessCriteria,
-                    originChainId: block.chainid,
-                    targetChainId: block.chainid,
-                    flags: flags,
-                    data: finalData
-                });
-
-                _addPaymentOrder(paymentOrder);
-
-                emit PaymentOrderCreated(
+                _createAndAddPaymentOrder(
                     roundId_,
                     contributor,
                     accessCriteriaId,
                     tokensForThisAccessCriteria,
-                    start,
-                    cliff,
-                    end
+                    issuanceToken
                 );
             }
         }
 
         emit ContributorBatchProcessed(roundId_, startIndex_, endIndex);
+    }
+
+    /// @notice Creates time parameter data for a payment order
+    /// @dev    Sets default values for start, cliff, and end if they are zero
+    /// @param  start_ The start time of the payment order
+    /// @param  cliff_ The cliff time of the payment order
+    /// @param  end_ The end time of the payment order
+    /// @return flags The flags for the payment order
+    /// @return finalData The final data for the payment order
+    function _createTimeParameterData(uint start_, uint cliff_, uint end_)
+        internal
+        view
+        returns (bytes32 flags, bytes32[] memory finalData)
+    {
+        if (start_ == 0) start_ = block.timestamp;
+        if (end_ == 0) end_ = block.timestamp;
+
+        bytes32 flags = 0;
+        bytes32[] memory data = new bytes32[](3); // For start, cliff, and end
+        uint8 flagCount = 0;
+
+        if (start_ > 0) {
+            flags |= bytes32(uint(1) << 1);
+            data[flagCount] = bytes32(start_);
+            flagCount++;
+        }
+
+        if (cliff_ > 0) {
+            flags |= bytes32(uint(1) << 2);
+            data[flagCount] = bytes32(cliff_);
+            flagCount++;
+        }
+
+        if (end_ > 0) {
+            flags |= bytes32(uint(1) << 3);
+            data[flagCount] = bytes32(end_);
+            flagCount++;
+        }
+
+        finalData = new bytes32[](flagCount);
+        for (uint8 j = 0; j < flagCount; j++) {
+            finalData[j] = data[j];
+        }
+
+        return (flags, finalData);
+    }
+
+    /// @notice Creates and adds a payment order for a contributor
+    /// @dev    Sets default values for start, cliff, and end if they are zero
+    /// @param  roundId_ The ID of the round to create the payment order for
+    /// @param  recipient_ The address of the recipient of the payment order
+    /// @param  accessCriteriaId_  The ID of the specific access criteria
+    /// @param  tokensAmount_ The amount of tokens for the payment order
+    /// @param  issuanceToken_ The issuance token for the payment order
+    function _createAndAddPaymentOrder(
+        uint64 roundId_,
+        address recipient_,
+        uint8 accessCriteriaId_,
+        uint tokensAmount_,
+        address issuanceToken_
+    ) internal {
+        Round storage round = rounds[roundId_];
+
+        AccessCriteriaPrivileges storage privileges =
+            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+
+        uint start = privileges.overrideContributionSpan
+            ? privileges.start
+            : round.roundStart;
+        uint cliff = privileges.overrideContributionSpan ? privileges.cliff : 0;
+        uint end = privileges.overrideContributionSpan
+            ? privileges.end
+            : round.roundEnd;
+
+        (bytes32 flags, bytes32[] memory finalData) =
+            _createTimeParameterData(start, cliff, end);
+
+        IERC20PaymentClientBase_v2.PaymentOrder memory paymentOrder =
+        IERC20PaymentClientBase_v2.PaymentOrder({
+            recipient: recipient_,
+            paymentToken: issuanceToken_,
+            amount: tokensAmount_,
+            originChainId: block.chainid,
+            targetChainId: block.chainid,
+            flags: flags,
+            data: finalData
+        });
+
+        _addPaymentOrder(paymentOrder);
+
+        emit PaymentOrderCreated(
+            roundId_,
+            recipient_,
+            accessCriteriaId_,
+            tokensAmount_,
+            start,
+            cliff,
+            end
+        );
     }
 
     function _buyBondingCurveToken(uint64 roundId_) internal {
