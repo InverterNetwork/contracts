@@ -495,7 +495,7 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
                 selectors
             );
 
-            // make stake and unstake public
+            // make stake, unstake, claimRewards public
             authorizer.addAccessPermission(
                 address(kpiRewarder),
                 kpiRewarder.stake.selector,
@@ -504,6 +504,11 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
             authorizer.addAccessPermission(
                 address(kpiRewarder),
                 kpiRewarder.unstake.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+            authorizer.addAccessPermission(
+                address(kpiRewarder),
+                kpiRewarder.claimRewards.selector,
                 authorizer.PUBLIC_ROLE()
             );
         }
