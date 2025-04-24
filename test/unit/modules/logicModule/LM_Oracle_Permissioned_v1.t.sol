@@ -6,8 +6,8 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+} from "@unitTest/modules/ModuleTest.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
 
 // External
@@ -16,8 +16,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 // Tests and Mocks
 import {Test} from "forge-std/Test.sol";
 import {LM_Oracle_Permissioned_v1_Exposed} from
-    "test/modules/logicModule/LM_Oracle_Permissioned_v1_Exposed.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+    "@mocks/modules/logicModule/LM_Oracle_Permissioned_v1_Exposed.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // System under testing
 import {

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 // Internal
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // External
 import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";

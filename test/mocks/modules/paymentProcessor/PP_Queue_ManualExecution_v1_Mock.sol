@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {PaymentProcessorV1Mock} from
-    "test/utils/mocks/modules/PaymentProcessorV1Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 
 contract PP_Queue_ManualExecution_v1_Mock is PaymentProcessorV1Mock {
     //--------------------------------------------------------------------------

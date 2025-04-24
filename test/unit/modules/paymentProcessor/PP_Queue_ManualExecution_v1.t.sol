@@ -17,23 +17,23 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {PP_Queue_v1_Exposed} from
-    "test/modules/paymentProcessor/PP_Queue_v1_Exposed.sol";
+    "@mocks/modules/paymentProcessor/PP_Queue_v1_Exposed.sol";
 import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {NonStandardTokenMock} from
-    "test/utils/mocks/token/NonStandardTokenMock.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+    "@mocks/external/token/NonStandardTokenMock.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // System under testing
 import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
 import {PP_Queue_ManualExecution_v1_Exposed} from
-    "test/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Exposed.sol";
+    "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Exposed.sol";
 import {PP_Queue_v1_Test} from "./PP_Queue_v1.t.sol";
 
 contract PP_Queue_ManualExecution_v1_Test is PP_Queue_v1_Test {

@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Internal
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Tests and Mocks
 import {Test} from "forge-std/Test.sol";
 import {ERC20Issuance_Blacklist_v1_Exposed} from
-    "test/external/ERC20Issuance_blacklist_v1_exposed.sol";
+    "@mocks/external/token/ERC20Issuance_blacklist_v1_exposed.sol";
 
 // System under testing
 import {

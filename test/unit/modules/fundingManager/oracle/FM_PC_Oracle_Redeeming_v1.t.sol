@@ -6,7 +6,7 @@ import {IOraclePrice_v1} from "@lm/interfaces/IOraclePrice_v1.sol";
 import {IFM_PC_Oracle_Redeeming_v1} from
     "@fm/oracle/interfaces/IFM_PC_Oracle_Redeeming_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 import {
     BondingCurveBase_v1,
     IBondingCurveBase_v1
@@ -25,20 +25,19 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Tests and Mocks
-import {ModuleTest} from "test/modules/ModuleTest.sol";
+import {ModuleTest} from "@unitTest/modules/ModuleTest.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
-import {OraclePrice_Mock} from
-    "test/utils/mocks/modules/logicModules/OraclePrice_Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
+import {OraclePrice_Mock} from "@mocks/modules/logicModule/OraclePrice_Mock.sol";
 import {InvalidOraclePrice_Mock} from
-    "test/utils/mocks/modules/logicModules/InvalidOraclePrice_Mock.sol";
+    "@mocks/modules/logicModule/InvalidOraclePrice_Mock.sol";
 import {PP_Queue_ManualExecution_v1_Mock} from
-    "test/utils/mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Mock.sol";
+    "@mocks/modules/paymentProcessor/PP_Queue_ManualExecution_v1_Mock.sol";
 
 // System under testing (SUT)
 import {FM_PC_Oracle_Redeeming_v1_Exposed} from
-    "test/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1_Exposed.sol";
+    "@mocks/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1_Exposed.sol";
 
 /**
  * @title FM_PC_ExternalPrice_Redeeming_v1_Test
