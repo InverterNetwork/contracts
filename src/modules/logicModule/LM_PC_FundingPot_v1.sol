@@ -1074,10 +1074,6 @@ contract LM_PC_FundingPot_v1 is
 
             if (contributorTotal == 0) continue;
 
-            // Calculate tokens for this contributor proportionally
-            uint contributorTokens =
-                (contributorTotal * tokensBought) / totalContributions;
-
             for (
                 uint8 accessCriteriaId = 0;
                 accessCriteriaId <= MAX_ACCESS_CRITERIA_ID;
@@ -1112,19 +1108,19 @@ contract LM_PC_FundingPot_v1 is
                 uint8 flagCount = 0;
 
                 if (start > 0) {
-                    flags |= bytes32(uint(1) << 1); // Flag 1 for start
+                    flags |= bytes32(1 << FLAG_START);
                     data[flagCount] = bytes32(start);
                     flagCount++;
                 }
 
                 if (cliff > 0) {
-                    flags |= bytes32(uint(1) << 2); // Flag 2 for cliff
+                    flags |= bytes32(1 << FLAG_CLIFF);
                     data[flagCount] = bytes32(cliff);
                     flagCount++;
                 }
 
                 if (end > 0) {
-                    flags |= bytes32(uint(1) << 3); // Flag 3 for end
+                    flags |= bytes32(1 << FLAG_END);
                     data[flagCount] = bytes32(end);
                     flagCount++;
                 }
@@ -1162,7 +1158,9 @@ contract LM_PC_FundingPot_v1 is
 
     function _buyBondingCurveToken(uint64 roundId_) internal {
         uint totalContributions = _getTotalRoundContribution(roundId_);
-
+        if (totalContributions == 0) {
+            revert Module__LM_PC_FundingPot__NoContributions();
+        }
         address issuanceToken = address(
             IBondingCurveBase_v1(
                 address(__Module_orchestrator.fundingManager())
