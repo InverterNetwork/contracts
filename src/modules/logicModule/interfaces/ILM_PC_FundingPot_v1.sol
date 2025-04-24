@@ -209,6 +209,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint end_
     );
 
+    /// @notice Emitted when a contributor batch is processed.
+    /// @param  roundId_ The ID of the round.
+    /// @param  startIndex_ The starting index in the contributors array.
+    /// @param  endIndex_ The ending index in the contributors array.
+    event ContributorBatchProcessed(
+        uint64 indexed roundId_, uint startIndex_, uint endIndex_
+    );
+
     // -------------------------------------------------------------------------
     // Errors
 
@@ -285,6 +293,15 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice No contributions were made to the round.
     error Module__LM_PC_FundingPot__NoContributions();
+
+    /// @notice Round is not closed.
+    error Module__LM_PC_FundingPot__RoundNotClosed();
+
+    /// @notice Invalid start index.
+    error Module__LM_PC_FundingPot__InvalidStartIndex();
+
+    /// @notice Invalid batch parameters.
+    error Module__LM_PC_FundingPot__InvalidBatchParameters();
 
     // -------------------------------------------------------------------------
     // Public - Getters
@@ -510,4 +527,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Closes a round.
     /// @param  roundId_ The ID of the round to close.
     function closeRound(uint64 roundId_) external;
+
+    /// @notice Creates a batch of contributors for payment order creation
+    /// @param roundId_ The ID of the round to process contributors for
+    /// @param batchSize_ The number of contributors to process in this batch
+    function createPaymentOrdersForContributorsBatch(
+        uint64 roundId_,
+        uint batchSize_
+    ) external;
 }
