@@ -283,6 +283,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Hook execution failed.
     error Module__LM_PC_FundingPot__HookExecutionFailed();
 
+    /// @notice No contributions were made to the round.
+    error Module__LM_PC_FundingPot__NoContributions();
+
     // -------------------------------------------------------------------------
     // Public - Getters
 
