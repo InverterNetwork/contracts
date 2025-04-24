@@ -37,7 +37,7 @@ import {ERC165Upgradeable} from
 
 import {InverterBeacon_v1} from "src/proxies/InverterBeacon_v1.sol";
 
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/ERC20Mock.sol";
 
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
