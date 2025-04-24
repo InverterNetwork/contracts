@@ -70,11 +70,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
-        );
+        issuanceToken =
+            new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, type(uint).max);
 
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
+        issuanceToken.setMinter(address(this), true);
 
         _setUpOrchestrator(bondingCurveFundingManager);
 

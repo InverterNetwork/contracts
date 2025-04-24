@@ -148,7 +148,7 @@ contract E2ETest is E2EModuleRegistry {
         // Set gov as the default beacon owner
         DEFAULT_BEACON_OWNER = address(gov);
 
-        token = new ERC20Mock("Mock", "MOCK");
+        token = new ERC20Mock("Mock", "MOCK", 18);
 
         // Deploy Orchestrator_v1 implementation.
         orchestratorImpl = new Orchestrator_v1(address(forwarder));

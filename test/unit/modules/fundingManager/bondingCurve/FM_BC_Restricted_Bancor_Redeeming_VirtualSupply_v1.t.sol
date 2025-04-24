@@ -42,9 +42,8 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1UpstreamTests is
 {
     function setUp() public override {
         // Deploy contracts
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
@@ -140,9 +139,8 @@ contract FM_BC_Restricted_Bancor_Redeeming_VirtualSupplyV1Tests is
 
     function setUp() public {
         // Deploy contracts
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);

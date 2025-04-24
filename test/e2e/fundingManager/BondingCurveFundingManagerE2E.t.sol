@@ -51,8 +51,9 @@ contract BondingCurveFundingManagerE2E is E2ETest {
         // BancorFormula 'formula' is instantiated in the E2EModuleRegistry
 
         issuanceToken = new ERC20Issuance_v1(
-            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
+            "Bonding Curve Token", "BCT", 18, type(uint).max - 1
         );
+        issuanceToken.setMinter(address(this), true);
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1

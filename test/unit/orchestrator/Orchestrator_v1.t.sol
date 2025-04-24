@@ -77,7 +77,7 @@ contract OrchestratorV1Test is Test {
         governor = new GovernorV1Mock();
         moduleFactory = new ModuleFactoryV1Mock();
         forwarder = new TransactionForwarder_v1();
-        token = new ERC20Mock("TestToken", "TST");
+        token = new ERC20Mock("TestToken", "TST", 18);
 
         address impl = address(new Orchestrator_v1(address(forwarder)));
         orchestrator = Orchestrator_v1(Clones.clone(impl));

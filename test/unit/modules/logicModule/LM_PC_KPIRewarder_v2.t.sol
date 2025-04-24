@@ -55,9 +55,10 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
 
     uint MAX_USER_AMOUNT = 10_000; // for testing purposes
 
-    ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
+    ERC20Mock stakingToken =
+        new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
     // the reward token is _token from ModuleTest
-    ERC20Mock feeToken = new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK");
+    ERC20Mock feeToken = new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK", 18);
     uint feeTokenBond;
 
     //=========================================================================================

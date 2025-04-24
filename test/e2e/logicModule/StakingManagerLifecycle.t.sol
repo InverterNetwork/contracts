@@ -50,8 +50,8 @@ contract LM_PC_Staking_v2Lifecycle is E2ETest {
 
     // Constants
 
-    ERC20Mock rewardToken = new ERC20Mock("Reward Mock", "R_MOCK");
-    ERC20Mock stakingToken = new ERC20Mock("Staking Mock", "S_MOCK");
+    ERC20Mock rewardToken = new ERC20Mock("Reward Mock", "R_MOCK", 18);
+    ERC20Mock stakingToken = new ERC20Mock("Staking Mock", "S_MOCK", 18);
 
     function setUp() public override {
         vm.label({

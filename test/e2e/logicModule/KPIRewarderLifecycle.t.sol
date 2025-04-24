@@ -154,8 +154,9 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
 
         // We deploy and label the necessary tokens for the tests
         USDC = ERC20Mock(USDC_address); // we use it  mock so we can call mint functions
-        rewardToken = new ERC20Mock("Project Reward Mock Token", "REWARD MOCK");
-        stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
+        rewardToken =
+            new ERC20Mock("Project Reward Mock Token", "REWARD MOCK", 18);
+        stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
 
         vm.label({
             account: USDC_address,

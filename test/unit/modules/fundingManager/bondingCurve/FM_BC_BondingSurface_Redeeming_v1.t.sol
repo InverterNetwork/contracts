@@ -77,9 +77,9 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
 
     function setUp() public {
         // Deploy contracts
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
+
         IFM_BC_BondingSurface_Redeeming_v1.BondingCurveProperties memory
             bc_properties;
 

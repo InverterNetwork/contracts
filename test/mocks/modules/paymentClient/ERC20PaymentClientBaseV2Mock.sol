@@ -37,7 +37,6 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
     function setToken(ERC20Mock token_) external {
         token = token_;
     }
-
     //--------------------------------------------------------------------------
     // IERC20PaymentClientBase_v2 Wrapper Functions
 
@@ -68,19 +67,25 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
         _addPaymentOrders(orders);
     }
 
+    function exposed_addToOutstandingTokenAmounts(address token_, uint amount_)
+        external
+    {
+        _outstandingTokenAmounts[token_] += amount_;
+    }
+
     //--------------------------------------------------------------------------
     // IERC20PaymentClientBase_v2 Overriden Functions
 
-    function _ensureTokenBalance(address _token)
+    function _ensureTokenBalance(address token_)
         internal
         override(ERC20PaymentClientBase_v2)
     {
-        uint amount = _outstandingTokenAmounts[_token];
+        uint amount = _outstandingTokenAmounts[token_];
 
-        if (ERC20Mock(_token).balanceOf(address(this)) >= amount) {
+        if (ERC20Mock(token_).balanceOf(address(this)) >= amount) {
             return;
         } else {
-            uint amtToMint = amount - ERC20Mock(_token).balanceOf(address(this));
+            uint amtToMint = amount - ERC20Mock(token_).balanceOf(address(this));
             token.mint(address(this), amtToMint);
         }
     }
@@ -102,7 +107,7 @@ contract ERC20PaymentClientBaseV2Mock is ERC20PaymentClientBase_v2 {
     }
 
     function amountPaid(address _token, uint amount)
-        external
+        public
         override(ERC20PaymentClientBase_v2)
     {
         amountPaidCounter[_token] += amount;
