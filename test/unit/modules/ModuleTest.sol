@@ -41,8 +41,7 @@ abstract contract ModuleTest is Test {
     OrchestratorV1Mock _orchestrator;
 
     // Mocks
-    //FundingManagerV1Mock _fundingManager; @note: using new custom funding manager for testing issuance token
-    FundingManagerV2Mock _fundingManager;
+    FundingManagerV1Mock _fundingManager;
     AuthorizerV1Mock _authorizer;
     ERC20Mock _token = new ERC20Mock("Mock Token", "MOCK", 18);
     PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
@@ -92,11 +91,8 @@ abstract contract ModuleTest is Test {
         address impl = address(new OrchestratorV1Mock(address(_forwarder)));
         _orchestrator = OrchestratorV1Mock(Clones.clone(impl));
 
-        // impl = address(new FundingManagerV1Mock());
-        // _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
-        // @note: using new custom funding manager for testing issuance token
-        impl = address(new FundingManagerV2Mock());
-        _fundingManager = FundingManagerV2Mock(Clones.clone(impl));
+        impl = address(new FundingManagerV1Mock());
+        _fundingManager = FundingManagerV1Mock(Clones.clone(impl));
 
         impl = address(new AuthorizerV1Mock());
         _authorizer = AuthorizerV1Mock(Clones.clone(impl));
