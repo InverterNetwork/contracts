@@ -1,0 +1,244 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.0;
+
+import "forge-std/Test.sol";
+
+// Internal
+import {OZErrors} from "@testUtilities/OZErrors.sol";
+
+// External
+import {OwnableUpgradeable} from "@oz-up/access/OwnableUpgradeable.sol";
+import {TransparentUpgradeableProxy} from
+    "@oz/proxy/transparent/TransparentUpgradeableProxy.sol";
+
+// SuT
+import {
+    ERC20IssuanceUpgradeable_v1,
+    IERC20Issuance_v1,
+    ERC20CappedUpgradeable
+} from "@ex/token/ERC20IssuanceUpgradeable_v1.sol";
+
+contract ERC20IssuanceUpgradeableTest is Test {
+    // ================================================================================
+    // Constants
+    uint constant MAX_SUPPLY = type(uint).max - 1;
+    uint8 constant DECIMALS = 18;
+    string constant NAME = "Test Token";
+    string constant SYMBOL = "TT";
+    bytes32 private constant PROXY_ADMIN_SLOT =
+        0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+
+    // ================================================================================
+    // State
+
+    ERC20IssuanceUpgradeable_v1 token;
+    address proxyAdmin;
+
+    event MinterSet(address indexed minter, bool allowed);
+
+    function setUp() public {
+        // Deploy the implementation contract
+        ERC20IssuanceUpgradeable_v1 implementation =
+            new ERC20IssuanceUpgradeable_v1();
+
+        // Deploy a simple proxy that delegates to the implementation
+        address proxy = address(
+            new TransparentUpgradeableProxy(
+                address(implementation),
+                address(this),
+                abi.encodeWithSelector(
+                    ERC20IssuanceUpgradeable_v1.__ERC20Issuance_init.selector,
+                    NAME,
+                    SYMBOL,
+                    DECIMALS,
+                    MAX_SUPPLY
+                )
+            )
+        );
+        // Get the proxy admin address contract address created when initializing the proxy
+        bytes32 proxyAdminSlot = vm.load(proxy, PROXY_ADMIN_SLOT);
+        proxyAdmin = address(uint160(uint(proxyAdminSlot)));
+
+        // Cast the proxy address to the implementation type
+        token = ERC20IssuanceUpgradeable_v1(proxy);
+        token.setMinter(address(this), true);
+    }
+
+    // ================================================================================
+    // Test Init
+
+    function testInit() public {
+        assertEq(token.name(), "Test Token");
+        assertEq(token.symbol(), "TT");
+        assertEq(token.decimals(), 18);
+        assertEq(token.cap(), type(uint).max - 1);
+        assertEq(token.balanceOf(address(this)), 0);
+        assertEq(token.owner(), address(this));
+        assertEq(token.allowedMinters(address(this)), true);
+    }
+
+    function testReinitializationFails() public {
+        // Attempt to reinitialize the contract
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        token.__ERC20Issuance_init(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+    }
+
+    /*
+    test setMinter
+    ├── When the caller is not the Admin
+    │   └── It should revert
+    └── When the caller is the Admin
+        └── It should set the new minter address rights
+    */
+
+    function testSetMinterFails_IfCallerNotAdmin() public {
+        vm.startPrank(address(0xB0B));
+        {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    OwnableUpgradeable.OwnableUnauthorizedAccount.selector,
+                    address(0xB0B)
+                )
+            );
+
+            token.setMinter(address(this), true);
+        }
+    }
+
+    function test_setMinter(address minter) public {
+        vm.expectEmit(true, true, true, true);
+        emit MinterSet(minter, true);
+
+        token.setMinter(minter, true);
+
+        assertTrue(token.allowedMinters(minter));
+
+        vm.expectEmit(true, true, true, true);
+        emit MinterSet(minter, false);
+
+        token.setMinter(minter, false);
+
+        assertFalse(token.allowedMinters(minter));
+    }
+
+    function test_setMinter_Idempotence(address minter, bool allowed) public {
+        // Sometimes we the initial state is that the address is allowed
+        if (uint(uint160(minter)) % 2 == 0) {
+            token.setMinter(minter, true);
+        }
+
+        vm.expectEmit(true, true, true, true);
+        emit MinterSet(minter, allowed);
+
+        token.setMinter(minter, allowed);
+
+        // state after
+        assertEq(token.allowedMinters(minter), allowed);
+    }
+
+    /*
+    test mint
+    ├── When the caller is not the Minter
+    │   └── It should revert
+    ├── When the mint amount would exceed the maximum supply
+    │   └── It should revert
+    └── When the mint amount is valid and the caller is allowed
+    └── It should mint the tokens
+    */
+    function testMintFails_IfCallerNotMinter() public {
+        vm.startPrank(address(0xB0B));
+        {
+            vm.expectRevert(
+                IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
+            );
+            token.mint(address(this), 100);
+        }
+    }
+
+    function testMintFails_IfMintExceedsMaximumSupply() public {
+        uint excessiveSupply = token.cap() + 1;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ERC20CappedUpgradeable.ERC20ExceededCap.selector,
+                excessiveSupply,
+                token.cap()
+            )
+        );
+        token.mint(address(this), excessiveSupply);
+    }
+
+    function test_Mint(uint amount) public {
+        vm.assume(amount < token.cap());
+
+        uint supplyBefore = token.totalSupply();
+
+        token.mint(address(this), amount);
+
+        assertEq(token.totalSupply(), supplyBefore + amount);
+    }
+
+    /*
+    test burn
+    ├── When the caller is not the Minter
+    │   └── It should revert
+    └── When the caller is not the Minter
+    └── It should burn 
+    */
+
+    function testBurnFails_IfCallerNotMinter() public {
+        vm.startPrank(address(0xB0B));
+        {
+            vm.expectRevert(
+                IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
+            );
+            token.burn(address(this), 100);
+        }
+    }
+
+    function test_Burn(uint amount) public {
+        vm.assume(amount < token.cap());
+
+        uint supplyBefore = token.totalSupply();
+
+        token.mint(address(this), amount);
+        token.burn(address(this), amount);
+
+        assertEq(token.totalSupply(), supplyBefore);
+    }
+
+    /*
+    test spendAllowance
+    ├── When the caller is not the Minter
+    │   └── It should revert
+    └── When the caller is the Minter
+    └── It should reduce the allowance by the defined amount 
+    */
+
+    function testSpendAllowanceFails_IfCallerNotMinter() public {
+        vm.startPrank(address(0xB0B));
+        {
+            vm.expectRevert(
+                IERC20Issuance_v1.IERC20Issuance__CallerIsNotMinter.selector
+            );
+            token.spendAllowance(address(this), address(0xB0B), 100);
+        }
+    }
+
+    function testSpendAllowance(uint intitialAllowance, uint amount) public {
+        intitialAllowance = bound(intitialAllowance, 0, type(uint32).max);
+
+        token.mint(address(0xBEEF), intitialAllowance);
+        vm.prank(address(0xBEEF));
+        token.approve(address(0xB0B), intitialAllowance);
+
+        amount = bound(amount, 0, intitialAllowance);
+
+        token.spendAllowance(address(0xBEEF), address(0xB0B), amount);
+
+        assertEq(
+            token.allowance(address(0xBEEF), address(0xB0B)),
+            intitialAllowance - amount
+        );
+    }
+}

@@ -16,8 +16,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
-} from "test/modules/logicModule/oracle/utils/OptimisiticOracleV3Mock.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+} from "@mocks/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 /**
  * @title Inverter Testnet Deployment Script

@@ -18,7 +18,7 @@ import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
 } from
-    "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
+    "@unitTest/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
