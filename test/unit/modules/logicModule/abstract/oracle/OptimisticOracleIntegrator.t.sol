@@ -9,7 +9,8 @@ import {OptimisticOracleIntegratorMock} from
 
 import {OptimisticOracleV3Mock} from
     "@mock/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
-
+import {OptimisticOracleV3CallbackRecipientInterface} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
 
@@ -118,6 +119,19 @@ contract OptimisticOracleIntegratorTest is ModuleTest {
     function testReinitFails() public override(ModuleTest) {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         ooIntegrator.init(_orchestrator, _METADATA, bytes(""));
+    }
+
+    function testSupportsInterface() public override(ModuleTest) {
+        assertTrue(
+            ooIntegrator.supportsInterface(
+                type(IOptimisticOracleIntegrator).interfaceId
+            )
+        );
+        assertTrue(
+            ooIntegrator.supportsInterface(
+                type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+            )
+        );
     }
 
     // Tests

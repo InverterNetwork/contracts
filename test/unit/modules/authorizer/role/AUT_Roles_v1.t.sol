@@ -99,7 +99,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         └── When: the function supportsInterface is called
             └── Then: the function should return true
     */
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(_authSuT.supportsInterface(type(IAuthorizer_v1).interfaceId));
     }
 

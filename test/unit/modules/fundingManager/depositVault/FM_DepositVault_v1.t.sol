@@ -51,7 +51,7 @@ contract FM_DepositVaultV1Test is ModuleTest {
         feeManager.setMaxFee(feeManager.BPS());
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             vault.supportsInterface(type(IFM_DepositVault_v1).interfaceId)
         );

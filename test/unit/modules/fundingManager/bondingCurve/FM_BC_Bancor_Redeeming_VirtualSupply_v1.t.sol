@@ -129,7 +129,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId

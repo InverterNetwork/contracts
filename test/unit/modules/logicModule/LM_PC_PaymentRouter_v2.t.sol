@@ -89,6 +89,14 @@ contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentRouter.init(_orchestrator, _METADATA, bytes(""));
     }
+
+    function testSupportsInterface() public override(ModuleTest) {
+        assertTrue(
+            paymentRouter.supportsInterface(
+                type(ILM_PC_PaymentRouter_v2).interfaceId
+            )
+        );
+    }
 }
 
 /*

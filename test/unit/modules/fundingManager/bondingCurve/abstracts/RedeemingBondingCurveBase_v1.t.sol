@@ -89,7 +89,7 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IRedeemingBondingCurveBase_v1).interfaceId

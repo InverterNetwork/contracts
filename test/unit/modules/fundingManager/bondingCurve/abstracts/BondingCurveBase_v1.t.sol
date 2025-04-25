@@ -76,7 +76,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IBondingCurveBase_v1).interfaceId

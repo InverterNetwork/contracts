@@ -64,7 +64,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bountyManager.supportsInterface(
                 type(ILM_PC_Bounties_v2).interfaceId

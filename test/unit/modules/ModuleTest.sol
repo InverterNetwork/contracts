@@ -161,6 +161,8 @@ abstract contract ModuleTest is Test {
 
     function testReinitFails() public virtual;
 
+    function testSupportsInterface() public virtual;
+
     //--------------------------------------------------------------------------
     // Assertion Helper Functions
     //

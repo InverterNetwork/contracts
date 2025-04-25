@@ -20,6 +20,7 @@ import {PIM_WorkflowFactory_v1} from
     "src/factories/workflow-specific/PIM_WorkflowFactory_v1.sol";
 import {E2ETest} from "test/e2e/E2ETest.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 import {IRedeemingBondingCurveBase_v1} from
@@ -181,7 +182,26 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
             logicModuleConfigs,
             pimConfig
         );
+
         address fundingManager = address(orchestrator.fundingManager());
+
+        // Adapt Permissions
+        {
+            AUT_Roles_v1 authorizer =
+                AUT_Roles_v1(address(orchestrator.authorizer()));
+            //Make BondingCurveBase buy public
+            authorizer.addAccessPermission(
+                fundingManager,
+                IBondingCurveBase_v1.buy.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+            // Make RedeemingBondingCurveBase sell public
+            authorizer.addAccessPermission(
+                fundingManager,
+                IRedeemingBondingCurveBase_v1.sell.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+        }
 
         // CHECK: curve HAS received initial collateral supply and firstCollateralIn
         assertTrue(
@@ -255,6 +275,24 @@ contract PIM_WorkflowFactory_v1Test is E2ETest {
         uint postCollateralBalance = token.balanceOf(address(this));
 
         address fundingManager = address(orchestrator.fundingManager());
+
+        // Adapt Permissions
+        {
+            AUT_Roles_v1 authorizer =
+                AUT_Roles_v1(address(orchestrator.authorizer()));
+            //Make BondingCurveBase buy public
+            authorizer.addAccessPermission(
+                fundingManager,
+                IBondingCurveBase_v1.buy.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+            // Make RedeemingBondingCurveBase sell public
+            authorizer.addAccessPermission(
+                fundingManager,
+                IRedeemingBondingCurveBase_v1.sell.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+        }
 
         // CHECK: deployer DID NOT send initial collateral supply to curve, ONLY did first purchase
         assertEq(

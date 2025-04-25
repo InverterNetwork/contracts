@@ -72,7 +72,7 @@ contract ModuleBaseV1Test is ModuleTest {
         └── When: the function supportsInterface is called
             └── Then: the function should return true
     */
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(module.supportsInterface(type(IModule_v1).interfaceId));
     }
 

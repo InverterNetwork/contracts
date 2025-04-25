@@ -296,7 +296,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Tests: Supports Interface
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IFM_BC_BondingSurface_Redeeming_v1).interfaceId

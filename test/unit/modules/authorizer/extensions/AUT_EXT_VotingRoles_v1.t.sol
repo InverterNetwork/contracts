@@ -126,7 +126,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         // validation of the initial state happens in testInit()
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             _votingRoles.supportsInterface(
                 type(IAUT_EXT_VotingRoles_v1).interfaceId

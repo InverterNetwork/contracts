@@ -182,7 +182,7 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
         kpiManager.init(_orchestrator, _METADATA, bytes(""));
     }
 
-    function test_InterfaceInheritanceTree() public view {
+    function testSupportsInterface() public override(ModuleTest) {
         kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v2).interfaceId);
         kpiManager.supportsInterface(type(ILM_PC_Staking_v2).interfaceId);
         kpiManager.supportsInterface(

@@ -46,7 +46,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
         vault.init(_orchestrator, _METADATA, bytes(""));
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             vault.supportsInterface(type(IFM_EXT_TokenVault_v1).interfaceId)
         );

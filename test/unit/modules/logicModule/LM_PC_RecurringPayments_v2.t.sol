@@ -46,7 +46,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
     //--------------------------------------------------------------------------
     // Test: Initialization
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             recurringPaymentManager.supportsInterface(
                 type(ILM_PC_RecurringPayments_v2).interfaceId

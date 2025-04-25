@@ -87,6 +87,14 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         );
     }
 
+    function testSupportsInterface() public override(ModuleTest) {
+        assertTrue(
+            stakingManager.supportsInterface(
+                type(ILM_PC_Staking_v2).interfaceId
+            )
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Modifier
 
