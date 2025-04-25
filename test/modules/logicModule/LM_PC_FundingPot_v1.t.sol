@@ -97,7 +97,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     ERC721Mock mockNFTContract = new ERC721Mock("NFT Mock", "NFT");
-    address issuanceERC20MockToken;
 
     // -------------------------------------------------------------------------
     // Setup
@@ -148,10 +147,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             true,
             true
         );
-
-        issuanceERC20MockToken = IBondingCurveBase_v1(
-            address(_orchestrator.fundingManager())
-        ).getIssuanceToken();
     }
 
     // -------------------------------------------------------------------------

@@ -16,8 +16,6 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
-import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
-    "src/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -1270,11 +1268,13 @@ contract LM_PC_FundingPot_v1 is
                 address(__Module_orchestrator.fundingManager())
             ).getIssuanceToken()
         );
-
-        uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
-        IBondingCurveBase_v1(issuanceToken).buyFor(
-            address(this), totalContributions, 0
+        // approve the fundingManager to spend the contribution token
+        IERC20(__Module_orchestrator.fundingManager().token()).approve(
+            address(__Module_orchestrator.fundingManager()), totalContributions
         );
+        uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
+        IBondingCurveBase_v1(address(__Module_orchestrator.fundingManager()))
+            .buyFor(address(this), totalContributions, 1);
         uint balanceAfter = IERC20(issuanceToken).balanceOf(address(this));
 
         uint tokensBought = balanceAfter - balanceBefore;

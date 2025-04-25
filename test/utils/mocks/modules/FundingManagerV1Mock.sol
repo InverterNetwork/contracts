@@ -11,6 +11,7 @@ import {
     IOrchestrator_v1
 } from "src/modules/base/Module_v1.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
+import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // External Libraries
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
@@ -32,6 +33,7 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
     // using SafeERC20 for IERC20;
 
     IERC20 private _token;
+    ERC20Issuance_v1 private _bondingToken;
 
     function init(
         IOrchestrator_v1 orchestrator_,
@@ -39,6 +41,9 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
         bytes memory
     ) public override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
+        _bondingToken = new ERC20Issuance_v1(
+            "Bonding Token", "BOND", 18, type(uint).max - 1, address(this)
+        );
     }
 
     function setToken(IERC20 newToken) public {
@@ -72,5 +77,14 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
     function transferOrchestratorToken(address to, uint amount) external {
         // _token.safeTransfer(to, amount);
         _token.transfer(to, amount);
+    }
+
+    function getIssuanceToken() public view returns (address) {
+        return address(_bondingToken);
+    }
+
+    function buyFor(address to, uint amount, uint minTokens) public {
+        _token.transferFrom(_msgSender(), address(this), amount);
+        _bondingToken.mint(to, amount);
     }
 }
