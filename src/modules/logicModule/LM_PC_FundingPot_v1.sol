@@ -684,7 +684,12 @@ contract LM_PC_FundingPot_v1 is
 
         // If autoClosure is false, only admin can process contributors
         if (!round.autoClosure) {
-            _checkRoleModifier(FUNDING_POT_ADMIN_ROLE, _msgSender());
+            _checkRoleModifier(
+                __Module_orchestrator.authorizer().generateRoleId(
+                    address(this), FUNDING_POT_ADMIN_ROLE
+                ),
+                _msgSender()
+            );
         }
 
         uint startIndex = roundIdToNextUnprocessedIndex[roundId_];

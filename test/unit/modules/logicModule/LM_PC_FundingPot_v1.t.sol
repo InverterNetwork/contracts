@@ -2312,10 +2312,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 roundId = fundingPot.getRoundCount();
 
         vm.startPrank(contributor1_);
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+        );
         vm.expectRevert(
             abi.encodeWithSelector(
                 IModule_v1.Module__CallerNotAuthorized.selector,
-                fundingPot.FUNDING_POT_ADMIN_ROLE(),
+                roleId,
                 contributor1_
             )
         );
