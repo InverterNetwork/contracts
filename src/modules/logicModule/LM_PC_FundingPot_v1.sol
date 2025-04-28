@@ -123,7 +123,7 @@ contract LM_PC_FundingPot_v1 is
     mapping(
         uint32 roundId
             => mapping(uint8 accessCriteriaId_ => AccessCriteriaPrivileges)
-    ) private roundItToAccessCriteriaIdToPrivileges;
+    ) private roundIdToAccessCriteriaIdToPrivileges;
 
     /// @notice Maps round IDs to user addresses to contribution amounts.
     mapping(uint32 => mapping(address => uint)) private
@@ -272,7 +272,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Store the privileges in a local variable to reduce stack usage.
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
 
         return (
             privileges.personalCap,
@@ -327,7 +327,7 @@ contract LM_PC_FundingPot_v1 is
 
         if (isEligible) {
             AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
             uint userPersonalCap = privileges.personalCap;
             uint userContribution = _getUserContributionToRound(roundId_, user_);
 
@@ -543,7 +543,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         AccessCriteriaPrivileges storage accessCriteriaPrivileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
         accessCriteriaPrivileges.personalCap = personalCap_;
         accessCriteriaPrivileges.overrideContributionSpan =
@@ -606,7 +606,7 @@ contract LM_PC_FundingPot_v1 is
 
             if (isEligible) {
                 AccessCriteriaPrivileges storage privileges =
-                roundItToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
+                roundIdToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
                     .accessCriteriaId];
 
                 uint userContribution =
@@ -807,7 +807,7 @@ contract LM_PC_FundingPot_v1 is
         );
 
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
         bool canOverrideContributionSpan = privileges.overrideContributionSpan;
 
         if (
@@ -934,7 +934,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Get the base personal cap for this round and criteria
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
         uint userPersonalCap = privileges.personalCap;
 
         // Add unspent capacity if global accumulative caps are enabled
@@ -1230,7 +1230,7 @@ contract LM_PC_FundingPot_v1 is
         address issuanceToken_
     ) internal {
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
         uint start = privileges.start;
         uint cliff = privileges.cliff;
