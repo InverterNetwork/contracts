@@ -174,7 +174,7 @@ contract FundingPotE2E is E2ETest {
             fundingPot.FUNDING_POT_ADMIN_ROLE(), address(this)
         );
 
-        // Configure rounds
+        // 3. Configure rounds
         // Round 1
         uint64 round1Id = fundingPot.createRound(
             block.timestamp + 1 days, // start
@@ -197,6 +197,7 @@ contract FundingPotE2E is E2ETest {
             false // no global caps
         );
 
+        // 4. Set access criteria for the rounds
         // Add access criteria to round 1
         address[] memory allowedAddresses = new address[](2);
         allowedAddresses[0] = contributor1;
@@ -222,6 +223,7 @@ contract FundingPotE2E is E2ETest {
             allowedAddresses
         );
 
+        // 5. Set access criteria privileges for the rounds
         fundingPot.setAccessCriteriaPrivileges(
             round1Id,
             0, // accessCriteriaId
@@ -244,19 +246,19 @@ contract FundingPotE2E is E2ETest {
 
         vm.warp(block.timestamp + 1 days);
 
-        // Fund contributors
+        // 6. Fund contributors and contribute to rounds
         contributionToken.mint(contributor1, 500e18);
         contributionToken.mint(contributor2, 500e18);
         contributionToken.mint(contributor3, 1000e18);
 
         vm.startPrank(contributor1);
-        contributionToken.approve(address(fundingPot), 500e18);
-        fundingPot.contributeToRound(round1Id, 500e18, 0, new bytes32[](0));
+        contributionToken.approve(address(fundingPot), 400e18);
+        fundingPot.contributeToRound(round1Id, 400e18, 0, new bytes32[](0));
         vm.stopPrank();
 
         vm.startPrank(contributor2);
-        contributionToken.approve(address(fundingPot), 500e18);
-        fundingPot.contributeToRound(round1Id, 500e18, 0, new bytes32[](0));
+        contributionToken.approve(address(fundingPot), 600e18);
+        fundingPot.contributeToRound(round1Id, 600e18, 0, new bytes32[](0));
         vm.stopPrank();
 
         vm.startPrank(contributor3);
@@ -264,44 +266,39 @@ contract FundingPotE2E is E2ETest {
         fundingPot.contributeToRound(round2Id, 750e18, 0, new bytes32[](0));
         vm.stopPrank();
 
-        // Fast forward to after rounds end
-        vm.warp(block.timestamp + 32 days);
+        // 7. Fast forward to after rounds end
+        vm.warp(block.timestamp + 50 days);
 
+        // 8. Close rounds
         fundingPot.closeRound(round1Id);
         assertEq(fundingPot.isRoundClosed(round1Id), true);
-        assertEq(fundingPot.isRoundClosed(round2Id), true);
+        assertEq(fundingPot.isRoundClosed(round2Id), true); // round2 is auto closed
         assertEq(contributionToken.balanceOf(address(fundingPot)), 0);
         assertGt(issuanceToken.balanceOf(address(fundingPot)), 0);
 
+        // 9. Create payment orders for contributors
         fundingPot.createPaymentOrdersForContributorsBatch(round1Id, 2);
         fundingPot.createPaymentOrdersForContributorsBatch(round2Id, 1);
 
-        IERC20PaymentClientBase_v2.PaymentOrder[] memory orders =
-            fundingPot.paymentOrders();
-
-        console2.log("orders: ", orders.length);
-
+        // 10. Process payments
         vm.prank(address(fundingPot));
         paymentProcessor.processPayments(
             IERC20PaymentClientBase_v2(address(fundingPot))
         );
-        //console2.log("orders: ", orders.length);
-        // @note: Lee I can view the orders created here!
 
-        // /// Assert a payment order was created
-        // PP_Streaming_v2.Stream[] memory streams = paymentProcessor
-        //     .viewAllPaymentOrders(address(fundingPot), contributor1);
-        // assertEq(streams.length, 1);
+        // 11. Claim payments
+        vm.prank(contributor1);
+        paymentProcessor.claimAll(address(fundingPot));
 
-        // uint totalContributions = 1500e18; // 300 + 200 + 1000
-        // // Verify tokens were minted from curve
+        vm.prank(contributor2);
+        paymentProcessor.claimAll(address(fundingPot));
 
-        address issueToken = (
-            IBondingCurveBase_v1(address(orchestrator.fundingManager()))
-                .getIssuanceToken()
-        );
-        console2.log("Contributor 1: ", issuanceToken.balanceOf(contributor1));
-        console2.log("Contributor 2: ", issuanceToken.balanceOf(contributor2));
-        console2.log("Contributor 3: ", issuanceToken.balanceOf(contributor3));
+        vm.prank(contributor3);
+        paymentProcessor.claimAll(address(fundingPot));
+
+        // 12. Assert that contributors received their tokens
+        assertGt(issuanceToken.balanceOf(contributor1), 0);
+        assertGt(issuanceToken.balanceOf(contributor2), 0);
+        assertGt(issuanceToken.balanceOf(contributor3), 0);
     }
 }
