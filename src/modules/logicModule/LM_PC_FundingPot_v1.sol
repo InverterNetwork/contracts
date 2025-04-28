@@ -114,36 +114,36 @@ contract LM_PC_FundingPot_v1 is
     // State
 
     /// @notice Stores all funding rounds by their unique ID.
-    mapping(uint64 => Round) private rounds;
+    mapping(uint32 => Round) private rounds;
 
     /// @notice Stores all access criteria privilages by their unique ID.
     mapping(
-        uint64 roundId
+        uint32 roundId
             => mapping(uint8 accessCriteriaId_ => AccessCriteriaPrivileges)
     ) private roundItToAccessCriteriaIdToPrivileges;
 
     /// @notice Maps round IDs to user addresses to contribution amounts
-    mapping(uint64 => mapping(address => uint)) private
+    mapping(uint32 => mapping(address => uint)) private
         roundIdToUserToContribution;
 
     /// @notice Maps round IDs to total contributions
-    mapping(uint64 => uint) private roundIdToTotalContributions;
+    mapping(uint32 => uint) private roundIdToTotalContributions;
 
     /// @notice Maps round IDs to closed status
-    mapping(uint64 => bool) private roundIdToClosedStatus;
+    mapping(uint32 => bool) private roundIdToClosedStatus;
 
     /// @notice Maps round IDs to bonding curve tokens bought
-    mapping(uint64 => uint) private roundTokensBought;
+    mapping(uint32 => uint) private roundTokensBought;
 
     /// @notice Maps round IDs to contributors recipients
-    mapping(uint64 => EnumerableSet.AddressSet) private contributorsByRound;
+    mapping(uint32 => EnumerableSet.AddressSet) private contributorsByRound;
 
     /// @notice Maps round IDs to user addresses to contribution amounts by access criteria
     mapping(uint64 => mapping(address => mapping(uint8 => uint))) private
         roundIdTouserContributionsByAccessCriteria;
 
     /// @notice The current round count.
-    uint64 private roundCount;
+    uint32 private roundCount;
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
@@ -182,7 +182,7 @@ contract LM_PC_FundingPot_v1 is
     // Public - Getters
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundGenericParameters(uint64 roundId_)
+    function getRoundGenericParameters(uint32 roundId_)
         external
         view
         returns (
@@ -208,7 +208,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundAccessCriteria(uint64 roundId_, uint8 accessCriteriaId_)
+    function getRoundAccessCriteria(uint32 roundId_, uint8 accessCriteriaId_)
         external
         view
         returns (
@@ -249,7 +249,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function getRoundAccessCriteriaPrivileges(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId__
     )
         external
@@ -284,18 +284,18 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getRoundCount() external view returns (uint64) {
+    function getRoundCount() external view returns (uint32) {
         return roundCount;
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function isRoundClosed(uint64 roundId_) external view returns (bool) {
+    function isRoundClosed(uint32 roundId_) external view returns (bool) {
         return roundIdToClosedStatus[roundId_];
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function getUserEligibility(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
@@ -361,10 +361,10 @@ contract LM_PC_FundingPot_v1 is
         bytes memory hookFunction_,
         bool autoClosure_,
         bool globalAccumulativeCaps_
-    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint64) {
+    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint32) {
         roundCount++;
 
-        uint64 roundId = roundCount;
+        uint32 roundId = roundCount;
 
         Round storage round = rounds[roundId];
         round.roundStart = roundStart_;
@@ -388,12 +388,12 @@ contract LM_PC_FundingPot_v1 is
             globalAccumulativeCaps_
         );
 
-        return roundId;
+        return uint32(roundId);
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function editRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint roundStart_,
         uint roundEnd_,
         uint roundCap_,
@@ -430,7 +430,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaForRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,
@@ -474,7 +474,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function editAccessCriteriaForRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,
@@ -503,7 +503,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     function removeAllowlistedAddresses(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         address[] calldata addressesToRemove_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
@@ -526,7 +526,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteriaPrivileges(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         uint personalCap_,
         bool overrideContributionSpan_,
@@ -565,7 +565,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function contributeToRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_
@@ -578,7 +578,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function contributeToRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
@@ -596,7 +596,7 @@ contract LM_PC_FundingPot_v1 is
 
             // Verify the user was eligible for this access criteria in the previous round
             bool isEligible = _checkAccessCriteriaEligibility(
-                roundCap.roundId,
+                uint32(roundCap.roundId),
                 roundCap.accessCriteriaId,
                 roundCap.merkleProof,
                 _msgSender()
@@ -607,8 +607,9 @@ contract LM_PC_FundingPot_v1 is
                 roundItToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
                     .accessCriteriaId];
 
-                uint userContribution =
-                    _getUserContributionToRound(roundCap.roundId, _msgSender());
+                uint userContribution = _getUserContributionToRound(
+                    uint32(roundCap.roundId), _msgSender()
+                );
                 uint personalCap = privileges.personalCap;
 
                 if (userContribution < personalCap) {
@@ -627,7 +628,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function closeRound(uint64 roundId_)
+    function closeRound(uint32 roundId_)
         external
         onlyModuleRole(FUNDING_POT_ADMIN_ROLE)
     {
@@ -655,7 +656,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @inheritdoc ILM_PC_FundingPot_v1
     function createPaymentOrdersForContributorsBatch(
-        uint64 roundId_,
+        uint32 roundId_,
         uint batchSize_
     ) external {
         Round storage round = rounds[roundId_];
@@ -767,7 +768,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param merkleProof_ The Merkle proof for validation if needed
     /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds
     function _contributeToRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
@@ -847,7 +848,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional)
     /// @param  user_ The address of the user to validate
     function _validateAccessCriteria(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
@@ -882,7 +883,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param canOverrideContributionSpan_ Whether the contribution span can be overridden
     /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds
     function _validateAndAdjustCapsWithUnspentCap(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId__,
         bool canOverrideContributionSpan_,
@@ -948,7 +949,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  user_ The address of the user to validate
     /// @return isEligible True if the user meets the access criteria, false otherwise
     function _checkAccessCriteriaEligibility(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
@@ -979,14 +980,14 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Calculates unused capacity from previous rounds
     /// @param roundId_ The ID of the current round
     /// @return unusedCapacityFromPrevious The total unused capacity from previous rounds
-    function _calculateUnusedCapacityFromPreviousRounds(uint64 roundId_)
+    function _calculateUnusedCapacityFromPreviousRounds(uint32 roundId_)
         internal
         view
         returns (uint unusedCapacityFromPrevious)
     {
         unusedCapacityFromPrevious = 0;
         // Iterate through all previous rounds (1 to roundId_-1)
-        for (uint64 i = 1; i < roundId_; ++i) {
+        for (uint32 i = 1; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
             if (!prevRound.globalAccumulativeCaps) continue;
 
@@ -1003,7 +1004,7 @@ contract LM_PC_FundingPot_v1 is
     /// @dev    Returns the accumulated contributions for the given round
     /// @param  roundId_ The ID of the round to check contributions for
     /// @return The total contributions for the specified round
-    function _getTotalRoundContribution(uint64 roundId_)
+    function _getTotalRoundContribution(uint32 roundId_)
         internal
         view
         returns (uint)
@@ -1016,7 +1017,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  roundId_ The ID of the round to check contributions for
     /// @param  user_ The address of the user
     /// @return The user's contribution amount for the specified round
-    function _getUserContributionToRound(uint64 roundId_, address user_)
+    function _getUserContributionToRound(uint32 roundId_, address user_)
         internal
         view
         returns (uint)
@@ -1059,7 +1060,7 @@ contract LM_PC_FundingPot_v1 is
         bytes32 root_,
         bytes32[] memory merkleProof_,
         address user_,
-        uint64 roundId_
+        uint32 roundId_
     ) internal pure returns (bool) {
         bytes32 leaf = keccak256(abi.encodePacked(user_, roundId_));
 
@@ -1073,7 +1074,7 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Handles round closure logic
     /// @dev    Updates round status and executes hook if needed
     /// @param  roundId_ The ID of the round to close
-    function _closeRound(uint64 roundId_) internal {
+    function _closeRound(uint32 roundId_) internal {
         Round storage round = rounds[roundId_];
 
         roundIdToClosedStatus[roundId_] = true;
@@ -1085,9 +1086,7 @@ contract LM_PC_FundingPot_v1 is
             }
         }
 
-        emit RoundClosed(
-            roundId_, block.timestamp, roundIdToTotalContributions[roundId_]
-        );
+        emit RoundClosed(roundId_, roundIdToTotalContributions[roundId_]);
     }
 
     /// @notice Creates payment orders for contributors in a round based on their access criteria
@@ -1096,7 +1095,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  startIndex_ The starting index in the contributors array
     /// @param  batchSize_ The number of contributors to process in this batch
     function _createPaymentOrdersForContributors(
-        uint64 roundId_,
+        uint32 roundId_,
         uint startIndex_,
         uint batchSize_
     ) internal {
@@ -1174,7 +1173,7 @@ contract LM_PC_FundingPot_v1 is
         if (start_ == 0) start_ = block.timestamp;
         if (end_ == 0) end_ = block.timestamp;
 
-        bytes32 flags = 0;
+        flags = 0;
         bytes32[] memory data = new bytes32[](3); // For start, cliff, and end
         uint8 flagCount = 0;
 
@@ -1212,7 +1211,7 @@ contract LM_PC_FundingPot_v1 is
     /// @param  tokensAmount_ The amount of tokens for the payment order
     /// @param  issuanceToken_ The issuance token for the payment order
     function _createAndAddPaymentOrder(
-        uint64 roundId_,
+        uint32 roundId_,
         address recipient_,
         uint8 accessCriteriaId_,
         uint tokensAmount_,
@@ -1258,7 +1257,7 @@ contract LM_PC_FundingPot_v1 is
         );
     }
 
-    function _buyBondingCurveToken(uint64 roundId_) internal {
+    function _buyBondingCurveToken(uint32 roundId_) internal {
         uint totalContributions = _getTotalRoundContribution(roundId_);
         if (totalContributions == 0) {
             revert Module__LM_PC_FundingPot__NoContributions();
@@ -1284,7 +1283,7 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Checks if a round has reached its cap or time limit
     /// @param  roundId_ The ID of the round to check
     /// @return Boolean indicating if the round has reached its cap or time limit
-    function _checkRoundClosureConditions(uint64 roundId_)
+    function _checkRoundClosureConditions(uint32 roundId_)
         internal
         view
         returns (bool)

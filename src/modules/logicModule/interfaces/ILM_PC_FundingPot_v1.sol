@@ -26,7 +26,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes hookFunction;
         bool autoClosure;
         bool globalAccumulativeCaps;
-        mapping(uint64 id => AccessCriteria) accessCriterias;
+        mapping(uint32 id => AccessCriteria) accessCriterias;
     }
 
     /// @notice Struct used to store information about a funding round's access criteria.
@@ -60,7 +60,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param accessCriteriaId The ID of the access criteria in that round
     /// @param merkleProof The Merkle proof needed to validate eligibility (if needed)
     struct UnspentPersonalRoundCap {
-        uint64 roundId;
+        uint32 roundId;
         uint8 accessCriteriaId;
         bytes32[] merkleProof;
     }
@@ -142,13 +142,13 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Emitted when access criteria is set for a round.
     /// @param  roundId_ The unique identifier of the round.
     /// @param  accessCriteriaId_ The identifier of the access criteria.
-    event AccessCriteriaSet(uint64 indexed roundId_, uint8 accessCriteriaId_);
+    event AccessCriteriaSet(uint32 indexed roundId_, uint8 accessCriteriaId_);
 
     /// @notice Emitted when access criteria is edited for a round.
     /// @param  roundId_ The unique identifier of the round.
     /// @param  accessCriteriaId_ The identifier of the access criteria.
     event AccessCriteriaEdited(
-        uint64 indexed roundId_, uint8 accessCriteriaId_
+        uint32 indexed roundId_, uint8 accessCriteriaId_
     );
 
     /// @notice Emitted when access criteria privileges are set for a round.
@@ -160,7 +160,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  cliff_ The time in seconds from start time at which the unlock starts.
     /// @param  end_ The end timestamp for when the linear vesting ends.
     event AccessCriteriaPrivilegesSet(
-        uint64 indexed roundId_,
+        uint32 indexed roundId_,
         uint8 accessCriteriaId_,
         uint personalCap_,
         bool overrideContributionSpan_,
@@ -173,22 +173,19 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The ID of the round.
     /// @param  contributor_ The address of the contributor.
     /// @param  amount_ The amount contributed.
-    event ContributionMade(uint64 roundId_, address contributor_, uint amount_);
+    event ContributionMade(uint32 roundId_, address contributor_, uint amount_);
 
     /// @notice Emitted when a round is closed.
     /// @param  roundId_ The ID of the round.
-    /// @param  timestamp_ The timestamp when the round was closed.
     /// @param  totalContributions_ The total contributions collected in the round.
-    event RoundClosed(
-        uint64 roundId_, uint timestamp_, uint totalContributions_
-    );
+    event RoundClosed(uint32 roundId_, uint totalContributions_);
 
     /// @notice Emitted when addresses are removed from an access criteria's allowed list.
     /// @param  roundId_ The ID of the round.
     /// @param  accessCriteriaId_ The ID of the access criteria.
     /// @param  addressesRemoved_ The addresses that were removed from the allowlist.
     event AllowlistedAddressesRemoved(
-        uint64 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
+        uint32 roundId_, uint8 accessCriteriaId_, address[] addressesRemoved_
     );
 
     /// @notice Emitted when a payment order is created.
@@ -200,7 +197,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  cliff_ The time in seconds from start time at which the unlock starts.
     /// @param  end_ The end timestamp for when the linear vesting ends.
     event PaymentOrderCreated(
-        uint64 roundId_,
+        uint32 roundId_,
         address contributor_,
         uint8 accessCriteriaId_,
         uint tokensForThisAccessCriteria_,
@@ -214,7 +211,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  startIndex_ The starting index in the contributors array.
     /// @param  endIndex_ The ending index in the contributors array.
     event ContributorBatchProcessed(
-        uint64 indexed roundId_, uint startIndex_, uint endIndex_
+        uint32 indexed roundId_, uint startIndex_, uint endIndex_
     );
 
     // -------------------------------------------------------------------------
@@ -315,7 +312,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return hookFunction_ The encoded function call for the hook.
     /// @return autoClosure_ Whether hook closure coincides with contribution span end.
     /// @return globalAccumulativeCaps_ Whether caps accumulate globally across rounds.
-    function getRoundGenericParameters(uint64 roundId_)
+    function getRoundGenericParameters(uint32 roundId_)
         external
         view
         returns (
@@ -335,7 +332,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return nftContract_ The address of the NFT contract used for access control.
     /// @return merkleRoot_ The merkle root used for access verification.
     /// @return isList_ If the access criteria is a list, this will be true.
-    function getRoundAccessCriteria(uint64 roundId_, uint8 accessCriteriaId_)
+    function getRoundAccessCriteria(uint32 roundId_, uint8 accessCriteriaId_)
         external
         view
         returns (
@@ -354,7 +351,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return cliff_ The cliff timestamp for the access criteria.
     /// @return end_ The end timestamp for the access criteria.
     function getRoundAccessCriteriaPrivileges(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_
     )
         external
@@ -369,12 +366,12 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Retrieves the total number of funding rounds.
     /// @return roundCount_ The total number of funding rounds.
-    function getRoundCount() external view returns (uint64 roundCount_);
+    function getRoundCount() external view returns (uint32 roundCount_);
 
     /// @notice Retrieves the closed status of a round.
     /// @param  roundId_ The ID of the round.
     /// @return The closed status of the round.
-    function isRoundClosed(uint64 roundId_) external view returns (bool);
+    function isRoundClosed(uint32 roundId_) external view returns (bool);
 
     /// @notice Gets eligibility information for a user in a specific round
     /// @param  roundId_ The ID of the round to check eligibility for
@@ -384,7 +381,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return isEligible Whether the user is eligible for the round through any criteria
     /// @return remainingAmountAllowedToContribute The remaining contribution the user can make
     function getUserEligibility(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
@@ -414,7 +411,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         bytes memory hookFunction_,
         bool autoClosure_,
         bool globalAccumulativeCaps_
-    ) external returns (uint64);
+    ) external returns (uint32);
 
     /// @notice Edits an existing funding round.
     /// @dev    Only callable by funding pot admin and only before the round has started.
@@ -427,7 +424,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  autoClosure_ New closure mechanism setting.
     /// @param  globalAccumulativeCaps_ New global accumulative caps setting.
     function editRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint roundStart_,
         uint roundEnd_,
         uint roundCap_,
@@ -445,7 +442,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  merkleRoot_ Merkle root for the access criteria.
     /// @param  allowedAddresses_ List of explicitly allowed addresses.
     function setAccessCriteriaForRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,
@@ -460,7 +457,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  merkleRoot_ Merkle root for the access criteria.
     /// @param  allowedAddresses_ List of explicitly allowed addresses.
     function editAccessCriteriaForRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,
@@ -473,7 +470,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  addressesToRemove_ List of addresses to remove from the allowed list.
     function removeAllowlistedAddresses(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         address[] calldata addressesToRemove_
     ) external;
@@ -488,7 +485,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  cliff_ Cliff timestamp for the access criteria.
     /// @param  end_ End timestamp for the access criteria.
     function setAccessCriteriaPrivileges(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         uint personalCap_,
         bool overrideContributionSpan_,
@@ -504,7 +501,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  accessCriteriaId_ The identifier for the access criteria to validate eligibility.
     /// @param  merkleProof_ The Merkle proof used to verify the contributor's eligibility.
     function contributeToRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_
@@ -517,7 +514,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param merkleProof_ The Merkle proof for validation if needed
     /// @param unspentPersonalRoundCaps_ Array of previous rounds and access criteria to calculate unused capacity from
     function contributeToRound(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_,
@@ -526,13 +523,13 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Closes a round.
     /// @param  roundId_ The ID of the round to close.
-    function closeRound(uint64 roundId_) external;
+    function closeRound(uint32 roundId_) external;
 
     /// @notice Creates a batch of contributors for payment order creation
     /// @param roundId_ The ID of the round to process contributors for
     /// @param batchSize_ The number of contributors to process in this batch
     function createPaymentOrdersForContributorsBatch(
-        uint64 roundId_,
+        uint32 roundId_,
         uint batchSize_
     ) external;
 }
