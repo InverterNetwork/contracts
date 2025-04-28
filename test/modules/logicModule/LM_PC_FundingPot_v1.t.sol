@@ -65,21 +65,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // -------------------------------------------------------------------------
     // State
-    struct RoundParameters {
-        uint roundStart;
-        uint roundEnd;
-        uint roundCap;
-        address hookContract;
-        bytes hookFunction;
-        bool autoClosure;
-        bool globalAccumulativeCaps;
-    }
+
     // SuT
 
     LM_PC_FundingPot_v1_Exposed fundingPot;
 
     // Storage variables to avoid stack too deep
-    uint64 private _testRoundId;
+    uint32 private _testRoundId;
 
     // Default round parameters for testing
     RoundParams private _defaultRoundParams;
@@ -438,7 +430,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params = RoundParams({
             roundStart: block.timestamp + 3 days,
@@ -474,7 +466,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound_revertsGivenRoundIsNotCreated() public {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params = RoundParams({
             roundStart: block.timestamp + 3 days,
@@ -494,7 +486,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             )
         );
         fundingPot.editRound(
-            roundId + 1,
+            uint32(roundId + 1),
             params.roundStart,
             params.roundEnd,
             params.roundCap,
@@ -507,7 +499,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound_revertsGivenRoundIsActive() public {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params;
         (
@@ -554,7 +546,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         _editedRoundParams;
         vm.assume(roundStart_ < block.timestamp);
         _editedRoundParams.roundStart = roundStart_;
@@ -581,7 +573,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound_revertsGivenRoundEndTimeAndCapAreBothZero() public {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params = RoundParams({
             roundStart: block.timestamp + 3 days,
@@ -622,7 +614,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 && roundEnd_ < roundStart_
         );
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         // Get the current round start time
         (uint currentRoundStart,,,,,,) =
@@ -666,7 +658,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params = _helper_createEditRoundParams(
             block.timestamp + 3 days,
@@ -702,7 +694,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         public
     {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         RoundParams memory params = _helper_createEditRoundParams(
             block.timestamp + 3 days,
@@ -750,7 +742,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testEditRound() public {
         testCreateRound();
-        uint64 lastRoundId = fundingPot.getRoundCount();
+        uint32 lastRoundId = fundingPot.getRoundCount();
 
         RoundParams memory params = _editedRoundParams;
 
@@ -774,7 +766,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             bytes memory storedHookFunction,
             bool storedAutoClosure,
             bool storedGlobalAccumulativeCaps
-        ) = fundingPot.getRoundGenericParameters(lastRoundId);
+        ) = fundingPot.getRoundGenericParameters(uint32(lastRoundId));
 
         // Compare with expected values
         assertEq(storedRoundStart, params.roundStart);
@@ -825,7 +817,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(user_ != address(0) && user_ != address(this));
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -857,7 +849,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -887,7 +879,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -920,7 +912,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -951,7 +943,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -982,7 +974,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -1011,7 +1003,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -1032,7 +1024,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address retrievedNftContract,
             bytes32 retrievedMerkleRoot,
             bool hasAccess
-        ) = fundingPot.getRoundAccessCriteria(roundId, accessCriteriaEnum);
+        ) = fundingPot.getRoundAccessCriteria(
+            uint32(roundId), accessCriteriaEnum
+        );
 
         assertEq(isOpen, accessCriteriaEnum == 1);
         assertEq(retrievedNftContract, nftContract);
@@ -1076,7 +1070,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(user_ != address(0) && user_ != address(this));
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         (
             address nftContract,
@@ -1109,7 +1103,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessCriteriaId = 10; // Invalid ID
 
         (
@@ -1134,7 +1128,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessCriteriaEnum
     ) public {
         vm.assume(accessCriteriaEnum >= 0 && accessCriteriaEnum <= 4);
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessCriteriaId = 0;
 
         (
@@ -1156,7 +1150,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Set up a round with access criteria
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnum);
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         // Warp to make the round active
         (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
@@ -1223,7 +1217,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
         uint amount = 250;
 
@@ -1263,7 +1257,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 0;
         uint amount = 250;
 
@@ -1307,7 +1301,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint8 accessId = 2;
         _helper_setupRoundWithAccessCriteria(accessId);
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         uint amount = 250;
 
@@ -1338,7 +1332,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 3;
         uint amount = 250;
 
@@ -1378,7 +1372,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 4;
         uint amount = 250;
 
@@ -1420,7 +1414,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
         uint amount = 500;
 
@@ -1510,7 +1504,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testContributeToRound_worksGivenAllConditionsMet() public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
         uint amount = 250;
 
@@ -1561,7 +1555,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         _helper_setupRoundWithAccessCriteria(accessCriteriaEnumOld);
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 0;
         uint amount = 201;
 
@@ -1603,7 +1597,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
 
         uint firstAmount = 400;
@@ -1656,7 +1650,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
         uint amount = 250;
 
@@ -1709,7 +1703,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.globalAccumulativeCaps
         );
 
-        uint64 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.getRoundCount();
 
         uint8 accessCriteriaId = 1;
         (
@@ -1740,7 +1734,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.globalAccumulativeCaps
         );
-        uint64 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.getRoundCount();
 
         fundingPot.setAccessCriteriaForRound(
             round2Id, accessCriteriaId, address(0), bytes32(0), allowedAddresses
@@ -1807,7 +1801,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.globalAccumulativeCaps
         );
-        uint64 round1Id = fundingPot.getRoundCount();
+        uint32 round1Id = fundingPot.getRoundCount();
 
         uint8 accessId = 0;
         (
@@ -1833,7 +1827,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.autoClosure,
             _defaultRoundParams.globalAccumulativeCaps
         );
-        uint64 round2Id = fundingPot.getRoundCount();
+        uint32 round2Id = fundingPot.getRoundCount();
         fundingPot.setAccessCriteriaForRound(
             round2Id, accessId, nftContract, merkleRoot, allowedAddresses
         );
@@ -1952,7 +1946,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(user_ != address(0) && user_ != address(this));
 
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         vm.startPrank(user_);
         bytes32 roleId = _authorizer.generateRoleId(
@@ -1968,7 +1962,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testCloseRound_revertsGivenRoundDoesNotExist() public {
-        uint64 nonExistentRoundId = 999;
+        uint32 nonExistentRoundId = 999;
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1983,7 +1977,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCloseRound_revertsGivenRoundIsAlreadyClosed() public {
         testCloseRound_worksGivenRoundCapHasBeenReached();
         // Try to close it again
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -1997,7 +1991,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCloseRound_worksGivenRoundHasStartedButNotEnded() public {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         uint8 accessId = 1;
         (
@@ -2032,7 +2026,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCloseRound_worksGivenRoundHasEnded() public {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         uint8 accessId = 1;
         (
@@ -2071,7 +2065,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCloseRound_worksGivenRoundCapHasBeenReached() public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 2;
         uint amount = 1000;
 
@@ -2110,7 +2104,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCloseRound_worksGivenRoundisAutoClosure() public {
         testEditRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 2;
         uint amount = 2000;
 
@@ -2146,7 +2140,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCloseRound_worksWithMultipleContributors() public {
         testCreateRound();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         // Set up access criteria
         uint8 accessId = 1;
@@ -2227,7 +2221,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenRoundDoesNotExist(
     ) public {
-        uint64 nonExistentRoundId = 999;
+        uint32 nonExistentRoundId = 999;
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -2244,7 +2238,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenRoundIsNotClosed(
     ) public {
         testContributeToRound_worksGivenAllConditionsMet();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -2259,7 +2253,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsGreaterThanContributorCount(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -2274,7 +2268,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsZero(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -2289,7 +2283,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenUserDoesNotHaveFundingPotAdminRole(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         vm.startPrank(contributor1_);
         vm.expectRevert(
@@ -2306,7 +2300,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsAutoClosure(
     ) public {
         testCloseRound_worksGivenRoundisAutoClosure();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
         assertEq(fundingPot.paymentOrders().length, 1);
@@ -2315,7 +2309,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsManualClosure(
     ) public {
         testCloseRound_worksWithMultipleContributors();
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
 
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 3);
         assertEq(fundingPot.paymentOrders().length, 3);
@@ -2324,7 +2318,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // Internal Functions
     function testFuzz_validateAccessCriteria(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessId_,
         bytes32[] calldata merkleProof_
     ) external view {
@@ -2341,7 +2335,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     }
 
     function testFuzz_validateAndAdjustCapsWithUnspentCap(
-        uint64 roundId_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessId_,
         bool canOverrideContributionSpan_,
@@ -2397,7 +2391,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         params.roundEnd = block.timestamp + 2 days;
         params.roundCap = 1000;
 
-        uint64 roundId = fundingPot.createRound(
+        uint32 roundId = fundingPot.createRound(
             params.roundStart,
             params.roundEnd,
             params.roundCap,
@@ -2445,7 +2439,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         params.roundEnd = block.timestamp + 2 days;
         params.roundCap = 1000;
 
-        uint64 roundId = fundingPot.createRound(
+        uint32 roundId = fundingPot.createRound(
             params.roundStart,
             params.roundEnd,
             params.roundCap,
@@ -2468,7 +2462,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         params.roundEnd = block.timestamp + 2 days;
         params.roundCap = 1000;
 
-        uint64 roundId = fundingPot.createRound(
+        uint32 roundId = fundingPot.createRound(
             params.roundStart,
             params.roundEnd,
             params.roundCap,
@@ -2488,7 +2482,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         params.roundEnd = 0; // No end time
         params.roundCap = 1000;
 
-        uint64 roundId = fundingPot.createRound(
+        uint32 roundId = fundingPot.createRound(
             params.roundStart,
             params.roundEnd,
             params.roundCap,
@@ -2539,7 +2533,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         params.roundEnd = block.timestamp + 2 days;
         params.roundCap = 0; // No cap
 
-        uint64 roundId = fundingPot.createRound(
+        uint32 roundId = fundingPot.createRound(
             params.roundStart,
             params.roundEnd,
             params.roundCap,
@@ -2550,18 +2544,22 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Should be false before end time
-        assertFalse(fundingPot.exposed_checkRoundClosureConditions(roundId));
+        assertFalse(
+            fundingPot.exposed_checkRoundClosureConditions(uint32(roundId))
+        );
 
         // Should be true after end time
         vm.warp(params.roundEnd + 1);
-        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+        assertTrue(
+            fundingPot.exposed_checkRoundClosureConditions(uint32(roundId))
+        );
     }
 
     // Test exposed internal function closeRound
     function test_closeRound_worksGivenCapReached() public {
         testCreateRound();
 
-        uint64 roundId = fundingPot.getRoundCount();
+        uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 2;
         uint amount = 1000;
 
@@ -2592,14 +2590,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, amount, accessId, new bytes32[](0)
         );
 
-        assertTrue(fundingPot.exposed_checkRoundClosureConditions(roundId));
+        assertTrue(
+            fundingPot.exposed_checkRoundClosureConditions(uint32(roundId))
+        );
 
         uint startIndex = 0;
         uint batchSize = 1;
-        fundingPot.exposed_closeRound(roundId);
-        fundingPot.exposed_buyBondingCurveToken(roundId);
+        fundingPot.exposed_closeRound(uint32(roundId));
+        fundingPot.exposed_buyBondingCurveToken(uint32(roundId));
         fundingPot.exposed_createPaymentOrdersForContributors(
-            roundId, startIndex, batchSize
+            uint32(roundId), startIndex, batchSize
         );
 
         assertTrue(fundingPot.isRoundClosed(roundId));
@@ -2684,7 +2684,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function _helper_setupRoundWithAccessCriteria(uint8 accessCriteriaEnum)
         internal
     {
-        uint64 roundId = fundingPot.createRound(
+        uint32 roundId = fundingPot.createRound(
             _defaultRoundParams.roundStart,
             _defaultRoundParams.roundEnd,
             _defaultRoundParams.roundCap,
