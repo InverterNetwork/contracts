@@ -648,7 +648,7 @@ contract LM_PC_FundingPot_v1 is
 
             _buyBondingCurveToken(roundId_);
 
-            // Payment orders will be created separately via processContributorBatch
+            // Payment orders will be created separately via createPaymentOrdersForContributorsBatch
         } else {
             revert Module__LM_PC_FundingPot__ClosureConditionsNotMet();
         }
@@ -1222,13 +1222,9 @@ contract LM_PC_FundingPot_v1 is
         AccessCriteriaPrivileges storage privileges =
             roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
-        uint start = privileges.overrideContributionSpan
-            ? privileges.start
-            : round.roundStart;
-        uint cliff = privileges.overrideContributionSpan ? privileges.cliff : 0;
-        uint end = privileges.overrideContributionSpan
-            ? privileges.end
-            : round.roundEnd;
+        uint start = privileges.start;
+        uint cliff = privileges.cliff;
+        uint end = privileges.end;
 
         (bytes32 flags, bytes32[] memory finalData) =
             _createTimeParameterData(start, cliff, end);
@@ -1271,13 +1267,13 @@ contract LM_PC_FundingPot_v1 is
         IERC20(__Module_orchestrator.fundingManager().token()).approve(
             address(__Module_orchestrator.fundingManager()), totalContributions
         );
-        uint balanceBefore = IERC20(issuanceToken).balanceOf(address(this));
+        uint minAmountOut = IBondingCurveBase_v1(
+            address(__Module_orchestrator.fundingManager())
+        ).calculatePurchaseReturn(totalContributions);
         IBondingCurveBase_v1(address(__Module_orchestrator.fundingManager()))
             .buyFor(address(this), totalContributions, 1);
-        uint balanceAfter = IERC20(issuanceToken).balanceOf(address(this));
 
-        uint tokensBought = balanceAfter - balanceBefore;
-        roundTokensBought[roundId_] = tokensBought;
+        roundTokensBought[roundId_] = minAmountOut;
     }
 
     /// @notice Checks if a round has reached its cap or time limit
