@@ -47,6 +47,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
      * @notice Exposes the internal _validateAndAdjustCapsWithUnspentCap function for testing
      */
     function exposed_validateAndAdjustCapsWithUnspentCap(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId__,
@@ -54,6 +55,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         uint unspentPersonalCap_
     ) external view returns (uint) {
         return _validateAndAdjustCapsWithUnspentCap(
+            user_,
             roundId_,
             amount_,
             accessCriteriaId__,

@@ -28,7 +28,7 @@ import "@oz/utils/cryptography/MerkleProof.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 /**
- * @title   Inverter Funding Pot Logic Module
+ * @title   Inverter Funding Pot Logic Module.
  *
  * @notice  A sophisticated funding management system that enables configurable fundraising rounds
  *          with multiple access criteria, contribution limits, and automated distribution.
@@ -36,37 +36,37 @@ import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
  *          campaigns with granular access control and contribution management.
  *
  * @dev     Implements a comprehensive funding system with the following features:
- *          - Round Configuration
+ *          - Round Configuration.
  *            Supports configurable start/end times, caps, and post-round hooks.
  *
- *          - Access Control
+ *          - Access Control.
  *            Multiple access criteria types:
- *            - Allowlist-based access
- *            - NFT ownership verification
- *            - Merkle proof validation
- *            - Open access
+ *            - Allowlist-based access.
+ *            - NFT ownership verification.
+ *            - Merkle proof validation.
+ *            - Open access.
  *
- *          - Contribution Management
- *            - Personal contribution caps
- *            - Round-level caps
- *            - Global accumulative caps across rounds
- *            - Configurable contribution time windows
+ *          - Contribution Management.
+ *            - Personal contribution caps.
+ *            - Round-level caps.
+ *            - Global accumulative caps across rounds.
+ *            - Configurable contribution time windows.
  *
- *          - Automated Processing
- *            - Automatic round closure based on time or cap
- *            - Post-round hook execution
- *            - Payment order creation for contributors
+ *          - Automated Processing.
+ *            - Automatic round closure based on time or cap.
+ *            - Post-round hook execution.
+ *            - Payment order creation for contributors.
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
  *                          our Security Policy at security.inverter.network or
  *                          email us directly!
  *
- * @custom:version  v1.0.0
+ * @custom:version  v1.0.0.
  *
- * @custom:inverter-standard-version v0.1.0
+ * @custom:inverter-standard-version v0.1.0.
  *
- * @author  33Audits
+ * @author  33Audits.
  */
 contract LM_PC_FundingPot_v1 is
     ILM_PC_FundingPot_v1,
@@ -122,35 +122,35 @@ contract LM_PC_FundingPot_v1 is
             => mapping(uint8 accessCriteriaId_ => AccessCriteriaPrivileges)
     ) private roundItToAccessCriteriaIdToPrivileges;
 
-    /// @notice Maps round IDs to user addresses to contribution amounts
+    /// @notice Maps round IDs to user addresses to contribution amounts.
     mapping(uint32 => mapping(address => uint)) private
         roundIdToUserToContribution;
 
-    /// @notice Maps round IDs to total contributions
+    /// @notice Maps round IDs to total contributions.
     mapping(uint32 => uint) private roundIdToTotalContributions;
 
-    /// @notice Maps round IDs to closed status
+    /// @notice Maps round IDs to closed status.
     mapping(uint32 => bool) private roundIdToClosedStatus;
 
-    /// @notice Maps round IDs to bonding curve tokens bought
+    /// @notice Maps round IDs to bonding curve tokens bought.
     mapping(uint32 => uint) private roundTokensBought;
 
-    /// @notice Maps round IDs to contributors recipients
+    /// @notice Maps round IDs to contributors recipients.
     mapping(uint32 => EnumerableSet.AddressSet) private contributorsByRound;
 
-    /// @notice Maps round IDs to user addresses to contribution amounts by access criteria
+    /// @notice Maps round IDs to user addresses to contribution amounts by access criteria.
     mapping(uint64 => mapping(address => mapping(uint8 => uint))) private
         roundIdTouserContributionsByAccessCriteria;
 
     /// @notice The current round count.
     uint32 private roundCount;
 
-    /// @notice Storage gap for future upgrades.
-    uint[50] private __gap;
-
-    // Add a mapping to track the next unprocessed index for each round
+    /// @notice Add a mapping to track the next unprocessed index for each round.
     mapping(uint64 => uint) private roundIdToNextUnprocessedIndex;
 
+    /// @notice Storage gap for future upgrades.
+    uint[50] private __gap;
+    
     // -------------------------------------------------------------------------
     // Modifiers
 
@@ -564,20 +564,22 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function contributeToRound(
+    function contributeToRoundFor(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_
     ) external {
         // Call the internal function with no additional unspent personal cap
-        _contributeToRound(
-            roundId_, amount_, accessCriteriaId_, merkleProof_, 0
+        _contributeToRoundFor(
+            user_, roundId_, amount_, accessCriteriaId_, merkleProof_, 0
         );
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function contributeToRound(
+    function contributeToRoundFor(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
@@ -599,7 +601,7 @@ contract LM_PC_FundingPot_v1 is
                 uint32(roundCap.roundId),
                 roundCap.accessCriteriaId,
                 roundCap.merkleProof,
-                _msgSender()
+                user_
             );
 
             if (isEligible) {
@@ -607,9 +609,8 @@ contract LM_PC_FundingPot_v1 is
                 roundItToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
                     .accessCriteriaId];
 
-                uint userContribution = _getUserContributionToRound(
-                    uint32(roundCap.roundId), _msgSender()
-                );
+                uint userContribution =
+                    _getUserContributionToRound(uint32(roundCap.roundId), user_);
                 uint personalCap = privileges.personalCap;
 
                 if (userContribution < personalCap) {
@@ -618,7 +619,8 @@ contract LM_PC_FundingPot_v1 is
             }
         }
 
-        _contributeToRound(
+        _contributeToRoundFor(
+            user_,
             roundId_,
             amount_,
             accessCriteriaId_,
@@ -761,13 +763,15 @@ contract LM_PC_FundingPot_v1 is
         return start_ + cliff_ <= end_;
     }
 
-    /// @notice Contributes to a round with unused capacity from previous rounds
-    /// @param roundId_ The ID of the round to contribute to
-    /// @param amount_ The amount to contribute
-    /// @param accessCriteriaId_ The ID of the access criteria to use for this contribution
-    /// @param merkleProof_ The Merkle proof for validation if needed
-    /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds
-    function _contributeToRound(
+    /// @notice Contributes to a round with unused capacity from previous rounds.
+    /// @param roundId_ The ID of the round to contribute to.
+    /// @param user_ The address of the user to contribute for.
+    /// @param amount_ The amount to contribute.
+    /// @param accessCriteriaId_ The ID of the access criteria to use for this contribution.
+    /// @param merkleProof_ The Merkle proof for validation if needed.
+    /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds.
+    function _contributeToRoundFor(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
@@ -794,7 +798,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         _validateAccessCriteria(
-            roundId_, accessCriteriaId_, merkleProof_, _msgSender()
+            roundId_, accessCriteriaId_, merkleProof_, user_
         );
 
         AccessCriteriaPrivileges storage privileges =
@@ -810,6 +814,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Calculate the adjusted amount considering caps
         uint adjustedAmount = _validateAndAdjustCapsWithUnspentCap(
+            user_,
             roundId_,
             amount_,
             accessCriteriaId_,
@@ -817,18 +822,18 @@ contract LM_PC_FundingPot_v1 is
             unspentPersonalCap_
         );
 
-        roundIdToUserToContribution[roundId_][_msgSender()] += adjustedAmount;
+        roundIdToUserToContribution[roundId_][user_] += adjustedAmount;
         roundIdToTotalContributions[roundId_] += adjustedAmount;
-        roundIdTouserContributionsByAccessCriteria[roundId_][_msgSender()][accessCriteriaId_]
+        roundIdTouserContributionsByAccessCriteria[roundId_][user_][accessCriteriaId_]
         += adjustedAmount;
 
         __Module_orchestrator.fundingManager().token().safeTransferFrom(
             _msgSender(), address(this), adjustedAmount
         );
 
-        EnumerableSet.add(contributorsByRound[roundId_], _msgSender());
+        EnumerableSet.add(contributorsByRound[roundId_], user_);
 
-        emit ContributionMade(roundId_, _msgSender(), adjustedAmount);
+        emit ContributionMade(roundId_, user_, adjustedAmount);
 
         // contribution triggers automatic closure
         if (!roundIdToClosedStatus[roundId_] && round.autoClosure) {
@@ -841,12 +846,12 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
-    /// @notice Validates access criteria for a specific round and access type
-    /// @dev    Checks if a user meets the access requirements based on the round's access criteria
-    /// @param  roundId_ The ID of the round being validated
-    /// @param  accessCriteriaId_ The ID of the specific access criteria
-    /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional)
-    /// @param  user_ The address of the user to validate
+    /// @notice Validates access criteria for a specific round and access type.
+    /// @dev    Checks if a user meets the access requirements based on the round's access criteria.
+    /// @param  roundId_ The ID of the round being validated.
+    /// @param  accessCriteriaId_ The ID of the specific access criteria.
+    /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional).
+    /// @param  user_ The address of the user to validate.
     function _validateAccessCriteria(
         uint32 roundId_,
         uint8 accessCriteriaId_,
@@ -876,13 +881,15 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
-    /// @notice Validates and adjusts the contribution amount considering caps and unspent capacity
-    /// @param roundId_ The ID of the round to contribute to
-    /// @param amount_ The amount to contribute
-    /// @param accessCriteriaId__ The ID of the access criteria to use for this contribution
-    /// @param canOverrideContributionSpan_ Whether the contribution span can be overridden
-    /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds
+    /// @notice Validates and adjusts the contribution amount considering caps and unspent capacity.
+    /// @param user_ The address of the user to contribute for.
+    /// @param roundId_ The ID of the round to contribute to.
+    /// @param amount_ The amount to contribute.
+    /// @param accessCriteriaId__ The ID of the access criteria to use for this contribution.
+    /// @param canOverrideContributionSpan_ Whether the contribution span can be overridden.
+    /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds.
     function _validateAndAdjustCapsWithUnspentCap(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId__,
@@ -918,7 +925,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Check and adjust for personal cap
         uint userPreviousContribution =
-            _getUserContributionToRound(roundId_, _msgSender());
+            _getUserContributionToRound(roundId_, user_);
 
         // Get the base personal cap for this round and criteria
         AccessCriteriaPrivileges storage privileges =
@@ -941,13 +948,13 @@ contract LM_PC_FundingPot_v1 is
         return adjustedAmount;
     }
 
-    /// @notice Checks if a user meets the access criteria for a specific round and access type
-    /// @dev    Returns true if the user meets the access criteria, reverts otherwise
-    /// @param  roundId_ The ID of the round being validated
-    /// @param  accessCriteriaId_ The ID of the specific access criteria
-    /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional)
-    /// @param  user_ The address of the user to validate
-    /// @return isEligible True if the user meets the access criteria, false otherwise
+    /// @notice Checks if a user meets the access criteria for a specific round and access type.
+    /// @dev    Returns true if the user meets the access criteria, reverts otherwise.
+    /// @param  roundId_ The ID of the round being validated.
+    /// @param  accessCriteriaId_ The ID of the specific access criteria.
+    /// @param  merkleProof_ Merkle proof for Merkle tree-based access (optional).
+    /// @param  user_ The address of the user to validate.
+    /// @return isEligible True if the user meets the access criteria, false otherwise.
     function _checkAccessCriteriaEligibility(
         uint32 roundId_,
         uint8 accessCriteriaId_,
@@ -977,9 +984,9 @@ contract LM_PC_FundingPot_v1 is
         return isEligible;
     }
 
-    /// @notice Calculates unused capacity from previous rounds
-    /// @param roundId_ The ID of the current round
-    /// @return unusedCapacityFromPrevious The total unused capacity from previous rounds
+    /// @notice Calculates unused capacity from previous rounds.
+    /// @param roundId_ The ID of the current round.
+    /// @return unusedCapacityFromPrevious The total unused capacity from previous rounds.
     function _calculateUnusedCapacityFromPreviousRounds(uint32 roundId_)
         internal
         view
@@ -1000,10 +1007,10 @@ contract LM_PC_FundingPot_v1 is
         return unusedCapacityFromPrevious;
     }
 
-    /// @notice Retrieves the total contribution for a specific round
-    /// @dev    Returns the accumulated contributions for the given round
-    /// @param  roundId_ The ID of the round to check contributions for
-    /// @return The total contributions for the specified round
+    /// @notice Retrieves the total contribution for a specific round.
+    /// @dev    Returns the accumulated contributions for the given round.
+    /// @param  roundId_ The ID of the round to check contributions for.
+    /// @return The total contributions for the specified round.
     function _getTotalRoundContribution(uint32 roundId_)
         internal
         view
@@ -1012,11 +1019,11 @@ contract LM_PC_FundingPot_v1 is
         return roundIdToTotalContributions[roundId_];
     }
 
-    /// @notice Retrieves the contribution amount for a specific user in a round
-    /// @dev    Returns the individual user's contribution for the given round
-    /// @param  roundId_ The ID of the round to check contributions for
-    /// @param  user_ The address of the user
-    /// @return The user's contribution amount for the specified round
+    /// @notice Retrieves the contribution amount for a specific user in a round.
+    /// @dev    Returns the individual user's contribution for the given round.
+    /// @param  roundId_ The ID of the round to check contributions for.
+    /// @param  user_ The address of the user.
+    /// @return The user's contribution amount for the specified round.
     function _getUserContributionToRound(uint32 roundId_, address user_)
         internal
         view
@@ -1025,11 +1032,11 @@ contract LM_PC_FundingPot_v1 is
         return roundIdToUserToContribution[roundId_][user_];
     }
 
-    /// @notice Verifies NFT ownership for access control
-    /// @dev    Safely checks the NFT balance of a user using a try-catch block
-    /// @param  nftContract_ Address of the NFT contract
-    /// @param  user_ Address of the user to check for NFT ownership
-    /// @return Boolean indicating whether the user owns an NFT
+    /// @notice Verifies NFT ownership for access control.
+    /// @dev    Safely checks the NFT balance of a user using a try-catch block.
+    /// @param  nftContract_ Address of the NFT contract.
+    /// @param  user_ Address of the user to check for NFT ownership.
+    /// @return Boolean indicating whether the user owns an NFT.
     function _checkNftOwnership(address nftContract_, address user_)
         internal
         view
@@ -1049,13 +1056,13 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
-    /// @notice Verifies a Merkle p roof for access control
-    /// @dev    Validates that the user's address is part of the Merkle tree
-    /// @param  root_ The Merkle root to validate against
-    /// @param  user_ The address of the user to check
-    /// @param  roundId_ The ID of the round to check
-    /// @param  merkleProof_ The Merkle proof to verify
-    /// @return Boolean indicating whether the proof is valid
+    /// @notice Verifies a Merkle p roof for access control.
+    /// @dev    Validates that the user's address is part of the Merkle tree.
+    /// @param  root_ The Merkle root to validate against.
+    /// @param  user_ The address of the user to check.
+    /// @param  roundId_ The ID of the round to check.
+    /// @param  merkleProof_ The Merkle proof to verify.
+    /// @return Boolean indicating whether the proof is valid.
     function _validateMerkleProof(
         bytes32 root_,
         bytes32[] memory merkleProof_,
@@ -1071,9 +1078,9 @@ contract LM_PC_FundingPot_v1 is
         return true;
     }
 
-    /// @notice Handles round closure logic
-    /// @dev    Updates round status and executes hook if needed
-    /// @param  roundId_ The ID of the round to close
+    /// @notice Handles round closure logic.
+    /// @dev    Updates round status and executes hook if needed.
+    /// @param  roundId_ The ID of the round to close.
     function _closeRound(uint32 roundId_) internal {
         Round storage round = rounds[roundId_];
 
@@ -1089,11 +1096,11 @@ contract LM_PC_FundingPot_v1 is
         emit RoundClosed(roundId_, roundIdToTotalContributions[roundId_]);
     }
 
-    /// @notice Creates payment orders for contributors in a round based on their access criteria
-    /// @dev    Processes a batch of contributors to handle gas limit concerns
-    /// @param  roundId_ The ID of the round to create payment orders for
-    /// @param  startIndex_ The starting index in the contributors array
-    /// @param  batchSize_ The number of contributors to process in this batch
+    /// @notice Creates payment orders for contributors in a round based on their access criteria.
+    /// @dev    Processes a batch of contributors to handle gas limit concerns.
+    /// @param  roundId_ The ID of the round to create payment orders for.
+    /// @param  startIndex_ The starting index in the contributors array.
+    /// @param  batchSize_ The number of contributors to process in this batch.
     function _createPaymentOrdersForContributors(
         uint32 roundId_,
         uint startIndex_,
@@ -1158,13 +1165,13 @@ contract LM_PC_FundingPot_v1 is
         emit ContributorBatchProcessed(roundId_, startIndex_, endIndex);
     }
 
-    /// @notice Creates time parameter data for a payment order
-    /// @dev    Sets default values for start, cliff, and end if they are zero
-    /// @param  start_ The start time of the payment order
-    /// @param  cliff_ The cliff time of the payment order
-    /// @param  end_ The end time of the payment order
-    /// @return flags The flags for the payment order
-    /// @return finalData The final data for the payment order
+    /// @notice Creates time parameter data for a payment order.
+    /// @dev    Sets default values for start, cliff, and end if they are zero.
+    /// @param  start_ The start time of the payment order.
+    /// @param  cliff_ The cliff time of the payment order.
+    /// @param  end_ The end time of the payment order.
+    /// @return flags The flags for the payment order.
+    /// @return finalData The final data for the payment order.
     function _createTimeParameterData(uint start_, uint cliff_, uint end_)
         internal
         view
@@ -1203,13 +1210,13 @@ contract LM_PC_FundingPot_v1 is
         return (flags, finalData);
     }
 
-    /// @notice Creates and adds a payment order for a contributor
-    /// @dev    Sets default values for start, cliff, and end if they are zero
-    /// @param  roundId_ The ID of the round to create the payment order for
-    /// @param  recipient_ The address of the recipient of the payment order
-    /// @param  accessCriteriaId_  The ID of the specific access criteria
-    /// @param  tokensAmount_ The amount of tokens for the payment order
-    /// @param  issuanceToken_ The issuance token for the payment order
+    /// @notice Creates and adds a payment order for a contributor.
+    /// @dev    Sets default values for start, cliff, and end if they are zero.
+    /// @param  roundId_ The ID of the round to create the payment order for.
+    /// @param  recipient_ The address of the recipient of the payment order.
+    /// @param  accessCriteriaId_  The ID of the specific access criteria.
+    /// @param  tokensAmount_ The amount of tokens for the payment order.
+    /// @param  issuanceToken_ The issuance token for the payment order.
     function _createAndAddPaymentOrder(
         uint32 roundId_,
         address recipient_,
@@ -1276,9 +1283,9 @@ contract LM_PC_FundingPot_v1 is
         roundTokensBought[roundId_] = minAmountOut;
     }
 
-    /// @notice Checks if a round has reached its cap or time limit
-    /// @param  roundId_ The ID of the round to check
-    /// @return Boolean indicating if the round has reached its cap or time limit
+    /// @notice Checks if a round has reached its cap or time limit.
+    /// @param  roundId_ The ID of the round to check.
+    /// @return Boolean indicating if the round has reached its cap or time limit.
     function _checkRoundClosureConditions(uint32 roundId_)
         internal
         view
