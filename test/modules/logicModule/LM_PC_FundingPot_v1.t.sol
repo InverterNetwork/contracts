@@ -1178,7 +1178,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    /* Test: contributeToRound() unhappy paths
+    /* Test: contributeToRoundFor() unhappy paths
     ├── Given the round has not started yet
     │   └── When the user contributes to the round
     │       └── Then the transaction should revert
@@ -1212,9 +1212,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │           └── Then the transaction should revert
     */
 
-    function testContributeToRound_revertsGivenContributionIsBeforeRoundStart()
-        public
-    {
+    function testcontributeToRoundFor_revertsGivenContributionIsBeforeRoundStart(
+    ) public {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
@@ -1247,12 +1246,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
     }
 
-    function testContributeToRound_revertsGivenContributionIsAfterRoundEnd()
+    function testcontributeToRoundFor_revertsGivenContributionIsAfterRoundEnd()
         public
     {
         testCreateRound();
@@ -1290,12 +1289,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
     }
 
-    function testContributeToRound_revertsGivenNFTAccessCriteriaIsNotMet()
+    function testcontributeToRoundFor_revertsGivenNFTAccessCriteriaIsNotMet()
         public
     {
         uint8 accessId = 2;
@@ -1323,12 +1322,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
     }
 
-    function testContributeToRound_revertsGivenMerkleRootAccessCriteriaIsNotMet(
+    function testcontributeToRoundFor_revertsGivenMerkleRootAccessCriteriaIsNotMet(
     ) public {
         testCreateRound();
 
@@ -1365,10 +1364,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(roundId, amount, accessId, PROOF);
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, PROOF
+        );
     }
 
-    function testContributeToRound_revertsGivenAllowedListAccessCriteriaIsNotMet(
+    function testcontributeToRoundFor_revertsGivenAllowedListAccessCriteriaIsNotMet(
     ) public {
         testCreateRound();
 
@@ -1405,12 +1406,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
     }
 
-    function testContributeToRound_revertsGivenPreviousContributionExceedsPersonalCap(
+    function testcontributeToRoundFor_revertsGivenPreviousContributionExceedsPersonalCap(
     ) public {
         testCreateRound();
 
@@ -1441,8 +1442,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), 1000);
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         // Attempt to contribute beyond personal cap
@@ -1455,10 +1456,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.prank(contributor1_);
 
-        fundingPot.contributeToRound(roundId, 251, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, 251, accessId, new bytes32[](0)
+        );
     }
 
-    /* Test: contributeToRound() happy paths
+    /* Test: contributeToRoundFor() happy paths
     ├── Given a round has been configured with generic round configuration and access criteria
     │   And the round has started
     │   And the user fulfills the access criteria
@@ -1501,7 +1504,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │           And the funds are transferred into the funding pot
     │
     */
-    function testContributeToRound_worksGivenAllConditionsMet() public {
+    function testcontributeToRoundFor_worksGivenAllConditionsMet() public {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
@@ -1530,8 +1533,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), 500);
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         uint totalContributions =
@@ -1544,7 +1547,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(personalContributions, amount);
     }
 
-    function testContributeToRound_worksGivenUserCurrentContributionExceedsTheRoundCap(
+    function testcontributeToRoundFor_worksGivenUserCurrentContributionExceedsTheRoundCap(
         uint8 accessCriteriaEnumOld,
         uint8 accessCriteriaEnumNew
     ) public {
@@ -1580,8 +1583,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), amount);
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         // only the amount that does not exceed the roundcap is contributed
@@ -1593,7 +1596,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testContributeToRound_worksGivenContributionPartiallyExceedingPersonalCap(
+    function testcontributeToRoundFor_worksGivenContributionPartiallyExceedingPersonalCap(
     ) public {
         testCreateRound();
 
@@ -1627,15 +1630,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // First contribution
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, firstAmount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, firstAmount, accessId, new bytes32[](0)
         );
 
         uint secondAmount = 200;
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, secondAmount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, secondAmount, accessId, new bytes32[](0)
         );
 
         uint totalContribution = fundingPot.exposed_getUserContributionToRound(
@@ -1645,7 +1648,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(totalContribution, personalCap);
     }
 
-    function testContributeToRound_worksGivenUserCanOverrideTimeConstraints()
+    function testcontributeToRoundFor_worksGivenUserCanOverrideTimeConstraints()
         public
     {
         testCreateRound();
@@ -1681,8 +1684,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // This should succeed despite being after round end, due to override privilege
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         // Verify the contribution was recorded
@@ -1691,7 +1694,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(totalContribution, amount);
     }
 
-    function testContributeToRound_worksGivenPersonalCapAccumulation() public {
+    function testcontributeToRoundFor_worksGivenPersonalCapAccumulation()
+        public
+    {
         _defaultRoundParams.globalAccumulativeCaps = true;
         fundingPot.createRound(
             _defaultRoundParams.roundStart,
@@ -1748,8 +1753,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.warp(_defaultRoundParams.roundStart + 1);
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), 1000);
-        fundingPot.contributeToRound(
-            round1Id, 200, accessCriteriaId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1Id, 200, accessCriteriaId, new bytes32[](0)
         );
 
         // Warp to round 2
@@ -1765,8 +1770,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         });
 
         // Contribute to round 2 with unspent capacity from round 1
-        fundingPot.contributeToRound(
-            round2Id, 700, accessCriteriaId, new bytes32[](0), unspentCaps
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round2Id,
+            700,
+            accessCriteriaId,
+            new bytes32[](0),
+            unspentCaps
         );
         vm.stopPrank();
 
@@ -1786,7 +1796,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testContributeToRound_worksGivenTotalRoundCapAccumulation()
+    function testcontributeToRoundFor_worksGivenTotalRoundCapAccumulation()
         public
     {
         _defaultRoundParams.globalAccumulativeCaps = true; // global accumulative caps enabled
@@ -1840,12 +1850,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), 300);
-        fundingPot.contributeToRound(round1Id, 300, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1Id, 300, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor2_);
         _token.approve(address(fundingPot), 200);
-        fundingPot.contributeToRound(round1Id, 200, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor2_, round1Id, 200, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // Move to Round 2
@@ -1855,12 +1869,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.startPrank(contributor2_);
         _token.approve(address(fundingPot), 400);
-        fundingPot.contributeToRound(round2Id, 400, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor2_, round2Id, 400, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor3_);
         _token.approve(address(fundingPot), 300);
-        fundingPot.contributeToRound(round2Id, 300, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor3_, round2Id, 300, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // Verify Round 1 contributions
@@ -2014,7 +2032,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Make a contribution
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), 1000);
-        fundingPot.contributeToRound(roundId, 1000, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, 1000, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // Close the round
@@ -2049,7 +2069,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), 500);
-        fundingPot.contributeToRound(roundId, 500, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, 500, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // Warp to after round end
@@ -2092,8 +2114,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), 1000);
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         assertEq(fundingPot.isRoundClosed(roundId), false);
@@ -2131,8 +2153,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), 2000);
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         assertEq(fundingPot.isRoundClosed(roundId), true);
@@ -2164,17 +2186,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Multiple contributors
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), 500);
-        fundingPot.contributeToRound(roundId, 500, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, 500, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor2_);
         _token.approve(address(fundingPot), 200);
-        fundingPot.contributeToRound(roundId, 200, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor2_, roundId, 200, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor3_);
         _token.approve(address(fundingPot), 300);
-        fundingPot.contributeToRound(roundId, 300, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor3_, roundId, 300, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // Close the round
@@ -2237,7 +2265,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenRoundIsNotClosed(
     ) public {
-        testContributeToRound_worksGivenAllConditionsMet();
+        testcontributeToRoundFor_worksGivenAllConditionsMet();
         uint32 roundId = fundingPot.getRoundCount();
 
         vm.expectRevert(
@@ -2347,6 +2375,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(unspentPersonalCap_ >= 0);
 
         try fundingPot.exposed_validateAndAdjustCapsWithUnspentCap(
+            contributor1_,
             roundId_,
             amount_,
             accessId_,
@@ -2425,8 +2454,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.warp(params.roundStart + 1);
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), params.roundCap);
-        fundingPot.contributeToRound(
-            roundId, params.roundCap, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, params.roundCap, accessId, new bytes32[](0)
         );
         vm.stopPrank();
 
@@ -2519,8 +2548,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.warp(params.roundStart + 1);
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), params.roundCap);
-        fundingPot.contributeToRound(
-            roundId, params.roundCap, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, params.roundCap, accessId, new bytes32[](0)
         );
         vm.stopPrank();
 
@@ -2586,8 +2615,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), 1000);
 
         vm.prank(contributor1_);
-        fundingPot.contributeToRound(
-            roundId, amount, accessId, new bytes32[](0)
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, amount, accessId, new bytes32[](0)
         );
 
         assertTrue(

@@ -55,23 +55,23 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint end;
     }
 
-    /// @notice Struct used to specify previous round's access criteria for carry-over capacity
-    /// @param roundId The ID of the previous round
-    /// @param accessCriteriaId The ID of the access criteria in that round
-    /// @param merkleProof The Merkle proof needed to validate eligibility (if needed)
+    /// @notice Struct used to specify previous round's access criteria for carry-over capacity.
+    /// @param roundId The ID of the previous round.
+    /// @param accessCriteriaId The ID of the access criteria in that round.
+    /// @param merkleProof The Merkle proof needed to validate eligibility (if needed).
     struct UnspentPersonalRoundCap {
         uint32 roundId;
         uint8 accessCriteriaId;
         bytes32[] merkleProof;
     }
 
-    /// @notice Struct to represent a user's complete eligibility information for a round
-    /// @param  isEligible Whether the user is eligible for the round through any criteria
-    /// @param  isNftHolder Whether the user is eligible through NFT holding
-    /// @param  isInMerkleTree Whether the user is eligible through Merkle proof
-    /// @param  isInAllowlist Whether the user is eligible through allowlist
-    /// @param  highestPersonalCap The highest personal cap the user can access
-    /// @param  canOverrideContributionSpan Whether the user has any criteria that can override contribution span
+    /// @notice Struct to represent a user's complete eligibility information for a round.
+    /// @param  isEligible Whether the user is eligible for the round through any criteria.
+    /// @param  isNftHolder Whether the user is eligible through NFT holding.
+    /// @param  isInMerkleTree Whether the user is eligible through Merkle proof.
+    /// @param  isInAllowlist Whether the user is eligible through allowlist.
+    /// @param  highestPersonalCap The highest personal cap the user can access.
+    /// @param  canOverrideContributionSpan Whether the user has any criteria that can override contribution span.
     struct RoundUserEligibility {
         bool isEligible;
         bool isNftHolder;
@@ -91,7 +91,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         NFT, // 2
         MERKLE, // 3
         LIST // 4
-
     }
 
     // -------------------------------------------------------------------------
@@ -249,6 +248,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid access criteria ID.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+
     /// @notice Cannot set Privileges for open access criteria.
     error Module__LM_PC_FundingPot__CannotSetPrivilegesForOpenAccessCriteria();
 
@@ -373,13 +373,13 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return The closed status of the round.
     function isRoundClosed(uint32 roundId_) external view returns (bool);
 
-    /// @notice Gets eligibility information for a user in a specific round
-    /// @param  roundId_ The ID of the round to check eligibility for
-    /// @param  accessCriteriaId_ The ID of the access criteria to check eligibility for
-    /// @param  merkleProof_ The Merkle proof for validation if needed
-    /// @param  user_ The address of the user to check
-    /// @return isEligible Whether the user is eligible for the round through any criteria
-    /// @return remainingAmountAllowedToContribute The remaining contribution the user can make
+    /// @notice Gets eligibility information for a user in a specific round.
+    /// @param  roundId_ The ID of the round to check eligibility for.
+    /// @param  accessCriteriaId_ The ID of the access criteria to check eligibility for.
+    /// @param  merkleProof_ The Merkle proof for validation if needed.
+    /// @param  user_ The address of the user to check.
+    /// @return isEligible Whether the user is eligible for the round through any criteria.
+    /// @return remainingAmountAllowedToContribute The remaining contribution the user can make.
     function getUserEligibility(
         uint32 roundId_,
         uint8 accessCriteriaId_,
@@ -496,24 +496,28 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Allows a user to contribute to a specific funding round.
     /// @dev    Verifies the contribution eligibility based on the provided Merkle proof.
+    /// @param  user_ The address of the user to contribute for.
     /// @param  roundId_ The unique identifier of the funding round.
     /// @param  amount_ The amount of tokens being contributed.
     /// @param  accessCriteriaId_ The identifier for the access criteria to validate eligibility.
     /// @param  merkleProof_ The Merkle proof used to verify the contributor's eligibility.
-    function contributeToRound(
+    function contributeToRoundFor(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
         bytes32[] calldata merkleProof_
     ) external;
 
-    /// @notice Allows a user to contribute to a round with unused capacity from previous rounds
-    /// @param roundId_ The ID of the round to contribute to
-    /// @param amount_ The amount to contribute
-    /// @param accessCriteriaId_ The ID of the access criteria to use for this contribution
-    /// @param merkleProof_ The Merkle proof for validation if needed
-    /// @param unspentPersonalRoundCaps_ Array of previous rounds and access criteria to calculate unused capacity from
-    function contributeToRound(
+    /// @notice Allows a user to contribute to a round with unused capacity from previous rounds.
+    /// @param  user_ The address of the user to contribute for.
+    /// @param  roundId_ The ID of the round to contribute to.
+    /// @param  amount_ The amount to contribute.
+    /// @param  accessCriteriaId_ The ID of the access criteria to use for this contribution.
+    /// @param  merkleProof_ The Merkle proof for validation if needed.
+    /// @param  unspentPersonalRoundCaps_ Array of previous rounds and access criteria to calculate unused capacity from.
+    function contributeToRoundFor(
+        address user_,
         uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId_,
@@ -525,9 +529,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  roundId_ The ID of the round to close.
     function closeRound(uint32 roundId_) external;
 
-    /// @notice Creates a batch of contributors for payment order creation
-    /// @param roundId_ The ID of the round to process contributors for
-    /// @param batchSize_ The number of contributors to process in this batch
+    /// @notice Creates a batch of contributors for payment order creation.
+    /// @param roundId_ The ID of the round to process contributors for.
+    /// @param batchSize_ The number of contributors to process in this batch.
     function createPaymentOrdersForContributorsBatch(
         uint32 roundId_,
         uint batchSize_
