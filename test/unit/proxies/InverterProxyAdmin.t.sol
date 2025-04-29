@@ -21,14 +21,14 @@ import {IInverterTransparentUpgradeableProxy_v1} from
 import {
     InverterTransparentUpgradeableProxy_v1,
     InverterTransparentUpgradeableProxyV1_Exposed
-} from "@mock/proxies/InverterTransparentUpgradeableProxyV1_Exposed.sol";
-import {InverterBeaconV1Mock} from "@mock/proxies/InverterBeaconV1Mock.sol";
+} from "@mocks/proxies/InverterTransparentUpgradeableProxyV1_Exposed.sol";
+import {InverterBeaconV1Mock} from "@mocks/proxies/InverterBeaconV1Mock.sol";
 import {ModuleImplementationV1Mock} from
-    "@mock/proxies/ModuleImplementationV1Mock.sol";
+    "@mocks/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
-    "@mock/proxies/ModuleImplementationV2Mock.sol";
+    "@mocks/proxies/ModuleImplementationV2Mock.sol";
 
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract InverterProxyAdmin is Test {
     // SuT

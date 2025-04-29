@@ -11,7 +11,7 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 
 // Internal Dependencies
 import {Orchestrator_v1_Exposed} from
-    "@mock/orchestrator/Orchestrator_v1_Exposed.sol";
+    "@mocks/orchestrator/Orchestrator_v1_Exposed.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 // Internal Interfaces
