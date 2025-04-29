@@ -1271,7 +1271,7 @@ contract LM_PC_FundingPot_v1 is
             address(__Module_orchestrator.fundingManager())
         ).calculatePurchaseReturn(totalContributions);
         IBondingCurveBase_v1(address(__Module_orchestrator.fundingManager()))
-            .buyFor(address(this), totalContributions, 1);
+            .buyFor(address(this), totalContributions, minAmountOut);
 
         roundTokensBought[roundId_] = minAmountOut;
     }
