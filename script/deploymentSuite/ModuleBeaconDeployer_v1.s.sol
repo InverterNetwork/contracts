@@ -77,22 +77,6 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
-        // TokenGatedRoleAuthorizer
-        initialMetadataRegistration.push(tokenGatedRoleAuthorizerMetadata);
-        initialBeaconRegistration.push(
-            IInverterBeacon_v1(
-                proxyAndBeaconDeployer.deployInverterBeacon(
-                    tokenGatedRoleAuthorizerMetadata.title,
-                    reverter,
-                    governor,
-                    impl_mod_Aut_TokenGated_Roles_v1,
-                    tokenGatedRoleAuthorizerMetadata.majorVersion,
-                    tokenGatedRoleAuthorizerMetadata.minorVersion,
-                    tokenGatedRoleAuthorizerMetadata.patchVersion
-                )
-            )
-        );
-
         // VotingRoles
         initialMetadataRegistration.push(votingRolesMetadata);
         initialBeaconRegistration.push(
