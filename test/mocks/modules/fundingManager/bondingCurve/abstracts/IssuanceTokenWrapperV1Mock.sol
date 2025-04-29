@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-contract IssuanceTokenWrapperMock {
+contract IssuanceTokenWrapperV1Mock {
     address public issuanceToken;
 
     constructor(address _issuanceToken) {

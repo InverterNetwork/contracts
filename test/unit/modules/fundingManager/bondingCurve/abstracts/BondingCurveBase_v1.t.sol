@@ -28,8 +28,8 @@ import {
     IBondingCurveBase_v1
 } from
     "@mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
-import {IssuanceTokenWrapperMock} from
-    "@mocks/modules/fundingManager/bondingCurve/utils/mocks/IssuanceTokenWrapperMock.sol";
+import {IssuanceTokenWrapperV1Mock} from
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/IssuanceTokenWrapperV1Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 contract BondingCurveBaseV1Test is ModuleTest {
@@ -891,8 +891,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
 
         // Create the wrapper
-        IssuanceTokenWrapperMock wrapper =
-            new IssuanceTokenWrapperMock(actualIssuanceToken);
+        IssuanceTokenWrapperV1Mock wrapper =
+            new IssuanceTokenWrapperV1Mock(actualIssuanceToken);
         assertEq(wrapper.issuanceToken(), actualIssuanceToken);
 
         // Set the wrapper as the new issuance token
