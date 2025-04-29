@@ -150,7 +150,7 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
-    
+
     // -------------------------------------------------------------------------
     // Modifiers
 
