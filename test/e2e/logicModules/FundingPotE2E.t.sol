@@ -176,7 +176,7 @@ contract FundingPotE2E is E2ETest {
 
         // 3. Configure rounds
         // Round 1
-        uint64 round1Id = fundingPot.createRound(
+        uint32 round1Id = fundingPot.createRound(
             block.timestamp + 1 days, // start
             block.timestamp + 30 days, // end
             1000e18, // cap
@@ -187,7 +187,7 @@ contract FundingPotE2E is E2ETest {
         );
 
         // Round 2
-        uint64 round2Id = fundingPot.createRound(
+        uint32 round2Id = fundingPot.createRound(
             block.timestamp + 1, // start
             block.timestamp + 60 days, // end
             750e18, // cap
