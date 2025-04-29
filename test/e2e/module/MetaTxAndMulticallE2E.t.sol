@@ -49,11 +49,10 @@ contract MetaTxAndMulticallE2E is E2ETest {
         );
 
         // Authorizer
-        setUpTokenGatedRoleAuthorizer();
+        setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                tokenRoleAuthorizerMetadata,
-                abi.encode(address(this), address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
 

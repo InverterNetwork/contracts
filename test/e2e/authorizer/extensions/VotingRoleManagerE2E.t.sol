@@ -51,13 +51,12 @@ contract VotingRoleManagerE2E is E2ETest {
         );
 
         // Authorizer
-        setUpTokenGatedRoleAuthorizer();
+        setUpRoleAuthorizer();
         moduleConfigurations.push(
             IOrchestratorFactory_v1.ModuleConfig(
-                tokenRoleAuthorizerMetadata, abi.encode(address(this))
+                roleAuthorizerMetadata, abi.encode(address(this))
             )
         );
-
         // PaymentProcessor
         setUpSimplePaymentProcessor();
         moduleConfigurations.push(
