@@ -68,7 +68,6 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     // Modifiers
 
     modifier permissioned() {
-        //@todo test
         _checkAuthorization(_msgSender(), _msgData());
         _;
     }
@@ -193,7 +192,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetAuthorizer(IAuthorizer_v1 newAuthorizer)
         external
-        permissioned //@todo test + interface check
+        permissioned
         updatingModuleAlreadyStarted(address(newAuthorizer))
         timelockExpired(address(newAuthorizer))
     {
@@ -216,7 +215,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_)
         external
-        permissioned //@todo test + interface check
+        permissioned
     {
         _cancelModuleUpdate(address(authorizer));
         _cancelModuleUpdate(address(authorizer_));
@@ -225,10 +224,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetFundingManagerWithTimelock(
         IFundingManager_v1 newFundingManager
-    )
-        external
-        permissioned //@todo test + interface check
-    {
+    ) external permissioned {
         address newFundingManagerAddress = address(newFundingManager);
 
         _enforcePrivilegedModuleInterfaceCheck(
@@ -249,7 +245,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetFundingManager(IFundingManager_v1 newFundingManager)
         external
-        permissioned //@todo test + interface check
+        permissioned
     {
         address newFundingManagerAddress = address(newFundingManager);
 
@@ -265,7 +261,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
         external
-        permissioned //@todo test + interface check
+        permissioned
     {
         _cancelModuleUpdate(address(fundingManager));
         _cancelModuleUpdate(address(fundingManager_));
@@ -274,10 +270,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateSetPaymentProcessorWithTimelock(
         IPaymentProcessor_v2 newPaymentProcessor
-    )
-        external
-        permissioned //@todo test + interface check
-    {
+    ) external permissioned {
         address newPaymentProcessorAddress = address(newPaymentProcessor);
 
         _enforcePrivilegedModuleInterfaceCheck(
@@ -291,10 +284,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function executeSetPaymentProcessor(
         IPaymentProcessor_v2 newPaymentProcessor
-    )
-        external
-        permissioned //@todo test + interface check
-    {
+    ) external permissioned {
         address newPaymentProcessorAddress = address(newPaymentProcessor);
 
         _enforcePrivilegedModuleInterfaceCheck(
@@ -310,10 +300,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function cancelPaymentProcessorUpdate(
         IPaymentProcessor_v2 paymentProcessor_
-    )
-        external
-        permissioned //@todo test + interface check
-    {
+    ) external permissioned {
         _cancelModuleUpdate(address(paymentProcessor));
         _cancelModuleUpdate(address(paymentProcessor_));
     }
@@ -321,17 +308,14 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     /// @inheritdoc IOrchestrator_v1
     function initiateAddModuleWithTimelock(address module_)
         external
-        permissioned //@todo test + interface check
+        permissioned
     {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
         _initiateAddModuleWithTimelock(module_);
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function executeAddModule(address module_)
-        external
-        permissioned //@todo test + interface check
-    {
+    function executeAddModule(address module_) external permissioned {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
         _executeAddModule(module_);
     }
@@ -340,7 +324,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     function initiateRemoveModuleWithTimelock(address module_)
         external
         onlyLogicModules(module_)
-        permissioned //@todo test + interface check
+        permissioned
     {
         _initiateRemoveModuleWithTimelock(module_);
     }
@@ -349,16 +333,13 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
     function executeRemoveModule(address module_)
         external
         onlyLogicModules(module_)
-        permissioned //@todo test + interface check
+        permissioned
     {
         _executeRemoveModule(module_);
     }
 
     /// @inheritdoc IOrchestrator_v1
-    function cancelModuleUpdate(address module_)
-        external
-        permissioned //@todo test + interface check
-    {
+    function cancelModuleUpdate(address module_) external permissioned {
         _enforceNonPrivilegedModuleInterfaceCheck(module_);
         _cancelModuleUpdate(module_);
     }
