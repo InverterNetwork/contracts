@@ -44,7 +44,7 @@ import {IFM_BC_Bancor_Redeeming_VirtualSupply_v1} from
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // External Dependencies
 import {TransparentUpgradeableProxy} from
@@ -148,7 +148,7 @@ contract E2ETest is E2EModuleRegistry {
         // Set gov as the default beacon owner
         DEFAULT_BEACON_OWNER = address(gov);
 
-        token = new ERC20Mock("Mock", "MOCK");
+        token = new ERC20Mock("Mock", "MOCK", 18);
 
         // Deploy Orchestrator_v1 implementation.
         orchestratorImpl = new Orchestrator_v1(address(forwarder));

@@ -26,11 +26,11 @@ import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
 import {
     IModuleImplementationMock,
     ModuleImplementationV1Mock
-} from "@mock/proxies/ModuleImplementationV1Mock.sol";
+} from "@mocks/proxies/ModuleImplementationV1Mock.sol";
 import {
     IModuleImplementationMock,
     ModuleImplementationV2Mock
-} from "@mock/proxies/ModuleImplementationV2Mock.sol";
+} from "@mocks/proxies/ModuleImplementationV2Mock.sol";
 
 contract InverterBeaconE2E is E2ETest {
     // Mocks

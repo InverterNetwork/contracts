@@ -23,8 +23,8 @@ import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {LM_PC_Staking_v2, ILM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 
 // Mocks
-// import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+// import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 
 contract LM_PC_Staking_v2Lifecycle is E2ETest {
@@ -50,8 +50,8 @@ contract LM_PC_Staking_v2Lifecycle is E2ETest {
 
     // Constants
 
-    ERC20Mock rewardToken = new ERC20Mock("Reward Mock", "R_MOCK");
-    ERC20Mock stakingToken = new ERC20Mock("Staking Mock", "S_MOCK");
+    ERC20Mock rewardToken = new ERC20Mock("Reward Mock", "R_MOCK", 18);
+    ERC20Mock stakingToken = new ERC20Mock("Staking Mock", "S_MOCK", 18);
 
     function setUp() public override {
         vm.label({

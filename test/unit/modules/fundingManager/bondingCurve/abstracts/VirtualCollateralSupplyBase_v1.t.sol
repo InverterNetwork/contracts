@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 import {VirtualCollateralSupplyBaseV1Mock} from
-    "@mock/modules/fundingManager/bondingCurve/abstracts/VirtualCollateralSupplyBaseV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/VirtualCollateralSupplyBaseV1Mock.sol";
 import {IVirtualCollateralSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualCollateralSupplyBase_v1.sol";
 

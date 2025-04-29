@@ -15,14 +15,14 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
@@ -30,7 +30,7 @@ import {
     RedeemingBondingCurveBaseV1Mock,
     IRedeemingBondingCurveBase_v1
 } from
-    "@mock/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBaseV1Mock.sol";
 
 contract RedeemingBondingCurveBaseV1Test is ModuleTest {
     string private constant NAME = "Bonding Curve Token";
@@ -60,11 +60,11 @@ contract RedeemingBondingCurveBaseV1Test is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
-        );
+        issuanceToken =
+            new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, type(uint).max);
 
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
+        issuanceToken.setMinter(address(this), true);
 
         _setUpOrchestrator(bondingCurveFundingManager);
 

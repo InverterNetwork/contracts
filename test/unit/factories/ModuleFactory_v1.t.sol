@@ -23,15 +23,15 @@ import {IInverterBeacon_v1} from "src/proxies/interfaces/IInverterBeacon_v1.sol"
 
 // Mocks
 import {ModuleImplementationV1Mock} from
-    "@mock/proxies/ModuleImplementationV1Mock.sol";
+    "@mocks/proxies/ModuleImplementationV1Mock.sol";
 import {ModuleImplementationV2Mock} from
-    "@mock/proxies/ModuleImplementationV2Mock.sol";
+    "@mocks/proxies/ModuleImplementationV2Mock.sol";
 import {InverterBeaconV1OwnableMock} from
-    "@mock/proxies/InverterBeaconV1OwnableMock.sol";
-import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
+    "@mocks/proxies/InverterBeaconV1OwnableMock.sol";
+import {GovernorV1Mock} from "@mocks/external/governance/GovernorV1Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // External Dependencies
 import {Clones} from "@oz/proxy/Clones.sol";

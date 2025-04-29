@@ -11,10 +11,10 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
@@ -25,16 +25,17 @@ import {
 } from "@lm/LM_PC_Staking_v2.sol";
 
 import {LM_PC_Staking_v2_Exposed} from
-    "@mock/modules/logicModule/LM_PC_Staking_v2_Exposed.sol";
+    "@mocks/modules/logicModule/LM_PC_Staking_v2_Exposed.sol";
 
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 contract LM_PC_Staking_v2Test is ModuleTest {
     // SuT
     LM_PC_Staking_v2_Exposed stakingManager;
 
-    ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
+    ERC20Mock stakingToken =
+        new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
 
     // Variables
     uint internal initialStakerMaxAmount = 100;

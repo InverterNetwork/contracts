@@ -14,13 +14,13 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 import {IERC20PaymentClientBase_v2} from
     "src/modules/logicModule/interfaces/IERC20PaymentClientBase_v2.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // SuT
 import {
@@ -34,10 +34,10 @@ import {
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
-} from "@mock/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
+} from "@mocks/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
 
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     // SuT
@@ -55,9 +55,10 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
 
     uint MAX_USER_AMOUNT = 10_000; // for testing purposes
 
-    ERC20Mock stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
+    ERC20Mock stakingToken =
+        new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
     // the reward token is _token from ModuleTest
-    ERC20Mock feeToken = new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK");
+    ERC20Mock feeToken = new ERC20Mock("OOV3 Fee Mock Token", "FEE MOCK", 18);
     uint feeTokenBond;
 
     //=========================================================================================

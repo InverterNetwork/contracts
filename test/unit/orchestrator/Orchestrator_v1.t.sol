@@ -28,20 +28,20 @@ import {TransactionForwarder_v1} from
 import {
     FundingManagerV1Mock,
     IFundingManager_v1
-} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
+} from "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
-import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
-import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {GovernorV1Mock} from "@mocks/external/governance/GovernorV1Mock.sol";
+import {ModuleFactoryV1Mock} from "@mocks/factories/ModuleFactoryV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
-import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
+import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Helper
-import {TypeSanityHelper} from "@tool/TypeSanityHelper.sol";
+import {TypeSanityHelper} from "@testUtilities/TypeSanityHelper.sol";
 
 contract OrchestratorV1Test is Test {
     // SuT
@@ -66,7 +66,7 @@ contract OrchestratorV1Test is Test {
         governor = new GovernorV1Mock();
         moduleFactory = new ModuleFactoryV1Mock();
         forwarder = new TransactionForwarder_v1();
-        token = new ERC20Mock("TestToken", "TST");
+        token = new ERC20Mock("TestToken", "TST", 18);
 
         address impl = address(new Orchestrator_v1_Exposed(address(forwarder)));
         orchestrator = Orchestrator_v1_Exposed(Clones.clone(impl));

@@ -11,9 +11,9 @@ import {
 import {InverterBeaconProxy_v1} from "src/proxies/InverterBeaconProxy_v1.sol";
 
 // Mocks
-import {InverterBeaconV1Mock} from "@mock/proxies/InverterBeaconV1Mock.sol";
+import {InverterBeaconV1Mock} from "@mocks/proxies/InverterBeaconV1Mock.sol";
 import {ModuleImplementationV1Mock} from
-    "@mock/proxies/ModuleImplementationV1Mock.sol";
+    "@mocks/proxies/ModuleImplementationV1Mock.sol";
 
 contract InverterBeaconProxyV1Test is Test {
     // SuT

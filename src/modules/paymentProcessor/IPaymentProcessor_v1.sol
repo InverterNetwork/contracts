@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // Internal Interfaces
-import {IERC20PaymentClientBase_v1} from
-    "@lm/interfaces/IERC20PaymentClientBase_v1.sol";
+import {IERC20PaymentClientBase_v2} from
+    "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
 // External Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -70,21 +70,21 @@ interface IPaymentProcessor_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    /// @notice Processes all payments from an {IERC20PaymentClientBase_v1} instance. Please note:
+    /// @notice Processes all payments from an {IERC20PaymentClientBase_v2} instance. Please note:
     ///         this function does not support callbacks on transfer of tokens.
     /// @dev    It's up to the the implementation to keep up with what has been
     ///         paid out or not.
     /// @dev	Currently callback functions on token transfers are not supported and thus not checked.
     ///         This could lead to a failed transaction which could influence the batched processing of
     ///         payments.
-    /// @param  client The {IERC20PaymentClientBase_v1} instance to process its to payments.
-    function processPayments(IERC20PaymentClientBase_v1 client) external;
+    /// @param  client The {IERC20PaymentClientBase_v2} instance to process its to payments.
+    function processPayments(IERC20PaymentClientBase_v2 client) external;
 
-    /// @notice Cancels all unfinished payments from an {IERC20PaymentClientBase_v1} instance.
+    /// @notice Cancels all unfinished payments from an {IERC20PaymentClientBase_v2} instance.
     /// @dev	It's up to the the implementation to keep up with what has been
     ///         paid out or not.
-    /// @param  client The {IERC20PaymentClientBase_v1} instance to process its to payments.
-    function cancelRunningPayments(IERC20PaymentClientBase_v1 client)
+    /// @param  client The {IERC20PaymentClientBase_v2} instance to process its to payments.
+    function cancelRunningPayments(IERC20PaymentClientBase_v2 client)
         external;
 
     /// @notice Getter for the amount of tokens that could not be claimed.
@@ -100,7 +100,7 @@ interface IPaymentProcessor_v1 {
     /// @notice claim every unclaimable amount that the paymentClient owes to the _msgSender and send it to a
     ///         specified receiver.
     /// @dev	This function should be callable if the _msgSender has unclaimedAmounts.
-    /// @param  client The IERC20PaymentClientBase_v1 instance address that processes all claims from _msgSender.
+    /// @param  client The IERC20PaymentClientBase_v2 instance address that processes all claims from _msgSender.
     /// @param  token address of the payment token.
     /// @param  receiver The address that will receive the previously unclaimable amount.
     function claimPreviouslyUnclaimable(
@@ -110,9 +110,9 @@ interface IPaymentProcessor_v1 {
     ) external;
 
     /// @notice Function that checks if the given PaymentOrder was valid.
-    /// @param  order The IERC20PaymentClientBase_v1 Order that needs to be checked.
+    /// @param  order The IERC20PaymentClientBase_v2 Order that needs to be checked.
     /// @return valid Bool if the Payment Order is valid.
     function validPaymentOrder(
-        IERC20PaymentClientBase_v1.PaymentOrder memory order
+        IERC20PaymentClientBase_v2.PaymentOrder memory order
     ) external returns (bool);
 }

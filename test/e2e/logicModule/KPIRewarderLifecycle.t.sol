@@ -5,7 +5,7 @@ import {E2ETest} from "test/e2e/E2ETest.sol";
 import "forge-std/console.sol";
 
 // Internal Dependencies
-import {ModuleTest, IOrchestrator_v1} from "@unit/modules/ModuleTest.sol";
+import {ModuleTest, IOrchestrator_v1} from "@unitTest/modules/ModuleTest.sol";
 import {IModule_v1, ERC165Upgradeable} from "src/modules/base/Module_v1.sol";
 import {IOrchestratorFactory_v1} from "src/factories/OrchestratorFactory_v1.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
@@ -28,7 +28,7 @@ import {OptimisticOracleV3Interface} from
     "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3Interface.sol";
 
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {ERC20} from "@oz/token/ERC20/ERC20.sol";
 import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -155,8 +155,9 @@ contract LM_PC_KPIRewarder_v2Lifecycle is E2ETest {
 
         // We deploy and label the necessary tokens for the tests
         USDC = ERC20Mock(USDC_address); // we use it  mock so we can call mint functions
-        rewardToken = new ERC20Mock("Project Reward Mock Token", "REWARD MOCK");
-        stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK");
+        rewardToken =
+            new ERC20Mock("Project Reward Mock Token", "REWARD MOCK", 18);
+        stakingToken = new ERC20Mock("Staking Mock Token", "STAKE MOCK", 18);
 
         vm.label({
             account: USDC_address,

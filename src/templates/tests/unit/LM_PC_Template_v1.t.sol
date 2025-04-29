@@ -6,9 +6,9 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
-import {OZErrors} from "@tool/OZErrors.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+} from "@unitTest/modules/ModuleTest.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // External
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -16,9 +16,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 // Tests and Mocks
 import {
     IERC20PaymentClientBase_v2,
-    ERC20PaymentClientBaseV2Mock,
-    ERC20Mock
-} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    ERC20PaymentClientBaseV2Mock
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // System under Test (SuT)
 import {LM_PC_Template_v1_Exposed} from
@@ -59,7 +58,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
 
     function setUp() public {
         // Setup the payment token
-        paymentToken = new ERC20Mock("Payment Token", "PT");
+        paymentToken = new ERC20Mock("Payment Token", "PT", 18);
 
         // Deploy the SuT
         address impl = address(new LM_PC_Template_v1_Exposed());

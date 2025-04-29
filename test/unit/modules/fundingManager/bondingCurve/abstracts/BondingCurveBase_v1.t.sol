@@ -16,18 +16,18 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
 import {
     BondingCurveBaseV1Mock,
     IBondingCurveBase_v1
 } from
-    "@mock/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/abstracts/BondingCurveBaseV1Mock.sol";
 import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 contract BondingCurveBaseV1Test is ModuleTest {
@@ -53,12 +53,11 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
         formula = address(new BancorFormula());
 
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, type(uint).max, address(this)
-        );
+        issuanceToken =
+            new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, type(uint).max);
 
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
-
+        issuanceToken.setMinter(address(this), true);
         _setUpOrchestrator(bondingCurveFundingManager);
 
         // Every caller has permission for every premissioned function
@@ -1007,9 +1006,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         // Emit event
         vm.expectEmit(

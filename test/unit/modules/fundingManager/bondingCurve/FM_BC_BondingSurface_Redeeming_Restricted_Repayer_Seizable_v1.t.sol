@@ -26,7 +26,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {BondingSurface} from "@fm/bondingCurve/formulas/BondingSurface.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
@@ -43,12 +43,12 @@ import {IRepayer_v1} from "@fm/bondingCurve/interfaces/IRepayer_v1.sol";
 import {FixedPointMathLib} from "src/modules/lib/FixedPointMathLib.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
 import {FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed}
     from
-    "@mock/modules/fundingManager/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed.sol";
+    "@mocks/modules/fundingManager/bondingCurve/FM_BC_BondingSurface_Redeeming_Restricted_Repayer_SeizableV1_Exposed.sol";
 
 /*     
     PLEASE NOTE: The following tests have been tested in other test contracts 
@@ -93,9 +93,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
 
     function setUp() public {
         // Deploy contracts
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
+
         FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
             .BondingCurveProperties memory bc_properties;
 

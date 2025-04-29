@@ -15,7 +15,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // Internal Libraries
 import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
@@ -29,20 +29,20 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
 // SuT
 import {AUT_Roles_v1_Exposed} from
-    "@mock/modules/authorizer/AUT_Roles_v1_Exposed.sol";
+    "@mocks/modules/authorizer/AUT_Roles_v1_Exposed.sol";
 
 // Mocks
 import {FundingManagerV1Mock} from
-    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
-import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
+    "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // External Dependencies
 import {IAccessControl} from "@oz/access/IAccessControl.sol";

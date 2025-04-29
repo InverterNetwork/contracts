@@ -31,6 +31,12 @@ import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v1} from
     "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
+import {PP_Queue_v1} from "@pp/PP_Queue_v1.sol";
+import {FM_PC_Oracle_Redeeming_v1} from
+    "src/modules/fundingManager/oracle/FM_PC_Oracle_Redeeming_v1.sol";
+import {LM_Oracle_Permissioned_v1} from
+    "src/modules/logicModule/LM_Oracle_Permissioned_v1.sol";
 
 // Beacon
 import {
@@ -72,6 +78,39 @@ contract E2EModuleRegistry is Test {
     // Followed by the  setUpModule() function.
     // This config can be copied to the setup function of each specific E2ETest contract and modified accordingly
     //--------------------------------------------------------------------------
+
+    //--------------------------------------------------------------------------
+    // Funding Managers
+    //--------------------------------------------------------------------------
+
+    IModule_v1.Metadata fundingManagerMetadata = IModule_v1.Metadata(
+        1, // major version
+        0, // minor version
+        0, // patch version
+        "https://github.com/inverter/funding-manager",
+        "FM_PC_Oracle_Redeeming_v1"
+    );
+
+    InverterBeacon_v1 fundingManagerBeacon;
+    FM_PC_Oracle_Redeeming_v1 fundingManagerExternal;
+
+    function setUpPermissionedOracleRedeemingFundingManager() internal {
+        fundingManagerExternal = new FM_PC_Oracle_Redeeming_v1();
+
+        fundingManagerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            fundingManagerMetadata.majorVersion,
+            address(fundingManagerExternal),
+            fundingManagerMetadata.minorVersion,
+            fundingManagerMetadata.patchVersion
+        );
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            fundingManagerMetadata, IInverterBeacon_v1(fundingManagerBeacon)
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Funding Managers
@@ -373,7 +412,76 @@ contract E2EModuleRegistry is Test {
     // Payment Processors
     //--------------------------------------------------------------------------
 
-    // PP_Simple_v2
+    // PP_Queue_v1
+    PP_Queue_v1 queueBasedPaymentProcessor;
+    InverterBeacon_v1 queueBasedPaymentProcessorBeacon;
+
+    IModule_v1.Metadata queueBasedPaymentProcessorMetadata = IModule_v1.Metadata(
+        1, // major version
+        0, // minor version
+        0, // patch version
+        "https://github.com/inverter/payment-processor",
+        "PP_Queue_v1"
+    );
+
+    function setUpQueueBasedPaymentProcessor() internal {
+        // Deploy module implementations.
+        queueBasedPaymentProcessor = new PP_Queue_v1();
+
+        // Deploy module beacons.
+        queueBasedPaymentProcessorBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            queueBasedPaymentProcessorMetadata.majorVersion,
+            address(queueBasedPaymentProcessor),
+            queueBasedPaymentProcessorMetadata.minorVersion,
+            queueBasedPaymentProcessorMetadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            queueBasedPaymentProcessorMetadata,
+            IInverterBeacon_v1(queueBasedPaymentProcessorBeacon)
+        );
+    }
+    // PP_Queue_ManualExecution_v1
+
+    PP_Queue_ManualExecution_v1 manualQueueBasedPaymentProcessor;
+    InverterBeacon_v1 manualQueueBasedPaymentProcessorBeacon;
+
+    IModule_v1.Metadata manualQueueBasedPaymentProcessorMetadata = IModule_v1
+        .Metadata(
+        1, // major version
+        0, // minor version
+        0, // patch version
+        "https://github.com/inverter/payment-processor",
+        "PP_Queue_v1"
+    );
+
+    function setUpManualQueueBasedPaymentProcessor() internal {
+        // Deploy module implementations.
+        manualQueueBasedPaymentProcessor = new PP_Queue_ManualExecution_v1();
+
+        // Deploy module beacons.
+        manualQueueBasedPaymentProcessorBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            manualQueueBasedPaymentProcessorMetadata.majorVersion,
+            address(manualQueueBasedPaymentProcessor),
+            manualQueueBasedPaymentProcessorMetadata.minorVersion,
+            manualQueueBasedPaymentProcessorMetadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            manualQueueBasedPaymentProcessorMetadata,
+            IInverterBeacon_v1(manualQueueBasedPaymentProcessorBeacon)
+        );
+    }
+
+    // PP_Simple_v1
 
     PP_Simple_v2 simplePaymentProcessorImpl;
 
@@ -458,6 +566,38 @@ contract E2EModuleRegistry is Test {
 
     //--------------------------------------------------------------------------
     // logicModules
+    //--------------------------------------------------------------------------
+
+    // LM_Oracle_Permissioned_v1
+
+    IModule_v1.Metadata oracleMetadata = IModule_v1.Metadata(
+        1, // major version
+        0, // minor version
+        0, // patch version
+        "https://github.com/inverter/oracle",
+        "LM_Oracle_Permissioned_v1"
+    );
+
+    InverterBeacon_v1 oracleBeacon;
+    LM_Oracle_Permissioned_v1 oracle;
+
+    function setUpPermissionedOracle() internal {
+        oracle = new LM_Oracle_Permissioned_v1();
+
+        oracleBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            oracleMetadata.majorVersion,
+            address(oracle),
+            oracleMetadata.minorVersion,
+            oracleMetadata.patchVersion
+        );
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            oracleMetadata, IInverterBeacon_v1(oracleBeacon)
+        );
+    }
 
     // LM_PC_RecurringPayments_v2
 

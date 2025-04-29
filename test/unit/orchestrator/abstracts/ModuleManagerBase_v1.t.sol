@@ -7,17 +7,17 @@ import {Test} from "forge-std/Test.sol";
 import {
     ModuleManagerBaseV1Mock,
     IModuleManagerBase_v1
-} from "@mock/orchestrator/abstracts/ModuleManagerBaseV1Mock.sol";
+} from "@mocks/orchestrator/abstracts/ModuleManagerBaseV1Mock.sol";
 
 // Mocks
-import {AuthorizerV1Mock} from "@mock/modules/authorizer/AuthorizerV1Mock.sol";
-import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
+import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
+import {ModuleV1Mock} from "@mocks/modules/base/ModuleV1Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Helper
-import {TypeSanityHelper} from "@tool/TypeSanityHelper.sol";
+import {TypeSanityHelper} from "@testUtilities/TypeSanityHelper.sol";
 
 contract ModuleManagerBaseV1Test is Test {
     // SuT

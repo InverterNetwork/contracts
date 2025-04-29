@@ -16,8 +16,8 @@ import {IERC20} from "@oz/token/ERC20/IERC20.sol";
 import {
     OptimisticOracleV3Mock,
     OptimisticOracleV3Interface
-} from "@mock/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+} from "@mocks/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 /**
  * @title Inverter Testnet Deployment Script
@@ -77,7 +77,7 @@ contract TestnetDeploymentScript is DeploymentScript {
             console2.log("\tOptimisticOracleV3Mock: %s", address(ooV3));
 
             // Deploy and setup Mock Collateral Token
-            mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD");
+            mockCollateralToken = new ERC20Mock("Inverter USD", "iUSD", 18);
             console2.log("\tERC20Mock iUSD: %s", address(mockCollateralToken));
         }
         vm.stopBroadcast();

@@ -12,26 +12,26 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // SuT
 import {
     ERC20PaymentClientBaseV2_Exposed,
     IERC20PaymentClientBase_v2
-} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2_Exposed.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2_Exposed.sol";
 import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 
-import {OrchestratorV1Mock} from "@mock/orchestrator/OrchestratorV1Mock.sol";
+import {OrchestratorV1Mock} from "@mocks/orchestrator/OrchestratorV1Mock.sol";
 
 import {
     PaymentProcessorV1Mock,
     IPaymentProcessor_v2
-} from "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+} from "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
 import {
     IFundingManager_v1,
     FundingManagerV1Mock
-} from "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
+} from "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 
 contract ERC20PaymentClientBaseV2Test is ModuleTest {
     bytes32 internal constant _START_END_CLIFF_FLAG =

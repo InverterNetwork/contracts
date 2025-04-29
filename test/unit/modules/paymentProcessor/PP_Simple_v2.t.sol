@@ -10,12 +10,12 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 
 // SuT
 
 import {PP_Simple_v2_Exposed} from
-    "@mock/modules/paymentProcessor/PP_Simple_v2_Exposed.sol";
+    "@mocks/modules/paymentProcessor/PP_Simple_v2_Exposed.sol";
 
 import {
     PP_Simple_v2,
@@ -27,10 +27,10 @@ import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract PP_SimpleV2Test is ModuleTest {
     // SuT
@@ -395,8 +395,12 @@ contract PP_SimpleV2Test is ModuleTest {
         vm.startPrank(sender);
         bool expectedValue = paymentProcessor.exposed_validPaymentReceiver(
             order.recipient
-        ) && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
-            && paymentProcessor.exposed__validTotal(order.amount);
+        ) && paymentProcessor.exposed__validTotal(order.amount)
+            && paymentProcessor.exposed_validPaymentToken(order.paymentToken)
+            && paymentProcessor.exposed_validOriginAndTargetChain(
+                order.originChainId, order.targetChainId
+            );
+
         assertEq(paymentProcessor.validPaymentOrder(order), expectedValue);
 
         vm.stopPrank();
@@ -445,7 +449,7 @@ contract PP_SimpleV2Test is ModuleTest {
         assertEq(paymentProcessor.exposed_validPaymentToken(randomToken), false);
 
         // ERC20 addresses are valid
-        ERC20Mock actualToken = new ERC20Mock("Test", "TST");
+        ERC20Mock actualToken = new ERC20Mock("Test", "TST", 18);
 
         vm.prank(sender);
         assertEq(

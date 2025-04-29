@@ -24,7 +24,7 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "@unit/modules/ModuleTest.sol";
+} from "@unitTest/modules/ModuleTest.sol";
 import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
 import {IVirtualIssuanceSupplyBase_v1} from
     "@fm/bondingCurve/interfaces/IVirtualIssuanceSupplyBase_v1.sol";
@@ -37,16 +37,16 @@ import {
     IRedeemingBondingCurveBase_v1
 } from "@fm/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.sol";
 // Errors
-import {OZErrors} from "@tool/OZErrors.sol";
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 // Mocks
 import {FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock} from
-    "@mock/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
+    "@mocks/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupplyV1Mock.sol";
 import {ERC20PaymentClientBaseV2Mock} from
-    "@mock/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 import {RedeemingBondingCurveBaseV1Test} from
-    "@unit/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
+    "@unitTest/modules/fundingManager/bondingCurve/abstracts/RedeemingBondingCurveBase_v1.t.sol";
 
 /*   
     Since the following functions just wrap the Bancor formula contract, their content is assumed to be tested in the original formula tests, not here:
@@ -81,9 +81,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     function setUp() public virtual {
         // Deploy contracts
-        issuanceToken = new ERC20Issuance_v1(
-            NAME, SYMBOL, DECIMALS, MAX_SUPPLY, address(this)
-        );
+        issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
+        issuanceToken.setMinter(address(this), true);
 
         BancorFormula bancorFormula = new BancorFormula();
         formula = address(bancorFormula);
@@ -1707,9 +1706,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -1732,9 +1731,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         vm.expectRevert(
             IFM_BC_Bancor_Redeeming_VirtualSupply_v1
@@ -1756,9 +1755,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         string memory _name = "New Issuance Token";
         string memory _symbol = "NEW";
 
-        ERC20Issuance_v1 newIssuanceToken = new ERC20Issuance_v1(
-            _name, _symbol, _newDecimals, _newMaxSupply, address(this)
-        );
+        ERC20Issuance_v1 newIssuanceToken =
+            new ERC20Issuance_v1(_name, _symbol, _newDecimals, _newMaxSupply);
+        newIssuanceToken.setMinter(address(this), true);
 
         // No authentication since it's an internal function exposed by the mock contract
         bondingCurveFundingManager.call_setIssuanceToken(
