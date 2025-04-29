@@ -73,10 +73,8 @@ contract LM_PC_Template_v1_Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(address(paymentToken))
         );
 
-        // Give test contract the DEPOSIT_ADMIN_ROLE.
-        paymentClient.grantModuleRole(
-            paymentClient.getDepositAdminRole(), address(this)
-        );
+        // Every caller has permission for every premissioned function
+        _authorizer.setAllAuthorized(true);
     }
 
     // -------------------------------------------------------------------------
@@ -87,7 +85,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
         assertEq(paymentClient.getPaymentToken(), address(paymentToken));
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentClient.supportsInterface(
                 type(IERC20PaymentClientBase_v2).interfaceId
@@ -162,43 +160,26 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     }
 
     /* Test: processDeposit()
-        ├── Given the caller does not have the DEPOSIT_ADMIN_ROLE
+        ├── Given the caller is not permissioned
         │   └── When the function processDeposit() is called
         │       └── Then it reverts (modifier in place)
-        └── Given the caller has DEPOSIT_ADMIN_ROLE
+        └── Given the caller is permissioned
             └── When the function processDeposit() is called
                 ├── Then the deposit balance clears
                 └── And the payment order processes
 
     */
-    function testProcessDeposit_revertGivenNotAdmin(address notAdmin_) public {
-        // Setup
-        vm.assume(notAdmin_ != address(this) && notAdmin_ != address(0));
 
-        uint depositAmount = 50 ether;
-        vm.startPrank(notAdmin_);
-        paymentToken.mint(notAdmin_, depositAmount);
-        paymentToken.approve(address(paymentClient), depositAmount);
+    function testBuyFor_ModifierInPositionChecks() public {
+        // permissioned
 
-        uint start = block.timestamp;
-        uint cliff = block.timestamp + 30 days;
-        uint end = block.timestamp + 90 days;
-
-        paymentClient.deposit(depositAmount);
-
-        // Test
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _orchestrator.authorizer().generateRoleId(
-                    address(paymentClient), paymentClient.getDepositAdminRole()
-                ),
-                notAdmin_
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
-        paymentClient.processDeposit(notAdmin_, start, cliff, end);
-
-        vm.stopPrank();
+        vm.prank(address(0xB0B));
+        paymentClient.processDeposit(address(0), 0, 0, 0);
     }
 
     function testProcessDeposit_worksGivenDepositIsProcessed(
@@ -263,14 +244,6 @@ contract LM_PC_Template_v1_Test is ModuleTest {
     */
     function testGetPaymentToken() public {
         assertEq(paymentClient.getPaymentToken(), address(paymentToken));
-    }
-
-    /* Test: getDepositAdminRole()
-        └── When the function getDepositAdminRole() is called
-            └── Then it returns the deposit admin role
-    */
-    function testGetDepositAdminRole() public {
-        assertEq(paymentClient.getDepositAdminRole(), DEPOSIT_ADMIN_ROLE);
     }
 
     /* Test: getMaxDepositAmount()
