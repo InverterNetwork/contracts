@@ -898,7 +898,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         // Set the wrapper as the new issuance token
         // and verify that it's set
         bondingCurveFundingManager.call_setIssuanceToken(address(wrapper));
-        assertEq(bondingCurveFundingManager.exposed_issuanceToken(), address(wrapper));
+        assertEq(
+            bondingCurveFundingManager.exposed_issuanceToken(), address(wrapper)
+        );
 
         // Obtain the issuance token again
         address issuanceTokenAfterWrapper =
