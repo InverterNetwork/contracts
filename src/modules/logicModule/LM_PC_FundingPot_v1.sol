@@ -113,6 +113,9 @@ contract LM_PC_FundingPot_v1 is
     // -------------------------------------------------------------------------
     // State
 
+    /// @notice The current round count.
+    uint32 private roundCount;
+
     /// @notice Stores all funding rounds by their unique ID.
     mapping(uint32 => Round) private rounds;
 
@@ -139,14 +142,11 @@ contract LM_PC_FundingPot_v1 is
     mapping(uint32 => EnumerableSet.AddressSet) private contributorsByRound;
 
     /// @notice Maps round IDs to user addresses to contribution amounts by access criteria.
-    mapping(uint64 => mapping(address => mapping(uint8 => uint))) private
+    mapping(uint32 => mapping(address => mapping(uint8 => uint))) private
         roundIdTouserContributionsByAccessCriteria;
 
-    /// @notice The current round count.
-    uint32 private roundCount;
-
     /// @notice Add a mapping to track the next unprocessed index for each round.
-    mapping(uint64 => uint) private roundIdToNextUnprocessedIndex;
+    mapping(uint32 => uint) private roundIdToNextUnprocessedIndex;
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
