@@ -1224,8 +1224,6 @@ contract LM_PC_FundingPot_v1 is
         uint tokensAmount_,
         address issuanceToken_
     ) internal {
-        Round storage round = rounds[roundId_];
-
         AccessCriteriaPrivileges storage privileges =
             roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
@@ -1265,11 +1263,6 @@ contract LM_PC_FundingPot_v1 is
         if (totalContributions == 0) {
             revert Module__LM_PC_FundingPot__NoContributions();
         }
-        address issuanceToken = address(
-            IBondingCurveBase_v1(
-                address(__Module_orchestrator.fundingManager())
-            ).getIssuanceToken()
-        );
         // approve the fundingManager to spend the contribution token
         IERC20(__Module_orchestrator.fundingManager().token()).approve(
             address(__Module_orchestrator.fundingManager()), totalContributions
