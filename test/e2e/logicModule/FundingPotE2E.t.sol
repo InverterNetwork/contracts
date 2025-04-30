@@ -257,17 +257,23 @@ contract FundingPotE2E is E2ETest {
 
         vm.startPrank(contributor1);
         contributionToken.approve(address(fundingPot), 400e18);
-        fundingPot.contributeToRound(round1Id, 400e18, 0, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1, round1Id, 400e18, 0, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor2);
         contributionToken.approve(address(fundingPot), 600e18);
-        fundingPot.contributeToRound(round1Id, 600e18, 0, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor2, round1Id, 600e18, 0, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor3);
         contributionToken.approve(address(fundingPot), 750e18);
-        fundingPot.contributeToRound(round2Id, 750e18, 0, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor3, round2Id, 750e18, 0, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // 7. Fast forward to after rounds end

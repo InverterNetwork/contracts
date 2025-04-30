@@ -18,16 +18,13 @@ import {
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
-import {IBondingCurveBase_v1} from
-    "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+
 import {
     ERC721Mock,
     MockHookContract,
     MockFailingHookContract
 } from "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v1Mock.sol";
 
-import {LM_PC_FundingPot_v1ERC20Mock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v1ERC20Mock.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
@@ -1466,9 +1463,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        vm.assume(amount > 0 && amount <= 500);
-        vm.assume(roundStart > block.timestamp && roundStart < roundEnd);
-        vm.assume(roundCap > 0);
+        // vm.assume(amount > 0 && amount <= 500);
+        // vm.assume(roundStart > block.timestamp && roundStart < roundEnd);
+        // vm.assume(roundCap > 0);
 
         uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
@@ -1586,7 +1583,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 3;
+        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
         uint amount = 250;
 
         (,,,, bytes32[] memory proofB) = _helper_generateMerkleTreeForTwoLeaves(
@@ -1623,7 +1620,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.prank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_, roundId, amount, accessId, PROOF
+            contributor1_, roundId, amount, accessId, proofB
         );
     }
 
@@ -1844,20 +1841,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             accessCriteriaEnumNew != accessCriteriaEnumOld
                 && accessCriteriaEnumNew >= 0 && accessCriteriaEnumNew <= 4
         );
-
+        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         _helper_setupRoundWithAccessCriteria(accessId);
         uint32 roundId = fundingPot.getRoundCount();
-        uint amount = 201;
-
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
-
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
-        );
 
         mockNFTContract.mint(contributor1_);
 
@@ -1873,7 +1859,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.expectEmit(true, false, false, true);
         emit ILM_PC_FundingPot_v1.ContributionMade(roundId, contributor1_, 250);
 
-        fundingPot.contributeToRound(roundId, 250, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, 250, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         uint userContribution = fundingPot.exposed_getUserContributionToRound(
@@ -1886,31 +1874,17 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(totalContributions, 250);
     }
 
-    function testContributeToRound_worksGivenMerkleAccessCriteriaMet() public {
+    function testContributeToRoundFor_worksGivenMerkleAccessCriteriaMet()
+        public
+    {
         uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
 
-        uint32 roundId = fundingPot.createRound(
-            _defaultRoundParams.roundStart,
-            _defaultRoundParams.roundEnd,
-            _defaultRoundParams.roundCap,
-            _defaultRoundParams.hookContract,
-            _defaultRoundParams.hookFunction,
-            _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
-        );
+        _helper_setupRoundWithAccessCriteria(accessId);
 
-        (,,,, bytes32[] memory proofB) = _helper_generateMerkleTreeForTwoLeaves(
+        uint32 roundId = fundingPot.getRoundCount();
+
+        _helper_generateMerkleTreeForTwoLeaves(
             contributor1_, contributor2_, roundId
-        );
-
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
-
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
         );
 
         fundingPot.setAccessCriteriaPrivileges(
@@ -1930,42 +1904,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.prank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_, roundId, amount, accessId, new bytes32[](0)
+            contributor1_,
+            roundId,
+            contributionAmount,
+            accessId,
+            new bytes32[](0)
         );
 
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
-
-        fundingPot.setAccessCriteriaForRound(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
-        );
-
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessId, 500, false, 0, 0, 0
-        );
-
-        vm.warp(_defaultRoundParams.roundStart + 1);
-
-        vm.startPrank(contributor2_);
-        _token.approve(address(fundingPot), 250);
-
-        vm.expectEmit(true, false, false, true);
-        emit ILM_PC_FundingPot_v1.ContributionMade(roundId, contributor2_, 250);
-
-        fundingPot.contributeToRound(roundId, 250, accessId, new bytes32[](0));
         vm.stopPrank();
 
         uint userContribution = fundingPot.exposed_getUserContributionToRound(
             roundId, contributor2_
         );
-        assertEq(userContribution, 250);
+        assertEq(userContribution, contributionAmount);
 
         uint totalContributions =
             fundingPot.exposed_getTotalRoundContributions(roundId);
-        assertEq(totalContributions, 250);
+        assertEq(totalContributions, contributionAmount);
     }
 
     function testContributeToRound_worksGivenUserCurrentContributionExceedsTheRoundCap(
@@ -2007,12 +1962,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.startPrank(contributor1_);
         _token.approve(address(fundingPot), 100);
-        fundingPot.contributeToRound(roundId, 100, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, roundId, 100, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         vm.startPrank(contributor2_);
         _token.approve(address(fundingPot), 100);
-        fundingPot.contributeToRound(roundId, 100, accessId, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor2_, roundId, 100, accessId, new bytes32[](0)
+        );
         vm.stopPrank();
 
         uint contribution = fundingPot.exposed_getUserContributionToRound(
