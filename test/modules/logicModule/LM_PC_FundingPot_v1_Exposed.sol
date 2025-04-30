@@ -13,7 +13,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     /**
      * @notice Exposes the internal _getTotalRoundContribution function for testing
      */
-    function exposed_getTotalRoundContributions(uint64 roundId_)
+    function exposed_getTotalRoundContributions(uint32 roundId_)
         external
         view
         returns (uint)
@@ -24,7 +24,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     /**
      * @notice Exposes the internal _getUserContributionToRound function for testing
      */
-    function exposed_getUserContributionToRound(uint64 roundId_, address user_)
+    function exposed_getUserContributionToRound(uint32 roundId_, address user_)
         external
         view
         returns (uint)
@@ -47,13 +47,15 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
      * @notice Exposes the internal _validateAndAdjustCapsWithUnspentCap function for testing
      */
     function exposed_validateAndAdjustCapsWithUnspentCap(
-        uint64 roundId_,
+        address user_,
+        uint32 roundId_,
         uint amount_,
         uint8 accessCriteriaId__,
         bool canOverrideContributionSpan_,
         uint unspentPersonalCap_
     ) external view returns (uint) {
         return _validateAndAdjustCapsWithUnspentCap(
+            user_,
             roundId_,
             amount_,
             accessCriteriaId__,
@@ -66,7 +68,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
      * @notice Exposes the internal _validateAccessCriteria function for testing
      */
     function exposed_validateAccessCriteria(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessId_,
         bytes32[] calldata merkleProof_,
         address user_
@@ -78,7 +80,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
      * @notice Exposes the internal _checkAccessCriteriaEligibility function for testing
      */
     function exposed_checkAccessCriteriaEligibility(
-        uint64 roundId_,
+        uint32 roundId_,
         uint8 accessCriteriaId_,
         bytes32[] memory merkleProof_,
         address user_
@@ -106,7 +108,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         bytes32 root_,
         bytes32[] memory merkleProof_,
         address user_,
-        uint64 roundId_
+        uint32 roundId_
     ) external pure returns (bool) {
         return _validateMerkleProof(root_, merkleProof_, user_, roundId_);
     }
@@ -114,7 +116,7 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     /**
      * @notice Exposes the internal _calculateUnusedCapacityFromPreviousRounds function for testing
      */
-    function exposed_calculateUnusedCapacityFromPreviousRounds(uint64 roundId_)
+    function exposed_calculateUnusedCapacityFromPreviousRounds(uint32 roundId_)
         external
         view
         returns (uint)
@@ -125,18 +127,38 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     /**
      * @notice Exposes the internal _closeRound function for testing
      */
-    function exposed_closeRound(uint64 roundId_) external {
+    function exposed_closeRound(uint32 roundId_) external {
         _closeRound(roundId_);
     }
 
     /**
      * @notice Exposes the internal _checkRoundClosureConditions function for testing
      */
-    function exposed_checkRoundClosureConditions(uint64 roundId_)
+    function exposed_checkRoundClosureConditions(uint32 roundId_)
         external
         view
         returns (bool)
     {
         return _checkRoundClosureConditions(roundId_);
+    }
+
+    /**
+     * @notice Exposes the internal _buyBondingCurveToken function for testing
+     */
+    function exposed_buyBondingCurveToken(uint32 roundId_) external {
+        return _buyBondingCurveToken(roundId_);
+    }
+
+    /**
+     * @notice Exposes the internal _createPaymentOrdersForContributors function for testing
+     */
+    function exposed_createPaymentOrdersForContributors(
+        uint32 roundId_,
+        uint startIndex_,
+        uint batchSize_
+    ) external {
+        return _createPaymentOrdersForContributors(
+            roundId_, startIndex_, batchSize_
+        );
     }
 }
