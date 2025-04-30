@@ -20,8 +20,6 @@ import {
 } from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {ERC721Mock} from
     "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v2NFTMock.sol";
-import {LM_PC_FundingPot_v1ERC20Mock} from
-    "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v1ERC20Mock.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
