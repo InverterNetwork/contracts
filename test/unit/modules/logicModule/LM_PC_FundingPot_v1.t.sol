@@ -1883,7 +1883,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint32 roundId = fundingPot.getRoundCount();
 
-        _helper_generateMerkleTreeForTwoLeaves(
+        (,,,, bytes32[] memory proofB) = _helper_generateMerkleTreeForTwoLeaves(
             contributor1_, contributor2_, roundId
         );
 
@@ -1901,14 +1901,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         emit ILM_PC_FundingPot_v1.ContributionMade(
             roundId, contributor2_, contributionAmount
         );
-
-        vm.prank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_,
-            roundId,
-            contributionAmount,
-            accessId,
-            new bytes32[](0)
+            contributor2_, roundId, contributionAmount, accessId, proofB
         );
 
         vm.stopPrank();
@@ -1923,7 +1917,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(totalContributions, contributionAmount);
     }
 
-    function testContributeToRound_worksGivenUserCurrentContributionExceedsTheRoundCap(
+    function testContributeToRoundFor_worksGivenUserCurrentContributionExceedsTheRoundCap(
     ) public {
         _defaultRoundParams.roundCap = 150;
         _defaultRoundParams.autoClosure = true;
@@ -1985,7 +1979,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertTrue(fundingPot.isRoundClosed(roundId));
     }
 
-    function testcontributeToRoundFor_worksGivenContributionPartiallyExceedingPersonalCap(
+    function testContributeToRoundFor_worksGivenContributionPartiallyExceedingPersonalCap(
     ) public {
         testCreateRound();
 
@@ -2048,7 +2042,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(totalContribution, personalCap);
     }
 
-    function testcontributeToRoundFor_worksGivenUserCanOverrideTimeConstraints()
+    function testContributeToRoundFor_worksGivenUserCanOverrideTimeConstraints()
         public
     {
         testCreateRound();
@@ -2100,7 +2094,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(totalContribution, amount);
     }
 
-    function testcontributeToRoundFor_worksGivenPersonalCapAccumulation()
+    function testContributeToRoundFor_worksGivenPersonalCapAccumulation()
         public
     {
         _defaultRoundParams.globalAccumulativeCaps = true;
@@ -2204,7 +2198,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testcontributeToRoundFor_worksGivenTotalRoundCapAccumulation()
+    function testContributeToRoundFor_worksGivenTotalRoundCapAccumulation()
         public
     {
         _defaultRoundParams.globalAccumulativeCaps = true;
