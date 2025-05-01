@@ -34,7 +34,6 @@ import {LM_PC_FundingPot_v1_Exposed} from
 import {ILM_PC_FundingPot_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_FundingPot_v1.sol";
 
-import {console2} from "forge-std/console2.sol";
 /**
  * @title   Inverter Funding Pot Logic Module Tests
  *
@@ -48,7 +47,6 @@ import {console2} from "forge-std/console2.sol";
  *
  * @author  Inverter Network
  */
-
 contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Constants
