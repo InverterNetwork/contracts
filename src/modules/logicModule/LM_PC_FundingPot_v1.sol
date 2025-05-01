@@ -1001,7 +1001,6 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (uint unusedCapacityFromPrevious)
     {
-        unusedCapacityFromPrevious = 0;
         // Iterate through all previous rounds (1 to roundId_-1)
         for (uint32 i = 1; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
