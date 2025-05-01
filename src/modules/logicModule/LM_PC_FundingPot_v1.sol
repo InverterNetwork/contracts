@@ -1193,19 +1193,19 @@ contract LM_PC_FundingPot_v1 is
         uint8 flagCount = 0;
 
         if (start_ > 0) {
-            flags |= bytes32(uint(1) << 1);
+            flags |= bytes32(uint(1) << FLAG_START);
             data[flagCount] = bytes32(start_);
             flagCount++;
         }
 
         if (cliff_ > 0) {
-            flags |= bytes32(uint(1) << 2);
+            flags |= bytes32(uint(1) << FLAG_CLIFF);
             data[flagCount] = bytes32(cliff_);
             flagCount++;
         }
 
         if (end_ > 0) {
-            flags |= bytes32(uint(1) << 3);
+            flags |= bytes32(uint(1) << FLAG_END);
             data[flagCount] = bytes32(end_);
             flagCount++;
         }
