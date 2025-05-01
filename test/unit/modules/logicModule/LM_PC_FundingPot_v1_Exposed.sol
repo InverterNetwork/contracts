@@ -130,6 +130,24 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         return _calculateUnusedCapacityFromPreviousRounds(roundId_);
     }
 
+    function exposed_contributeToRoundFor(
+        address user_,
+        uint32 roundId_,
+        uint amount_,
+        uint8 accessCriteriaId__,
+        bytes32[] memory merkleProof_,
+        uint unspentPersonalCap_
+    ) external {
+        _contributeToRoundFor(
+            user_,
+            roundId_,
+            amount_,
+            accessCriteriaId__,
+            merkleProof_,
+            unspentPersonalCap_
+        );
+    }
+
     /**
      * @notice Exposes the internal _closeRound function for testing
      */
