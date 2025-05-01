@@ -55,10 +55,6 @@ contract FundingPotE2E is E2ETest {
     ERC20Mock contributionToken;
 
     function setUp() public override {
-        // vm.label({
-        //     account: address(contributionToken),
-        //     newLabel: ERC20Mock(address(contributionToken)).symbol()
-        // });
         // Setup common E2E framework
         super.setUp();
 
@@ -251,8 +247,8 @@ contract FundingPotE2E is E2ETest {
         vm.warp(block.timestamp + 1 days);
 
         // 6. Fund contributors and contribute to rounds
-        contributionToken.mint(contributor1, 500e18);
-        contributionToken.mint(contributor2, 500e18);
+        contributionToken.mint(contributor1, 1000e18);
+        contributionToken.mint(contributor2, 1000e18);
         contributionToken.mint(contributor3, 1000e18);
 
         vm.startPrank(contributor1);
