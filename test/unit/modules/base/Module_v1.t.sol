@@ -474,6 +474,8 @@ contract ModuleBaseV1Test is ModuleTest {
         bytes calldata data_
     ) public {
         vm.assume(data_.length >= 4);
+        // Assume that caller is not the module as it is the default admin
+        vm.assume(caller_ != address(this));
 
         _authorizer.setHasPermission(
             caller_, address(module), bytes4(data_[0:4]), hasPermission_

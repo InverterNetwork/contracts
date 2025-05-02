@@ -98,8 +98,8 @@ contract PP_Queue_v1_Test is ModuleTest {
         paymentClient.setIsAuthorized(address(queue), true);
         paymentClient.setToken(_token);
 
-        // Authorize test contract
-        _authorizer.setIsAuthorized(address(this), true);
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
     }
 
     // ================================================================================
@@ -117,7 +117,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             queue.supportsInterface(type(IPaymentProcessor_v2).interfaceId)
         );
@@ -3029,46 +3029,24 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    /* Test testPublicClaimPreviouslyUnclaimableToTreasury_revertsGivenUnauthorizedCaller() function
-        ├── Given an unclaimable payment order has been added
-        │   └── And tokens have been transferred to the queue
-        │       └── When claimPreviouslyUnclaimableToTreasury is called by an unauthorized caller
-        │           └── Then the transaction should revert with "Module__CallerNotAuthorized"
+    /* Test claimPreviouslyUnclaimableToTreasury 
+        └── Given caller is not permissioned
+            └── When claimPreviouslyUnclaimableToTreasury is called
+                └── Then it should revert (modifier in place test)
     */
-    function testPublicClaimPreviouslyUnclaimableToTreasury_revertsGivenUnauthorizedCaller(
-    ) public {
-        paymentClient.exposed_addToOutstandingTokenAmounts(address(_token), 200);
+    function testClaimPreviouslyUnclaimableToTreasury_modifierInPlace()
+        public
+    {
+        // permissioned
 
-        address recipient_ = makeAddr("recipient");
-        uint96 amount_ = 100;
-
-        IERC20PaymentClientBase_v2.PaymentOrder memory order =
-        helper_createTestPaymentOrder(recipient_, amount_, 1, address(_token));
-
-        _token.mint(address(paymentClient), amount_ * 2);
-
-        vm.startPrank(address(paymentClient));
-        _token.approve(address(queue), amount_ * 2);
-        queue.exposed_addUnclaimableOrder(order, address(paymentClient));
-        _token.transfer(address(queue), amount_);
-        vm.stopPrank();
-
-        vm.prank(address(queue));
-        _token.approve(address(queue), amount_);
-
-        //@todo => calculate role
-        // bytes32 role = _authorizer.generateRoleId(address(this), QUEUE_OPERATOR_ROLE);
-
-        vm.prank(address(paymentClient));
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module__CallerNotAuthorized(bytes32,address)",
-                0x5d97d4d42ba6fe9c9c1a1451385e8b1e735e94d33a05d1e7fae480933f0db4e0,
-                address(paymentClient)
-            )
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
         );
+        vm.prank(address(0xB0B));
         queue.claimPreviouslyUnclaimableToTreasury(
-            address(paymentClient), address(_token), recipient_
+            address(0), address(0), address(0)
         );
     }
 
@@ -3130,11 +3108,24 @@ contract PP_Queue_v1_Test is ModuleTest {
     /* Test testPublicSetCanceledOrdersTreasury_succeedsGivenAuthorizedCaller() function
         ├── Given a new treasury address
         │   └── And the current treasury address is different
-        │       └── When setCanceledOrdersTreasury is called by an unauthorized caller
-        │           └── Then it should revert with "Module__CallerNotAuthorized"
-        │       └── And when called by an authorized caller
+        │       └── When setCanceledOrdersTreasury is called by non permissioned caller
+        │           └── Then it should revert (Modifier in place test)
+        │       └── And when called by a permissioned caller
         │           └── Then the treasury address should be updated
     */
+
+    function testPublicSetCanceledOrdersTreasury_ModifierInPosition() public {
+        //permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        queue.setCanceledOrdersTreasury(address(0));
+    }
+
     function testPublicSetCanceledOrdersTreasury_succeedsGivenAuthorizedCaller()
         public
     {
@@ -3146,20 +3137,6 @@ contract PP_Queue_v1_Test is ModuleTest {
             "New treasury should be different from current"
         );
 
-        bytes32 ORCHESTRATOR_ADMIN_ROLE =
-            0x3078303000000000000000000000000000000000000000000000000000000000;
-        address unauthorized = makeAddr("unauthorized");
-        vm.prank(unauthorized);
-        vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module__CallerNotAuthorized(bytes32,address)",
-                ORCHESTRATOR_ADMIN_ROLE,
-                unauthorized
-            )
-        );
-        queue.setCanceledOrdersTreasury(newTreasury);
-
-        vm.prank(address(this));
         queue.setCanceledOrdersTreasury(newTreasury);
 
         assertEq(
@@ -3172,11 +3149,24 @@ contract PP_Queue_v1_Test is ModuleTest {
     /* Test testPublicSetFailedOrdersTreasury_succeedsGivenAuthorizedCaller() function
         ├── Given a new failed orders treasury address
         │   └── And the current failed orders treasury address is different
-        │       └── When setFailedOrdersTreasury is called by an unauthorized caller
-        │           └── Then it should revert with "Module__CallerNotAuthorized"
-        │       └── And when called by an authorized caller
+        │       └── When setFailedOrdersTreasury is called by a permissioned caller
+        │           └── Then it should revert (Modifier in place test)
+        │       └── And when called by a permissioned caller 
         │           └── Then the failed orders treasury address should be updated
     */
+
+    function testPublicSetFailedOrdersTreasury_ModifierInPosition() public {
+        //permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        queue.setFailedOrdersTreasury(address(0));
+    }
+
     function testPublicSetFailedOrdersTreasury_succeedsGivenAuthorizedCaller()
         public
     {
@@ -3187,19 +3177,6 @@ contract PP_Queue_v1_Test is ModuleTest {
             newTreasury,
             "New treasury should be different from current"
         );
-
-        bytes32 ORCHESTRATOR_ADMIN_ROLE =
-            0x3078303000000000000000000000000000000000000000000000000000000000;
-        address unauthorized = makeAddr("unauthorized");
-        vm.prank(unauthorized);
-        vm.expectRevert(
-            abi.encodeWithSignature(
-                "Module__CallerNotAuthorized(bytes32,address)",
-                ORCHESTRATOR_ADMIN_ROLE,
-                unauthorized
-            )
-        );
-        queue.setFailedOrdersTreasury(newTreasury);
 
         vm.prank(address(this));
         queue.setFailedOrdersTreasury(newTreasury);

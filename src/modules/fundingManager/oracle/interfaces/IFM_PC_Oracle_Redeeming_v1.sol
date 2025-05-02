@@ -317,25 +317,6 @@ interface IFM_PC_Oracle_Redeeming_v1 is
     /// @return fee_ The current sell fee.
     function getSellFee() external view returns (uint fee_);
 
-    /// @notice Gets the whitelist role identifier
-    /// @return role_ The whitelist role identifier
-    function getWhitelistRole() external pure returns (bytes32 role_);
-
-    /// @notice Gets the whitelist role admin identifier
-    /// @return role_ The whitelist role admin identifier
-    function getWhitelistRoleAdmin() external pure returns (bytes32 role_);
-
-    /// @notice Gets the queue executor role identifier
-    /// @return role_ The queue executor role identifier
-    function getQueueExecutorRole() external pure returns (bytes32 role_);
-
-    /// @notice Gets the queue executor role admin identifier
-    /// @return role_ The queue executor role admin identifier
-    function getQueueExecutorRoleAdmin()
-        external
-        pure
-        returns (bytes32 role_);
-
     /// @notice Gets the oracle address.
     /// @return oracle_ The address of the oracle.
     function getOracle() external view returns (address oracle_);

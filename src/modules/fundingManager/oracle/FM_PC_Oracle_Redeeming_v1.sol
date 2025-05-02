@@ -34,6 +34,7 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+//@todo adapt?
 /**
  * @title   External Price Oracle Funding Manager with Payment Client.
  *
@@ -207,27 +208,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
     // -------------------------------------------------------------------------
     // Constants
 
-    /// @notice Role identifier for accounts who are whitelisted to buy and sell.
-    bytes32 internal constant WHITELIST_ROLE = "WHITELIST_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the whitelist
-    ///         role.
-    /// @dev    This role should be set as the role admin for the WHITELIST_ROLE
-    ///         within the Authorizer module.
-    bytes32 internal constant WHITELIST_ROLE_ADMIN = "WHITELIST_ROLE_ADMIN";
-
-    /// @notice Role identifier for accounts who are allowed to manually execute
-    ///         the redemption queue.
-    bytes32 internal constant QUEUE_EXECUTOR_ROLE = "QUEUE_EXECUTOR_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the queue
-    ///         execution role.
-    ///         role.
-    /// @dev    This role should be set as the role admin for the
-    ///         QUEUE_EXECUTOR_ROLE within the Authorizer module.
-    bytes32 internal constant QUEUE_EXECUTOR_ROLE_ADMIN =
-        "QUEUE_EXECUTOR_ROLE_ADMIN";
-
     /// @notice Flag used for the payment order.
     uint internal constant FLAG_ORDER_ID = 0;
 
@@ -368,41 +348,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
 
     // -------------------------------------------------------------------------
     // Public View Functions
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getWhitelistRole() public pure virtual returns (bytes32 role_) {
-        return WHITELIST_ROLE;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getWhitelistRoleAdmin()
-        public
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return WHITELIST_ROLE_ADMIN;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getQueueExecutorRole()
-        public
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_EXECUTOR_ROLE;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getQueueExecutorRoleAdmin()
-        public
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_EXECUTOR_ROLE_ADMIN;
-    }
 
     /// @inheritdoc IFundingManager_v1
     function token() public view virtual override returns (IERC20 token_) {
@@ -548,34 +493,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     // Public Mutating Functions
 
     /// @inheritdoc BondingCurveBase_v1
-    function buy(uint collateralAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-    {
-        super.buyFor(_msgSender(), collateralAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc BondingCurveBase_v1
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
         thirdPartyOperationsEnabled
     {
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc RedeemingBondingCurveBase_v1
-    function sell(uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-    {
-        super.sellTo(_msgSender(), depositAmount_, minAmountOut_);
     }
 
     /// @inheritdoc RedeemingBondingCurveBase_v1
@@ -583,14 +507,15 @@ contract FM_PC_Oracle_Redeeming_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
         thirdPartyOperationsEnabled
     {
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function depositReserve(uint amount_) external virtual {
+    function depositReserve(uint amount_) external virtual 
+    //@todo permissioned ?
+    {
         if (amount_ == 0) {
             revert Module__FM_PC_ExternalPrice_Redeeming_InvalidAmount();
         }
@@ -626,7 +551,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setProjectTreasury(address projectTreasury_)
         external
         virtual
-        onlyOrchestratorAdmin
+        permissioned // @todo adapt Interface + test
     {
         _setProjectTreasury(projectTreasury_);
     }
@@ -635,7 +560,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setOracleAddress(address oracle_)
         external
         virtual
-        onlyOrchestratorAdmin
+        permissioned // @todo adapt Interface + test
     {
         _setOracleAddress(oracle_);
     }
@@ -644,7 +569,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_)
         public
         virtual
-        onlyOrchestratorAdmin
+        permissioned // @todo adapt Interface + test
     {
         _setIsDirectOperationsOnly(isDirectOperationsOnly_);
     }
@@ -653,7 +578,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function executeRedemptionQueue()
         external
         virtual
-        onlyModuleRole(QUEUE_EXECUTOR_ROLE)
+        permissioned // @todo adapt Interface + test
     {
         (bool success, bytes memory data) = address(
             __Module_orchestrator.paymentProcessor()

@@ -7,6 +7,9 @@ import "forge-std/console.sol";
 import {OptimisticOracleIntegratorMock} from
     "@mocks/modules/logicModule/oracle/OptimisiticOracleIntegratorMock.sol";
 
+import {OptimisticOracleV3CallbackRecipientInterface} from
+    "@lm/abstracts/oracleIntegrations/UMA_OptimisticOracleV3/optimistic-oracle-v3/interfaces/OptimisticOracleV3CallbackRecipientInterface.sol";
+
 import {OptimisticOracleV3Mock} from
     "@mocks/modules/logicModule/oracle/OptimisiticOracleV3Mock.sol";
 

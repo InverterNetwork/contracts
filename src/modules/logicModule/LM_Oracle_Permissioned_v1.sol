@@ -14,6 +14,7 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
+//@todo adapt?
 /**
  * @title   Manual External Price Oracle Implementation.
  *
@@ -108,20 +109,6 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     }
 
     // -------------------------------------------------------------------------
-    // Constants
-
-    /// @notice Role identifier for accounts authorized to set prices.
-    /// @dev    This role should be granted to trusted price feeders only.
-    bytes32 internal constant PRICE_SETTER_ROLE = "PRICE_SETTER_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the price
-    ///         setter role.
-    /// @dev    This role should be set as the role admin within the Authorizer
-    ///         module.
-    bytes32 internal constant PRICE_SETTER_ROLE_ADMIN =
-        "PRICE_SETTER_ROLE_ADMIN";
-
-    // -------------------------------------------------------------------------
     // State Variables
 
     /// @notice The price for issuing tokens (in collateral token decimals)
@@ -184,21 +171,6 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
         return _redemptionPrice;
     }
 
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function getPriceSetterRole() external pure virtual returns (bytes32) {
-        return PRICE_SETTER_ROLE;
-    }
-
-    /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function getPriceSetterRoleAdmin()
-        external
-        pure
-        virtual
-        returns (bytes32)
-    {
-        return PRICE_SETTER_ROLE_ADMIN;
-    }
-
     //--------------------------------------------------------------------------
     // Public Mutating Functions
 
@@ -206,7 +178,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     function setIssuancePrice(uint price_)
         external
         virtual
-        onlyModuleRole(PRICE_SETTER_ROLE)
+        permissioned // @todo adapt Interface + test
     {
         _setIssuancePrice(price_);
     }
@@ -215,7 +187,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     function setRedemptionPrice(uint price_)
         external
         virtual
-        onlyModuleRole(PRICE_SETTER_ROLE)
+        permissioned // @todo adapt Interface + test
     {
         _setRedemptionPrice(price_);
     }
@@ -224,7 +196,11 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     function setIssuanceAndRedemptionPrice(
         uint issuancePrice_,
         uint redemptionPrice_
-    ) external virtual onlyModuleRole(PRICE_SETTER_ROLE) {
+    )
+        external
+        virtual
+        permissioned // @todo adapt Interface + test
+    {
         _setIssuancePrice(issuancePrice_);
         _setRedemptionPrice(redemptionPrice_);
     }
