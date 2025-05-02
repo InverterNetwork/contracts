@@ -214,6 +214,8 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
         orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
+        authorizer = AUT_Roles_v1(address(orchestrator.authorizer()));
+
         // Get funding manager
         fundingManager =
             FM_PC_Oracle_Redeeming_v1(address(orchestrator.fundingManager()));
@@ -246,102 +248,156 @@ contract OracleFundingManagerAndManualQueueBasedPaymentProcessorE2E is
 
     function _setRoles() internal {
         //--------------------------------------------------------------------------
-        // Set role admins roles in the system
+        // Set roles and their admin roles in the system
 
-        bytes32 roleId;
-        bytes32 adminRoleId;
+        {
+            //Here we create the different roles and set their initial members
+            // We remember that the role id is just counting up from 1
+            // 0 is the default admin role and 1 is the public role
+            // The create Role function can only be called by permissioned addresses
+            // In this case only the default admin can call it
 
-        // Set role admin for price setter role
-        roleId = orchestrator.authorizer().generateRoleId(
-            address(permissionedOracle), permissionedOracle.getPriceSetterRole()
-        );
-        adminRoleId = orchestrator.authorizer().generateRoleId(
-            address(permissionedOracle),
-            permissionedOracle.getPriceSetterRoleAdmin()
-        );
-        orchestrator.authorizer().transferAdminRole(roleId, adminRoleId);
+            string memory roleName;
+            bytes32 roleAdmin;
+            address[] memory roleMembers;
 
-        // Set role admin for queue operator role
-        roleId = orchestrator.authorizer().generateRoleId(
-            address(paymentProcessor), paymentProcessor.getQueueOperatorRole()
-        );
-        adminRoleId = orchestrator.authorizer().generateRoleId(
-            address(paymentProcessor),
-            paymentProcessor.getQueueOperatorRoleAdmin()
-        );
-        orchestrator.authorizer().transferAdminRole(roleId, adminRoleId);
+            //PRICE_SETTER_ROLE_ADMIN
+            roleName = "PRICE_SETTER_ROLE_ADMIN";
+            roleAdmin = bytes32(0); // The default admin
+            roleMembers = new address[](1);
+            roleMembers[0] = priceSetterRoleAdmin;
 
-        // Set role admin for whitelist role
-        roleId = orchestrator.authorizer().generateRoleId(
-            address(fundingManager), fundingManager.getWhitelistRole()
-        );
-        adminRoleId = orchestrator.authorizer().generateRoleId(
-            address(fundingManager), fundingManager.getWhitelistRoleAdmin()
-        );
-        orchestrator.authorizer().transferAdminRole(roleId, adminRoleId);
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
 
-        // Set role admin for queue executor role
-        roleId = orchestrator.authorizer().generateRoleId(
-            address(fundingManager), fundingManager.getQueueExecutorRole()
-        );
-        adminRoleId = orchestrator.authorizer().generateRoleId(
-            address(fundingManager), fundingManager.getQueueExecutorRoleAdmin()
-        );
-        orchestrator.authorizer().transferAdminRole(roleId, adminRoleId);
+            //PRICE_SETTER_ROLE
+            roleName = "PRICE_SETTER_ROLE";
+            roleAdmin = bytes32(uint(2)); // The newly created role Price Setter admin
+            roleMembers = new address[](0); // No initial members as we want for the admins to set them
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+
+            //QUEUE_OPERATOR_ROLE_ADMIN
+            roleName = "QUEUE_OPERATOR_ROLE_ADMIN";
+            roleAdmin = bytes32(0); // The default admin
+            roleMembers = new address[](1);
+            roleMembers[0] = queueOperatorRoleAdmin;
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+
+            //QUEUE_OPERATOR_ROLE
+            roleName = "QUEUE_OPERATOR_ROLE";
+            roleAdmin = bytes32(uint(4)); // The newly created role Queue Operator admin
+            roleMembers = new address[](0); // No initial members as we want for the admins to set them
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+
+            //WHITELIST_ROLE_ADMIN
+            roleName = "WHITELIST_ROLE_ADMIN";
+            roleAdmin = bytes32(0); // The default admin
+            roleMembers = new address[](1);
+            roleMembers[0] = whitelistRoleAdmin;
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+
+            //WHITELIST_ROLE
+            roleName = "WHITELIST_ROLE";
+            roleAdmin = bytes32(uint(6)); // The newly created role Whitelist admin
+            roleMembers = new address[](0); // No initial members as we want for the admins to set them
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+
+            //QUEUE_EXECUTOR_ROLE_ADMIN
+            roleName = "QUEUE_EXECUTOR_ROLE_ADMIN";
+            roleAdmin = bytes32(0); // The default admin
+            roleMembers = new address[](1);
+            roleMembers[0] = queueExecutorRoleAdmin;
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+
+            //QUEUE_EXECUTOR_ROLE
+            roleName = "QUEUE_EXECUTOR_ROLE";
+            roleAdmin = bytes32(uint(8)); // The newly created role Queue Executor admin
+            roleMembers = new address[](0); // No initial members as we want for the admins to set them
+
+            authorizer.createRole(roleName, roleAdmin, roleMembers);
+        }
 
         //--------------------------------------------------------------------------
-        // Assign role admin roles
+        // Add Access Permissions to the roles
+        {
+            // The addAccessPermission function can only be called by permissioned addresses
+            // In this case only the default admin can call it
 
-        // Assign price setter role admin
-        permissionedOracle.grantModuleRole(
-            permissionedOracle.getPriceSetterRoleAdmin(), priceSetterRoleAdmin
-        );
+            address target;
+            bytes4 selector;
+            bytes32 roleId;
 
-        // Assign queue operator role admin
-        paymentProcessor.grantModuleRole(
-            paymentProcessor.getQueueOperatorRoleAdmin(), queueOperatorRoleAdmin
-        );
+            //PRICE_SETTER_ROLE - setIssuancePrice
+            target = address(permissionedOracle);
+            selector = permissionedOracle.setIssuancePrice.selector;
+            roleId = bytes32(uint(3));
+            authorizer.addAccessPermission(target, selector, roleId);
 
-        // Assign whitelist role admin
-        fundingManager.grantModuleRole(
-            fundingManager.getWhitelistRoleAdmin(), whitelistRoleAdmin
-        );
+            //PRICE_SETTER_ROLE - setRedemptionPrice
+            selector = permissionedOracle.setRedemptionPrice.selector;
+            authorizer.addAccessPermission(target, selector, roleId);
 
-        // Assign queue executor role admin
-        fundingManager.grantModuleRole(
-            fundingManager.getQueueExecutorRoleAdmin(), queueExecutorRoleAdmin
-        );
+            //PRICE_SETTER_ROLE - setIssuanceAndRedemptionPrice
+            selector = permissionedOracle.setIssuanceAndRedemptionPrice.selector;
+            authorizer.addAccessPermission(target, selector, roleId);
 
+            //QUEUE_OPERATOR_ROLE - processPayments
+            target = address(paymentProcessor);
+            selector =
+                paymentProcessor.claimPreviouslyUnclaimableToTreasury.selector;
+            roleId = bytes32(uint(5));
+            authorizer.addAccessPermission(target, selector, roleId);
+
+            //QUEUE_OPERATOR_ROLE - cancelPaymentOrderThroughQueueId
+            selector =
+                paymentProcessor.cancelPaymentOrderThroughQueueId.selector;
+            authorizer.addAccessPermission(target, selector, roleId);
+
+            //WHITELIST_ROLE - buy
+            target = address(fundingManager);
+            selector = fundingManager.buy.selector;
+            authorizer.addAccessPermission(target, selector, bytes32(uint(7)));
+
+            //WHITELIST_ROLE - buyFor
+            selector = fundingManager.buyFor.selector;
+            authorizer.addAccessPermission(target, selector, bytes32(uint(7)));
+
+            //WHITELIST_ROLE - sell
+            selector = fundingManager.sell.selector;
+            authorizer.addAccessPermission(target, selector, bytes32(uint(7)));
+
+            //WHITELIST_ROLE - sellTo
+            selector = fundingManager.sellTo.selector;
+            authorizer.addAccessPermission(target, selector, bytes32(uint(7)));
+
+            //QUEUE_EXECUTOR_ROLE - executeRedemptionQueue
+            target = address(fundingManager);
+            selector = fundingManager.executeRedemptionQueue.selector;
+            authorizer.addAccessPermission(target, selector, bytes32(uint(9)));
+        }
         //--------------------------------------------------------------------------
         // Assign roles through admins
 
-        // Assign price setter role
-        vm.startPrank(priceSetterRoleAdmin);
-        permissionedOracle.grantModuleRole(
-            permissionedOracle.getPriceSetterRole(), priceSetter
-        );
-        vm.stopPrank();
+        // Price Setter
+        vm.prank(priceSetterRoleAdmin);
+        authorizer.grantRole(bytes32(uint(3)), priceSetter);
 
-        // Assign queue operator role
-        vm.startPrank(queueOperatorRoleAdmin);
-        paymentProcessor.grantModuleRole(
-            paymentProcessor.getQueueOperatorRole(), queueOperator
-        );
-        vm.stopPrank();
+        // Queue Operator
+        vm.prank(queueOperatorRoleAdmin);
+        authorizer.grantRole(bytes32(uint(5)), queueOperator);
 
-        // Assign whitelist role
-        vm.startPrank(whitelistRoleAdmin);
-        fundingManager.grantModuleRole(
-            fundingManager.getWhitelistRole(), whitelistedUser
-        );
-        vm.stopPrank();
+        // Whitelist
+        vm.prank(whitelistRoleAdmin);
+        authorizer.grantRole(bytes32(uint(7)), whitelistedUser);
 
-        // Assign queue executor role
-        vm.startPrank(queueExecutorRoleAdmin);
-        fundingManager.grantModuleRole(
-            fundingManager.getQueueExecutorRole(), queueExecutor
-        );
-        vm.stopPrank();
+        // Queue Executor
+        vm.prank(queueExecutorRoleAdmin);
+        authorizer.grantRole(bytes32(uint(9)), queueExecutor);
 
         //--------------------------------------------------------------------------
         // Assign other roles in the system
