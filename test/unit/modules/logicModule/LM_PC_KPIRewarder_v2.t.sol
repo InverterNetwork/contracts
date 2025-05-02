@@ -184,15 +184,25 @@ contract LM_PC_KPIRewarder_v2Test is ModuleTest {
     }
 
     function testSupportsInterface() public override(ModuleTest) {
-        kpiManager.supportsInterface(type(ILM_PC_KPIRewarder_v2).interfaceId);
-        kpiManager.supportsInterface(type(ILM_PC_Staking_v2).interfaceId);
-        kpiManager.supportsInterface(
-            type(IOptimisticOracleIntegrator).interfaceId
+        assertTrue(
+            kpiManager.supportsInterface(
+                type(ILM_PC_KPIRewarder_v2).interfaceId
+            )
         );
-        kpiManager.supportsInterface(
-            type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+        assertTrue(
+            kpiManager.supportsInterface(type(ILM_PC_Staking_v2).interfaceId)
         );
-        kpiManager.supportsInterface(type(IModule_v1).interfaceId);
+        assertTrue(
+            kpiManager.supportsInterface(
+                type(IOptimisticOracleIntegrator).interfaceId
+            )
+        );
+        assertTrue(
+            kpiManager.supportsInterface(
+                type(OptimisticOracleV3CallbackRecipientInterface).interfaceId
+            )
+        );
+        assertTrue(kpiManager.supportsInterface(type(IModule_v1).interfaceId));
     }
 
     // Creates  dummy incontinuous KPI with 3 tranches, a max value of 300 and 300e18 tokens for rewards

@@ -126,17 +126,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     /// @notice    Flag position in the flags byte.
     uint8 internal constant FLAG_ORDER_ID = 0;
 
-    /// @notice Role identifier for queue operations.
-    /// @dev    This role cancels payments in the queue.
-    bytes32 internal constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE"; //@todo scrap
-
-    /// @notice Role identifier for the admin authorized to assign the queue
-    ///         operator role.
-    /// @dev    This role should be set as the role admin for the
-    ///         QUEUE_OPERATOR_ROLE within the Authorizer module.
-    bytes32 internal constant QUEUE_OPERATOR_ROLE_ADMIN =
-        "QUEUE_OPERATOR_ROLE_ADMIN"; //@todo scrap
-
     /// @notice BPS value.
     uint internal constant BPS = 10_000;
 
@@ -310,26 +299,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         returns (uint size_)
     {
         size_ = _queue[client_].length();
-    }
-
-    /// @inheritdoc IPP_Queue_v1
-    function getQueueOperatorRole()
-        external
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_OPERATOR_ROLE; //@todo scrap
-    }
-
-    /// @inheritdoc IPP_Queue_v1
-    function getQueueOperatorRoleAdmin()
-        external
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_OPERATOR_ROLE_ADMIN; //@todo scrap
     }
 
     /// @inheritdoc IPaymentProcessor_v2

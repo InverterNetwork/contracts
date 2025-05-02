@@ -121,7 +121,7 @@ interface ILM_PC_Staking_v2 {
     function unstake(uint amount) external;
 
     /// @notice Collects the rewards that are earned up until now.
-    /// @dev    Function access controlled by authorizer. //@todo yet to be decided
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reaps the rewards collected up to this point for the msg.Sender().
     function claimRewards() external;
 

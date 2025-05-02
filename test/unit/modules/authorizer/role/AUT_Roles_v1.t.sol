@@ -674,7 +674,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     ├── Given: Caller inhabits the default admin role
     ├── And: The given roleId is not existing
     │   └── When: labelRole is called
-    │       └── Then: Then it should revert (modifier in position check)//@todo Do we want to restrict that?
+    │       └── Then: Then it should revert (modifier in position check)
     ├── Given: Caller inhabits the default admin role
     └── And: The given roleId is existing
         └── When: labelRole is called

@@ -234,13 +234,6 @@ contract LM_PC_Bounties_v2 is ILM_PC_Bounties_v2, ERC20PaymentClientBase_v2 {
     /// @dev	Marks the beginning of the list.
     uint internal constant _SENTINEL = type(uint).max;
 
-    /// @dev	Role for the bounty issuer.
-    bytes32 public constant BOUNTY_ISSUER_ROLE = "BOUNTY_ISSUER"; //@todo scrap
-    /// @dev	Role for the claimant.
-    bytes32 public constant CLAIMANT_ROLE = "CLAIMANT"; // @todo scrap
-    /// @dev	Role for the verifier.
-    bytes32 public constant VERIFIER_ROLE = "VERIFIER"; // @todo scrap
-
     //--------------------------------------------------------------------------
     // Storage
 

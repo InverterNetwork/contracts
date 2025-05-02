@@ -1475,20 +1475,6 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    /* Test testGetQueueOperatorRole_GivenValidRole()
-        └── Given a queue operator role
-            └── When getting the role
-                └── Then it should return correct role hash.
-    */
-    function testGetQueueOperatorRole_GivenValidRole() public {
-        bytes32 expectedRole_ = bytes32("QUEUE_OPERATOR_ROLE");
-        assertEq(
-            queue.getQueueOperatorRole(),
-            expectedRole_,
-            "Role hash should match."
-        );
-    }
-
     // ================================================================================
     // Test Process Next Order
 
@@ -3253,20 +3239,6 @@ contract PP_Queue_v1_Test is ModuleTest {
         assertFalse(
             queue.validPaymentOrder(invalidOrder),
             "Payment order with zero token address should return false"
-        );
-    }
-
-    /* Test testPublicGetQueueOperatorRoleAdmin_succeedsGivenCorrectAdmin() function
-        ├── When getQueueOperatorRoleAdmin is called
-        │   └── Then it should return "QUEUE_OPERATOR_ROLE_ADMIN"
-    */
-    function testPublicGetQueueOperatorRoleAdmin_succeedsGivenCorrectAdmin()
-        public
-    {
-        bytes32 operatorRoleAdmin_ = queue.getQueueOperatorRoleAdmin();
-        assertTrue(
-            operatorRoleAdmin_ == "QUEUE_OPERATOR_ROLE_ADMIN",
-            "Queue operator role admin should be the queue address"
         );
     }
 

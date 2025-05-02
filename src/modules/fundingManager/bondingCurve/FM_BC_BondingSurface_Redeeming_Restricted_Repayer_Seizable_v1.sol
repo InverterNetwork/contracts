@@ -93,14 +93,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     uint64 public constant MAX_FEE = 100;
     /// @notice Time interval between seizes.
     uint64 public constant SEIZE_DELAY = 7 days;
-    /// @notice Role associated with the managing of the bonding curve values.
-    bytes32 public constant RISK_MANAGER_ROLE = "RISK_MANAGER"; //@todo scrap
-    /// @notice Role associated with the managing of setting withdraw addresses
-    ///         and setting the fee.
-    bytes32 public constant COVER_MANAGER_ROLE = "COVER_MANAGER"; //@todo scrap
-    /// @notice Role that can use buy and sell regardless wether these
-    ///         functions are restricted or not
-    bytes32 public constant CURVE_INTERACTION_ROLE = "CURVE_USER"; //@todo scrap
 
     // ========================================================================
     // Storage
@@ -119,8 +111,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     uint internal _lastSeizeTimestamp;
     /// @notice Address of the reserve pool.
     address internal _tokenVault;
-    /// @notice Restricts buying and selling functionalities to specific role.
-    bool internal _buyAndSellIsRestricted; //@todo scrap
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;

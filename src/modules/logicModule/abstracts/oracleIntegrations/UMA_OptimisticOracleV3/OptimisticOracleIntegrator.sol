@@ -56,12 +56,6 @@ abstract contract OptimisticOracleIntegrator is
     }
 
     //==========================================================================
-    // Constants
-
-    /// @dev	The role that is allowed to assert data.
-    bytes32 public constant ASSERTER_ROLE = keccak256("DATA_ASSERTER"); // @todo scrap
-
-    //==========================================================================
     // Storage
 
     // General Parameters

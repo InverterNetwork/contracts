@@ -37,7 +37,6 @@ interface IVirtualIssuanceSupplyBase_v1 {
     //--------------------------------------------------------------------------
     // Functions
 
-    //@todo downstream contract access control? Where should I add this comment?     
     /// @dev    Function access controlled by authorizer.
     /// @notice Sets the virtual issuance supply to a new value.
     /// @dev    This function calls the internal function `_setVirtualIssuanceSupply`.

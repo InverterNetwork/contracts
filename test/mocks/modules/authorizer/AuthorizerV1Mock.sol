@@ -11,8 +11,7 @@ import {
 
 import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 
-contract AuthorizerV1Mock is //@todo split into Access Mock and Role Mock
-    IAuthorizer_v1, Module_v1 {
+contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
     function supportsInterface(bytes4 interfaceId)
         public
         view

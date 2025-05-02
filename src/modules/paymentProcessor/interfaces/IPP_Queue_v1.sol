@@ -304,17 +304,6 @@ interface IPP_Queue_v1 is IPaymentProcessor_v2 {
         view
         returns (uint size_);
 
-    /// @notice  Gets the role identifier for the queue operator role.
-    /// @return  role_ The queue operator role identifier.
-    function getQueueOperatorRole() external pure returns (bytes32 role_);
-
-    /// @notice  Gets the role identifier for queue operator admin.
-    /// @return  role_ The queue operator role admin identifier.
-    function getQueueOperatorRoleAdmin()
-        external
-        pure
-        returns (bytes32 role_);
-
     /// @notice Cancels a payment order by its queue ID and sends the funds
     ///         from the cancelled order to the canceled orders treasury.
     /// @dev    Function only callable by claim contributors

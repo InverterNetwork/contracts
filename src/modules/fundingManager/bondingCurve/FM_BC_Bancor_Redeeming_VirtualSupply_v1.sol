@@ -379,6 +379,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     // Permissioned Functions
 
     /// @inheritdoc IVirtualIssuanceSupplyBase_v1
+    /// @dev    Function access controlled by authorizer.
     function setVirtualIssuanceSupply(uint virtualSupply_)
         external
         virtual
@@ -390,6 +391,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @inheritdoc IVirtualCollateralSupplyBase_v1
+    /// @dev    Function access controlled by authorizer.
     function setVirtualCollateralSupply(uint virtualSupply_)
         external
         virtual
@@ -411,6 +413,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupply_v1 is
     }
 
     /// @inheritdoc IFM_BC_Bancor_Redeeming_VirtualSupply_v1
+    /// @dev    Function access controlled by authorizer.
     function setReserveRatioForSelling(uint32 reserveRatio_)
         external
         virtual
