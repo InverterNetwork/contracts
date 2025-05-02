@@ -94,6 +94,7 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
 
     /// @notice Sets the issuance price for token issuance (buying tokens)
     ///         Price represents how much collateral is paid for 1 issuance token.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    Must be non-zero and denominated in collateral token decimals.
     ///         For example: With 6 decimal collateral token,
     ///         - To price 1 issuance token at 1.5 collateral, use 1_500_000
@@ -103,6 +104,7 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
 
     /// @notice Sets the redemption price for token redemption (selling tokens)
     ///         Price represents how much collateral is returned for 1 issuance token.
+    /// @dev    Function only callable by claim contributors
     /// @dev    Must be non-zero and denominated in collateral token decimals.
     ///         For example: With 6 decimal collateral token,
     ///         - To price 1 issuance token at 1.5 collateral, use 1_500_000
@@ -112,6 +114,7 @@ interface ILM_Oracle_Permissioned_v1 is IOraclePrice_v1 {
 
     /// @notice	Sets both issuance and redemption prices atomically, denominated
     ///         in the collateral token decimals.
+    /// @dev    Function only callable by claim contributors
     /// @dev    Both prices must be non-zero. Both the issuance and redemption
     ///         prices should be denominated in the collateral token decimals.
     ///         For example, if the collateral token has 6 decimals and the

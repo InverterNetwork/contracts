@@ -551,17 +551,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setProjectTreasury(address projectTreasury_)
         external
         virtual
-        permissioned // @todo adapt Interface + test
+        permissioned
     {
         _setProjectTreasury(projectTreasury_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function setOracleAddress(address oracle_)
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-    {
+    function setOracleAddress(address oracle_) external virtual permissioned {
         _setOracleAddress(oracle_);
     }
 
@@ -569,17 +565,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_)
         public
         virtual
-        permissioned // @todo adapt Interface + test
+        permissioned
     {
         _setIsDirectOperationsOnly(isDirectOperationsOnly_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function executeRedemptionQueue()
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-    {
+    function executeRedemptionQueue() external virtual permissioned {
         (bool success, bytes memory data) = address(
             __Module_orchestrator.paymentProcessor()
         ).call(

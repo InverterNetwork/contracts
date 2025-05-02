@@ -17,6 +17,7 @@ import {IPP_Queue_v1} from "@pp/interfaces/IPP_Queue_v1.sol";
 import {Module_v1} from "src/modules/base/Module_v1.sol";
 import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
 
+// @todo adapt
 /**
  * @title   Queue Based Payment Processor
  *
@@ -355,16 +356,13 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function setCanceledOrdersTreasury(address treasury_)
         external
         virtual
-        permissioned // @todo adapt Interface + test
+        permissioned
     {
         _setCanceledOrdersTreasury(treasury_);
     }
 
     /// @inheritdoc IPP_Queue_v1
-    function setFailedOrdersTreasury(address treasury_)
-        external
-        permissioned // @todo adapt Interface + test
-    {
+    function setFailedOrdersTreasury(address treasury_) external permissioned {
         _setFailedOrdersTreasury(treasury_);
     }
 
@@ -417,11 +415,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         address client_,
         address token_,
         address receiver_
-    )
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-    {
+    ) external virtual permissioned {
         if (unclaimable(client_, token_, receiver_) == 0) {
             revert Module__PaymentProcessor__NothingToClaim(client_, receiver_);
         }
@@ -447,12 +441,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function cancelPaymentOrderThroughQueueId(
         uint orderId_,
         IERC20PaymentClientBase_v2 client_
-    )
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-        returns (bool success_)
-    {
+    ) external virtual permissioned returns (bool success_) {
         // Validate that the order exists for the given queue ID and client.
         if (!_orderExists(orderId_, client_)) {
             revert Module__PP_Queue_InvalidOrderId(address(client_), orderId_);

@@ -175,20 +175,12 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     // Public Mutating Functions
 
     /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setIssuancePrice(uint price_)
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-    {
+    function setIssuancePrice(uint price_) external virtual permissioned {
         _setIssuancePrice(price_);
     }
 
     /// @inheritdoc ILM_Oracle_Permissioned_v1
-    function setRedemptionPrice(uint price_)
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-    {
+    function setRedemptionPrice(uint price_) external virtual permissioned {
         _setRedemptionPrice(price_);
     }
 
@@ -196,11 +188,7 @@ contract LM_Oracle_Permissioned_v1 is ILM_Oracle_Permissioned_v1, Module_v1 {
     function setIssuanceAndRedemptionPrice(
         uint issuancePrice_,
         uint redemptionPrice_
-    )
-        external
-        virtual
-        permissioned // @todo adapt Interface + test
-    {
+    ) external virtual permissioned {
         _setIssuancePrice(issuancePrice_);
         _setRedemptionPrice(redemptionPrice_);
     }

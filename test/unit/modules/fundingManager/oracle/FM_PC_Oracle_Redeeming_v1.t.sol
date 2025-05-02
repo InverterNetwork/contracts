@@ -662,10 +662,26 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function setProjectTreasury()
-        ├── Given the project treasury is a valid address
-        │   └── When the function setProjectTreasury() is called
-        │       └── Then it should set the project treasury correctly
+        ├── Given: Caller is not permissioned
+        |   └── When the function setProjectTreasury() is called
+        |       └── Then it should revert (modifier in place test)
+        ├── Given: Caller is permissioned
+        ├── And: the project treasury is a valid address
+            └── When the function setProjectTreasury() is called
+                └── Then it should set the project treasury correctly
     */
+    function testSetProjectTreasury_modifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        fundingManager.setProjectTreasury(address(0));
+    }
+
     function testSetProjectTreasury_worksGivenValidAddress(
         address projectTreasury_
     ) public {
@@ -680,13 +696,31 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function setOracleAddress()
-        ├── Given the oracle supports the IOraclePrice_v1 interface
-        │   └── When the function _setOracleAddress() is called
-        │       └── Then it should set the oracle address correctly
-        └── Given the oracle does not support the IOraclePrice_v1 interface
-            └── When the function _setOracleAddress() is called
+        ├── Given: Caller is not permissioned
+        |   └── When the function setOracleAddress() is called
+        |       └── Then it should revert (modifier in place test)
+        ├── Given: Caller is permissioned
+        ├── And: the oracle supports the IOraclePrice_v1 interface
+        |    └── When the function setOracleAddress() is called
+        |        └── Then it should set the oracle address correctly
+        ├── Given: Caller is permissioned
+        ├── And: the oracle does not support the IOraclePrice_v1 interface
+            └── When the function setOracleAddress() is called
                 └── Then it should revert
     */
+
+    function testSetOracleAddress_modifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        fundingManager.setOracleAddress(address(0));
+    }
+
     function testSetOracleAddress_worksGivenValidOracle(address _oracle)
         public
     {
@@ -707,10 +741,27 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function setIsDirectOperationsOnly()
-        └── Given a valid value
+        ├── Given: Caller is not permissioned
+        |   └── When the function setIsDirectOperationsOnly() is called
+        |       └── Then it should revert (modifier in place test)
+        ├── Given: Caller is permissioned
+        └── And: Called with a valid value
             └── When the function exposed_setIsDirectOperationsOnly() is called
                 └── Then the value should be set correctly
     */
+
+    function testSetIsDirectOperationsOnly_modifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        fundingManager.setIsDirectOperationsOnly(false);
+    }
+
     function testSetIsDirectOperationsOnly_worksGivenValidValue(
         bool _isDirectOperationsOnly
     ) public {
@@ -743,7 +794,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function executeRedemptionQueue()
-        ├── Given caller has QUEUE_EXECUTOR_ROLE
+        ├── Given caller is permissioned
         └── And the Payment Processor does not have the correct interface
                 └── When executeRedemptionQueue() is called
                     └── Then it should revert
@@ -766,7 +817,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function executeRedemptionQueue()
-        ├── Given caller has QUEUE_EXECUTOR_ROLE
+        ├── Given caller is permissioned
         ├── And there are redemption orders in the queue
         └── And the payment processor has the correct interface
             └── When executeRedemptionQueue() is called

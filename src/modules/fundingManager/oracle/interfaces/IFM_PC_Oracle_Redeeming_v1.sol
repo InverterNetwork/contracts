@@ -8,6 +8,7 @@ import {IERC20PaymentClientBase_v2} from
 import {IRedeemingBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IRedeemingBondingCurveBase_v1.sol";
 
+//@todo adapt
 /**
  * @title   External Price Oracle Funding Manager with Payment Client.
  *
@@ -329,19 +330,23 @@ interface IFM_PC_Oracle_Redeeming_v1 is
     function depositReserve(uint amount_) external;
 
     /// @notice Sets the project treasury address.
-    /// @param projectTreasury_ The address of the project treasury.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  projectTreasury_ The address of the project treasury.
     function setProjectTreasury(address projectTreasury_) external;
 
     /// @notice Sets the oracle address.
-    /// @param oracle_ The address of the oracle.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  oracle_ The address of the oracle.
     function setOracleAddress(address oracle_) external;
 
     /// @notice Toggles whether the contract only allows direct operations or not.
+    /// @dev    Function access controlled by authorizer.
     /// @param  isDirectOperationsOnly_ The new value for the flag.
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_) external;
 
     /// @notice Manually executes the redemption queue in the workflows Payment
     ///         Processor.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    If this function is called but the Payment Processor does not
     ///         implement the option to manually execute the redemption queue
     ///         then this function will revert.

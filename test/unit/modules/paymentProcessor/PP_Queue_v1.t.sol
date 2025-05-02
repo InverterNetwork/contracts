@@ -2819,6 +2819,26 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
+    /*
+    Test: cancelPaymentOrderThroughQueueId
+    └── Given: Caller is not permissioned
+        └── When the function cancelPaymentOrderThroughQueueId() is called
+            └── Then it should revert (modifier in place test)
+    */
+    function testCancelPaymentOrderThroughQueueId_ModifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(address(0xB0B));
+        queue.cancelPaymentOrderThroughQueueId(
+            0, IERC20PaymentClientBase_v2(address(0))
+        );
+    }
+
     /*    Test: function cancelPaymentOrderThroughQueueId()
         └── Given the canceledOrdeTreasury address is blacklisted
             └── When the function cancelPaymentOrderThroughQueueId() is called
@@ -3053,7 +3073,7 @@ contract PP_Queue_v1_Test is ModuleTest {
     /* Test testPublicClaimPreviouslyUnclaimableToTreasury_succeedsGivenValidConditions() function
         ├── Given an unclaimable payment order has been added
         │   └── And tokens have been transferred to the queue
-        │       └── When claimPreviouslyUnclaimableToTreasury is called by an authorized caller
+        │       └── When claimPreviouslyUnclaimableToTreasury is called by an permissioned caller
         │           └── Then the unclaimable amount should be zero
         │           └── And the tokens should be transferred to the failed orders treasury
         │           └── And the canceled orders treasury should not receive any tokens
@@ -3105,7 +3125,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    /* Test testPublicSetCanceledOrdersTreasury_succeedsGivenAuthorizedCaller() function
+    /* Test testPublicSetCanceledOrdersTreasury
         ├── Given a new treasury address
         │   └── And the current treasury address is different
         │       └── When setCanceledOrdersTreasury is called by non permissioned caller
@@ -3146,7 +3166,7 @@ contract PP_Queue_v1_Test is ModuleTest {
         );
     }
 
-    /* Test testPublicSetFailedOrdersTreasury_succeedsGivenAuthorizedCaller() function
+    /* Test testPublicSetFailedOrdersTreasury
         ├── Given a new failed orders treasury address
         │   └── And the current failed orders treasury address is different
         │       └── When setFailedOrdersTreasury is called by a permissioned caller

@@ -93,7 +93,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
     // ================================================================================
     // Test External (public + external)
 
-    /* Test: Function SetIssuancePrice() //@todo dadapt
+    /* Test: Function SetIssuancePrice()
         ├── Given the caller is not permissioned
         │   └── When the function setIssuancePrice() is called
         │       └── Then the function should revert (Modifier in place test)
@@ -102,7 +102,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
                 └── Then the price should be set correctly (redirects to internal func)
     */
 
-    function testSetIssuancePrice_worksGivenModifierInPlace() public {
+    function testSetIssuancePrice_ModifierInPlace() public {
         // permissioned
 
         // Turn off all adresses are permissioned to call all functions
@@ -150,7 +150,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
                 └── Then the price should be set correctly (redirects to internal func)
     */
 
-    function testSetRedemptionPrice_worksGivenModifierInPlace() public {
+    function testSetRedemptionPrice_ModifierInPlace() public {
         // permissioned
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
@@ -197,9 +197,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
                 └── Then the price should be set correctly (redirects to internal funcs)
     */
 
-    function testSetIssuanceAndRedemptionPrice_worksGivenModifierInPlace()
-        public
-    {
+    function testSetIssuanceAndRedemptionPrice_ModifierInPlace() public {
         // permissioned
 
         // Turn off all adresses are permissioned to call all functions

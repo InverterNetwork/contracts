@@ -6,6 +6,7 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
+//@todo adapt
 /**
  * @title   Queue Based Payment Processor
  *
@@ -316,10 +317,10 @@ interface IPP_Queue_v1 is IPaymentProcessor_v2 {
 
     /// @notice Cancels a payment order by its queue ID and sends the funds
     ///         from the cancelled order to the canceled orders treasury.
+    /// @dev    Function only callable by claim contributors
     /// @dev    This function can only be excuted if the payment client
     ///         has enough collateral to transfer the funds to the
-    ///         canceled orders treasury. Additionally, the caller
-    ///         must have the queue operator role. If the transfer fails,
+    ///         canceled orders treasury. If the transfer fails,
     ///         then the amount is added to the unclaimable amounts for
     ///         the canceled orders treasury.
     /// @param	orderId_ The ID of the order to cancel.
@@ -346,17 +347,19 @@ interface IPP_Queue_v1 is IPaymentProcessor_v2 {
 
     /// @notice Set the treasury address which receives the collateral
     ///         of canceled orders.
+    /// @dev    Function only callable by claim contributors
     /// @param treasury_ The treasury address for canceled orders.
     function setCanceledOrdersTreasury(address treasury_) external;
 
     /// @notice Set the treasury address which receives the collateral
     ///         of failed orders.
+    /// @dev    Function only callable by claim contributors
     /// @param treasury_ The treasury address for failed orders.
     function setFailedOrdersTreasury(address treasury_) external;
 
     /// @notice Claim previously unclaimable amounts from a receiver to
     ///         the failed orders treasury.
-    /// @dev    This function is only callable by the queue operator.
+    /// @dev    Function only callable by claim contributors
     /// @param client_ The client address.
     /// @param token_ The token address.
     /// @param receiver_ The receiver address.
