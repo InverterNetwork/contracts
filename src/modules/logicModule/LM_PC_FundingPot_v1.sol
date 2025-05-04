@@ -192,7 +192,7 @@ contract LM_PC_FundingPot_v1 is
             address hookContract,
             bytes memory hookFunction,
             bool autoClosure,
-            bool globalAccumulativeCaps
+            AccumulationMode accumulationMode
         )
     {
         Round storage round = rounds[roundId_];
@@ -203,7 +203,7 @@ contract LM_PC_FundingPot_v1 is
             round.hookContract,
             round.hookFunction,
             round.autoClosure,
-            round.globalAccumulativeCaps
+            round.accumulationMode
         );
     }
 
@@ -360,7 +360,7 @@ contract LM_PC_FundingPot_v1 is
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint32) {
         roundCount++;
 
@@ -373,7 +373,7 @@ contract LM_PC_FundingPot_v1 is
         round.hookContract = hookContract_;
         round.hookFunction = hookFunction_;
         round.autoClosure = autoClosure_;
-        round.globalAccumulativeCaps = globalAccumulativeCaps_;
+        round.accumulationMode = accumulationMode_;
 
         _validateRoundParameters(round);
 
@@ -385,7 +385,7 @@ contract LM_PC_FundingPot_v1 is
             hookContract_,
             hookFunction_,
             autoClosure_,
-            globalAccumulativeCaps_
+            accumulationMode_
         );
 
         return uint32(roundId);
@@ -400,7 +400,7 @@ contract LM_PC_FundingPot_v1 is
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
@@ -412,7 +412,7 @@ contract LM_PC_FundingPot_v1 is
         round.hookContract = hookContract_;
         round.hookFunction = hookFunction_;
         round.autoClosure = autoClosure_;
-        round.globalAccumulativeCaps = globalAccumulativeCaps_;
+        round.accumulationMode = accumulationMode_;
 
         _validateRoundParameters(round);
 
@@ -424,7 +424,7 @@ contract LM_PC_FundingPot_v1 is
             hookContract_,
             hookFunction_,
             autoClosure_,
-            globalAccumulativeCaps_
+            accumulationMode_
         );
     }
 
@@ -594,7 +594,7 @@ contract LM_PC_FundingPot_v1 is
                 unspentPersonalRoundCaps_[i];
 
             Round storage prevRound = rounds[roundCap.roundId];
-            if (!prevRound.globalAccumulativeCaps) continue;
+            if (prevRound.accumulationMode == AccumulationMode.Disabled) continue;
 
             // Verify the user was eligible for this access criteria in the previous round
             bool isEligible = _checkAccessCriteriaEligibility(
@@ -906,7 +906,10 @@ contract LM_PC_FundingPot_v1 is
 
             // If global accumulative caps are enabled,
             // adjust the round cap to acommodate unused capacity from previous rounds
-            if (round.globalAccumulativeCaps) {
+            if (
+                round.accumulationMode == AccumulationMode.Total
+                    || round.accumulationMode == AccumulationMode.All
+            ) {
                 uint unusedCapacityFromPrevious =
                     _calculateUnusedCapacityFromPreviousRounds(roundId_);
                 effectiveRoundCap += unusedCapacityFromPrevious;
@@ -933,7 +936,10 @@ contract LM_PC_FundingPot_v1 is
         uint userPersonalCap = privileges.personalCap;
 
         // Add unspent capacity if global accumulative caps are enabled
-        if (round.globalAccumulativeCaps) {
+        if (
+            round.accumulationMode == AccumulationMode.Personal
+                || round.accumulationMode == AccumulationMode.All
+        ) {
             userPersonalCap += unspentPersonalCap_;
         }
 
@@ -996,7 +1002,7 @@ contract LM_PC_FundingPot_v1 is
         // Iterate through all previous rounds (1 to roundId_-1)
         for (uint32 i = 1; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
-            if (!prevRound.globalAccumulativeCaps) continue;
+            if (prevRound.accumulationMode == AccumulationMode.Disabled) continue;
 
             uint prevRoundTotal = _getTotalRoundContribution(i);
             if (prevRoundTotal < prevRound.roundCap) {

@@ -16,7 +16,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract Address of an optional hook contract to be called after round closure.
     /// @param  hookFunction Encoded function call to be executed on the `hookContract` after round closure.
     /// @param  autoClosure Indicates whether the hook closure coincides with the contribution span end.
-    /// @param  globalAccumulativeCaps Indicates whether contribution caps accumulate globally across rounds.
+    /// @param  accumulationMode Defines how caps accumulate across rounds (None, Personal, Total, All).
     /// @param  accessCriterias Mapping of access criteria IDs to their respective access criteria.
     struct Round {
         uint roundStart;
@@ -25,7 +25,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address hookContract;
         bytes hookFunction;
         bool autoClosure;
-        bool globalAccumulativeCaps;
+        AccumulationMode accumulationMode;
         mapping(uint32 id => AccessCriteria) accessCriterias;
     }
 
@@ -115,7 +115,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address hookContract_,
         bytes hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     );
 
     /// @notice Emitted when an existing round is edited.
@@ -127,7 +127,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
     /// @param  hookFunction_ The updated encoded function call for the hook.
     /// @param  autoClosure_ A boolean indicating whether a specific closure mechanism is enabled.
-    /// @param  globalAccumulativeCaps_ A boolean indicating whether global accumulative caps are enforced.
+    /// @param  accumulationMode_ The updated accumulation mode for this round.
     event RoundEdited(
         uint indexed roundId_,
         uint roundStart_,
@@ -136,7 +136,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address hookContract_,
         bytes hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     );
 
     /// @notice Emitted when access criteria is set for a round.
@@ -312,7 +312,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return hookContract_ The address of the hook contract.
     /// @return hookFunction_ The encoded function call for the hook.
     /// @return autoClosure_ Whether hook closure coincides with contribution span end.
-    /// @return globalAccumulativeCaps_ Whether caps accumulate globally across rounds.
+    /// @return accumulationMode_ The accumulation mode for the round.
     function getRoundGenericParameters(uint32 roundId_)
         external
         view
@@ -323,7 +323,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
             address hookContract_,
             bytes memory hookFunction_,
             bool autoClosure_,
-            bool globalAccumulativeCaps_
+            AccumulationMode accumulationMode_
         );
 
     /// @notice Retrieves the access criteria for a specific funding round.
@@ -402,7 +402,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ Address of contract to call after round closure.
     /// @param  hookFunction_ Encoded function call for the hook.
     /// @param  autoClosure_ Whether hook closure coincides with contribution span end.
-    /// @param  globalAccumulativeCaps_ Whether caps accumulate globally.
+    /// @param  accumulationMode_ The accumulation mode for this round.
     /// @return The ID of the newly created round.
     function createRound(
         uint roundStart_,
@@ -411,7 +411,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     ) external returns (uint32);
 
     /// @notice Edits an existing funding round.
@@ -423,7 +423,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ New hook contract address.
     /// @param  hookFunction_ New encoded function call.
     /// @param  autoClosure_ New closure mechanism setting.
-    /// @param  globalAccumulativeCaps_ New global accumulative caps setting.
+    /// @param  accumulationMode_ New accumulation mode setting.
     function editRound(
         uint32 roundId_,
         uint roundStart_,
@@ -432,7 +432,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     ) external;
 
     /// @notice Set Access Control Check.
