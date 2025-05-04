@@ -7,6 +7,17 @@ import {IERC20PaymentClientBase_v2} from
 
 interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     // --------------------------------------------------------------------------
+    // Enums
+
+    /// @notice Enum used to define how caps accumulate across rounds.
+    enum AccumulationMode {
+        Disabled, // 0 - No accumulation (like globalAccumulativeCaps = false)
+        Personal, // 1 - Only personal caps roll over
+        Total, // 2 - Only total round caps expand based on previous undersubscription
+        All // 3 - Both personal and total caps accumulate (like globalAccumulativeCaps = true)
+    }
+
+    // --------------------------------------------------------------------------
     // Structs
 
     /// @notice Struct used to store information about a funding round.
@@ -106,7 +117,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
     /// @param  hookFunction_ The encoded function call for the hook.
     /// @param  autoClosure_ A boolean indicating whether a specific closure mechanism is enabled.
-    /// @param  globalAccumulativeCaps_ A boolean indicating whether global accumulative caps are enforced.
+    /// @param  accumulationMode_ Defines how caps accumulate across rounds for this round.
     event RoundCreated(
         uint indexed roundId_,
         uint roundStart_,

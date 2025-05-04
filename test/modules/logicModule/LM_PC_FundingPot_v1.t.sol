@@ -83,7 +83,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         address hookContract;
         bytes hookFunction;
         bool autoClosure;
-        bool globalAccumulativeCaps;
+        ILM_PC_FundingPot_v1.AccumulationMode accumulationMode;
     }
 
     ERC721Mock mockNFTContract = new ERC721Mock("NFT Mock", "NFT");
@@ -124,7 +124,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             hookContract: address(0),
             hookFunction: bytes(""),
             autoClosure: false,
-            globalAccumulativeCaps: false
+            accumulationMode: ILM_PC_FundingPot_v1.AccumulationMode.Disabled
         });
 
         // Initialize edited round parameters
@@ -135,7 +135,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address(0x1),
             bytes("test"),
             true,
-            true
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
     }
 
@@ -216,7 +216,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
         vm.stopPrank();
     }
@@ -242,7 +242,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -267,7 +267,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -292,7 +292,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -315,7 +315,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -339,7 +339,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -359,7 +359,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         _testRoundId = fundingPot.getRoundCount();
@@ -372,7 +372,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address storedHookContract,
             bytes memory storedHookFunction,
             bool storedAutoClosure,
-            bool storedGlobalAccumulativeCaps
+            ILM_PC_FundingPot_v1.AccumulationMode storedAccumulationMode
         ) = fundingPot.getRoundGenericParameters(_testRoundId);
 
         // Compare with expected values
@@ -382,7 +382,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(storedHookContract, params.hookContract);
         assertEq(storedHookFunction, params.hookFunction);
         assertEq(storedAutoClosure, params.autoClosure);
-        assertEq(storedGlobalAccumulativeCaps, params.globalAccumulativeCaps);
+        assertEq(uint(storedAccumulationMode), uint(params.accumulationMode));
     }
 
     /* Test editRound()
@@ -422,6 +422,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         └── Given all valid parameters are provided
             └── When user attempts to edit the round
                 └── Then all round details should be successfully updated
+                    ├── roundStart should be updated to the new value
+                    ├── roundEnd should be updated to the new value
+                    ├── roundCap should be updated to the new value
+                    ├── hookContract should be updated to the new value
+                    ├── hookFunction should be updated to the new value
+                    ├── autoClosure should be updated to the new value
+                    └── accumulationMode should be updated to the new value
     */
 
     function testEditRound_revertsGivenUserIsNotFundingPotAdmin(address user_)
@@ -437,7 +444,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             hookContract: address(0x1),
             hookFunction: bytes("test"),
             autoClosure: true,
-            globalAccumulativeCaps: true
+            accumulationMode: ILM_PC_FundingPot_v1.AccumulationMode.All
         });
 
         vm.startPrank(user_);
@@ -457,7 +464,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
         vm.stopPrank();
     }
@@ -473,7 +480,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             hookContract: address(0x1),
             hookFunction: bytes("test"),
             autoClosure: true,
-            globalAccumulativeCaps: true
+            accumulationMode: ILM_PC_FundingPot_v1.AccumulationMode.All
         });
 
         vm.expectRevert(
@@ -491,7 +498,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -507,7 +514,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(params.roundStart + 1);
 
@@ -518,7 +525,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             hookContract: address(0x1),
             hookFunction: bytes("test"),
             autoClosure: true,
-            globalAccumulativeCaps: true
+            accumulationMode: ILM_PC_FundingPot_v1.AccumulationMode.All
         });
 
         vm.expectRevert(
@@ -536,7 +543,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params_.hookContract,
             params_.hookFunction,
             params_.autoClosure,
-            params_.globalAccumulativeCaps
+            params_.accumulationMode
         );
     }
 
@@ -565,7 +572,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _editedRoundParams.hookContract,
             _editedRoundParams.hookFunction,
             _editedRoundParams.autoClosure,
-            _editedRoundParams.globalAccumulativeCaps
+            _editedRoundParams.accumulationMode
         );
     }
 
@@ -580,7 +587,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             hookContract: address(0x1),
             hookFunction: bytes("test"),
             autoClosure: true,
-            globalAccumulativeCaps: true
+            accumulationMode: ILM_PC_FundingPot_v1.AccumulationMode.All
         });
 
         vm.expectRevert(
@@ -599,7 +606,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -615,7 +622,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 roundId = fundingPot.getRoundCount();
 
         // Get the current round start time
-        (uint currentRoundStart,,,,,,) =
+        (uint currentRoundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
             fundingPot.getRoundGenericParameters(roundId);
 
         // Ensure roundEnd_ is less than current round start
@@ -629,7 +636,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address(0x1),
             bytes("test"),
             true,
-            true
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
 
         vm.expectRevert(
@@ -648,7 +655,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -665,7 +672,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address(1),
             bytes(""),
             true,
-            true
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
 
         vm.expectRevert(
@@ -684,7 +691,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -701,7 +708,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address(0),
             bytes("test"),
             true,
-            true
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
 
         vm.expectRevert(
@@ -720,7 +727,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
     }
 
@@ -735,7 +742,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             ├── hookContract should be updated to the new value
             ├── hookFunction should be updated to the new value
             ├── autoClosure should be updated to the new value
-            └── globalAccumulativeCaps should be updated to the new value
+            └── accumulationMode should be updated to the new value
     */
 
     function testEditRound() public {
@@ -752,7 +759,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         // Retrieve the stored parameters
@@ -763,7 +770,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address storedHookContract,
             bytes memory storedHookFunction,
             bool storedAutoClosure,
-            bool storedGlobalAccumulativeCaps
+            ILM_PC_FundingPot_v1.AccumulationMode storedAccumulationMode
         ) = fundingPot.getRoundGenericParameters(uint32(lastRoundId));
 
         // Compare with expected values
@@ -773,7 +780,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(storedHookContract, params.hookContract);
         assertEq(storedHookFunction, params.hookFunction);
         assertEq(storedAutoClosure, params.autoClosure);
-        assertEq(storedGlobalAccumulativeCaps, params.globalAccumulativeCaps);
+        assertEq(uint(storedAccumulationMode), uint(params.accumulationMode));
     }
 
     /* Test setAccessCriteria()
@@ -885,7 +892,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address[] memory allowedAddresses
         ) = _helper_createAccessCriteria(accessCriteriaEnum);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         vm.expectRevert(
@@ -1151,7 +1159,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 roundId = fundingPot.getRoundCount();
 
         // Warp to make the round active
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Create a new access criteria to try to edit with
@@ -1271,7 +1280,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 10 days);
 
         // Approve
@@ -1302,7 +1312,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint amount = 250;
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1346,7 +1357,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1388,7 +1400,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1432,7 +1445,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1523,7 +1537,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1573,7 +1588,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 200, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1619,7 +1635,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1672,7 +1689,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
 
         vm.warp(roundStart + 10 days);
 
@@ -1695,7 +1713,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testcontributeToRoundFor_worksGivenPersonalCapAccumulation()
         public
     {
-        _defaultRoundParams.globalAccumulativeCaps = true;
+        _defaultRoundParams.accumulationMode = ILM_PC_FundingPot_v1.AccumulationMode.All;
         fundingPot.createRound(
             _defaultRoundParams.roundStart,
             _defaultRoundParams.roundEnd,
@@ -1703,7 +1721,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.hookContract,
             _defaultRoundParams.hookFunction,
             _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
+            _defaultRoundParams.accumulationMode
         );
 
         uint32 round1Id = fundingPot.getRoundCount();
@@ -1735,7 +1753,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.hookContract,
             _defaultRoundParams.hookFunction,
             _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
+            _defaultRoundParams.accumulationMode
         );
         uint32 round2Id = fundingPot.getRoundCount();
 
@@ -1797,7 +1815,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testcontributeToRoundFor_worksGivenTotalRoundCapAccumulation()
         public
     {
-        _defaultRoundParams.globalAccumulativeCaps = true; // global accumulative caps enabled
+        _defaultRoundParams.accumulationMode = ILM_PC_FundingPot_v1.AccumulationMode.All;
 
         // Create Round 1
         fundingPot.createRound(
@@ -1807,7 +1825,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.hookContract,
             _defaultRoundParams.hookFunction,
             _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
+            _defaultRoundParams.accumulationMode
         );
         uint32 round1Id = fundingPot.getRoundCount();
 
@@ -1833,7 +1851,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.hookContract,
             _defaultRoundParams.hookFunction,
             _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
+            _defaultRoundParams.accumulationMode
         );
         uint32 round2Id = fundingPot.getRoundCount();
         fundingPot.setAccessCriteriaForRound(
@@ -2024,7 +2042,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Warp to round start
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Make a contribution
@@ -2061,7 +2080,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Make a contribution
-        (uint roundStart, uint roundEnd,,,,,) =
+        (uint roundStart, uint roundEnd, uint roundCap, address hookContract, bytes memory hookFunction, bool autoClosure, ILM_PC_FundingPot_v1.AccumulationMode mode) = 
             fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
@@ -2104,7 +2123,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -2143,7 +2163,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -2178,7 +2199,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Warp to round start
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Multiple contributors
@@ -2425,7 +2447,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         // Set access criteria and privileges
@@ -2473,7 +2495,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         // Move time past end time
@@ -2496,7 +2518,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         // Time is before end and no contributions
@@ -2516,7 +2538,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         // Set access criteria and privileges
@@ -2567,7 +2589,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             params.hookContract,
             params.hookFunction,
             params.autoClosure,
-            params.globalAccumulativeCaps
+            params.accumulationMode
         );
 
         // Should be false before end time
@@ -2605,7 +2627,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,,) = fundingPot.getRoundGenericParameters(roundId);
+        (uint roundStart,,,,,,ILM_PC_FundingPot_v1.AccumulationMode mode) =
+            fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -2643,7 +2666,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        ILM_PC_FundingPot_v1.AccumulationMode accumulationMode_
     ) internal pure returns (RoundParams memory) {
         return RoundParams({
             roundStart: roundStart_,
@@ -2652,7 +2675,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             hookContract: hookContract_,
             hookFunction: hookFunction_,
             autoClosure: autoClosure_,
-            globalAccumulativeCaps: globalAccumulativeCaps_
+            accumulationMode: accumulationMode_
         });
     }
 
@@ -2718,7 +2741,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             _defaultRoundParams.hookContract,
             _defaultRoundParams.hookFunction,
             _defaultRoundParams.autoClosure,
-            _defaultRoundParams.globalAccumulativeCaps
+            _defaultRoundParams.accumulationMode
         );
 
         (
