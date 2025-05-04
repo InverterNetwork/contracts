@@ -2758,4 +2758,169 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             allowedAddresses
         );
     }
+
+    function testContribute_PersonalMode_AccumulatesPersonalOnly() public {
+        // 1. Create the first round with AccumulationMode.Personal
+        _defaultRoundParams.accumulationMode = ILM_PC_FundingPot_v1.AccumulationMode.Personal;
+        
+        fundingPot.createRound(
+            _defaultRoundParams.roundStart,
+            _defaultRoundParams.roundEnd,
+            1000, // Round cap of 1000
+            _defaultRoundParams.hookContract,
+            _defaultRoundParams.hookFunction,
+            _defaultRoundParams.autoClosure,
+            _defaultRoundParams.accumulationMode
+        );
+        uint32 round1Id = fundingPot.getRoundCount();
+        
+        // Set up access criteria for round 1
+        uint8 accessCriteriaId = 1; // Open access
+        (
+            address nftContract,
+            bytes32 merkleRoot,
+            address[] memory allowedAddresses
+        ) = _helper_createAccessCriteria(accessCriteriaId);
+        
+        fundingPot.setAccessCriteriaForRound(
+            round1Id,
+            accessCriteriaId,
+            nftContract,
+            merkleRoot,
+            allowedAddresses
+        );
+        
+        // Set a personal cap of 500 for round 1
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, accessCriteriaId, 500, false, 0, 0, 0
+        );
+        
+        // 2. Create the second round, also with AccumulationMode.Personal
+        // Use different start and end times to avoid overlap
+        RoundParams memory params = _helper_createEditRoundParams(
+            _defaultRoundParams.roundStart + 3 days,
+            _defaultRoundParams.roundEnd + 3 days,
+            500, // Round cap of 500
+            _defaultRoundParams.hookContract,
+            _defaultRoundParams.hookFunction,
+            _defaultRoundParams.autoClosure,
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        );
+        
+        fundingPot.createRound(
+            params.roundStart,
+            params.roundEnd,
+            params.roundCap,
+            params.hookContract,
+            params.hookFunction,
+            params.autoClosure,
+            params.accumulationMode
+        );
+        uint32 round2Id = fundingPot.getRoundCount();
+        
+        // Set up access criteria for round 2
+        fundingPot.setAccessCriteriaForRound(
+            round2Id, accessCriteriaId, nftContract, merkleRoot, allowedAddresses
+        );
+        
+        // Set a personal cap of 400 for round 2
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, accessCriteriaId, 400, false, 0, 0, 0
+        );
+        
+        // First round contribution: user contributes 200 out of their 500 personal cap
+        vm.warp(_defaultRoundParams.roundStart + 1);
+        
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 1000);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1Id, 200, accessCriteriaId, new bytes32[](0)
+        );
+        vm.stopPrank();
+        
+        // Verify contribution to round 1
+        assertEq(
+            fundingPot.exposed_getUserContributionToRound(
+                round1Id, contributor1_
+            ),
+            200
+        );
+        
+        // Move to round 2
+        vm.warp(_defaultRoundParams.roundStart + 3 days + 1);
+        
+        // ------------ PART 1: VERIFY PERSONAL CAP ACCUMULATION ------------
+        // Create unspent capacity structure
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCaps =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        unspentCaps[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap({
+            roundId: round1Id,
+            accessCriteriaId: accessCriteriaId,
+            merkleProof: new bytes32[](0)
+        });
+        
+        // Try to contribute more than the round 2 personal cap (400)
+        // In Personal mode, this should succeed up to the personal cap (400) + unspent from round 1 (300) = 700
+        // But capped by round cap of 500
+        vm.startPrank(contributor1_);
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round2Id,
+            450, // More than the personal cap of round 2
+            accessCriteriaId,
+            new bytes32[](0),
+            unspentCaps
+        );
+        vm.stopPrank();
+        
+        // Verify contributions to round 2 - should be more than the personal cap of round 2 (400)
+        // This verifies personal caps DO accumulate
+        uint contributionAmount = fundingPot.exposed_getUserContributionToRound(
+            round2Id, contributor1_
+        );
+        assertEq(contributionAmount, 450);
+        assertTrue(contributionAmount > 400, "Personal cap should accumulate"); 
+        
+        // ------------ PART 2: VERIFY TOTAL CAP NON-ACCUMULATION ------------
+        // Clear contribution for round 2 and try again with a higher amount
+        // This time we'll try to add up to the round cap of 500
+        vm.startPrank(contributor2_);
+        _token.approve(address(fundingPot), 200);
+        
+        // This should revert with RoundCapReached because the first contributor already contributed 450
+        // and the round cap is 500, so only 50 more is allowed
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__RoundCapReached.selector
+            )
+        );
+        fundingPot.contributeToRoundFor(
+            contributor2_, round2Id, 100, accessCriteriaId, new bytes32[](0)
+        );
+        vm.stopPrank();
+        
+        // But contributor2 should be able to contribute exactly the remaining amount (50)
+        vm.startPrank(contributor2_);
+        fundingPot.contributeToRoundFor(
+            contributor2_, round2Id, 50, accessCriteriaId, new bytes32[](0)
+        );
+        vm.stopPrank();
+        
+        // Verify total contributions to round 2 is exactly the round cap
+        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 500);
+        
+        // Additional contributor3 should not be able to contribute anything
+        vm.startPrank(contributor3_);
+        _token.approve(address(fundingPot), 100);
+        
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__RoundCapReached.selector
+            )
+        );
+        fundingPot.contributeToRoundFor(
+            contributor3_, round2Id, 1, accessCriteriaId, new bytes32[](0)
+        );
+        vm.stopPrank();
+    }
 }
