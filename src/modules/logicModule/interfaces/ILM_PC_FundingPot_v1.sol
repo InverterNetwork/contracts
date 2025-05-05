@@ -10,11 +10,13 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     // Enums
 
     /// @notice Enum used to define how caps accumulate across rounds.
+    /// @dev    Determines whether unused personal caps or round caps from previous
+    ///         rounds can affect the limits of the current round.
     enum AccumulationMode {
-        Disabled, // 0 - No accumulation (like globalAccumulativeCaps = false)
-        Personal, // 1 - Only personal caps roll over
-        Total, // 2 - Only total round caps expand based on previous undersubscription
-        All // 3 - Both personal and total caps accumulate (like globalAccumulativeCaps = true)
+        Disabled, // 0 - No accumulation. Personal and round caps are isolated to this round.
+        Personal, // 1 - Only personal caps roll over from previous compatible rounds. Round cap is isolated.
+        Total, // 2 - Only total round caps expand based on previous compatible rounds' undersubscription. Personal caps are isolated.
+        All // 3 - Both personal caps roll over and total round caps expand based on previous compatible rounds.
     }
 
     // --------------------------------------------------------------------------
@@ -27,7 +29,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract Address of an optional hook contract to be called after round closure.
     /// @param  hookFunction Encoded function call to be executed on the `hookContract` after round closure.
     /// @param  autoClosure Indicates whether the hook closure coincides with the contribution span end.
-    /// @param  accumulationMode Defines how caps accumulate across rounds (None, Personal, Total, All).
+    /// @param  accumulationMode Defines how caps accumulate across rounds (see AccumulationMode enum).
     /// @param  accessCriterias Mapping of access criteria IDs to their respective access criteria.
     struct Round {
         uint roundStart;
@@ -117,7 +119,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
     /// @param  hookFunction_ The encoded function call for the hook.
     /// @param  autoClosure_ A boolean indicating whether a specific closure mechanism is enabled.
-    /// @param  accumulationMode_ Defines how caps accumulate across rounds for this round.
+    /// @param  accumulationMode_ The accumulation mode for this round (see AccumulationMode enum).
     event RoundCreated(
         uint indexed roundId_,
         uint roundStart_,
@@ -138,7 +140,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ The address of an optional hook contract for custom logic.
     /// @param  hookFunction_ The updated encoded function call for the hook.
     /// @param  autoClosure_ A boolean indicating whether a specific closure mechanism is enabled.
-    /// @param  accumulationMode_ The updated accumulation mode for this round.
+    /// @param  accumulationMode_ The updated accumulation mode for this round (see AccumulationMode enum).
     event RoundEdited(
         uint indexed roundId_,
         uint roundStart_,
@@ -323,7 +325,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @return hookContract_ The address of the hook contract.
     /// @return hookFunction_ The encoded function call for the hook.
     /// @return autoClosure_ Whether hook closure coincides with contribution span end.
-    /// @return accumulationMode_ The accumulation mode for the round.
+    /// @return accumulationMode_ The accumulation mode for the round (see AccumulationMode enum).
     function getRoundGenericParameters(uint32 roundId_)
         external
         view
@@ -413,7 +415,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ Address of contract to call after round closure.
     /// @param  hookFunction_ Encoded function call for the hook.
     /// @param  autoClosure_ Whether hook closure coincides with contribution span end.
-    /// @param  accumulationMode_ The accumulation mode for this round.
+    /// @param  accumulationMode_ The accumulation mode for this round (see AccumulationMode enum).
     /// @return The ID of the newly created round.
     function createRound(
         uint roundStart_,
@@ -434,7 +436,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  hookContract_ New hook contract address.
     /// @param  hookFunction_ New encoded function call.
     /// @param  autoClosure_ New closure mechanism setting.
-    /// @param  accumulationMode_ New accumulation mode setting.
+    /// @param  accumulationMode_ New accumulation mode setting (see AccumulationMode enum).
     function editRound(
         uint32 roundId_,
         uint roundStart_,
