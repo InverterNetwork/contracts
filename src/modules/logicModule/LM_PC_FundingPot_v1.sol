@@ -594,7 +594,9 @@ contract LM_PC_FundingPot_v1 is
                 unspentPersonalRoundCaps_[i];
 
             Round storage prevRound = rounds[roundCap.roundId];
-            if (prevRound.accumulationMode == AccumulationMode.Disabled) continue;
+            if (prevRound.accumulationMode == AccumulationMode.Disabled) {
+                continue;
+            }
 
             // Verify the user was eligible for this access criteria in the previous round
             bool isEligible = _checkAccessCriteriaEligibility(
@@ -900,7 +902,7 @@ contract LM_PC_FundingPot_v1 is
 
         Round storage round = rounds[roundId_];
 
-        // --- Round Cap Check --- 
+        // --- Round Cap Check ---
         if (!canOverrideContributionSpan_ && round.roundCap > 0) {
             uint totalRoundContribution = _getTotalRoundContribution(roundId_);
             uint effectiveRoundCap = round.roundCap;
@@ -920,14 +922,15 @@ contract LM_PC_FundingPot_v1 is
             // Check if cap is already reached BEFORE this contribution attempt
             if (totalRoundContribution >= effectiveRoundCap) {
                 // If user tries to contribute a non-zero amount when cap is full, revert.
-                if (amount_ > 0) { 
+                if (amount_ > 0) {
                     revert Module__LM_PC_FundingPot__RoundCapReached();
                 }
-                 // If user tries to contribute zero when cap is full, allow adjustedAmount = 0.
-                 adjustedAmount = 0; 
+                // If user tries to contribute zero when cap is full, allow adjustedAmount = 0.
+                adjustedAmount = 0;
             } else {
                 // Cap is not full, calculate remaining and clamp if necessary
-                uint remainingRoundCap = effectiveRoundCap - totalRoundContribution;
+                uint remainingRoundCap =
+                    effectiveRoundCap - totalRoundContribution;
                 if (adjustedAmount > remainingRoundCap) {
                     adjustedAmount = remainingRoundCap;
                 }
@@ -938,19 +941,19 @@ contract LM_PC_FundingPot_v1 is
         // If original amount was 0, adjustedAmount is 0, so we can proceed to personal cap check which will also result in 0.
         // If adjustedAmount > 0, proceed to personal cap check.
         if (adjustedAmount == 0 && amount_ > 0) {
-             // This state should ideally not be reached due to the revert above if cap was full.
-             // But as a safeguard, if amount_ was > 0 and adjustedAmount is now 0, return 0.
-             return 0; 
+            // This state should ideally not be reached due to the revert above if cap was full.
+            // But as a safeguard, if amount_ was > 0 and adjustedAmount is now 0, return 0.
+            return 0;
         }
-        
-        // --- Personal Cap Check --- 
+
+        // --- Personal Cap Check ---
         // Only proceed if adjustedAmount wasn't already set to 0 by round cap or initial amount.
         if (adjustedAmount > 0) {
             uint userPreviousContribution =
                 _getUserContributionToRound(roundId_, user_);
 
             AccessCriteriaPrivileges storage privileges =
-                roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
             uint userPersonalCap = privileges.personalCap;
 
             // Add unspent personal capacity if personal accumulation is enabled for this round (Personal or All)
@@ -966,14 +969,16 @@ contract LM_PC_FundingPot_v1 is
             if (userPreviousContribution + adjustedAmount > userPersonalCap) {
                 // If user hasn't reached personal cap yet, clamp further to remaining personal cap.
                 if (userPreviousContribution < userPersonalCap) {
-                    uint remainingPersonalCap = userPersonalCap - userPreviousContribution;
+                    uint remainingPersonalCap =
+                        userPersonalCap - userPreviousContribution;
                     // Ensure we don't accidentally increase amount, only clamp down.
-                    if (remainingPersonalCap < adjustedAmount) { 
+                    if (remainingPersonalCap < adjustedAmount) {
                         adjustedAmount = remainingPersonalCap;
                     }
-                } else { // User is already at or over personal cap.
+                } else {
+                    // User is already at or over personal cap.
                     // If they tried to contribute a non-zero amount initially, revert.
-                    if (amount_ > 0) { 
+                    if (amount_ > 0) {
                         revert Module__LM_PC_FundingPot__PersonalCapReached();
                     }
                     // If initial amount was 0, just ensure adjustedAmount remains 0.
@@ -981,7 +986,7 @@ contract LM_PC_FundingPot_v1 is
                 }
             }
         }
-        // --- End Personal Cap Check --- 
+        // --- End Personal Cap Check ---
 
         return adjustedAmount;
     }

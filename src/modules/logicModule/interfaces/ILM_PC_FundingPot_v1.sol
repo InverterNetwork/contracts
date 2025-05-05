@@ -17,6 +17,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         Personal, // 1 - Only personal caps roll over from previous compatible rounds. Round cap is isolated.
         Total, // 2 - Only total round caps expand based on previous compatible rounds' undersubscription. Personal caps are isolated.
         All // 3 - Both personal caps roll over and total round caps expand based on previous compatible rounds.
+
     }
 
     // --------------------------------------------------------------------------
