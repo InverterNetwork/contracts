@@ -2900,15 +2900,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 500);
         
         // Additional contributor3 should not be able to contribute anything as the cap is full.
+        // Attempting to contribute when the cap is already full should revert.
         vm.startPrank(contributor3_);
         _token.approve(address(fundingPot), 100);
         
-        // Contributor 3 attempts to contribute 1. This should be clamped to 0.
+        // Expect revert because the round cap (500) is already met.
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__RoundCapReached.selector
+            )
+        );
         fundingPot.contributeToRoundFor(
             contributor3_, round2Id, 1, accessCriteriaId, new bytes32[](0)
         );
-        // Verify contributor 3's contribution is 0.
-        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor3_), 0);
         vm.stopPrank();
 
         // Final check that total contributions remain at the round cap.
