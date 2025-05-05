@@ -954,6 +954,7 @@ contract LM_PC_FundingPot_v1 is
             uint userPersonalCap = privileges.personalCap;
 
             // Add unspent personal capacity if personal accumulation is enabled for this round (Personal or All)
+            // Explicitly exclude Total mode here.
             if (
                 round.accumulationMode == AccumulationMode.Personal
                     || round.accumulationMode == AccumulationMode.All
@@ -1033,7 +1034,13 @@ contract LM_PC_FundingPot_v1 is
         // Iterate through all previous rounds (1 to roundId_-1)
         for (uint32 i = 1; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
-            if (prevRound.accumulationMode == AccumulationMode.Disabled) continue;
+            // Only consider previous rounds that allowed total accumulation
+            if (
+                prevRound.accumulationMode != AccumulationMode.Total
+                    && prevRound.accumulationMode != AccumulationMode.All
+            ) {
+                continue;
+            }
 
             uint prevRoundTotal = _getTotalRoundContribution(i);
             if (prevRoundTotal < prevRound.roundCap) {

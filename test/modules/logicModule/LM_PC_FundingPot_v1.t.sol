@@ -3000,20 +3000,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // ------------ PART 1: VERIFY TOTAL CAP ACCUMULATION ------------
         // Effective Round 2 Cap = Base Cap (500) + Unused from Round 1 (400) = 900
         vm.startPrank(contributor2_);
-        _token.approve(address(fundingPot), 1000);
+        _token.approve(address(fundingPot), 1000); // Approve enough
         
         // Contributor 2 attempts to contribute 700. 
-        // This is > base round cap (500) but < effective cap (900).
-        // This should succeed because Total mode accumulates round caps.
+        // Personal Cap (R2) is 300. Gets clamped to 300.
         fundingPot.contributeToRoundFor(
             contributor2_, round2Id, 700, accessCriteriaId, new bytes32[](0)
         );
-        // Verify contributor 2's full contribution was accepted
-        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor2_), 700);
+        // Verify contributor 2's contribution was clamped by personal cap.
+        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor2_), 300, "C2 contribution should be clamped by personal cap");
         vm.stopPrank();
         
-        // Verify total contributions to round 2 reflect the accumulation
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700);
+        // Verify total contributions after C2 is 300
+        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 300, "Total after C2 should be 300");
 
         // ------------ PART 2: VERIFY PERSONAL CAP NON-ACCUMULATION ------------
         // Contributor 1 had 800 personal cap in R1, contributed 600, unused = 200.
@@ -3033,7 +3032,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _token.approve(address(fundingPot), 500); 
 
         // Attempt to contribute 400 ( > R2 personal cap 300)
-        // Should be clamped to 300 because personal caps don't accumulate in Total mode.
+        // Total contributions = 300. Effective Round Cap = 900. Remaining Round Cap = 600.
+        // Personal Cap (R2) = 300. Unspent (R1) = 200, ignored in Total mode.
+        // Min(Remaining Round Cap, Remaining Personal Cap) = Min(600, 300) = 300.
+        // Should be clamped to 300.
         fundingPot.contributeToRoundFor(
             contributor1_,
             round2Id,
@@ -3043,29 +3045,43 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             unspentCaps // Provide unspent caps, although they should be ignored for personal limit
         );
         // Verify contributor 1's contribution was clamped to their R2 personal cap.
-        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_), 300);
+        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_), 300, "C1 contribution should be clamped by personal cap");
         vm.stopPrank();
 
-        // Verify total round contributions: 700 (C2) + 300 (C1 clamped) = 1000
-        // Note: This exceeds the *effective* R2 cap of 900. This indicates a potential issue 
-        // in the clamping logic interaction between personal and round caps. 
-        // Let's refine the expected total for now, assuming personal cap clamps first.
-        // Expected total: 700 (C2) + 300 (C1) = 1000. This still needs review against effective cap. 
-        // For now, let's assert the sum of individual contributions.
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700 + 300); 
-        // --> Further check: Can contributor 3 add more? Effective cap 900, current total 1000 -> No.
+        // Verify total round contributions: 300 (C2) + 300 (C1) = 600
+        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 600, "Total after C1 and C2 should be 600"); 
+        // Effective cap 900, current total 600. Remaining = 300.
 
+        // Contributor 3 contributes 300. Personal Cap = 300. Remaining Round Cap = 300. Should succeed.
         vm.startPrank(contributor3_);
-        _token.approve(address(fundingPot), 100);
+        _token.approve(address(fundingPot), 300);
         fundingPot.contributeToRoundFor(
-            contributor3_, round2Id, 1, accessCriteriaId, new bytes32[](0)
+            contributor3_, round2Id, 300, accessCriteriaId, new bytes32[](0)
         );
-        // Verify contributor 3 contributed 0 as effective cap was likely exceeded by C1's clamped contribution.
-        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor3_), 0);
+        // Verify C3 contributed 300
+        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor3_), 300, "C3 contributes remaining 300");
         vm.stopPrank();
 
-        // Final total check should remain 1000
-         assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 1000); 
+        // Total contributions should now be 900 (300 + 300 + 300), matching the effective cap.
+        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 900, "Total should match effective cap after C3");
+
+        // Now the effective cap is full. Try contributing 1 again.
+        vm.startPrank(contributor3_); // Can use C3 or another contributor
+        _token.approve(address(fundingPot), 1);
+        
+        // Try contributing 1, expect revert as cap is full
+        vm.expectRevert(
+             abi.encodeWithSelector(
+                 ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__RoundCapReached.selector
+             )
+         );
+         fundingPot.contributeToRoundFor(
+             contributor3_, round2Id, 1, accessCriteriaId, new bytes32[](0)
+         );
+        vm.stopPrank();
+
+        // Final total check should remain 900
+         assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 900, "Final total should be effective cap"); 
 
     }
 }
