@@ -442,22 +442,7 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @param  nftContract_ Address of the NFT contract.
     /// @param  merkleRoot_ Merkle root for the access criteria.
     /// @param  allowedAddresses_ List of explicitly allowed addresses.
-    function setAccessCriteriaForRound(
-        uint32 roundId_,
-        uint8 accessCriteriaId_,
-        address nftContract_,
-        bytes32 merkleRoot_,
-        address[] memory allowedAddresses_
-    ) external;
-
-    /// @notice Edits an existing access criteria for a round.
-    /// @dev    Only callable by funding pot admin and only before the round has started.
-    /// @param  roundId_ ID of the round.
-    /// @param  accessCriteriaId_ ID of the access criteria.
-    /// @param  nftContract_ Address of the NFT contract.
-    /// @param  merkleRoot_ Merkle root for the access criteria.
-    /// @param  allowedAddresses_ List of explicitly allowed addresses.
-    function editAccessCriteriaForRound(
+    function setAccessCriteria(
         uint32 roundId_,
         uint8 accessCriteriaId_,
         address nftContract_,

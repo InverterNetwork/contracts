@@ -429,7 +429,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function setAccessCriteriaForRound(
+    function setAccessCriteria(
         uint32 roundId_,
         uint8 accessCriteriaId_,
         address nftContract_,
@@ -444,68 +444,61 @@ contract LM_PC_FundingPot_v1 is
 
         _validateEditRoundParameters(round);
 
-        if (
-            (
-                accessCriteriaId_ == uint8(AccessCriteriaType.NFT)
-                    && nftContract_ == address(0)
-            )
-                || (
-                    accessCriteriaId_ == uint8(AccessCriteriaType.MERKLE)
-                        && merkleRoot_ == bytes32("")
-                )
-                || (
-                    accessCriteriaId_ == uint8(AccessCriteriaType.LIST)
-                        && allowedAddresses_.length == 0
-                )
-        ) {
-            revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
-        }
+        // Check if this is a new setting or an edit
+        bool isEdit = round.accessCriterias[accessCriteriaId_]
+            .accessCriteriaType != AccessCriteriaType.UNSET;
 
+        // Validate required data based on access criteria type
         AccessCriteriaType accessCriteriaType =
             AccessCriteriaType(accessCriteriaId_);
-        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
-            accessCriteriaType;
-        round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
-        round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
-
-        for (uint i = 0; i < allowedAddresses_.length; i++) {
-            round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
-            = true;
+        if (accessCriteriaType == AccessCriteriaType.NFT) {
+            if (nftContract_ == address(0)) {
+                revert
+                    Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+            }
+        } else if (accessCriteriaType == AccessCriteriaType.MERKLE) {
+            if (merkleRoot_ == bytes32(0)) {
+                revert
+                    Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+            }
+        } else if (accessCriteriaType == AccessCriteriaType.LIST) {
+            if (allowedAddresses_.length == 0) {
+                revert
+                    Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+            }
         }
 
-        emit AccessCriteriaSet(roundId_, accessCriteriaId_);
+        // Clear all existing data to prevent stale data
+        round.accessCriterias[accessCriteriaId_].nftContract = address(0);
+        round.accessCriterias[accessCriteriaId_].merkleRoot = bytes32(0);
+        // @note: When changing allowlists, call removeAllowlistedAddresses first to clear previous entries
+
+        // Set the access criteria type
+        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
+            accessCriteriaType;
+
+        // Set only the relevant data based on the access criteria type
+        if (accessCriteriaType == AccessCriteriaType.NFT) {
+            round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
+        } else if (accessCriteriaType == AccessCriteriaType.MERKLE) {
+            round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
+        } else if (accessCriteriaType == AccessCriteriaType.LIST) {
+            // For LIST type, update the allowed addresses
+            for (uint i = 0; i < allowedAddresses_.length; i++) {
+                round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
+                = true;
+            }
+        }
+
+        // Emit the appropriate event based on whether this is a new setting or an edit
+        if (isEdit) {
+            emit AccessCriteriaEdited(roundId_, accessCriteriaId_);
+        } else {
+            emit AccessCriteriaSet(roundId_, accessCriteriaId_);
+        }
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function editAccessCriteriaForRound(
-        uint32 roundId_,
-        uint8 accessCriteriaId_,
-        address nftContract_,
-        bytes32 merkleRoot_,
-        address[] calldata allowedAddresses_
-    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
-        Round storage round = rounds[roundId_];
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
-            revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
-        }
-
-        _validateEditRoundParameters(round);
-
-        AccessCriteriaType accessCriteriaType =
-            AccessCriteriaType(accessCriteriaId_);
-        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
-            accessCriteriaType;
-        round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
-        round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
-
-        for (uint i = 0; i < allowedAddresses_.length; i++) {
-            round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
-            = true;
-        }
-
-        emit AccessCriteriaEdited(roundId_, accessCriteriaId_);
-    }
-
     function removeAllowlistedAddresses(
         uint32 roundId_,
         uint8 accessCriteriaId_,

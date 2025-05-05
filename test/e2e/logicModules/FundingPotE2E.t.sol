@@ -201,7 +201,7 @@ contract FundingPotE2E is E2ETest {
         allowedAddresses[0] = contributor1;
         allowedAddresses[1] = contributor2;
 
-        fundingPot.setAccessCriteriaForRound(
+        fundingPot.setAccessCriteria(
             round1Id,
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST),
             address(0),
@@ -213,7 +213,7 @@ contract FundingPotE2E is E2ETest {
         allowedAddresses = new address[](1);
         allowedAddresses[0] = contributor3;
 
-        fundingPot.setAccessCriteriaForRound(
+        fundingPot.setAccessCriteria(
             round2Id,
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST),
             address(0),
