@@ -76,6 +76,16 @@ contract MetadataCollection_v1 {
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "AUT_Roles_v1"
     );
 
+    // TokenGatedRoleAuthorizer
+    IModule_v1.Metadata public tokenGatedRoleAuthorizerMetadata = IModule_v1
+        .Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "AUT_TokenGated_Roles_v1"
+    );
+
     // VotingRoles
     IModule_v1.Metadata public votingRolesMetadata = IModule_v1.Metadata(
         1,

@@ -29,6 +29,7 @@ import {LM_PC_PaymentRouter_v2} from "@lm/LM_PC_PaymentRouter_v2.sol";
 import {LM_PC_Staking_v2} from "@lm/LM_PC_Staking_v2.sol";
 import {LM_PC_KPIRewarder_v2} from "@lm/LM_PC_KPIRewarder_v2.sol";
 import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
 import {AUT_EXT_VotingRoles_v1} from
     "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
 import {PP_Queue_ManualExecution_v1} from "@pp/PP_Queue_ManualExecution_v1.sol";
@@ -399,6 +400,20 @@ contract E2EModuleRegistry is Test {
         );
     }
 
+    // Token Gated Role Authorizer
+
+    AUT_TokenGated_Roles_v1 tokenRoleAuthorizerImpl;
+
+    InverterBeacon_v1 tokenRoleAuthorizerBeacon;
+
+    IModule_v1.Metadata tokenRoleAuthorizerMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/tokenRoleAuthorizer",
+        "AUT_TokenGated_Roles_v1"
+    );
+
     /* 
     // Note that AUT_Roles_v1 owner and manager are the same
     IOrchestratorFactory_v1.ModuleConfig tokenRoleAuthorizerFactoryConfig =
@@ -407,6 +422,28 @@ contract E2EModuleRegistry is Test {
         abi.encode(address(this))  
     ); 
     */
+
+    function setUpTokenGatedRoleAuthorizer() internal {
+        // Deploy module implementations.
+        tokenRoleAuthorizerImpl = new AUT_TokenGated_Roles_v1();
+
+        // Deploy module beacons.
+        tokenRoleAuthorizerBeacon = new InverterBeacon_v1(
+            moduleFactory.reverter(),
+            DEFAULT_BEACON_OWNER,
+            tokenRoleAuthorizerMetadata.majorVersion,
+            address(tokenRoleAuthorizerImpl),
+            tokenRoleAuthorizerMetadata.minorVersion,
+            tokenRoleAuthorizerMetadata.patchVersion
+        );
+
+        // Register modules at moduleFactory.
+        vm.prank(teamMultisig);
+        gov.registerMetadataInModuleFactory(
+            tokenRoleAuthorizerMetadata,
+            IInverterBeacon_v1(tokenRoleAuthorizerBeacon)
+        );
+    }
 
     //--------------------------------------------------------------------------
     // Payment Processors
