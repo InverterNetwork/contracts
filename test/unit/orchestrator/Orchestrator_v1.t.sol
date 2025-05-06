@@ -932,6 +932,8 @@ contract OrchestratorV1Test is Test {
         bytes calldata data_
     ) public {
         vm.assume(data_.length >= 4);
+        // Assume that caller is not the module as it is the default admin
+        vm.assume(caller_ != address(this) || caller_ != address(0));
 
         // Turn off that every caller has permission for every premissioned function
         authorizer.setAllAuthorized(false);
