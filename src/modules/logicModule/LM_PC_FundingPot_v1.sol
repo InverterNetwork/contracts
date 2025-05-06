@@ -253,7 +253,7 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function getRoundAccessCriteriaPrivileges(
         uint32 roundId_,
-        uint8 accessCriteriaId__
+        uint8 accessCriteriaId_
     )
         external
         view
@@ -267,7 +267,7 @@ contract LM_PC_FundingPot_v1 is
     {
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria =
-            round.accessCriterias[accessCriteriaId__];
+            round.accessCriterias[accessCriteriaId_];
 
         if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
             return (0, false, 0, 0, 0);
@@ -275,7 +275,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Store the privileges in a local variable to reduce stack usage.
         AccessCriteriaPrivileges storage privileges =
-            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
         return (
             privileges.personalCap,
@@ -912,14 +912,14 @@ contract LM_PC_FundingPot_v1 is
     /// @param user_ The address of the user to contribute for.
     /// @param roundId_ The ID of the round to contribute to.
     /// @param amount_ The amount to contribute.
-    /// @param accessCriteriaId__ The ID of the access criteria to use for this contribution.
+    /// @param accessCriteriaId_ The ID of the access criteria to use for this contribution.
     /// @param canOverrideContributionSpan_ Whether the contribution span can be overridden.
     /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds.
     function _validateAndAdjustCapsWithUnspentCap(
         address user_,
         uint32 roundId_,
         uint amount_,
-        uint8 accessCriteriaId__,
+        uint8 accessCriteriaId_,
         bool canOverrideContributionSpan_,
         uint unspentPersonalCap_
     ) internal view returns (uint adjustedAmount) {
@@ -956,7 +956,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Get the base personal cap for this round and criteria
         AccessCriteriaPrivileges storage privileges =
-            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
         uint userPersonalCap = privileges.personalCap;
 
         // Add unspent capacity if global accumulative caps are enabled
