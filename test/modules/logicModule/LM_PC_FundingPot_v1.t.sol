@@ -3198,20 +3198,35 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testSetGlobalAccumulationStart_RevertsGivenStartRoundIsZero() public {
         // AC: Must revert if startRoundId_ == 0
         // Note: Add specific custom error later if desired
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__StartRoundCannotBeZero.selector
+            )
+        );
         fundingPot.setGlobalAccumulationStart(0);
     }
 
     function testSetGlobalAccumulationStart_RevertsGivenStartRoundGreaterThanCount(
         uint32 startRoundIdOffset
     ) public {
-        vm.assume(startRoundIdOffset > 0);
         testCreateRound(); // Ensure roundCount is at least 1
         uint32 currentRoundCount = fundingPot.getRoundCount();
+
+        vm.assume(startRoundIdOffset > 0); // Ensure invalidStartRoundId will be greater
+        // Prevent overflow: currentRoundCount + startRoundIdOffset <= type(uint32).max
+        // Therefore: startRoundIdOffset <= type(uint32).max - currentRoundCount
+        // currentRoundCount is at least 1, so type(uint32).max - currentRoundCount will not underflow.
+        vm.assume(startRoundIdOffset <= type(uint32).max - currentRoundCount);
+
         uint32 invalidStartRoundId = currentRoundCount + startRoundIdOffset;
 
-        // Note: Add specific custom error later if desired
-        vm.expectRevert();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount.selector,
+                invalidStartRoundId,
+                currentRoundCount
+            )
+        );
         fundingPot.setGlobalAccumulationStart(invalidStartRoundId);
     }
 
@@ -3243,7 +3258,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Expect event emission
         vm.expectEmit(true, true, true, true);
-        emit GlobalAccumulationStartSet(startRoundId);
+        emit ILM_PC_FundingPot_v1.GlobalAccumulationStartSet(startRoundId);
 
         // Set the value
         fundingPot.setGlobalAccumulationStart(startRoundId);

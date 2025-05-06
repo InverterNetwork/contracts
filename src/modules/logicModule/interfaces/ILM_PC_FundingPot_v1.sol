@@ -319,6 +319,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Invalid batch parameters.
     error Module__LM_PC_FundingPot__InvalidBatchParameters();
 
+    /// @notice Start round ID must be greater than zero.
+    error Module__LM_PC_FundingPot__StartRoundCannotBeZero();
+
+    /// @notice Start round ID cannot be greater than the current round count.
+    /// @param startRoundId_ The provided start round ID.
+    /// @param currentRoundCount_ The current total number of rounds.
+    error Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(uint32 startRoundId_, uint32 currentRoundCount_);
+
     // -------------------------------------------------------------------------
     // Public - Getters
 

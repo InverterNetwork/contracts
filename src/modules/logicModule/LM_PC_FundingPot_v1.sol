@@ -148,6 +148,11 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Add a mapping to track the next unprocessed index for each round.
     mapping(uint32 => uint) private roundIdToNextUnprocessedIndex;
 
+    /// @notice The minimum round ID (inclusive, >= 1) to consider for accumulation calculations.
+    /// @dev    Defaults to 1. If a target round's mode allows accumulation,
+    ///         only previous rounds with roundId >= globalAccumulationStartRoundId will be included.
+    uint32 internal globalAccumulationStartRoundId;
+
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -176,6 +181,9 @@ contract LM_PC_FundingPot_v1 is
         flags |= bytes32(1 << FLAG_END);
 
         __ERC20PaymentClientBase_v2_init(flags);
+
+        // Explicitly initialize the global start round ID
+        globalAccumulationStartRoundId = 1;
     }
 
     // -------------------------------------------------------------------------
@@ -347,6 +355,11 @@ contract LM_PC_FundingPot_v1 is
         } else {
             return (false, 0);
         }
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getGlobalAccumulationStartRoundId() external view returns (uint32) {
+        return globalAccumulationStartRoundId;
     }
 
     // -------------------------------------------------------------------------
@@ -699,6 +712,23 @@ contract LM_PC_FundingPot_v1 is
         }
 
         roundIdToNextUnprocessedIndex[roundId_] = endIndex;
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function setGlobalAccumulationStart(uint32 startRoundId_)
+        external
+        onlyModuleRole(FUNDING_POT_ADMIN_ROLE)
+    {
+        if (startRoundId_ == 0) {
+            revert Module__LM_PC_FundingPot__StartRoundCannotBeZero();
+        }
+        if (startRoundId_ > roundCount) {
+            revert Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(startRoundId_, roundCount);
+        }
+
+        globalAccumulationStartRoundId = startRoundId_;
+
+        emit GlobalAccumulationStartSet(startRoundId_);
     }
 
     // -------------------------------------------------------------------------
