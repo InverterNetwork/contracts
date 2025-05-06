@@ -148,6 +148,9 @@ contract LM_PC_FundingPot_v1 is
     /// @notice Add a mapping to track the next unprocessed index for each round.
     mapping(uint32 => uint) private roundIdToNextUnprocessedIndex;
 
+    /// @notice The next available access criteria ID for each round
+    mapping(uint32 => uint8) private roundIdToNextAccessCriteriaId;
+
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -431,26 +434,42 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function setAccessCriteria(
         uint32 roundId_,
-        uint8 accessCriteriaId_,
+        uint8 accessCriteriaType_,
+        uint8 accessCriteriaId_, // Optional: 0 for new, non-zero for edit
         address nftContract_,
         bytes32 merkleRoot_,
         address[] calldata allowedAddresses_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+        if (accessCriteriaType_ > MAX_ACCESS_CRITERIA_ID) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
         _validateEditRoundParameters(round);
 
-        // Check if this is a new setting or an edit
-        bool isEdit = round.accessCriterias[accessCriteriaId_]
-            .accessCriteriaType != AccessCriteriaType.UNSET;
+        uint8 criteriaId;
+        bool isEdit = false;
+
+        // If accessCriteriaId_ is 0, create a new access criteria
+        // Otherwise, edit the existing one
+        if (accessCriteriaId_ == 0) {
+            criteriaId = ++roundIdToNextAccessCriteriaId[roundId_];
+        } else {
+            criteriaId = accessCriteriaId_;
+            isEdit = true;
+
+            if (
+                round.accessCriterias[criteriaId].accessCriteriaType
+                    == AccessCriteriaType.UNSET
+            ) {
+                revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+            }
+        }
 
         // Validate required data based on access criteria type
         AccessCriteriaType accessCriteriaType =
-            AccessCriteriaType(accessCriteriaId_);
+            AccessCriteriaType(accessCriteriaType_);
         if (accessCriteriaType == AccessCriteriaType.NFT) {
             if (nftContract_ == address(0)) {
                 revert
@@ -469,35 +488,36 @@ contract LM_PC_FundingPot_v1 is
         }
 
         // Clear all existing data to prevent stale data
-        round.accessCriterias[accessCriteriaId_].nftContract = address(0);
-        round.accessCriterias[accessCriteriaId_].merkleRoot = bytes32(0);
+        round.accessCriterias[criteriaId].nftContract = address(0);
+        round.accessCriterias[criteriaId].merkleRoot = bytes32(0);
         // @note: When changing allowlists, call removeAllowlistedAddresses first to clear previous entries
 
         // Set the access criteria type
-        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
+        round.accessCriterias[criteriaId].accessCriteriaType =
             accessCriteriaType;
 
         // Set only the relevant data based on the access criteria type
         if (accessCriteriaType == AccessCriteriaType.NFT) {
-            round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
+            round.accessCriterias[criteriaId].nftContract = nftContract_;
         } else if (accessCriteriaType == AccessCriteriaType.MERKLE) {
-            round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
+            round.accessCriterias[criteriaId].merkleRoot = merkleRoot_;
         } else if (accessCriteriaType == AccessCriteriaType.LIST) {
             // For LIST type, update the allowed addresses
             for (uint i = 0; i < allowedAddresses_.length; i++) {
-                round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
+                round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]
                 = true;
             }
         }
 
         // Emit the appropriate event based on whether this is a new setting or an edit
         if (isEdit) {
-            emit AccessCriteriaEdited(roundId_, accessCriteriaId_);
+            emit AccessCriteriaEdited(roundId_, criteriaId);
         } else {
-            emit AccessCriteriaSet(roundId_, accessCriteriaId_);
+            emit AccessCriteriaSet(roundId_, criteriaId);
         }
     }
 
+    // Update removeAllowlistedAddresses to match the new approach
     /// @inheritdoc ILM_PC_FundingPot_v1
     function removeAllowlistedAddresses(
         uint32 roundId_,
@@ -505,7 +525,12 @@ contract LM_PC_FundingPot_v1 is
         address[] calldata addressesToRemove_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+
+        // Verify the access criteria exists
+        if (
+            round.accessCriterias[accessCriteriaId_].accessCriteriaType
+                == AccessCriteriaType.UNSET
+        ) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 

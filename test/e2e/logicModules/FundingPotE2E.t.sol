@@ -204,6 +204,7 @@ contract FundingPotE2E is E2ETest {
         fundingPot.setAccessCriteria(
             round1Id,
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST),
+            0,
             address(0),
             bytes32(0),
             allowedAddresses
@@ -216,6 +217,7 @@ contract FundingPotE2E is E2ETest {
         fundingPot.setAccessCriteria(
             round2Id,
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST),
+            0,
             address(0),
             bytes32(0),
             allowedAddresses
@@ -224,7 +226,7 @@ contract FundingPotE2E is E2ETest {
         // 5. Set access criteria privileges for the rounds
         fundingPot.setAccessCriteriaPrivileges(
             round1Id,
-            0, // accessCriteriaId
+            1, // accessCriteriaId
             500e18, // personalCap
             true, // overrideContributionSpan
             block.timestamp, // start
@@ -234,7 +236,7 @@ contract FundingPotE2E is E2ETest {
 
         fundingPot.setAccessCriteriaPrivileges(
             round2Id,
-            0, // accessCriteriaId
+            1, // accessCriteriaId
             750e18, // personalCap
             true, // overrideContributionSpan
             block.timestamp, // start
@@ -252,21 +254,21 @@ contract FundingPotE2E is E2ETest {
         vm.startPrank(contributor1);
         contributionToken.approve(address(fundingPot), 400e18);
         fundingPot.contributeToRoundFor(
-            contributor1, round1Id, 400e18, 0, new bytes32[](0)
+            contributor1, round1Id, 400e18, 1, new bytes32[](0)
         );
         vm.stopPrank();
 
         vm.startPrank(contributor2);
         contributionToken.approve(address(fundingPot), 600e18);
         fundingPot.contributeToRoundFor(
-            contributor2, round1Id, 600e18, 0, new bytes32[](0)
+            contributor2, round1Id, 600e18, 1, new bytes32[](0)
         );
         vm.stopPrank();
 
         vm.startPrank(contributor3);
         contributionToken.approve(address(fundingPot), 750e18);
         fundingPot.contributeToRoundFor(
-            contributor3, round2Id, 750e18, 0, new bytes32[](0)
+            contributor3, round2Id, 750e18, 1, new bytes32[](0)
         );
         vm.stopPrank();
 

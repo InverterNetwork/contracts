@@ -271,9 +271,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice User is not on the allowlist.
     error Module__LM_PC_FundingPot__AccessCriteriaListFailed();
 
-    /// @notice Invalid access criteria type.
-    error Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
-
     /// @notice Access not permitted.
     error Module__LM_PC_FundingPot__AccessNotPermitted();
 
@@ -438,12 +435,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set Access Control Check.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
+    /// @param  accessCriteriaType_ access criteria type of the round.
     /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  nftContract_ Address of the NFT contract.
     /// @param  merkleRoot_ Merkle root for the access criteria.
     /// @param  allowedAddresses_ List of explicitly allowed addresses.
     function setAccessCriteria(
         uint32 roundId_,
+        uint8 accessCriteriaType_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,

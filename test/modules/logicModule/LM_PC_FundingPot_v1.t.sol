@@ -843,6 +843,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum_,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -873,6 +874,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -906,6 +908,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -939,6 +942,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -970,6 +974,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -1001,6 +1006,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -1032,6 +1038,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -1043,6 +1050,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         testCreateRound();
         uint32 roundId = fundingPot.getRoundCount();
+        uint8 accessId = 1;
 
         (
             address nftContract,
@@ -1053,6 +1061,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -1063,9 +1072,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address retrievedNftContract,
             bytes32 retrievedMerkleRoot,
             bool hasAccess
-        ) = fundingPot.getRoundAccessCriteria(
-            uint32(roundId), accessCriteriaEnum
-        );
+        ) = fundingPot.getRoundAccessCriteria(uint32(roundId), accessId);
 
         assertEq(isOpen, accessCriteriaEnum == 1);
         assertEq(retrievedNftContract, nftContract);
@@ -1084,22 +1091,26 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.assume(oldAccessCriteriaEnum >= 1 && oldAccessCriteriaEnum <= 4);
         vm.assume(
             newAccessCriteriaEnum != oldAccessCriteriaEnum
-                && newAccessCriteriaEnum >= 0 && newAccessCriteriaEnum <= 4
+                && newAccessCriteriaEnum >= 1 && newAccessCriteriaEnum <= 4
         );
 
         testFuzzSetAccessCriteria(oldAccessCriteriaEnum);
 
         uint32 roundId = fundingPot.getRoundCount();
-
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(oldAccessCriteriaEnum, roundId);
+        ) = _helper_createAccessCriteria(newAccessCriteriaEnum, roundId);
 
+        vm.expectEmit(true, true, true, false);
+        emit ILM_PC_FundingPot_v1.AccessCriteriaEdited(
+            roundId, uint8(newAccessCriteriaEnum)
+        );
         fundingPot.setAccessCriteria(
             roundId,
-            oldAccessCriteriaEnum,
+            newAccessCriteriaEnum,
+            1,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -1127,15 +1138,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
         uint32 roundId = fundingPot.getRoundCount();
 
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
 
         address[] memory addressesToRemove = new address[](2);
@@ -1198,6 +1210,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -1213,9 +1226,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             )
         );
 
-        fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessCriteriaEnum, 1000, false, 0, 0, 0
-        );
+        fundingPot.setAccessCriteriaPrivileges(roundId, 1, 1000, false, 0, 0, 0);
         vm.stopPrank();
     }
 
@@ -1239,16 +1250,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address[] memory allowedAddresses
         ) = _helper_createAccessCriteria(accessCriteriaEnum, roundId);
 
+        uint8 accessId = 1;
+
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
         );
 
         fundingPot.setAccessCriteriaPrivileges(
-            roundId, accessCriteriaEnum, 1000, false, 0, 0, 0
+            roundId, accessId, 1000, false, 0, 0, 0
         );
 
         (
@@ -1257,9 +1271,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             uint start,
             uint cliff,
             uint end
-        ) = fundingPot.getRoundAccessCriteriaPrivileges(
-            roundId, accessCriteriaEnum
-        );
+        ) = fundingPot.getRoundAccessCriteriaPrivileges(roundId, accessId);
 
         assertEq(personalCap, 1000);
         assertEq(overrideContributionSpan, false);
@@ -1354,22 +1366,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     ) public {
         testCreateRound();
 
-        // vm.assume(amount > 0 && amount <= 500);
-        // vm.assume(roundStart > block.timestamp && roundStart < roundEnd);
-        // vm.assume(roundCap > 0);
-
         uint32 roundId = fundingPot.getRoundCount();
         uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
         uint amount = 250;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, false, 0, 0, 0
@@ -1399,17 +1408,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 0;
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         uint amount = 250;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, false, 0, 0, 0
@@ -1439,8 +1450,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testContributeToRoundFor_revertsGivenNFTAccessCriteriaIsNotMet()
         public
     {
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
-        _helper_setupRoundWithAccessCriteria(accessId);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        _helper_setupRoundWithAccessCriteria(accessType);
 
         uint32 roundId = fundingPot.getRoundCount();
 
@@ -1474,7 +1486,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
         uint amount = 250;
 
         (,,,, bytes32[] memory proofB) = _helper_generateMerkleTreeForTwoLeaves(
@@ -1485,10 +1498,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, false, 0, 0, 0
@@ -1520,17 +1533,18 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.LIST);
         uint amount = 250;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, false, 0, 0, 0
@@ -1562,17 +1576,18 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         uint amount = 500;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 500, false, 0, 0, 0
@@ -1672,7 +1687,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testcontributeToRoundFor_worksGivenAllConditionsMet() public {
         testCreateRound();
 
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
         uint32 roundId = fundingPot.getRoundCount();
         uint amount = 250;
@@ -1681,10 +1697,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -1732,7 +1748,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             accessCriteriaEnumNew != accessCriteriaEnumOld
                 && accessCriteriaEnumNew >= 0 && accessCriteriaEnumNew <= 4
         );
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         _helper_setupRoundWithAccessCriteria(accessId);
         uint32 roundId = fundingPot.getRoundCount();
 
@@ -1768,9 +1785,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     function testContributeToRoundFor_worksGivenMerkleAccessCriteriaMet()
         public
     {
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.MERKLE);
 
-        _helper_setupRoundWithAccessCriteria(accessId);
+        _helper_setupRoundWithAccessCriteria(accessType);
 
         uint32 roundId = fundingPot.getRoundCount();
 
@@ -1813,7 +1831,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         _defaultRoundParams.roundCap = 150;
         _defaultRoundParams.autoClosure = true;
 
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
         uint32 roundId = fundingPot.createRound(
             _defaultRoundParams.roundStart,
@@ -1829,10 +1848,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
 
         uint personalCap = 200;
@@ -1875,7 +1894,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
 
         uint firstAmount = 400;
         uint personalCap = 500;
@@ -1884,10 +1904,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, personalCap, false, 0, 0, 0
@@ -1939,17 +1959,18 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         uint amount = 250;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
 
         // Set privileges with override capability
@@ -2001,16 +2022,18 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint32 round1Id = fundingPot.getRoundCount();
 
-        uint8 accessCriteriaId =
+        uint8 accessCriteriaId = 1;
+        uint8 accessCriteriaType =
             uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessCriteriaId, round1Id);
+        ) = _helper_createAccessCriteria(accessCriteriaType, round1Id);
         fundingPot.setAccessCriteria(
             round1Id,
-            accessCriteriaId,
+            accessCriteriaType,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -2035,7 +2058,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         fundingPot.setAccessCriteria(
             round2Id,
-            accessCriteriaId,
+            accessCriteriaType,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
@@ -2112,13 +2136,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 round1Id = fundingPot.getRoundCount();
 
         uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, round1Id);
+        ) = _helper_createAccessCriteria(accessType, round1Id);
         fundingPot.setAccessCriteria(
-            round1Id, accessId, nftContract, merkleRoot, allowedAddresses
+            round1Id, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             round1Id, accessId, 500, false, 0, 0, 0
@@ -2137,7 +2163,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         uint32 round2Id = fundingPot.getRoundCount();
         fundingPot.setAccessCriteria(
-            round2Id, accessId, nftContract, merkleRoot, allowedAddresses
+            round2Id, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             round2Id, accessId, 500, false, 0, 0, 0
@@ -2326,7 +2352,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ) = _helper_createAccessCriteria(accessCriteriaId, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessCriteriaId, nftContract, merkleRoot, allowedAddresses
+            roundId,
+            accessCriteriaId,
+            0,
+            nftContract,
+            merkleRoot,
+            allowedAddresses
         );
 
         fundingPot.setAccessCriteriaPrivileges(roundId, 0, 1000, false, 0, 0, 0);
@@ -2392,15 +2423,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
         uint32 roundId = fundingPot.getRoundCount();
 
-        uint8 accessId = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -2430,14 +2462,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 roundId = fundingPot.getRoundCount();
 
         uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -2469,17 +2503,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 2;
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+
         uint amount = 1000;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -2508,17 +2544,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testEditRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 2;
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         uint amount = 2000;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
 
         fundingPot.setAccessCriteriaPrivileges(
@@ -2547,14 +2585,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Set up access criteria
         uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -2891,13 +2931,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Set access criteria and privileges
         uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -2974,13 +3016,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // Set access criteria and privileges
         uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId,
@@ -3039,17 +3083,19 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         testCreateRound();
 
         uint32 roundId = fundingPot.getRoundCount();
-        uint8 accessId = 2;
+        uint8 accessId = 1;
+        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+
         uint amount = 1000;
 
         (
             address nftContract,
             bytes32 merkleRoot,
             address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessId, roundId);
+        ) = _helper_createAccessCriteria(accessType, roundId);
 
         fundingPot.setAccessCriteria(
-            roundId, accessId, nftContract, merkleRoot, allowedAddresses
+            roundId, accessType, 0, nftContract, merkleRoot, allowedAddresses
         );
         fundingPot.setAccessCriteriaPrivileges(
             roundId, accessId, 1000, false, 0, 0, 0
@@ -3236,6 +3282,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setAccessCriteria(
             roundId,
             accessCriteriaEnum,
+            0,
             nftContract,
             merkleRoot,
             allowedAddresses
