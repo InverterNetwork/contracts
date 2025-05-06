@@ -131,15 +131,6 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @return The role ID.
     function getAdminRole() external view returns (bytes32);
 
-    // ------------------------------------------------------------------------
-    // Getter - Out of Order
-
-    /// @notice This function is deprecated and will revert when called.
-    function checkForRole(bytes32, address) external view returns (bool);
-
-    /// @notice This function is deprecated and will revert when called.
-    function generateRoleId(address, bytes32) external pure returns (bytes32);
-
     // ========================================================================
     // Mutating Functions
 
@@ -236,42 +227,4 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
         address[] memory targets_,
         bytes4[][] memory selectors_
     ) external returns (bytes32 newRoleId_);
-
-    // ------------------------------------------------------------------------
-    // Mutating - Out of Order
-
-    /// @notice This function is deprecated and will revert when called.
-    function grantRoleFromModule(bytes32, address) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function grantRoleFromModuleBatched(bytes32, address[] calldata)
-        external
-        pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function revokeRoleFromModule(bytes32, address) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
-        external
-        pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function burnAdminFromModuleRole(bytes32) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function grantGlobalRole(bytes32, address) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function grantGlobalRoleBatched(bytes32, address[] calldata)
-        external
-        pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function revokeGlobalRole(bytes32, address) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function revokeGlobalRoleBatched(bytes32, address[] calldata)
-        external
-        pure;
 }

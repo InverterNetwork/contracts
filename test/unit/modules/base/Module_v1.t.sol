@@ -342,68 +342,6 @@ contract ModuleBaseV1Test is ModuleTest {
     }
 
     // ========================================================================
-    // Mutating Functions
-
-    // ------------------------------------------------------------------------
-    // Mutating - Out of Order
-
-    /*
-    Test: grantModuleRole
-    └── When: grantModuleRole is called
-        └── Then: The function should revert with Module_FunctionDeprecated
-        */
-    function testGrantModuleRole_Deprecated() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__FunctionDeprecated.selector
-            )
-        );
-        module.grantModuleRole(bytes32(uint(0)), address(0));
-    }
-
-    /*
-    Test: grantModuleRoleBatched
-    └── When: grantModuleRoleBatched is called
-        └── Then: The function should revert with Module_FunctionDeprecated
-        */
-    function testGrantModuleRoleBatched_Deprecated() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__FunctionDeprecated.selector
-            )
-        );
-        module.grantModuleRoleBatched(bytes32(uint(0)), new address[](0));
-    }
-
-    /*
-    Test: revokeModuleRole
-    └── When: revokeModuleRole is called
-        └── Then: The function should revert with Module_FunctionDeprecated
-        */
-    function testRevokeModuleRole_Deprecated() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__FunctionDeprecated.selector
-            )
-        );
-        module.revokeModuleRole(bytes32(uint(0)), address(0));
-    }
-
-    /*
-    Test: revokeModuleRoleBatched
-    └── When: revokeModuleRoleBatched is called
-        └── Then: The function should revert with Module_FunctionDeprecated
-        */
-    function testRevokeModuleRoleBatched_Deprecated() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__FunctionDeprecated.selector
-            )
-        );
-        module.revokeModuleRoleBatched(bytes32(uint(0)), new address[](0));
-    }
-
-    // ========================================================================
     // Internal Functions
 
     // ------------------------------------------------------------------------

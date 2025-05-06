@@ -111,26 +111,4 @@ interface IModule_v1 {
     /// @notice Returns the module's {Orchestrator_v1} interface, {IOrchestrator_v1}.
     /// @return The module's {Orchestrator_1}.
     function orchestrator() external view returns (IOrchestrator_v1);
-
-    // ========================================================================
-    // Mutating Functions
-
-    // ------------------------------------------------------------------------
-    // Mutating - Out of Order
-
-    /// @notice This function is deprecated and will revert when called.
-    function grantModuleRole(bytes32, address) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function grantModuleRoleBatched(bytes32, address[] calldata)
-        external
-        pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function revokeModuleRole(bytes32, address) external pure;
-
-    /// @notice This function is deprecated and will revert when called.
-    function revokeModuleRoleBatched(bytes32, address[] calldata)
-        external
-        pure;
 }

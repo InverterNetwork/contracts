@@ -223,18 +223,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         return _getRepayableAmount();
     }
 
-    // ------------------------------------------------------------------------
-    // Getter - Out of Order
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function isBuyAndSellRestricted()
-        public
-        view
-        returns (bool buyAndSellIsRestricted_)
-    {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
     // ========================================================================
     // Public Mutating Functions
 
@@ -358,16 +346,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
         revert
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1__InvalidFunctionality(
         );
-    }
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function restrictBuyAndSell() external {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
-    function unrestrictBuyAndSell() external {
-        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     // ========================================================================

@@ -1200,34 +1200,6 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
     }
 
-    /*
-    Test: restrictBuyAndSell
-    └── When: restrictBuyAndSell is called
-        └── Then: The function should revert with Module_FunctionDeprecated
-    */
-    function testRestrictBuyAndSell_Deprecated() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__FunctionDeprecated.selector
-            )
-        );
-        bondingCurveFundingManager.restrictBuyAndSell();
-    }
-
-    /*
-    Test: unrestrictBuyAndSell
-    └── When: unrestrictBuyAndSell is called
-        └── Then: The function should revert with Module_FunctionDeprecated
-    */
-    function testUnrestrictBuyAndSell_Deprecated() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__FunctionDeprecated.selector
-            )
-        );
-        bondingCurveFundingManager.unrestrictBuyAndSell();
-    }
-
     // -------------------------------------------------------------------------
     // Internal Functions
 

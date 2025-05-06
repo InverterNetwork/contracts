@@ -222,24 +222,6 @@ contract AUT_Roles_v1 is
         return DEFAULT_ADMIN_ROLE;
     }
 
-    // ------------------------------------------------------------------------
-    // Getter - Out of Order
-
-    /// @inheritdoc IAuthorizer_v1
-    function checkForRole(bytes32, address)
-        external
-        view
-        virtual
-        returns (bool)
-    {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function generateRoleId(address, bytes32) public pure returns (bytes32) {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
     // ========================================================================
     // Mutating Functions
 
@@ -378,65 +360,6 @@ contract AUT_Roles_v1 is
                 addAccessPermission(targets_[i], selectors_[i][j], newRoleId_);
             }
         }
-    }
-    // ------------------------------------------------------------------------
-    // Mutating - Out of Order
-
-    /// @inheritdoc IAuthorizer_v1
-    function grantRoleFromModule(bytes32, address) external pure {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function grantRoleFromModuleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeRoleFromModule(bytes32, address) external pure {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function burnAdminFromModuleRole(bytes32) external pure {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function grantGlobalRole(bytes32, address) external pure {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function grantGlobalRoleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeGlobalRole(bytes32, address) external pure {
-        revert IModule_v1.Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function revokeGlobalRoleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert IModule_v1.Module__FunctionDeprecated();
     }
 
     // ========================================================================

@@ -115,15 +115,6 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @return tokenVault_ The address of the token vault.
     function getTokenVault() external view returns (address tokenVault_);
 
-    // ------------------------------------------------------------------------
-    // Getter - Out of Order
-
-    /// @notice This function is deprecated and will revert when called.
-    function isBuyAndSellRestricted()
-        external
-        view
-        returns (bool buyAndSellIsRestricted_);
-
     // ========================================================================
     // Public Mutating Functions
 
@@ -168,13 +159,4 @@ interface IFM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1 is
     /// @dev    Function access controlled by authorizer.
     /// @param  tokenVault_ The address of the token vault.
     function setTokenVault(address tokenVault_) external;
-
-    // ------------------------------------------------------------------------
-    // Mutating - Out of Order
-
-    /// @notice This function is deprecated and will revert when called.
-    function restrictBuyAndSell() external;
-
-    /// @notice This function is deprecated and will revert when called.
-    function unrestrictBuyAndSell() external;
 }

@@ -216,38 +216,6 @@ abstract contract Module_v1 is
     }
 
     // ========================================================================
-    // Mutating Functions
-
-    // ------------------------------------------------------------------------
-    // Mutating - Out of Order
-
-    /// @inheritdoc IModule_v1
-    function grantModuleRole(bytes32, address) external pure {
-        revert Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IModule_v1
-    function grantModuleRoleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IModule_v1
-    function revokeModuleRole(bytes32, address) external pure {
-        revert Module__FunctionDeprecated();
-    }
-
-    /// @inheritdoc IModule_v1
-    function revokeModuleRoleBatched(bytes32, address[] calldata)
-        external
-        pure
-    {
-        revert Module__FunctionDeprecated();
-    }
-
-    // ========================================================================
     // Internal Functions
 
     // ------------------------------------------------------------------------
