@@ -8,7 +8,7 @@ Implement a feature allowing the `FUNDING_POT_ADMIN_ROLE` to configure a single,
 
 1.  **State Variable:**
 
-    - A new `public` state variable `uint32 public globalAccumulationStartRoundId` shall be added to `LM_PC_FundingPot_v1.sol`.
+    - A new `internal` state variable `uint32 internal globalAccumulationStartRoundId` shall be added to `LM_PC_FundingPot_v1.sol`.
     - The value stored represents the minimum `roundId` (inclusive) of a previous round to be included in accumulation calculations, _if_ the target round's `AccumulationMode` allows for accumulation (`Personal`, `Total`, or `All`).
     - The variable shall be initialized to `1` in the contract (e.g., via `__LM_PC_FundingPot_init` or directly if using Solidity >=0.8.18 default initialization feature), meaning accumulation considers rounds starting from round 1 by default.
 
@@ -23,7 +23,8 @@ Implement a feature allowing the `FUNDING_POT_ADMIN_ROLE` to configure a single,
 
 3.  **Getter Function:**
 
-    - The `public` visibility of the `globalAccumulationStartRoundId` variable serves as the getter. No separate getter function is required.
+    - A new `external view` function `getGlobalAccumulationStartRoundId() returns (uint32)` shall be implemented in `LM_PC_FundingPot_v1.sol` and defined in the `ILM_PC_FundingPot_v1.sol` interface.
+    - This function shall return the current value of the `globalAccumulationStartRoundId` state variable.
 
 4.  **Event:**
 
@@ -50,64 +51,62 @@ Implement a feature allowing the `FUNDING_POT_ADMIN_ROLE` to configure a single,
       - Revert condition: `startRoundId_ > roundCount`.
       - Successful setting and event emission.
       - Correct update of the `globalAccumulationStartRoundId` state variable.
-      - Verification of the default initial value (should be 1).
+    - Add tests for the `getGlobalAccumulationStartRoundId` getter function:
+      - Verify it returns the correct default value (1) initially.
+      - Verify it returns the updated value after `setGlobalAccumulationStart` is called successfully.
     - Modify existing accumulation tests (or add new ones) for modes `Personal`, `Total`, and `All` to incorporate the global start round:
       - Test Case 1: In a multi-round setup (e.g., Round 1, 2, 3), set `globalAccumulationStartRoundId = 2`. Verify that accumulation calculations for Round 3 (when its mode is `Personal`, `Total`, or `All`) only consider Round 2 and ignore Round 1.
-      - Test Case 2: In a multi-round setup (e.g., Round 1, 2, 3), keep the default `globalAccumulationStartRoundId = 1`. Verify that accumulation calculations for Round 3 (when its mode allows) consider both Round 1 and Round 2.
+      - Test Case 2: In a multi-round setup (e.g., Round 1, 2, 3), keep the default `globalAccumulationStartRoundId = 1` (verify via getter). Verify that accumulation calculations for Round 3 (when its mode allows) consider both Round 1 and Round 2.
       - Test Case 3: Verify that if the target round's mode is `Disabled`, accumulation does not occur even if `globalAccumulationStartRoundId` is set to allow previous rounds.
 
 8.  **Documentation (NatSpec):**
-    - Add NatSpec comments for the new `globalAccumulationStartRoundId` state variable in `LM_PC_FundingPot_v1.sol`.
-    - Add NatSpec comments for the `setGlobalAccumulationStart` function and `GlobalAccumulationStartSet` event in both the interface (`ILM_PC_FundingPot_v1.sol`) and implementation (`LM_PC_FundingPot_v1.sol`) files.
+    - Add NatSpec comments for the new `globalAccumulationStartRoundId` state variable (documenting its purpose even though internal).
+    - Add NatSpec comments for the `setGlobalAccumulationStart` function, `getGlobalAccumulationStartRoundId` function, and `GlobalAccumulationStartSet` event in both the interface (`ILM_PC_FundingPot_v1.sol`) and implementation (`LM_PC_FundingPot_v1.sol`) files.
     - Update existing NatSpec comments where relevant to mention the global start round constraint on accumulation.
 
 ## Implementation Plan
 
-**(Commit-sized tasks)**
+**(TDD Approach - Commit-sized tasks)**
 
 1.  **Interface Definitions (`ILM_PC_FundingPot_v1.sol`):**
 
     - Define the `GlobalAccumulationStartSet(uint32 startRoundId)` event.
     - Define the `setGlobalAccumulationStart(uint32 startRoundId_)` external function signature.
-    - Add NatSpec comments for the new event and function.
+    - Define the `getGlobalAccumulationStartRoundId() external view returns (uint32)` function signature.
+    - Add NatSpec comments for the new event and functions.
+    - _(Commit 1: Interface updates)_
 
-2.  **State and Setter Implementation (`LM_PC_FundingPot_v1.sol`):**
+2.  **Setter & Getter Tests (`LM_PC_FundingPot_v1.t.sol`):**
 
-    - Add the `uint32 public globalAccumulationStartRoundId = 1;` state variable.
-    - Implement the `setGlobalAccumulationStart(uint32 startRoundId_)` function:
-      - Add `onlyModuleRole(FUNDING_POT_ADMIN_ROLE)` modifier.
-      - Add revert checks: `startRoundId_ == 0` and `startRoundId_ > roundCount`.
-      - Update the `globalAccumulationStartRoundId` state variable.
-      - Emit the `GlobalAccumulationStartSet` event.
-    - Add NatSpec comments for the state variable and the implemented function.
+    - Add a new test suite or section for `setGlobalAccumulationStart` and `getGlobalAccumulationStartRoundId`.
+    - Test role access control for the setter.
+    - Test revert condition `startRoundId_ == 0` for the setter.
+    - Test revert condition `startRoundId_ > roundCount` for the setter.
+    - Test successful setting and event emission for the setter.
+    - Test the getter returns the correct value after successful setting.
+    - Test the getter returns the default value (1) initially.
+    - _(Commit 2: Failing tests for setter/getter)_
 
-3.  **Logic Integration - Total Cap (`LM_PC_FundingPot_v1.sol`):**
+3.  **State, Setter & Getter Implementation (`LM_PC_FundingPot_v1.sol`):**
 
-    - Modify the internal function `_calculateUnusedCapacityFromPreviousRounds`:
-      - Read `globalAccumulationStartRoundId`.
-      - Add check: `if (startRound >= targetRoundId_) return 0;`
-      - Adjust the loop to start from `globalAccumulationStartRoundId`: `for (uint32 i = startRound; i < targetRoundId_; ++i)`.
+    - Add the `uint32 internal globalAccumulationStartRoundId = 1;` state variable.
+    - Implement the `setGlobalAccumulationStart(uint32 startRoundId_)` function (including role check, reverts, state update, event emission).
+    - Implement the `getGlobalAccumulationStartRoundId() external view returns (uint32)` function.
+    - Add basic NatSpec for the new state var and functions (in the interface contract).
+    - _(Commit 3: Implement setter/getter to make tests pass)_
 
-4.  **Logic Integration - Personal Cap (`LM_PC_FundingPot_v1.sol`):**
+4.  **Accumulation Logic Tests (`LM_PC_FundingPot_v1.t.sol`):**
 
-    - Modify the `external` function `contributeToRoundFor(..., UnspentPersonalRoundCap[] ...)`:
-      - Inside the loop processing `unspentPersonalRoundCaps_`, read `globalAccumulationStartRoundId`.
-      - Add a check: `if (roundCap.roundId < startRound) continue;` before calculating/adding the unspent capacity for that specific previous round.
+    - Add _new, separate_ tests dedicated to verifying the interaction between `AccumulationMode` (`Personal`, `Total`, `All`) and the `globalAccumulationStartRoundId` constraint.
+    - Cover scenarios like setting start round to 2, verifying default start round 1 via getter, and interaction with `Disabled` mode (Acceptance Criterion #7).
+    - _(Commit 4: Failing tests for accumulation logic with global start)_
 
-5.  **Setter Function Tests (`LM_PC_FundingPot_v1.t.sol`):**
+5.  **Logic Integration (Total & Personal Cap) (`LM_PC_FundingPot_v1.sol`):**
 
-    - Add a new test suite or section for `setGlobalAccumulationStart`.
-    - Test role access control.
-    - Test revert condition `startRoundId_ == 0`.
-    - Test revert condition `startRoundId_ > roundCount`.
-    - Test successful setting and event emission.
-    - Test correct state variable update.
-    - Test reading the default value (should be 1 initially).
+    - Modify `_calculateUnusedCapacityFromPreviousRounds` to read `globalAccumulationStartRoundId`, check `startRound >= targetRoundId_`, and adjust the loop start.
+    - Modify `contributeToRoundFor(..., UnspentPersonalRoundCap[] ...)` to read `globalAccumulationStartRoundId` within the loop and skip rounds where `roundCap.roundId < startRound`.
+    - _(Commit 5: Implement logic changes to make accumulation tests pass)_
 
-6.  **Accumulation Logic Tests (`LM_PC_FundingPot_v1.t.sol`):**
-
-    - Modify existing accumulation tests (`Personal`, `Total`, `All` modes) or add specific new tests to verify the interaction with `globalAccumulationStartRoundId`.
-    - Cover the scenarios outlined in Acceptance Criterion #7 (e.g., setting start round to 2, verifying default start round 1, checking interaction with `Disabled` mode).
-
-7.  **Documentation Update (`ILM_PC_FundingPot_v1.sol` & `LM_PC_FundingPot_v1.sol`):**
-    - Review and update NatSpec comments for functions/structs/enums affected by accumulation (e.g., `AccumulationMode`, `contributeToRoundFor`, `_calculateUnusedCapacityFromPreviousRounds`) to mention the constraint imposed by `globalAccumulationStartRoundId`.
+6.  **Documentation Update (`ILM_PC_FundingPot_v1.sol` & `LM_PC_FundingPot_v1.sol`):**
+    - Review and update all relevant NatSpec comments (interface and implementation) to comprehensively document the new variable, functions, event, and the global start round constraint's effect on accumulation.
+    - _(Commit 6: Final documentation)_
