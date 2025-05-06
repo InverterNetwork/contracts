@@ -3164,4 +3164,91 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             "Final total should be effective cap"
         );
     }
+
+    // -------------------------------------------------------------------------
+    // Test: Global Accumulation Start Round Settings
+    // -------------------------------------------------------------------------
+
+    function testGetGlobalAccumulationStartRoundId_Default() public {
+        // Expecting default value to be 1 as per AC
+        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Default start round ID should be 1");
+    }
+
+    function testSetGlobalAccumulationStart_RevertsGivenUnauthorizedUser(
+        address unauthorizedUser,
+        uint32 startRoundId
+    ) public {
+        vm.assume(unauthorizedUser != address(this));
+        vm.assume(startRoundId >= 1);
+
+        bytes32 roleId = _authorizer.generateRoleId(
+            address(fundingPot), fundingPot.FUNDING_POT_ADMIN_ROLE()
+        );
+
+        vm.startPrank(unauthorizedUser);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotAuthorized.selector, roleId, unauthorizedUser
+            )
+        );
+        fundingPot.setGlobalAccumulationStart(startRoundId);
+        vm.stopPrank();
+    }
+
+    function testSetGlobalAccumulationStart_RevertsGivenStartRoundIsZero() public {
+        // AC: Must revert if startRoundId_ == 0
+        // Note: Add specific custom error later if desired
+        vm.expectRevert();
+        fundingPot.setGlobalAccumulationStart(0);
+    }
+
+    function testSetGlobalAccumulationStart_RevertsGivenStartRoundGreaterThanCount(
+        uint32 startRoundIdOffset
+    ) public {
+        vm.assume(startRoundIdOffset > 0);
+        testCreateRound(); // Ensure roundCount is at least 1
+        uint32 currentRoundCount = fundingPot.getRoundCount();
+        uint32 invalidStartRoundId = currentRoundCount + startRoundIdOffset;
+
+        // Note: Add specific custom error later if desired
+        vm.expectRevert();
+        fundingPot.setGlobalAccumulationStart(invalidStartRoundId);
+    }
+
+    function testSetGlobalAccumulationStart_Success(uint32 startRoundId)
+        public
+    {
+        // Ensure we have at least startRoundId rounds created if startRoundId > 0
+        if (startRoundId > 0) {
+            vm.assume(startRoundId <= 10); // Bound the fuzzing
+            for (uint32 i = fundingPot.getRoundCount() + 1; i <= startRoundId; i++) {
+                fundingPot.createRound(
+                    _defaultRoundParams.roundStart + (i * 3 days),
+                    _defaultRoundParams.roundEnd + (i * 3 days),
+                    _defaultRoundParams.roundCap,
+                    _defaultRoundParams.hookContract,
+                    _defaultRoundParams.hookFunction,
+                    _defaultRoundParams.autoClosure,
+                    _defaultRoundParams.accumulationMode
+                );
+            }
+             vm.assume(startRoundId <= fundingPot.getRoundCount()); // Final check
+        } else {
+             vm.assume(startRoundId == 0);
+             // For startRoundId = 0, test should actually fail based on the revert check above
+             // However, fuzzing might pass 0. Let's test non-zero valid cases.
+             vm.assume(false);
+        }
+       
+
+        // Expect event emission
+        vm.expectEmit(true, true, true, true);
+        emit GlobalAccumulationStartSet(startRoundId);
+
+        // Set the value
+        fundingPot.setGlobalAccumulationStart(startRoundId);
+
+        // Verify the value using the getter
+        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), startRoundId, "Getter should return the set value");
+    }
 }
