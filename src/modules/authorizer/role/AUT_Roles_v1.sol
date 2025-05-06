@@ -71,7 +71,7 @@ contract AUT_Roles_v1 is
     /// @dev     Verifies that the roleId is already existing.
     /// @param  roleId_ The id of the role.
     modifier idExisting(bytes32 roleId_) {
-        if (roleId_ != PUBLIC_ROLE && uint(roleId_) > _roleIdCounter) {
+        if (uint(roleId_) > _roleIdCounter) {
             revert Module__Authorizer__RoleIdNotExisting();
         }
         _;

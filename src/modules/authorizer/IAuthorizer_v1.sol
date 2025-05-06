@@ -34,9 +34,6 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @notice The provided role ID is not existing.
     error Module__Authorizer__RoleIdNotExisting();
 
-    /// @notice The admin of the provided role ID is already burned.
-    error Module__Authorizer__RoleAdminBurned();
-
     /// @notice The provided input length is not valid.
     error Module__Authorizer__InvalidInputLength();
 
@@ -191,6 +188,8 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     ) external returns (bytes32 _newRoleId);
 
     /// @notice Changes the name of a role.
+    /// @dev    Labels are emitted as events and therefor are not accessible
+    ///         on-chain.
     /// @dev    Function access controlled by authorizer.
     /// @dev    The role has to be created already.
     /// @param  roleId_ The ID of the role to change the name of.
