@@ -11,28 +11,6 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     // testing.
 
     /**
-     * @notice Exposes the internal _getTotalRoundContribution function for testing
-     */
-    function exposed_getTotalRoundContributions(uint32 roundId_)
-        external
-        view
-        returns (uint)
-    {
-        return _getTotalRoundContribution(roundId_);
-    }
-
-    /**
-     * @notice Exposes the internal _getUserContributionToRound function for testing
-     */
-    function exposed_getUserContributionToRound(uint32 roundId_, address user_)
-        external
-        view
-        returns (uint)
-    {
-        return _getUserContributionToRound(roundId_, user_);
-    }
-
-    /**
      * @notice Exposes the internal _validTimes function for testing
      */
     function exposed_validTimes(uint start_, uint cliff_, uint end_)

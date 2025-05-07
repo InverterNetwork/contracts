@@ -388,6 +388,23 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (bool isEligible, uint remainingAmountAllowedToContribute);
 
+    /// @notice Retrieves the total contribution for a specific round.
+    /// @param  roundId_ The ID of the round to check contributions for.
+    /// @return The total contributions for the specified round.
+    function getTotalRoundContribution(uint32 roundId_)
+        external
+        view
+        returns (uint);
+
+    /// @notice Retrieves the contribution amount for a specific user in a round.
+    /// @param  roundId_ The ID of the round to check contributions for.
+    /// @param  user_ The address of the user.
+    /// @return The user's contribution amount for the specified round.
+    function getUserContributionToRound(uint32 roundId_, address user_)
+        external
+        view
+        returns (uint);
+
     // -------------------------------------------------------------------------
     // Public - Mutating
 

@@ -332,7 +332,7 @@ contract LM_PC_FundingPot_v1 is
             AccessCriteriaPrivileges storage privileges =
             roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
             uint userPersonalCap = privileges.personalCap;
-            uint userContribution = _getUserContributionToRound(roundId_, user_);
+            uint userContribution = roundIdToUserToContribution[roundId_][user_];
 
             uint personalCapRemaining = userPersonalCap > userContribution
                 ? userPersonalCap - userContribution
@@ -350,6 +350,24 @@ contract LM_PC_FundingPot_v1 is
         } else {
             return (false, 0);
         }
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getTotalRoundContribution(uint32 roundId_)
+        external
+        view
+        returns (uint)
+    {
+        return roundIdToTotalContributions[roundId_];
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getUserContributionToRound(uint32 roundId_, address user_)
+        external
+        view
+        returns (uint)
+    {
+        return roundIdToUserToContribution[roundId_][user_];
     }
 
     // -------------------------------------------------------------------------
@@ -632,7 +650,7 @@ contract LM_PC_FundingPot_v1 is
                     .accessCriteriaId];
 
                 uint userContribution =
-                    _getUserContributionToRound(uint32(roundCap.roundId), user_);
+                    roundIdToUserToContribution[roundCap.roundId][user_];
                 uint personalCap = privileges.personalCap;
 
                 if (userContribution < personalCap) {
@@ -928,7 +946,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
 
         if (!canOverrideContributionSpan_ && round.roundCap > 0) {
-            uint totalRoundContribution = _getTotalRoundContribution(roundId_);
+            uint totalRoundContribution = roundIdToTotalContributions[roundId_];
             uint effectiveRoundCap = round.roundCap;
 
             // If global accumulative caps are enabled,
@@ -952,7 +970,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Check and adjust for personal cap
         uint userPreviousContribution =
-            _getUserContributionToRound(roundId_, user_);
+            roundIdToUserToContribution[roundId_][user_];
 
         // Get the base personal cap for this round and criteria
         AccessCriteriaPrivileges storage privileges =
@@ -1024,38 +1042,13 @@ contract LM_PC_FundingPot_v1 is
             Round storage prevRound = rounds[i];
             if (!prevRound.globalAccumulativeCaps) continue;
 
-            uint prevRoundTotal = _getTotalRoundContribution(i);
+            uint prevRoundTotal = roundIdToTotalContributions[i];
             if (prevRoundTotal < prevRound.roundCap) {
                 unusedCapacityFromPrevious +=
                     (prevRound.roundCap - prevRoundTotal);
             }
         }
         return unusedCapacityFromPrevious;
-    }
-
-    /// @notice Retrieves the total contribution for a specific round.
-    /// @dev    Returns the accumulated contributions for the given round.
-    /// @param  roundId_ The ID of the round to check contributions for.
-    /// @return The total contributions for the specified round.
-    function _getTotalRoundContribution(uint32 roundId_)
-        internal
-        view
-        returns (uint)
-    {
-        return roundIdToTotalContributions[roundId_];
-    }
-
-    /// @notice Retrieves the contribution amount for a specific user in a round.
-    /// @dev    Returns the individual user's contribution for the given round.
-    /// @param  roundId_ The ID of the round to check contributions for.
-    /// @param  user_ The address of the user.
-    /// @return The user's contribution amount for the specified round.
-    function _getUserContributionToRound(uint32 roundId_, address user_)
-        internal
-        view
-        returns (uint)
-    {
-        return roundIdToUserToContribution[roundId_][user_];
     }
 
     /// @notice Verifies NFT ownership for access control.
@@ -1285,7 +1278,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     function _buyBondingCurveToken(uint32 roundId_) internal {
-        uint totalContributions = _getTotalRoundContribution(roundId_);
+        uint totalContributions = roundIdToTotalContributions[roundId_];
         if (totalContributions == 0) {
             revert Module__LM_PC_FundingPot__NoContributions();
         }

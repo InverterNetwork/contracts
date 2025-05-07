@@ -1733,13 +1733,12 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             contributor1_, roundId, amount, accessCriteriaId, new bytes32[](0)
         );
 
-        uint totalContributions =
-            fundingPot.exposed_getTotalRoundContributions(roundId);
+        uint totalContributions = fundingPot.getTotalRoundContribution(roundId);
 
         assertEq(totalContributions, amount);
 
-        uint personalContributions = fundingPot
-            .exposed_getUserContributionToRound(roundId, contributor1_);
+        uint personalContributions =
+            fundingPot.getUserContributionToRound(roundId, contributor1_);
         assertEq(personalContributions, amount);
     }
 
@@ -1776,13 +1775,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
 
-        uint userContribution = fundingPot.exposed_getUserContributionToRound(
-            roundId, contributor1_
-        );
+        uint userContribution =
+            fundingPot.getUserContributionToRound(roundId, contributor1_);
         assertEq(userContribution, 250);
 
-        uint totalContributions =
-            fundingPot.exposed_getTotalRoundContributions(roundId);
+        uint totalContributions = fundingPot.getTotalRoundContribution(roundId);
         assertEq(totalContributions, 250);
     }
 
@@ -1820,13 +1817,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         vm.stopPrank();
 
-        uint userContribution = fundingPot.exposed_getUserContributionToRound(
-            roundId, contributor2_
-        );
+        uint userContribution =
+            fundingPot.getUserContributionToRound(roundId, contributor2_);
         assertEq(userContribution, contributionAmount);
 
-        uint totalContributions =
-            fundingPot.exposed_getTotalRoundContributions(roundId);
+        uint totalContributions = fundingPot.getTotalRoundContribution(roundId);
         assertEq(totalContributions, contributionAmount);
     }
 
@@ -1882,13 +1877,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
 
-        uint contribution = fundingPot.exposed_getUserContributionToRound(
-            roundId, contributor2_
-        );
+        uint contribution =
+            fundingPot.getUserContributionToRound(roundId, contributor2_);
         assertEq(contribution, 50);
 
-        uint totalContribution =
-            fundingPot.exposed_getTotalRoundContributions(roundId);
+        uint totalContribution = fundingPot.getTotalRoundContribution(roundId);
         assertEq(totalContribution, _defaultRoundParams.roundCap);
         assertTrue(fundingPot.isRoundClosed(roundId));
     }
@@ -1958,9 +1951,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             new bytes32[](0)
         );
 
-        uint totalContribution = fundingPot.exposed_getUserContributionToRound(
-            roundId, contributor1_
-        );
+        uint totalContribution =
+            fundingPot.getUserContributionToRound(roundId, contributor1_);
 
         assertEq(totalContribution, personalCap);
     }
@@ -2013,8 +2005,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Verify the contribution was recorded
-        uint totalContribution =
-            fundingPot.exposed_getTotalRoundContributions(roundId);
+        uint totalContribution = fundingPot.getTotalRoundContribution(roundId);
         assertEq(totalContribution, amount);
     }
 
@@ -2116,17 +2107,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
 
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(
-                round1Id, contributor1_
-            ),
-            200
+            fundingPot.getUserContributionToRound(round1Id, contributor1_), 200
         );
 
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(
-                round2Id, contributor1_
-            ),
-            700
+            fundingPot.getUserContributionToRound(round2Id, contributor1_), 700
         );
     }
 
@@ -2215,35 +2200,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         vm.stopPrank();
 
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round1Id), 500);
+        assertEq(fundingPot.getTotalRoundContribution(round1Id), 500);
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(
-                round1Id, contributor1_
-            ),
-            300
+            fundingPot.getUserContributionToRound(round1Id, contributor1_), 300
         );
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(
-                round1Id, contributor2_
-            ),
-            200
+            fundingPot.getUserContributionToRound(round1Id, contributor2_), 200
         );
 
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700);
+        assertEq(fundingPot.getTotalRoundContribution(round2Id), 700);
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(
-                round2Id, contributor2_
-            ),
-            400
+            fundingPot.getUserContributionToRound(round2Id, contributor2_), 400
         );
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(
-                round2Id, contributor3_
-            ),
-            300
+            fundingPot.getUserContributionToRound(round2Id, contributor3_), 300
         );
 
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), 700);
+        assertEq(fundingPot.getTotalRoundContribution(round2Id), 700);
     }
 
     // -------------------------------------------------------------------------
