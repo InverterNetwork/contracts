@@ -325,7 +325,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Start round ID cannot be greater than the current round count.
     /// @param startRoundId_ The provided start round ID.
     /// @param currentRoundCount_ The current total number of rounds.
-    error Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(uint32 startRoundId_, uint32 currentRoundCount_);
+    error Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(
+        uint32 startRoundId_, uint32 currentRoundCount_
+    );
 
     // -------------------------------------------------------------------------
     // Public - Getters
@@ -335,7 +337,10 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     ///         with IDs greater than or equal to this value, provided the target round's
     ///         AccumulationMode allows it. Defaults to 1.
     /// @return The first round ID (inclusive) to consider for accumulation.
-    function getGlobalAccumulationStartRoundId() external view returns (uint32);
+    function getGlobalAccumulationStartRoundId()
+        external
+        view
+        returns (uint32);
 
     /// @notice Retrieves the generic parameters of a specific funding round.
     /// @param  roundId_ The unique identifier of the round to retrieve.

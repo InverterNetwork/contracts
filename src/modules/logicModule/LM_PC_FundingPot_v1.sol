@@ -358,7 +358,11 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function getGlobalAccumulationStartRoundId() external view returns (uint32) {
+    function getGlobalAccumulationStartRoundId()
+        external
+        view
+        returns (uint32)
+    {
         return globalAccumulationStartRoundId;
     }
 
@@ -469,6 +473,7 @@ contract LM_PC_FundingPot_v1 is
         ) {
             revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
         }
+
 
         AccessCriteriaType accessCriteriaType =
             AccessCriteriaType(accessCriteriaId_);
@@ -599,37 +604,48 @@ contract LM_PC_FundingPot_v1 is
         bytes32[] memory merkleProof_,
         UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
     ) external {
-        uint unspentPersonalCap;
+        uint unspentPersonalCap = 0; // Initialize to zero
 
         // Process each previous round cap that the user wants to carry over
         for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
-            UnspentPersonalRoundCap memory roundCap =
+            UnspentPersonalRoundCap memory roundCapInfo =
                 unspentPersonalRoundCaps_[i];
 
-            Round storage prevRound = rounds[roundCap.roundId];
-            if (prevRound.accumulationMode == AccumulationMode.Disabled) {
+            // Skip if this round is before the global accumulation start round
+            if (roundCapInfo.roundId < globalAccumulationStartRoundId) {
+                continue;
+            }
+
+            // For PERSONAL cap rollover, the PREVIOUS round must have allowed it (Personal or All).
+            if (
+                rounds[roundCapInfo.roundId].accumulationMode
+                    != AccumulationMode.Personal
+                    && rounds[roundCapInfo.roundId].accumulationMode
+                        != AccumulationMode.All
+            ) {
                 continue;
             }
 
             // Verify the user was eligible for this access criteria in the previous round
             bool isEligible = _checkAccessCriteriaEligibility(
-                uint32(roundCap.roundId),
-                roundCap.accessCriteriaId,
-                roundCap.merkleProof,
+                roundCapInfo.roundId, // No need to cast to uint32, it already is
+                roundCapInfo.accessCriteriaId,
+                roundCapInfo.merkleProof,
                 user_
             );
 
             if (isEligible) {
                 AccessCriteriaPrivileges storage privileges =
-                roundItToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
+                roundItToAccessCriteriaIdToPrivileges[roundCapInfo.roundId][roundCapInfo
                     .accessCriteriaId];
 
-                uint userContribution =
-                    _getUserContributionToRound(uint32(roundCap.roundId), user_);
-                uint personalCap = privileges.personalCap;
+                uint userContributionInPrevRound =
+                    _getUserContributionToRound(roundCapInfo.roundId, user_);
+                uint personalCapInPrevRound = privileges.personalCap;
 
-                if (userContribution < personalCap) {
-                    unspentPersonalCap += (personalCap - userContribution);
+                if (userContributionInPrevRound < personalCapInPrevRound) {
+                    unspentPersonalCap +=
+                        (personalCapInPrevRound - userContributionInPrevRound);
                 }
             }
         }
@@ -723,7 +739,9 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__StartRoundCannotBeZero();
         }
         if (startRoundId_ > roundCount) {
-            revert Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(startRoundId_, roundCount);
+            revert Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(
+                startRoundId_, roundCount
+            );
         }
 
         globalAccumulationStartRoundId = startRoundId_;
@@ -1066,8 +1084,14 @@ contract LM_PC_FundingPot_v1 is
         returns (uint unusedCapacityFromPrevious)
     {
         unusedCapacityFromPrevious = 0;
-        // Iterate through all previous rounds (1 to roundId_-1)
-        for (uint32 i = 1; i < roundId_; ++i) {
+        uint32 startAccumulationFrom = globalAccumulationStartRoundId;
+
+        if (startAccumulationFrom >= roundId_) {
+            return 0; // No rounds to consider for accumulation
+        }
+
+        // Iterate through previous rounds starting from the globalAccumulationStartRoundId
+        for (uint32 i = startAccumulationFrom; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
             // Only consider previous rounds that allowed total accumulation
             if (
