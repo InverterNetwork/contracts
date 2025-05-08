@@ -27,7 +27,7 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
     address bountyVerifier = makeAddr("bountyVerifier");
     address bountySubmitter = makeAddr("bountySubmitter");
 
-    ERC20Mock gatingToken = new ERC20Mock("Gating Token", "GATOR");
+    ERC20Mock gatingToken = new ERC20Mock("Gating Token", "GATOR", 18);
 
     function setUp() public override {
         // Setup common E2E framework
@@ -116,39 +116,72 @@ contract TokenGatedRoleAuthorizerE2E is E2ETest {
 
         vm.startPrank(orchestratorAdmin);
         {
-            // Make the BOUNTY_ADMIN_ROLE token-gated by GATOR token and set the threshold
-            bytes32 bountyRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.BOUNTY_ISSUER_ROLE()
+            // BOUNTY_ISSUER_ROLE
+            // Create the role
+            bytes32 bountyIssuerRoleId = authorizer.createRole(
+                "BOUNTY_ISSUER_ROLE",
+                authorizer.DEFAULT_ADMIN_ROLE(),
+                new address[](0)
             );
-            authorizer.setTokenGated(bountyRoleId, true);
-            authorizer.setThreshold(bountyRoleId, address(gatingToken), 100);
-            authorizer.grantRole(bountyRoleId, address(gatingToken));
 
-            // We mint 101 tokens to the orchestrator admin so they can create bounties
-            gatingToken.mint(orchestratorAdmin, 101);
+            authorizer.setTokenGated(bountyIssuerRoleId, true);
+            authorizer.setThreshold(
+                bountyIssuerRoleId, address(gatingToken), 100
+            );
 
-            // Make the VERIFY_ADMIN_ROLE token-gated by GATOR token and set the threshold
-            bytes32 verifierRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.VERIFIER_ROLE()
+            // Now add the gating Token as a member of the role
+            // With this any holder of that token with a balance equal or higher than
+            // 100 will have permission to access the BOUNTY_ISSUER_ROLE functions
+            // In this case we actually only want the orchestrator admin to be able to call this
+            // As the default admin is always allowed to call permissioned functions
+            authorizer.grantRole(bountyIssuerRoleId, address(gatingToken));
+
+            // VERIFIER_ROLE
+            // Create the role
+            bytes32 verifierRoleId = authorizer.createRole(
+                "VERIFIER_ROLE",
+                authorizer.DEFAULT_ADMIN_ROLE(),
+                new address[](0)
             );
             authorizer.setTokenGated(verifierRoleId, true);
             authorizer.setThreshold(verifierRoleId, address(gatingToken), 50);
             authorizer.grantRole(verifierRoleId, address(gatingToken));
 
-            // We mint 51 tokens to the orchestrator manager so they can verify bounties
-            gatingToken.mint(bountyVerifier, 51);
+            // We mint 50 tokens to the orchestrator manager so they can verify bounties
+            gatingToken.mint(bountyVerifier, 50);
 
-            // Make the CLAIM_ADMIN_ROLE token-gated by GATOR token and set the threshold
-            bytes32 claimRoleId = authorizer.generateRoleId(
-                address(bountyManager), bountyManager.CLAIMANT_ROLE()
+            // CLAIMANT_ROLE
+            // Create the role
+            bytes32 claimRoleId = authorizer.createRole(
+                "CLAIMANT_ROLE",
+                authorizer.DEFAULT_ADMIN_ROLE(),
+                new address[](0)
             );
             authorizer.setTokenGated(claimRoleId, true);
             authorizer.setThreshold(claimRoleId, address(gatingToken), 25);
             authorizer.grantRole(claimRoleId, address(gatingToken));
 
-            // We mint 26 tokens to the bounty submitter so they can submit bounties
-            gatingToken.mint(bountySubmitter, 26);
+            // We mint 25 tokens to the bounty submitter so they can submit bounties
+            gatingToken.mint(bountySubmitter, 25);
+
+            // Assign the correct permissions to the roles
+            authorizer.addAccessPermission(
+                address(bountyManager),
+                bountyManager.addBounty.selector,
+                bountyIssuerRoleId
+            );
+            authorizer.addAccessPermission(
+                address(bountyManager),
+                bountyManager.addClaim.selector,
+                claimRoleId
+            );
+            authorizer.addAccessPermission(
+                address(bountyManager),
+                bountyManager.verifyClaim.selector,
+                verifierRoleId
+            );
         }
+
         vm.stopPrank();
 
         //--------------------------------------------------------------------------
