@@ -1,16 +1,25 @@
 # Comments authorizer Update
 
-# todo
+# Onchain Roles setup Questions
 
-- Finish test for transferAdminRole and burnAdminFromRole
-- Adapt Module implementation
-- test for new modifier and changes
-- adapt permissioned modifier in authorizer
-- Test permissioned modifier in module
-- Adapt All modules with new permissioned modifier
-- Adapt Orchestrator permissioned structure
-- Adapt tests for that
-- Adapt E2E tests
+- Find concept for proper role setup
+  - Questions:
+    - What is the exact userstory here?
+  - Idea: createRoleAndAddAccessPermissions setup function
+    - function that returns input parameters needed for createRoleAndAddAccessPermissions
+    - least intrusive into code
+      - example function
+        - createWhitelistRoleTemplate
+          - parameters
+            - members\_ (address[])
+          - returns
+            - roleName: WHITELIST_ROLE
+            - respectiveAdminRole: DEFAULT_ADMIN_ROLE
+            - initialMembers: members\_
+            - targets: address[address(this)]
+            - selectors: bytes4[][buy.selector,sell.selector]();
+  - Idea: directly call createRoleAndAddAccessPermissions from Module
+    - needs to modify the function itself to allow for module calls
 
 ## Did do:
 

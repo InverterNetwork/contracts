@@ -326,6 +326,7 @@ interface IFM_PC_Oracle_Redeeming_v1 is
     // External Functions
 
     /// @notice	Allows depositing collateral to provide reserves for redemptions.
+    /// @dev    This function is always publicly callable.
     /// @param	amount_ The amount of collateral to deposit.
     function depositReserve(uint amount_) external;
 

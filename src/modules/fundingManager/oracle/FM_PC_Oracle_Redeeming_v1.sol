@@ -35,6 +35,7 @@ import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
 //@todo adapt?
+//@todo if you dont do any setup you always have access to permissioned with the default admin role
 /**
  * @title   External Price Oracle Funding Manager with Payment Client.
  *
@@ -513,9 +514,7 @@ contract FM_PC_Oracle_Redeeming_v1 is
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function depositReserve(uint amount_) external virtual 
-    //@todo permissioned ?
-    {
+    function depositReserve(uint amount_) external virtual {
         if (amount_ == 0) {
             revert Module__FM_PC_ExternalPrice_Redeeming_InvalidAmount();
         }
