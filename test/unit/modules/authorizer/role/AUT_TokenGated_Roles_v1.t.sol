@@ -1,786 +1,936 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-// SuT
-import {Test} from "forge-std/Test.sol";
+import "forge-std/Test.sol";
 
-import {AUT_RolesV1Test} from "@unit/modules/authorizer/role/AUT_Roles_v1.t.sol";
-
-// SuT
-import {
-    AUT_TokenGated_Roles_v1,
-    IAUT_TokenGated_Roles_v1
-} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
-
-import {AUT_Roles_v1, IAuthorizer_v1} from "@aut/role/AUT_Roles_v1.sol";
-import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 // External Libraries
 import {Clones} from "@oz/proxy/Clones.sol";
+
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
-import {IAccessControl} from "@oz/access/IAccessControl.sol";
-import {IAccessControlEnumerable} from
-    "@oz/access/extensions/IAccessControlEnumerable.sol";
 
 // Internal Dependencies
-import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-// Interfaces
+import {
+    ModuleTest,
+    IModule_v1,
+    IOrchestrator_v1
+} from "@unitTest/modules/ModuleTest.sol";
+
+// Internal Libraries
+import {LibMetadata} from "src/modules/lib/LibMetadata.sol";
+
+// Internal Interfaces
 import {IModule_v1, IOrchestrator_v1} from "src/modules/base/IModule_v1.sol";
+
+import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
+
+import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
+import {IAUT_TokenGated_Roles_v1} from
+    "@aut/role/interfaces/IAUT_TokenGated_Roles_v1.sol";
+
+import {TokenInterface} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+
+// SuT
+import {AUT_TokenGated_Roles_v1_Exposed} from
+    "@mocks/modules/authorizer/AUT_TokenGated_Roles_v1_Exposed.sol";
+
 // Mocks
-import {ERC20Mock} from "@mock/external/token/ERC20Mock.sol";
-import {ERC721Mock} from "@mock/external/token/ERC721Mock.sol";
-import {ModuleV1Mock} from "@mock/modules/base/ModuleV1Mock.sol";
 import {FundingManagerV1Mock} from
-    "@mock/modules/fundingManager/FundingManagerV1Mock.sol";
+    "@mocks/modules/fundingManager/FundingManagerV1Mock.sol";
+import {AuthorizerV1Mock} from "@mocks/modules/authorizer/AuthorizerV1Mock.sol";
 import {PaymentProcessorV1Mock} from
-    "@mock/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
-import {GovernorV1Mock} from "@mock/external/governance/GovernorV1Mock.sol";
-import {ModuleFactoryV1Mock} from "@mock/factories/ModuleFactoryV1Mock.sol";
+    "@mocks/modules/paymentProcessor/PaymentProcessorV1Mock.sol";
+import {ERC20PaymentClientBaseV2Mock} from
+    "@mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+import {TokenInterfaceMock} from
+    "@mocks/modules/authorizer/TokenInterfaceMock.sol";
 
-// Run through the AUT_Roles_v1 tests with the AUT_TokenGated_Roles_v1
-contract AUT_TokenGated_RolesV1Test is AUT_RolesV1Test {
-    function setUp() public override {
-        //==== We use the AUT_TokenGated_Roles_v1 as a regular AUT_Roles_v1 =====
-        address authImpl = address(new AUT_TokenGated_Roles_v1());
-        _authorizer = AUT_Roles_v1(Clones.clone(authImpl));
-        //==========================================================================
+// Errors
+import {OZErrors} from "@testUtilities/OZErrors.sol";
 
-        address propImpl = address(new Orchestrator_v1(address(0)));
-        _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
-        ModuleV1Mock module = new ModuleV1Mock();
-        address[] memory modules = new address[](1);
-        modules[0] = address(module);
-        _orchestrator.init(
-            _ORCHESTRATOR_ID,
-            address(_moduleFactory),
-            modules,
-            _fundingManager,
-            _authorizer,
-            _paymentProcessor,
-            _governor
-        );
+// External Dependencies
+import {IAccessControl} from "@oz/access/IAccessControl.sol";
 
-        address initialAuth = ALBA;
+contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
+    ///////////////////////////////////////////////////////////////////////////
+    // State
 
-        _authorizer.init(
-            IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
-        );
-        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
-        assertEq(
-            _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
-            false
-        );
-    }
-}
+    // SuT
+    AUT_TokenGated_Roles_v1_Exposed _authSuT;
 
-contract TokenGatedAUT_RoleV1Test is Test {
-    // Mocks
-    AUT_TokenGated_Roles_v1 _authorizer;
-    Orchestrator_v1 internal _orchestrator = new Orchestrator_v1(address(0));
-    ERC20Mock internal _token = new ERC20Mock("Mock Token", "MOCK");
-    FundingManagerV1Mock _fundingManager = new FundingManagerV1Mock();
-    PaymentProcessorV1Mock _paymentProcessor = new PaymentProcessorV1Mock();
-    GovernorV1Mock internal _governor = new GovernorV1Mock();
-    ModuleFactoryV1Mock internal _moduleFactory = new ModuleFactoryV1Mock();
+    // Constants
+    address _bob = makeAddr("Bob");
 
-    ModuleV1Mock mockModule = new ModuleV1Mock();
+    // Addresses
 
-    address ALBA = address(0xa1ba); // default authorized person
-    address BOB = address(0xb0b); // example person
-    address CLOE = address(0xc10e); // example person
+    // Bob and Alice can Access
+    bytes4 _selector1 = bytes4(keccak256("selector1()"));
+    // Alice can access
+    bytes4 _selector2 = bytes4(keccak256("selector2()"));
+    // No Permissions
+    bytes4 _selector3 = bytes4(keccak256("selector3()"));
+    // Public Role can access
+    bytes4 _selector4 = bytes4(keccak256("selector4()"));
 
-    ERC20Mock internal roleToken =
-        new ERC20Mock("Inverters With Benefits", "IWB");
-    ERC721Mock internal roleNft =
-        new ERC721Mock("detrevnI epA thcaY bulC", "EPA");
-
-    bytes32 immutable ROLE_TOKEN = "ROLE_TOKEN";
-    bytes32 immutable ROLE_NFT = "ROLE_NFT";
-
-    // Orchestrator_v1 Constants
-    uint internal constant _ORCHESTRATOR_ID = 1;
-    // Module Constants
-    uint constant MAJOR_VERSION = 1;
-    uint constant MINOR_VERSION = 0;
-    uint constant PATCH_VERSION = 0;
-    string constant URL = "https://github.com/organization/module";
-    string constant TITLE = "Module";
-
-    IModule_v1.Metadata _METADATA = IModule_v1.Metadata(
-        MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION, URL, TITLE
-    );
-
-    //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Event emitted when the token-gating of a role changes.
-    /// @param  role The role that was modified.
-    /// @param  newValue The new value of the role.
-    event ChangedTokenGating(bytes32 role, bool newValue);
-
-    /// @notice Event emitted when the threshold of a token-gated role changes.
-    /// @param  role The role that was modified.
-    /// @param  token The token for which the threshold was modified.
-    /// @param  newValue The new value of the threshold.
-    event ChangedTokenThreshold(bytes32 role, address token, uint newValue);
-
-    /// @notice Event emitted when `account` is revoked of `role`.
-    /// @param  role The role that was revoked.
-    /// @param  account The account that has the role revoked.
-    /// @param  sender The account that performed the revocation.
-    event RoleRevoked(
-        bytes32 indexed role, address indexed account, address indexed sender
-    );
+    ///////////////////////////////////////////////////////////////////////////
+    // Setup
 
     function setUp() public {
-        address authImpl = address(new AUT_TokenGated_Roles_v1());
-        _authorizer = AUT_TokenGated_Roles_v1(Clones.clone(authImpl));
-        address propImpl = address(new Orchestrator_v1(address(0)));
-        _orchestrator = Orchestrator_v1(Clones.clone(propImpl));
-        address[] memory modules = new address[](1);
-        modules[0] = address(mockModule);
-        _orchestrator.init(
-            _ORCHESTRATOR_ID,
-            address(_moduleFactory),
-            modules,
-            _fundingManager,
-            _authorizer,
-            _paymentProcessor,
-            _governor
+        address impl = address(new AUT_TokenGated_Roles_v1_Exposed());
+        _authSuT = AUT_TokenGated_Roles_v1_Exposed(Clones.clone(impl));
+
+        // initiate orchestrator without extra Module
+        _setUpOrchestrator();
+
+        // Init SuT
+        // Initial Admin is this contract
+        _authSuT.init(_orchestrator, _METADATA, abi.encode(address(this)));
+
+        // Change Authorizer of Module Test to SuT
+        _orchestrator.initiateSetAuthorizerWithTimelock(
+            IAuthorizer_v1(_authSuT)
         );
-
-        address initialAuth = ALBA;
-
-        _authorizer.init(
-            IOrchestrator_v1(_orchestrator), _METADATA, abi.encode(initialAuth)
-        );
-        assertEq(_authorizer.hasRole(_authorizer.getAdminRole(), ALBA), true);
-        assertEq(
-            _authorizer.hasRole(_authorizer.getAdminRole(), address(this)),
-            false
-        );
-
-        // We mint some tokens: First, two different amounts of ERC20
-        roleToken.mint(BOB, 1000);
-        roleToken.mint(CLOE, 10);
-
-        // Then, a ERC721 for BOB
-        roleNft.mint(BOB);
+        vm.warp(72 hours + 1);
+        _orchestrator.executeSetAuthorizer(IAuthorizer_v1(_authSuT));
     }
 
-    function testSupportsInterface() public {
+    ///////////////////////////////////////////////////////////////////////////
+    // Test Initialization
+
+    /*
+    Test: SupportsInterface
+    └── Given: The interfaceId is IAuthorizer_v1
+        └── When: the function supportsInterface is called
+            └── Then: the function should return true
+    */
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
-            _authorizer.supportsInterface(
+            _authSuT.supportsInterface(
                 type(IAUT_TokenGated_Roles_v1).interfaceId
             )
         );
     }
 
-    //-------------------------------------------------
-    // Helper Functions
-
-    // function set up tokenGated role with threshold
-    function setUpTokenGatedRole(
-        address module,
-        bytes32 role,
-        address token,
-        uint threshold
-    ) internal returns (bytes32) {
-        bytes32 roleId = _authorizer.generateRoleId(module, role);
-        vm.startPrank(module);
-
-        vm.expectEmit();
-        emit ChangedTokenGating(roleId, true);
-        emit ChangedTokenThreshold(roleId, address(token), threshold);
-
-        _authorizer.makeRoleTokenGatedFromModule(role);
-        _authorizer.grantTokenRoleFromModule(role, address(token), threshold);
-        vm.stopPrank();
-        return roleId;
+    /*
+    Test: Init
+    └── When: the function init is called
+        └── Then: the function should set the initial admin
+    */
+    function testInit() public override {
+        // Check that the initial Admin is set
+        assertTrue(_authSuT.hasRole(_authSuT.getAdminRole(), address(this)));
     }
 
-    // function set up nftGated role
-    function setUpNFTGatedRole(address module, bytes32 role, address nft)
-        internal
-        returns (bytes32)
+    /*
+    Test: ReinitFails
+    └── When: the function init is called after the contract has been initialized
+        └── Then: the function should revert
+    */
+    function testReinitFails() public override {
+        vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
+        _authSuT.init(_orchestrator, _METADATA, abi.encode(address(this)));
+    }
+    /////////////////////////////////////////////////////////////////////////////
+    // Test Modifier
+
+    /* 
+    Test: onlyEmptyRole Modifier
+    └── Given: Role is not empty
+        └── When: function with onlyEmptyRole modifier is called
+            └── Then: the function should revert
+    */
+    function testOnlyEmptyRoleModifier(uint seed_) public {
+        // Create address array
+        address[] memory members = new address[](seed_ % 20);
+        for (uint i; i < members.length; ++i) {
+            members[i] = address(uint160(i));
+        }
+
+        // Create Role
+        bytes32 roleId =
+            _authSuT.createRole("Role", _authSuT.DEFAULT_ADMIN_ROLE(), members);
+
+        if (members.length != 0) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IAUT_TokenGated_Roles_v1
+                        .Module__AUT_TokenGated_Roles__RoleNotEmpty
+                        .selector
+                )
+            );
+        }
+        _authSuT.onlyEmptyRoleModifier_exposed(roleId);
+    }
+
+    /*
+    Test notPublicRole Modifier
+    └── Given: Role is public
+        └── When: function with notPublicRole modifier is called
+            └── Then: the function should revert
+     */
+    function testNotPublicRoleModifier() public {
+        bytes32 roleId = _authSuT.PUBLIC_ROLE();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleIsPublic
+                    .selector
+            )
+        );
+        _authSuT.notPublicRoleModifier_exposed(roleId);
+    }
+
+    /*
+    Test: onlyTokenGated Modifier
+    └── Given: Role is not token-gated
+        └── When: function with onlyTokenGated modifier is called
+            └── Then: the function should revert
+    */
+    function testOnlyTokenGatedModifier(bool isTokenGated_) public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Set token gated
+        if (isTokenGated_) {
+            _authSuT.setTokenGated(roleId, true);
+        } else {
+            // If not token gated, then the function should revert
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IAUT_TokenGated_Roles_v1
+                        .Module__AUT_TokenGated_Roles__RoleNotTokenGated
+                        .selector
+                )
+            );
+        }
+        _authSuT.onlyTokenGatedModifier_exposed(roleId);
+    }
+
+    /*
+    Test: validThreshold Modifier
+    └── Given: Threshold is invalid
+        └── When: function with validThreshold modifier is called
+            └── Then: the function should revert
+    */
+    function testValidThresholdModifier(uint threshold_) public {
+        if (threshold_ == 0) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    IAUT_TokenGated_Roles_v1
+                        .Module__AUT_TokenGated_Roles__InvalidThreshold
+                        .selector,
+                    threshold_
+                )
+            );
+        }
+        _authSuT.validThresholdModifier_exposed(threshold_);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test External Functions
+
+    // ========================================================================
+    // Public Getter Functions
+
+    /*
+    Test: isTokenGated
+    └── When: isTokenGated is called
+        └── Then: Return if the role is token gated
+    */
+    function testIsTokenGated(bool isTokenGated_, bytes32 roleId_) public {
+        // Public role cannot be token gated
+        vm.assume(roleId_ != _authSuT.PUBLIC_ROLE());
+
+        // Set token gated
+        if (isTokenGated_) {
+            _authSuT.setTokenGated_unrestricted(roleId_, true);
+        }
+        assertEq(_authSuT.isTokenGated(roleId_), isTokenGated_);
+    }
+
+    /*
+    Test: hasTokenRole
+    ├── Given: Role is not token gated
+    │   └── When: hasTokenRole is called
+    │       └── Then: It should revert (modifier in position check)
+    └──  Given: Role is token gated
+        └── When: hasTokenRole is called
+            └── Then: It should call the internal function
+    */
+    function testHasTokenRole_ModifierInPositionChecks() public {
+        // onlyTokenGated
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
+                    .selector
+            )
+        );
+        _authSuT.hasTokenRole(bytes32(uint(0)), address(0));
+    }
+
+    function testHasTokenRole_TokenGated_CallsInternalFunction(
+        address who_,
+        bool hasTokenRole_
+    ) public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        // Create Token Interface Mock
+        address token = address(new TokenInterfaceMock());
+
+        // Set threshold
+        _authSuT.setThreshold(roleId, token, 1);
+
+        // Grant Role
+        _authSuT.grantRole(roleId, token);
+
+        if (hasTokenRole_) {
+            // Give the address some tokens
+            TokenInterfaceMock(token).setTokenBalance(who_, 1);
+        }
+
+        // Check that the role is granted
+        assertEq(_authSuT.hasTokenRole(roleId, who_), hasTokenRole_);
+    }
+
+    /*
+    Test: getThresholdValue
+    └── When: getThresholdValue is called
+        └── Then: Return the threshold value
+    */
+    function testGetThresholdValue(
+        uint threshold_,
+        bytes32 roleId_,
+        address token_
+    ) public {
+        // Set threshold
+        _authSuT.setThreshold_unrestricted(roleId_, token_, threshold_);
+
+        assertEq(_authSuT.getThresholdValue(roleId_, token_), threshold_);
+    }
+
+    // ========================================================================
+    // Mutating Functions
+
+    // ------------------------------------------------------------------------
+    // Mutating - TokenGated Settings
+
+    /*
+    Test: setTokenGated
+    ├── Given: Caller is not permissioned
+    │   └── When: setTokenGated is called
+    │       └── Then: The call reverts (modifier in position check)
+    ├── Given: Caller is permissioned
+    ├── And: Role is not empty
+    │   └── When: setTokenGated is called
+    │       └── Then: The call reverts (modifier in position check)
+    ├── Given: Caller is permissioned
+    ├── And: Role is empty
+    ├── And: Role is Public Role
+    │   └── When: setTokenGated is called
+    │       └── Then: The call reverts (modifier in position check)
+    ├── Given: Caller is permissioned
+    ├── And: Role is empty
+    └── And: Role is not Public Role
+        └── When: setTokenGated is called
+            └── Then: The role becomes token gated
+                └── And: An event is emitted
+     */
+    function testSetTokenGated_ModifierInPositionChecks() public {
+        // permissioned
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(_bob);
+        _authSuT.setTokenGated(bytes32(uint(0)), true);
+
+        //idExisting(roleId_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        _authSuT.setTokenGated(bytes32(uint(2)), true);
+
+        // onlyEmptyRole(roleId_)
+
+        // Create Role that is not empty
+        address[] memory members = new address[](1);
+        members[0] = _bob;
+        bytes32 roleId =
+            _authSuT.createRole("Role", _authSuT.DEFAULT_ADMIN_ROLE(), members);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
+                    .selector
+            )
+        );
+        _authSuT.setTokenGated(roleId, true);
+
+        // notPublicRole(roleId_)
+        roleId = _authSuT.PUBLIC_ROLE();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleIsPublic
+                    .selector
+            )
+        );
+        _authSuT.setTokenGated(roleId, true);
+    }
+
+    function testSetTokenGated_Functionality() public {
+        // Create Role that is empty
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Expect event
+        vm.expectEmit(true, true, true, true);
+        emit IAUT_TokenGated_Roles_v1.ChangedTokenGating(roleId, true);
+
+        // Set token gated
+        _authSuT.setTokenGated(roleId, true);
+        assertTrue(_authSuT.isTokenGated(roleId));
+    }
+
+    /*
+    Test: setThreshold
+    ├── Given: Caller is not permissioned
+    │   └── When: setThreshold is called
+    │       └── Then: The call reverts (modifier in position check)
+    └── Given: Caller is permissioned
+        └── When: setThreshold is called
+            └── Then: The underlying function is called (Check via event)
+    */
+    function testSetThreshold_ModifierInPositionChecks() public {
+        // permissioned
+        vm.expectRevert(
+            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+        );
+        vm.prank(_bob);
+        _authSuT.setThreshold(bytes32(uint(0)), address(0), 0);
+
+        //idExisting(roleId_)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
+            )
+        );
+        _authSuT.setThreshold(bytes32(uint(2)), address(0), 0);
+    }
+
+    function testSetThreshold_Functionality() public {
+        // Create Role that is empty
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Make it token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        // Expect event
+        vm.expectEmit(true, true, true, true);
+        emit IAUT_TokenGated_Roles_v1.ChangedTokenThreshold(
+            roleId, address(0), 1
+        );
+
+        // Set threshold
+        _authSuT.setThreshold(roleId, address(0), 1);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test Override Functions
+
+    /*
+    Test: hasRole
+    ├── Given: Role is not token gated
+    ├── And: The given address does not have the role
+    │   └── When: hasRole is called
+    │       └── Then: hasRole works like base contract
+    ├── Given: Role is token gated
+    ├── And: The given address has the role
+    │   └── When: hasRole is called
+    │       └── Then: hasRole works like base contract
+    └── Given: Role is token gated
+        └── When: hasRole is called
+            └── Then: It should use the internal _hasTokenRole function
+    */
+    function testHasRole_NotTokenGated_AddressDoesNotHaveRole(address who_)
+        public
     {
-        bytes32 roleId = _authorizer.generateRoleId(module, role);
-        vm.startPrank(module);
-
-        _authorizer.makeRoleTokenGatedFromModule(role);
-        _authorizer.grantTokenRoleFromModule(role, address(nft), 1);
-        vm.stopPrank();
-        return roleId;
-    }
-
-    function makeAddressDefaultAdmin(address who) public {
-        bytes32 adminRole = _authorizer.DEFAULT_ADMIN_ROLE();
-        vm.prank(ALBA);
-        _authorizer.grantRole(adminRole, who);
-        assertTrue(_authorizer.hasRole(adminRole, who));
-    }
-
-    // -------------------------------------
-    // State change and validation tests
-
-    // test make role token gated
-
-    function testMakeRoleTokenGated() public {
-        bytes32 roleId_1 = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
+        // Check that address is not initial admin
+        vm.assume(who_ != address(this));
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
         );
-        assertTrue(_authorizer.isTokenGated(roleId_1));
-
-        bytes32 roleId_2 =
-            setUpNFTGatedRole(address(mockModule), ROLE_NFT, address(roleNft));
-        assertTrue(_authorizer.isTokenGated(roleId_2));
+        assertFalse(_authSuT.hasRole(roleId, who_));
     }
 
-    // test admin setTokenGating
-    function testSetTokenGatingByAdmin() public {
-        // we set CLOE as admin
-        makeAddressDefaultAdmin(CLOE);
-
-        // we set and unset on an empty role
-
-        bytes32 roleId = _authorizer.generateRoleId(address(mockModule), "0x00");
-
-        // now we make it tokengated as admin
-        vm.prank(CLOE);
-
-        vm.expectEmit();
-        emit ChangedTokenGating(roleId, true);
-
-        _authorizer.setTokenGated(roleId, true);
-
-        assertTrue(_authorizer.isTokenGated(roleId));
-
-        // and revert the change
-        vm.prank(CLOE);
-
-        vm.expectEmit();
-        emit ChangedTokenGating(roleId, false);
-
-        _authorizer.setTokenGated(roleId, false);
-
-        assertFalse(_authorizer.isTokenGated(roleId));
-    }
-
-    // test makeTokenGated fails if not empty
-    function testMakingFunctionTokenGatedFailsIfAlreadyInUse() public {
-        bytes32 roleId =
-            _authorizer.generateRoleId(address(mockModule), ROLE_TOKEN);
-
-        // we switch on self-management and whitelist an address
-        vm.startPrank(address(mockModule));
-        _authorizer.grantRoleFromModule(ROLE_TOKEN, CLOE);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
-                    .selector
-            )
+    function testHasRole_NotTokenGated_AddressHasRole(address who_) public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
         );
-        _authorizer.makeRoleTokenGatedFromModule(ROLE_TOKEN);
-        assertFalse(_authorizer.isTokenGated(roleId));
-
-        // we revoke the whitelist
-        _authorizer.revokeRoleFromModule(ROLE_TOKEN, CLOE);
-
-        // now it works:
-        _authorizer.makeRoleTokenGatedFromModule(ROLE_TOKEN);
-        assertTrue(_authorizer.isTokenGated(roleId));
-    }
-    // smae but with admin
-
-    function testSetTokenGatedFailsIfRoleAlreadyInUse() public {
-        // we set BOB as admin
-        makeAddressDefaultAdmin(BOB);
-
-        bytes32 roleId =
-            _authorizer.generateRoleId(address(mockModule), ROLE_TOKEN);
-
-        // we switch on self-management and whitelist an address
-        vm.prank(address(mockModule));
-        _authorizer.grantRoleFromModule(ROLE_TOKEN, CLOE);
-
-        vm.startPrank(BOB);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
-                    .selector
-            )
-        );
-        _authorizer.setTokenGated(roleId, true);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__RoleNotEmpty
-                    .selector
-            )
-        );
-        _authorizer.setTokenGated(roleId, false);
-
-        // we revoke the whitelist
-        _authorizer.revokeRole(roleId, CLOE);
-
-        // now it works:
-        _authorizer.setTokenGated(roleId, true);
-        assertTrue(_authorizer.isTokenGated(roleId));
-
-        _authorizer.setTokenGated(roleId, false);
-        assertFalse(_authorizer.isTokenGated(roleId));
+        // Add address to role
+        _authSuT.grantRole(roleId, who_);
+        assertTrue(_authSuT.hasRole(roleId, who_));
     }
 
-    // test interface enforcement when granting role
-    // -> yes case
-    function testCanAddTokenWhenTokenGated() public {
-        setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
-        );
-        setUpNFTGatedRole(address(mockModule), ROLE_NFT, address(roleNft));
-    }
-    // -> no case
-
-    /// forge-config: default.allow_internal_expect_revert = true
-    function testCannotAddNonTokenWhenTokenGated() public {
-        setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
+    function testHasRole_TokenGated_CallsInternalFunction(
+        address who_,
+        bool hasTokenRole_
+    ) public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
         );
 
-        vm.prank(address(mockModule));
-        // First, the call to the interface reverts without reason
-        vm.expectRevert();
-        // Then the contract handles the reversion and sends the correct error message
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        // Create Token Interface Mock
+        address token = address(new TokenInterfaceMock());
+
+        // Set threshold
+        _authSuT.setThreshold(roleId, token, 1);
+
+        // Grant Role
+        _authSuT.grantRole(roleId, token);
+
+        if (hasTokenRole_) {
+            // Give the address some tokens
+            TokenInterfaceMock(token).setTokenBalance(who_, 1);
+        }
+
+        // Check that the role is granted
+        assertEq(_authSuT.hasRole(roleId, who_), hasTokenRole_);
+    }
+    /*
+    Test: grantRole
+    ├── Given: Role is not token gated
+    │   └── When: grantRole is called
+    │       └── Then: Grant Role works like base contract
+    ├── Given: Role is token gated
+    ├── And: The given address has code size 0
+    │   └── When: grantRole is called
+    │       └── Then: The function should revert
+    ├── Given: Role is token gated
+    ├── And: The given address has code size > 0
+    ├── And: The Threshold is 0 for the given address
+    │   └── When: grantRole is called
+    │       └── Then: The function should revert
+    ├── Given: Role is token gated
+    ├── And: The given address has code size > 0
+    ├── And: The Threshold is > 0 for the given address
+    ├── And: The given address does not implement the TokenInterface
+    │   └── When: grantRole is called
+    │       └── Then: The function should revert
+    ├── Given: Role is token gated
+    ├── And: the given address has code size > 0
+    ├── And: The Threshold is > 0 for the given address
+    └── And: The given address implements the TokenInterface
+        └── When: grantRole is called
+            └── Then: Grant Role works like base contract
+    */
+
+    function test_grantRole_NotTokenGated(address who_) public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Grant Role
+        _authSuT.grantRole(roleId, who_);
+
+        // Check that the role is granted
+        assertTrue(
+            _authSuT.exposed_AccessControlUpgradeable_hasRole(roleId, who_)
+        );
+    }
+
+    function test_grantRole_CodeSizeZero(address who_) public {
+        uint32 size;
+        assembly {
+            size := extcodesize(who_)
+        }
+        vm.assume(size == 0);
+
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        // Grant Role
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAUT_TokenGated_Roles_v1
                     .Module__AUT_TokenGated_Roles__InvalidToken
                     .selector,
-                CLOE
+                address(who_)
             )
         );
-        _authorizer.grantRoleFromModule(ROLE_TOKEN, CLOE);
+        _authSuT.grantRole(roleId, who_);
     }
 
-    /// forge-config: default.allow_internal_expect_revert = true
-    function testAdminCannotAddNonTokenWhenTokenGated() public {
-        // we set BOB as admin
-        makeAddressDefaultAdmin(BOB);
+    function test_grantRole_TokenInterfaceThresholdZero() public {
+        // Create Mock Token Interface
+        TokenInterfaceMock tokenInterfaceMock = new TokenInterfaceMock();
 
-        bytes32 roleId = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
         );
 
-        vm.prank(BOB);
-        // First, the call to the interface reverts without reason
-        vm.expectRevert();
-        // Then the contract handles the reversion and sends the correct error message
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__InvalidToken
-                    .selector,
-                CLOE
-            )
-        );
-        _authorizer.grantRole(roleId, CLOE);
-    }
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
 
-    // Check setting the threshold
-    // yes case
-    function testSetThreshold() public {
-        bytes32 roleId = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
-        );
-        assertEq(_authorizer.getThresholdValue(roleId, address(roleToken)), 500);
-    }
-
-    // invalid threshold from module
-
-    function testSetThresholdFailsIfInvalid() public {
-        bytes32 role = ROLE_TOKEN;
-        vm.startPrank(address(mockModule));
-        _authorizer.makeRoleTokenGatedFromModule(role);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__InvalidThreshold
-                    .selector,
-                0
-            )
-        );
-        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 0);
-
-        vm.stopPrank();
-    }
-    // invalid threshold from admin
-
-    function testSetThresholdFromAdminFailsIfInvalid() public {
-        // we set BOB as admin
-        makeAddressDefaultAdmin(BOB);
-        // First we set up a valid role
-        bytes32 roleId = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
-        );
-
-        // and we try to break it
-        vm.prank(BOB);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__InvalidThreshold
-                    .selector,
-                0
-            )
-        );
-        _authorizer.setThreshold(roleId, address(roleToken), 0);
-    }
-
-    function testSetThresholdFailsIfNotTokenGated() public {
-        // we set BOB as admin
-        makeAddressDefaultAdmin(BOB);
-
-        vm.prank(address(mockModule));
-        // We didn't make the role token-gated beforehand
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
-                    .selector
-            )
-        );
-        _authorizer.grantTokenRoleFromModule(
-            ROLE_TOKEN, address(roleToken), 500
-        );
-
-        // also fails for the admin
-        bytes32 roleId =
-            _authorizer.generateRoleId(address(mockModule), ROLE_TOKEN);
-
-        vm.prank(BOB);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
-                    .selector
-            )
-        );
-        _authorizer.setThreshold(roleId, address(roleToken), 500);
-    }
-
-    // Test setThresholdFromModule
-
-    function testSetThresholdFromModule() public {
-        bytes32 roleId = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), 500
-        );
-        vm.prank(address(mockModule));
-        _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 1000);
-        assertEq(
-            _authorizer.getThresholdValue(roleId, address(roleToken)), 1000
-        );
-    }
-
-    // invalid threshold from module
-
-    function testSetThresholdFromModuleFailsIfInvalid() public {
-        bytes32 role = ROLE_TOKEN;
-        vm.startPrank(address(mockModule));
-        _authorizer.makeRoleTokenGatedFromModule(role);
-
-        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 100);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__InvalidThreshold
-                    .selector,
-                0
-            )
-        );
-        _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 0);
-
-        vm.stopPrank();
-    }
-
-    function testSetThresholdFromModuleFailsIfNotTokenGated() public {
-        // we set BOB as admin
-        makeAddressDefaultAdmin(BOB);
-
-        vm.prank(address(mockModule));
-        // We didn't make the role token-gated beforehand
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAUT_TokenGated_Roles_v1
-                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
-                    .selector
-            )
-        );
-        _authorizer.setThresholdFromModule(ROLE_TOKEN, address(roleToken), 500);
-    }
-
-    // Threshold state checks:
-    // Cannot grant role if threshold is set to zero
-
-    function testGrantTokenRoleFailsIfThresholdWouldBeZero() public {
-        bytes32 role = ROLE_TOKEN;
-
-        // Make the role token-gated, but don't set a token with grantRoleFromModule()
-        vm.prank(address(mockModule));
-        _authorizer.makeRoleTokenGatedFromModule(role);
-
-        bytes32 storedRoleId =
-            _authorizer.generateRoleId(address(mockModule), role);
-
-        // Now we make BOB admin of the role
-        makeAddressDefaultAdmin(BOB);
-
-        vm.startPrank(BOB);
+        // Grant Role
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAUT_TokenGated_Roles_v1
                     .Module__AUT_TokenGated_Roles__TokenRoleMustHaveThreshold
                     .selector,
-                storedRoleId,
-                address(roleToken)
+                roleId,
+                address(tokenInterfaceMock)
             )
         );
-        _authorizer.grantRole(storedRoleId, address(roleToken)); // BOB tries to circumvent setting a threshold
 
-        vm.stopPrank();
+        _authSuT.grantRole(roleId, address(tokenInterfaceMock));
     }
 
-    // Threshold is zero after revoking role
-
-    function testThresholdStateGetsDeletedOnRevoke() public {
-        bytes32 role = ROLE_TOKEN;
-        bytes32 moduleRoleId =
-            _authorizer.generateRoleId(address(mockModule), role);
-
-        assertEq(
-            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 0
+    function test_grantRole_TokenInterfaceNotImplemented() public {
+        // We pick a contract that definetly does not implement the interface
+        address who_ = address(_orchestrator);
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
         );
 
-        vm.startPrank(address(mockModule));
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
 
-        // Make the role token-gated with a threshold of 500
-        _authorizer.makeRoleTokenGatedFromModule(role);
-        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 500);
+        // Set threshold
+        _authSuT.setThreshold(roleId, who_, 1);
 
-        assertEq(
-            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 500
+        // Grant Role
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidToken
+                    .selector,
+                who_
+            )
         );
-        assertEq(true, _authorizer.hasRole(moduleRoleId, address(roleToken)));
-
-        assertEq(
-            false, _authorizer.hasTokenRole(moduleRoleId, address(roleToken))
-        );
-        assertEq(
-            false, _authorizer.checkForRole(moduleRoleId, address(roleToken))
-        );
-
-        _authorizer.revokeRoleFromModule(role, address(roleToken));
-
-        assertEq(
-            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 0
-        );
-
-        assertEq(false, _authorizer.hasRole(moduleRoleId, address(roleToken)));
-
-        // Grant the same role again, with different Threshold
-        _authorizer.grantTokenRoleFromModule(role, address(roleToken), 250);
-
-        assertEq(
-            _authorizer.getThresholdValue(moduleRoleId, address(roleToken)), 250
-        );
-
-        vm.stopPrank();
+        _authSuT.grantRole(roleId, who_);
     }
 
-    // Test Authorization
+    function test_grantRole_TokenInterfaceImplemented() public {
+        // Create Mock Token Interface
+        TokenInterfaceMock tokenInterfaceMock = new TokenInterfaceMock();
 
-    // Test token authorization
-    // -> yes case
-    function testFuzzTokenAuthorization(
-        uint threshold,
-        address[] calldata callers,
-        uint[] calldata amounts
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        // Set threshold
+        _authSuT.setThreshold(roleId, address(tokenInterfaceMock), 1);
+
+        // Grant Role
+        _authSuT.grantRole(roleId, address(tokenInterfaceMock));
+
+        // Check that the role is granted
+        assertTrue(
+            _authSuT.exposed_AccessControlUpgradeable_hasRole(
+                roleId, address(tokenInterfaceMock)
+            )
+        );
+    }
+
+    /*
+    Test: _revokeRole
+    ├── Given: Role is not token gated
+    │   └── When: revokeRole is called
+    │       └── Then: Revoke Role works like base contract
+    └── Given: Role is token gated
+        └── When: revokeRole is called
+            └── Then: The Threshold is set to 0
+                └── And: An event is emitted
+                    └── And: Revoke Role works like base contract
+    */
+    function test_revokeRole_NotTokenGated(address who_) public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+        // Add address to role
+        _authSuT.grantRole(roleId, who_);
+
+        // Revoke Role
+        _authSuT.revokeRole(roleId, who_);
+
+        // Check that the role is revoked
+        assertFalse(
+            _authSuT.exposed_AccessControlUpgradeable_hasRole(roleId, who_)
+        );
+    }
+
+    function test_revokeRole_TokenGated() public {
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        // Make Role token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        // Create Token Interface Mock
+        address who = address(new TokenInterfaceMock());
+
+        // Set threshold
+        _authSuT.setThreshold(roleId, who, 1);
+
+        // Grant Role
+        _authSuT.grantRole(roleId, who);
+
+        // Expect event
+        vm.expectEmit(true, true, true, true);
+        emit IAUT_TokenGated_Roles_v1.ChangedTokenThreshold(roleId, who, 0);
+
+        // Revoke Role
+        _authSuT.revokeRole(roleId, who);
+
+        // Check that threshold is set to 0
+        assertEq(_authSuT.getThresholdValue(roleId, who), 0);
+
+        // Check that the role is revoked
+        assertFalse(
+            _authSuT.exposed_AccessControlUpgradeable_hasRole(roleId, who)
+        );
+    }
+    ///////////////////////////////////////////////////////////////////////////
+    // Test Internal Functions
+
+    // ------------------------------------------------------------------------
+    // Internal - Upstream Function Implementations
+
+    /*
+    Test: _setThreshold
+    ├── Given: The given roleId is not token gated
+    │   └── When: _setThreshold is called
+    │       └── Then: The call reverts (modifier in position check)
+    ├── Given: The given roleId is token gated
+    ├── And: the given threshold is invalid
+    │   └── When: _setThreshold is called
+    │       └── Then: The call reverts (modifier in position check)
+    ├── Given: The given roleId is token gated
+    └── And: the given threshold is valid
+        └── When: _setThreshold is called
+            └── Then: the threshold map is updated
+                └── And: A event is emitted
+    */
+    function test_setThreshold_ModifierInPositionChecks() public {
+        // onlyTokenGated(roleId_)
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__RoleNotTokenGated
+                    .selector
+            )
+        );
+        _authSuT.exposed_setThreshold(roleId, address(0), 0);
+
+        // validThreshold(threshold_)
+
+        // Make role token gated
+        _authSuT.setTokenGated(roleId, true);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAUT_TokenGated_Roles_v1
+                    .Module__AUT_TokenGated_Roles__InvalidThreshold
+                    .selector,
+                0
+            )
+        );
+        _authSuT.exposed_setThreshold(roleId, address(0), 0);
+    }
+
+    function test_setThreshold_Functionality(address token_, uint threshold_)
+        public
+    {
+        // Make sure threshold_ is not zero
+        vm.assume(threshold_ != 0);
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+        // Make it TokenGated
+        _authSuT.setTokenGated(roleId, true);
+
+        vm.expectEmit(true, true, true, true);
+        emit IAUT_TokenGated_Roles_v1.ChangedTokenThreshold(
+            roleId, token_, threshold_
+        );
+        // Set Threshold
+        _authSuT.setThreshold(roleId, token_, threshold_);
+
+        assertEq(_authSuT.getThresholdValue(roleId, token_), threshold_);
+    }
+
+    /*
+    Test: _hasTokenRole
+    Invariant: Role can only contain TokenInterface addresses
+    ├── Given: Role contains TokenInterface mock addresses
+    ├── And: The token amount is less than the threshold
+    │   └── When: _hasTokenRole is called
+    │       └── Then: It should return false
+    ├── Given: Role contains TokenInterface mock addresses
+    └── And: The token amount of at least one of them is equal or higher than the threshold
+        └── When: _hasTokenRole is called
+            └── Then: It should return true
+    */
+    function test_hasTokenRole_TokenInterfacesWrongThreshold(
+        uint[] memory thresholdAmounts_,
+        address who_
     ) public {
-        vm.assume(callers.length <= amounts.length);
-        vm.assume(threshold != 0);
-
-        // This implcitly confirms ERC20 compatibility
-
-        // We burn the tokens created on setup
-        roleToken.burn(BOB, 1000);
-        roleToken.burn(CLOE, 10);
-
-        bytes32 roleId = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), threshold
+        // Assume realistic number of token interface Mocks
+        vm.assume(thresholdAmounts_.length < 30);
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
         );
+        // Set token gated
+        _authSuT.setTokenGated(roleId, true);
 
-        for (uint i = 0; i < callers.length; i++) {
-            if (callers[i] == address(0)) {
-                // cannot mint to 0 address
-                continue;
+        // Create token interface mocks
+        address[] memory tokenInterfaceMocks =
+            new address[](thresholdAmounts_.length);
+
+        for (uint i; i < thresholdAmounts_.length; ++i) {
+            // Should the threshold be zero then set it to 1
+            if (thresholdAmounts_[i] == 0) {
+                thresholdAmounts_[i] = 1;
             }
-
-            roleToken.mint(callers[i], amounts[i]);
-
-            // we ensure both ways to check give the same result
-            vm.prank(address(mockModule));
-            bool result = _authorizer.checkForRole(roleId, callers[i]);
-            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
-
-            // we verify the result ir correct
-            if (amounts[i] >= threshold) {
-                assertTrue(result);
-            } else {
-                assertFalse(result);
-            }
-
-            // we burn the minted tokens to avoid overflows
-            roleToken.burn(callers[i], amounts[i]);
+            tokenInterfaceMocks[i] =
+            _createTokenInterfaceMock_SetThresholdAmount_AddToMembers(
+                roleId, thresholdAmounts_[i]
+            );
         }
+
+        // Should return false as target has no tokens in any of the mocks
+        assertFalse(_authSuT.exposed_hasTokenRole(roleId, who_));
     }
 
-    // Test NFT authorization
-    // -> yes case
-    // -> no case
-    function testFuzzNFTAuthorization(
-        address[] calldata callers,
-        bool[] calldata hasNFT
+    event hm(uint);
+
+    function test_hasTokenRole_WhoHasTokens(
+        uint seed_,
+        uint[] memory thresholdAmounts_,
+        uint[] memory tokenAmounts_,
+        address who_
     ) public {
-        vm.assume(callers.length < 50);
-        vm.assume(callers.length <= hasNFT.length);
+        // Assume realistic number of token interface Mocks
+        vm.assume(thresholdAmounts_.length > 0);
+        vm.assume(thresholdAmounts_.length < 30);
+        vm.assume(tokenAmounts_.length <= thresholdAmounts_.length);
+        // Create Role
+        bytes32 roleId = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+        // Set token gated
+        _authSuT.setTokenGated(roleId, true);
 
-        // This is similar to the function above, but in this case we just do a yes/no check
-        // This implcitly confirms ERC721 compatibility
+        // Create token interface mocks
+        address[] memory tokenInterfaceMocks =
+            new address[](thresholdAmounts_.length);
 
-        // We burn the token created on setup
-        roleNft.burn(roleNft.idCounter() - 1);
-
-        bytes32 roleId =
-            setUpNFTGatedRole(address(mockModule), ROLE_NFT, address(roleNft));
-
-        for (uint i = 0; i < callers.length; i++) {
-            if (callers[i] == address(0)) {
-                // cannot mint to 0 address
-                continue;
+        for (uint i; i < thresholdAmounts_.length; ++i) {
+            // Should the threshold be zero then set it to 1
+            if (thresholdAmounts_[i] == 0) {
+                thresholdAmounts_[i] = 1;
             }
-            if (hasNFT[i]) {
-                roleNft.mint(callers[i]);
-            }
-
-            // we ensure both ways to check give the same result
-            vm.prank(address(mockModule));
-            bool result = _authorizer.checkForRole(roleId, callers[i]);
-            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
-
-            // we verify the result ir correct
-            if (hasNFT[i]) {
-                assertTrue(result);
-            } else {
-                assertFalse(result);
-            }
-
-            // If we minted a token we burn it to guarantee a clean slate in case of address repetition
-            if (hasNFT[i]) {
-                roleNft.burn(roleNft.idCounter() - 1);
-            }
+            tokenInterfaceMocks[i] =
+            _createTokenInterfaceMock_SetThresholdAmount_AddToMembers(
+                roleId, thresholdAmounts_[i]
+            );
         }
-    }
 
-    function testFuzzTokenAuthorizationAndRevoke(
-        uint threshold,
-        address[] calldata callers,
-        uint[] calldata amounts
-    ) public {
-        vm.assume(callers.length <= amounts.length);
-        vm.assume(threshold != 0);
+        // Give the target some tokens
+        for (uint i; i < tokenAmounts_.length; ++i) {
+            TokenInterfaceMock(tokenInterfaceMocks[i]).setTokenBalance(
+                who_, tokenAmounts_[i]
+            );
+        }
 
-        // This implcitly confirms ERC20 compatibility
+        // Make sure that the target has at least more or equal tokens in one of the mocks
+        // Pick a random token interface mock
+        address randomTokenInterfaceAddress =
+            tokenInterfaceMocks[seed_ % thresholdAmounts_.length];
+        // Pick the respective threshold amount
+        uint thresholdAmountOfTokenInterfaceMock =
+            thresholdAmounts_[seed_ % thresholdAmounts_.length];
 
-        // We burn the tokens created on setup
-        roleToken.burn(BOB, 1000);
-        roleToken.burn(CLOE, 10);
-
-        bytes32 roleId = setUpTokenGatedRole(
-            address(mockModule), ROLE_TOKEN, address(roleToken), threshold
+        // Set the balance of the target to the threshold amount of the token interface mock
+        TokenInterfaceMock(randomTokenInterfaceAddress).setTokenBalance(
+            who_, thresholdAmountOfTokenInterfaceMock
         );
 
-        assertEq(true, _authorizer.hasRole(roleId, address(roleToken))); // The token has been added to the core authorizer mapping
+        // Should return false as target has no tokens in any of the mocks
+        assertTrue(_authSuT.exposed_hasTokenRole(roleId, who_));
+    }
 
-        assertEq(false, _authorizer.checkForRole(roleId, address(roleToken))); // The token itself  does not have the role
-        assertEq(
-            _authorizer.checkForRole(roleId, address(roleToken)),
-            _authorizer.hasTokenRole(roleId, address(roleToken))
-        ); // We ensure both ways to check give the same result
+    ///////////////////////////////////////////////////////////////////////////
+    // Helper Functions
 
-        for (uint i = 0; i < callers.length; i++) {
-            if (callers[i] == address(0)) {
-                // cannot mint to 0 address
-                continue;
-            }
+    /// @notice Creates a role with token gated set to true
+    /// @return roleId_ The id of the created role
+    function _createTokenGatedRole() internal returns (bytes32 roleId_) {
+        // Create Role
+        roleId_ = _authSuT.createRole(
+            "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
+        );
+        // Set token gated
+        _authSuT.setTokenGated(roleId_, true);
+    }
 
-            roleToken.mint(callers[i], amounts[i]);
+    /// @notice Creates a token interface mock, sets the threshold and adds it to the role
+    /// @param  roleId_ The id of the role to add the token interface mock to
+    /// @param  thresholdAmount_ The threshold amount to set
+    /// @return tokenInterfaceMock_ The address of the token interface mock
+    function _createTokenInterfaceMock_SetThresholdAmount_AddToMembers(
+        bytes32 roleId_,
+        uint thresholdAmount_
+    ) internal returns (address tokenInterfaceMock_) {
+        // Create token interface mock
+        tokenInterfaceMock_ = address(new TokenInterfaceMock());
 
-            // we ensure both ways to check give the same result
-            vm.prank(address(mockModule));
-            bool result = _authorizer.checkForRole(roleId, callers[i]);
-            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
+        // Set threshold
+        _authSuT.setThreshold(roleId_, tokenInterfaceMock_, thresholdAmount_);
 
-            // we verify the result is correct
-            if (amounts[i] >= threshold) {
-                assertTrue(result);
-            } else {
-                assertFalse(result);
-            }
-
-            // we burn the minted tokens to avoid overflows
-            roleToken.burn(callers[i], amounts[i]);
-        }
-
-        // Now we revoke the token from the role
-        vm.startPrank(address(mockModule));
-        vm.expectEmit();
-        emit ChangedTokenThreshold(roleId, address(roleToken), 0);
-        emit RoleRevoked(roleId, address(roleToken), address(mockModule));
-
-        _authorizer.revokeRoleFromModule(ROLE_TOKEN, address(roleToken));
-        vm.stopPrank();
-
-        assertEq(false, _authorizer.hasRole(roleId, address(roleToken))); // The token has been revoked from the core authorizer mapping
-
-        assertEq(false, _authorizer.checkForRole(roleId, address(roleToken))); // The token itsef still does not have the role
-        assertEq(
-            _authorizer.checkForRole(roleId, address(roleToken)),
-            _authorizer.hasTokenRole(roleId, address(roleToken))
-        ); // We ensure both ways to check give the same result
-
-        for (uint i = 0; i < callers.length; i++) {
-            if (callers[i] == address(0)) {
-                // cannot mint to 0 address
-                continue;
-            }
-
-            roleToken.mint(callers[i], amounts[i]);
-
-            // we ensure both ways to check give the same result
-            vm.prank(address(mockModule));
-            bool result = _authorizer.checkForRole(ROLE_TOKEN, callers[i]);
-            assertEq(result, _authorizer.hasTokenRole(roleId, callers[i]));
-
-            // we verify the user is not authorized
-            assertFalse(result);
-
-            // we burn the minted tokens to avoid overflows
-            roleToken.burn(callers[i], amounts[i]);
-        }
+        // Add token interface mock to role
+        _authSuT.grantRole(roleId_, tokenInterfaceMock_);
     }
 }
