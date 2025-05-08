@@ -817,7 +817,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         address who_
     ) public {
         // Assume realistic number of token interface Mocks
-        vm.assume(thresholdAmounts_.length < 30);
+        vm.assume(thresholdAmounts_.length < 50);
         // Create Role
         bytes32 roleId = _authSuT.createRole(
             "Role", _authSuT.DEFAULT_ADMIN_ROLE(), new address[](0)
@@ -844,8 +844,6 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
         assertFalse(_authSuT.exposed_hasTokenRole(roleId, who_));
     }
 
-    event hm(uint);
-
     function test_hasTokenRole_WhoHasTokens(
         uint seed_,
         uint[] memory thresholdAmounts_,
@@ -854,7 +852,18 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
     ) public {
         // Assume realistic number of token interface Mocks
         vm.assume(thresholdAmounts_.length > 0);
-        vm.assume(thresholdAmounts_.length < 30);
+
+        // Cap the array to 50 elements
+        if (thresholdAmounts_.length > 50) {
+            uint[] memory cappedArr = new uint[](50); // Create new memory array
+
+            for (uint i = 0; i < 50; i++) {
+                cappedArr[i] = thresholdAmounts_[i]; // Copy elements into new array
+            }
+
+            thresholdAmounts_ = cappedArr;
+        }
+
         vm.assume(tokenAmounts_.length <= thresholdAmounts_.length);
         // Create Role
         bytes32 roleId = _authSuT.createRole(
@@ -898,7 +907,7 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
             who_, thresholdAmountOfTokenInterfaceMock
         );
 
-        // Should return false as target has no tokens in any of the mocks
+        // Should return true as target has thethreshold in at least one contract
         assertTrue(_authSuT.exposed_hasTokenRole(roleId, who_));
     }
 
