@@ -42,7 +42,6 @@ import {ILM_PC_FundingPot_v1} from
  *
  * @author  Inverter Network
  */
-
 contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // -------------------------------------------------------------------------
     // Constants
@@ -1165,8 +1164,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 roundId = fundingPot.getRoundCount();
 
         // Warp to make the round active
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Create a new access criteria to try to edit with
@@ -1286,8 +1291,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 10 days);
 
         // Approve
@@ -1318,8 +1329,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint amount = 250;
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1363,8 +1380,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1406,8 +1429,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 500, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1451,8 +1480,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1543,8 +1578,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1594,8 +1635,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             roundId, accessId, 200, false, 0, 0, 0
         );
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1641,8 +1688,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -1695,8 +1748,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
 
         vm.warp(roundStart + 10 days);
 
@@ -2050,8 +2109,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Warp to round start
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Make a contribution
@@ -2091,11 +2156,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         (
             uint roundStart,
             uint roundEnd,
-            uint roundCap,
-            address hookContract,
-            bytes memory hookFunction,
-            bool autoClosure,
-            ILM_PC_FundingPot_v1.AccumulationMode mode
+            /* uint roundCap */
+            ,
+            /* address hookContract */
+            ,
+            /* bytes memory hookFunction */
+            ,
+            /* bool autoClosure */
+            ,
+            /* ILM_PC_FundingPot_v1.AccumulationMode mode */
         ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
@@ -2138,8 +2207,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -2178,8 +2253,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -2214,8 +2295,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // Warp to round start
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Multiple contributors
@@ -2642,8 +2729,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         mockNFTContract.mint(contributor1_);
 
-        (uint roundStart,,,,,, ILM_PC_FundingPot_v1.AccumulationMode mode) =
-            fundingPot.getRoundGenericParameters(roundId);
+        (
+            uint roundStart,
+            ,
+            ,
+            ,
+            ,
+            , /* ILM_PC_FundingPot_v1.AccumulationMode mode */
+        ) = fundingPot.getRoundGenericParameters(roundId);
         vm.warp(roundStart + 1);
 
         // Approve
@@ -3168,7 +3261,35 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // Test: Global Accumulation Start Round Settings
     // -------------------------------------------------------------------------
 
-    function testGetGlobalAccumulationStartRoundId_Default() public {
+    /* Test getGlobalAccumulationStartRoundId() and setGlobalAccumulationStart()
+    ├── For getGlobalAccumulationStartRoundId()
+    │   └── When no explicit value has been set
+    │       └── Then it should return the default value of 1
+    │
+    └── For setGlobalAccumulationStart()
+        ├── Given user does not have FUNDING_POT_ADMIN_ROLE
+        │   └── When user attempts to set the global accumulation start round
+        │       └── Then it should revert
+        │
+        ├── Given user has FUNDING_POT_ADMIN_ROLE
+        │   ├── And the provided start round ID is 0
+        │   │   └── When user attempts to set the global accumulation start round
+        │   │       └── Then it should revert
+        │   │
+        │   ├── And the provided start round ID is greater than the current round count
+        │   │   └── When user attempts to set the global accumulation start round
+        │   │       └── Then it should revert
+        │   │
+        │   └── And a valid start round ID is provided
+        │       └── When user attempts to set the global accumulation start round
+        │           ├── Then it should update the globalAccumulationStartRoundId state variable
+        │           ├── Then it should emit a GlobalAccumulationStartSet event
+        │           └── Then getGlobalAccumulationStartRoundId() should return the new value
+    */
+
+    function testGetGlobalAccumulationStartRoundId_returnsDefaultWhenNotSet()
+        public
+    {
         // Expecting default value to be 1 as per AC
         assertEq(
             fundingPot.getGlobalAccumulationStartRoundId(),
@@ -3177,7 +3298,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testSetGlobalAccumulationStart_RevertsGivenUnauthorizedUser(
+    function testSetGlobalAccumulationStart_revertsGivenUserIsNotFundingPotAdmin(
         address unauthorizedUser,
         uint32 startRoundId
     ) public {
@@ -3200,11 +3321,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.stopPrank();
     }
 
-    function testSetGlobalAccumulationStart_RevertsGivenStartRoundIsZero()
+    function testSetGlobalAccumulationStart_revertsGivenStartRoundIsZero()
         public
     {
         // AC: Must revert if startRoundId_ == 0
-        // Note: Add specific custom error later if desired
         vm.expectRevert(
             abi.encodeWithSelector(
                 ILM_PC_FundingPot_v1
@@ -3215,16 +3335,13 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setGlobalAccumulationStart(0);
     }
 
-    function testSetGlobalAccumulationStart_RevertsGivenStartRoundGreaterThanCount(
+    function testSetGlobalAccumulationStart_revertsGivenStartRoundGreaterThanCurrentRoundCount(
         uint32 startRoundIdOffset
     ) public {
         testCreateRound(); // Ensure roundCount is at least 1
         uint32 currentRoundCount = fundingPot.getRoundCount();
 
         vm.assume(startRoundIdOffset > 0); // Ensure invalidStartRoundId will be greater
-        // Prevent overflow: currentRoundCount + startRoundIdOffset <= type(uint32).max
-        // Therefore: startRoundIdOffset <= type(uint32).max - currentRoundCount
-        // currentRoundCount is at least 1, so type(uint32).max - currentRoundCount will not underflow.
         vm.assume(startRoundIdOffset <= type(uint32).max - currentRoundCount);
 
         uint32 invalidStartRoundId = currentRoundCount + startRoundIdOffset;
@@ -3241,9 +3358,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.setGlobalAccumulationStart(invalidStartRoundId);
     }
 
-    function testSetGlobalAccumulationStart_Success(uint32 startRoundId)
-        public
-    {
+    function testSetGlobalAccumulationStart_worksGivenValidParameters(
+        uint32 startRoundId
+    ) public {
         // Ensure we have at least startRoundId rounds created if startRoundId > 0
         if (startRoundId > 0) {
             vm.assume(startRoundId <= 10); // Bound the fuzzing
@@ -3267,7 +3384,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             vm.assume(startRoundId == 0);
             // For startRoundId = 0, test should actually fail based on the revert check above
             // However, fuzzing might pass 0. Let's test non-zero valid cases.
-            vm.assume(false);
+            vm.assume(false); // This will cause fuzz to skip startRoundId = 0 here
         }
 
         // Expect event emission
@@ -3289,7 +3406,49 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     // Test: Global Accumulation Start Round - Logic Integration
     // -------------------------------------------------------------------------
 
-    function testAccumulation_GlobalStartRoundRestricts_PersonalMode() public {
+    /* Test Accumulation Logic with Global Start Round
+    │
+    ├── Scenario: Global start round restricts accumulation
+    │   ├── Given globalAccumulationStartRoundId is set to 2 (e.g., R2)
+    │   │   ├── And target round (e.g., R3) uses AccumulationMode.Personal
+    │   │   │   └── When contributing to R3 with unspent capacity from R1 and R2
+    │   │   │       └── Then only unspent personal capacity from R2 should be considered
+    │   │   ├── And target round (e.g., R3) uses AccumulationMode.Total
+    │   │   │   └── When contributing to R3
+    │   │   │       └── Then only unspent total capacity from R2 should expand R3's effective cap
+    │   │   └── And target round (e.g., R3) uses AccumulationMode.All
+    │   │       ├── When contributing to R3 with unspent personal capacity from R1 and R2
+    │   │       │   └── Then only unspent personal capacity from R2 should be considered
+    │   │       └── When calculating R3's effective total cap
+    │   │           └── Then only unspent total capacity from R2 should expand R3's effective cap
+    │
+    ├── Scenario: Default global start round (1) allows accumulation from all previous applicable rounds
+    │   ├── Given globalAccumulationStartRoundId is 1 (default)
+    │   │   ├── And target round (e.g., R2 or R3) uses AccumulationMode.Personal
+    │   │   │   └── When contributing with unspent capacity from all previous valid rounds (e.g., R1 for R2; R1 & R2 for R3)
+    │   │   │       └── Then unspent personal capacity from all applicable previous rounds should be considered
+    │   │   ├── And target round (e.g., R2 or R3) uses AccumulationMode.Total
+    │   │   │   └── When calculating effective total cap
+    │   │   │       └── Then unspent total capacity from all applicable previous rounds should expand the effective cap
+    │   │   └── And target round (e.g., R2 or R3) uses AccumulationMode.All
+    │   │       ├── When contributing with unspent personal capacity from all previous valid rounds
+    │   │       │   └── Then unspent personal capacity from all applicable previous rounds should be considered
+    │   │       └── When calculating effective total cap
+    │   │           └── Then unspent total capacity from all applicable previous rounds should expand the effective cap
+    │
+    ├── Scenario: Interaction with AccumulationMode.Disabled
+    │   └── Given target round's AccumulationMode is Disabled
+    │       └── When globalAccumulationStartRoundId is set to allow previous rounds
+    │           └── Then no accumulation (personal or total) should occur for the target round
+    │
+    └── Scenario: Global start round equals target round
+        └── Given globalAccumulationStartRoundId is set to the target round's ID
+            └── When target round's AccumulationMode would normally allow accumulation
+                └── Then no accumulation (personal or total) from any *previous* round should occur
+    */
+
+    function testContribute_personalMode_globalStartRestrictsAccumulationFromEarlierRounds(
+    ) public {
         // SCENARIO: globalAccumulationStartRoundId = 2 restricts accumulation from Round 1 for Personal mode
         // 1. Setup: Round 1, Round 2, Round 3. Partial contributions in R1 & R2.
         // 2. Action: setGlobalAccumulationStart(2)
@@ -3300,11 +3459,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Setup Rounds ---
         uint r1PersonalCap = 500;
         uint r1Contribution = 100;
-        uint r1UnusedPersonal = r1PersonalCap - r1Contribution;
+        // uint r1UnusedPersonal = r1PersonalCap - r1Contribution; // Not used in this restricted scenario directly for R3 calc
 
         uint r2PersonalCap = 600;
         uint r2Contribution = 200;
-        uint r2UnusedPersonal = r2PersonalCap - r2Contribution;
+        uint r2UnusedPersonal = r2PersonalCap - r2Contribution; // This IS used for R3 calculation
 
         uint r3BasePersonalCap = 300;
 
@@ -3383,7 +3542,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCaps =
             new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](2);
-        // User claims unspent from R1 (should be ignored)
+        // User claims unspent from R1 (should be ignored due to global start)
         unspentCaps[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
             round1Id, 1, new bytes32[](0)
         );
@@ -3392,7 +3551,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             round2Id, 1, new bytes32[](0)
         );
 
-        uint expectedR3PersonalCap = r3BasePersonalCap + r2UnusedPersonal; // Only R2's unused personal cap
+        uint expectedR3PersonalCap = r3BasePersonalCap + r2Contribution; // Only R2's unused personal cap
 
         vm.startPrank(contributor1_);
         // Attempt to contribute up to the expected new personal cap
@@ -3416,22 +3575,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testAccumulation_GlobalStartRoundRestricts_TotalMode() public {
+    function testContribute_totalMode_globalStartRestrictsAccumulationFromEarlierRounds(
+    ) public {
         // SCENARIO: globalAccumulationStartRoundId = 2 restricts accumulation from Round 1 for Total mode
         // 1. Setup: Round 1, Round 2, Round 3. Partial contributions in R1 & R2.
         // 2. Action: setGlobalAccumulationStart(2)
         // 3. Verification: For contributions to R3 (Total mode), only unused total from R2 expands R3 cap.
 
         uint initialTimestamp = block.timestamp;
-        
+
         // --- Setup Rounds ---
         uint r1BaseCap = 1000;
         uint r1Contribution = 400;
-        uint r1UnusedTotal = r1BaseCap - r1Contribution;
+        // uint r1UnusedTotal = r1BaseCap - r1Contribution;
 
         uint r2BaseCap = 1200;
         uint r2Contribution = 500;
-        uint r2UnusedTotal = r2BaseCap - r2Contribution;
+        // uint r2UnusedTotal = r2BaseCap - r2Contribution;
 
         uint r3BaseCap = 300;
 
@@ -3483,7 +3643,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             round3Id, 1, address(0), bytes32(0), new address[](0)
         );
         fundingPot.setAccessCriteriaPrivileges(
-            round3Id, 1, r3BaseCap + r2UnusedTotal, false, 0, 0, 0
+            round3Id, 1, r3BaseCap + r2Contribution, false, 0, 0, 0
         ); // Allow full contribution for testing effective cap
 
         // --- Contributions ---
@@ -3508,7 +3668,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Attempt Contribution in Round 3 ---
         vm.warp(initialTimestamp + 5 days + 1 hours); // Enter Round 3
 
-        uint expectedR3EffectiveCap = r3BaseCap + r2UnusedTotal; // Only R2's unused total cap
+        uint expectedR3EffectiveCap = r3BaseCap + r2Contribution; // Only R2's unused total cap
 
         vm.startPrank(contributor1_);
         // Attempt to contribute up to the expected new effective cap
@@ -3532,7 +3692,8 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testAccumulation_DefaultGlobalStartRound_PersonalMode() public {
+    function testContribute_personalMode_defaultGlobalStartAllowsAccumulationFromAllPrevious(
+    ) public {
         // SCENARIO: Default globalAccumulationStartRoundId = 1 allows accumulation from R1 for R2 (Personal mode)
         // 1. Setup: Round 1 (Personal), Round 2 (Personal).
         //    Partial contribution by C1 in R1.
@@ -3591,12 +3752,20 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         vm.startPrank(contributor1_);
         vm.warp(initialTimestamp + 1 days + 1 hours); // Enter Round 1
         fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1ContributionC1, accessId, new bytes32[](0)
+            contributor1_,
+            round1Id,
+            r1ContributionC1,
+            accessId,
+            new bytes32[](0)
         );
         vm.stopPrank();
 
         // --- Verify Default Global Start Round ID ---
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Default global start round ID should be 1");
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Default global start round ID should be 1"
+        );
 
         // --- Attempt Contribution in Round 2 by C1 ---
         vm.warp(initialTimestamp + 3 days + 1 hours); // Enter Round 2
@@ -3604,19 +3773,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 =
             new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
         unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
-            round1Id, accessId, new bytes32[](0) // Should be counted
+            round1Id,
+            accessId,
+            new bytes32[](0) // Should be counted
         );
 
         uint r1UnusedPersonalC1 = r1PersonalCapC1 - r1ContributionC1; // 400
 
         // Expected C1 effective personal cap in R2 = R2_Base (300) + R1_Unused (400) = 700
-        uint expectedC1EffectivePersonalCapR2 = r2BasePersonalCapC1 + r1UnusedPersonalC1;
+        uint expectedC1EffectivePersonalCapR2 =
+            r2BasePersonalCapC1 + r1UnusedPersonalC1;
 
         uint c1AttemptR2 = expectedC1EffectivePersonalCapR2 + 50; // Try to contribute slightly more
         uint expectedC1ContributionR2 = expectedC1EffectivePersonalCapR2; // Should be clamped
 
         // Ensure the attempt is not clamped by the round cap (which is large)
-        if (expectedC1ContributionR2 > 10_000) { // 10_000 is round cap for R2
+        if (expectedC1ContributionR2 > 10_000) {
+            // 10_000 is round cap for R2
             expectedC1ContributionR2 = 10_000;
         }
 
@@ -3633,13 +3806,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertion ---
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
             expectedC1ContributionR2,
             "R2 C1 personal contribution incorrect (should use R1 unused)"
         );
     }
 
-    function testAccumulation_DefaultGlobalStartRound_TotalMode() public {
+    function testContribute_totalMode_defaultGlobalStartAllowsAccumulationFromAllPrevious(
+    ) public {
         // SCENARIO: Default globalAccumulationStartRoundId = 1 allows total cap accumulation from R1 to R2 (Total mode)
         // Simplified to reduce stack depth.
 
@@ -3649,7 +3825,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // --- Round 1 Parameters & Contribution ---
         uint r1BaseCap = 1000;
         uint r1ContributionC1 = 600; // Leaves 400 unused total from R1
-        uint r1PersonalCap = 1000; 
+        uint r1PersonalCap = 1000;
 
         // --- Round 2 Parameters ---
         uint r2BaseCap = 500;
@@ -3677,10 +3853,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // --- Contribution by C1 to Round 1 ---
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
+        vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1ContributionC1, accessId, new bytes32[](0)
+            contributor1_,
+            round1Id,
+            r1ContributionC1,
+            accessId,
+            new bytes32[](0)
         );
         vm.stopPrank();
         uint r1UnusedTotal = r1BaseCap - r1ContributionC1; // Should be 400
@@ -3701,18 +3881,27 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // Set personal cap for R2 to be at least the expected effective total cap
         uint r2ExpectedEffectiveTotalCap = r2BaseCap + r1UnusedTotal; // 500 + 400 = 900
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, r2ExpectedEffectiveTotalCap, false, 0, 0, 0 
+            round2Id, accessId, r2ExpectedEffectiveTotalCap, false, 0, 0, 0
         );
 
         // --- Verify Default Global Start Round ID ---
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Default global start round ID should be 1");
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Default global start round ID should be 1"
+        );
 
         // --- Attempt Contribution in Round 2 by C1 ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
+        vm.warp(initialTimestamp + 3 days + 1 hours);
 
         uint c1AttemptR2 = r2ExpectedEffectiveTotalCap - 100; // e.g., 900 - 100 = 800. Utilizes expanded cap.
-        assertTrue(c1AttemptR2 > r2BaseCap, "C1 R2 attempt should be > R2 base cap");
-        assertTrue(c1AttemptR2 <= r2ExpectedEffectiveTotalCap, "C1 R2 attempt should be <= R2 effective cap");
+        assertTrue(
+            c1AttemptR2 > r2BaseCap, "C1 R2 attempt should be > R2 base cap"
+        );
+        assertTrue(
+            c1AttemptR2 <= r2ExpectedEffectiveTotalCap,
+            "C1 R2 attempt should be <= R2 effective cap"
+        );
 
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
@@ -3722,7 +3911,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
             c1AttemptR2,
             "R2 C1 contribution incorrect"
         );
@@ -3731,18 +3922,17 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             c1AttemptR2,
             "R2 Total contributions after C1 incorrect"
         );
-        
+
         // Verify that the total contributions possible is indeed the effective cap
-        // by trying to contribute slightly more by another user (or same user if personal cap allows more)
-        // For simplicity, let's check if C1 can contribute the remaining if personal cap on R2 was higher than c1AttemptR2.
-        // Here, personal cap for R2 for accessId 1 was set to r2ExpectedEffectiveTotalCap.
-        // C1 already contributed c1AttemptR2. Remaining personal = r2ExpectedEffectiveTotalCap - c1AttemptR2.
-        // Remaining total = r2ExpectedEffectiveTotalCap - c1AttemptR2.
         uint remainingToFill = r2ExpectedEffectiveTotalCap - c1AttemptR2;
         if (remainingToFill > 0) {
-             vm.startPrank(contributor1_); // C1 continues, as personal cap allows
-             fundingPot.contributeToRoundFor(
-                contributor1_, round2Id, remainingToFill, accessId, new bytes32[](0)
+            vm.startPrank(contributor1_);
+            fundingPot.contributeToRoundFor(
+                contributor1_,
+                round2Id,
+                remainingToFill,
+                accessId,
+                new bytes32[](0)
             );
             vm.stopPrank();
         }
@@ -3754,22 +3944,22 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-    function testAccumulation_DisabledMode_IgnoresGlobalStartRound() public {
-        // SCENARIO: AccumulationMode.Disabled on a target round (R2) prevents any accumulation 
+    function testContribute_disabledMode_ignoresGlobalStartAndPreventsAccumulation(
+    ) public {
+        // SCENARIO: AccumulationMode.Disabled on a target round (R2) prevents any accumulation
         // from a previous round (R1), even if globalAccumulationStartRoundId would allow it.
 
         uint initialTimestamp = block.timestamp;
         uint8 accessId = 1; // Open access
 
-        // --- Round 1 Parameters (set to allow accumulation to make the test meaningful) ---
+        // --- Round 1 Parameters ---
         uint r1PersonalCapC1 = 500;
-        uint r1ContributionC1 = 100; // Leaves 400 unused personal from R1
-        uint r1BaseCap = 1000;       // R1 total cap
-                                      // R1 unused total = 1000 - 100 = 900 (assuming only C1 contributes to R1)
+        uint r1ContributionC1 = 100;
+        uint r1BaseCap = 1000;
 
         // --- Round 2 Parameters (Disabled Mode) ---
-        uint r2BasePersonalCapC1 = 50; // Very small base personal cap for C1 in R2
-        uint r2BaseCap = 200;          // Small base total cap for R2
+        uint r2BasePersonalCapC1 = 50;
+        uint r2BaseCap = 200;
 
         // --- Approvals ---
         vm.startPrank(contributor1_);
@@ -3780,11 +3970,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 round1Id = fundingPot.createRound(
             initialTimestamp + 1 days,
             initialTimestamp + 2 days,
-            r1BaseCap, 
+            r1BaseCap,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.Personal // R1 allows personal accumulation
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
         );
         fundingPot.setAccessCriteriaForRound(
             round1Id, accessId, address(0), bytes32(0), new address[](0)
@@ -3794,49 +3984,51 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // --- Contribution by C1 to Round 1 ---
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
+        vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1ContributionC1, accessId, new bytes32[](0)
+            contributor1_,
+            round1Id,
+            r1ContributionC1,
+            accessId,
+            new bytes32[](0)
         );
         vm.stopPrank();
-        // uint r1UnusedPersonalFromC1 = r1PersonalCapC1 - r1ContributionC1; // 400
-        // uint r1UnusedTotalFromR1 = r1BaseCap - r1ContributionC1;       // 900
 
         // --- Create Round 2 (Disabled Mode) ---
         uint32 round2Id = fundingPot.createRound(
             initialTimestamp + 3 days,
             initialTimestamp + 4 days,
-            r2BaseCap, // R2's own base cap
+            r2BaseCap,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.Disabled // R2 accumulation is DISABLED
+            ILM_PC_FundingPot_v1.AccumulationMode.Disabled
         );
         fundingPot.setAccessCriteriaForRound(
             round2Id, accessId, address(0), bytes32(0), new address[](0)
         );
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0 // R2 personal cap for C1
+            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0
         );
 
         // --- Set Global Start Round ID to allow R1 (to show it's ignored by R2's Disabled mode) ---
         fundingPot.setGlobalAccumulationStart(1);
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Global start round ID should be 1");
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Global start round ID should be 1"
+        );
 
         // --- Attempt Contribution in Round 2 by C1 ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
+        vm.warp(initialTimestamp + 3 days + 1 hours);
 
-        // C1 attempts to contribute more than R2's base personal cap, expecting it to be clamped
-        // even though R1 had unused personal capacity and global start allows R1.
-        uint c1AttemptR2 = r2BasePersonalCapC1 + 100; // e.g., 50 + 100 = 150
-        
-        // This unspentCaps array would be used if accumulation was active.
-        // We pass it to show that even with it, Disabled mode takes precedence.
+        uint c1AttemptR2 = r2BasePersonalCapC1 + 100;
+
         ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 =
             new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
         unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
-            round1Id, accessId, new bytes32[](0) 
+            round1Id, accessId, new bytes32[](0)
         );
 
         vm.startPrank(contributor1_);
@@ -3846,52 +4038,45 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             c1AttemptR2,
             accessId,
             new bytes32[](0),
-            unspentCapsC1 // Provide R1 unspent, should be ignored
+            unspentCapsC1
         );
         vm.stopPrank();
 
         // --- Assertions ---
-        // 1. C1's contribution should be clamped by R2's base personal cap (r2BasePersonalCapC1)
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
             r2BasePersonalCapC1,
             "R2 C1 personal contribution should be clamped by R2's base personal cap (Disabled mode)"
         );
-
-        // 2. Total contributions to R2 should reflect this clamped amount.
-        //    If C1 was the only contributor and got clamped to r2BasePersonalCapC1, total is r2BasePersonalCapC1.
-        //    This also implicitly tests that R2's total cap wasn't expanded by R1's unused total.
         assertEq(
             fundingPot.exposed_getTotalRoundContributions(round2Id),
-            r2BasePersonalCapC1, // Assuming C1 is the only one contributing and capped
+            r2BasePersonalCapC1,
             "R2 Total contributions should not be expanded by R1 (Disabled mode)"
         );
-        
-        // 3. Further check: ensure total contributions do not exceed R2's original base cap.
         assertTrue(
             fundingPot.exposed_getTotalRoundContributions(round2Id) <= r2BaseCap,
             "R2 Total contributions exceeded R2's original base cap (Disabled mode)"
-        );  
+        );
     }
 
-    function testAccumulation_GlobalStartEqualsTargetRound_NoAccumulation()
-        public
-    {
+    function testContribute_anyAccumulativeMode_noAccumulationWhenGlobalStartEqualsTargetRound(
+    ) public {
         // SCENARIO: If globalAccumulationStartRoundId is set to the target round's ID (R2),
         // no accumulation from any previous round (R1) occurs for R2, even if R2's mode would allow it.
 
         uint initialTimestamp = block.timestamp;
         uint8 accessId = 1; // Open access
 
-        // --- Round 1 Parameters (set to allow accumulation to make the test meaningful) ---
+        // --- Round 1 Parameters ---
         uint r1PersonalCapC1 = 500;
-        uint r1ContributionC1 = 100; // Leaves 400 unused personal from R1
-        uint r1BaseCap = 1000;       // R1 total cap
-                                      // R1 unused total = 1000 - 100 = 900
+        uint r1ContributionC1 = 100;
+        uint r1BaseCap = 1000;
 
         // --- Round 2 Parameters (Mode that would normally allow accumulation, e.g., Personal) ---
-        uint r2BasePersonalCapC1 = 50; // Very small base personal cap for C1 in R2
-        uint r2BaseCap = 200;          // Small base total cap for R2
+        uint r2BasePersonalCapC1 = 50;
+        uint r2BaseCap = 200;
 
         // --- Approvals ---
         vm.startPrank(contributor1_);
@@ -3902,11 +4087,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 round1Id = fundingPot.createRound(
             initialTimestamp + 1 days,
             initialTimestamp + 2 days,
-            r1BaseCap, 
+            r1BaseCap,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.Personal // R1 allows personal accumulation
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
         );
         fundingPot.setAccessCriteriaForRound(
             round1Id, accessId, address(0), bytes32(0), new address[](0)
@@ -3916,10 +4101,14 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // --- Contribution by C1 to Round 1 ---
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
+        vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1ContributionC1, accessId, new bytes32[](0)
+            contributor1_,
+            round1Id,
+            r1ContributionC1,
+            accessId,
+            new bytes32[](0)
         );
         vm.stopPrank();
 
@@ -3927,34 +4116,36 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 round2Id = fundingPot.createRound(
             initialTimestamp + 3 days,
             initialTimestamp + 4 days,
-            r2BaseCap, // R2's own base cap
+            r2BaseCap,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.Personal 
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
         );
         fundingPot.setAccessCriteriaForRound(
             round2Id, accessId, address(0), bytes32(0), new address[](0)
         );
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0 // R2 personal cap for C1
+            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0
         );
 
         // --- Set Global Start Round ID to be Round 2's ID ---
-        fundingPot.setGlobalAccumulationStart(round2Id); // Key part of the test
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), round2Id, "Global start round ID not set to R2 ID");
+        fundingPot.setGlobalAccumulationStart(round2Id);
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            round2Id,
+            "Global start round ID not set to R2 ID"
+        );
 
         // --- Attempt Contribution in Round 2 by C1 ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
+        vm.warp(initialTimestamp + 3 days + 1 hours);
 
-        // C1 attempts to contribute more than R2's base personal cap.
-        // It should be clamped because R1 is not considered for accumulation.
-        uint c1AttemptR2 = r2BasePersonalCapC1 + 100; // e.g., 50 + 100 = 150
-        
+        uint c1AttemptR2 = r2BasePersonalCapC1 + 100;
+
         ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 =
             new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
         unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
-            round1Id, accessId, new bytes32[](0) // Provide R1 unspent, should be ignored
+            round1Id, accessId, new bytes32[](0)
         );
 
         vm.startPrank(contributor1_);
@@ -3964,26 +4155,23 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             c1AttemptR2,
             accessId,
             new bytes32[](0),
-            unspentCapsC1 
+            unspentCapsC1
         );
         vm.stopPrank();
 
         // --- Assertions ---
-        // 1. C1's contribution should be clamped by R2's base personal cap (r2BasePersonalCapC1)
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
             r2BasePersonalCapC1,
             "R2 C1 personal contribution should be clamped by R2's base personal cap (global start = R2)"
         );
-
-        // 2. Total contributions to R2 should reflect this clamped amount.
         assertEq(
             fundingPot.exposed_getTotalRoundContributions(round2Id),
-            r2BasePersonalCapC1, 
+            r2BasePersonalCapC1,
             "R2 Total contributions should not be expanded by R1 (global start = R2)"
         );
-        
-        // 3. Further check: ensure total contributions do not exceed R2's original base cap.
         assertTrue(
             fundingPot.exposed_getTotalRoundContributions(round2Id) <= r2BaseCap,
             "R2 Total contributions exceeded R2's original base cap (global start = R2)"
@@ -3992,9 +4180,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
     // -------------------------------------------------------------------------
     // Test: Global Accumulation Start Round - Logic Integration - Remaining Tests
+    // (Covers multi-round accumulation where global start allows all previous)
     // -------------------------------------------------------------------------
 
-    function testAccumulation_GlobalStartRoundAllows_PersonalMode() public {
+    function testContribute_personalMode_defaultGlobalStartAllowsAccumulationFromMultiplePreviousRounds(
+    ) public {
         // SCENARIO: globalAccumulationStartRoundId = 1 allows personal cap accumulation from R1 AND R2
         // for contributions to R3, when all rounds are in Personal mode.
         // 1. Setup: R1, R2, R3 in Personal mode. C1 makes partial contributions in R1 & R2.
@@ -4002,19 +4192,16 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         // 3. Verification: C1's effective personal cap in R3 includes unused from R1 and R2.
 
         uint initialTimestamp = block.timestamp;
-        
+
         // --- Round Parameters, Personal Caps, and Contributions for contributor1_ ---
         uint r1PersonalCapC1 = 500;
         uint r1ContributionC1 = 200;
-        // uint r1UnusedPersonalC1 = r1PersonalCapC1 - r1ContributionC1; // 300
 
         uint r2PersonalCapC1 = 600;
         uint r2ContributionC1 = 250;
-        // uint r2UnusedPersonalC1 = r2PersonalCapC1 - r2ContributionC1; // 350
 
         uint r3BasePersonalCapC1 = 300;
 
-        // Large round caps to not interfere with personal cap testing
         uint largeRoundCap = 1_000_000;
 
         // --- Approvals ---
@@ -4032,15 +4219,26 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             false,
             ILM_PC_FundingPot_v1.AccumulationMode.Personal
         );
-        fundingPot.setAccessCriteriaForRound(round1Id, 1, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round1Id, 1, r1PersonalCapC1, false, 0, 0, 0);
+        fundingPot.setAccessCriteriaForRound(
+            round1Id, 1, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, 1, r1PersonalCapC1, false, 0, 0, 0
+        );
 
         // --- Contribution by C1 to Round 1 ---
         vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
-        fundingPot.contributeToRoundFor(contributor1_, round1Id, r1ContributionC1, 1, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1Id, r1ContributionC1, 1, new bytes32[](0)
+        );
         vm.stopPrank();
-        assertEq(fundingPot.exposed_getUserContributionToRound(round1Id, contributor1_), r1ContributionC1);
+        assertEq(
+            fundingPot.exposed_getUserContributionToRound(
+                round1Id, contributor1_
+            ),
+            r1ContributionC1
+        );
 
         // --- Create Round 2 (Personal Mode) ---
         uint32 round2Id = fundingPot.createRound(
@@ -4052,15 +4250,26 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             false,
             ILM_PC_FundingPot_v1.AccumulationMode.Personal
         );
-        fundingPot.setAccessCriteriaForRound(round2Id, 1, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round2Id, 1, r2PersonalCapC1, false, 0, 0, 0);
+        fundingPot.setAccessCriteriaForRound(
+            round2Id, 1, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, 1, r2PersonalCapC1, false, 0, 0, 0
+        );
 
         // --- Contribution by C1 to Round 2 ---
         vm.warp(initialTimestamp + 3 days + 1 hours);
         vm.startPrank(contributor1_);
-        fundingPot.contributeToRoundFor(contributor1_, round2Id, r2ContributionC1, 1, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, round2Id, r2ContributionC1, 1, new bytes32[](0)
+        );
         vm.stopPrank();
-        assertEq(fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_), r2ContributionC1);
+        assertEq(
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
+            r2ContributionC1
+        );
 
         // --- Create Round 3 (Personal Mode) ---
         uint32 round3Id = fundingPot.createRound(
@@ -4072,26 +4281,37 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             false,
             ILM_PC_FundingPot_v1.AccumulationMode.Personal
         );
-        fundingPot.setAccessCriteriaForRound(round3Id, 1, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round3Id, 1, r3BasePersonalCapC1, false, 0, 0, 0);
+        fundingPot.setAccessCriteriaForRound(
+            round3Id, 1, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round3Id, 1, r3BasePersonalCapC1, false, 0, 0, 0
+        );
 
         // --- Verify Global Start Round ID ---
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Default global start round ID should be 1");
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Default global start round ID should be 1"
+        );
 
         // --- Attempt Contribution in Round 3 by C1 ---
         vm.warp(initialTimestamp + 5 days + 1 hours);
 
         ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 =
             new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](2);
-        unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(round1Id, 1, new bytes32[](0));
-        unspentCapsC1[1] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(round2Id, 1, new bytes32[](0));
+        unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round1Id, 1, new bytes32[](0)
+        );
+        unspentCapsC1[1] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round2Id, 1, new bytes32[](0)
+        );
 
-        uint expectedR3PersonalCapC1 = r3BasePersonalCapC1 +
-                                      (r1PersonalCapC1 - r1ContributionC1) +
-                                      (r2PersonalCapC1 - r2ContributionC1);
-        // 300 + (500-200) + (600-250) = 300 + 300 + 350 = 950
+        uint expectedR3PersonalCapC1 = r3BasePersonalCapC1
+            + (r1PersonalCapC1 - r1ContributionC1)
+            + (r2PersonalCapC1 - r2ContributionC1);
 
-        uint c1AttemptR3 = expectedR3PersonalCapC1; // Attempt to contribute the full expected amount
+        uint c1AttemptR3 = expectedR3PersonalCapC1;
 
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
@@ -4106,38 +4326,35 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         // --- Assertions ---
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round3Id, contributor1_),
+            fundingPot.exposed_getUserContributionToRound(
+                round3Id, contributor1_
+            ),
             expectedR3PersonalCapC1,
             "R3 C1 personal contribution incorrect (should use R1 & R2 unused)"
         );
-
-        // Verify total round contributions if C1 is the only one
         assertEq(
             fundingPot.exposed_getTotalRoundContributions(round3Id),
             expectedR3PersonalCapC1,
             "R3 total contributions incorrect after C1"
         );
 
-        // Try to contribute 1 more to ensure personal cap is met for C1
         vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), 1); // Approve 1 more
+        _token.approve(address(fundingPot), 1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__PersonalCapReached.selector
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__PersonalCapReached
+                    .selector
             )
         );
         fundingPot.contributeToRoundFor(
-            contributor1_,
-            round3Id,
-            1, // Attempt to contribute 1 more
-            1,
-            new bytes32[](0),
-            unspentCapsC1 // Provide same unspent caps, shouldn't change outcome
+            contributor1_, round3Id, 1, 1, new bytes32[](0), unspentCapsC1
         );
         vm.stopPrank();
     }
 
-    function testAccumulation_GlobalStartRoundAllows_TotalMode() public {
+    function testContribute_totalMode_defaultGlobalStartAllowsAccumulationFromMultiplePreviousRounds(
+    ) public {
         // SCENARIO: globalAccumulationStartRoundId = 1 allows accumulation from Round 1 AND Round 2 for Total mode
         // 1. Setup: Round 1, Round 2, Round 3. Partial total contributions in R1 & R2. All in Total mode.
         // 2. Action: setGlobalAccumulationStart(1) (or verify default).
@@ -4177,15 +4394,24 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             false,
             ILM_PC_FundingPot_v1.AccumulationMode.Total
         );
-        fundingPot.setAccessCriteriaForRound(round1Id, 1, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round1Id, 1, r1BaseCap, false, 0, 0, 0); // Personal cap = round cap for simplicity
+        fundingPot.setAccessCriteriaForRound(
+            round1Id, 1, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, 1, r1BaseCap, false, 0, 0, 0
+        );
 
         // --- Contribution by C1 to Round 1 ---
         vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
-        fundingPot.contributeToRoundFor(contributor1_, round1Id, r1ContributionC1, 1, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, round1Id, r1ContributionC1, 1, new bytes32[](0)
+        );
         vm.stopPrank();
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round1Id), r1ContributionC1);
+        assertEq(
+            fundingPot.exposed_getTotalRoundContributions(round1Id),
+            r1ContributionC1
+        );
 
         // --- Create Round 2 (Total Mode) ---
         uint32 round2Id = fundingPot.createRound(
@@ -4197,42 +4423,59 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             false,
             ILM_PC_FundingPot_v1.AccumulationMode.Total
         );
-        fundingPot.setAccessCriteriaForRound(round2Id, 1, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round2Id, 1, r2BaseCap, false, 0, 0, 0); // Personal cap = round cap
+        fundingPot.setAccessCriteriaForRound(
+            round2Id, 1, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, 1, r2BaseCap, false, 0, 0, 0
+        );
 
         // --- Contribution by C2 to Round 2 ---
         vm.warp(initialTimestamp + 3 days + 1 hours);
         vm.startPrank(contributor2_);
-        fundingPot.contributeToRoundFor(contributor2_, round2Id, r2ContributionC2, 1, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor2_, round2Id, r2ContributionC2, 1, new bytes32[](0)
+        );
         vm.stopPrank();
-        assertEq(fundingPot.exposed_getTotalRoundContributions(round2Id), r2ContributionC2);
+        assertEq(
+            fundingPot.exposed_getTotalRoundContributions(round2Id),
+            r2ContributionC2
+        );
 
         // --- Create Round 3 (Total Mode) ---
-        uint r3ExpectedEffectiveCap = r3BaseCap + (r1BaseCap - r1ContributionC1) + (r2BaseCap - r2ContributionC2); // 300 + 600 + 500 = 1400
+        uint r3ExpectedEffectiveCap = r3BaseCap + (r1BaseCap - r1ContributionC1)
+            + (r2BaseCap - r2ContributionC2);
         uint32 round3Id = fundingPot.createRound(
             initialTimestamp + 5 days,
             initialTimestamp + 6 days,
-            r3BaseCap, // Base cap, will be expanded by accumulation
+            r3BaseCap,
             address(0),
             bytes(""),
             false,
             ILM_PC_FundingPot_v1.AccumulationMode.Total
         );
-        (address nftR3, bytes32 merkleR3, address[] memory allowedR3) = _helper_createAccessCriteria(1);
-        fundingPot.setAccessCriteriaForRound(round3Id, 1, nftR3, merkleR3, allowedR3);
-        // Set personal cap for C3 high enough to contribute to the full effective cap
-        fundingPot.setAccessCriteriaPrivileges(round3Id, 1, r3ExpectedEffectiveCap, false, 0, 0, 0);
+        (address nftR3, bytes32 merkleR3, address[] memory allowedR3) =
+            _helper_createAccessCriteria(1);
+        fundingPot.setAccessCriteriaForRound(
+            round3Id, 1, nftR3, merkleR3, allowedR3
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round3Id, 1, r3ExpectedEffectiveCap, false, 0, 0, 0
+        );
 
-        // --- Set/Verify Global Start Round ID ---
-        // Default is 1, but explicitly set for clarity if needed, or rely on default.
-        // fundingPot.setGlobalAccumulationStart(1);
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Default global start round ID should be 1");
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Default global start round ID should be 1"
+        );
 
         // --- Attempt Contribution in Round 3 by C3 ---
         vm.warp(initialTimestamp + 5 days + 1 hours);
 
         vm.startPrank(contributor3_);
-        fundingPot.contributeToRoundFor(contributor3_, round3Id, r3ExpectedEffectiveCap, 1, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor3_, round3Id, r3ExpectedEffectiveCap, 1, new bytes32[](0)
+        );
         vm.stopPrank();
 
         // --- Assertions ---
@@ -4242,224 +4485,47 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             "R3 total contributions should match effective cap with rollover from R1 and R2"
         );
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round3Id, contributor3_),
+            fundingPot.exposed_getUserContributionToRound(
+                round3Id, contributor3_
+            ),
             r3ExpectedEffectiveCap,
             "R3 C3 contribution incorrect"
         );
 
-        // Try to contribute 1 more to ensure cap is met
-        vm.startPrank(contributor1_); // Use any contributor
-         _token.approve(address(fundingPot), 1);
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), 1);
         vm.expectRevert(
             abi.encodeWithSelector(
-                ILM_PC_FundingPot_v1.Module__LM_PC_FundingPot__RoundCapReached.selector
+                ILM_PC_FundingPot_v1
+                    .Module__LM_PC_FundingPot__RoundCapReached
+                    .selector
             )
         );
-        fundingPot.contributeToRoundFor(contributor1_, round3Id, 1, 1, new bytes32[](0));
+        fundingPot.contributeToRoundFor(
+            contributor1_, round3Id, 1, 1, new bytes32[](0)
+        );
         vm.stopPrank();
     }
 
-    function testAccumulation_GlobalStartRoundAllows_AllMode_PersonalCap()
-        public
-    {
-        // SCENARIO: globalAccumulationStartRoundId = 1 allows personal cap 
+    function testContribute_allMode_defaultGlobalStartAllowsPersonalCapAccumulationFromAllPrevious(
+    ) public {
+        // SCENARIO: globalAccumulationStartRoundId = 1 allows personal cap
         // accumulation from R1 to R2, when both are in All mode. (Simplified for stack)
 
         uint initialTimestamp = block.timestamp;
-        uint8 accessId = 1; 
+        uint8 accessId = 1;
 
         // --- Round 1: Setup & C1 Contribution ---
         uint r1PersonalCapC1 = 500;
-        uint r1ContributionC1 = 100; 
-        uint32 round1Id = fundingPot.createRound(
-            initialTimestamp + 1 days, initialTimestamp + 2 days, 1000, // R1 total cap large
-            address(0), bytes(""), false, ILM_PC_FundingPot_v1.AccumulationMode.All 
-        );
-        fundingPot.setAccessCriteriaForRound(round1Id, accessId, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round1Id, accessId, r1PersonalCapC1, false, 0, 0, 0);
-
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), type(uint).max); // Approve inside prank, closer to use
-        fundingPot.contributeToRoundFor(contributor1_, round1Id, r1ContributionC1, accessId, new bytes32[](0));
-        vm.stopPrank();
-        uint r1UnusedPersonalForC1 = r1PersonalCapC1 - r1ContributionC1; // 400
-
-        // --- Round 2: Setup ---
-        uint r2BasePersonalCapC1 = 200; 
-        uint32 round2Id = fundingPot.createRound(
-            initialTimestamp + 3 days, initialTimestamp + 4 days, 2000, // R2 total cap large
-            address(0), bytes(""), false, ILM_PC_FundingPot_v1.AccumulationMode.All 
-        );
-        fundingPot.setAccessCriteriaForRound(round2Id, accessId, address(0), bytes32(0), new address[](0));
-        fundingPot.setAccessCriteriaPrivileges(round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0);
-
-        // --- Global Start ID Check ---
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Default global start ID is 1");
-
-        // --- C1 Contribution to Round 2 (Testing Personal Cap Rollover) ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
-        uint expectedEffectivePersonalCapC1R2 = r2BasePersonalCapC1 + r1UnusedPersonalForC1; // 200 + 400 = 600
-        uint c1AttemptR2 = expectedEffectivePersonalCapC1R2 + 50; // Attempt 650
-        
-        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 = new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
-        unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(round1Id, accessId, new bytes32[](0));
-
-        vm.startPrank(contributor1_); 
-        // Note: Approval already done for C1
-        fundingPot.contributeToRoundFor(contributor1_, round2Id, c1AttemptR2, accessId, new bytes32[](0), unspentCapsC1);
-        vm.stopPrank();
-
-        // --- Assertions ---
-        assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
-            expectedEffectivePersonalCapC1R2, // Should be clamped to 600
-            "R2 C1 personal contribution incorrect"
-        );
-        assertEq(
-            fundingPot.exposed_getTotalRoundContributions(round2Id),
-            expectedEffectivePersonalCapC1R2,
-            "R2 Total contributions incorrect"
-        );
-    }
-
-    function testAccumulation_GlobalStartRoundAllows_AllMode_TotalCap() public {
-        // SCENARIO: globalAccumulationStartRoundId = 1 (default or set) allows total cap 
-        // accumulation from R1 to R2, when both are in All mode.
-
-        uint initialTimestamp = block.timestamp;
-        uint8 accessId = 1; // Open access
-
-        // --- Round 1 Parameters (All Mode) ---
-        uint r1BaseTotalCap = 1000;
-        uint r1C1PersonalCap = 800; // C1 personal cap for R1
-        uint r1C1Contribution = 600; // C1 contributes, leaving 400 unused total from R1
-
-        // --- Round 2 Parameters (All Mode) ---
-        uint r2BaseTotalCap = 500;
-        // Personal cap for C1 in R2 will be set to the expected effective total cap of R2
-
-        // --- Approvals ---
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), type(uint).max);
-        vm.stopPrank();
-        // If using a second contributor for R2, approve for them too.
-        // vm.startPrank(contributor2_);
-        // _token.approve(address(fundingPot), type(uint).max);
-        // vm.stopPrank();
-
-        // --- Create Round 1 (All Mode) ---
+        uint r1ContributionC1 = 100;
         uint32 round1Id = fundingPot.createRound(
             initialTimestamp + 1 days,
             initialTimestamp + 2 days,
-            r1BaseTotalCap, 
+            1000,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.All 
-        );
-        fundingPot.setAccessCriteriaForRound(
-            round1Id, accessId, address(0), bytes32(0), new address[](0)
-        );
-        fundingPot.setAccessCriteriaPrivileges(
-            round1Id, accessId, r1C1PersonalCap, false, 0, 0, 0
-        );
-
-        // --- Contribution by C1 to Round 1 ---
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
-        vm.startPrank(contributor1_);
-        fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1C1Contribution, accessId, new bytes32[](0)
-        );
-        vm.stopPrank();
-        uint r1UnusedTotal = r1BaseTotalCap - r1C1Contribution; // Should be 400
-
-        // --- Create Round 2 (All Mode) ---
-        uint32 round2Id = fundingPot.createRound(
-            initialTimestamp + 3 days,
-            initialTimestamp + 4 days,
-            r2BaseTotalCap, 
-            address(0),
-            bytes(""),
-            false,
-            ILM_PC_FundingPot_v1.AccumulationMode.All 
-        );
-        fundingPot.setAccessCriteriaForRound(
-            round2Id, accessId, address(0), bytes32(0), new address[](0)
-        );
-        // Set personal cap for C1 in R2 to be the expected effective total cap of R2
-        // R2_effective_total_cap = R2_base_total_cap (500) + R1_unused_total (400) = 900
-        uint r2ExpectedEffectiveTotalCap = r2BaseTotalCap + r1UnusedTotal;
-        fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, r2ExpectedEffectiveTotalCap, false, 0, 0, 0 
-        );
-
-        // --- Ensure Global Start Round ID is 1 ---
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), 1, "Global start round ID should be 1 by default");
-
-        // --- Attempt Contribution in Round 2 by C1 to fill effective total cap ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
-
-        uint c1AttemptR2 = r2ExpectedEffectiveTotalCap; // C1 attempts to contribute the full effective total
-
-        vm.startPrank(contributor1_);
-        fundingPot.contributeToRoundFor(
-            contributor1_,
-            round2Id,
-            c1AttemptR2,
-            accessId,
-            new bytes32[](0) // No personal unspent caps needed from C1 for *this* specific test logic focus
-        );
-        vm.stopPrank();
-
-        // --- Assertions ---
-        // 1. C1's contribution should be the amount they attempted (which is the effective total cap)
-        assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
-            c1AttemptR2,
-            "R2 C1 contribution should match attempt (filling effective total cap)"
-        );
-
-        // 2. Total contributions to R2 should match the expected effective total cap.
-        assertEq(
-            fundingPot.exposed_getTotalRoundContributions(round2Id),
-            r2ExpectedEffectiveTotalCap, 
-            "R2 Total contributions should match effective total cap (All mode, global_start=1)"
-        );
-    }
-
-    function testAccumulation_GlobalStartRoundRestricts_AllMode_PersonalCap()
-        public
-    {
-        // SCENARIO: globalAccumulationStartRoundId = 2 restricts personal cap accumulation 
-        // from R1 for R2, when both are in All mode.
-
-        uint initialTimestamp = block.timestamp;
-        uint8 accessId = 1; // Open access
-
-        // --- Round 1 Parameters (All Mode) ---
-        uint r1PersonalCapC1 = 500;
-        uint r1ContributionC1 = 100; // Leaves 400 unused personal from R1 for C1
-        uint r1BaseTotalCap = 1000;   // R1 total cap (large enough)
-
-        // --- Round 2 Parameters (All Mode) ---
-        uint r2BasePersonalCapC1 = 50;  // Small base personal cap for C1 in R2
-        uint r2BaseTotalCap = 1000;    // R2 total cap (large enough)
-
-        // --- Approvals ---
-        vm.startPrank(contributor1_);
-        _token.approve(address(fundingPot), type(uint).max);
-        vm.stopPrank();
-
-        // --- Create Round 1 (All Mode) ---
-        uint32 round1Id = fundingPot.createRound(
-            initialTimestamp + 1 days,
-            initialTimestamp + 2 days,
-            r1BaseTotalCap, 
-            address(0),
-            bytes(""),
-            false,
-            ILM_PC_FundingPot_v1.AccumulationMode.All 
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
         fundingPot.setAccessCriteriaForRound(
             round1Id, accessId, address(0), bytes32(0), new address[](0)
@@ -4468,47 +4534,54 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             round1Id, accessId, r1PersonalCapC1, false, 0, 0, 0
         );
 
-        // --- Contribution by C1 to Round 1 ---
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
+        vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), type(uint).max);
         fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1ContributionC1, accessId, new bytes32[](0)
+            contributor1_,
+            round1Id,
+            r1ContributionC1,
+            accessId,
+            new bytes32[](0)
         );
         vm.stopPrank();
-        // uint r1UnusedPersonalForC1 = r1PersonalCapC1 - r1ContributionC1; // 400
+        uint r1UnusedPersonalForC1 = r1PersonalCapC1 - r1ContributionC1;
 
-        // --- Create Round 2 (All Mode) ---
+        // --- Round 2: Setup ---
+        uint r2BasePersonalCapC1 = 200;
         uint32 round2Id = fundingPot.createRound(
             initialTimestamp + 3 days,
             initialTimestamp + 4 days,
-            r2BaseTotalCap, 
+            2000,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.All 
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
         fundingPot.setAccessCriteriaForRound(
             round2Id, accessId, address(0), bytes32(0), new address[](0)
         );
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0 
+            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0
         );
 
-        // --- Set Global Start Round ID to Round 2's ID ---
-        fundingPot.setGlobalAccumulationStart(round2Id); 
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), round2Id, "Global start ID not set to R2 ID");
+        // --- Global Start ID Check ---
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Default global start ID is 1"
+        );
 
-        // --- Attempt Contribution in Round 2 by C1 ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
+        // --- C1 Contribution to Round 2 (Testing Personal Cap Rollover) ---
+        vm.warp(initialTimestamp + 3 days + 1 hours);
+        uint expectedEffectivePersonalCapC1R2 =
+            r2BasePersonalCapC1 + r1UnusedPersonalForC1;
+        uint c1AttemptR2 = expectedEffectivePersonalCapC1R2 + 50;
 
-        // C1 attempts to contribute more than R2's base personal cap.
-        // Should be clamped to R2's base personal cap as R1 is ignored.
-        uint c1AttemptR2 = r2BasePersonalCapC1 + 100; // e.g., 50 + 100 = 150
-        
         ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 =
             new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
         unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
-            round1Id, accessId, new bytes32[](0) // Provide R1 unspent, should be ignored
+            round1Id, accessId, new bytes32[](0)
         );
 
         vm.startPrank(contributor1_);
@@ -4518,43 +4591,40 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             c1AttemptR2,
             accessId,
             new bytes32[](0),
-            unspentCapsC1 
+            unspentCapsC1
         );
         vm.stopPrank();
 
         // --- Assertions ---
-        // 1. C1's contribution should be clamped by R2's base personal cap (r2BasePersonalCapC1)
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
-            r2BasePersonalCapC1,
-            "R2 C1 personal contribution should be clamped by R2 base personal cap (All mode, global_start=R2)"
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
+            expectedEffectivePersonalCapC1R2,
+            "R2 C1 personal contribution incorrect"
         );
-
-        // 2. Total contributions to R2 should reflect this clamped amount.
         assertEq(
             fundingPot.exposed_getTotalRoundContributions(round2Id),
-            r2BasePersonalCapC1, 
-            "R2 Total contributions should be C1's clamped amount (All mode, global_start=R2)"
+            expectedEffectivePersonalCapC1R2,
+            "R2 Total contributions incorrect"
         );
     }
 
-    function testAccumulation_GlobalStartRoundRestricts_AllMode_TotalCap()
-        public
-    {
-        // SCENARIO: globalAccumulationStartRoundId = 2 restricts total cap accumulation 
-        // from R1 for R2, when both are in All mode.
+    function testContribute_allMode_defaultGlobalStartAllowsTotalCapAccumulationFromAllPrevious(
+    ) public {
+        // SCENARIO: globalAccumulationStartRoundId = 1 (default or set) allows total cap
+        // accumulation from R1 to R2, when both are in All mode.
 
         uint initialTimestamp = block.timestamp;
         uint8 accessId = 1; // Open access
 
         // --- Round 1 Parameters (All Mode) ---
         uint r1BaseTotalCap = 1000;
-        uint r1C1PersonalCap = 800; 
-        uint r1C1Contribution = 400; // Leaves 600 unused total from R1
+        uint r1C1PersonalCap = 800;
+        uint r1C1Contribution = 600;
 
         // --- Round 2 Parameters (All Mode) ---
-        uint r2BaseTotalCap = 200;  // Small base total cap for R2
-        // Personal cap for C1 in R2 will be set to R2's base total cap for this test
+        uint r2BaseTotalCap = 500;
 
         // --- Approvals ---
         vm.startPrank(contributor1_);
@@ -4565,11 +4635,11 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         uint32 round1Id = fundingPot.createRound(
             initialTimestamp + 1 days,
             initialTimestamp + 2 days,
-            r1BaseTotalCap, 
+            r1BaseTotalCap,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.All 
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
         fundingPot.setAccessCriteriaForRound(
             round1Id, accessId, address(0), bytes32(0), new address[](0)
@@ -4579,45 +4649,155 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
 
         // --- Contribution by C1 to Round 1 ---
-        vm.warp(initialTimestamp + 1 days + 1 hours); 
+        vm.warp(initialTimestamp + 1 days + 1 hours);
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
-            contributor1_, round1Id, r1C1Contribution, accessId, new bytes32[](0)
+            contributor1_,
+            round1Id,
+            r1C1Contribution,
+            accessId,
+            new bytes32[](0)
         );
         vm.stopPrank();
-        // uint r1UnusedTotal = r1BaseTotalCap - r1C1Contribution; // 600
+        uint r1UnusedTotal = r1BaseTotalCap - r1C1Contribution;
 
         // --- Create Round 2 (All Mode) ---
         uint32 round2Id = fundingPot.createRound(
             initialTimestamp + 3 days,
             initialTimestamp + 4 days,
-            r2BaseTotalCap, 
+            r2BaseTotalCap,
             address(0),
             bytes(""),
             false,
-            ILM_PC_FundingPot_v1.AccumulationMode.All 
+            ILM_PC_FundingPot_v1.AccumulationMode.All
         );
         fundingPot.setAccessCriteriaForRound(
             round2Id, accessId, address(0), bytes32(0), new address[](0)
         );
-        // Set C1's personal cap in R2 to R2's base total cap to isolate total cap behavior
+        uint r2ExpectedEffectiveTotalCap = r2BaseTotalCap + r1UnusedTotal;
         fundingPot.setAccessCriteriaPrivileges(
-            round2Id, accessId, r2BaseTotalCap, false, 0, 0, 0 
+            round2Id, accessId, r2ExpectedEffectiveTotalCap, false, 0, 0, 0
+        );
+
+        // --- Ensure Global Start Round ID is 1 ---
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            1,
+            "Global start round ID should be 1 by default"
+        );
+
+        // --- Attempt Contribution in Round 2 by C1 to fill effective total cap ---
+        vm.warp(initialTimestamp + 3 days + 1 hours);
+
+        uint c1AttemptR2 = r2ExpectedEffectiveTotalCap;
+
+        vm.startPrank(contributor1_);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round2Id, c1AttemptR2, accessId, new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        // --- Assertions ---
+        assertEq(
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
+            c1AttemptR2,
+            "R2 C1 contribution should match attempt (filling effective total cap)"
+        );
+        assertEq(
+            fundingPot.exposed_getTotalRoundContributions(round2Id),
+            r2ExpectedEffectiveTotalCap,
+            "R2 Total contributions should match effective total cap (All mode, global_start=1)"
+        );
+    }
+
+    function testContribute_allMode_globalStartRestrictsPersonalCapAccumulationFromEarlierRounds(
+    ) public {
+        // SCENARIO: globalAccumulationStartRoundId = 2 restricts personal cap accumulation
+        // from R1 for R2, when both are in All mode.
+
+        uint initialTimestamp = block.timestamp;
+        uint8 accessId = 1; // Open access
+
+        // --- Round 1 Parameters (All Mode) ---
+        uint r1PersonalCapC1 = 500;
+        uint r1ContributionC1 = 100;
+        uint r1BaseTotalCap = 1000;
+
+        // --- Round 2 Parameters (All Mode) ---
+        uint r2BasePersonalCapC1 = 50;
+        uint r2BaseTotalCap = 1000;
+
+        // --- Approvals ---
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), type(uint).max);
+        vm.stopPrank();
+
+        // --- Create Round 1 (All Mode) ---
+        uint32 round1Id = fundingPot.createRound(
+            initialTimestamp + 1 days,
+            initialTimestamp + 2 days,
+            r1BaseTotalCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.All
+        );
+        fundingPot.setAccessCriteriaForRound(
+            round1Id, accessId, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, accessId, r1PersonalCapC1, false, 0, 0, 0
+        );
+
+        // --- Contribution by C1 to Round 1 ---
+        vm.warp(initialTimestamp + 1 days + 1 hours);
+        vm.startPrank(contributor1_);
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round1Id,
+            r1ContributionC1,
+            accessId,
+            new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        // --- Create Round 2 (All Mode) ---
+        uint32 round2Id = fundingPot.createRound(
+            initialTimestamp + 3 days,
+            initialTimestamp + 4 days,
+            r2BaseTotalCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.All
+        );
+        fundingPot.setAccessCriteriaForRound(
+            round2Id, accessId, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, accessId, r2BasePersonalCapC1, false, 0, 0, 0
         );
 
         // --- Set Global Start Round ID to Round 2's ID ---
-        fundingPot.setGlobalAccumulationStart(round2Id); 
-        assertEq(fundingPot.getGlobalAccumulationStartRoundId(), round2Id, "Global start ID not set to R2 ID");
+        fundingPot.setGlobalAccumulationStart(round2Id);
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            round2Id,
+            "Global start ID not set to R2 ID"
+        );
 
         // --- Attempt Contribution in Round 2 by C1 ---
-        vm.warp(initialTimestamp + 3 days + 1 hours); 
+        vm.warp(initialTimestamp + 3 days + 1 hours);
 
-        // C1 attempts to contribute more than R2's base total cap.
-        // Should be clamped to R2's base total cap as R1's unused total is ignored.
-        uint c1AttemptR2 = r2BaseTotalCap + 100; // e.g., 200 + 100 = 300
-        
-        // No UnspentPersonalRoundCap needed here as we are testing total cap restriction primarily,
-        // and C1's personal cap in R2 is already set to r2BaseTotalCap.
+        uint c1AttemptR2 = r2BasePersonalCapC1 + 100;
+
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsC1 =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](1);
+        unspentCapsC1[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round1Id, accessId, new bytes32[](0)
+        );
 
         vm.startPrank(contributor1_);
         fundingPot.contributeToRoundFor(
@@ -4625,22 +4805,123 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             round2Id,
             c1AttemptR2,
             accessId,
-            new bytes32[](0) 
+            new bytes32[](0),
+            unspentCapsC1
         );
         vm.stopPrank();
 
         // --- Assertions ---
-        // 1. C1's contribution should be clamped by R2's base total cap (which also matches C1's personal cap for this test).
         assertEq(
-            fundingPot.exposed_getUserContributionToRound(round2Id, contributor1_),
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
+            r2BasePersonalCapC1,
+            "R2 C1 personal contribution should be clamped by R2 base personal cap (All mode, global_start=R2)"
+        );
+        assertEq(
+            fundingPot.exposed_getTotalRoundContributions(round2Id),
+            r2BasePersonalCapC1,
+            "R2 Total contributions should be C1's clamped amount (All mode, global_start=R2)"
+        );
+    }
+
+    function testContribute_allMode_globalStartRestrictsTotalCapAccumulationFromEarlierRounds(
+    ) public {
+        // SCENARIO: globalAccumulationStartRoundId = 2 restricts total cap accumulation
+        // from R1 for R2, when both are in All mode.
+
+        uint initialTimestamp = block.timestamp;
+        uint8 accessId = 1; // Open access
+
+        // --- Round 1 Parameters (All Mode) ---
+        uint r1BaseTotalCap = 1000;
+        uint r1C1PersonalCap = 800;
+        uint r1C1Contribution = 400;
+
+        // --- Round 2 Parameters (All Mode) ---
+        uint r2BaseTotalCap = 200;
+
+        // --- Approvals ---
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), type(uint).max);
+        vm.stopPrank();
+
+        // --- Create Round 1 (All Mode) ---
+        uint32 round1Id = fundingPot.createRound(
+            initialTimestamp + 1 days,
+            initialTimestamp + 2 days,
+            r1BaseTotalCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.All
+        );
+        fundingPot.setAccessCriteriaForRound(
+            round1Id, accessId, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, accessId, r1C1PersonalCap, false, 0, 0, 0
+        );
+
+        // --- Contribution by C1 to Round 1 ---
+        vm.warp(initialTimestamp + 1 days + 1 hours);
+        vm.startPrank(contributor1_);
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round1Id,
+            r1C1Contribution,
+            accessId,
+            new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        // --- Create Round 2 (All Mode) ---
+        uint32 round2Id = fundingPot.createRound(
+            initialTimestamp + 3 days,
+            initialTimestamp + 4 days,
+            r2BaseTotalCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.All
+        );
+        fundingPot.setAccessCriteriaForRound(
+            round2Id, accessId, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, accessId, r2BaseTotalCap, false, 0, 0, 0
+        );
+
+        // --- Set Global Start Round ID to Round 2's ID ---
+        fundingPot.setGlobalAccumulationStart(round2Id);
+        assertEq(
+            fundingPot.getGlobalAccumulationStartRoundId(),
+            round2Id,
+            "Global start ID not set to R2 ID"
+        );
+
+        // --- Attempt Contribution in Round 2 by C1 ---
+        vm.warp(initialTimestamp + 3 days + 1 hours);
+
+        uint c1AttemptR2 = r2BaseTotalCap + 100;
+
+        vm.startPrank(contributor1_);
+        fundingPot.contributeToRoundFor(
+            contributor1_, round2Id, c1AttemptR2, accessId, new bytes32[](0)
+        );
+        vm.stopPrank();
+
+        // --- Assertions ---
+        assertEq(
+            fundingPot.exposed_getUserContributionToRound(
+                round2Id, contributor1_
+            ),
             r2BaseTotalCap,
             "R2 C1 contribution should be clamped by R2 base total cap (All mode, global_start=R2)"
         );
-
-        // 2. Total contributions to R2 should be R2's base total cap.
         assertEq(
             fundingPot.exposed_getTotalRoundContributions(round2Id),
-            r2BaseTotalCap, 
+            r2BaseTotalCap,
             "R2 Total contributions should be R2 base total cap (All mode, global_start=R2)"
         );
     }

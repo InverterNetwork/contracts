@@ -83,11 +83,11 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
         return address(_bondingToken);
     }
 
-    function calculatePurchaseReturn(uint amount) public view returns (uint) {
+    function calculatePurchaseReturn(uint amount) public pure returns (uint) {
         return amount;
     }
 
-    function buyFor(address to, uint amount, uint minTokens) public {
+    function buyFor(address to, uint amount, uint /*minTokens*/ ) public {
         _token.transferFrom(_msgSender(), address(this), amount);
         _bondingToken.mint(to, amount);
     }
