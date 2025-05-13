@@ -87,6 +87,13 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Public Getter Functions
 
     // ------------------------------------------------------------------------
+    // Getter -  Role Management
+
+    /// @notice Returns the role ID of the admin role.
+    /// @return The role ID.
+    function getAdminRole() external view returns (bytes32);
+
+    // ------------------------------------------------------------------------
     // Getter -  Authorization
 
     /// @notice Returns the permissions of the given function in the target contract.
@@ -125,43 +132,8 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
         view
         returns (bool hasPermission_);
 
-    // ------------------------------------------------------------------------
-    // Getter -  Role Management
-
-    /// @notice Returns the role ID of the admin role.
-    /// @return The role ID.
-    function getAdminRole() external view returns (bytes32);
-
     // ========================================================================
     // Mutating Functions
-
-    // ------------------------------------------------------------------------
-    // Mutating - Authorization
-
-    /// @notice Adds a new permission to the given roleId to call the given function in the target contract.
-    /// @dev    Function access controlled by authorizer.
-    /// @dev    The roleId must have already been created.
-    /// @dev    Does nothing if the roleId permission is already added to the function.
-    /// @param  target_ The address of the target contract.
-    /// @param  selector_ The selector of the function.
-    /// @param  roleId_ The roleId that will receive the permission.
-    function addAccessPermission(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleId_
-    ) external;
-
-    /// @notice Removes a permission from the given roleid to call the given function in the target contract.
-    /// @dev    Function access controlled by authorizer.
-    /// @dev    Does nothing if the roleId is not linked to the function.
-    /// @param  target_ The address of the target contract.
-    /// @param  selector_ The selector of the function.
-    /// @param  roleId_ The roleId to remove.
-    function removeAccessPermission(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleId_
-    ) external;
 
     // ------------------------------------------------------------------------
     // Mutating - Role Management
@@ -203,6 +175,34 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @dev    Does nothing if the admin was already burned.
     /// @param  roleId_ The role for which to burn the admin.
     function burnAdminFromRole(bytes32 roleId_) external;
+
+    // ------------------------------------------------------------------------
+    // Mutating - Authorization
+
+    /// @notice Adds a new permission to the given roleId to call the given function in the target contract.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    The roleId must have already been created.
+    /// @dev    Does nothing if the roleId permission is already added to the function.
+    /// @param  target_ The address of the target contract.
+    /// @param  selector_ The selector of the function.
+    /// @param  roleId_ The roleId that will receive the permission.
+    function addAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) external;
+
+    /// @notice Removes a permission from the given roleid to call the given function in the target contract.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    Does nothing if the roleId is not linked to the function.
+    /// @param  target_ The address of the target contract.
+    /// @param  selector_ The selector of the function.
+    /// @param  roleId_ The roleId to remove.
+    function removeAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) external;
 
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility

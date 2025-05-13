@@ -149,6 +149,14 @@ contract AUT_Roles_v1 is
     // Public Getter Functions
 
     // ------------------------------------------------------------------------
+    // Getter -  Role Management
+
+    /// @inheritdoc IAuthorizer_v1
+    function getAdminRole() public pure returns (bytes32) {
+        return DEFAULT_ADMIN_ROLE;
+    }
+
+    // ------------------------------------------------------------------------
     // Getter -  Authorization
 
     /// @inheritdoc IAuthorizer_v1
@@ -214,59 +222,9 @@ contract AUT_Roles_v1 is
         // Caller does not have any of the roles, so they cannot call the function.
         return false;
     }
-    // ------------------------------------------------------------------------
-    // Getter -  Role Management
-
-    /// @inheritdoc IAuthorizer_v1
-    function getAdminRole() public pure returns (bytes32) {
-        return DEFAULT_ADMIN_ROLE;
-    }
 
     // ========================================================================
     // Mutating Functions
-
-    // ------------------------------------------------------------------------
-    // Mutating - Authorization
-
-    /// @inheritdoc IAuthorizer_v1
-    function addAccessPermission(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleId_
-    ) public permissioned idNotDefaultAdmin(roleId_) idExists(roleId_) {
-        // if RoleId already has a permission, do nothing
-        if (isRolePermissioned(target_, selector_, roleId_)) {
-            return;
-        }
-
-        _permissions[target_][selector_].push(roleId_);
-        emit AccessPermissionAdded(target_, selector_, roleId_);
-    }
-
-    /// @inheritdoc IAuthorizer_v1
-    function removeAccessPermission(
-        address target_,
-        bytes4 selector_,
-        bytes32 roleId_
-    ) public permissioned {
-        bytes32[] memory permissions = _permissions[target_][selector_];
-        uint permissionsLength = permissions.length;
-
-        for (uint i = 0; i < permissionsLength; i++) {
-            if (permissions[i] == roleId_) {
-                // Replace the element to be removed with the last one
-                _permissions[target_][selector_][i] =
-                    _permissions[target_][selector_][permissionsLength - 1];
-                // Remove the last element
-                _permissions[target_][selector_].pop();
-
-                // Emit Event and exit the function once the value is removed
-                emit AccessPermissionRemoved(target_, selector_, roleId_);
-                return;
-            }
-        }
-        // Do nothing if the value is not found
-    }
 
     // ------------------------------------------------------------------------
     // Mutating - Role Management
@@ -327,6 +285,49 @@ contract AUT_Roles_v1 is
         // Burn Role Admin
         _setRoleAdmin(roleId_, BURN_ADMIN_ROLE);
         emit RoleAdminBurned(roleId_);
+    }
+
+    // ------------------------------------------------------------------------
+    // Mutating - Authorization
+
+    /// @inheritdoc IAuthorizer_v1
+    function addAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) public permissioned idNotDefaultAdmin(roleId_) idExists(roleId_) {
+        // if RoleId already has a permission, do nothing
+        if (isRolePermissioned(target_, selector_, roleId_)) {
+            return;
+        }
+
+        _permissions[target_][selector_].push(roleId_);
+        emit AccessPermissionAdded(target_, selector_, roleId_);
+    }
+
+    /// @inheritdoc IAuthorizer_v1
+    function removeAccessPermission(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) public permissioned {
+        bytes32[] memory permissions = _permissions[target_][selector_];
+        uint permissionsLength = permissions.length;
+
+        for (uint i = 0; i < permissionsLength; i++) {
+            if (permissions[i] == roleId_) {
+                // Replace the element to be removed with the last one
+                _permissions[target_][selector_][i] =
+                    _permissions[target_][selector_][permissionsLength - 1];
+                // Remove the last element
+                _permissions[target_][selector_].pop();
+
+                // Emit Event and exit the function once the value is removed
+                emit AccessPermissionRemoved(target_, selector_, roleId_);
+                return;
+            }
+        }
+        // Do nothing if the value is not found
     }
 
     // ------------------------------------------------------------------------
