@@ -808,7 +808,6 @@ contract PP_StreamingV1Test is ModuleTest {
         );
     }
 
-    // @todo why is nothing tested here? gitblame? I really hope its not me xD
     function testRemoveAllPaymentReceiverPayments_ModifierInPosition() public {
         // permissioned
 

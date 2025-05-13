@@ -33,11 +33,9 @@ import {AccessControlEnumerableUpgradeable} from
  *          - AccessControlEnumerableUpgradeable: Access control functionality.
  *
  *          Key features:
- *
  *              - Role creation and management. This includes the ability to
  *                create roles, revoke roles, assigning and revoking role
  *                admins, which can add and remove role members.
- *
  *              - Role-based access control. This includes the ability to grant
  *                roles access to functions that implement the permissioned
  *                modifier. Functions can also be set to public access by

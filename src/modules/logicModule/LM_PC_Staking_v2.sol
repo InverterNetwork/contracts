@@ -244,12 +244,7 @@ contract LM_PC_Staking_v2 is
     }
 
     /// @inheritdoc ILM_PC_Staking_v2
-    function claimRewards()
-        external
-        virtual
-        nonReentrant
-        permissioned //@todo permissioned here? not tested yet
-    {
+    function claimRewards() external virtual nonReentrant {
         address recipient = _msgSender();
 
         _update(recipient);

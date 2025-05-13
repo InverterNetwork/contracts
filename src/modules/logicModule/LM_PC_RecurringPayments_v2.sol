@@ -269,17 +269,15 @@ contract LM_PC_RecurringPayments_v2 is
     // Trigger
 
     /// @inheritdoc ILM_PC_RecurringPayments_v2
-    function trigger()
-        external
-        permissioned //@todo do we restrict this? not tested yet
-    {
+    /// @dev    This function is always publicly callable.
+    function trigger() external {
         _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
     }
 
     /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @dev    This function is always publicly callable.
     function triggerFor(uint startId, uint endId)
         external
-        permissioned //@todo do we restrict this? not tested yet
         validId(startId)
         validId(endId)
         startIdBeforeEndId(startId, endId)
