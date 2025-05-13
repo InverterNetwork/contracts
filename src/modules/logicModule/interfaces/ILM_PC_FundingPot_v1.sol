@@ -232,9 +232,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already started and cannot be modified.
     error Module__LM_PC_FundingPot__RoundAlreadyStarted();
 
-    /// @notice Hook function is required when a hook contract is provided.
-    error Module__LM_PC_FundingPot__HookFunctionRequiredWithContract();
-
     /// @notice Thrown when a hook contract is specified without a hook function.
     error Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
 
@@ -249,9 +246,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid access criteria ID.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
-
-    /// @notice Cannot set Privileges for open access criteria.
-    error Module__LM_PC_FundingPot__CannotSetPrivilegesForOpenAccessCriteria();
 
     /// @notice Invalid times.
     error Module__LM_PC_FundingPot__InvalidTimes();
