@@ -34,8 +34,6 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-//@todo adapt?
-//@todo if you dont do any setup you always have access to permissioned with the default admin role
 /**
  * @title   External Price Oracle Funding Manager with Payment Client.
  *
@@ -58,9 +56,6 @@ import {ERC165Upgradeable} from
  *              - Token issuance and redemption.
  *                Mints new tokens during purchases and burns tokens during
  *                sell operations at oracle-determined prices.
- *
- *              - Whitelisting system for controlled token distribution.
- *                Restricts token purchases and sales to approved addresses.
  *
  *              - Queue-based redemption and payment processing.
  *                Creates payment orders in a queue and sends them to the payment
@@ -91,84 +86,48 @@ import {ERC165Upgradeable} from
  *                                setter function.
  *                     - Example: module.setOracleAddress(oracleAddress);
  *
- *                  3. Setup Whitelist:
+ *                  3. Enable Trading:
+ *                     - Purpose: Makes the the buy/sell functionality of the
+ *                                contract public. Trading must be explicitly
+ *                                enabled.
+ *                     - How:     The OrchestratorAdmin must enable both buying
+ *                                and selling operations separately.
+ *                     - Example: authorizer.addAccessPermission(buy.selector);
+ *                                authorizer.addAccessPermission(sell.selector);
+ *                                module.openBuy();
+ *                                module.openSell();
+ *
+ *                  OPTIONAL setup steps for enhanced administration:
+ *
+ *                  1. Setup Whitelist:
  *                     - Purpose: Implements access control for buy/sell
  *                                functions. Only whitelisted addresses can
  *                                participate in token buy & sell operations to
  *                                provide a security layer for controlled token
  *                                distribution and compliance.
- *                     - How:     The OrchestratorAdmin (or WHITELIST_ROLE_ADMIN
- *                                if configured) must:
- *                                1. Retrieve the whitelist role identifier.
- *                                2. Grant the role to desired addresses.
- *                     - Example: module.grantModuleRole(
- *                                module.getWhitelistRole(),
- *                                userAddress
- *                                );
+ *                     - How:     The OrchestratorAdmin must:
+ *                                1. Create a whitelist role
+ *                                2. Add access permission for the buy() and
+ *                                   sell() functions to the whitelist role.
+ *                                3. Grant the role to desired addresses.
+ *                     - Example: authorizer.createRole();
+ *                                authorizer.addAccessPermission();
+ *                                authorizer.grantRole();
+ *                     - Notice:  This assumes that the function access
+ *                                permissions currently don't contain the
+ *                                public role.
  *
- *                  4. Setup Queue Executors:
+ *                  2. Setup Queue Executors:
  *                     - Purpose: Implements access control for authorized
  *                                addresses that can process the redemption
  *                                queue.
- *                     - How:     The OrchestratorAdmin (or
- *                                QUEUE_EXECUTOR_ROLE_ADMIN if configured) must:
- *                                1. Retrieve the executor role identifier.
- *                                2. Grant the role to designated executors.
- *                     - Example: module.grantModuleRole(
- *                                 module.getQueueExecutorRole(),
- *                                 executorAddress
- *                                );
- *
- *                  5. Enable Trading:
- *                     - Purpose: Activates the buy/sell functionality of the
- *                                contract. Trading must be explicitly enabled.
- *                     - How:     The OrchestratorAdmin must enable both buying
- *                                and selling operations separately.
- *                     - Example: module.openBuy();
- *                                module.openSell();
- *
- *                  OPTIONAL setup steps for enhanced administration:
- *
- *                  1. Custom Whitelist Admin:
- *                     - Purpose: Enables delegation of whitelist management to
- *                                a dedicated admin role instead of relying on
- *                                the OrchestratorAdmin. This allows for more
- *                                granular access control and operational
- *                                flexibility.
  *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles.
- *                                2. Transfer admin rights through the Authorizer.
- *                     - Example: authorizer.transferAdminRole(
- *                                authorizer.generateRoleId(
- *                                  moduleAddress,
- *                                   module.getWhitelistRole()
- *                                ),
- *                                authorizer.generateRoleId(
- *                                   moduleAddress,
- *                                   module.getWhitelistRoleAdmin()
- *                                 )
- *                                );
- *
- *                  2. Custom Queue Executor Admin:
- *                     - Purpose: Allows delegation of queue executor
- *                                management to a dedicated admin role instead
- *                                of the OrchestratorAdmin. This allows for
- *                                more granular access control and operational
- *                                flexibility.
- *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles.
- *                                2. Transfer admin rights through the
- *                                   Authorizer.
- *                     - Example: authorizer.transferAdminRole(
- *                                authorizer.generateRoleId(
- *                                   moduleAddress,
- *                                   module.getQueueExecutorRole()
- *                                ),
- *                                authorizer.generateRoleId(
- *                                   moduleAddress,
- *                                   module.getQueueExecutorRoleAdmin()
- *                                 )
- *                                );
+ *                                1. Create a queue executor role
+ *                                2. Add access permission for the executeRedemptionQueue() function.
+ *                                3. Grant the role to designated executors.
+ *                     - Example: authorizer.createRole();
+ *                                authorizer.addAccessPermission();
+ *                                authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to

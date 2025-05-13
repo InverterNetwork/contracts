@@ -33,7 +33,7 @@ import {ERC165Upgradeable} from
  *                and redemption operations.
  *
  *              - Manual price setting.
- *                Prices are manually set by the price setter role and must be
+ *                Prices are manually set and must be
  *                non-zero values.
  *
  *              - Price decimal denominations.
@@ -45,7 +45,7 @@ import {ERC165Upgradeable} from
  *                - To price redeeming 1 token at 0.5 collateral with 6 decimal
  *                  collateral: 500_000
  *
- * @custom:setup   This module requires the following MANDATORY setup steps:
+ * @custom:setup   OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Configure Price Setter Role:
  *                    - Purpose: The price setter role is authorized to set
@@ -57,28 +57,6 @@ import {ERC165Upgradeable} from
  *                    - Example: module.grantModuleRole(
  *                                module.getPriceSetterRole(),
  *                                operatorAddress
- *                               );
- *
- *                 OPTIONAL setup steps for enhanced administration:
- *
- *                 1. Custom Price Setter Role Admin:
- *                    - Purpose: Enables delegation of price setter role
- *                               management to a dedicated admin role instead of
- *                               relying on the OrchestratorAdmin. This allows
- *                               for more granular access control and operational
- *                               flexibility.
- *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles.
- *                               2. Transfer admin rights through the Authorizer.
- *                    - Example: authorizer.transferAdminRole(
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getPriceSetterRole()
- *                               ),
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getPriceSetterRoleAdmin()
- *                                )
  *                               );
  *
  * @custom:security-contact security@inverter.network
