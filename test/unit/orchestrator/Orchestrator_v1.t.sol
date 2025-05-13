@@ -76,7 +76,10 @@ contract OrchestratorV1Test is Test {
         // Actually link the Authorizer to the Orchestrator
         orchestrator.setup_authorizer(address(authorizer));
 
-        // Every caller has permission for every premissioned function
+        // Set the default admin to this contract
+        authorizer.setDefaultAdmin(address(this));
+
+        // Every caller has permission for every permissioned function
         authorizer.setAllAuthorized(true);
     }
 
@@ -935,7 +938,7 @@ contract OrchestratorV1Test is Test {
         // Assume that caller is not the module as it is the default admin
         vm.assume(caller_ != address(this));
 
-        // Turn off that every caller has permission for every premissioned function
+        // Turn off that every caller has permission for every permissioned function
         authorizer.setAllAuthorized(false);
 
         authorizer.setHasPermission(
