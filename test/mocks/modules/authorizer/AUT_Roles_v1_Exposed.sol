@@ -28,9 +28,9 @@ contract AUT_Roles_v1_Exposed is AUT_Roles_v1 {
         idNotDefaultAdmin(roleId_)
     {}
 
-    function idExistingModifier_exposed(bytes32 roleId_)
+    function idExistsModifier_exposed(bytes32 roleId_)
         public
-        idExisting(roleId_)
+        idExists(roleId_)
     {}
 
     //==========================================================================

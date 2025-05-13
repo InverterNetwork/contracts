@@ -44,8 +44,8 @@ interface IAUT_EXT_VotingRoles_v1 {
     //--------------------------------------------------------------------------
     // Errors
 
-    /// @notice Theis function is only callable by this contract.
-    error Module__VotingRoleManager__NoSelfCall();
+    /// @notice This function is only callable by a motion of this contract.
+    error Module__VotingRoleManager__OnlyCallableByMotion();
 
     /// @notice The action would leave an empty voter list.
     error Module__VotingRoleManager__EmptyVoters();

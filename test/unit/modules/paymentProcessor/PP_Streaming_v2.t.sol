@@ -815,7 +815,9 @@ contract PP_StreamingV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         paymentProcessor.removeAllPaymentReceiverPayments(
@@ -1095,7 +1097,9 @@ contract PP_StreamingV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         paymentProcessor.removePaymentForSpecificStream(
@@ -2242,7 +2246,9 @@ contract PP_StreamingV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         paymentProcessor.setStreamingDefaults(0, 0, 0);

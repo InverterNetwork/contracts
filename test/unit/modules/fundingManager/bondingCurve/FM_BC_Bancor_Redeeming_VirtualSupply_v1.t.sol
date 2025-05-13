@@ -241,7 +241,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.buyFor(address(0), 0, 0);
@@ -292,7 +294,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.buy(0, 0);
@@ -648,7 +652,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.sellTo(address(0), 0, 0);
@@ -700,7 +706,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.sell(0, 0);
@@ -1366,7 +1374,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setVirtualIssuanceSupply(0);
@@ -1454,7 +1464,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setVirtualCollateralSupply(0);
@@ -1532,7 +1544,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setReserveRatioForBuying(0);
@@ -1622,7 +1636,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setReserveRatioForSelling(0);

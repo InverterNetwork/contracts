@@ -27,7 +27,7 @@ interface IModule_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    error Module__NotPermissioned();
+    error Module__CallerNotPermissioned();
 
     /// @notice Function is only callable by a {IERC20PaymentClientBase_v2}.
     error Module__OnlyCallableByPaymentClient();

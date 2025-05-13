@@ -481,7 +481,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.burnIssuanceToken(0);
@@ -557,7 +559,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.burnIssuanceTokenFor(address(0), 0);
@@ -709,7 +713,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.seize(0);
@@ -832,7 +838,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
 
@@ -870,7 +878,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setLiquidityVaultControllerContract(
@@ -941,7 +951,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setRepayableAmount(0);
@@ -979,7 +991,9 @@ contract FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1_Test is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bondingCurveFundingManager.setTokenVault(address(0));

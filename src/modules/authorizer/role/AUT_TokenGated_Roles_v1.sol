@@ -158,7 +158,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     function setTokenGated(bytes32 roleId_, bool to)
         public
         permissioned
-        idExisting(roleId_)
+        idExists(roleId_)
         onlyEmptyRole(roleId_)
         notPublicRole(roleId_)
     // @todo Do we prevent default admin here?
@@ -171,7 +171,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     function setThreshold(bytes32 roleId_, address token, uint threshold)
         public
         permissioned
-        idExisting(roleId_)
+        idExists(roleId_)
     {
         _setThreshold(roleId_, token, threshold);
     }

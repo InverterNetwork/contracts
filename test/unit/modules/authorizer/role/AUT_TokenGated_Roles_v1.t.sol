@@ -348,12 +348,14 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
     function testSetTokenGated_ModifierInPositionChecks() public {
         // permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(_bob);
         _authSuT.setTokenGated(bytes32(uint(0)), true);
 
-        //idExisting(roleId_)
+        //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -416,12 +418,14 @@ contract AUT_TokenGated_Roles_v1_Test is ModuleTest {
     function testSetThreshold_ModifierInPositionChecks() public {
         // permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(_bob);
         _authSuT.setThreshold(bytes32(uint(0)), address(0), 0);
 
-        //idExisting(roleId_)
+        //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector

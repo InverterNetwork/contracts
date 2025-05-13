@@ -441,7 +441,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.addBounty(0, 0, bytes(""));
@@ -511,7 +513,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.addBountyBatch(
@@ -564,7 +568,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.updateBounty(1, bytes(""));
@@ -612,7 +618,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.lockBounty(1);
@@ -682,7 +690,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.addClaim(0, DEFAULT_CONTRIBUTORS, bytes(""));
@@ -773,7 +783,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.updateClaimContributors(2, DEFAULT_CONTRIBUTORS);
@@ -945,7 +957,9 @@ contract LM_PC_BountiesV1Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         bountyManager.verifyClaim(0, DEFAULT_CONTRIBUTORS);

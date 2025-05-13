@@ -676,7 +676,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         fundingManager.setProjectTreasury(address(0));
@@ -715,7 +717,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         fundingManager.setOracleAddress(address(0));
@@ -756,7 +760,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         fundingManager.setIsDirectOperationsOnly(false);
@@ -787,7 +793,9 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         fundingManager.executeRedemptionQueue();

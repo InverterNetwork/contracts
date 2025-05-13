@@ -20,6 +20,7 @@ import {
 import {AccessControlEnumerableUpgradeable} from
     "@oz-up/access/extensions/AccessControlEnumerableUpgradeable.sol";
 
+//@todo adapt
 /**
  * @title   Inverter Roles Authorizer
  *
@@ -70,7 +71,7 @@ contract AUT_Roles_v1 is
 
     /// @dev     Verifies that the roleId is already existing.
     /// @param  roleId_ The id of the role.
-    modifier idExisting(bytes32 roleId_) {
+    modifier idExists(bytes32 roleId_) {
         if (uint(roleId_) > _roleIdCounter) {
             revert Module__Authorizer__RoleIdNotExisting();
         }
@@ -166,12 +167,11 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function isPermissioned(address target_, bytes4 selector_, bytes32 roleId_)
-        public
-        view
-        virtual
-        returns (bool isPermissioned_)
-    {
+    function isRolePermissioned(
+        address target_,
+        bytes4 selector_,
+        bytes32 roleId_
+    ) public view virtual returns (bool isRolePermissioned_) {
         bytes32[] memory permissions_ = _permissions[target_][selector_];
         for (uint i = 0; i < permissions_.length; i++) {
             if (permissions_[i] == roleId_) {
@@ -233,9 +233,9 @@ contract AUT_Roles_v1 is
         address target_,
         bytes4 selector_,
         bytes32 roleId_
-    ) public permissioned idNotDefaultAdmin(roleId_) idExisting(roleId_) {
+    ) public permissioned idNotDefaultAdmin(roleId_) idExists(roleId_) {
         // if RoleId already has a permission, do nothing
-        if (isPermissioned(target_, selector_, roleId_)) {
+        if (isRolePermissioned(target_, selector_, roleId_)) {
             return;
         }
 
@@ -280,7 +280,7 @@ contract AUT_Roles_v1 is
         public
         virtual
         permissioned
-        idExisting(respectiveAdminRole_)
+        idExists(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
         newRoleId_ = bytes32(++_roleIdCounter);
@@ -299,7 +299,7 @@ contract AUT_Roles_v1 is
     function labelRole(bytes32 roleId_, string memory newRoleName_)
         external
         permissioned
-        idExisting(roleId_)
+        idExists(roleId_)
     {
         emit RoleLabeled(roleId_, newRoleName_);
     }
@@ -308,8 +308,8 @@ contract AUT_Roles_v1 is
     function transferAdminRole(bytes32 roleId_, bytes32 newAdminRoleId_)
         external
         onlyRole(getRoleAdmin(roleId_))
-        idExisting(roleId_)
-        idExisting(newAdminRoleId_)
+        idExists(roleId_)
+        idExists(newAdminRoleId_)
     {
         _setRoleAdmin(roleId_, newAdminRoleId_);
     }
@@ -318,7 +318,7 @@ contract AUT_Roles_v1 is
     function burnAdminFromRole(bytes32 roleId_)
         external
         onlyRole(getRoleAdmin(roleId_))
-        idExisting(roleId_)
+        idExists(roleId_)
     {
         // If Role Admin is Burned do nothing
         if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
@@ -342,7 +342,7 @@ contract AUT_Roles_v1 is
     )
         external
         permissioned
-        idExisting(respectiveAdminRole_)
+        idExists(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
         uint targetsLength = targets_.length;
@@ -376,7 +376,7 @@ contract AUT_Roles_v1 is
         internal
         virtual
         override
-        idExisting(role)
+        idExists(role)
         returns (bool)
     {
         return super._grantRole(role, who);

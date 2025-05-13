@@ -305,13 +305,17 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
 
         // Check that the buy and sell functionalities dont work anymore for a regular user
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(alice);
         fundingManager.buy(1, 1);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(alice);
         fundingManager.sell(1, 1);

@@ -277,7 +277,7 @@ abstract contract Module_v1 is
                 caller_, address(this), bytes4(data_[0:4])
             )
         ) {
-            revert Module__NotPermissioned();
+            revert Module__CallerNotPermissioned();
         }
     }
 

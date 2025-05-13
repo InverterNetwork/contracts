@@ -364,7 +364,9 @@ contract LM_PC_KPIRewarder_v2_postAssertionTest is LM_PC_KPIRewarder_v2Test {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         kpiManager.postAssertion(
@@ -605,7 +607,9 @@ contract LM_PC_KPIRewarder_v2_createKPITest is LM_PC_KPIRewarder_v2Test {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         kpiManager.createKPI(true, new uint[](0), new uint[](0));
@@ -765,7 +769,9 @@ contract LM_PC_KPIRewarder_v2_stakeTest is LM_PC_KPIRewarder_v2Test {
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         kpiManager.stake(0);
@@ -1226,7 +1232,9 @@ contract LM_PC_KPIRewarder_v2_deleteStuckAssertionTest is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         kpiManager.deleteStuckAssertion(0);

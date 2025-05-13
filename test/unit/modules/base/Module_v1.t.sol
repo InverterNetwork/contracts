@@ -420,7 +420,7 @@ contract ModuleBaseV1Test is ModuleTest {
         );
 
         if (!hasPermission_) {
-            vm.expectRevert(IModule_v1.Module__NotPermissioned.selector);
+            vm.expectRevert(IModule_v1.Module__CallerNotPermissioned.selector);
         }
 
         module._checkAuthorization_exposed(caller_, data_);

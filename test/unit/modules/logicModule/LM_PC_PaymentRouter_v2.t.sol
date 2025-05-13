@@ -126,7 +126,9 @@ contract LM_PC_PaymentRouter_v2_Test_pushPayment is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         paymentRouter.pushPayment(address(0), address(0), 0, 0, 0, 0);
@@ -190,7 +192,9 @@ contract LM_PC_PaymentRouter_v2_Test_pushPaymentBatched is
         // Turn off all adresses are permissioned to call all functions
         _authorizer.setAllAuthorized(false);
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         vm.prank(address(0xB0B));
         paymentRouter.pushPaymentBatched(

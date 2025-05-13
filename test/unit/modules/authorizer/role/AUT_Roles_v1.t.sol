@@ -146,12 +146,12 @@ contract AUT_Roles_v1_Test is ModuleTest {
     }
 
     /*
-    Test: idExisting Modifier
+    Test: idExists Modifier
     └── Given: Role ID is not existing and is not Public Role
-        └── When: function with idExisting modifier is called
+        └── When: function with idExists modifier is called
             └── Then: the function should revert
     */
-    function testIdExistingModifier(
+    function testidExistsModifier(
         uint _roleIdCounterValue,
         bytes32 _givenRoleId
     ) public {
@@ -168,7 +168,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
                 )
             );
         }
-        _authSuT.idExistingModifier_exposed(_givenRoleId);
+        _authSuT.idExistsModifier_exposed(_givenRoleId);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -204,24 +204,24 @@ contract AUT_Roles_v1_Test is ModuleTest {
     }
 
     /*
-    Test: isPermissioned
-    └── When: isPermissioned is called
+    Test: isRolePermissioned
+    └── When: isRolePermissioned is called
         └── Then: Return true if the roleId is listed for that function
     */
-    function testIsPermissioned(
+    function testisRolePermissioned(
         bytes32 roleId_,
         address target_,
         bytes4 selector_,
-        bool isPermissioned_
+        bool isRolePermissioned_
     ) public {
-        if (isPermissioned_) {
+        if (isRolePermissioned_) {
             _authSuT.addAccessPermission_unrestricted(
                 target_, selector_, roleId_
             );
         }
         assertEq(
-            _authSuT.isPermissioned(target_, selector_, roleId_),
-            isPermissioned_
+            _authSuT.isRolePermissioned(target_, selector_, roleId_),
+            isRolePermissioned_
         );
     }
 
@@ -367,7 +367,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
     function testAddAccessPermission_ModifierInPostionChecks() public {
         //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         _authSuT.addAccessPermission(address(this), bytes4(0), bytes32(uint(0)));
 
@@ -386,7 +388,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             bytes32(uint(0)) //Default Admin Id
         );
 
-        //idExisting(roleId_)
+        //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -444,7 +446,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             createRandomLockRestrictions(seed_, 0);
 
         // Make sure roleId_ is not part of the function lock
-        vm.assume(!_authSuT.isPermissioned(target, selector, roleId_));
+        vm.assume(!_authSuT.isRolePermissioned(target, selector, roleId_));
 
         // Fetch permission array for comparison
         bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
@@ -465,7 +467,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         assertEq(permissionsAfter.length, permissions.length + 1);
 
         // Check that the role is permissioned
-        assertTrue(_authSuT.isPermissioned(target, selector, roleId_));
+        assertTrue(_authSuT.isRolePermissioned(target, selector, roleId_));
     }
 
     /*
@@ -487,7 +489,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
     function testRemoveAccessPermission_ModifierInPostionChecks() public {
         //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         _authSuT.removeAccessPermission(
             address(this), bytes4(0), bytes32(uint(0))
@@ -506,7 +510,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             createRandomLockRestrictions(seed_, 0);
 
         // Make sure roleId_ is not part of the function lock
-        vm.assume(!_authSuT.isPermissioned(target, selector, roleId_));
+        vm.assume(!_authSuT.isRolePermissioned(target, selector, roleId_));
 
         // Fetch permission array for comparison
         bytes32[] memory permissions = _authSuT.getPermissions(target, selector);
@@ -560,7 +564,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
         assertEq(permissions.length - 1, permissionsAfter.length);
 
         // Check that roleId is not permissioned
-        assertFalse(_authSuT.isPermissioned(target, selector, roleIdPermission));
+        assertFalse(
+            _authSuT.isRolePermissioned(target, selector, roleIdPermission)
+        );
     }
 
     // ------------------------------------------------------------------------
@@ -587,11 +593,13 @@ contract AUT_Roles_v1_Test is ModuleTest {
     function testCreateRole_ModifierInPostionChecks() public {
         //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         _authSuT.createRole("RoleName", bytes32(uint(0)), new address[](0));
 
-        //idExisting(respectiveAdminRole_)
+        //idExists(respectiveAdminRole_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -651,11 +659,13 @@ contract AUT_Roles_v1_Test is ModuleTest {
     function testLabelRole_ModifierInPositionChecks() public {
         //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         _authSuT.labelRole(bytes32(uint(0)), "RoleName");
 
-        //idExisting(roleId_)
+        //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -665,7 +675,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.labelRole(bytes32(uint(2)), "RoleName");
     }
 
-    function testLabelRole_IdExisting(string memory newRoleName_) public {
+    function testLabelRole_idExists(string memory newRoleName_) public {
         // Create Role
         vm.prank(_initialAdmin);
         bytes32 id =
@@ -734,7 +744,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     }
 
     function testTransferAdminRole_ModifierInPositionChecks() public {
-        //idExisting(roleId_)
+        //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -743,7 +753,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.prank(_initialAdmin);
         _authSuT.transferAdminRole(bytes32(uint(2)), bytes32(uint(0)));
 
-        //idExisting(newAdminRoleId_)
+        //idExists(newAdminRoleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -753,7 +763,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.transferAdminRole(bytes32(uint(0)), bytes32(uint(2)));
     }
 
-    function testTransferAdminRole_IdExisting(
+    function testTransferAdminRole_idExists(
         bytes32 roleId_,
         bytes32 newAdminRoleId_
     ) public {
@@ -826,7 +836,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
     }
 
     function testBurnAdminFromRole_ModifierInPositionChecks() public {
-        //idExisting(roleId_)
+        //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -836,7 +846,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.burnAdminFromRole(bytes32(uint(2)));
     }
 
-    function testBurnAdminFromRole_IdExisting(
+    function testBurnAdminFromRole_idExists(
         bytes32 roleId_,
         bytes32 adminRoleId_
     ) public {
@@ -894,7 +904,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
     {
         //permissioned
         vm.expectRevert(
-            abi.encodeWithSelector(IModule_v1.Module__NotPermissioned.selector)
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
         );
         _authSuT.createRoleAndAddAccessPermissions(
             "RoleName",
@@ -904,7 +916,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             new bytes4[][](0)
         );
 
-        //idExisting(respectiveAdminRole_)
+        //idExists(respectiveAdminRole_)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
@@ -941,7 +953,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     //@note This test alone takes up as much time as the others combined. Restricted the number of runs to 20
     /// forge-config: default.fuzz.runs = 20
-    function testCreateRoleAndAddAccessPermissions_IdExisting(
+    function testCreateRoleAndAddAccessPermissions_idExists(
         string memory roleName_,
         address[] memory initialMembers_,
         address[] memory targets_,
@@ -980,7 +992,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         for (uint i = 0; i < targetLength; i++) {
             for (uint j = 0; j < selectors_[i].length; j++) {
                 assertTrue(
-                    _authSuT.isPermissioned(
+                    _authSuT.isRolePermissioned(
                         targets_[i], selectors_[i][j], roleId
                     )
                 );
@@ -1006,7 +1018,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             └── Then: The call reverts (modifier in position check)
     */
     function testGrantRole_ModifierInPositionCheck() public {
-        // idExisting(role)
+        // idExists(role)
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1.Module__Authorizer__RoleIdNotExisting.selector
