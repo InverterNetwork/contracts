@@ -144,10 +144,6 @@ contract FundingPotE2E is E2ETest {
         paymentProcessor =
             PP_Streaming_v2(address(orchestrator.paymentProcessor()));
 
-        // Define payment processor
-        PP_Streaming_v2 paymentProcessor =
-            PP_Streaming_v2(address(orchestrator.paymentProcessor()));
-
         // Get the funding pot
         address[] memory modulesList = orchestrator.listModules();
         for (uint i; i < modulesList.length; ++i) {

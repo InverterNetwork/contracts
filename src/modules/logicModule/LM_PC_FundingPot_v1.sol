@@ -24,7 +24,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-import "@oz/utils/cryptography/MerkleProof.sol";
+import {MerkleProof} from "@oz/utils/cryptography/MerkleProof.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 /**
@@ -383,7 +383,9 @@ contract LM_PC_FundingPot_v1 is
         bool autoClosure_,
         bool globalAccumulativeCaps_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint32) {
-        roundCount++;
+        unchecked {
+            roundCount++;
+        }
 
         uint32 roundId = roundCount;
 
@@ -472,7 +474,9 @@ contract LM_PC_FundingPot_v1 is
         // If accessCriteriaId_ is 0, create a new access criteria
         // Otherwise, edit the existing one
         if (accessCriteriaId_ == 0) {
-            criteriaId = ++roundIdToNextAccessCriteriaId[roundId_];
+            unchecked {
+                criteriaId = ++roundIdToNextAccessCriteriaId[roundId_];
+            }
         } else {
             criteriaId = accessCriteriaId_;
             isEdit = true;
@@ -522,8 +526,10 @@ contract LM_PC_FundingPot_v1 is
         } else if (accessCriteriaType == AccessCriteriaType.LIST) {
             // For LIST type, update the allowed addresses
             for (uint i = 0; i < allowedAddresses_.length; i++) {
-                round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]
-                = true;
+                unchecked {
+                    round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]
+                    = true;
+                }
             }
         }
 
@@ -555,8 +561,10 @@ contract LM_PC_FundingPot_v1 is
         _validateEditRoundParameters(round);
 
         for (uint i = 0; i < addressesToRemove_.length; i++) {
-            round.accessCriterias[accessCriteriaId_].allowedAddresses[addressesToRemove_[i]]
-            = false;
+            unchecked {
+                round.accessCriterias[accessCriteriaId_].allowedAddresses[addressesToRemove_[i]]
+                = false;
+            }
         }
 
         emit AllowlistedAddressesRemoved(
@@ -962,7 +970,10 @@ contract LM_PC_FundingPot_v1 is
             }
 
             // Allow the user to contribute up to the remaining round cap
-            uint remainingRoundCap = effectiveRoundCap - totalRoundContribution;
+            uint remainingRoundCap;
+            unchecked {
+                remainingRoundCap = effectiveRoundCap - totalRoundContribution;
+            }
             if (adjustedAmount > remainingRoundCap) {
                 adjustedAmount = remainingRoundCap;
             }
@@ -1167,9 +1178,12 @@ contract LM_PC_FundingPot_v1 is
 
                 if (contributionByAccessCriteria == 0) continue;
 
-                uint tokensForThisAccessCriteria = (
-                    contributionByAccessCriteria * tokensBought
-                ) / totalContributions;
+                uint tokensForThisAccessCriteria;
+                unchecked {
+                    tokensForThisAccessCriteria = (
+                        contributionByAccessCriteria * tokensBought
+                    ) / totalContributions;
+                }
 
                 _createAndAddPaymentOrder(
                     roundId_,
@@ -1206,24 +1220,32 @@ contract LM_PC_FundingPot_v1 is
         if (start_ > 0) {
             flags |= bytes32(uint(1) << FLAG_START);
             data[flagCount] = bytes32(start_);
-            flagCount++;
+            unchecked {
+                flagCount++;
+            }
         }
 
         if (cliff_ > 0) {
             flags |= bytes32(uint(1) << FLAG_CLIFF);
             data[flagCount] = bytes32(cliff_);
-            flagCount++;
+            unchecked {
+                flagCount++;
+            }
         }
 
         if (end_ > 0) {
             flags |= bytes32(uint(1) << FLAG_END);
             data[flagCount] = bytes32(end_);
-            flagCount++;
+            unchecked {
+                flagCount++;
+            }
         }
 
         finalData = new bytes32[](flagCount);
-        for (uint8 j = 0; j < flagCount; j++) {
-            finalData[j] = data[j];
+        for (uint8 j = 0; j < flagCount; ++j) {
+            unchecked {
+                finalData[j] = data[j];
+            }
         }
 
         return (flags, finalData);
