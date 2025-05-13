@@ -50,7 +50,7 @@ contract LM_PC_BountiesV1Test is ModuleTest {
 
         _setUpOrchestrator(bountyManager);
 
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         DEFAULT_CONTRIBUTORS.push(ALICE);

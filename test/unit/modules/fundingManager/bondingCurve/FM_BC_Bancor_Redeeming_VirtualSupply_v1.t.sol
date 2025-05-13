@@ -107,7 +107,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         vm.expectEmit(true, true, true, true);

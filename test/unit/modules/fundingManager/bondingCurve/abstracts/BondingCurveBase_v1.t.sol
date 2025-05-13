@@ -60,7 +60,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         issuanceToken.setMinter(address(this), true);
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         // Set max fee of feeManager to 100% for testing purposes

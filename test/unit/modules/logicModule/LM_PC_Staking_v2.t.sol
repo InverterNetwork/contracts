@@ -47,7 +47,7 @@ contract LM_PC_Staking_v2Test is ModuleTest {
         stakingManager = LM_PC_Staking_v2_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(stakingManager);
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         vm.expectEmit(true, true, true, true);

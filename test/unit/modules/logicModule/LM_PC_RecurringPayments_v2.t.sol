@@ -39,7 +39,7 @@ contract LM_PC_RecurringV1Test is ModuleTest {
         recurringPaymentManager = LM_PC_RecurringPayments_v2(Clones.clone(impl));
 
         _setUpOrchestrator(recurringPaymentManager);
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
     }
 

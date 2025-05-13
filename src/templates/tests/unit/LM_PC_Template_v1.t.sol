@@ -72,7 +72,7 @@ contract LM_PC_Template_v1_Test is ModuleTest {
             _orchestrator, _METADATA, abi.encode(address(paymentToken))
         );
 
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
     }
 

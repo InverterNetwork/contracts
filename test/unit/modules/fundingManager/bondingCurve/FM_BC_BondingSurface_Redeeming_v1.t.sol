@@ -105,7 +105,7 @@ contract FM_BC_BondingSurface_Redeeming_v1_Test is ModuleTest {
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         // Set Minter

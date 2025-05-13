@@ -40,7 +40,7 @@ contract FM_EXT_TokenVault_v1_Test is ModuleTest {
         vault = FM_EXT_TokenVault_v1_Exposed(Clones.clone(impl));
 
         _setUpOrchestrator(vault);
-        // Every caller has permission for every premissioned function
+        // Every caller has permission for every permissioned function
         _authorizer.setAllAuthorized(true);
 
         vault.init(_orchestrator, _METADATA, bytes(""));
