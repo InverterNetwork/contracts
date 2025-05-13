@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 // Internal Dependencies
+
 import {
     E2ETest,
     IOrchestratorFactory_v1,
@@ -251,24 +252,30 @@ contract FundingPotE2E is E2ETest {
         contributionToken.mint(contributor2, 1000e18);
         contributionToken.mint(contributor3, 1000e18);
 
+        uint contributor1Amount = 400e18;
+        uint contributor2Amount = 500e18;
+        uint contributor3Amount = 750e18;
+        uint totalContributionForRound1 =
+            contributor1Amount + contributor2Amount;
+
         vm.startPrank(contributor1);
-        contributionToken.approve(address(fundingPot), 400e18);
+        contributionToken.approve(address(fundingPot), contributor1Amount);
         fundingPot.contributeToRoundFor(
-            contributor1, round1Id, 400e18, 1, new bytes32[](0)
+            contributor1, round1Id, contributor1Amount, 1, new bytes32[](0)
         );
         vm.stopPrank();
 
         vm.startPrank(contributor2);
-        contributionToken.approve(address(fundingPot), 600e18);
+        contributionToken.approve(address(fundingPot), contributor2Amount);
         fundingPot.contributeToRoundFor(
-            contributor2, round1Id, 600e18, 1, new bytes32[](0)
+            contributor2, round1Id, contributor2Amount, 1, new bytes32[](0)
         );
         vm.stopPrank();
 
         vm.startPrank(contributor3);
-        contributionToken.approve(address(fundingPot), 750e18);
+        contributionToken.approve(address(fundingPot), contributor3Amount);
         fundingPot.contributeToRoundFor(
-            contributor3, round2Id, 750e18, 1, new bytes32[](0)
+            contributor3, round2Id, contributor3Amount, 1, new bytes32[](0)
         );
         vm.stopPrank();
 
@@ -302,9 +309,37 @@ contract FundingPotE2E is E2ETest {
         vm.prank(contributor3);
         paymentProcessor.claimAll(address(fundingPot));
 
-        // 12. Assert that contributors received their tokens
-        assertGt(issuanceToken.balanceOf(contributor1), 0);
-        assertGt(issuanceToken.balanceOf(contributor2), 0);
+        // 12. Verify proportional distribution for round 1
+        uint contributor1Issuance = issuanceToken.balanceOf(contributor1);
+        uint contributor2Issuance = issuanceToken.balanceOf(contributor2);
+        uint totalIssuanceForRound1 =
+            contributor1Issuance + contributor2Issuance;
+
+        // Calculate the expected proportions (scaled by 1e18 for precision)
+        uint contributor1ExpectedProportion =
+            (contributor1Amount * 1e18) / totalContributionForRound1;
+        uint contributor1ActualProportion =
+            (contributor1Issuance * 1e18) / totalIssuanceForRound1;
+
+        uint contributor2ExpectedProportion =
+            (contributor2Amount * 1e18) / totalContributionForRound1;
+        uint contributor2ActualProportion =
+            (contributor2Issuance * 1e18) / totalIssuanceForRound1;
+
+        // Using 0.001e18 (0.1%) as the maximum relative error
+        assertApproxEqRel(
+            contributor1ActualProportion,
+            contributor1ExpectedProportion,
+            0.001e18
+        );
+
+        assertApproxEqRel(
+            contributor2ActualProportion,
+            contributor2ExpectedProportion,
+            0.001e18
+        );
+
+        // verify round 2 contributor
         assertGt(issuanceToken.balanceOf(contributor3), 0);
     }
 }
