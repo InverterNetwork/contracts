@@ -232,9 +232,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Round has already started and cannot be modified.
     error Module__LM_PC_FundingPot__RoundAlreadyStarted();
 
-    /// @notice Hook function is required when a hook contract is provided.
-    error Module__LM_PC_FundingPot__HookFunctionRequiredWithContract();
-
     /// @notice Thrown when a hook contract is specified without a hook function.
     error Module__LM_PC_FundingPot__HookFunctionRequiredWithHookContract();
 
@@ -249,9 +246,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid access criteria ID.
     error Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
-
-    /// @notice Cannot set Privileges for open access criteria.
-    error Module__LM_PC_FundingPot__CannotSetPrivilegesForOpenAccessCriteria();
 
     /// @notice Invalid times.
     error Module__LM_PC_FundingPot__InvalidTimes();
@@ -270,9 +264,6 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice User is not on the allowlist.
     error Module__LM_PC_FundingPot__AccessCriteriaListFailed();
-
-    /// @notice Invalid access criteria type.
-    error Module__LM_PC_FundingPot__InvalidAccessCriteriaType();
 
     /// @notice Access not permitted.
     error Module__LM_PC_FundingPot__AccessNotPermitted();
@@ -391,6 +382,23 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         view
         returns (bool isEligible, uint remainingAmountAllowedToContribute);
 
+    /// @notice Retrieves the total contribution for a specific round.
+    /// @param  roundId_ The ID of the round to check contributions for.
+    /// @return The total contributions for the specified round.
+    function getTotalRoundContribution(uint32 roundId_)
+        external
+        view
+        returns (uint);
+
+    /// @notice Retrieves the contribution amount for a specific user in a round.
+    /// @param  roundId_ The ID of the round to check contributions for.
+    /// @param  user_ The address of the user.
+    /// @return The user's contribution amount for the specified round.
+    function getUserContributionToRound(uint32 roundId_, address user_)
+        external
+        view
+        returns (uint);
+
     // -------------------------------------------------------------------------
     // Public - Mutating
 
@@ -438,27 +446,14 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
     /// @notice Set Access Control Check.
     /// @dev    Only callable by funding pot admin and only before the round has started.
     /// @param  roundId_ ID of the round.
+    /// @param  accessCriteriaType_ access criteria type of the round.
     /// @param  accessCriteriaId_ ID of the access criteria.
     /// @param  nftContract_ Address of the NFT contract.
     /// @param  merkleRoot_ Merkle root for the access criteria.
     /// @param  allowedAddresses_ List of explicitly allowed addresses.
-    function setAccessCriteriaForRound(
+    function setAccessCriteria(
         uint32 roundId_,
-        uint8 accessCriteriaId_,
-        address nftContract_,
-        bytes32 merkleRoot_,
-        address[] memory allowedAddresses_
-    ) external;
-
-    /// @notice Edits an existing access criteria for a round.
-    /// @dev    Only callable by funding pot admin and only before the round has started.
-    /// @param  roundId_ ID of the round.
-    /// @param  accessCriteriaId_ ID of the access criteria.
-    /// @param  nftContract_ Address of the NFT contract.
-    /// @param  merkleRoot_ Merkle root for the access criteria.
-    /// @param  allowedAddresses_ List of explicitly allowed addresses.
-    function editAccessCriteriaForRound(
-        uint32 roundId_,
+        uint8 accessCriteriaType_,
         uint8 accessCriteriaId_,
         address nftContract_,
         bytes32 merkleRoot_,

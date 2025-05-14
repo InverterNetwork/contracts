@@ -5,32 +5,10 @@ pragma solidity 0.8.23;
 import {LM_PC_FundingPot_v1} from
     "src/modules/logicModule/LM_PC_FundingPot_v1.sol";
 
-// Access Mock of the PP_Template_v1 contract for Testing.
+// Access Mock of the LM_PC_FundingPot_v1 contract for Testing.
 contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
     // Use the `exposed_` prefix for functions to expose internal functions for
     // testing.
-
-    /**
-     * @notice Exposes the internal _getTotalRoundContribution function for testing
-     */
-    function exposed_getTotalRoundContributions(uint32 roundId_)
-        external
-        view
-        returns (uint)
-    {
-        return _getTotalRoundContribution(roundId_);
-    }
-
-    /**
-     * @notice Exposes the internal _getUserContributionToRound function for testing
-     */
-    function exposed_getUserContributionToRound(uint32 roundId_, address user_)
-        external
-        view
-        returns (uint)
-    {
-        return _getUserContributionToRound(roundId_, user_);
-    }
 
     /**
      * @notice Exposes the internal _validTimes function for testing
@@ -122,6 +100,24 @@ contract LM_PC_FundingPot_v1_Exposed is LM_PC_FundingPot_v1 {
         returns (uint)
     {
         return _calculateUnusedCapacityFromPreviousRounds(roundId_);
+    }
+
+    function exposed_contributeToRoundFor(
+        address user_,
+        uint32 roundId_,
+        uint amount_,
+        uint8 accessCriteriaId__,
+        bytes32[] memory merkleProof_,
+        uint unspentPersonalCap_
+    ) external {
+        _contributeToRoundFor(
+            user_,
+            roundId_,
+            amount_,
+            accessCriteriaId__,
+            merkleProof_,
+            unspentPersonalCap_
+        );
     }
 
     /**

@@ -24,7 +24,7 @@ import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-import "@oz/utils/cryptography/MerkleProof.sol";
+import {MerkleProof} from "@oz/utils/cryptography/MerkleProof.sol";
 import {EnumerableSet} from "@oz/utils/structs/EnumerableSet.sol";
 
 /**
@@ -123,7 +123,7 @@ contract LM_PC_FundingPot_v1 is
     mapping(
         uint32 roundId
             => mapping(uint8 accessCriteriaId_ => AccessCriteriaPrivileges)
-    ) private roundItToAccessCriteriaIdToPrivileges;
+    ) private roundIdToAccessCriteriaIdToPrivileges;
 
     /// @notice Maps round IDs to user addresses to contribution amounts.
     mapping(uint32 => mapping(address => uint)) private
@@ -147,6 +147,9 @@ contract LM_PC_FundingPot_v1 is
 
     /// @notice Add a mapping to track the next unprocessed index for each round.
     mapping(uint32 => uint) private roundIdToNextUnprocessedIndex;
+
+    /// @notice The next available access criteria ID for each round
+    mapping(uint32 => uint8) private roundIdToNextAccessCriteriaId;
 
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
@@ -250,7 +253,7 @@ contract LM_PC_FundingPot_v1 is
     /// @inheritdoc ILM_PC_FundingPot_v1
     function getRoundAccessCriteriaPrivileges(
         uint32 roundId_,
-        uint8 accessCriteriaId__
+        uint8 accessCriteriaId_
     )
         external
         view
@@ -264,7 +267,7 @@ contract LM_PC_FundingPot_v1 is
     {
         Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria =
-            round.accessCriterias[accessCriteriaId__];
+            round.accessCriterias[accessCriteriaId_];
 
         if (accessCriteria.accessCriteriaType == AccessCriteriaType.UNSET) {
             return (0, false, 0, 0, 0);
@@ -272,7 +275,7 @@ contract LM_PC_FundingPot_v1 is
 
         // Store the privileges in a local variable to reduce stack usage.
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
         return (
             privileges.personalCap,
@@ -327,9 +330,9 @@ contract LM_PC_FundingPot_v1 is
 
         if (isEligible) {
             AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
             uint userPersonalCap = privileges.personalCap;
-            uint userContribution = _getUserContributionToRound(roundId_, user_);
+            uint userContribution = roundIdToUserToContribution[roundId_][user_];
 
             uint personalCapRemaining = userPersonalCap > userContribution
                 ? userPersonalCap - userContribution
@@ -349,6 +352,24 @@ contract LM_PC_FundingPot_v1 is
         }
     }
 
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getTotalRoundContribution(uint32 roundId_)
+        external
+        view
+        returns (uint)
+    {
+        return roundIdToTotalContributions[roundId_];
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getUserContributionToRound(uint32 roundId_, address user_)
+        external
+        view
+        returns (uint)
+    {
+        return roundIdToUserToContribution[roundId_][user_];
+    }
+
     // -------------------------------------------------------------------------
     // Public - Mutating
 
@@ -362,7 +383,9 @@ contract LM_PC_FundingPot_v1 is
         bool autoClosure_,
         bool globalAccumulativeCaps_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint32) {
-        roundCount++;
+        unchecked {
+            roundCount++;
+        }
 
         uint32 roundId = roundCount;
 
@@ -429,94 +452,119 @@ contract LM_PC_FundingPot_v1 is
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
-    function setAccessCriteriaForRound(
+    function setAccessCriteria(
         uint32 roundId_,
-        uint8 accessCriteriaId_,
+        uint8 accessCriteriaType_,
+        uint8 accessCriteriaId_, // Optional: 0 for new, non-zero for edit
         address nftContract_,
         bytes32 merkleRoot_,
         address[] calldata allowedAddresses_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
-        _validateEditRoundParameters(round);
-
-        if (
-            (
-                accessCriteriaId_ == uint8(AccessCriteriaType.NFT)
-                    && nftContract_ == address(0)
-            )
-                || (
-                    accessCriteriaId_ == uint8(AccessCriteriaType.MERKLE)
-                        && merkleRoot_ == bytes32("")
-                )
-                || (
-                    accessCriteriaId_ == uint8(AccessCriteriaType.LIST)
-                        && allowedAddresses_.length == 0
-                )
-        ) {
-            revert Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
-        }
-
-        AccessCriteriaType accessCriteriaType =
-            AccessCriteriaType(accessCriteriaId_);
-        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
-            accessCriteriaType;
-        round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
-        round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
-
-        for (uint i = 0; i < allowedAddresses_.length; i++) {
-            round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
-            = true;
-        }
-
-        emit AccessCriteriaSet(roundId_, accessCriteriaId_);
-    }
-
-    /// @inheritdoc ILM_PC_FundingPot_v1
-    function editAccessCriteriaForRound(
-        uint32 roundId_,
-        uint8 accessCriteriaId_,
-        address nftContract_,
-        bytes32 merkleRoot_,
-        address[] calldata allowedAddresses_
-    ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
-        Round storage round = rounds[roundId_];
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+        if (accessCriteriaType_ > MAX_ACCESS_CRITERIA_ID) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
         _validateEditRoundParameters(round);
 
-        AccessCriteriaType accessCriteriaType =
-            AccessCriteriaType(accessCriteriaId_);
-        round.accessCriterias[accessCriteriaId_].accessCriteriaType =
-            accessCriteriaType;
-        round.accessCriterias[accessCriteriaId_].nftContract = nftContract_;
-        round.accessCriterias[accessCriteriaId_].merkleRoot = merkleRoot_;
+        uint8 criteriaId;
+        bool isEdit = false;
 
-        for (uint i = 0; i < allowedAddresses_.length; i++) {
-            round.accessCriterias[accessCriteriaId_].allowedAddresses[allowedAddresses_[i]]
-            = true;
+        // If accessCriteriaId_ is 0, create a new access criteria
+        // Otherwise, edit the existing one
+        if (accessCriteriaId_ == 0) {
+            unchecked {
+                criteriaId = ++roundIdToNextAccessCriteriaId[roundId_];
+            }
+        } else {
+            criteriaId = accessCriteriaId_;
+            isEdit = true;
+
+            if (
+                round.accessCriterias[criteriaId].accessCriteriaType
+                    == AccessCriteriaType.UNSET
+            ) {
+                revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
+            }
         }
 
-        emit AccessCriteriaEdited(roundId_, accessCriteriaId_);
+        // Validate required data based on access criteria type
+        AccessCriteriaType accessCriteriaType =
+            AccessCriteriaType(accessCriteriaType_);
+        if (accessCriteriaType == AccessCriteriaType.NFT) {
+            if (nftContract_ == address(0)) {
+                revert
+                    Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+            }
+        } else if (accessCriteriaType == AccessCriteriaType.MERKLE) {
+            if (merkleRoot_ == bytes32(0)) {
+                revert
+                    Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+            }
+        } else if (accessCriteriaType == AccessCriteriaType.LIST) {
+            if (allowedAddresses_.length == 0) {
+                revert
+                    Module__LM_PC_FundingPot__MissingRequiredAccessCriteriaData();
+            }
+        }
+
+        // Clear all existing data to prevent stale data
+        round.accessCriterias[criteriaId].nftContract = address(0);
+        round.accessCriterias[criteriaId].merkleRoot = bytes32(0);
+        // @note: When changing allowlists, call removeAllowlistedAddresses first to clear previous entries
+
+        // Set the access criteria type
+        round.accessCriterias[criteriaId].accessCriteriaType =
+            accessCriteriaType;
+
+        // Set only the relevant data based on the access criteria type
+        if (accessCriteriaType == AccessCriteriaType.NFT) {
+            round.accessCriterias[criteriaId].nftContract = nftContract_;
+        } else if (accessCriteriaType == AccessCriteriaType.MERKLE) {
+            round.accessCriterias[criteriaId].merkleRoot = merkleRoot_;
+        } else if (accessCriteriaType == AccessCriteriaType.LIST) {
+            // For LIST type, update the allowed addresses
+            for (uint i = 0; i < allowedAddresses_.length; i++) {
+                unchecked {
+                    round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]
+                    = true;
+                }
+            }
+        }
+
+        // Emit the appropriate event based on whether this is a new setting or an edit
+        if (isEdit) {
+            emit AccessCriteriaEdited(roundId_, criteriaId);
+        } else {
+            emit AccessCriteriaSet(roundId_, criteriaId);
+        }
     }
 
+    // Update removeAllowlistedAddresses to match the new approach
+    /// @inheritdoc ILM_PC_FundingPot_v1
     function removeAllowlistedAddresses(
         uint32 roundId_,
         uint8 accessCriteriaId_,
         address[] calldata addressesToRemove_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+
+        // Verify the access criteria exists
+        if (
+            round.accessCriterias[accessCriteriaId_].accessCriteriaType
+                == AccessCriteriaType.UNSET
+        ) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
         _validateEditRoundParameters(round);
 
         for (uint i = 0; i < addressesToRemove_.length; i++) {
-            round.accessCriterias[accessCriteriaId_].allowedAddresses[addressesToRemove_[i]]
-            = false;
+            unchecked {
+                round.accessCriterias[accessCriteriaId_].allowedAddresses[addressesToRemove_[i]]
+                = false;
+            }
         }
 
         emit AllowlistedAddressesRemoved(
@@ -543,7 +591,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         AccessCriteriaPrivileges storage accessCriteriaPrivileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
         accessCriteriaPrivileges.personalCap = personalCap_;
         accessCriteriaPrivileges.overrideContributionSpan =
@@ -606,11 +654,11 @@ contract LM_PC_FundingPot_v1 is
 
             if (isEligible) {
                 AccessCriteriaPrivileges storage privileges =
-                roundItToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
+                roundIdToAccessCriteriaIdToPrivileges[roundCap.roundId][roundCap
                     .accessCriteriaId];
 
                 uint userContribution =
-                    _getUserContributionToRound(uint32(roundCap.roundId), user_);
+                    roundIdToUserToContribution[roundCap.roundId][user_];
                 uint personalCap = privileges.personalCap;
 
                 if (userContribution < personalCap) {
@@ -684,7 +732,12 @@ contract LM_PC_FundingPot_v1 is
 
         // If autoClosure is false, only admin can process contributors
         if (!round.autoClosure) {
-            _checkRoleModifier(FUNDING_POT_ADMIN_ROLE, _msgSender());
+            _checkRoleModifier(
+                __Module_orchestrator.authorizer().generateRoleId(
+                    address(this), FUNDING_POT_ADMIN_ROLE
+                ),
+                _msgSender()
+            );
         }
 
         uint startIndex = roundIdToNextUnprocessedIndex[roundId_];
@@ -802,7 +855,7 @@ contract LM_PC_FundingPot_v1 is
         );
 
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
         bool canOverrideContributionSpan = privileges.overrideContributionSpan;
 
         if (
@@ -885,14 +938,14 @@ contract LM_PC_FundingPot_v1 is
     /// @param user_ The address of the user to contribute for.
     /// @param roundId_ The ID of the round to contribute to.
     /// @param amount_ The amount to contribute.
-    /// @param accessCriteriaId__ The ID of the access criteria to use for this contribution.
+    /// @param accessCriteriaId_ The ID of the access criteria to use for this contribution.
     /// @param canOverrideContributionSpan_ Whether the contribution span can be overridden.
     /// @param unspentPersonalCap_ The amount of unused capacity from previous rounds.
     function _validateAndAdjustCapsWithUnspentCap(
         address user_,
         uint32 roundId_,
         uint amount_,
-        uint8 accessCriteriaId__,
+        uint8 accessCriteriaId_,
         bool canOverrideContributionSpan_,
         uint unspentPersonalCap_
     ) internal view returns (uint adjustedAmount) {
@@ -901,7 +954,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
 
         if (!canOverrideContributionSpan_ && round.roundCap > 0) {
-            uint totalRoundContribution = _getTotalRoundContribution(roundId_);
+            uint totalRoundContribution = roundIdToTotalContributions[roundId_];
             uint effectiveRoundCap = round.roundCap;
 
             // If global accumulative caps are enabled,
@@ -917,7 +970,10 @@ contract LM_PC_FundingPot_v1 is
             }
 
             // Allow the user to contribute up to the remaining round cap
-            uint remainingRoundCap = effectiveRoundCap - totalRoundContribution;
+            uint remainingRoundCap;
+            unchecked {
+                remainingRoundCap = effectiveRoundCap - totalRoundContribution;
+            }
             if (adjustedAmount > remainingRoundCap) {
                 adjustedAmount = remainingRoundCap;
             }
@@ -925,11 +981,11 @@ contract LM_PC_FundingPot_v1 is
 
         // Check and adjust for personal cap
         uint userPreviousContribution =
-            _getUserContributionToRound(roundId_, user_);
+            roundIdToUserToContribution[roundId_][user_];
 
         // Get the base personal cap for this round and criteria
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId__];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
         uint userPersonalCap = privileges.personalCap;
 
         // Add unspent capacity if global accumulative caps are enabled
@@ -992,44 +1048,18 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (uint unusedCapacityFromPrevious)
     {
-        unusedCapacityFromPrevious = 0;
         // Iterate through all previous rounds (1 to roundId_-1)
         for (uint32 i = 1; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
             if (!prevRound.globalAccumulativeCaps) continue;
 
-            uint prevRoundTotal = _getTotalRoundContribution(i);
+            uint prevRoundTotal = roundIdToTotalContributions[i];
             if (prevRoundTotal < prevRound.roundCap) {
                 unusedCapacityFromPrevious +=
                     (prevRound.roundCap - prevRoundTotal);
             }
         }
         return unusedCapacityFromPrevious;
-    }
-
-    /// @notice Retrieves the total contribution for a specific round.
-    /// @dev    Returns the accumulated contributions for the given round.
-    /// @param  roundId_ The ID of the round to check contributions for.
-    /// @return The total contributions for the specified round.
-    function _getTotalRoundContribution(uint32 roundId_)
-        internal
-        view
-        returns (uint)
-    {
-        return roundIdToTotalContributions[roundId_];
-    }
-
-    /// @notice Retrieves the contribution amount for a specific user in a round.
-    /// @dev    Returns the individual user's contribution for the given round.
-    /// @param  roundId_ The ID of the round to check contributions for.
-    /// @param  user_ The address of the user.
-    /// @return The user's contribution amount for the specified round.
-    function _getUserContributionToRound(uint32 roundId_, address user_)
-        internal
-        view
-        returns (uint)
-    {
-        return roundIdToUserToContribution[roundId_][user_];
     }
 
     /// @notice Verifies NFT ownership for access control.
@@ -1148,9 +1178,12 @@ contract LM_PC_FundingPot_v1 is
 
                 if (contributionByAccessCriteria == 0) continue;
 
-                uint tokensForThisAccessCriteria = (
-                    contributionByAccessCriteria * tokensBought
-                ) / totalContributions;
+                uint tokensForThisAccessCriteria;
+                unchecked {
+                    tokensForThisAccessCriteria = (
+                        contributionByAccessCriteria * tokensBought
+                    ) / totalContributions;
+                }
 
                 _createAndAddPaymentOrder(
                     roundId_,
@@ -1185,26 +1218,34 @@ contract LM_PC_FundingPot_v1 is
         uint8 flagCount = 0;
 
         if (start_ > 0) {
-            flags |= bytes32(uint(1) << 1);
+            flags |= bytes32(uint(1) << FLAG_START);
             data[flagCount] = bytes32(start_);
-            flagCount++;
+            unchecked {
+                flagCount++;
+            }
         }
 
         if (cliff_ > 0) {
-            flags |= bytes32(uint(1) << 2);
+            flags |= bytes32(uint(1) << FLAG_CLIFF);
             data[flagCount] = bytes32(cliff_);
-            flagCount++;
+            unchecked {
+                flagCount++;
+            }
         }
 
         if (end_ > 0) {
-            flags |= bytes32(uint(1) << 3);
+            flags |= bytes32(uint(1) << FLAG_END);
             data[flagCount] = bytes32(end_);
-            flagCount++;
+            unchecked {
+                flagCount++;
+            }
         }
 
         finalData = new bytes32[](flagCount);
-        for (uint8 j = 0; j < flagCount; j++) {
-            finalData[j] = data[j];
+        for (uint8 j = 0; j < flagCount; ++j) {
+            unchecked {
+                finalData[j] = data[j];
+            }
         }
 
         return (flags, finalData);
@@ -1225,7 +1266,7 @@ contract LM_PC_FundingPot_v1 is
         address issuanceToken_
     ) internal {
         AccessCriteriaPrivileges storage privileges =
-            roundItToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
 
         uint start = privileges.start;
         uint cliff = privileges.cliff;
@@ -1259,7 +1300,7 @@ contract LM_PC_FundingPot_v1 is
     }
 
     function _buyBondingCurveToken(uint32 roundId_) internal {
-        uint totalContributions = _getTotalRoundContribution(roundId_);
+        uint totalContributions = roundIdToTotalContributions[roundId_];
         if (totalContributions == 0) {
             revert Module__LM_PC_FundingPot__NoContributions();
         }

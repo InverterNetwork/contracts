@@ -38,3 +38,18 @@ contract ERC721Mock is ERC721URIStorage, Ownable {
         _setTokenURI(tokenId, tokenURI);
     }
 }
+
+// Mock contracts for testing hooks
+contract MockHookContract {
+    bool public hookExecuted;
+
+    function executeHook() external {
+        hookExecuted = true;
+    }
+}
+
+contract MockFailingHookContract {
+    function executeHook() external pure {
+        revert("Hook execution failed");
+    }
+}
