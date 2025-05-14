@@ -38,42 +38,22 @@ import {IERC20PaymentClientBase_v2} from
  *                  - FAILED: The order has failed due to the transfer failing
  *                    (blacklisted address).
  *
- * @custom:setup   This module requires the following MANDATORY setup steps:
+ * @custom:setup   OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Configure Queue Operators:
  *                    - Purpose: Queue operators are authorized to cancel payment
  *                               orders in the queue, and claim collateral for
  *                               failed payments.
- *                    - How:     The OrchestratorAdmin (or
- *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
- *                               1. Retrieve the queue operator role identifier.
- *                               2. Grant the role to desired addresses.
- *                    - Example: module.grantModuleRole(
- *                                module.getQueueOperatorRole(),
- *                                operatorAddress
- *                               );
- *
- *                 OPTIONAL setup steps for enhanced administration:
- *
- *                 1. Custom Queue Operator Admin:
- *                    - Purpose: Enables delegation of queue operator management
- *                               to a dedicated admin role instead of relying on
- *                               the OrchestratorAdmin. This allows for more
- *                               granular access control and operational
- *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles.
- *                               2. Transfer admin rights through the Authorizer.
- *                    - Example: authorizer.transferAdminRole(
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getQueueOperatorRole()
- *                               ),
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getQueueOperatorRoleAdmin()
- *                                )
- *                               );
+ *                                1. Create a Queue operator role
+ *                                2. Add access permission for the
+ *                                   claimPreviouslyUnclaimableToTreasury() and
+ *                                   cancelPaymentOrderThroughQueueId()
+ *                                   functions to the Queue operator role.
+ *                                3. Grant the role to desired addresses.
+ *                    - Example: authorizer.createRole();
+ *                               authorizer.addAccessPermission();
+ *                               authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to

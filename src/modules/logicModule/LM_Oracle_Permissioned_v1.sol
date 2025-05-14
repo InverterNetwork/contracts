@@ -14,7 +14,6 @@ import {IERC20Metadata} from "@oz/token/ERC20/extensions/IERC20Metadata.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
 
-//@todo adapt?
 /**
  * @title   Manual External Price Oracle Implementation.
  *
@@ -50,14 +49,16 @@ import {ERC165Upgradeable} from
  *                 1. Configure Price Setter Role:
  *                    - Purpose: The price setter role is authorized to set
  *                               prices for issuance and redemption operations.
- *                    - How:     The OrchestratorAdmin (or PRICE_SETTER_ROLE_ADMIN
- *                               if configured) must:
- *                               1. Retrieve the price setter role identifier.
- *                               2. Grant the role to desired addresses.
- *                    - Example: module.grantModuleRole(
- *                                module.getPriceSetterRole(),
- *                                operatorAddress
- *                               );
+ *                    - How:     The OrchestratorAdmin must:
+ *                                1. Create a price setter role
+ *                                2. Add access permission for the
+ *                                   setIssuancePrice(), setRedemptionPrice()
+ *                                   and setIssuanceAndRedemptionPrice()
+ *                                   functions to the price setter role.
+ *                                3. Grant the role to desired addresses.
+ *                    - Example: authorizer.createRole();
+ *                               authorizer.addAccessPermission();
+ *                               authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer
