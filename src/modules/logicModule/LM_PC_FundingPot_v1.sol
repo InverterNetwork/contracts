@@ -151,6 +151,11 @@ contract LM_PC_FundingPot_v1 is
     /// @notice The next available access criteria ID for each round
     mapping(uint32 => uint8) private roundIdToNextAccessCriteriaId;
 
+    /// @notice The minimum round ID (inclusive, >= 1) to consider for accumulation calculations.
+    /// @dev    Defaults to 1. If a target round's mode allows accumulation,
+    ///         only previous rounds with roundId >= globalAccumulationStartRoundId will be included.
+    uint32 internal globalAccumulationStartRoundId;
+
     /// @notice Storage gap for future upgrades.
     uint[50] private __gap;
 
@@ -368,6 +373,15 @@ contract LM_PC_FundingPot_v1 is
         returns (uint)
     {
         return roundIdToUserToContribution[roundId_][user_];
+    }
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function getGlobalAccumulationStartRoundId()
+        external
+        view
+        returns (uint32)
+    {
+        return globalAccumulationStartRoundId;
     }
 
     // -------------------------------------------------------------------------
@@ -752,6 +766,26 @@ contract LM_PC_FundingPot_v1 is
         roundIdToNextUnprocessedIndex[roundId_] = endIndex;
     }
 
+
+    /// @inheritdoc ILM_PC_FundingPot_v1
+    function setGlobalAccumulationStart(uint32 startRoundId_)
+        external
+        onlyModuleRole(FUNDING_POT_ADMIN_ROLE)
+    {
+        if (startRoundId_ == 0) {
+            revert Module__LM_PC_FundingPot__StartRoundCannotBeZero();
+        }
+        if (startRoundId_ > roundCount) {
+            revert Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(
+                startRoundId_, roundCount
+            );
+        }
+
+        globalAccumulationStartRoundId = startRoundId_;
+
+        emit GlobalAccumulationStartSet(startRoundId_);
+    }
+
     // -------------------------------------------------------------------------
     // Internal
 
@@ -1080,8 +1114,14 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (uint unusedCapacityFromPrevious)
     {
-        // Iterate through all previous rounds (1 to roundId_-1)
-        for (uint32 i = 1; i < roundId_; ++i) {
+        uint32 startAccumulationFrom = globalAccumulationStartRoundId;
+
+        if (startAccumulationFrom >= roundId_) {
+            return 0; // No rounds to consider for accumulation
+        }
+
+        // Iterate through previous rounds starting from the globalAccumulationStartRoundId
+        for (uint32 i = startAccumulationFrom; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
             // Only consider previous rounds that allowed total accumulation
             if (

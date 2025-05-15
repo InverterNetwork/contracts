@@ -225,6 +225,10 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint32 indexed roundId_, uint startIndex_, uint endIndex_
     );
 
+    /// @notice Emitted when the global accumulation start round ID is updated.
+    /// @param startRoundId The new round ID from which accumulation calculations will begin (inclusive, must be >= 1).
+    event GlobalAccumulationStartSet(uint32 startRoundId);
+
     // -------------------------------------------------------------------------
     // Errors
 
@@ -302,6 +306,16 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
 
     /// @notice Invalid batch parameters.
     error Module__LM_PC_FundingPot__InvalidBatchParameters();
+
+    /// @notice Start round ID must be greater than zero.
+    error Module__LM_PC_FundingPot__StartRoundCannotBeZero();
+
+    /// @notice Start round ID cannot be greater than the current round count.
+    /// @param startRoundId_ The provided start round ID.
+    /// @param currentRoundCount_ The current total number of rounds.
+    error Module__LM_PC_FundingPot__StartRoundGreaterThanRoundCount(
+        uint32 startRoundId_, uint32 currentRoundCount_
+    );
 
     // -------------------------------------------------------------------------
     // Public - Getters
@@ -409,6 +423,16 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         external
         view
         returns (uint);
+
+    /// @notice Retrieves the globally configured start round ID for accumulation calculations.
+    /// @dev    Accumulation (both personal and total) will only consider previous rounds
+    ///         with IDs greater than or equal to this value, provided the target round's
+    ///         AccumulationMode allows it. Defaults to 1.
+    /// @return The first round ID (inclusive) to consider for accumulation.
+    function getGlobalAccumulationStartRoundId()
+        external
+        view
+        returns (uint32);
 
     // -------------------------------------------------------------------------
     // Public - Mutating
@@ -543,4 +567,10 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint32 roundId_,
         uint batchSize_
     ) external;
+
+    /// @notice Sets the global minimum round ID from which accumulation calculations should begin.
+    /// @dev    Only callable by `FUNDING_POT_ADMIN_ROLE`. This setting affects all future
+    ///         accumulation calculations across the module. The start round must be >= 1 and cannot exceed the current round count.
+    /// @param  startRoundId_ The first round ID (inclusive, >= 1) to consider for accumulation.
+    function setGlobalAccumulationStart(uint32 startRoundId_) external;
 }
