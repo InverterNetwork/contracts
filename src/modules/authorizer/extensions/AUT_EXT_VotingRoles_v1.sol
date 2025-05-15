@@ -47,9 +47,9 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     // Modifiers
 
     /// @notice	Reverts if caller is not the module itself.
-    modifier onlyCallableByMotion() {
+    modifier onlySelf() {
         if (_msgSender() != address(this)) {
-            revert Module__VotingRoleManager__OnlyCallableByMotion();
+            revert Module__VotingRoleManager__OnlySelfCallAllowed();
         }
         _;
     }
@@ -263,7 +263,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     // Mutating - Configuration Functions
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function setThreshold(uint newThreshold_) public onlyCallableByMotion {
+    function setThreshold(uint newThreshold_) public onlySelf {
         // Revert if the threshold is set incorrectly.
         _validateThreshold(_voterCount, newThreshold_);
 
@@ -272,10 +272,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     }
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function setVotingDuration(uint newVoteDuration_)
-        external
-        onlyCallableByMotion
-    {
+    function setVotingDuration(uint newVoteDuration_) external onlySelf {
         // Revert if votingDuration outside of bounds.
         if (
             newVoteDuration_ < MIN_VOTING_DURATION
@@ -292,11 +289,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     // Mutating - Voter Management Functions
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function addVoter(address who_)
-        public
-        onlyCallableByMotion
-        isValidVoterAddress(who_)
-    {
+    function addVoter(address who_) public onlySelf isValidVoterAddress(who_) {
         if (!_isVoter[who_]) {
             _isVoter[who_] = true;
             unchecked {
@@ -318,7 +311,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     }
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function removeVoter(address who_) public onlyCallableByMotion {
+    function removeVoter(address who_) public onlySelf {
         _removeVoter(who_);
 
         // Revert if the threshold would be invalid after this.
@@ -328,7 +321,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function removeVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external
-        onlyCallableByMotion
+        onlySelf
     {
         _removeVoter(who_);
 

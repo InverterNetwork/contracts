@@ -497,7 +497,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 IAUT_EXT_VotingRoles_v1
-                    .Module__VotingRoleManager__OnlyCallableByMotion
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
                     .selector
             );
             vm.prank(users[i]); // authorized, but not Module
@@ -516,7 +516,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 IAUT_EXT_VotingRoles_v1
-                    .Module__VotingRoleManager__OnlyCallableByMotion
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
                     .selector
             );
             vm.prank(users[i]); // authorized, but not Module
@@ -1186,7 +1186,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 IAUT_EXT_VotingRoles_v1
-                    .Module__VotingRoleManager__OnlyCallableByMotion
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
                     .selector
             );
             vm.prank(users[i]); // authorized, but not orchestrator
@@ -1289,7 +1289,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         for (uint i; i < users.length; ++i) {
             vm.expectRevert(
                 IAUT_EXT_VotingRoles_v1
-                    .Module__VotingRoleManager__OnlyCallableByMotion
+                    .Module__VotingRoleManager__OnlySelfCallAllowed
                     .selector
             );
             vm.prank(users[i]); // authorized, but not orchestrator
