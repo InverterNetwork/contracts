@@ -178,7 +178,7 @@ contract FundingPotE2E is E2ETest {
             address(0), // no hook
             bytes(""), // no hook function
             false, // auto closure
-            false // no global caps
+            ILM_PC_FundingPot_v1.AccumulationMode.Disabled // no global caps
         );
 
         // Round 2
@@ -189,7 +189,7 @@ contract FundingPotE2E is E2ETest {
             address(0), // no hook
             bytes(""), // no hook function
             true, // auto closure
-            false // no global caps
+            ILM_PC_FundingPot_v1.AccumulationMode.Disabled // no global caps
         );
 
         // 4. Set access criteria for the rounds

@@ -195,7 +195,7 @@ contract LM_PC_FundingPot_v1 is
             address hookContract,
             bytes memory hookFunction,
             bool autoClosure,
-            bool globalAccumulativeCaps
+            AccumulationMode accumulationMode
         )
     {
         Round storage round = rounds[roundId_];
@@ -206,7 +206,7 @@ contract LM_PC_FundingPot_v1 is
             round.hookContract,
             round.hookFunction,
             round.autoClosure,
-            round.globalAccumulativeCaps
+            round.accumulationMode
         );
     }
 
@@ -381,7 +381,7 @@ contract LM_PC_FundingPot_v1 is
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) returns (uint32) {
         unchecked {
             roundCount++;
@@ -396,7 +396,7 @@ contract LM_PC_FundingPot_v1 is
         round.hookContract = hookContract_;
         round.hookFunction = hookFunction_;
         round.autoClosure = autoClosure_;
-        round.globalAccumulativeCaps = globalAccumulativeCaps_;
+        round.accumulationMode = accumulationMode_;
 
         _validateRoundParameters(round);
 
@@ -408,7 +408,7 @@ contract LM_PC_FundingPot_v1 is
             hookContract_,
             hookFunction_,
             autoClosure_,
-            globalAccumulativeCaps_
+            accumulationMode_
         );
 
         return uint32(roundId);
@@ -423,7 +423,7 @@ contract LM_PC_FundingPot_v1 is
         address hookContract_,
         bytes memory hookFunction_,
         bool autoClosure_,
-        bool globalAccumulativeCaps_
+        AccumulationMode accumulationMode_
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
@@ -435,7 +435,7 @@ contract LM_PC_FundingPot_v1 is
         round.hookContract = hookContract_;
         round.hookFunction = hookFunction_;
         round.autoClosure = autoClosure_;
-        round.globalAccumulativeCaps = globalAccumulativeCaps_;
+        round.accumulationMode = accumulationMode_;
 
         _validateRoundParameters(round);
 
@@ -447,7 +447,7 @@ contract LM_PC_FundingPot_v1 is
             hookContract_,
             hookFunction_,
             autoClosure_,
-            globalAccumulativeCaps_
+            accumulationMode_
         );
     }
 
@@ -642,7 +642,7 @@ contract LM_PC_FundingPot_v1 is
                 unspentPersonalRoundCaps_[i];
 
             Round storage prevRound = rounds[roundCap.roundId];
-            if (!prevRound.globalAccumulativeCaps) continue;
+            if (prevRound.accumulationMode == AccumulationMode.Disabled) continue;
 
             // Verify the user was eligible for this access criteria in the previous round
             bool isEligible = _checkAccessCriteriaEligibility(
@@ -957,49 +957,81 @@ contract LM_PC_FundingPot_v1 is
             uint totalRoundContribution = roundIdToTotalContributions[roundId_];
             uint effectiveRoundCap = round.roundCap;
 
-            // If global accumulative caps are enabled,
-            // adjust the round cap to acommodate unused capacity from previous rounds
-            if (round.globalAccumulativeCaps) {
+            // If total accumulative caps are enabled for this round,
+            // adjust the effective round cap to accommodate unused capacity from previous rounds
+            // NOTE: This part is relevant for Total/All modes, but the check itself is needed here.
+            if (
+                round.accumulationMode == AccumulationMode.Total
+                    || round.accumulationMode == AccumulationMode.All
+            ) {
                 uint unusedCapacityFromPrevious =
                     _calculateUnusedCapacityFromPreviousRounds(roundId_);
                 effectiveRoundCap += unusedCapacityFromPrevious;
             }
 
             if (totalRoundContribution >= effectiveRoundCap) {
-                revert Module__LM_PC_FundingPot__RoundCapReached();
-            }
-
-            // Allow the user to contribute up to the remaining round cap
-            uint remainingRoundCap;
-            unchecked {
-                remainingRoundCap = effectiveRoundCap - totalRoundContribution;
-            }
-            if (adjustedAmount > remainingRoundCap) {
-                adjustedAmount = remainingRoundCap;
-            }
-        }
-
-        // Check and adjust for personal cap
-        uint userPreviousContribution =
-            roundIdToUserToContribution[roundId_][user_];
-
-        // Get the base personal cap for this round and criteria
-        AccessCriteriaPrivileges storage privileges =
-            roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
-        uint userPersonalCap = privileges.personalCap;
-
-        // Add unspent capacity if global accumulative caps are enabled
-        if (round.globalAccumulativeCaps) {
-            userPersonalCap += unspentPersonalCap_;
-        }
-
-        if (userPreviousContribution + adjustedAmount > userPersonalCap) {
-            if (userPreviousContribution < userPersonalCap) {
-                adjustedAmount = userPersonalCap - userPreviousContribution;
+                // If user tries to contribute a non-zero amount when cap is full, revert.
+                if (amount_ > 0) { 
+                    revert Module__LM_PC_FundingPot__RoundCapReached();
+                }
+                 // If user tries to contribute zero when cap is full, allow adjustedAmount = 0.
+                 adjustedAmount = 0; 
             } else {
-                revert Module__LM_PC_FundingPot__PersonalCapReached();
+                // Cap is not full, calculate remaining and clamp if necessary
+                uint remainingRoundCap = effectiveRoundCap - totalRoundContribution;
+                if (adjustedAmount > remainingRoundCap) {
+                    adjustedAmount = remainingRoundCap;
+                }
             }
         }
+
+        // If round cap check clamped adjustedAmount to 0, and original amount was > 0, we already reverted.
+        // If original amount was 0, adjustedAmount is 0, so we can proceed to personal cap check which will also result in 0.
+        // If adjustedAmount > 0, proceed to personal cap check.
+        if (adjustedAmount == 0 && amount_ > 0) {
+             // This state should ideally not be reached due to the revert above if cap was full.
+             // But as a safeguard, if amount_ was > 0 and adjustedAmount is now 0, return 0.
+             return 0; 
+        }
+
+        // --- Personal Cap Check --- 
+        // Only proceed if adjustedAmount wasn't already set to 0 by round cap or initial amount.
+        if (adjustedAmount > 0) {
+            uint userPreviousContribution = roundIdToUserToContribution[roundId_][user_];
+
+            AccessCriteriaPrivileges storage privileges =
+                roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
+            uint userPersonalCap = privileges.personalCap;
+
+            // Add unspent personal capacity if personal accumulation is enabled for this round (Personal or All)
+            // Explicitly exclude Total mode here.
+            if (
+                round.accumulationMode == AccumulationMode.Personal
+                    || round.accumulationMode == AccumulationMode.All
+            ) {
+                userPersonalCap += unspentPersonalCap_;
+            }
+
+            // Check if the already potentially-clamped amount exceeds personal cap
+            if (userPreviousContribution + adjustedAmount > userPersonalCap) {
+                // If user hasn't reached personal cap yet, clamp further to remaining personal cap.
+                if (userPreviousContribution < userPersonalCap) {
+                    uint remainingPersonalCap = userPersonalCap - userPreviousContribution;
+                    // Ensure we don't accidentally increase amount, only clamp down.
+                    if (remainingPersonalCap < adjustedAmount) { 
+                        adjustedAmount = remainingPersonalCap;
+                    }
+                } else { // User is already at or over personal cap.
+                    // If they tried to contribute a non-zero amount initially, revert.
+                    if (amount_ > 0) { 
+                        revert Module__LM_PC_FundingPot__PersonalCapReached();
+                    }
+                    // If initial amount was 0, just ensure adjustedAmount remains 0.
+                    adjustedAmount = 0;
+                }
+            }
+        }
+        // --- End Personal Cap Check --- '
 
         return adjustedAmount;
     }
@@ -1051,7 +1083,13 @@ contract LM_PC_FundingPot_v1 is
         // Iterate through all previous rounds (1 to roundId_-1)
         for (uint32 i = 1; i < roundId_; ++i) {
             Round storage prevRound = rounds[i];
-            if (!prevRound.globalAccumulativeCaps) continue;
+            // Only consider previous rounds that allowed total accumulation
+            if (
+                prevRound.accumulationMode != AccumulationMode.Total
+                    && prevRound.accumulationMode != AccumulationMode.All
+            ) {
+                continue;
+            }
 
             uint prevRoundTotal = roundIdToTotalContributions[i];
             if (prevRoundTotal < prevRound.roundCap) {
