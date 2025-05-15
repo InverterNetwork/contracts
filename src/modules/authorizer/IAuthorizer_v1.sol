@@ -309,11 +309,11 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @return roleIdCounter_ The number of created role IDs.
     function getRoleIdCounter() external view returns (uint roleIdCounter_);
 
-    /// @notice Returns wether the given roleId has the permission to callthe given function in the target contract.
+    /// @notice Returns whether the given roleId has the permission to call the given function in the target contract.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
     /// @param  roleId_ The roleId that we want to check.
-    /// @return isRolePermissioned_ Returns if the roleId is permissioned to call the function.
+    /// @return isRolePermissioned_ Returns whether the roleId is permissioned to call the function.
     function isRolePermissioned(
         address target_,
         bytes4 selector_,
@@ -344,12 +344,12 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @param  roleName_ The name of the role to create.
     /// @param  respectiveAdminRole_ The role ID of the admin role.
     /// @param  initialMembers_ The addresses of the initial members.
-    /// @return _newRoleId The ID of the newly created role.
+    /// @return newRoleId_ The ID of the newly created role.
     function createRole(
         string memory roleName_,
         bytes32 respectiveAdminRole_,
         address[] memory initialMembers_
-    ) external returns (bytes32 _newRoleId);
+    ) external returns (bytes32 newRoleId_);
 
     /// @notice Changes the name of a role.
     /// @dev    Labels are emitted as events and are therefore not accessible
