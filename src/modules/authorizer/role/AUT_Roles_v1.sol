@@ -323,7 +323,7 @@ contract AUT_Roles_v1 is
             revert Module__Authorizer__InvalidInitialAdmin();
         }
 
-        // Start with 1 to symbolize two roles: DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
+        // Starts at 1, as we already have two roles: DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
         _roleIdCounter = 1;
 
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin
@@ -412,7 +412,8 @@ contract AUT_Roles_v1 is
                 return true;
             }
         }
-        // Caller does not have any of the roles, so they cannot call the function.
+        // Caller does not have any of the roles, so they cannot call the
+        // function.
         return false;
     }
 
@@ -471,7 +472,7 @@ contract AUT_Roles_v1 is
         onlyRole(getRoleAdmin(roleId_))
         idExists(roleId_)
     {
-        // If Role Admin is Burned do nothing
+        // If Role Admin is burned do nothing
         if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
             return;
         }
@@ -547,7 +548,8 @@ contract AUT_Roles_v1 is
         newRoleId_ =
             createRole(roleName_, respectiveAdminRole_, initialMembers_);
 
-        // Run through all target and selector combinations and add permission to role id
+        // Run through all target and selector combinations and add permission
+        // to role id.
 
         for (uint i = 0; i < targetsLength; i++) {
             for (uint j = 0; j < selectors_[i].length; j++) {
