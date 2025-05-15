@@ -265,7 +265,9 @@ contract AUT_Roles_v1 is
     /// @dev     Verifies that the roleId is already existing.
     /// @param  roleId_ The id of the role.
     modifier idExists(bytes32 roleId_) {
-        if (uint(roleId_) > _roleIdCounter) {
+        // If the given roleId is not equal or smaller than the last assigned
+        // roleId, then it is not existing.
+        if (uint(roleId_) > _lastAssignedRoleId) {
             revert Module__Authorizer__RoleIdNotExisting();
         }
         _;
@@ -292,7 +294,7 @@ contract AUT_Roles_v1 is
     /// @dev	This is used to generate unique role IDs for each role.
     /// @dev    Starts at 1, which symbolizes two roles: PUBLIC_ROLE and DEFAULT_ADMIN_ROLE,
     ///         but is immediately incremented when a role is created.
-    uint internal _roleIdCounter;
+    uint internal _lastAssignedRoleId;
 
     /// @dev	Storage gap for future upgrades.
     uint[47] private __gap;
@@ -324,7 +326,7 @@ contract AUT_Roles_v1 is
         }
 
         // Start with 1 to symbolize two roles: DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
-        _roleIdCounter = 1;
+        _lastAssignedRoleId = 1;
 
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin
         // privileges on all Modules in the contract.
@@ -363,8 +365,12 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function getRoleIdCounter() public view returns (uint roleIdCounter_) {
-        roleIdCounter_ = _roleIdCounter;
+    function getLastAssignedRoleId()
+        public
+        view
+        returns (uint lastAssignedRoleId_)
+    {
+        lastAssignedRoleId_ = _lastAssignedRoleId;
     }
 
     /// @inheritdoc IAuthorizer_v1
@@ -434,7 +440,7 @@ contract AUT_Roles_v1 is
         idExists(respectiveAdminRole_)
         returns (bytes32 newRoleId_)
     {
-        newRoleId_ = bytes32(++_roleIdCounter);
+        newRoleId_ = bytes32(++_lastAssignedRoleId);
 
         emit RoleCreated(newRoleId_, roleName_);
 

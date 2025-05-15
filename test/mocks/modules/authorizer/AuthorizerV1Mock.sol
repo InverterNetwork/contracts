@@ -130,7 +130,11 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         returns (bytes32[] memory)
     {}
 
-    function getRoleIdCounter() external view returns (uint roleIdCounter_) {}
+    function getLastAssignedRoleId()
+        external
+        view
+        returns (uint lastAssignedRoleId_)
+    {}
 
     function isRolePermissioned(address, bytes4, bytes32)
         external

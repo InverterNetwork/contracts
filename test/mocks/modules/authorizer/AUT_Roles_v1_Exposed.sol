@@ -8,8 +8,10 @@ contract AUT_Roles_v1_Exposed is AUT_Roles_v1 {
     //==========================================================================
     // State Access Functions
 
-    function changeRoleIdCounter(uint newRoleIdCounterValue_) external {
-        _roleIdCounter = newRoleIdCounterValue_;
+    function changeLastAssignedRoleId(uint newLastAssignedRoleIdValue_)
+        external
+    {
+        _lastAssignedRoleId = newLastAssignedRoleIdValue_;
     }
 
     function addAccessPermission_unrestricted(

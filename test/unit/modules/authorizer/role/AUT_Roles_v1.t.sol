@@ -152,13 +152,13 @@ contract AUT_Roles_v1_Test is ModuleTest {
             └── Then: the function should revert
     */
     function testidExistsModifier(
-        uint _roleIdCounterValue,
+        uint _lastAssignedRoleIdValue,
         bytes32 _givenRoleId
     ) public {
-        _authSuT.changeRoleIdCounter(_roleIdCounterValue);
+        _authSuT.changeLastAssignedRoleId(_lastAssignedRoleIdValue);
         if (
             _givenRoleId != _authSuT.PUBLIC_ROLE()
-                && uint(_givenRoleId) > _roleIdCounterValue
+                && uint(_givenRoleId) > _lastAssignedRoleIdValue
         ) {
             vm.expectRevert(
                 abi.encodeWithSelector(
@@ -402,7 +402,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         public
     {
         // Create All Role Ids
-        _authSuT.changeRoleIdCounter(type(uint).max);
+        _authSuT.changeLastAssignedRoleId(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
@@ -439,7 +439,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.assume(roleId_ != _authSuT.PUBLIC_ROLE());
 
         // Create All Role Ids
-        _authSuT.changeRoleIdCounter(type(uint).max);
+        _authSuT.changeLastAssignedRoleId(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
@@ -503,7 +503,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         bytes32 roleId_
     ) public {
         // Create All Role Ids
-        _authSuT.changeRoleIdCounter(type(uint).max);
+        _authSuT.changeLastAssignedRoleId(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
@@ -534,7 +534,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
     function testRemoveAccessPermission_PermissionExisting(uint seed_) public {
         // Create All Role Ids
-        _authSuT.changeRoleIdCounter(type(uint).max);
+        _authSuT.changeLastAssignedRoleId(type(uint).max);
 
         // Create a random lock setup
         (address target, bytes4 selector) =
@@ -618,10 +618,10 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.assume(members_.length < 2500);
 
         // Create random number of permissions between 0 and half uint max
-        _authSuT.changeRoleIdCounter(bound(seed_, 0, type(uint).max / 2));
+        _authSuT.changeLastAssignedRoleId(bound(seed_, 0, type(uint).max / 2));
 
-        uint currentRoleIdCounter = _authSuT.getRoleIdCounter();
-        bytes32 expectedRoleId = bytes32(currentRoleIdCounter + 1);
+        uint currentLastAssignedRoleId = _authSuT.getLastAssignedRoleId();
+        bytes32 expectedRoleId = bytes32(currentLastAssignedRoleId + 1);
 
         // Expect event
         vm.expectEmit(true, true, true, true);
@@ -630,7 +630,9 @@ contract AUT_Roles_v1_Test is ModuleTest {
         // Create role
         vm.prank(_initialAdmin);
         bytes32 roleId = _authSuT.createRole(
-            roleName_, bytes32(bound(seed_, 0, currentRoleIdCounter)), members_
+            roleName_,
+            bytes32(bound(seed_, 0, currentLastAssignedRoleId)),
+            members_
         );
 
         // Check that roleId is the expected roleId
@@ -721,7 +723,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Create Setup
         // Create random amount of Roles making the next created Role have the given RoleId
-        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        _authSuT.changeLastAssignedRoleId(uint(roleId_) - 1);
         // Create new Role with given RoleAdmin
         vm.prank(_initialAdmin);
         _authSuT.createRole("RoleName", roleAdmin_, new address[](0));
@@ -771,7 +773,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.assume(uint(roleId_) > uint(newAdminRoleId_));
         // Create Setup
         // Create random amount of Roles making the next created Role have the given RoleId
-        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        _authSuT.changeLastAssignedRoleId(uint(roleId_) - 1);
         // Create new Role with given RoleAdmin
         vm.prank(_initialAdmin);
         _authSuT.createRole("RoleName", bytes32(0), new address[](0));
@@ -813,7 +815,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Create Setup
         // Create random amount of Roles making the next created Role have the given RoleId
-        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        _authSuT.changeLastAssignedRoleId(uint(roleId_) - 1);
         // Create new Role with given RoleAdmin
         vm.prank(_initialAdmin);
         _authSuT.createRole("RoleName", roleAdmin_, new address[](0));
@@ -854,7 +856,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.assume(uint(roleId_) > uint(adminRoleId_));
         // Create Setup
         // Create random amount of Roles making the next created Role have the given RoleId
-        _authSuT.changeRoleIdCounter(uint(roleId_) - 1);
+        _authSuT.changeLastAssignedRoleId(uint(roleId_) - 1);
         // Create new Role with given RoleAdmin
         vm.prank(_initialAdmin);
         _authSuT.createRole("RoleName", adminRoleId_, new address[](0));
@@ -1147,7 +1149,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         }
     }
 
-    /// @dev needs all permissions to be unlocked via _authSuT.changeRoleIdCounter(type(uint).max);
+    /// @dev needs all permissions to be unlocked via _authSuT.changeLastAssignedRoleId(type(uint).max);
     function createRandomLockRestrictions(
         uint seed_,
         uint minimumPermissionLength_

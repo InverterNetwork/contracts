@@ -306,8 +306,11 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
         returns (bytes32[] memory permissions_);
 
     /// @notice Returns the number of created role IDs.
-    /// @return roleIdCounter_ The number of created role IDs.
-    function getRoleIdCounter() external view returns (uint roleIdCounter_);
+    /// @return lastAssignedRoleId_ The number of created role IDs.
+    function getLastAssignedRoleId()
+        external
+        view
+        returns (uint lastAssignedRoleId_);
 
     /// @notice Returns wether the given roleId has the permission to callthe given function in the target contract.
     /// @param  target_ The address of the target contract.
