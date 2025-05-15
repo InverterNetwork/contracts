@@ -6,10 +6,10 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
 /**
  * @title   Inverter Token-Gated Role Authorizer Interface
  *
- * @notice  Extends the Inverter's role-based access control to include token gating,
- *          enabling roles to be conditionally assigned based on token ownership.
- *          This mechanism allows for dynamic permissioning tied to specific token
- *          holdings.
+ * @notice  Extends the Inverter's role-based access control to include token
+ *          gating, enabling roles to be conditionally assigned based on token
+ *          ownership. This mechanism allows for dynamic permissioning tied to
+ *          specific token holdings.
  *
  * @dev     Inherits functionality from:
  *          - {IAUT_TokenGated_Roles_v1}: Implementation interface.
@@ -17,7 +17,7 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
  *
  *          Key feeatures:
  *              - Token-based access checks before role assignment.
- *              - Supports both {ERC20} and {ERC721} tokens for role eligibility.
+ *              - Supports both {ERC20} and {ERC721} tokens.
  *
  * @custom:guide
  *          The following guide explains in detail how to use the key features
@@ -53,8 +53,8 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
  *
  *                  - Making a role token gated:
  *                    Making a role token gated is done by calling the
- *                    `setTokenGated` function. This function takes the following
- *                    parameters:
+ *                    `setTokenGated` function. This function takes the
+ *                    following parameters:
  *                    - The role id of the role that we change the token gated
  *                      status of.
  *                    - The boolean that indicates if the role should be token
@@ -119,8 +119,9 @@ import {IAuthorizer_v1} from "@aut/IAuthorizer_v1.sol";
  *                    authorizer.setTokenGated(whitelistedRoleId, false);
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @custom:version  v1.0.0
  *
@@ -135,10 +136,12 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     /// @notice The function is only callable by an active Module.
     error Module__AUT_TokenGated_Roles__RoleNotTokenGated();
 
-    /// @notice The function is only callable if the Module is self-managing its roles.
+    /// @notice The function is only callable if the Module is self-managing
+    ///         its roles.
     error Module__AUT_TokenGated_Roles__RoleNotEmpty();
 
-    /// @notice The function is only callable if the Module is not the public role.
+    /// @notice The function is only callable if the Module is not the public
+    ///         role.
     error Module__AUT_TokenGated_Roles__RoleIsPublic();
 
     /// @notice The token doesn't support balance query.
@@ -192,13 +195,15 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
         view
         returns (bool hasTokenRole_);
 
-    /// @notice Returns the threshold balance for a given token necessary to qualify for a
-    ///         specific role. If the value is 0, the supplied token is not part of the.
-    ///         role's token gating.
-    /// @dev	In case the queried role is not token gated, all calls will return 0.
+    /// @notice Returns the threshold balance for a given token necessary to
+    ///         qualify for a specific role. If the value is 0, the supplied
+    ///         token is not part of the role's token gating.
+    /// @dev	In case the queried role is not token gated, all calls will
+    ///         return 0.
     /// @param  roleId_ The role to be checked on.
     /// @param  token_ The token to check the threshold for.
-    /// @return threshold_ The threshold amount necessary to qualify for a given token role.
+    /// @return threshold_ The threshold amount necessary to qualify for a
+    ///         given token role.
     function getThresholdValue(bytes32 roleId_, address token_)
         external
         returns (uint threshold_);
@@ -207,17 +212,22 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     // Mutating Functions
 
     /// @notice Sets if a role is token-gated or not.
+    /// @dev	Admin access for rescue purposes. If the role has active
+    ///         members, they need to be reovked first.
     /// @param  roleId_ The ID of the role to be modified.
     /// @param  to_ The new value to be set.
-    /// @dev	Admin access for rescue purposes. If the role has active members, they need to be reovked first.
+
     function setTokenGated(bytes32 roleId_, bool to_) external;
 
     /// @notice Sets the minimum threshold for a token-gated role.
+    /// @dev	This function does not validate the threshold. It is
+    ///         technically possible to set a threshold above the total supply
+    ///         of the token.
     /// @param  roleId_  The ID of the role to be modified.
     /// @param  token_ The token for which to the threshold.
-    /// @param  threshold_ The user will need to have at least this number to qualify for the role.
-    /// @dev	This function does not validate the threshold. It is technically possible to set a threshold above
-    ///         the total supply of the token.
+    /// @param  threshold_ The user will need to have at least this number to
+    ///         qualify for the role.
+
     function setThreshold(bytes32 roleId_, address token_, uint threshold_)
         external;
 }

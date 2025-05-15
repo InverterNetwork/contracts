@@ -2,19 +2,21 @@
 pragma solidity ^0.8.0;
 
 interface IAUT_EXT_VotingRoles_v1 {
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Structs
 
-    /// @notice A motion is a proposal to execute an action on a target contract.
+    /// @notice A motion is a proposal to execute an action on a target
+    ///         contract.
     /// @param  target The address of the contract to execute the action on.
     /// @param  action The action data to execute on the target contract.
     /// @param  startTimestamp The timestamp at which the motion starts.
     /// @param  endTimestamp The timestamp at which the motion ends.
-    /// @param  requiredThreshold The required threshold of votes to pass the motion.
+    /// @param  requiredThreshold The required threshold of votes to pass the
+    ///         motion.
     /// @param  forVotes The number of votes in favor of the motion.
     /// @param  againstVotes The number of votes against the motion.
     /// @param  abstainVotes The number of votes abstaining from the motion.
-    /// @param  receipts The receipts of votes for the motion address => Receipt
+    /// @param  receipts The receipts of votes for the motion address.
     /// @param  executedAt The timestamp at which the motion was executed.
     /// @param  executionResult The result of the execution.
     /// @param  executionReturnData The return data of the execution.
@@ -35,13 +37,13 @@ interface IAUT_EXT_VotingRoles_v1 {
 
     /// @notice A receipt is a vote cast for a motion.
     /// @param  hasVoted Whether the voter has already voted.
-    /// @param  support The value that indicates wether the voter supports the motion.
+    /// @param  support The value that indicates wether the voter supports the
+    ///         motion.
     struct Receipt {
         bool hasVoted;
         uint8 support;
     }
-
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Errors
 
     /// @notice This function is only callable by a motion of this contract.
@@ -75,7 +77,8 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @notice A user cannot vote twice.
     error Module__VotingRoleManager__AttemptedDoubleVote();
 
-    /// @notice A motion cannot be executed if the voting duration hasn't passed.
+    /// @notice A motion cannot be executed if the voting duration hasn't
+    ///         passed.
     error Module__VotingRoleManager__MotionInVotingPhase();
 
     /// @notice A motion cannot be voted on if the duration has been exceeded.
@@ -87,7 +90,7 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @notice A motion cannot be executed if it didn't reach the threshold.
     error Module__VotingRoleManager__ThresholdNotReached();
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Events
 
     /// @notice Event emitted when a new voter address gets added.
@@ -126,16 +129,28 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param  motionId_ The motion ID.
     event MotionExecuted(bytes32 indexed motionId_);
 
+    // ========================================================================
+    // Public Getter Functions
+
     //--------------------------------------------------------------------------
-    // Getter Functions
+    // Getter - Constants
 
     /// @notice The maximum voting duration.
-    /// @return The maximum voting duration.
-    function MAX_VOTING_DURATION() external view returns (uint);
+    /// @return maxVotingDuration_ The maximum voting duration.
+    function MAX_VOTING_DURATION()
+        external
+        view
+        returns (uint maxVotingDuration_);
 
     /// @notice The minimum voting duration.
-    /// @return The minimum voting duration.
-    function MIN_VOTING_DURATION() external view returns (uint);
+    /// @return minVotingDuration_ The minimum voting duration.
+    function MIN_VOTING_DURATION()
+        external
+        view
+        returns (uint minVotingDuration_);
+
+    //--------------------------------------------------------------------------
+    // Getter - State Access Functions
 
     /// @notice Checks whether an address is a voter.
     /// @param  who_ The address to check.
@@ -148,7 +163,8 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @return action_ The action data to execute on the target contract.
     /// @return startTimestamp_ The timestamp at which the motion starts.
     /// @return endTimestamp_ The timestamp at which the motion ends.
-    /// @return requiredThreshold_ The required threshold of votes to pass the motion.
+    /// @return requiredThreshold_ The required threshold of votes to pass the
+    ///         motion.
     /// @return forVotes_ The number of votes in favor of the motion.
     /// @return againstVotes_ The number of votes against the motion.
     /// @return abstainVotes_ The number of votes abstaining from the motion.
@@ -189,16 +205,30 @@ interface IAUT_EXT_VotingRoles_v1 {
     function getVoteDuration() external view returns (uint voteDuration_);
 
     /// @notice Gets the receipt of a voter for a motion.
-    /// @param  _ID The ID of the motion.
+    /// @param  id_ The ID of the motion.
     /// @param  voter_ The address of the voter.
     /// @return receipt_ The receipt of the voter.
-    function getReceipt(bytes32 _ID, address voter_)
+    function getReceipt(bytes32 id_, address voter_)
         external
         view
         returns (Receipt memory receipt_);
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Mutating Functions
+
+    //--------------------------------------------------------------------------
+    // Mutating - Configuration Functions
+
+    /// @notice Sets the threshold.
+    /// @param  newThreshold_ The new threshold.
+    function setThreshold(uint newThreshold_) external;
+
+    /// @notice Sets the voting duration.
+    /// @param  newVoteDuration_ The new voting duration.
+    function setVotingDuration(uint newVoteDuration_) external;
+
+    //--------------------------------------------------------------------------
+    // Mutating - Voter Management Functions
 
     /// @notice Adds a voter.
     /// @param  who_ The address to add.
@@ -220,25 +250,21 @@ interface IAUT_EXT_VotingRoles_v1 {
     function removeVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external;
 
-    /// @notice Sets the threshold.
-    /// @param  newThreshold_ The new threshold.
-    function setThreshold(uint newThreshold_) external;
-
-    /// @notice Sets the voting duration.
-    /// @param  newVoteDuration_ The new voting duration.
-    function setVotingDuration(uint newVoteDuration_) external;
+    //--------------------------------------------------------------------------
+    // Mutating - Governance Functions
 
     /// @notice Creates a motion.
     /// @param  target_ The address of the contract to execute the action on.
     /// @param  action_ The action data to execute on the target contract.
-    /// @return id_ The ID of the created motion.
+    /// @return motionId_ The ID of the created motion.
     function createMotion(address target_, bytes calldata action_)
         external
-        returns (bytes32 id_);
+        returns (bytes32 motionId_);
 
     /// @notice Casts a vote for a motion.
     /// @param  motionId_ The ID of the motion.
-    /// @param  support_ The value that indicates wether the voter supports the motion.
+    /// @param  support_ The value that indicates wether the voter supports the
+    ///         motion.
     function castVote(bytes32 motionId_, uint8 support_) external;
 
     /// @notice Executes a motion.

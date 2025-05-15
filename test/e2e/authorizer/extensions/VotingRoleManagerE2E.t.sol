@@ -196,8 +196,8 @@ contract VotingRoleManagerE2E is E2ETest {
     }
 
     function _getMotionExecutionResult(
-        AUT_EXT_VotingRoles_v1 votingRoles,
-        bytes32 motionId
+        AUT_EXT_VotingRoles_v1 votingRoles_,
+        bytes32 motionId_
     ) internal view returns (bool, bytes memory) {
         (
             , // address _addr
@@ -211,7 +211,7 @@ contract VotingRoleManagerE2E is E2ETest {
             , // uint _excAt
             bool _excRes,
             bytes memory _excData
-        ) = votingRoles.motions(motionId);
+        ) = votingRoles_.getMotion(motionId_);
 
         return (_excRes, _excData);
     }

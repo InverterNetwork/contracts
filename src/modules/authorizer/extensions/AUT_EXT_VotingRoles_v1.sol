@@ -13,17 +13,19 @@ import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
 /**
  * @title   Inverter Voting Role Manager
  *
- * @notice  Facilitates voting and motion management within the Inverter Network,
- *          allowing designated voters to participate in governance through proposals,
- *          voting, and execution of decisions.
+ * @notice  Facilitates voting and motion management within the Inverter
+ *          Network, allowing designated voters to participate in governance
+ *          through proposals, voting, and execution of decisions.
  *
- * @dev     Supports setting thresholds for decision-making, managing voter lists,
- *          creating _motions, casting votes, and executing actions based on collective
- *          decisions. This structure enhances governance transparency and efficacy.
+ * @dev     Supports setting thresholds for decision-making, managing voter
+ *          lists, creating _motions, casting votes, and executing actions
+ *          based on collective decisions. This structure enhances governance
+ *          transparency and efficacy.
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @author  Inverter Network
  */
@@ -41,10 +43,10 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             || super.supportsInterface(interfaceId_);
     }
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Modifiers
 
-    /// @dev	Reverts if caller is not the module itself.
+    /// @notice	Reverts if caller is not the module itself.
     modifier onlyCallableByMotion() {
         if (_msgSender() != address(this)) {
             revert Module__VotingRoleManager__OnlyCallableByMotion();
@@ -52,7 +54,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    /// @dev	Reverts if caller is not a voter.
+    /// @notice	Reverts if caller is not a voter.
     modifier onlyVoter() {
         if (!_isVoter[_msgSender()]) {
             revert Module__VotingRoleManager__CallerNotVoter();
@@ -60,7 +62,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    /// @dev	Reverts if voter address is invalid.
+    /// @notice	Reverts if voter address is invalid.
     /// @param  voter_ The address to check.
     modifier isValidVoterAddress(address voter_) {
         if (
@@ -72,7 +74,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         _;
     }
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Constants
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
@@ -81,14 +83,14 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     uint public constant MIN_VOTING_DURATION = 1 days;
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Storage
 
     /// @notice Mapping that stores if an address is a voter.
     mapping(address voter => bool isVoter) internal _isVoter;
 
     /// @notice Mapping that stores the motions.
-    mapping(bytes32 => Motion) internal _motions;
+    mapping(bytes32 motionId => Motion motion) internal _motions;
 
     /// @notice The counter for motions.
     uint internal _motionCount;
@@ -105,7 +107,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Initialization
 
     /// @inheritdoc Module_v1
@@ -131,7 +133,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__EmptyVoters();
         }
 
-        // Revert if the threshold is set incorrectly
+        // Revert if the threshold is set incorrectly.
         _validateThreshold(votersLen, threshold);
 
         // Revert if votingDuration outside of bounds.
@@ -174,8 +176,11 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         emit VoteDurationUpdated(0, voteDuration);
     }
 
-    //--------------------------------------------------------------------------
+    //==========================================================================
     // Getter Functions
+
+    //--------------------------------------------------------------------------
+    // Getter - State Access Functions
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function isVoter(address who_) external view returns (bool isVoter_) {
@@ -251,12 +256,15 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         return (r);
     }
 
+    //==========================================================================
+    // Mutating Functions
+
     //--------------------------------------------------------------------------
-    // Configuration Functions
+    // Mutating - Configuration Functions
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function setThreshold(uint newThreshold_) public onlyCallableByMotion {
-        // Revert if the threshold is set incorrectly
+        // Revert if the threshold is set incorrectly.
         _validateThreshold(_voterCount, newThreshold_);
 
         emit ThresholdUpdated(_threshold, newThreshold_);
@@ -281,7 +289,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     }
 
     //--------------------------------------------------------------------------
-    // Voter Management Functions
+    // Mutating - Voter Management Functions
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
     function addVoter(address who_)
@@ -302,10 +310,10 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     function addVoterAndUpdateThreshold(address who_, uint newThreshold_)
         external
     {
-        // Add the new voter
+        // Add the new voter.
         addVoter(who_);
 
-        // Set the new threshold (also validates it)
+        // Set the new threshold (also validates it).
         setThreshold(newThreshold_);
     }
 
@@ -313,7 +321,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     function removeVoter(address who_) public onlyCallableByMotion {
         _removeVoter(who_);
 
-        // Revert if the threshold would be invalid after this
+        // Revert if the threshold would be invalid after this.
         _validateThreshold(_voterCount, _threshold);
     }
 
@@ -324,50 +332,30 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     {
         _removeVoter(who_);
 
-        // Set the new threshold (also validates it)
+        // Set the new threshold (also validates it).
         setThreshold(newThreshold_);
     }
 
     //--------------------------------------------------------------------------
-    // Internal Functions
-
-    /// @dev	Removes a voter from the list of voters.
-    /// @param  who_ The address of the voter to remove.
-    function _removeVoter(address who_) internal {
-        // Revert if trying to remove the last voter
-        if (_voterCount == 1) {
-            revert Module__VotingRoleManager__EmptyVoters();
-        }
-
-        if (_isVoter[who_]) {
-            delete _isVoter[who_];
-            unchecked {
-                --_voterCount;
-            }
-            emit VoterRemoved(who_);
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    // Governance Functions
+    // Mutating - Governance Functions
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function createMotion(address target, bytes calldata action)
+    function createMotion(address target_, bytes calldata action_)
         external
         onlyVoter
-        returns (bytes32)
+        returns (bytes32 motionId_)
     {
         // Cache motion's id.
         bytes32 motionId =
-            keccak256(abi.encodePacked(target, action, _motionCount));
+            keccak256(abi.encodePacked(target_, action_, _motionCount));
 
         // Get pointer to motion.
         // Note that the motion instance is uninitialized.
         Motion storage motion_ = _motions[motionId];
 
         // Initialize motion.
-        motion_.target = target;
-        motion_.action = action;
+        motion_.target = target_;
+        motion_.action = action_;
 
         motion_.startTimestamp = block.timestamp;
         motion_.endTimestamp = block.timestamp + _voteDuration;
@@ -384,24 +372,24 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
     }
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function castVote(bytes32 motionId, uint8 support) external onlyVoter {
+    function castVote(bytes32 motionId_, uint8 support_) external onlyVoter {
         // Revert if support invalid.
-        // 0 = for
-        // 1 = against
-        // 2 = abstain
-        if (support > 2) {
+        // - 0 = for
+        // - 1 = against
+        // - 2 = abstain
+        if (support_ > 2) {
             revert Module__VotingRoleManager__InvalidSupport();
         }
 
         // Get pointer to the motion.
-        Motion storage motion_ = _motions[motionId];
+        Motion storage motion_ = _motions[motionId_];
 
-        // Revert if motionID invalid
+        // Revert if motionID invalid.
         if (motion_.startTimestamp == 0) {
             revert Module__VotingRoleManager__InvalidMotionId();
         }
 
-        // Revert if voting duration exceeded
+        // Revert if voting duration exceeded.
         if (block.timestamp > motion_.endTimestamp) {
             revert Module__VotingRoleManager__MotionVotingPhaseClosed();
         }
@@ -411,15 +399,15 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__AttemptedDoubleVote();
         }
 
-        if (support == 0) {
+        if (support_ == 0) {
             unchecked {
                 ++motion_.forVotes;
             }
-        } else if (support == 1) {
+        } else if (support_ == 1) {
             unchecked {
                 ++motion_.againstVotes;
             }
-        } else if (support == 2) {
+        } else if (support_ == 2) {
             unchecked {
                 ++motion_.abstainVotes;
             }
@@ -427,15 +415,15 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
 
         address voter = _msgSender();
 
-        motion_.receipts[voter] = Receipt(true, support);
+        motion_.receipts[voter] = Receipt(true, support_);
 
-        emit VoteCast(motionId, voter, support);
+        emit VoteCast(motionId_, voter, support_);
     }
 
     /// @inheritdoc IAUT_EXT_VotingRoles_v1
-    function executeMotion(bytes32 motionId) external {
+    function executeMotion(bytes32 motionId_) external {
         // Get pointer to the motion.
-        Motion storage motion_ = _motions[motionId];
+        Motion storage motion_ = _motions[motionId_];
 
         // Revert if motionId invalid.
         if (motion_.startTimestamp == 0) {
@@ -447,7 +435,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__MotionInVotingPhase();
         }
 
-        // Revert if necessary threshold was not reached
+        // Revert if necessary threshold was not reached.
         if (motion_.forVotes < motion_.requiredThreshold) {
             revert Module__VotingRoleManager__ThresholdNotReached();
         }
@@ -457,7 +445,7 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
             revert Module__VotingRoleManager__MotionAlreadyExecuted();
         }
 
-        // Updating executedAt here to prevent reentrancy
+        // Updating executedAt here to prevent reentrancy.
         motion_.executedAt = block.timestamp;
 
         // Execute `action` on `target`.
@@ -469,17 +457,34 @@ contract AUT_EXT_VotingRoles_v1 is IAUT_EXT_VotingRoles_v1, Module_v1 {
         motion_.executionResult = result;
         motion_.executionReturnData = returnData;
 
-        emit MotionExecuted(motionId);
+        emit MotionExecuted(motionId_);
     }
 
-    //--------------------------------------------------------------------------
-    // Internal
+    //==========================================================================
+    // Internal Functions
 
-    /// @dev	Internal function to validate the threshold.
+    /// @notice	Removes a voter from the list of voters.
+    /// @param  who_ The address of the voter to remove.
+    function _removeVoter(address who_) internal {
+        // Revert if trying to remove the last voter.
+        if (_voterCount == 1) {
+            revert Module__VotingRoleManager__EmptyVoters();
+        }
+
+        if (_isVoter[who_]) {
+            delete _isVoter[who_];
+            unchecked {
+                --_voterCount;
+            }
+            emit VoterRemoved(who_);
+        }
+    }
+
+    /// @notice	Internal function to validate the threshold.
     /// @param  voters_ The number of voters.
     /// @param  threshold_ The threshold.
     function _validateThreshold(uint voters_, uint threshold_) internal pure {
-        // Revert if one of these conditions is met
+        // Revert if one of these conditions is met:
         // - Threshold is higher than the amount of voters
         // - There are less than 3 voters and the threshold is set to 0
         // - There are 3 or more voters and the threshold is less than 2

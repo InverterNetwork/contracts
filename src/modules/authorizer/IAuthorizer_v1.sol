@@ -7,9 +7,9 @@ import {IAccessControlEnumerable} from
 /**
  * @title   Inverter Authorizer Interface
  *
- * @notice  Provides the access control mechanism for managing roles and permissions
- *          across different modules within the Inverter Network, ensuring secure and
- *          controlled access to critical functionalities.
+ * @notice  Provides the access control mechanism for managing roles and
+ *          permissions across different modules within the Inverter Network,
+ *          ensuring secure and controlled access to critical functionalities.
  *
  * @dev     Inherits functionality from:
  *          - IAuthorizer_v1: Implementation interface.
@@ -238,10 +238,11 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     error Module__Authorizer__InvalidInputLength();
 
     /// @notice The function is only callable by an active Module.
-    /// @param  module The address of the module.
-    error Module__Authorizer__NotActiveModule(address module);
+    /// @param  module_ The address of the module.
+    error Module__Authorizer__NotActiveModule(address module_);
 
-    /// @notice The function is only callable if the Module is self-managing its roles.
+    /// @notice The function is only callable if the Module is self-managing
+    ///         its roles.
     error Module__Authorizer__ModuleNotSelfManaged();
 
     /// @notice There always needs to be at least one admin.
@@ -254,34 +255,34 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Events
 
     /// @notice Emits when a role is added to a function permission.
-    /// @param  target The address of the target contract.
-    /// @param  functionSelector The selector of the function.
-    /// @param  roleId The ID of the role.
+    /// @param  target_ The address of the target contract.
+    /// @param  functionSelector_ The selector of the function.
+    /// @param  roleId_ The ID of the role.
     event AccessPermissionAdded(
-        address target, bytes4 functionSelector, bytes32 roleId
+        address target_, bytes4 functionSelector_, bytes32 roleId_
     );
 
     /// @notice Emits when a role is removed from a function permission.
-    /// @param  target The address of the target contract.
-    /// @param  functionSelector The selector of the function.
-    /// @param  roleId The ID of the role.
+    /// @param  target_ The address of the target contract.
+    /// @param  functionSelector_ The selector of the function.
+    /// @param  roleId_ The ID of the role.
     event AccessPermissionRemoved(
-        address target, bytes4 functionSelector, bytes32 roleId
+        address target_, bytes4 functionSelector_, bytes32 roleId_
     );
 
     /// @notice Emits when a role is created.
-    /// @param  roleId The ID of the role.
+    /// @param  roleId_ The ID of the role.
     /// @param  roleName The name of the role.
-    event RoleCreated(bytes32 roleId, string roleName);
+    event RoleCreated(bytes32 roleId_, string roleName);
 
     /// @notice Emits when a role is labeled.
-    /// @param  roleId The ID of the role.
+    /// @param  roleId_ The ID of the role.
     /// @param  newRoleName The new name of the role.
-    event RoleLabeled(bytes32 roleId, string newRoleName);
+    event RoleLabeled(bytes32 roleId_, string newRoleName);
 
     /// @notice Emits when a role admin is burned.
-    /// @param  roleId The ID of the role for which the admin was burned.
-    event RoleAdminBurned(bytes32 roleId);
+    /// @param  roleId_ The ID of the role for which the admin was burned.
+    event RoleAdminBurned(bytes32 roleId_);
 
     // ========================================================================
     // Public Getter Functions
@@ -290,16 +291,18 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // Getter -  Role Management
 
     /// @notice Returns the role ID of the admin role.
-    /// @return The role ID.
-    function getAdminRole() external view returns (bytes32);
+    /// @return defaultAdminId_ The role ID of the default admin.
+    function getAdminRole() external view returns (bytes32 defaultAdminId_);
 
     // ------------------------------------------------------------------------
     // Getter -  Authorization
 
-    /// @notice Returns the permissions of the given function in the target contract.
+    /// @notice Returns the permissions of the given function in the target
+    ///         contract.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
-    /// @return permissions_ The roleIds that are permissioned to call the function.
+    /// @return permissions_ The roleIds that are permissioned to call the
+    ///         function.
     function getPermissions(address target_, bytes4 selector_)
         external
         view
@@ -312,20 +315,24 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
         view
         returns (uint lastAssignedRoleId_);
 
-    /// @notice Returns whether the given roleId has the permission to call the given function in the target contract.
+    /// @notice Returns whether the given roleId has the permission to call the
+    ///         given function in the target contract.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
     /// @param  roleId_ The roleId that we want to check.
-    /// @return isRolePermissioned_ Returns whether the roleId is permissioned to call the function.
+    /// @return isRolePermissioned_ Returns whether the roleId is permissioned
+    ///         to call the function.
     function isRolePermissioned(
         address target_,
         bytes4 selector_,
         bytes32 roleId_
     ) external view returns (bool isRolePermissioned_);
 
-    /// @notice Checks whether the given caller address holds the required role to execute the given function in the target contract.
+    /// @notice Checks whether the given caller address holds the required role
+    ///         to execute the given function in the target contract.
     /// @dev    Returns true if the address holds the Default Admin role.
-    ///         Returns true if the function permissions contain the public role.
+    ///         Returns true if the function permissions contain the public
+    ///         role.
     /// @param  caller_ The address of the caller.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
@@ -368,11 +375,12 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @dev    The role has to be created already.
     /// @dev    The admin of the roleId_ can not be burned.
     /// @param  roleId_ The role on which to peform the admin transfer.
-    /// @param  newAdminRoleId_ The new role to which to transfer admin access to.
+    /// @param  newAdminRoleId_ The new role to which to transfer admin
+    ///         access to.
     function transferAdminRole(bytes32 roleId_, bytes32 newAdminRoleId_)
         external;
 
-    /// @notice    Burns the admin of the given roleId.
+    /// @notice Burns the admin of the given roleId.
     /// @dev    Only callable by the Admin of the role.
     /// @dev    The role has to be created already.
     /// @dev    Does nothing if the admin was already burned.
@@ -382,10 +390,12 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ------------------------------------------------------------------------
     // Mutating - Authorization
 
-    /// @notice Adds a new permission to the given roleId to call the given function in the target contract.
+    /// @notice Adds a new permission to the given roleId to call the given
+    ///         function in the target contract.
     /// @dev    Function access controlled by authorizer.
     /// @dev    The roleId must have already been created.
-    /// @dev    Does nothing if the roleId permission is already added to the function.
+    /// @dev    Does nothing if the roleId permission is already added to the
+    ///function.
     /// @param  target_ The address of the target contract.
     /// @param  selector_ The selector of the function.
     /// @param  roleId_ The roleId that will receive the permission.
@@ -395,7 +405,8 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
         bytes32 roleId_
     ) external;
 
-    /// @notice Removes a permission from the given roleid to call the given function in the target contract.
+    /// @notice Removes a permission from the given roleid to call the given
+    ///         function in the target contract.
     /// @dev    Function access controlled by authorizer.
     /// @dev    Does nothing if the roleId is not linked to the function.
     /// @param  target_ The address of the target contract.
@@ -410,14 +421,18 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     // ------------------------------------------------------------------------
     // Mutating - Mixed Utility
 
-    /// @notice Creates a new role, adds initial members to it and adds permission to call to the respective functions.
+    /// @notice Creates a new role, adds initial members to it and adds
+    ///         permission to call to the respective functions.
     /// @dev    Function access controlled by authorizer.
     /// @dev    The role of the admin has to be created already.
-    /// @dev    The array of targets corresponds with the two dimensional array of selectors.
-    ///         The first position of targets therefore is assigned to the first position of the selector array.
-    ///         The second dimension of the selector array contains all the function selectors of the target,
-    ///         which get the newly created role added as a permissioned role.
-    /// @dev    The target contracts array have to have the same length as the selector array.
+    /// @dev    The array of targets corresponds with the two dimensional array
+    ///         of selectors. The first position of targets therefore is
+    ///         assigned to the first position of the selector array. The
+    ///         second dimension of the selector array contains all the
+    ///         function selectors of the target, which get the newly created
+    ///         role added as a permissioned role.
+    /// @dev    The target contracts array must have the same length as the
+    ///         selector array.
     /// @param  roleName_ The name of the role to create.
     /// @param  respectiveAdminRole_ The role ID of the admin role.
     /// @param  initialMembers_ The addresses of the initial members.

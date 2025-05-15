@@ -23,9 +23,9 @@ import {AccessControlEnumerableUpgradeable} from
 /**
  * @title   Inverter Roles Authorizer
  *
- * @notice  Provides the access control mechanism for managing roles and permissions
- *          across different modules within the Inverter Network, ensuring secure and
- *          controlled access to critical functionalities.
+ * @notice  Provides the access control mechanism for managing roles and
+ *          permissions across different modules within the Inverter Network,
+ *          ensuring secure and controlled access to critical functionalities.
  *
  * @dev     Inherits functionality from:
  *          - IAuthorizer_v1: Implementation interface.
@@ -226,8 +226,9 @@ import {AccessControlEnumerableUpgradeable} from
  *
  *
  * @custom:security-contact security@inverter.network
- *                          In case of any concerns or findings, please refer to our Security Policy
- *                          at security.inverter.network or email us directly!
+ *                          In case of any concerns or findings, please refer to
+ *                          our Security Policy at security.inverter.network or
+ *                          email us directly!
  *
  * @custom:version  v1.1.0
  *
@@ -241,15 +242,15 @@ contract AUT_Roles_v1 is
     AccessControlEnumerableUpgradeable
 {
     /// @inheritdoc ERC165Upgradeable
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(bytes4 interfaceId_)
         public
         view
         virtual
         override(Module_v1, AccessControlEnumerableUpgradeable)
-        returns (bool)
+        returns (bool isInterfaceId_)
     {
-        return interfaceId == type(IAuthorizer_v1).interfaceId
-            || super.supportsInterface(interfaceId);
+        return interfaceId_ == type(IAuthorizer_v1).interfaceId
+            || super.supportsInterface(interfaceId_);
     }
 
     // ========================================================================
@@ -285,17 +286,19 @@ contract AUT_Roles_v1 is
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    /// @notice Mapping that stores the role IDs that can be used to call functions on a target contract.
+    /// @notice Mapping that stores the role IDs that can be used to call
+    ///         functions on a target contract.
     /// @dev    target The address of the target contract.
     /// @dev    selector The function selector of the function to call.
     /// @dev    roleIds The role IDs that can be used to call the function.
     mapping(address target => mapping(bytes4 selector => bytes32[] roleIds))
-        public _permissions;
+        internal _permissions;
 
     /// @notice The counter for role IDs.
     /// @dev	This is used to generate unique role IDs for each role.
-    /// @dev    Starts at 1, which symbolizes two roles: PUBLIC_ROLE and DEFAULT_ADMIN_ROLE,
-    ///         but is immediately incremented when a role is created.
+    /// @dev    Starts at 1, which symbolizes two roles: PUBLIC_ROLE and
+    ///         DEFAULT_ADMIN_ROLE, but is immediately incremented when a role
+    ///         is created.
     uint internal _lastAssignedRoleId;
 
     /// @dev	Storage gap for future upgrades.
@@ -307,23 +310,23 @@ contract AUT_Roles_v1 is
     /// @inheritdoc Module_v1
     function init(
         IOrchestrator_v1 orchestrator_,
-        Metadata memory metadata,
-        bytes memory configData
+        Metadata memory metadata_,
+        bytes memory configData_
     ) external override initializer {
-        __Module_init(orchestrator_, metadata);
+        __Module_init(orchestrator_, metadata_);
 
-        (address initialAdmin) = abi.decode(configData, (address));
+        (address initialAdmin) = abi.decode(configData_, (address));
 
         __RoleAuthorizer_init(initialAdmin);
     }
 
     /// @notice Initializes the role authorizer.
-    /// @param  initialAdmin The initial admin of the role authorizer.
-    function __RoleAuthorizer_init(address initialAdmin)
+    /// @param  initialAdmin_ The initial admin of the role authorizer.
+    function __RoleAuthorizer_init(address initialAdmin_)
         internal
         onlyInitializing
     {
-        if (initialAdmin == address(0)) {
+        if (initialAdmin_ == address(0)) {
             revert Module__Authorizer__InvalidInitialAdmin();
         }
 
@@ -331,16 +334,19 @@ contract AUT_Roles_v1 is
         // DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
         _lastAssignedRoleId = 1;
 
-        // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin
-        // privileges on all Modules in the contract.
-        // It is defined in the AccessControl contract and identified with bytes32("0x00")
-        // Modules can opt out of this on a per-role basis by setting the admin role to "BURN_ADMIN_ROLE".
+        // Note about DEFAULT_ADMIN_ROLE:
+        // The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has
+        // admin privileges on all Modules in the contract.
+        // It is defined in the AccessControl contract and identified with
+        // bytes32("0x00").
+        // Modules can opt out of this on a per-role basis by setting the admin
+        // role to "BURN_ADMIN_ROLE".
 
-        // make the BURN_ADMIN_ROLE immutable
+        // make the BURN_ADMIN_ROLE immutable.
         _setRoleAdmin(BURN_ADMIN_ROLE, BURN_ADMIN_ROLE);
 
         // set the initial admin as the DEFAULT_ADMIN_ROLE
-        _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin);
+        _grantRole(DEFAULT_ADMIN_ROLE, initialAdmin_);
     }
 
     // ========================================================================
@@ -350,7 +356,7 @@ contract AUT_Roles_v1 is
     // Getter -  Role Management
 
     /// @inheritdoc IAuthorizer_v1
-    function getAdminRole() public pure returns (bytes32) {
+    function getAdminRole() public pure returns (bytes32 defaultAdminId_) {
         return DEFAULT_ADMIN_ROLE;
     }
 
@@ -411,11 +417,11 @@ contract AUT_Roles_v1 is
             return false;
         }
 
-        // Go through each role and check if the caller has it.
+        // Go through each role and check if the caller has permission.
         for (uint i = 0; i < permissionLength; i++) {
             if (
-                // if the role the public role
-                // or if the caller has the role
+                // Return true if the role the public role
+                // or if the caller has the role.
                 roleIds[i] == PUBLIC_ROLE || hasRole(roleIds[i], caller_)
             ) {
                 return true;
@@ -481,11 +487,11 @@ contract AUT_Roles_v1 is
         onlyRole(getRoleAdmin(roleId_))
         idExists(roleId_)
     {
-        // If Role Admin is burned do nothing
+        // If Role Admin is burned do nothing.
         if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
             return;
         }
-        // Burn Role Admin
+        // Burn admin from the role.
         _setRoleAdmin(roleId_, BURN_ADMIN_ROLE);
         emit RoleAdminBurned(roleId_);
     }
@@ -499,7 +505,7 @@ contract AUT_Roles_v1 is
         bytes4 selector_,
         bytes32 roleId_
     ) public permissioned idNotDefaultAdmin(roleId_) idExists(roleId_) {
-        // if RoleId already has a permission, do nothing
+        // if RoleId already has a permission, do nothing.
         if (isRolePermissioned(target_, selector_, roleId_)) {
             return;
         }
@@ -519,18 +525,18 @@ contract AUT_Roles_v1 is
 
         for (uint i = 0; i < permissionsLength; i++) {
             if (permissions[i] == roleId_) {
-                // Replace the element to be removed with the last one
+                // Replace the element to be removed with the last one.
                 _permissions[target_][selector_][i] =
                     _permissions[target_][selector_][permissionsLength - 1];
-                // Remove the last element
+                // Remove the last element.
                 _permissions[target_][selector_].pop();
 
-                // Emit Event and exit the function once the value is removed
+                // Emit Event and exit the function once the value is removed.
                 emit AccessPermissionRemoved(target_, selector_, roleId_);
                 return;
             }
         }
-        // Do nothing if the value is not found
+        // Do nothing if the value is not found.
     }
 
     // ------------------------------------------------------------------------
@@ -573,51 +579,56 @@ contract AUT_Roles_v1 is
     // ------------------------------------------------------------------------
     // Internal - Upstream Function Implementations
 
-    /// @notice Overrides {_grantRole} to make sure only existing roles can be granted.
-    /// @param  role The id of the role.
-    /// @param  who The user we want to check on.
-    /// @return bool Returns if grant has been successful.
-    function _grantRole(bytes32 role, address who)
+    /// @notice Overrides {_grantRole} to make sure only existing roles can be
+    ///         granted.
+    /// @param  role_ The id of the role.
+    /// @param  who_ The user we want to check on.
+    /// @return success_ Returns if grant has been successful.
+    function _grantRole(bytes32 role_, address who_)
         internal
         virtual
         override
-        idExists(role)
-        returns (bool)
+        idExists(role_)
+        returns (bool success_)
     {
-        return super._grantRole(role, who);
+        return super._grantRole(role_, who_);
     }
 
     //--------------------------------------------------------------------------
     // Internal - ERC2771 Context Upgradeable
 
-    /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
+    /// @dev    Needs to be overridden, because they are imported via the
+    ///         AccessControlEnumerableUpgradeable as well.
     function _msgSender()
         internal
         view
         virtual
         override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
+        returns (address sender_)
     {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// Needs to be overridden, because they are imported via the AccessControlEnumerableUpgradeable as well.
+    /// @dev    Needs to be overridden, because they are imported via the
+    ///         AccessControlEnumerableUpgradeable as well.
     function _msgData()
         internal
         view
         virtual
         override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
+        returns (bytes calldata msgData_)
     {
         return ERC2771ContextUpgradeable._msgData();
     }
 
+    /// @dev    Needs to be overridden, because they are imported via the
+    ///         AccessControlEnumerableUpgradeable as well.
     function _contextSuffixLength()
         internal
         view
         virtual
         override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (uint)
+        returns (uint contextSuffixLength_)
     {
         return ERC2771ContextUpgradeable._contextSuffixLength();
     }
