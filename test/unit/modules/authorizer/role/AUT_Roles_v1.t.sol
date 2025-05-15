@@ -137,7 +137,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             vm.expectRevert(
                 abi.encodeWithSelector(
                     IAuthorizer_v1
-                        .Module__Authorizer__CannotAddDefaultAdminRole
+                        .Module__Authorizer__CannotModifyAdminRoleAccess
                         .selector
                 )
             );
@@ -377,7 +377,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IAuthorizer_v1
-                    .Module__Authorizer__CannotAddDefaultAdminRole
+                    .Module__Authorizer__CannotModifyAdminRoleAccess
                     .selector
             )
         );

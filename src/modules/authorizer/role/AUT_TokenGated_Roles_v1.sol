@@ -189,7 +189,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
     // ========================================================================
     // Modifiers
 
-    /// @dev     Modifier to guarantee function is only callable when the role is empty.
+    /// @notice Modifier to guarantee function is only callable when the role is empty.
     /// @param  roleId_ The ID of the role to be checked.
     modifier onlyEmptyRole(bytes32 roleId_) {
         // Check that the role is empty
@@ -200,7 +200,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         _;
     }
 
-    /// @dev     Modifier to guarantee that the role is not the public role.
+    /// @notice Modifier to guarantee that the role is not the public role.
     /// @param  roleId_ The ID of the role to be checked.
     modifier notPublicRole(bytes32 roleId_) {
         if (PUBLIC_ROLE == roleId_) {
@@ -209,7 +209,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         _;
     }
 
-    /// @dev     Modifier to guarantee function is only callable when the role is token-gated.
+    /// @notice Modifier to guarantee function is only callable when the role is token-gated.
     /// @param  roleId_ The ID of the role to be checked.
     modifier onlyTokenGated(bytes32 roleId_) {
         if (!_isTokenGated[roleId_]) {
@@ -218,7 +218,7 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         _;
     }
 
-    /// @dev     Modifier to guarantee function is only callable when the threshold is valid.
+    /// @notice Modifier to guarantee function is only callable when the threshold is valid.
     /// @param  threshold The threshold to be checked.
     modifier validThreshold(uint threshold) {
         // Since base ERC721 does not have a total/max supply, we can only enforce that the value should be non-zero
@@ -284,7 +284,6 @@ contract AUT_TokenGated_Roles_v1 is IAUT_TokenGated_Roles_v1, AUT_Roles_v1 {
         idExists(roleId_)
         onlyEmptyRole(roleId_)
         notPublicRole(roleId_)
-    // @todo Do we prevent default admin here?
     {
         _isTokenGated[roleId_] = to;
         emit ChangedTokenGating(roleId_, to);

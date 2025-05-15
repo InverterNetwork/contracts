@@ -229,7 +229,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     error Module__Authorizer__InvalidInitialAdmin();
 
     /// @notice The provided role ID is the default admin role.
-    error Module__Authorizer__CannotAddDefaultAdminRole();
+    error Module__Authorizer__CannotModifyAdminRoleAccess();
 
     /// @notice The provided role ID is not existing.
     error Module__Authorizer__RoleIdNotExisting();

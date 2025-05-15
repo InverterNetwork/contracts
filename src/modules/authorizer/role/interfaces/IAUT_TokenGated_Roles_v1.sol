@@ -146,8 +146,8 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
     error Module__AUT_TokenGated_Roles__InvalidToken(address token_);
 
     /// @notice The given threshold is invalid.
-    /// @param  threshold The threshold that is not valid.
-    error Module__AUT_TokenGated_Roles__InvalidThreshold(uint threshold);
+    /// @param  threshold_ The threshold that is not valid.
+    error Module__AUT_TokenGated_Roles__InvalidThreshold(uint threshold_);
 
     /// @notice The role is token-gated but no threshold is set.
     /// @param  roleId_ The role that doesnt have threshold.
@@ -185,9 +185,9 @@ interface IAUT_TokenGated_Roles_v1 is IAuthorizer_v1 {
 
     /// @notice Checks if an account qualifies for a token-gated role.
     /// @param  roleId_ The role to be checked.
-    /// @param  who The account to be checked.
+    /// @param  who_ The account to be checked.
     /// @return hasTokenRole_ True if the account qualifies for the role.
-    function hasTokenRole(bytes32 roleId_, address who)
+    function hasTokenRole(bytes32 roleId_, address who_)
         external
         view
         returns (bool hasTokenRole_);

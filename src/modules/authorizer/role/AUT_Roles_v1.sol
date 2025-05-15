@@ -255,14 +255,16 @@ contract AUT_Roles_v1 is
     // ========================================================================
     // Modifiers
 
+    /// @notice Verifies that the roleId is not the default admin role.
+    /// @param  roleId_ The id of the role.
     modifier idNotDefaultAdmin(bytes32 roleId_) {
         if (roleId_ == DEFAULT_ADMIN_ROLE) {
-            revert Module__Authorizer__CannotAddDefaultAdminRole();
+            revert Module__Authorizer__CannotModifyAdminRoleAccess();
         }
         _;
     }
 
-    /// @dev     Verifies that the roleId is already existing.
+    /// @notice Verifies that the roleId is already existing.
     /// @param  roleId_ The id of the role.
     modifier idExists(bytes32 roleId_) {
         // If the given roleId is not equal or smaller than the last assigned
@@ -276,12 +278,12 @@ contract AUT_Roles_v1 is
     // ========================================================================
     // Storage
 
-    /// @notice The role that is used as a placeholder for a burned admin role.
+    /// @notice The public role.
+    bytes32 public constant PUBLIC_ROLE = bytes32(uint(1));
+
+    /// @notice The burned admin role.
     bytes32 public constant BURN_ADMIN_ROLE =
         0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-
-    /// @notice The role that is used as a placeholder for a public role.
-    bytes32 public constant PUBLIC_ROLE = bytes32(uint(1));
 
     /// @notice Mapping that stores the role IDs that can be used to call functions on a target contract.
     /// @dev    target The address of the target contract.
@@ -297,7 +299,7 @@ contract AUT_Roles_v1 is
     uint internal _lastAssignedRoleId;
 
     /// @dev	Storage gap for future upgrades.
-    uint[47] private __gap;
+    uint[50] private __gap;
 
     // ========================================================================
     // Initialization
@@ -326,7 +328,7 @@ contract AUT_Roles_v1 is
         }
 
         // Start with 1 to represent the two native roles:
-        // DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1. 
+        // DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
         _lastAssignedRoleId = 1;
 
         // Note about DEFAULT_ADMIN_ROLE: The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has admin
@@ -357,7 +359,7 @@ contract AUT_Roles_v1 is
 
     /// @inheritdoc IAuthorizer_v1
     function getPermissions(address target_, bytes4 selector_)
-        public
+        external
         view
         virtual
         returns (bytes32[] memory permissions_)
