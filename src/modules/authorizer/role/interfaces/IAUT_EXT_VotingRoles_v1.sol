@@ -91,41 +91,43 @@ interface IAUT_EXT_VotingRoles_v1 {
     // Events
 
     /// @notice Event emitted when a new voter address gets added.
-    /// @param  who The added address.
-    event VoterAdded(address indexed who);
+    /// @param  who_ The added address.
+    event VoterAdded(address indexed who_);
 
     /// @notice Event emitted when a voter address gets removed.
-    /// @param  who The removed address.
-    event VoterRemoved(address indexed who);
+    /// @param  who_ The removed address.
+    event VoterRemoved(address indexed who_);
 
     /// @notice Event emitted when the required threshold changes.
-    /// @param  oldThreshold The old threshold.
-    /// @param  newThreshold The new threshold.
-    event ThresholdUpdated(uint oldThreshold, uint newThreshold);
+    /// @param  oldThreshold_ The old threshold.
+    /// @param  newThreshold_ The new threshold.
+    event ThresholdUpdated(uint oldThreshold_, uint newThreshold_);
 
     /// @notice Event emitted when the voting duration changes.
-    /// @param  oldVotingDuration The old voting duration.
-    /// @param  newVotingDuration The new voting duration.
-    event VoteDurationUpdated(uint oldVotingDuration, uint newVotingDuration);
+    /// @param  oldVotingDuration_ The old voting duration.
+    /// @param  newVotingDuration_ The new voting duration.
+    event VoteDurationUpdated(uint oldVotingDuration_, uint newVotingDuration_);
 
     /// @notice Event emitted when a motion is created.
-    /// @param  motionId The motion ID.
-    event MotionCreated(bytes32 indexed motionId);
+    /// @param  motionId_ The motion ID.
+    event MotionCreated(bytes32 indexed motionId_);
 
     /// @notice Event emitted when a vote is cast for a motion.
-    /// @param  motionId The motion ID.
-    /// @param  voter The address of a voter.
-    /// @param  motionId Value that indicates how the voter supports the motion.
+    /// @param  motionId_ The motion ID.
+    /// @param  voter_ The address of a voter.
+    /// @param  support_ Value that indicates how the voter supports the motion.
     event VoteCast(
-        bytes32 indexed motionId, address indexed voter, uint8 indexed support
+        bytes32 indexed motionId_,
+        address indexed voter_,
+        uint8 indexed support_
     );
 
     /// @notice Event emitted when a motion is executed.
-    /// @param  motionId The motion ID.
-    event MotionExecuted(bytes32 indexed motionId);
+    /// @param  motionId_ The motion ID.
+    event MotionExecuted(bytes32 indexed motionId_);
 
     //--------------------------------------------------------------------------
-    // Functions
+    // Getter Functions
 
     /// @notice The maximum voting duration.
     /// @return The maximum voting duration.
@@ -136,107 +138,110 @@ interface IAUT_EXT_VotingRoles_v1 {
     function MIN_VOTING_DURATION() external view returns (uint);
 
     /// @notice Checks whether an address is a voter.
-    /// @param  who The address to check.
-    /// @return Whether the address is a voter.
-    function isVoter(address who) external view returns (bool);
-
-    /// @notice Adds a voter.
-    /// @param  who The address to add.
-    function addVoter(address who) external;
-
-    /// @notice Adds a voter and updates the threshold.
-    /// @param  who The address to add.
-    /// @param  newThreshold The new threshold.
-    function addVoterAndUpdateThreshold(address who, uint newThreshold)
-        external;
-
-    /// @notice Removes a voter.
-    /// @param  who The address to remove.
-    function removeVoter(address who) external;
-
-    /// @notice Removes a voter and updates the threshold.
-    /// @param  who The address to remove.
-    /// @param  newThreshold The new threshold.
-    function removeVoterAndUpdateThreshold(address who, uint newThreshold)
-        external;
+    /// @param  who_ The address to check.
+    /// @return isVoter_ Whether the address is a voter.
+    function isVoter(address who_) external view returns (bool isVoter_);
 
     /// @notice Gets the motion data.
-    /// @param  motionId The ID of the motion.
-    /// @return target The address of the contract to execute the action on.
-    /// @return action The action data to execute on the target contract.
-    /// @return startTimestamp The timestamp at which the motion starts.
-    /// @return endTimestamp The timestamp at which the motion ends.
-    /// @return requiredThreshold The required threshold of votes to pass the motion.
-    /// @return forVotes The number of votes in favor of the motion.
-    /// @return againstVotes The number of votes against the motion.
-    /// @return abstainVotes The number of votes abstaining from the motion.
-    /// @return executedAt The timestamp at which the motion was executed.
-    /// @return executionResult The result of the execution.
-    /// @return executionReturnData The return data of the execution.
-    function motions(bytes32 motionId)
+    /// @param  motionId_ The ID of the motion.
+    /// @return target_ The address of the contract to execute the action on.
+    /// @return action_ The action data to execute on the target contract.
+    /// @return startTimestamp_ The timestamp at which the motion starts.
+    /// @return endTimestamp_ The timestamp at which the motion ends.
+    /// @return requiredThreshold_ The required threshold of votes to pass the motion.
+    /// @return forVotes_ The number of votes in favor of the motion.
+    /// @return againstVotes_ The number of votes against the motion.
+    /// @return abstainVotes_ The number of votes abstaining from the motion.
+    /// @return executedAt_ The timestamp at which the motion was executed.
+    /// @return executionResult_ The result of the execution.
+    /// @return executionReturnData_ The return data of the execution.
+    function getMotion(bytes32 motionId_)
         external
         view
         returns (
-            address,
-            bytes memory,
-            uint,
-            uint,
-            uint,
-            uint,
-            uint,
-            uint,
-            uint,
-            bool,
-            bytes memory
+            address target_,
+            bytes memory action_,
+            uint startTimestamp_,
+            uint endTimestamp_,
+            uint requiredThreshold_,
+            uint forVotes_,
+            uint againstVotes_,
+            uint abstainVotes_,
+            uint executedAt_,
+            bool executionResult_,
+            bytes memory executionReturnData_
         );
 
     /// @notice Gets the number of motions.
-    /// @return The number of motions.
-    function motionCount() external view returns (uint);
+    /// @return motionCount_ The number of motions.
+    function getMotionCount() external view returns (uint motionCount_);
 
     /// @notice Gets the number of voters.
-    /// @return The number of voters.
-    function voterCount() external view returns (uint);
+    /// @return voterCount_ The number of voters.
+    function getVoterCount() external view returns (uint voterCount_);
 
     /// @notice Gets the threshold.
-    /// @return The threshold.
-    function threshold() external view returns (uint);
+    /// @return threshold_ The threshold.
+    function getThreshold() external view returns (uint threshold_);
+
+    /// @notice Gets the voting duration.
+    /// @return voteDuration_ The voting duration.
+    function getVoteDuration() external view returns (uint voteDuration_);
 
     /// @notice Gets the receipt of a voter for a motion.
     /// @param  _ID The ID of the motion.
-    /// @param  voter The address of the voter.
-    /// @return The receipt of the voter.
-    function getReceipt(bytes32 _ID, address voter)
+    /// @param  voter_ The address of the voter.
+    /// @return receipt_ The receipt of the voter.
+    function getReceipt(bytes32 _ID, address voter_)
         external
         view
-        returns (Receipt memory);
+        returns (Receipt memory receipt_);
 
-    /// @notice Gets the voting duration.
-    /// @return The voting duration.
-    function voteDuration() external view returns (uint);
+    //--------------------------------------------------------------------------
+    // Mutating Functions
+
+    /// @notice Adds a voter.
+    /// @param  who_ The address to add.
+    function addVoter(address who_) external;
+
+    /// @notice Adds a voter and updates the threshold.
+    /// @param  who_ The address to add.
+    /// @param  newThreshold_ The new threshold.
+    function addVoterAndUpdateThreshold(address who_, uint newThreshold_)
+        external;
+
+    /// @notice Removes a voter.
+    /// @param  who_ The address to remove.
+    function removeVoter(address who_) external;
+
+    /// @notice Removes a voter and updates the threshold.
+    /// @param  who_ The address to remove.
+    /// @param  newThreshold_ The new threshold.
+    function removeVoterAndUpdateThreshold(address who_, uint newThreshold_)
+        external;
 
     /// @notice Sets the threshold.
-    /// @param  newThreshold The new threshold.
-    function setThreshold(uint newThreshold) external;
+    /// @param  newThreshold_ The new threshold.
+    function setThreshold(uint newThreshold_) external;
 
     /// @notice Sets the voting duration.
-    /// @param  newVoteDuration The new voting duration.
-    function setVotingDuration(uint newVoteDuration) external;
+    /// @param  newVoteDuration_ The new voting duration.
+    function setVotingDuration(uint newVoteDuration_) external;
 
     /// @notice Creates a motion.
-    /// @param  target The address of the contract to execute the action on.
-    /// @param  action The action data to execute on the target contract.
-    /// @return The ID of the created motion.
-    function createMotion(address target, bytes calldata action)
+    /// @param  target_ The address of the contract to execute the action on.
+    /// @param  action_ The action data to execute on the target contract.
+    /// @return id_ The ID of the created motion.
+    function createMotion(address target_, bytes calldata action_)
         external
-        returns (bytes32);
+        returns (bytes32 id_);
 
     /// @notice Casts a vote for a motion.
-    /// @param  motionId The ID of the motion.
-    /// @param  support The value that indicates wether the voter supports the motion.
-    function castVote(bytes32 motionId, uint8 support) external;
+    /// @param  motionId_ The ID of the motion.
+    /// @param  support_ The value that indicates wether the voter supports the motion.
+    function castVote(bytes32 motionId_, uint8 support_) external;
 
     /// @notice Executes a motion.
-    /// @param  motionId The ID of the motion.
-    function executeMotion(bytes32 motionId) external;
+    /// @param  motionId_ The ID of the motion.
+    function executeMotion(bytes32 motionId_) external;
 }
