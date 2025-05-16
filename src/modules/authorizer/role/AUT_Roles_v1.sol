@@ -330,13 +330,13 @@ contract AUT_Roles_v1 is
             revert Module__Authorizer__InvalidInitialAdmin();
         }
 
-        // Start with 1 to represent the two native roles:
+        // Start with 1 to account for the two native roles:
         // DEFAULT_ADMIN_ROLE at 0 and PUBLIC_ROLE at 1.
         _lastAssignedRoleId = 1;
 
         // Note about DEFAULT_ADMIN_ROLE:
-        // The Admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has
-        // admin privileges on all Modules in the contract.
+        // The admin of the workflow holds the DEFAULT_ADMIN_ROLE, and has
+        // admin privileges on all modules in the contract.
         // It is defined in the AccessControl contract and identified with
         // bytes32("0x00").
         // Modules can opt out of this on a per-role basis by setting the admin
@@ -420,7 +420,7 @@ contract AUT_Roles_v1 is
         // Go through each role and check if the caller has permission.
         for (uint i = 0; i < permissionLength; i++) {
             if (
-                // Return true if the role the public role
+                // Return true if the role is the public role
                 // or if the caller has the role.
                 roleIds[i] == PUBLIC_ROLE || hasRole(roleIds[i], caller_)
             ) {
