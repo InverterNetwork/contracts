@@ -346,11 +346,11 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     }
 
     /// @inheritdoc IPaymentProcessor_v2
-    function claimPreviouslyUnclaimable( //@todo permissioned?
-    address client_, address token_, address receiver_)
-        external
-        virtual
-    {
+    function claimPreviouslyUnclaimable(
+        address client_,
+        address token_,
+        address receiver_
+    ) external virtual {
         if (unclaimable(client_, token_, _msgSender()) == 0) {
             revert Module__PaymentProcessor__NothingToClaim(client_, receiver_);
         }

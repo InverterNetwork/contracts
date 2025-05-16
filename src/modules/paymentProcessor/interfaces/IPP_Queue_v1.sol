@@ -6,7 +6,6 @@ import {IPaymentProcessor_v2} from "@pp/IPaymentProcessor_v2.sol";
 import {IERC20PaymentClientBase_v2} from
     "@lm/interfaces/IERC20PaymentClientBase_v2.sol";
 
-//@todo adapt
 /**
  * @title   Queue Based Payment Processor
  *
