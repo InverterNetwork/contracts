@@ -116,7 +116,7 @@ import {AccessControlEnumerableUpgradeable} from
  *                    The transferAdminRole function can only be called by
  *                    according admin of the role.
  *                    The admin role can be burned by calling the
- *                    burnAdminFromRole function.
+ *                    burnRoleAdmin function.
  *                    The function takes the following parameters:
  *                    - The role id of the role to burn the admin from
  *                    If the admin role is burned, then no members can be added
@@ -268,8 +268,8 @@ contract AUT_Roles_v1 is
     /// @notice Verifies that the roleId is already existing.
     /// @param  roleId_ The id of the role.
     modifier idExists(bytes32 roleId_) {
-        // If the given roleId is not equal or smaller than the last assigned
-        // roleId, then it is not existing.
+        // If the given roleId is greater than the last assigned roleId, then
+        // it is not existing.
         if (uint(roleId_) > _lastAssignedRoleId) {
             revert Module__Authorizer__RoleIdNotExisting();
         }
@@ -356,7 +356,7 @@ contract AUT_Roles_v1 is
     // Getter -  Role Management
 
     /// @inheritdoc IAuthorizer_v1
-    function getAdminRole() public pure returns (bytes32 defaultAdminId_) {
+    function getAdminRole() external pure returns (bytes32 defaultAdminId_) {
         return DEFAULT_ADMIN_ROLE;
     }
 
@@ -375,7 +375,7 @@ contract AUT_Roles_v1 is
 
     /// @inheritdoc IAuthorizer_v1
     function getLastAssignedRoleId()
-        public
+        external
         view
         returns (uint lastAssignedRoleId_)
     {
@@ -399,7 +399,7 @@ contract AUT_Roles_v1 is
 
     /// @inheritdoc IAuthorizer_v1
     function hasPermission(address caller_, address target_, bytes4 selector_)
-        public
+        external
         view
         virtual
         returns (bool hasPermission_)
@@ -482,7 +482,7 @@ contract AUT_Roles_v1 is
     }
 
     /// @inheritdoc IAuthorizer_v1
-    function burnAdminFromRole(bytes32 roleId_)
+    function burnRoleAdmin(bytes32 roleId_)
         external
         onlyRole(getRoleAdmin(roleId_))
         idExists(roleId_)

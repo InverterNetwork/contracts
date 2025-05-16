@@ -786,24 +786,24 @@ contract AUT_Roles_v1_Test is ModuleTest {
         assertEq(_authSuT.getRoleAdmin(roleId_), newAdminRoleId_);
     }
 
-    // burnAdminFromRole
+    // burnRoleAdmin
 
     /*
-    Test: burnAdminFromRole
+    Test: burnRoleAdmin
     ├── Given: Caller is not the admin of the role for which the admin is being burned
-    │   └── When: burnAdminFromRole is called
+    │   └── When: burnRoleAdmin is called
     │       └── Then: The function should revert
     ├── Given: Caller is the admin of the role for which the admin is being burned
     ├── And: The given roleId is not existing
-    │   └── When: burnAdminFromRole is called
+    │   └── When: burnRoleAdmin is called
     │       └── Then: The function should revert (modifier in position check)
     ├── Given: Caller is the admin of the role for which the admin is being burned
     └── And: The given roleId is existing
-        └── When: burnAdminFromRole is called
+        └── When: burnRoleAdmin is called
             └── Then: The Admin should be burned
     */
 
-    function testBurnAdminFromRole_OnlyRoleAdmin(
+    function testburnRoleAdmin_OnlyRoleAdmin(
         uint seed_,
         bytes32 roleId_,
         bytes32 roleAdmin_
@@ -834,10 +834,10 @@ contract AUT_Roles_v1_Test is ModuleTest {
             );
         }
         vm.prank(_bob);
-        _authSuT.burnAdminFromRole(roleId_);
+        _authSuT.burnRoleAdmin(roleId_);
     }
 
-    function testBurnAdminFromRole_ModifierInPositionChecks() public {
+    function testburnRoleAdmin_ModifierInPositionChecks() public {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -845,13 +845,12 @@ contract AUT_Roles_v1_Test is ModuleTest {
             )
         );
         vm.prank(_initialAdmin);
-        _authSuT.burnAdminFromRole(bytes32(uint(2)));
+        _authSuT.burnRoleAdmin(bytes32(uint(2)));
     }
 
-    function testBurnAdminFromRole_idExists(
-        bytes32 roleId_,
-        bytes32 adminRoleId_
-    ) public {
+    function testburnRoleAdmin_idExists(bytes32 roleId_, bytes32 adminRoleId_)
+        public
+    {
         // make sure that roleAdmin was created before roleId
         vm.assume(uint(roleId_) > uint(adminRoleId_));
         // Create Setup
@@ -871,7 +870,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
 
         // Call transferAdminRole
         vm.prank(_bob);
-        _authSuT.burnAdminFromRole(roleId_);
+        _authSuT.burnRoleAdmin(roleId_);
 
         // Check that the new Admin Role is the Burned Admin role
         assertEq(_authSuT.getRoleAdmin(roleId_), _authSuT.BURN_ADMIN_ROLE());

@@ -215,7 +215,7 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         revert("Not implemented in Authorizer Mock");
     }
 
-    function burnAdminFromRole(bytes32) external pure {
+    function burnRoleAdmin(bytes32) external pure {
         revert("Not implemented in Authorizer Mock");
     }
 

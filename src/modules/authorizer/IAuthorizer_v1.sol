@@ -102,7 +102,7 @@ import {IAccessControlEnumerable} from
  *                    The transferAdminRole function can only be called by
  *                    according admin of the role.
  *                    The admin role can be burned by calling the
- *                    burnAdminFromRole function.
+ *                    burnRoleAdmin function.
  *                    The function takes the following parameters:
  *                    - The role id of the role to burn the admin from
  *                    If the admin role is burned, then no members can be added
@@ -385,7 +385,7 @@ interface IAuthorizer_v1 is IAccessControlEnumerable {
     /// @dev    The role has to be created already.
     /// @dev    Does nothing if the admin was already burned.
     /// @param  roleId_ The role for which to burn the admin.
-    function burnAdminFromRole(bytes32 roleId_) external;
+    function burnRoleAdmin(bytes32 roleId_) external;
 
     // ------------------------------------------------------------------------
     // Mutating - Authorization
