@@ -16,6 +16,7 @@ import {
 } from "@lm/abstracts/ERC20PaymentClientBase_v2.sol";
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
+import {IFundingManager_v1} from "@fm/IFundingManager_v1.sol";
 
 // External
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -228,33 +229,24 @@ contract LM_PC_FundingPot_v1 is
             bool isList_
         )
     {
-        Round storage round = rounds[roundId_];
         AccessCriteria storage accessCriteria =
-            round.accessCriterias[accessCriteriaId_];
+            rounds[roundId_].accessCriterias[accessCriteriaId_];
+        ILM_PC_FundingPot_v1.AccessCriteriaType acType =
+            accessCriteria.accessCriteriaType;
 
-        if (accessCriteria.accessCriteriaType == AccessCriteriaType.OPEN) {
-            return (
-                true,
-                accessCriteria.nftContract,
-                accessCriteria.merkleRoot,
-                true
-            );
-        } else if (accessCriteria.accessCriteriaType == AccessCriteriaType.LIST)
-        {
-            return (
-                false,
-                accessCriteria.nftContract,
-                accessCriteria.merkleRoot,
-                true
-            );
-        } else {
-            return (
-                false,
-                accessCriteria.nftContract,
-                accessCriteria.merkleRoot,
-                false
-            );
-        }
+        bool isRoundOpen =
+            (acType == ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN);
+        bool isList = (
+            acType == ILM_PC_FundingPot_v1.AccessCriteriaType.OPEN
+                || acType == ILM_PC_FundingPot_v1.AccessCriteriaType.LIST
+        );
+
+        return (
+            isRoundOpen,
+            accessCriteria.nftContract,
+            accessCriteria.merkleRoot,
+            isList
+        );
     }
 
     /// @inheritdoc ILM_PC_FundingPot_v1
@@ -406,15 +398,16 @@ contract LM_PC_FundingPot_v1 is
         uint32 roundId = roundCount;
 
         Round storage round = rounds[roundId];
-        round.roundStart = roundStart_;
-        round.roundEnd = roundEnd_;
-        round.roundCap = roundCap_;
-        round.hookContract = hookContract_;
-        round.hookFunction = hookFunction_;
-        round.autoClosure = autoClosure_;
-        round.accumulationMode = accumulationMode_;
-
-        _validateRoundParameters(round);
+        _setAndValidateRoundParameters(
+            round,
+            roundStart_,
+            roundEnd_,
+            roundCap_,
+            hookContract_,
+            hookFunction_,
+            autoClosure_,
+            accumulationMode_
+        );
 
         emit RoundCreated(
             roundId,
@@ -445,15 +438,16 @@ contract LM_PC_FundingPot_v1 is
 
         _validateEditRoundParameters(round);
 
-        round.roundStart = roundStart_;
-        round.roundEnd = roundEnd_;
-        round.roundCap = roundCap_;
-        round.hookContract = hookContract_;
-        round.hookFunction = hookFunction_;
-        round.autoClosure = autoClosure_;
-        round.accumulationMode = accumulationMode_;
-
-        _validateRoundParameters(round);
+        _setAndValidateRoundParameters(
+            round,
+            roundStart_,
+            roundEnd_,
+            roundCap_,
+            hookContract_,
+            hookFunction_,
+            autoClosure_,
+            accumulationMode_
+        );
 
         emit RoundEdited(
             roundId_,
@@ -1033,15 +1027,6 @@ contract LM_PC_FundingPot_v1 is
             }
         }
 
-        // If round cap check clamped adjustedAmount to 0, and original amount was > 0, we already reverted.
-        // If original amount was 0, adjustedAmount is 0, so we can proceed to personal cap check which will also result in 0.
-        // If adjustedAmount > 0, proceed to personal cap check.
-        if (adjustedAmount == 0 && amount_ > 0) {
-            // This state should ideally not be reached due to the revert above if cap was full.
-            // But as a safeguard, if amount_ was > 0 and adjustedAmount is now 0, return 0.
-            return 0;
-        }
-
         // --- Personal Cap Check ---
         // Only proceed if adjustedAmount wasn't already set to 0 by round cap or initial amount.
         if (adjustedAmount > 0) {
@@ -1172,10 +1157,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         try IERC721(nftContract_).balanceOf(user_) returns (uint balance) {
-            if (balance == 0) {
-                return false;
-            }
-            return true;
+            return balance > 0;
         } catch {
             return false;
         }
@@ -1196,11 +1178,7 @@ contract LM_PC_FundingPot_v1 is
     ) internal pure returns (bool) {
         bytes32 leaf = keccak256(abi.encodePacked(user_, roundId_));
 
-        if (!MerkleProof.verify(merkleProof_, root_, leaf)) {
-            return false;
-        }
-
-        return true;
+        return MerkleProof.verify(merkleProof_, root_, leaf);
     }
 
     /// @notice Handles round closure logic.
@@ -1211,7 +1189,7 @@ contract LM_PC_FundingPot_v1 is
 
         roundIdToClosedStatus[roundId_] = true;
 
-        if (round.hookContract != address(0) && round.hookFunction.length > 0) {
+        if (round.hookContract != address(0)) {
             (bool success,) = round.hookContract.call(round.hookFunction);
             if (!success) {
                 revert Module__LM_PC_FundingPot__HookExecutionFailed();
@@ -1264,7 +1242,7 @@ contract LM_PC_FundingPot_v1 is
             if (contributorTotal == 0) continue;
 
             for (
-                uint8 accessCriteriaId = 0;
+                uint8 accessCriteriaId = 1;
                 accessCriteriaId <= MAX_ACCESS_CRITERIA_ID;
                 accessCriteriaId++
             ) {
@@ -1306,40 +1284,38 @@ contract LM_PC_FundingPot_v1 is
         returns (bytes32 flags, bytes32[] memory finalData)
     {
         if (start_ == 0) start_ = block.timestamp;
-        if (end_ == 0) end_ = block.timestamp;
+        if (end_ == 0) end_ = block.timestamp; // Note: cliff_ is not defaulted here.
 
         flags = 0;
-        bytes32[] memory data = new bytes32[](3); // For start, cliff, and end
         uint8 flagCount = 0;
+        bytes32[3] memory tempData; // Fixed-size array on stack for intermediate values
 
-        if (start_ > 0) {
-            flags |= bytes32(uint(1) << FLAG_START);
-            data[flagCount] = bytes32(start_);
-            unchecked {
-                flagCount++;
-            }
+        // Start time
+        flags |= bytes32(uint(1) << FLAG_START);
+        tempData[flagCount] = bytes32(start_);
+        unchecked {
+            flagCount++;
         }
 
         if (cliff_ > 0) {
             flags |= bytes32(uint(1) << FLAG_CLIFF);
-            data[flagCount] = bytes32(cliff_);
+            tempData[flagCount] = bytes32(cliff_);
             unchecked {
                 flagCount++;
             }
         }
 
-        if (end_ > 0) {
-            flags |= bytes32(uint(1) << FLAG_END);
-            data[flagCount] = bytes32(end_);
-            unchecked {
-                flagCount++;
-            }
+        // End time
+        flags |= bytes32(uint(1) << FLAG_END);
+        tempData[flagCount] = bytes32(end_);
+        unchecked {
+            flagCount++;
         }
 
         finalData = new bytes32[](flagCount);
         for (uint8 j = 0; j < flagCount; ++j) {
             unchecked {
-                finalData[j] = data[j];
+                finalData[j] = tempData[j];
             }
         }
 
@@ -1399,15 +1375,22 @@ contract LM_PC_FundingPot_v1 is
         if (totalContributions == 0) {
             revert Module__LM_PC_FundingPot__NoContributions();
         }
-        // approve the fundingManager to spend the contribution token
-        IERC20(__Module_orchestrator.fundingManager().token()).approve(
-            address(__Module_orchestrator.fundingManager()), totalContributions
-        );
-        uint minAmountOut = IBondingCurveBase_v1(
-            address(__Module_orchestrator.fundingManager())
-        ).calculatePurchaseReturn(totalContributions);
-        IBondingCurveBase_v1(address(__Module_orchestrator.fundingManager()))
-            .buyFor(address(this), totalContributions, minAmountOut);
+
+        // Cache the funding manager instance and its address
+        IFundingManager_v1 fundingManager =
+            __Module_orchestrator.fundingManager();
+
+        // Get the contribution token from the cached funding manager instance and approve it
+        IERC20 contributionToken = fundingManager.token();
+        contributionToken.approve(address(fundingManager), totalContributions);
+
+        // Cast the cached funding manager address to the bonding curve interface
+        IBondingCurveBase_v1 bondingCurve =
+            IBondingCurveBase_v1(address(fundingManager));
+
+        uint minAmountOut =
+            bondingCurve.calculatePurchaseReturn(totalContributions);
+        bondingCurve.buyFor(address(this), totalContributions, minAmountOut);
 
         roundTokensBought[roundId_] = minAmountOut;
     }
@@ -1426,5 +1409,35 @@ contract LM_PC_FundingPot_v1 is
             round.roundCap > 0 && totalContribution == round.roundCap;
         bool timeEnded = round.roundEnd > 0 && block.timestamp >= round.roundEnd;
         return capReached || timeEnded;
+    }
+
+    /// @notice Sets and validates the round parameters.
+    /// @param  roundToSet_ The round storage object to set parameters for.
+    /// @param  roundStart_ Start timestamp for the round.
+    /// @param  roundEnd_ End timestamp for the round.
+    /// @param  roundCap_ Maximum contribution cap.
+    /// @param  hookContract_ Address of contract to call after round closure.
+    /// @param  hookFunction_ Encoded function call for the hook.
+    /// @param  autoClosure_ Whether hook closure coincides with contribution span end.
+    /// @param  accumulationMode_ Defines how caps accumulate.
+    function _setAndValidateRoundParameters(
+        Round storage roundToSet_,
+        uint roundStart_,
+        uint roundEnd_,
+        uint roundCap_,
+        address hookContract_,
+        bytes memory hookFunction_,
+        bool autoClosure_,
+        AccumulationMode accumulationMode_
+    ) internal {
+        roundToSet_.roundStart = roundStart_;
+        roundToSet_.roundEnd = roundEnd_;
+        roundToSet_.roundCap = roundCap_;
+        roundToSet_.hookContract = hookContract_;
+        roundToSet_.hookFunction = hookFunction_;
+        roundToSet_.autoClosure = autoClosure_;
+        roundToSet_.accumulationMode = accumulationMode_;
+
+        _validateRoundParameters(roundToSet_);
     }
 }
