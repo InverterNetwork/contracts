@@ -10,6 +10,7 @@ optimizer = true
 optimizer_runs = 750
 via_ir = false
 
+additional_compiler_profiles = [ { name = "large-contracts", optimizer = true, optimizer_runs = 200 } ]
 compilation_restrictions = [
     { paths = "src/modules/logicModule/LM_PC_FundingPot_v1.sol", optimizer = true, optimizer_runs = 200 },
 ]
