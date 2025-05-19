@@ -3888,7 +3888,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
     }
 
-        function testContributeToRoundFor_personalModeOnlyAccumulatesPersonalCaps()
+    function testContributeToRoundFor_personalModeOnlyAccumulatesPersonalCaps()
         public
     {
         // 1. Create the first round with AccumulationMode.Personal
@@ -4059,7 +4059,9 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         assertEq(fundingPot.getTotalRoundContribution(round2Id), 500);
     }
 
-    function testContributeToRoundFor_totalModeOnlyAccumulatesTotalCaps() public {
+    function testContributeToRoundFor_totalModeOnlyAccumulatesTotalCaps()
+        public
+    {
         // 1. Create the first round with AccumulationMode.Total
         _defaultRoundParams.accumulationMode =
             ILM_PC_FundingPot_v1.AccumulationMode.Total;
