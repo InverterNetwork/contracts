@@ -171,11 +171,10 @@ contract LM_PC_FundingPot_v1 is
     /// @dev    MUST call `__Module_init()`.
     /// @param  orchestrator_ The orchestrator contract.
     /// @param  metadata_ The metadata of the module.
-    /// @param  configData_ The config data of the module, comprised of:
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata_,
-        bytes memory configData_
+        bytes memory
     ) external override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata_);
         // Set the flags for the PaymentOrders (this module uses 3 flags).
