@@ -1007,13 +1007,13 @@ contract LM_PC_FundingPot_v1 is
 
         Round storage round = rounds[roundId_];
 
+        // --- Round Cap Check ---
         if (!canOverrideContributionSpan_ && round.roundCap > 0) {
             uint totalRoundContribution = roundIdToTotalContributions[roundId_];
             uint effectiveRoundCap = round.roundCap;
 
             // If total accumulative caps are enabled for this round,
             // adjust the effective round cap to accommodate unused capacity from previous rounds
-            // NOTE: This part is relevant for Total/All modes, but the check itself is needed here.
             if (
                 round.accumulationMode == AccumulationMode.Total
                     || round.accumulationMode == AccumulationMode.All
@@ -1024,12 +1024,8 @@ contract LM_PC_FundingPot_v1 is
             }
 
             if (totalRoundContribution >= effectiveRoundCap) {
-                // If user tries to contribute a non-zero amount when cap is full, revert.
-                if (amount_ > 0) {
-                    revert Module__LM_PC_FundingPot__RoundCapReached();
-                }
-                // If user tries to contribute zero when cap is full, allow adjustedAmount = 0.
-                adjustedAmount = 0;
+                // If round cap is reached, revert (we know amount_ > 0 from parent function)
+                revert Module__LM_PC_FundingPot__RoundCapReached();
             } else {
                 // Cap is not full, calculate remaining and clamp if necessary
                 uint remainingRoundCap =
@@ -1041,7 +1037,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         // --- Personal Cap Check ---
-        // Only proceed if adjustedAmount wasn't already set to 0 by round cap or initial amount.
+        // Skip personal cap check if adjustedAmount is already 0
         if (adjustedAmount > 0) {
             uint userPreviousContribution =
                 roundIdToUserToContribution[roundId_][user_];
@@ -1050,8 +1046,7 @@ contract LM_PC_FundingPot_v1 is
             roundIdToAccessCriteriaIdToPrivileges[roundId_][accessCriteriaId_];
             uint userPersonalCap = privileges.personalCap;
 
-            // Add unspent personal capacity if personal accumulation is enabled for this round (Personal or All)
-            // Explicitly exclude Total mode here.
+            // Add unspent personal capacity if personal accumulation is enabled for this round
             if (
                 round.accumulationMode == AccumulationMode.Personal
                     || round.accumulationMode == AccumulationMode.All
@@ -1059,28 +1054,18 @@ contract LM_PC_FundingPot_v1 is
                 userPersonalCap += unspentPersonalCap_;
             }
 
-            // Check if the already potentially-clamped amount exceeds personal cap
-            if (userPreviousContribution + adjustedAmount > userPersonalCap) {
-                // If user hasn't reached personal cap yet, clamp further to remaining personal cap.
-                if (userPreviousContribution < userPersonalCap) {
-                    uint remainingPersonalCap =
-                        userPersonalCap - userPreviousContribution;
-                    // Ensure we don't accidentally increase amount, only clamp down.
-                    if (remainingPersonalCap < adjustedAmount) {
-                        adjustedAmount = remainingPersonalCap;
-                    }
-                } else {
-                    // User is already at or over personal cap.
-                    // If they tried to contribute a non-zero amount initially, revert.
-                    if (amount_ > 0) {
-                        revert Module__LM_PC_FundingPot__PersonalCapReached();
-                    }
-                    // If initial amount was 0, just ensure adjustedAmount remains 0.
-                    adjustedAmount = 0;
-                }
+            // If user already reached their cap, revert
+            if (userPreviousContribution >= userPersonalCap) {
+                revert Module__LM_PC_FundingPot__PersonalCapReached();
+            }
+
+            // Calculate remaining personal cap and take minimum
+            uint remainingPersonalCap =
+                userPersonalCap - userPreviousContribution;
+            if (remainingPersonalCap < adjustedAmount) {
+                adjustedAmount = remainingPersonalCap;
             }
         }
-        // --- End Personal Cap Check --- '
 
         return adjustedAmount;
     }
