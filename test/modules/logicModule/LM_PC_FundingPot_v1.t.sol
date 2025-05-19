@@ -5304,4 +5304,147 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
             "R2 Total contributions should be R2 base total cap (All mode, global_start=R2)"
         );
     }
+
+    function testContributeToRoundFor_revertsGivenUnspentCapsRoundIdsNotStrictlyIncreasing(
+    ) public {
+        // Setup: Round 1 (Personal), Round 2 (Personal), Round 3 (Personal for contribution)
+        uint initialTimestamp = block.timestamp;
+        uint8 accessId = 1; // Open access
+        uint personalCap = 500;
+        uint roundCap = 10_000;
+
+        vm.startPrank(contributor1_);
+        _token.approve(address(fundingPot), type(uint).max);
+        vm.stopPrank();
+
+        // Round 1
+        uint32 round1Id = fundingPot.createRound(
+            initialTimestamp + 1 days,
+            initialTimestamp + 2 days,
+            roundCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        );
+        fundingPot.setAccessCriteria(
+            round1Id, accessId, 0, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round1Id, accessId, personalCap, false, 0, 0, 0
+        );
+
+        // Round 2
+        uint32 round2Id = fundingPot.createRound(
+            initialTimestamp + 3 days,
+            initialTimestamp + 4 days,
+            roundCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        );
+        fundingPot.setAccessCriteria(
+            round2Id, accessId, 0, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round2Id, accessId, personalCap, false, 0, 0, 0
+        );
+
+        // Round 3 (target for contribution)
+        uint32 round3Id = fundingPot.createRound(
+            initialTimestamp + 5 days,
+            initialTimestamp + 6 days,
+            roundCap,
+            address(0),
+            bytes(""),
+            false,
+            ILM_PC_FundingPot_v1.AccumulationMode.Personal
+        );
+        fundingPot.setAccessCriteria(
+            round3Id, accessId, 0, address(0), bytes32(0), new address[](0)
+        );
+        fundingPot.setAccessCriteriaPrivileges(
+            round3Id, accessId, personalCap, false, 0, 0, 0
+        );
+
+        vm.warp(initialTimestamp + 5 days + 1 hours); // Enter Round 3
+
+        // Case 1: Out of order
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory
+            unspentCapsOutOfOrder =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](2);
+        unspentCapsOutOfOrder[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round2Id, accessId, new bytes32[](0)
+        );
+        unspentCapsOutOfOrder[1] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round1Id, accessId, new bytes32[](0)
+        );
+
+        vm.startPrank(contributor1_);
+        vm.expectRevert(
+            ILM_PC_FundingPot_v1
+                .Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing
+                .selector
+        );
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round3Id,
+            100,
+            accessId,
+            new bytes32[](0),
+            unspentCapsOutOfOrder
+        );
+        vm.stopPrank();
+
+        // Case 2: Duplicate roundId
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory
+            unspentCapsDuplicate =
+                new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](2);
+        unspentCapsDuplicate[0] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round1Id, accessId, new bytes32[](0)
+        );
+        unspentCapsDuplicate[1] = ILM_PC_FundingPot_v1.UnspentPersonalRoundCap(
+            round1Id, accessId, new bytes32[](0)
+        );
+
+        vm.startPrank(contributor1_);
+        vm.expectRevert(
+            ILM_PC_FundingPot_v1
+                .Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing
+                .selector
+        );
+        fundingPot.contributeToRoundFor(
+            contributor1_,
+            round3Id,
+            100,
+            accessId,
+            new bytes32[](0),
+            unspentCapsDuplicate
+        );
+        vm.stopPrank();
+
+        // Case 3: Correct order but first element's roundId is 0 (if lastSeenRoundId starts at 0)
+        // This specific case won't be hit if round IDs must be >0, but good to be aware.
+        // Assuming valid round IDs start from 1, this case might not be directly testable if 0 isn't a valid roundId.
+        // The current check `currentProcessingRoundId <= lastSeenRoundId` covers this if roundId can be 0.
+        // If round IDs are always >= 1, then an initial lastSeenRoundId=0 is fine.
+
+        // Case 4: Empty array (should not revert with this specific error, but pass)
+        ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[] memory unspentCapsEmpty =
+            new ILM_PC_FundingPot_v1.UnspentPersonalRoundCap[](0);
+        vm.startPrank(contributor1_);
+        fundingPot.contributeToRoundFor( // This should pass (or revert with a different error if amount is 0 etc.)
+            contributor1_,
+            round3Id,
+            100,
+            accessId,
+            new bytes32[](0),
+            unspentCapsEmpty
+        );
+        vm.stopPrank();
+        assertEq(
+            fundingPot.getUserContributionToRound(round3Id, contributor1_), 100
+        );
+    }
 }
