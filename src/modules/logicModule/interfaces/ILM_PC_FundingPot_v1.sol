@@ -317,6 +317,9 @@ interface ILM_PC_FundingPot_v1 is IERC20PaymentClientBase_v2 {
         uint32 startRoundId_, uint32 currentRoundCount_
     );
 
+    /// @notice Thrown when round IDs in UnspentPersonalRoundCap array are not strictly increasing.
+    error Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing();
+
     // -------------------------------------------------------------------------
     // Public - Getters
 

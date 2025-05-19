@@ -644,49 +644,62 @@ contract LM_PC_FundingPot_v1 is
         bytes32[] memory merkleProof_,
         UnspentPersonalRoundCap[] calldata unspentPersonalRoundCaps_
     ) external {
-        uint unspentPersonalCap;
+        uint unspentPersonalCap = 0; // Initialize to 0
+        uint32 lastSeenRoundId = 0; // Tracks the last seen roundId to ensure strictly increasing order
 
         // Process each previous round cap that the user wants to carry over
         for (uint i = 0; i < unspentPersonalRoundCaps_.length; i++) {
             UnspentPersonalRoundCap memory roundCapInfo =
                 unspentPersonalRoundCaps_[i];
+            uint32 currentProcessingRoundId = roundCapInfo.roundId;
+
+            // Enforcement: Round IDs in the array must be strictly increasing.
+            if (currentProcessingRoundId <= lastSeenRoundId) {
+                revert
+                    Module__LM_PC_FundingPot__UnspentCapsRoundIdsNotStrictlyIncreasing(
+                );
+            }
 
             // Skip if this round is before the global accumulation start round
-            if (roundCapInfo.roundId < globalAccumulationStartRoundId) {
+            if (currentProcessingRoundId < globalAccumulationStartRoundId) {
+                lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
                 continue;
             }
 
             // For PERSONAL cap rollover, the PREVIOUS round must have allowed it (Personal or All).
             if (
-                rounds[roundCapInfo.roundId].accumulationMode
+                rounds[currentProcessingRoundId].accumulationMode
                     != AccumulationMode.Personal
-                    && rounds[roundCapInfo.roundId].accumulationMode
+                    && rounds[currentProcessingRoundId].accumulationMode
                         != AccumulationMode.All
             ) {
+                lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
                 continue;
             }
 
-            // Verify the user was eligible for this access criteria in the previous round
-            bool isEligible = _checkAccessCriteriaEligibility(
-                roundCapInfo.roundId,
-                roundCapInfo.accessCriteriaId,
-                roundCapInfo.merkleProof,
-                user_
-            );
-
-            if (isEligible) {
+            if (
+                _checkAccessCriteriaEligibility(
+                    currentProcessingRoundId,
+                    roundCapInfo.accessCriteriaId,
+                    roundCapInfo.merkleProof,
+                    user_
+                )
+            ) {
                 AccessCriteriaPrivileges storage privileges =
-                roundIdToAccessCriteriaIdToPrivileges[roundCapInfo.roundId][roundCapInfo
+                roundIdToAccessCriteriaIdToPrivileges[currentProcessingRoundId][roundCapInfo
                     .accessCriteriaId];
 
                 uint userContribution =
-                    roundIdToUserToContribution[roundCapInfo.roundId][user_];
+                    roundIdToUserToContribution[currentProcessingRoundId][user_];
                 uint personalCap = privileges.personalCap;
+                uint unspentForThisEntry = 0;
 
                 if (userContribution < personalCap) {
-                    unspentPersonalCap += (personalCap - userContribution);
+                    unspentForThisEntry = personalCap - userContribution;
                 }
+                unspentPersonalCap += unspentForThisEntry;
             }
+            lastSeenRoundId = currentProcessingRoundId; // Update after processing or skipping
         }
 
         _contributeToRoundFor(
