@@ -1829,7 +1829,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 && accessCriteriaEnumNew >= 0 && accessCriteriaEnumNew <= 4
         );
         uint8 accessCriteriaId = 1;
-        uint8 accessType = uint8(ILM_PC_FundingPot_v1.AccessCriteriaType.NFT);
+        
         _helper_setupRoundWithAccessCriteria(accessCriteriaId);
         uint32 roundId = fundingPot.getRoundCount();
 
@@ -2315,7 +2315,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint r2PersonalCap = 600;
         uint r2Contribution = 200;
-        uint r2UnusedPersonal = r2PersonalCap - r2Contribution; // This IS used for R3 calculation
 
         uint r3BasePersonalCap = 300;
 
@@ -4355,11 +4354,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
 
         uint32 roundId = fundingPot.getRoundCount();
 
-        (
-            address nftContract,
-            bytes32 merkleRoot,
-            address[] memory allowedAddresses
-        ) = _helper_createAccessCriteria(accessCriteriaEnum, roundId);
+        _helper_createAccessCriteria(accessCriteriaEnum, roundId);
 
         vm.expectRevert(
             abi.encodeWithSelector(
