@@ -8,6 +8,23 @@ import {
 } from "src/modules/base/Module_v1.sol";
 
 contract ModuleV1Mock is Module_v1 {
+    // ========================================================================
+    // Modifier Access
+
+    function modifierPermissionedCheck() external view permissioned {}
+
+    // Empty function used to test the modifier `onlyPaymentClient`
+    function modifierOnlyPaymentClientCheck() external view onlyPaymentClient {}
+
+    function modifierOnlyValidAddressCheck(address to)
+        external
+        view
+        validAddress(to)
+    {}
+
+    // ========================================================================
+    // Initialization
+
     function init(
         IOrchestrator_v1 orchestrator_,
         Metadata memory metadata,
@@ -25,6 +42,8 @@ contract ModuleV1Mock is Module_v1 {
         __Module_init(orchestrator_, metadata);
     }
 
+    // ========================================================================
+    // Internal Function Access
     function original_msgSender()
         external
         view
@@ -43,7 +62,7 @@ contract ModuleV1Mock is Module_v1 {
         return _msgData();
     }
 
-    function original_getFeeManagerCollateralFeeData(bytes4 functionSelector)
+    function _getFeeManagerCollateralFeeData_exposed(bytes4 functionSelector)
         external
         view
         returns (uint, address)
@@ -51,7 +70,7 @@ contract ModuleV1Mock is Module_v1 {
         return _getFeeManagerCollateralFeeData(functionSelector);
     }
 
-    function original_getFeeManagerIssuanceFeeData(bytes4 functionSelector)
+    function _getFeeManagerIssuanceFeeData_exposed(bytes4 functionSelector)
         external
         view
         returns (uint, address)
@@ -59,12 +78,10 @@ contract ModuleV1Mock is Module_v1 {
         return _getFeeManagerIssuanceFeeData(functionSelector);
     }
 
-    // Empty function used to test the modifier `onlyPaymentClient`
-    function modifierOnlyPaymentClientCheck() external view onlyPaymentClient {}
-
-    function modifierOnlyValidAddressCheck(address to)
+    function _checkAuthorization_exposed(address caller_, bytes calldata data_)
         external
         view
-        validAddress(to)
-    {}
+    {
+        _checkAuthorization(caller_, data_);
+    }
 }

@@ -74,27 +74,11 @@ contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
 
         paymentRouter.init(_orchestrator, _METADATA, bytes(""));
 
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(paymentRouter), paymentRouter.PAYMENT_PUSHER_ROLE()
-        );
-
-        _authorizer.grantRole(roleId, paymentPusher_user);
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
     }
 
     function testInit() public override(ModuleTest) {
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(paymentRouter), paymentRouter.PAYMENT_PUSHER_ROLE()
-        );
-
-        assertEq(_authorizer.hasRole(roleId, paymentPusher_user), true);
-        assertEq(
-            _authorizer.checkRoleMembership(roleId, paymentPusher_user), true
-        );
-
-        vm.startPrank(address(paymentRouter));
-        assertEq(_authorizer.checkForRole(roleId, paymentPusher_user), true);
-        vm.stopPrank();
-
         assertEq(paymentRouter.getFlagCount(), 3);
         bytes32 _START_END_CLIFF_FLAG =
             0x000000000000000000000000000000000000000000000000000000000000000e;
@@ -105,12 +89,20 @@ contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
         vm.expectRevert(OZErrors.Initializable__InvalidInitialization);
         paymentRouter.init(_orchestrator, _METADATA, bytes(""));
     }
+
+    function testSupportsInterface() public override(ModuleTest) {
+        assertTrue(
+            paymentRouter.supportsInterface(
+                type(ILM_PC_PaymentRouter_v2).interfaceId
+            )
+        );
+    }
 }
 
 /*
     test_pushPayment
-    ├── When the caller doesn't have the PAYMENT_PUSHER_ROLE
-    │   └── It should revert
+    ├── When the caller is not permissioned
+    │   └── It should revert (modifier in position check)
     └── When the caller has the PAYMENT_PUSHER_ROLE
         ├── When the Payment Order is incorrect
         │   ├── When the recipient is incorrect
@@ -128,31 +120,33 @@ contract LM_PC_PaymentRouter_v2_Test is ModuleTest {
 contract LM_PC_PaymentRouter_v2_Test_pushPayment is
     LM_PC_PaymentRouter_v2_Test
 {
-    function test_WhenTheCallerDoesntHaveThePAYMENT_PUSHER_ROLE(address caller)
-        external
-    {
-        // It should revert
-        _assumeValidAddress(caller);
-        vm.assume(caller != paymentPusher_user);
-        vm.startPrank(caller);
+    function test_ModifierInPositionCheck() external {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(paymentRouter), paymentRouter.PAYMENT_PUSHER_ROLE()
-                ),
-                caller
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
+        vm.prank(address(0xB0B));
         paymentRouter.pushPayment(address(0), address(0), 0, 0, 0, 0);
-        vm.stopPrank();
     }
 }
+
+/* @todo Where is this? @0xNuggan
+ └── When the Payment Order is correct
+            ├── It should add the Payment Order to the array of Payment Orders
+            ├── It should emit an event
+            ├── It should call processPayments
+            └── It should emit an event
+*/
 
 /*
     pushPaymentBatched
     ├── When the caller doesn't have the PAYMENT_PUSHER_ROLE
-    │   └── It should revert
+    │   └── It should revert (modifier in position check)
     └── When the caller has the PAYMENT_PUSHER_ROLE
         ├── When the Payment Order arrays are incorrect
         │   ├── When the array lengths are mismatched
@@ -192,37 +186,23 @@ contract LM_PC_PaymentRouter_v2_Test_pushPaymentBatched is
         ends[1] = po_end + 500;
     }
 
-    modifier whenTheCallerHasThePAYMENT_PUSHER_ROLE() {
-        vm.startPrank(paymentPusher_user);
-        _;
-    }
+    function test_ModifierInPositionCheck() external {
+        // permissioned
 
-    function test_WhenTheCallerDoesntHaveThePAYMENT_PUSHER_ROLE(address caller)
-        external
-    {
-        // It should revert
-        _assumeValidAddress(caller);
-        vm.assume(caller != paymentPusher_user);
-        vm.startPrank(caller);
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.generateRoleId(
-                    address(paymentRouter), paymentRouter.PAYMENT_PUSHER_ROLE()
-                ),
-                caller
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
+        vm.prank(address(0xB0B));
         paymentRouter.pushPaymentBatched(
             0, new address[](0), new address[](0), new uint[](0), 0, 0, 0
         );
-        vm.stopPrank();
     }
 
-    function test_WhenTheArrayLengthsAreMismatched()
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
+    function test_WhenTheArrayLengthsAreMismatched() external {
         // It should revert with the corresponding error message
 
         vm.expectRevert(
@@ -284,15 +264,11 @@ contract LM_PC_PaymentRouter_v2_Test_pushPaymentBatched is
 
     function test_WhenTheParamatersOfASpecificPaymentOrderAreIncorrect()
         external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
     {
         // It was tested upstream
     }
 
-    function test_WhenThePaymentOrdersAreCorrect(uint8 _numOfOrders)
-        external
-        whenTheCallerHasThePAYMENT_PUSHER_ROLE
-    {
+    function test_WhenThePaymentOrdersAreCorrect(uint8 _numOfOrders) external {
         vm.assume(_numOfOrders < 20);
         // It should add all Payment Orders
         // It should emit an event for each Payment Order

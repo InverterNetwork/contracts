@@ -57,9 +57,6 @@ import {ERC165Upgradeable} from
  *                Mints new tokens during purchases and burns tokens during
  *                sell operations at oracle-determined prices.
  *
- *              - Whitelisting system for controlled token distribution.
- *                Restricts token purchases and sales to approved addresses.
- *
  *              - Queue-based redemption and payment processing.
  *                Creates payment orders in a queue and sends them to the payment
  *                processor for executing token redemptions.
@@ -89,84 +86,48 @@ import {ERC165Upgradeable} from
  *                                setter function.
  *                     - Example: module.setOracleAddress(oracleAddress);
  *
- *                  3. Setup Whitelist:
+ *                  3. Enable Trading:
+ *                     - Purpose: Makes the the buy/sell functionality of the
+ *                                contract public. Trading must be explicitly
+ *                                enabled.
+ *                     - How:     The OrchestratorAdmin must enable both buying
+ *                                and selling operations separately.
+ *                     - Example: authorizer.addAccessPermission(buy.selector);
+ *                                authorizer.addAccessPermission(sell.selector);
+ *                                module.openBuy();
+ *                                module.openSell();
+ *
+ *                  OPTIONAL setup steps for enhanced administration:
+ *
+ *                  1. Setup Whitelist:
  *                     - Purpose: Implements access control for buy/sell
  *                                functions. Only whitelisted addresses can
  *                                participate in token buy & sell operations to
  *                                provide a security layer for controlled token
  *                                distribution and compliance.
- *                     - How:     The OrchestratorAdmin (or WHITELIST_ROLE_ADMIN
- *                                if configured) must:
- *                                1. Retrieve the whitelist role identifier.
- *                                2. Grant the role to desired addresses.
- *                     - Example: module.grantModuleRole(
- *                                module.getWhitelistRole(),
- *                                userAddress
- *                                );
+ *                     - How:     The OrchestratorAdmin must:
+ *                                1. Create a whitelist role
+ *                                2. Add access permission for the buy() and
+ *                                   sell() functions to the whitelist role.
+ *                                3. Grant the role to desired addresses.
+ *                     - Example: authorizer.createRole();
+ *                                authorizer.addAccessPermission();
+ *                                authorizer.grantRole();
+ *                     - Notice:  This assumes that the function access
+ *                                permissions currently don't contain the
+ *                                public role.
  *
- *                  4. Setup Queue Executors:
+ *                  2. Setup Queue Executors:
  *                     - Purpose: Implements access control for authorized
  *                                addresses that can process the redemption
  *                                queue.
- *                     - How:     The OrchestratorAdmin (or
- *                                QUEUE_EXECUTOR_ROLE_ADMIN if configured) must:
- *                                1. Retrieve the executor role identifier.
- *                                2. Grant the role to designated executors.
- *                     - Example: module.grantModuleRole(
- *                                 module.getQueueExecutorRole(),
- *                                 executorAddress
- *                                );
- *
- *                  5. Enable Trading:
- *                     - Purpose: Activates the buy/sell functionality of the
- *                                contract. Trading must be explicitly enabled.
- *                     - How:     The OrchestratorAdmin must enable both buying
- *                                and selling operations separately.
- *                     - Example: module.openBuy();
- *                                module.openSell();
- *
- *                  OPTIONAL setup steps for enhanced administration:
- *
- *                  1. Custom Whitelist Admin:
- *                     - Purpose: Enables delegation of whitelist management to
- *                                a dedicated admin role instead of relying on
- *                                the OrchestratorAdmin. This allows for more
- *                                granular access control and operational
- *                                flexibility.
  *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles.
- *                                2. Transfer admin rights through the Authorizer.
- *                     - Example: authorizer.transferAdminRole(
- *                                authorizer.generateRoleId(
- *                                  moduleAddress,
- *                                   module.getWhitelistRole()
- *                                ),
- *                                authorizer.generateRoleId(
- *                                   moduleAddress,
- *                                   module.getWhitelistRoleAdmin()
- *                                 )
- *                                );
- *
- *                  2. Custom Queue Executor Admin:
- *                     - Purpose: Allows delegation of queue executor
- *                                management to a dedicated admin role instead
- *                                of the OrchestratorAdmin. This allows for
- *                                more granular access control and operational
- *                                flexibility.
- *                     - How:     The OrchestratorAdmin must:
- *                                1. Generate the role IDs for both roles.
- *                                2. Transfer admin rights through the
- *                                   Authorizer.
- *                     - Example: authorizer.transferAdminRole(
- *                                authorizer.generateRoleId(
- *                                   moduleAddress,
- *                                   module.getQueueExecutorRole()
- *                                ),
- *                                authorizer.generateRoleId(
- *                                   moduleAddress,
- *                                   module.getQueueExecutorRoleAdmin()
- *                                 )
- *                                );
+ *                                1. Create a queue executor role
+ *                                2. Add access permission for the executeRedemptionQueue() function.
+ *                                3. Grant the role to designated executors.
+ *                     - Example: authorizer.createRole();
+ *                                authorizer.addAccessPermission();
+ *                                authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -206,27 +167,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
 
     // -------------------------------------------------------------------------
     // Constants
-
-    /// @notice Role identifier for accounts who are whitelisted to buy and sell.
-    bytes32 internal constant WHITELIST_ROLE = "WHITELIST_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the whitelist
-    ///         role.
-    /// @dev    This role should be set as the role admin for the WHITELIST_ROLE
-    ///         within the Authorizer module.
-    bytes32 internal constant WHITELIST_ROLE_ADMIN = "WHITELIST_ROLE_ADMIN";
-
-    /// @notice Role identifier for accounts who are allowed to manually execute
-    ///         the redemption queue.
-    bytes32 internal constant QUEUE_EXECUTOR_ROLE = "QUEUE_EXECUTOR_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the queue
-    ///         execution role.
-    ///         role.
-    /// @dev    This role should be set as the role admin for the
-    ///         QUEUE_EXECUTOR_ROLE within the Authorizer module.
-    bytes32 internal constant QUEUE_EXECUTOR_ROLE_ADMIN =
-        "QUEUE_EXECUTOR_ROLE_ADMIN";
 
     /// @notice Flag used for the payment order.
     uint internal constant FLAG_ORDER_ID = 0;
@@ -368,41 +308,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
 
     // -------------------------------------------------------------------------
     // Public View Functions
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getWhitelistRole() public pure virtual returns (bytes32 role_) {
-        return WHITELIST_ROLE;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getWhitelistRoleAdmin()
-        public
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return WHITELIST_ROLE_ADMIN;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getQueueExecutorRole()
-        public
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_EXECUTOR_ROLE;
-    }
-
-    /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function getQueueExecutorRoleAdmin()
-        public
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_EXECUTOR_ROLE_ADMIN;
-    }
 
     /// @inheritdoc IFundingManager_v1
     function token() public view virtual override returns (IERC20 token_) {
@@ -548,34 +453,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     // Public Mutating Functions
 
     /// @inheritdoc BondingCurveBase_v1
-    function buy(uint collateralAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-    {
-        super.buyFor(_msgSender(), collateralAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc BondingCurveBase_v1
     function buyFor(address receiver_, uint depositAmount_, uint minAmountOut_)
         public
         virtual
         override(BondingCurveBase_v1, IBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
         thirdPartyOperationsEnabled
     {
         super.buyFor(receiver_, depositAmount_, minAmountOut_);
-    }
-
-    /// @inheritdoc RedeemingBondingCurveBase_v1
-    function sell(uint depositAmount_, uint minAmountOut_)
-        public
-        virtual
-        override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
-    {
-        super.sellTo(_msgSender(), depositAmount_, minAmountOut_);
     }
 
     /// @inheritdoc RedeemingBondingCurveBase_v1
@@ -583,7 +467,6 @@ contract FM_PC_Oracle_Redeeming_v1 is
         public
         virtual
         override(RedeemingBondingCurveBase_v1, IRedeemingBondingCurveBase_v1)
-        onlyModuleRole(WHITELIST_ROLE)
         thirdPartyOperationsEnabled
     {
         super.sellTo(receiver_, depositAmount_, minAmountOut_);
@@ -626,17 +509,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setProjectTreasury(address projectTreasury_)
         external
         virtual
-        onlyOrchestratorAdmin
+        permissioned
     {
         _setProjectTreasury(projectTreasury_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function setOracleAddress(address oracle_)
-        external
-        virtual
-        onlyOrchestratorAdmin
-    {
+    function setOracleAddress(address oracle_) external virtual permissioned {
         _setOracleAddress(oracle_);
     }
 
@@ -644,17 +523,13 @@ contract FM_PC_Oracle_Redeeming_v1 is
     function setIsDirectOperationsOnly(bool isDirectOperationsOnly_)
         public
         virtual
-        onlyOrchestratorAdmin
+        permissioned
     {
         _setIsDirectOperationsOnly(isDirectOperationsOnly_);
     }
 
     /// @inheritdoc IFM_PC_Oracle_Redeeming_v1
-    function executeRedemptionQueue()
-        external
-        virtual
-        onlyModuleRole(QUEUE_EXECUTOR_ROLE)
-    {
+    function executeRedemptionQueue() external virtual permissioned {
         (bool success, bytes memory data) = address(
             __Module_orchestrator.paymentProcessor()
         ).call(

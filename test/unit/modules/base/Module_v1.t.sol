@@ -40,20 +40,16 @@ import {ERC20Mock} from "@mocks/external/token/ERC20Mock.sol";
 import {OZErrors} from "@testUtilities/OZErrors.sol";
 
 contract ModuleBaseV1Test is ModuleTest {
+    ///////////////////////////////////////////////////////////////////////////
+    // State
+
     // SuT
     ModuleV1Mock module;
 
     bytes _CONFIGDATA = bytes("");
 
-    //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Module has been initialized.
-    /// @param  parentOrchestrator The address of the orchestrator the module is linked to.
-    /// @param  metadata The metadata of the module.
-    event ModuleInitialized(
-        address indexed parentOrchestrator, IModule_v1.Metadata metadata
-    );
+    ///////////////////////////////////////////////////////////////////////////
+    // Setup
 
     function setUp() public {
         address impl = address(new ModuleV1Mock());
@@ -62,15 +58,21 @@ contract ModuleBaseV1Test is ModuleTest {
         _setUpOrchestrator(module);
 
         vm.expectEmit(true, true, true, false);
-        emit ModuleInitialized(address(_orchestrator), _METADATA);
+        emit IModule_v1.ModuleInitialized(address(_orchestrator), _METADATA);
 
         module.init(_orchestrator, _METADATA, _CONFIGDATA);
     }
 
-    //--------------------------------------------------------------------------
-    // Tests: Initialization
+    ///////////////////////////////////////////////////////////////////////////
+    // Test Initialization
 
-    function testSupportsInterface() public {
+    /*
+    Test: SupportsInterface
+    └── Given: The interfaceId is IModule_v1
+        └── When: the function supportsInterface is called
+            └── Then: the function should return true
+    */
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(module.supportsInterface(type(IModule_v1).interfaceId));
     }
 
@@ -143,147 +145,127 @@ contract ModuleBaseV1Test is ModuleTest {
         );
     }
 
-    //--------------------------------------------------------------------------
-    // Role Functions
+    /////////////////////////////////////////////////////////////////////////////
+    // Test Modifier
 
-    function testGrantModuleRole(bytes32 role, address addr) public {
-        vm.assume(addr != address(0));
-
-        vm.startPrank(address(this));
-
-        module.grantModuleRole(role, addr);
-
-        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-        bool isAuthorized = _authorizer.checkRoleMembership(roleId, addr);
-        assertTrue(isAuthorized);
-
-        vm.stopPrank();
-    }
-
-    function testGrantModuleRoleBatched(bytes32 role, address[] memory addrs)
+    /*
+    Test: permissioned
+    ├── Given: modifierPermissionedCheck is executed via call with a valid selector, but random data
+    ├── And: The call sender is randomised
+    └── And: The Caller is permissioned to call the function
+        └── When: The function modifierPermissionedCheck is called
+            └── Then: the function should not revert, because the sender and only the function selector were correctly passed
+    */
+    function testPermissioned_modifier(address caller_, bytes memory data_)
         public
     {
-        vm.startPrank(address(this));
+        // Assume that the calldata is at least 4 bytes long
+        vm.assume(data_.length >= 4);
 
-        for (uint i = 0; i < addrs.length; i++) {
-            vm.assume(addrs[i] != address(0));
-        }
+        bytes4 targetSelector = ModuleV1Mock.modifierPermissionedCheck.selector;
 
-        module.grantModuleRoleBatched(role, addrs);
-
-        for (uint i = 0; i < addrs.length; i++) {
-            bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-            bool isAuthorized =
-                _authorizer.checkRoleMembership(roleId, addrs[i]);
-            assertTrue(isAuthorized);
-        }
-
-        vm.stopPrank();
-    }
-
-    function testRevokeModuleRole(bytes32 role, address addr) public {
-        vm.assume(addr != address(0));
-
-        vm.startPrank(address(this));
-
-        module.grantModuleRole(role, addr);
-
-        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-        bool isAuthorizedBefore = _authorizer.checkRoleMembership(roleId, addr);
-        assertTrue(isAuthorizedBefore);
-
-        module.revokeModuleRole(role, addr);
-
-        bool isAuthorizedAfter = _authorizer.checkRoleMembership(roleId, addr);
-        assertFalse(isAuthorizedAfter);
-
-        vm.stopPrank();
-    }
-
-    function testRevokeModuleRoleBatched(bytes32 role, address[] memory addrs)
-        public
-    {
-        vm.startPrank(address(this));
-
-        for (uint i = 0; i < addrs.length; i++) {
-            vm.assume(addrs[i] != address(0));
-        }
-
-        module.grantModuleRoleBatched(role, addrs);
-
-        bytes32 roleId = _authorizer.generateRoleId(address(module), role);
-
-        for (uint i = 0; i < addrs.length; i++) {
-            bool isAuthorizedBefore =
-                _authorizer.checkRoleMembership(roleId, addrs[i]);
-            assertTrue(isAuthorizedBefore);
-        }
-
-        module.revokeModuleRoleBatched(role, addrs);
-
-        for (uint i = 0; i < addrs.length; i++) {
-            bool isAuthorizedAfter =
-                _authorizer.checkRoleMembership(roleId, addrs[i]);
-            assertFalse(isAuthorizedAfter);
-        }
-
-        vm.stopPrank();
-    }
-
-    //--------------------------------------------------------------------------
-    // FeeManager
-
-    function testGetFeeManagerCollateralFeeData(bytes4 functionSelector)
-        public
-    {
-        uint setFee = 100;
-        address treasury = makeAddr("customTreasury");
-
-        // Set treasury
-        feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
-
-        // set fee
-        feeManager.setCollateralWorkflowFee(
-            address(_orchestrator),
-            address(module),
-            functionSelector,
-            true,
-            setFee
+        // Proof
+        _authorizer.setHasPermission(
+            caller_, address(module), targetSelector, true
         );
 
-        (uint returnFee, address returnTreasury) =
-            module.original_getFeeManagerCollateralFeeData(functionSelector);
+        // Replace the msg.data function selector with the correct one
+        for (uint i = 0; i < 4; i++) {
+            data_[i] = targetSelector[i];
+        }
 
-        assertEq(returnFee, setFee);
-        assertEq(returnTreasury, treasury);
+        // Expect no revert
+        vm.prank(caller_);
+        address(module).call(data_);
     }
 
-    function testGetFeeManagerIssuanceFeeData(bytes4 functionSelector) public {
-        uint setFee = 100;
-        address treasury = makeAddr("customTreasury");
+    /* 
+    Test modifier onlyPaymentClient
+        ├── given the caller is not a PaymentClient
+        │   └── when the function modifierOnlyPaymentClientCheck() gets called
+        │       └── then it should revert
+        └── given the caller is a PaymentClient module
+            └── and the PaymentClient module is not registered in the Orchestrator
+                └── when the function modifierOnlyPaymentClientCheck() gets called
+                    └── then it should revert
+    */
 
-        // Set treasury
-        feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
-
-        // set fee
-        feeManager.setIssuanceWorkflowFee(
-            address(_orchestrator),
-            address(module),
-            functionSelector,
-            true,
-            setFee
-        );
-
-        (uint returnFee, address returnTreasury) =
-            module.original_getFeeManagerIssuanceFeeData(functionSelector);
-
-        assertEq(returnFee, setFee);
-        assertEq(returnTreasury, treasury);
+    function testOnlyPaymentClientModifier_worksGivenCallerIsNotPaymentClient(
+        address _notPaymentClient
+    ) public {
+        vm.prank(address(_notPaymentClient));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        module.modifierOnlyPaymentClientCheck();
     }
+
+    function testOnlyPaymentClientModifier_worksGivenCallerIsPaymentClientButNotRegisteredModule(
+    ) public {
+        ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock =
+            new ERC20PaymentClientBaseV2Mock();
+
+        vm.prank(address(_erc20PaymentClientMock));
+        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
+        module.modifierOnlyPaymentClientCheck();
+    }
+
+    /*
+    Test: validAddress
+    └── Given: The address is either the zero address or the module address
+        └── When: validAddress is called
+            └── Then: The function should revert
+    */
+
+    function testValidAddress(address adr) public {
+        if (adr == address(0) || adr == address(module)) {
+            vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        }
+        module.modifierOnlyValidAddressCheck(adr);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Test External Functions
+
+    // ========================================================================
+    // Public Getter Functions
+
+    // ------------------------------------------------------------------------
+    // Getter - Module State
+
+    /*
+    Test: identifier
+    └── When: the function identifier is called
+        └── Then: the function should return the identifier
+    */
+    // Trivial
+    /*
+    Test: version
+    └── When: the function version is called
+        └── Then: the function should return the version
+    */
+    // Trivial
+    /*
+    Test: url
+    └── When: the function url is called
+        └── Then: the function should return the url
+    */
+    // Trivial
+    /*
+    Test: title
+    └── When: the function title is called
+        └── Then: the function should return the title
+    */
+    // Trivial
+    /*
+    Test: orchestrator
+    └── When: the function orchestrator is called
+        └── Then: the function should return the orchestrator
+    */
+    // Trivial
 
     //--------------------------------------------------------------------------
-    // ERC2771
+    // Getter - ERC2771 Context Upgradeable Overrides
 
+    //@todo This test is weird and probably needs to be moved to a different test file
     function test_msgSender(address signer, address sender, bool fromForwarder)
         public
     {
@@ -321,6 +303,7 @@ contract ModuleBaseV1Test is ModuleTest {
         }
     }
 
+    //@todo This test is weird and probably needs to be moved to a different test file
     function test_msgData(address signer, address sender, bool fromForwarder)
         public
     {
@@ -358,41 +341,88 @@ contract ModuleBaseV1Test is ModuleTest {
         }
     }
 
-    //--------------------------------------------------------------------------
-    // Modifier
+    // ========================================================================
+    // Internal Functions
 
-    /* Test modifier onlyPaymentClient
-        ├── given the caller is not a PaymentClient
-        │   └── when the function modifierOnlyPaymentClientCheck() gets called
-        │       └── then it should revert
-        └── given the caller is a PaymentClient module
-            └── and the PaymentClient module is not registered in the Orchestrator
-                └── when the function modifierOnlyPaymentClientCheck() gets called
-                    └── then it should revert
+    // ------------------------------------------------------------------------
+    // Internal - Fees
+
+    function testGetFeeManagerCollateralFeeData(bytes4 functionSelector)
+        public
+    {
+        uint setFee = 100;
+        address treasury = makeAddr("customTreasury");
+
+        // Set treasury
+        feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
+
+        // set fee
+        feeManager.setCollateralWorkflowFee(
+            address(_orchestrator),
+            address(module),
+            functionSelector,
+            true,
+            setFee
+        );
+
+        (uint returnFee, address returnTreasury) =
+            module._getFeeManagerCollateralFeeData_exposed(functionSelector);
+
+        assertEq(returnFee, setFee);
+        assertEq(returnTreasury, treasury);
+    }
+
+    function testGetFeeManagerIssuanceFeeData(bytes4 functionSelector) public {
+        uint setFee = 100;
+        address treasury = makeAddr("customTreasury");
+
+        // Set treasury
+        feeManager.setWorkflowTreasury(address(_orchestrator), treasury);
+
+        // set fee
+        feeManager.setIssuanceWorkflowFee(
+            address(_orchestrator),
+            address(module),
+            functionSelector,
+            true,
+            setFee
+        );
+
+        (uint returnFee, address returnTreasury) =
+            module._getFeeManagerIssuanceFeeData_exposed(functionSelector);
+
+        assertEq(returnFee, setFee);
+        assertEq(returnTreasury, treasury);
+    }
+
+    // ------------------------------------------------------------------------
+    // Internal - Authorization
+
+    /*
+    Test: _checkAuthorization_
+    └── Given: Authorizer hasPermission() is mocked
+        ├── When: _checkAuthorization_ is called
+        └── And: Authorizer hasPermission() returns false
+            ├── Then: It should forward the function selector properly
+            └── And: The function should revert
     */
-
-    function testOnlyPaymentClientModifier_worksGivenCallerIsNotPaymentClient(
-        address _notPaymentClient
+    function test_checkAuthorization_hasPermissionMocked(
+        bool hasPermission_,
+        address caller_,
+        bytes calldata data_
     ) public {
-        vm.prank(address(_notPaymentClient));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
-        module.modifierOnlyPaymentClientCheck();
-    }
+        vm.assume(data_.length >= 4);
+        // Assume that caller is not the module as it is the default admin
+        vm.assume(caller_ != address(this));
 
-    function testOnlyPaymentClientModifier_worksGivenCallerIsPaymentClientButNotRegisteredModule(
-    ) public {
-        ERC20PaymentClientBaseV2Mock _erc20PaymentClientMock =
-            new ERC20PaymentClientBaseV2Mock();
+        _authorizer.setHasPermission(
+            caller_, address(module), bytes4(data_[0:4]), hasPermission_
+        );
 
-        vm.prank(address(_erc20PaymentClientMock));
-        vm.expectRevert(IModule_v1.Module__OnlyCallableByPaymentClient.selector);
-        module.modifierOnlyPaymentClientCheck();
-    }
-
-    function testValidAddress(address adr) public {
-        if (adr == address(0) || adr == address(module)) {
-            vm.expectRevert(IModule_v1.Module__InvalidAddress.selector);
+        if (!hasPermission_) {
+            vm.expectRevert(IModule_v1.Module__CallerNotPermissioned.selector);
         }
-        module.modifierOnlyValidAddressCheck(adr);
+
+        module._checkAuthorization_exposed(caller_, data_);
     }
 }

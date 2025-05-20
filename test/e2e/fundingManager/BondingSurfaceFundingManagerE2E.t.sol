@@ -10,6 +10,8 @@ import {
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
 
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
@@ -147,6 +149,9 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         IOrchestrator_v1 orchestrator =
             _create_E2E_Orchestrator(workflowConfig, moduleConfigurations);
 
+        AUT_Roles_v1 authorizer =
+            AUT_Roles_v1(address(orchestrator.authorizer()));
+
         FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1
             fundingManager =
             FM_BC_BondingSurface_Redeeming_Restricted_Repayer_Seizable_v1(
@@ -176,15 +181,84 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         fundingManager.setTokenVault(address(tokenVault));
 
         // Set Roles
-        fundingManager.grantModuleRole(
-            fundingManager.RISK_MANAGER_ROLE(), riskManager
-        );
-        fundingManager.grantModuleRole(
-            fundingManager.COVER_MANAGER_ROLE(), coverManager
-        );
-        fundingManager.grantModuleRole(
-            fundingManager.CURVE_INTERACTION_ROLE(), curveUser
-        );
+        {
+            // Create and assign role for the riskManager
+
+            // Members of the role
+            address[] memory roleMembers = new address[](1);
+            roleMembers[0] = riskManager;
+            // Target contract and function selectors
+            address[] memory targets = new address[](1);
+            targets[0] = address(fundingManager);
+            bytes4[][] memory selectors = new bytes4[][](1);
+            selectors[0] = new bytes4[](2);
+            selectors[0][0] = fundingManager.setCapitalRequired.selector;
+            selectors[0][1] = fundingManager.setBasePriceMultiplier.selector;
+
+            // Create role and set members
+            orchestrator.authorizer().createRoleAndAddAccessPermissions(
+                "RISK_MANAGER_ROLE",
+                authorizer.getAdminRole(),
+                roleMembers,
+                targets,
+                selectors
+            );
+
+            // Create and assign role for the coverManager
+
+            // Members of the role
+            roleMembers = new address[](1);
+            roleMembers[0] = coverManager;
+            // Target contract and function selectors
+            targets = new address[](1);
+            targets[0] = address(fundingManager);
+            selectors = new bytes4[][](1);
+            selectors[0] = new bytes4[](1);
+            selectors[0][0] = fundingManager.seize.selector;
+
+            // Create role and set members
+            orchestrator.authorizer().createRoleAndAddAccessPermissions(
+                "COVER_MANAGER_ROLE",
+                authorizer.getAdminRole(),
+                roleMembers,
+                targets,
+                selectors
+            );
+
+            // Create and assign role for the curveUser
+
+            // Members of the role
+            roleMembers = new address[](1);
+            roleMembers[0] = curveUser;
+            // Target contract and function selectors
+            targets = new address[](1);
+            targets[0] = address(fundingManager);
+            selectors = new bytes4[][](1);
+            selectors[0] = new bytes4[](2);
+            selectors[0][0] = fundingManager.buy.selector;
+            selectors[0][1] = fundingManager.sell.selector;
+
+            // Create role and set members
+            orchestrator.authorizer().createRoleAndAddAccessPermissions(
+                "CURVE_USER_ROLE",
+                authorizer.getAdminRole(),
+                roleMembers,
+                targets,
+                selectors
+            );
+
+            // Buy and sell should be public initially
+            authorizer.addAccessPermission(
+                address(fundingManager),
+                fundingManager.buy.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+            authorizer.addAccessPermission(
+                address(fundingManager),
+                fundingManager.sell.selector,
+                authorizer.PUBLIC_ROLE()
+            );
+        }
 
         //--------------------------------------------------------------------------------
         // Setup
@@ -201,22 +275,38 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         //--------------------------------------------------------------------------------
         // Buy and Sell Restrictions
 
-        // Check for that buy and sell is not restricted
-        assertEq(fundingManager.isBuyAndSellRestricted(), false);
+        // Check for that buy and sell is public initially
+        assertEq(
+            authorizer.hasPermission(
+                address(0), address(fundingManager), fundingManager.buy.selector
+            ),
+            true
+        );
+        assertEq(
+            authorizer.hasPermission(
+                address(0),
+                address(fundingManager),
+                fundingManager.sell.selector
+            ),
+            true
+        );
 
-        // Restrict Buy and Sell
-        vm.prank(coverManager);
-        fundingManager.restrictBuyAndSell();
+        // Restrict Buy and Sell by removing the public role
+        authorizer.removeAccessPermission(
+            address(fundingManager),
+            fundingManager.buy.selector,
+            authorizer.PUBLIC_ROLE()
+        );
+        authorizer.removeAccessPermission(
+            address(fundingManager),
+            fundingManager.sell.selector,
+            authorizer.PUBLIC_ROLE()
+        );
 
         // Check that the buy and sell functionalities dont work anymore for a regular user
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                orchestrator.authorizer().generateRoleId(
-                    address(fundingManager),
-                    fundingManager.CURVE_INTERACTION_ROLE()
-                ),
-                alice
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(alice);
@@ -224,12 +314,7 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                orchestrator.authorizer().generateRoleId(
-                    address(fundingManager),
-                    fundingManager.CURVE_INTERACTION_ROLE()
-                ),
-                alice
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
         vm.prank(alice);
@@ -248,9 +333,17 @@ contract BondingSurfaceFundingManagerE2E is E2ETest {
         vm.prank(curveUser);
         fundingManager.sell(curveUserSellAmount, 1);
 
-        // Open up functions again
-        vm.prank(coverManager);
-        fundingManager.unrestrictBuyAndSell();
+        // Open up functions again by making them public again
+        authorizer.addAccessPermission(
+            address(fundingManager),
+            fundingManager.buy.selector,
+            authorizer.PUBLIC_ROLE()
+        );
+        authorizer.addAccessPermission(
+            address(fundingManager),
+            fundingManager.sell.selector,
+            authorizer.PUBLIC_ROLE()
+        );
 
         //--------------------------------------------------------------------------------
         // Transfer Repayment

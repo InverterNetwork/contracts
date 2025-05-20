@@ -103,35 +103,7 @@ interface ILM_PC_KPIRewarder_v2 {
     event DeletedStuckAssertion(bytes32 indexed assertionId);
 
     //--------------------------------------------------------------------------
-    // Functions
-
-    /// @notice Posts an assertion to the Optimistic Oracle, specifying the KPI to use and the asserted value.
-    /// @param  dataId The dataId to be posted.
-    /// @param  assertedValue The target value that will be asserted and posted as data to the oracle.
-    /// @param  asserter The address of the asserter.
-    /// @param  targetKPI The KPI to be used for distribution once the assertion confirms.
-    /// @return assertionId The assertionId received for the posted assertion.
-    function postAssertion(
-        bytes32 dataId,
-        uint assertedValue,
-        address asserter,
-        uint targetKPI
-    ) external returns (bytes32 assertionId);
-
-    /// @notice Creates a KPI for the Rewarder.
-    /// @param  _continuous Should the tranche rewards be distributed continuously or in steps.
-    /// @param  _trancheValues The value at which the tranches end.
-    /// @param  _trancheRewards The rewards to be distributed at completion of each tranche.
-    /// @return The KPI id.
-    function createKPI(
-        bool _continuous,
-        uint[] calldata _trancheValues,
-        uint[] calldata _trancheRewards
-    ) external returns (uint);
-
-    /// @notice Deposits funds into the contract so it can pay for the oracle bond and fee itself.
-    /// @param  amount The amount to deposit.
-    function depositFeeFunds(uint amount) external;
+    // Getter
 
     /// @notice Returns the KPI with the given number.
     /// @param  KPInum The number of the KPI to return.
@@ -146,11 +118,6 @@ interface ILM_PC_KPIRewarder_v2 {
         view
         returns (RewardRoundConfiguration memory);
 
-    /// @notice Deletes a stuck assertion.
-    /// @dev    This function is only callable by the Orchestrator Admin.
-    /// @param  assertionId The id of the assertion to delete.
-    function deleteStuckAssertion(bytes32 assertionId) external;
-
     /// @notice Returns the current KPI counter.
     /// @return The KPI counter.
     function getKPICounter() external view returns (uint);
@@ -158,4 +125,43 @@ interface ILM_PC_KPIRewarder_v2 {
     /// @notice Returns the assertion pending flag.
     /// @return The assertion pending flag.
     function getAssertionPending() external view returns (bool);
+
+    //--------------------------------------------------------------------------
+    // Mutating
+
+    /// @notice Posts an assertion to the Optimistic Oracle, specifying the KPI to use and the asserted value.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  dataId The dataId to be posted.
+    /// @param  assertedValue The target value that will be asserted and posted as data to the oracle.
+    /// @param  asserter The address of the asserter.
+    /// @param  targetKPI The KPI to be used for distribution once the assertion confirms.
+    /// @return assertionId The assertionId received for the posted assertion.
+    function postAssertion(
+        bytes32 dataId,
+        uint assertedValue,
+        address asserter,
+        uint targetKPI
+    ) external returns (bytes32 assertionId);
+
+    /// @notice Creates a KPI for the Rewarder.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  _continuous Should the tranche rewards be distributed continuously or in steps.
+    /// @param  _trancheValues The value at which the tranches end.
+    /// @param  _trancheRewards The rewards to be distributed at completion of each tranche.
+    /// @return The KPI id.
+    function createKPI(
+        bool _continuous,
+        uint[] calldata _trancheValues,
+        uint[] calldata _trancheRewards
+    ) external returns (uint);
+
+    /// @notice Deposits funds into the contract so it can pay for the oracle bond and fee itself.
+    /// @param  amount The amount to deposit.
+    function depositFeeFunds(uint amount) external;
+
+    /// @notice Deletes a stuck assertion.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev    This function is only callable by the Orchestrator Admin.
+    /// @param  assertionId The id of the assertion to delete.
+    function deleteStuckAssertion(bytes32 assertionId) external;
 }

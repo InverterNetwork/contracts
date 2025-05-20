@@ -59,13 +59,8 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
         bytes memory configData = abi.encode(address(collateralToken));
         manualExternalPriceSetter.init(_orchestrator, _METADATA, configData);
 
-        // Grant PRICE_SETTER_ROLE and PRICE_SETTER_ROLE_ADMIN to the test contract
-        manualExternalPriceSetter.grantModuleRole(
-            manualExternalPriceSetter.getPriceSetterRole(), address(this)
-        );
-        manualExternalPriceSetter.grantModuleRole(
-            manualExternalPriceSetter.getPriceSetterRoleAdmin(), address(this)
-        );
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
     }
 
     // ================================================================================
@@ -87,7 +82,7 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface_GivenValidInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             manualExternalPriceSetter.supportsInterface(
                 type(ILM_Oracle_Permissioned_v1).interfaceId
@@ -99,36 +94,26 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
     // Test External (public + external)
 
     /* Test: Function SetIssuancePrice()
-        ├── Given the caller has not PRICE_SETTER_ROLE
+        ├── Given the caller is not permissioned
         │   └── When the function setIssuancePrice() is called
         │       └── Then the function should revert (Modifier in place test)
-        └── Given the caller has PRICE_SETTER_ROLE
+        └── Given the caller is permissioned
             └── When the function setIssuancePrice() is called
                 └── Then the price should be set correctly (redirects to internal func)
     */
 
-    function testSetIssuancePrice_worksGivenModifierInPlace(
-        address unauthorized_,
-        uint price_
-    ) public {
-        // Setup
-        vm.assume(unauthorized_ != address(this));
-        vm.assume(price_ > 0);
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(manualExternalPriceSetter),
-            manualExternalPriceSetter.getPriceSetterRole()
-        );
+    function testSetIssuancePrice_ModifierInPlace() public {
+        // permissioned
 
-        // Test
-        vm.startPrank(unauthorized_);
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                unauthorized_
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        manualExternalPriceSetter.setIssuancePrice(price_);
+        vm.prank(address(0xB0B));
+        manualExternalPriceSetter.setIssuancePrice(0);
     }
 
     function testSetIssuancePrice_worksGivenPriceIsSet(
@@ -159,36 +144,25 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
     }
 
     /* Test: Function: SetRedemptionPrice()
-        ├── Given the caller has not PRICE_SETTER_ROLE
+        ├── Given the caller is not permissioned
         │   └── When the function setRedemptionPrice() is called
         │       └── Then the function should revert (Modifier in place test)
-        └── Given the caller has PRICE_SETTER_ROLE
+        └── Given the caller is permissioned
             └── When the function setRedemptionPrice() is called
                 └── Then the price should be set correctly (redirects to internal func)
     */
 
-    function testSetRedemptionPrice_worksGivenModifierInPlace(
-        address unauthorized_,
-        uint price_
-    ) public {
-        // Setup
-        vm.assume(unauthorized_ != address(this));
-        vm.assume(price_ > 0);
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(manualExternalPriceSetter),
-            manualExternalPriceSetter.getPriceSetterRole()
-        );
-
-        // Test
-        vm.startPrank(unauthorized_);
+    function testSetRedemptionPrice_ModifierInPlace() public {
+        // permissioned
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                unauthorized_
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        manualExternalPriceSetter.setRedemptionPrice(price_);
+        vm.prank(address(0xB0B));
+        manualExternalPriceSetter.setRedemptionPrice(0);
     }
 
     function testSetRedemptionPrice_worksGivenPriceIsSet(
@@ -219,39 +193,26 @@ contract LM_Oracle_Permissioned_v1_Test is ModuleTest {
     }
 
     /* Test: Function: SetIssuanceAndRedemptionPrice()
-        ├── Given the caller has not PRICE_SETTER_ROLE
+        ├── Given the caller is not permissioned
         │   └── When the function setIssuanceAndRedemptionPrice() is called
         │       └── Then the function should revert (Modifier in place test)
-        └── Given the caller has PRICE_SETTER_ROLE
+        └── Given the caller is permissioned
             └── When the function setIssuanceAndRedemptionPrice() is called
                 └── Then the price should be set correctly (redirects to internal funcs)
     */
 
-    function testSetIssuanceAndRedemptionPrice_worksGivenModifierInPlace(
-        address unauthorized_,
-        uint issuancePrice_,
-        uint redemptionPrice_
-    ) public {
-        // Setup
-        vm.assume(unauthorized_ != address(this));
-        vm.assume(issuancePrice_ > 0 && redemptionPrice_ > 0);
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(manualExternalPriceSetter),
-            manualExternalPriceSetter.getPriceSetterRole()
-        );
+    function testSetIssuanceAndRedemptionPrice_ModifierInPlace() public {
+        // permissioned
 
-        // Test
-        vm.startPrank(unauthorized_);
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                unauthorized_
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        manualExternalPriceSetter.setIssuanceAndRedemptionPrice(
-            issuancePrice_, redemptionPrice_
-        );
+        vm.prank(address(0xB0B));
+        manualExternalPriceSetter.setIssuanceAndRedemptionPrice(0, 0);
     }
 
     function testSetIssuanceAndRedemptionPrice_worksGivenPricesAreSet(

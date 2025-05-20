@@ -219,7 +219,7 @@ contract LM_PC_RecurringPayments_v2 is
         address recipient
     )
         external
-        onlyOrchestratorAdmin
+        permissioned
         validAmount(amount)
         validStartEpoch(startEpoch)
         validRecipient(recipient)
@@ -251,7 +251,7 @@ contract LM_PC_RecurringPayments_v2 is
     /// @inheritdoc ILM_PC_RecurringPayments_v2
     function removeRecurringPayment(uint prevId, uint id)
         external
-        onlyOrchestratorAdmin
+        permissioned
     {
         // trigger to resolve the given Payment
         _triggerFor(id, _paymentList.getNextId(id));
@@ -269,11 +269,13 @@ contract LM_PC_RecurringPayments_v2 is
     // Trigger
 
     /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @dev    This function is always publicly callable.
     function trigger() external {
         _triggerFor(_paymentList.getNextId(_SENTINEL), _SENTINEL);
     }
 
     /// @inheritdoc ILM_PC_RecurringPayments_v2
+    /// @dev    This function is always publicly callable.
     function triggerFor(uint startId, uint endId)
         external
         validId(startId)
@@ -285,10 +287,13 @@ contract LM_PC_RecurringPayments_v2 is
         _triggerFor(startId, _paymentList.getNextId(endId));
     }
 
+    //--------------------------------------------------------------------------
+    // Internal Functions
+
     /// @dev	Triggers the given RecurringPayment.
     /// @param  startId The id of the first RecurringPayment to trigger.
     /// @param  endId The id of the last RecurringPayment to trigger.
-    function _triggerFor(uint startId, uint endId) private {
+    function _triggerFor(uint startId, uint endId) internal {
         // Set startId to be the current position in List
         uint currentId = startId;
 

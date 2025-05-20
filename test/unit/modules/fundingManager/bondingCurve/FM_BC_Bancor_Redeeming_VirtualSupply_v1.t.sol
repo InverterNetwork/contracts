@@ -15,6 +15,8 @@ import {Clones} from "@oz/proxy/Clones.sol";
 
 import {IERC165} from "@oz/utils/introspection/IERC165.sol";
 
+import {IERC20} from "@oz/token/ERC20/IERC20.sol";
+
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
 // Internal Dependencies
@@ -77,39 +79,6 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     address admin_address = address(0xA1BA);
     address non_admin_address = address(0xB0B);
 
-    event Transfer(address indexed from, address indexed to, uint value);
-
-    event TokensBought(
-        address indexed receiver,
-        uint depositAmount,
-        uint receivedAmount,
-        address buyer
-    );
-    event VirtualCollateralAmountAdded(uint amountAdded, uint newSupply);
-    event VirtualCollateralAmountSubtracted(
-        uint amountSubtracted, uint newSupply
-    );
-    event VirtualIssuanceAmountSubtracted(
-        uint amountSubtracted, uint newSupply
-    );
-    event VirtualIssuanceAmountAdded(uint amountAdded, uint newSupply);
-    event TokensSold(
-        address indexed receiver,
-        uint depositAmount,
-        uint receivedAmount,
-        address seller
-    );
-    event BuyReserveRatioSet(
-        uint32 newBuyReserveRatio, uint32 oldBuyReserveRatio
-    );
-    event SellReserveRatioSet(
-        uint32 newSellReserveRatio, uint32 oldSellReserveRatio
-    );
-    event VirtualIssuanceSupplySet(uint newSupply, uint oldSupply);
-    event VirtualCollateralSupplySet(uint newSupply, uint oldSupply);
-    event TransferOrchestratorToken(address indexed to, uint amount);
-    event OrchestratorTokenSet(address indexed token, uint8 decimals);
-
     function setUp() public virtual {
         // Deploy contracts
         issuanceToken = new ERC20Issuance_v1(NAME, SYMBOL, DECIMALS, MAX_SUPPLY);
@@ -138,10 +107,11 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+        // Every caller has permission for every permissioned function
+        _authorizer.setAllAuthorized(true);
 
         vm.expectEmit(true, true, true, true);
-        emit OrchestratorTokenSet(address(_token), DECIMALS);
+        emit IFundingManager_v1.OrchestratorTokenSet(address(_token), DECIMALS);
 
         // Init Module
         bondingCurveFundingManager.init(
@@ -158,7 +128,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         issuanceToken.setMinter(address(bondingCurveFundingManager), true);
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IFM_BC_Bancor_Redeeming_VirtualSupply_v1).interfaceId
@@ -248,6 +218,104 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Public Functions
+
+    /*
+    Test: buyFor Modifier Checks
+    ├── Given: buyer is not permissioned
+    │   └── When: buyFor is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is not enabled
+    │   └── When: buyFor is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is enabled
+    └── And: receiver is invalid
+        └── When: buyFor is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testBuyFor_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+
+        // Open up Buy again
+        bondingCurveFundingManager.openBuy();
+
+        // validReceiver
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidRecipient
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+    }
+
+    /*
+    Test: buy Modifier Checks
+    ├── Given: buyer is not permissioned
+    │   └── When: buy is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is not enabled
+        └── When: buy is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testBuy_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.buy(0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.buy(0, 0);
+    }
 
     /* Test buy and _virtualSupplyBuyOrder function
         ├── when the deposit amount is 0
@@ -387,23 +455,25 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Execution
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
-        emit Transfer(buyer, address(bondingCurveFundingManager), amount);
+        emit IERC20.Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(true, true, true, true, address(issuanceToken));
-        emit Transfer(address(0), buyer, formulaReturn);
+        emit IERC20.Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, formulaReturn, buyer);
+        emit IBondingCurveBase_v1.TokensBought(
+            buyer, amount, formulaReturn, buyer
+        );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceAmountAdded(
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountAdded(
             formulaReturn, (INITIAL_ISSUANCE_SUPPLY + formulaReturn)
         );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualCollateralAmountAdded(
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralAmountAdded(
             amount, (INITIAL_COLLATERAL_SUPPLY + amount)
         );
         bondingCurveFundingManager.buy(amount, formulaReturn);
@@ -465,23 +535,25 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         // Execution
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true, address(_token));
-        emit Transfer(buyer, address(bondingCurveFundingManager), amount);
+        emit IERC20.Transfer(buyer, address(bondingCurveFundingManager), amount);
         vm.expectEmit(true, true, true, true, address(issuanceToken));
-        emit Transfer(address(0), buyer, formulaReturn);
+        emit IERC20.Transfer(address(0), buyer, formulaReturn);
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, formulaReturn, buyer);
+        emit IBondingCurveBase_v1.TokensBought(
+            buyer, amount, formulaReturn, buyer
+        );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceAmountAdded(
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountAdded(
             formulaReturn, (INITIAL_ISSUANCE_SUPPLY + formulaReturn)
         );
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit VirtualCollateralAmountAdded(
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralAmountAdded(
             buyAmountMinusFee, (INITIAL_COLLATERAL_SUPPLY + buyAmountMinusFee)
         );
         bondingCurveFundingManager.buy(amount, formulaReturn);
@@ -556,6 +628,105 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         assertEq(_token.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(buyer), 0);
         assertEq(issuanceToken.balanceOf(to), formulaReturn);
+    }
+
+    /*
+    Test: sellTo Modifier Checks
+    ├── Given: seller is not permissioned
+    │   └── When: sellTo is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    ├── And: buysellinging is not enabled
+    │   └── When: sellTo is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    ├── And: selling is enabled
+    └── And: receiver is invalid
+        └── When: sellTo is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testsellTo_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+
+        // Open up Buy again
+        bondingCurveFundingManager.openSell();
+
+        // validReceiver
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidRecipient
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.sellTo(address(0), 0, 0);
+    }
+
+    /*
+    Test: sell Modifier Checks
+    ├── Given: seller is not permissioned
+    │   └── When: sell is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: seller is permissioned
+    └── And: buysellinging is not enabled
+        └── When: sell is called
+            └── Then: it should revert (modifier in position check)
+    
+    */
+
+    function testsell_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.sell(0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeSell();
+
+        vm.expectRevert(
+            IRedeemingBondingCurveBase_v1
+                .Module__RedeemingBondingCurveBase__SellingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.sell(0, 0);
     }
 
     /* Test sell and _virtualSupplySellOrder function
@@ -728,7 +899,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectEmit(true, true, true, true, address(_token));
-            emit Transfer(
+            emit IERC20.Transfer(
                 address(bondingCurveFundingManager),
                 address(seller),
                 normalized_formulaReturn
@@ -736,19 +907,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit TokensSold(
+            emit IRedeemingBondingCurveBase_v1.TokensSold(
                 seller, userSellAmount, normalized_formulaReturn, seller
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualIssuanceAmountSubtracted(
+            emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountSubtracted(
                 userSellAmount, newVirtualIssuanceSupply - userSellAmount
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualCollateralAmountSubtracted(
+            emit IVirtualCollateralSupplyBase_v1
+                .VirtualCollateralAmountSubtracted(
                 normalized_formulaReturn,
                 newVirtualCollateral - normalized_formulaReturn
             );
@@ -837,7 +1009,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(seller);
         {
             vm.expectEmit(true, true, true, true, address(_token));
-            emit Transfer(
+            emit IERC20.Transfer(
                 address(bondingCurveFundingManager),
                 address(seller),
                 sellAmountMinusFee
@@ -845,17 +1017,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit TokensSold(seller, userSellAmount, sellAmountMinusFee, seller);
+            emit IRedeemingBondingCurveBase_v1.TokensSold(
+                seller, userSellAmount, sellAmountMinusFee, seller
+            );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualIssuanceAmountSubtracted(
+            emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceAmountSubtracted(
                 userSellAmount, newVirtualIssuanceSupply - userSellAmount
             );
             vm.expectEmit(
                 true, true, true, true, address(bondingCurveFundingManager)
             );
-            emit VirtualCollateralAmountSubtracted(
+            emit IVirtualCollateralSupplyBase_v1
+                .VirtualCollateralAmountSubtracted(
                 normalized_formulaReturn,
                 newVirtualCollateral - normalized_formulaReturn
             );
@@ -1172,10 +1347,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // OnlyOrchestrator Functions
 
     /* Test setVirtualIssuanceSupply and _setVirtualIssuanceSupply function
-        ├── given caller is not the Orchestrator_v1 admin
+        ├── given caller is not permissioned
         │   └── when the function setVirtualIssuanceSupply() is called
         │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
-        └── given the caller is the Orchestrator_v1 admin
+        └── given the caller is permissioned
             ├── and the buy | sell curve are still open (modifier test)
             │   └── when the function_setVirtualIssuanceSupply() is called
             │       └── then it should revert
@@ -1191,19 +1366,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                         └── and it should emit an event
     */
 
-    function testSetVirtualIssuanceSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
-        uint _newSupply
-    ) public {
-        vm.assume(_newSupply != 0);
+    function testSetVirtualIssuanceSupply_PermissionedModifierInPlace()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                non_admin_address
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        vm.prank(non_admin_address);
-        bondingCurveFundingManager.setVirtualIssuanceSupply(_newSupply);
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setVirtualIssuanceSupply(0);
     }
 
     function testSetVirtualIssuanceSupply_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
@@ -1254,7 +1430,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit VirtualIssuanceSupplySet(_newSupply, INITIAL_ISSUANCE_SUPPLY);
+        emit IVirtualIssuanceSupplyBase_v1.VirtualIssuanceSupplySet(
+            _newSupply, INITIAL_ISSUANCE_SUPPLY
+        );
         bondingCurveFundingManager.call_setVirtualIssuanceSupply(_newSupply);
         assertEq(
             bondingCurveFundingManager.getVirtualIssuanceSupply(), _newSupply
@@ -1262,10 +1440,10 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setVirtualCollateralSupply and _setVirtualCollateralSupply function
-        ├── given caller is not the Orchestrator_v1 admin
+        ├── given caller is not permissioned
         │   └── when the function setVirtualCollateralSupply() is called
         │       └── then it should revert (test modifier is in place. Modifier test itself is tested in base Module tests)
-        └── given the caller is the Orchestrator_v1 admin
+        └── given the caller is permissioned
             ├── and the buy | sell curve are still open (modifier test)
             │   └── when the setVirtualCollateralSupply() is called
             │       └── then it should revert
@@ -1278,19 +1456,20 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                         └── and it should emit an event
     */
 
-    function testSetVirtualCollateralSupply_WorksGivenOnlyOrchestratorAdminModifierInPlace(
-        uint _newSupply
-    ) public {
-        vm.assume(_newSupply != 0);
+    function testSetVirtualCollateralSupply_permissionedModifierInPlace()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                _authorizer.getAdminRole(),
-                non_admin_address
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        vm.prank(non_admin_address);
-        bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setVirtualCollateralSupply(0);
     }
 
     function testSetVirtualCollateralSupply_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
@@ -1330,7 +1509,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit VirtualCollateralSupplySet(_newSupply, INITIAL_COLLATERAL_SUPPLY);
+        emit IVirtualCollateralSupplyBase_v1.VirtualCollateralSupplySet(
+            _newSupply, INITIAL_COLLATERAL_SUPPLY
+        );
         bondingCurveFundingManager.setVirtualCollateralSupply(_newSupply);
         assertEq(
             bondingCurveFundingManager.getVirtualCollateralSupply(), _newSupply
@@ -1338,8 +1519,8 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     }
 
     /* Test setReserveRatioForBuying and _setReserveRatioForBuying function
-        ├── when caller is not the Orchestrator_v1 admin
-        │       └── it should revert (tested in base Module tests)
+        ├── when caller is not permissioned
+        │       └── it should revert (modifier in position test)
         └── when caller is the Orchestrator_v1 admin
                 ├── when buy | sell is still open (modifier test)
                 │       └── it should revert
@@ -1354,6 +1535,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
+
+    function testSetReserveRatioForBuying_permissionedModifierInPosition()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setReserveRatioForBuying(0);
+    }
 
     function testSetReserveRatioForBuying_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
     ) public {
@@ -1401,7 +1598,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit BuyReserveRatioSet(_newRatio, RESERVE_RATIO_FOR_BUYING);
+        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BuyReserveRatioSet(
+            _newRatio, RESERVE_RATIO_FOR_BUYING
+        );
         bondingCurveFundingManager.setReserveRatioForBuying(_newRatio);
         assertEq(
             bondingCurveFundingManager.call_reserveRatioForBuying(), _newRatio
@@ -1412,9 +1611,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
     // Test reserve ratio changes
 
     /* Test setReserveRatioForSelling and _setReserveRatioForSelling function
-        ├── when caller is not the Orchestrator_v1 admin
-        │       └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
+        ├── when caller is not permissioned
+        │       └── it should revert (modifier in position)
+        └── when caller is permissioned
                 ├── when buy | sell is still open (modifier test)
                 │       └── it should revert
                 ├── when reserve ratio is  0% 
@@ -1428,6 +1627,22 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
                 └──  when reserve ratio is over 100% 
                         └── it should revert
     */
+
+    function testSetReserveRatioForSelling_permissionedModifierInPosition()
+        public
+    {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setReserveRatioForSelling(0);
+    }
 
     function testSetReserveRatioForSelling_WorksGivenOnlyWhenCurveInteractionsAreClosedModifierInPosition(
     ) public {
@@ -1475,7 +1690,9 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit SellReserveRatioSet(_newRatio, RESERVE_RATIO_FOR_SELLING);
+        emit IFM_BC_Bancor_Redeeming_VirtualSupply_v1.SellReserveRatioSet(
+            _newRatio, RESERVE_RATIO_FOR_SELLING
+        );
         bondingCurveFundingManager.setReserveRatioForSelling(_newRatio);
         assertEq(
             bondingCurveFundingManager.call_reserveRatioForSelling(), _newRatio
@@ -1726,7 +1943,7 @@ contract FM_BC_Bancor_Redeeming_VirtualSupplyV1Test is ModuleTest {
         vm.startPrank(address(_erc20PaymentClientMock));
         {
             vm.expectEmit(true, true, true, true);
-            emit TransferOrchestratorToken(to, amount);
+            emit IFundingManager_v1.TransferOrchestratorToken(to, amount);
 
             bondingCurveFundingManager.transferOrchestratorToken(to, amount);
         }

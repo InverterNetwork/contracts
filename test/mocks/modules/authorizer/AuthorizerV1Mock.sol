@@ -27,7 +27,20 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
     mapping(address => bool) private _authorized;
     mapping(bytes32 => mapping(address => bool)) private _roleAuthorized;
 
+    mapping(
+        address caller
+            => mapping(
+                address target
+                    => mapping(bytes4 functionSelector => bool permission)
+            )
+    ) internal _permissions;
+
     bool private _allAuthorized;
+    address _defaultAdmin;
+
+    function setDefaultAdmin(address who) external {
+        _defaultAdmin = who;
+    }
 
     function setIsAuthorized(address who, bool to) external {
         _authorized[who] = to;
@@ -53,8 +66,9 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
 
         _authorized[authorized] = true;
 
-        _roleAuthorized["0x00"][msg.sender] = true;
-        _roleAuthorized["0x02"][msg.sender] = true;
+        _roleAuthorized[0x00][msg.sender] = true;
+
+        _defaultAdmin = authorized;
     }
 
     function mockInit(bytes memory configData) public {
@@ -65,58 +79,14 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         _authorized[authorized] = true;
     }
 
-    //--------------------------------------------------------------------------
-    // IAuthorizer_v1 Functions
-
-    function generateRoleId(address module, bytes32 role)
-        public
-        pure
-        returns (bytes32)
-    {
-        return keccak256(abi.encodePacked(module, role));
-    }
-
-    function grantRoleFromModule(bytes32 role, address target) external {
-        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = true;
-    }
-
-    function grantRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external {
-        for (uint i = 0; i < targets.length; i++) {
-            _roleAuthorized[generateRoleId(_msgSender(), role)][targets[i]] =
-                true;
-        }
-    }
-
-    function revokeRoleFromModule(bytes32 role, address target) external {
-        _roleAuthorized[generateRoleId(_msgSender(), role)][target] = false;
-    }
-
-    function revokeRoleFromModuleBatched(
-        bytes32 role,
-        address[] calldata targets
-    ) external {
-        for (uint i = 0; i < targets.length; i++) {
-            _roleAuthorized[generateRoleId(_msgSender(), role)][targets[i]] =
-                false;
-        }
-    }
+    // ========================================================================
+    // Mock Overrides
 
     function grantRole(bytes32 role, address who) public {
         _roleAuthorized[role][who] = true;
     }
 
     function hasRole(bytes32 role, address who) external view returns (bool) {
-        return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
-    }
-
-    function checkForRole(bytes32 role, address who)
-        external
-        view
-        returns (bool)
-    {
         return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
@@ -132,22 +102,166 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         _roleAuthorized[role][who] = false;
     }
 
+    function renounceRole(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function getRoleAdmin(bytes32) external pure returns (bytes32) {
+        return 0x00; // In this mock, all roles have the owner as admin
+    }
+
+    function getRoleMember(bytes32, uint) external pure returns (address) {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function getRoleMemberCount(bytes32) external pure returns (uint) {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    // ========================================================================
+    // Public Getter Functions
+
+    // ------------------------------------------------------------------------
+    // Getter -  Authorization
+
+    function getPermissions(address, bytes4)
+        external
+        view
+        returns (bytes32[] memory)
+    {}
+
+    function getLastAssignedRoleId()
+        external
+        view
+        returns (uint lastAssignedRoleId_)
+    {}
+
+    function isRolePermissioned(address, bytes4, bytes32)
+        external
+        view
+        returns (bool)
+    {}
+
+    function hasPermission(
+        address caller_,
+        address target_,
+        bytes4 functionSelector_
+    ) external view returns (bool) {
+        if (_allAuthorized) {
+            return true;
+        }
+        if (caller_ == _defaultAdmin) {
+            return true;
+        }
+        return _permissions[caller_][target_][functionSelector_];
+    }
+
+    function setHasPermission(
+        address caller_,
+        address target_,
+        bytes4 functionSelector_,
+        bool to
+    ) external {
+        _permissions[caller_][target_][functionSelector_] = to;
+    }
+
+    // ------------------------------------------------------------------------
+    // Getter -  Role Management
+
     function getAdminRole() external pure returns (bytes32) {
-        return "0x00";
+        return 0x00;
     }
 
-    function grantGlobalRole(bytes32 role, address target) external {
-        bytes32 roleID = generateRoleId(address(orchestrator()), role);
-        grantRole(roleID, target);
+    // ------------------------------------------------------------------------
+    // Getter - Out of Order
+
+    function checkForRole(bytes32 role, address who)
+        external
+        view
+        returns (bool)
+    {
+        return _authorized[who] || _roleAuthorized[role][who] || _allAuthorized;
     }
 
-    function revokeGlobalRole(bytes32 role, address target) external {
-        bytes32 roleID = generateRoleId(address(orchestrator()), role);
-        revokeRole(roleID, target);
+    function generateRoleId(address module, bytes32 role)
+        public
+        pure
+        returns (bytes32)
+    {
+        return keccak256(abi.encodePacked(module, role));
     }
 
-    //--------------------------------------------------------------------------
-    // Functions left empty
+    // ========================================================================
+    // Mutating Functions
+
+    // ------------------------------------------------------------------------
+    // Mutating - Authorization
+
+    function addAccessPermission(address, bytes4, bytes32) external {}
+
+    function removeAccessPermission(address, bytes4, bytes32) external {}
+
+    // ------------------------------------------------------------------------
+    // Mutating - Role Management
+
+    function createRole(string memory, bytes32, address[] memory)
+        external
+        returns (bytes32)
+    {}
+
+    function labelRole(bytes32, string memory) external {}
+
+    function transferAdminRole(bytes32, bytes32) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function burnRoleAdmin(bytes32) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    // ------------------------------------------------------------------------
+    // Mutating - Mixed Utility
+
+    function createRoleAndAddAccessPermissions(
+        string memory,
+        bytes32,
+        address[] memory,
+        address[] memory,
+        bytes4[][] memory
+    ) external returns (bytes32) {}
+
+    // ------------------------------------------------------------------------
+    // Mutating - Out of Order
+
+    function grantRoleFromModule(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function grantRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function revokeRoleFromModule(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function revokeRoleFromModuleBatched(bytes32, address[] calldata)
+        external
+        pure
+    {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function burnAdminFromModuleRole(bytes32) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
+    function grantGlobalRole(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
 
     function grantGlobalRoleBatched(bytes32, address[] calldata)
         external
@@ -156,34 +270,14 @@ contract AuthorizerV1Mock is IAuthorizer_v1, Module_v1 {
         revert("Not implemented in Authorizer Mock");
     }
 
+    function revokeGlobalRole(bytes32, address) external pure {
+        revert("Not implemented in Authorizer Mock");
+    }
+
     function revokeGlobalRoleBatched(bytes32, address[] calldata)
         external
         pure
     {
-        revert("Not implemented in Authorizer Mock");
-    }
-
-    function renounceRole(bytes32, address) external pure {
-        revert("Not implemented in Authorizer Mock");
-    }
-
-    function transferAdminRole(bytes32, bytes32) external pure {
-        revert("Not implemented in Authorizer Mock");
-    }
-
-    function burnAdminFromModuleRole(bytes32) external pure {
-        revert("Not implemented in Authorizer Mock");
-    }
-
-    function getRoleAdmin(bytes32) external pure returns (bytes32) {
-        return "0x00"; // In this mock, all roles have the owner as admin
-    }
-
-    function getRoleMember(bytes32, uint) external pure returns (address) {
-        revert("Not implemented in Authorizer Mock");
-    }
-
-    function getRoleMemberCount(bytes32) external pure returns (uint) {
         revert("Not implemented in Authorizer Mock");
     }
 }

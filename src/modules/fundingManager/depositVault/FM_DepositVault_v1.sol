@@ -118,7 +118,7 @@ contract FM_DepositVault_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // OnlyOrchestrator Mutating Functions
+    // PaymentClient Mutating Functions
 
     /// @inheritdoc IFundingManager_v1
     function transferOrchestratorToken(address to, uint amount)
@@ -127,7 +127,6 @@ contract FM_DepositVault_v1 is
         validAddress(to)
     {
         token().safeTransfer(to, amount);
-
         emit TransferOrchestratorToken(to, amount);
     }
 

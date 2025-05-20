@@ -18,9 +18,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    /// @param  role The role of the caller.
-    /// @param  caller The caller address.
-    error Orchestrator__CallerNotAuthorized(bytes32 role, address caller);
+    error Orchestrator__NotPermissioned();
 
     /// @notice The given module is not used in the {Orchestrator_v1}.
     /// @param  module The module address.
@@ -77,122 +75,7 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     );
 
     //--------------------------------------------------------------------------
-    // Functions
-
-    /// @notice Initialization function.
-    /// @param  orchestratorId The id of the {Orchestrator_v1}.
-    /// @param  moduleFactory_ The address of the module factory.
-    /// @param  modules The addresses of the modules used in the {Orchestrator_v1}.
-    /// @param  fundingManager The address of the funding manager module.
-    /// @param  authorizer The address of the authorizer module.
-    /// @param  paymentProcessor The address of the payment processor module.
-    /// @param  governor The address of the governor contract.
-    function init(
-        uint orchestratorId,
-        address moduleFactory_,
-        address[] calldata modules,
-        IFundingManager_v1 fundingManager,
-        IAuthorizer_v1 authorizer,
-        IPaymentProcessor_v2 paymentProcessor,
-        IGovernor_v1 governor
-    ) external;
-
-    /// @notice Initiates replacing the current authorizer with `_authorizer` on a timelock.
-    /// @dev	Only callable by authorized caller.
-    /// @param  authorizer_ The address of the new authorizer module.
-    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
-        external;
-
-    /// @notice Initiates replaces the current funding manager with `fundingManager_` on a timelock.
-    /// @dev	Only callable by authorized caller.
-    /// @param  fundingManager_ The address of the new funding manager module.
-    function initiateSetFundingManagerWithTimelock(
-        IFundingManager_v1 fundingManager_
-    ) external;
-
-    /// @notice Initiates replaces the current payment processor with `paymentProcessor_` on a timelock.
-    /// @dev	Only callable by authorized caller.
-    /// @param  paymentProcessor_ The address of the new payment processor module.
-    function initiateSetPaymentProcessorWithTimelock(
-        IPaymentProcessor_v2 paymentProcessor_
-    ) external;
-
-    /// @notice Cancels the replacement of the current authorizer with `authorizer_`.
-    /// @dev	Only callable by authorized caller.
-    /// @param  authorizer_ The address of the new authorizer module, for which the update is canceled.
-    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external;
-
-    /// @notice Cancels the replacement of the current funding manager with `fundingManager_`.
-    /// @dev	Only callable by authorized caller.
-    /// @param  fundingManager_ The address of the new funding manager module, for which the update is canceled.
-    function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
-        external;
-
-    /// @notice Cancels the replacement of the current payment processor with `paymentProcessor_`.
-    /// @dev	Only callable by authorized caller.
-    /// @param  paymentProcessor_ The address of the new payment processro module, for which the update is canceled.
-    function cancelPaymentProcessorUpdate(
-        IPaymentProcessor_v2 paymentProcessor_
-    ) external;
-
-    /// @notice Executes replacing the current authorizer with `_authorizer`.
-    /// @notice !!! IMPORTANT !!! When changing the Authorizer the current set of assigned addresses to Roles are lost.
-    ///         Make sure initial owners are set properly.
-    /// @dev	Only callable by authorized caller.
-    /// @param  authorizer_ The address of the new authorizer module.
-    function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
-
-    /// @notice Executes replaces the current funding manager with `fundingManager_`.
-    /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained in the module might
-    ///         not be retrievable. Make sure to clean the FundingManager properly beforehand.
-    /// @dev	Only callable by authorized caller.
-    /// @param  fundingManager_ The address of the new funding manager module.
-    function executeSetFundingManager(IFundingManager_v1 fundingManager_)
-        external;
-
-    /// @notice Executes replaces the current payment processor with `paymentProcessor_`.
-    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payment orders are lost.
-    ///         Make sure to resolve those payments properly beforehand.
-    /// @dev	Only callable by authorized caller.
-    /// @param  paymentProcessor_ The address of the new payment processor module.
-    function executeSetPaymentProcessor(IPaymentProcessor_v2 paymentProcessor_)
-        external;
-
-    /// @notice Initiates the adding of a module to the {Orchestrator_v1} on a timelock.
-    /// @dev	Only callable by authorized address.
-    /// @dev	Fails of adding module exeeds max modules limit.
-    /// @dev	Fails if address invalid or address already added as module.
-    /// @param  module The module address to add.
-    function initiateAddModuleWithTimelock(address module) external;
-
-    /// @notice Initiate the removal of a module from the {Orchestrator_v1} on a timelock.
-    /// @dev	Reverts if module to be removed is the current authorizer/fundingManager/paymentProcessor.
-    ///         The functions specific to updating these 3 module categories should be used instead.
-    /// @dev	Only callable by authorized address.
-    /// @dev	Fails if address not added as module.
-    /// @param  module The module address to remove.
-    function initiateRemoveModuleWithTimelock(address module) external;
-
-    /// @notice Adds address `module` as module.
-    /// @dev	Only callable by authorized address.
-    /// @dev	Fails if adding of module has not been initiated.
-    /// @dev	Fails if timelock has not been expired yet.
-    /// @param  module The module address to add.
-    function executeAddModule(address module) external;
-
-    /// @notice Removes address `module` as module.
-    /// @dev	Only callable by authorized address.
-    /// @dev	Fails if removing of module has not been initiated.
-    /// @dev	Fails if timelock has not been expired yet.
-    /// @param  module The module address to remove.
-    function executeRemoveModule(address module) external;
-
-    /// @notice Cancels an initiated update for a module. Can be adding or removing a module
-    ///         from the {Orchestrator_v1}.
-    /// @dev	Only callable by authorized address.
-    /// @dev	Fails if module update has not been initiated.
-    /// @param  module The module address to remove.
-    function cancelModuleUpdate(address module) external;
+    // Getter Functions
 
     /// @notice Returns the {Orchestrator_v1}'s id.
     /// @dev	Unique id set by the {OrchestratorFactory_v1} during initialization.
@@ -215,4 +98,125 @@ interface IOrchestrator_v1 is IModuleManagerBase_v1 {
     /// @notice The {IGovernor_v1} implementation used for protocol level interactions.
     /// @return The {IGovernor_v1} implementation.
     function governor() external view returns (IGovernor_v1);
+
+    //--------------------------------------------------------------------------
+    // Initialization
+
+    /// @notice Initialization function.
+    /// @param  orchestratorId The id of the {Orchestrator_v1}.
+    /// @param  moduleFactory_ The address of the module factory.
+    /// @param  modules The addresses of the modules used in the {Orchestrator_v1}.
+    /// @param  fundingManager The address of the funding manager module.
+    /// @param  authorizer The address of the authorizer module.
+    /// @param  paymentProcessor The address of the payment processor module.
+    /// @param  governor The address of the governor contract.
+    function init(
+        uint orchestratorId,
+        address moduleFactory_,
+        address[] calldata modules,
+        IFundingManager_v1 fundingManager,
+        IAuthorizer_v1 authorizer,
+        IPaymentProcessor_v2 paymentProcessor,
+        IGovernor_v1 governor
+    ) external;
+
+    //--------------------------------------------------------------------------
+    // Mutating Functions
+
+    /// @notice Initiates replacing the current authorizer with `_authorizer` on a timelock.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  authorizer_ The address of the new authorizer module.
+    function initiateSetAuthorizerWithTimelock(IAuthorizer_v1 authorizer_)
+        external;
+
+    /// @notice Initiates replaces the current funding manager with `fundingManager_` on a timelock.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  fundingManager_ The address of the new funding manager module.
+    function initiateSetFundingManagerWithTimelock(
+        IFundingManager_v1 fundingManager_
+    ) external;
+
+    /// @notice Initiates replaces the current payment processor with `paymentProcessor_` on a timelock.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  paymentProcessor_ The address of the new payment processor module.
+    function initiateSetPaymentProcessorWithTimelock(
+        IPaymentProcessor_v2 paymentProcessor_
+    ) external;
+
+    /// @notice Cancels the replacement of the current authorizer with `authorizer_`.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  authorizer_ The address of the new authorizer module, for which the update is canceled.
+    function cancelAuthorizerUpdate(IAuthorizer_v1 authorizer_) external;
+
+    /// @notice Cancels the replacement of the current funding manager with `fundingManager_`.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  fundingManager_ The address of the new funding manager module, for which the update is canceled.
+    function cancelFundingManagerUpdate(IFundingManager_v1 fundingManager_)
+        external;
+
+    /// @notice Cancels the replacement of the current payment processor with `paymentProcessor_`.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  paymentProcessor_ The address of the new payment processro module, for which the update is canceled.
+    function cancelPaymentProcessorUpdate(
+        IPaymentProcessor_v2 paymentProcessor_
+    ) external;
+
+    /// @notice Executes replacing the current authorizer with `_authorizer`.
+    /// @notice !!! IMPORTANT !!! When changing the Authorizer the current set of assigned addresses to Roles are lost.
+    ///         Make sure initial owners are set properly.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  authorizer_ The address of the new authorizer module.
+    function executeSetAuthorizer(IAuthorizer_v1 authorizer_) external;
+
+    /// @notice Executes replaces the current funding manager with `fundingManager_`.
+    /// @notice !!! IMPORTANT !!! When changing the FundingManager the current funds still contained in the module might
+    ///         not be retrievable. Make sure to clean the FundingManager properly beforehand.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  fundingManager_ The address of the new funding manager module.
+    function executeSetFundingManager(IFundingManager_v1 fundingManager_)
+        external;
+
+    /// @notice Executes replaces the current payment processor with `paymentProcessor_`.
+    /// @notice !!! IMPORTANT !!! When changing the PaymentProcessor the current ongoing payment orders are lost.
+    ///         Make sure to resolve those payments properly beforehand.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  paymentProcessor_ The address of the new payment processor module.
+    function executeSetPaymentProcessor(IPaymentProcessor_v2 paymentProcessor_)
+        external;
+
+    /// @notice Initiates the adding of a module to the {Orchestrator_v1} on a timelock.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev	Fails of adding module exeeds max modules limit.
+    /// @dev	Fails if address invalid or address already added as module.
+    /// @param  module The module address to add.
+    function initiateAddModuleWithTimelock(address module) external;
+
+    /// @notice Initiate the removal of a module from the {Orchestrator_v1} on a timelock.
+    /// @dev	Reverts if module to be removed is the current authorizer/fundingManager/paymentProcessor.
+    ///         The functions specific to updating these 3 module categories should be used instead.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev	Fails if address not added as module.
+    /// @param  module The module address to remove.
+    function initiateRemoveModuleWithTimelock(address module) external;
+
+    /// @notice Adds address `module` as module.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev	Fails if adding of module has not been initiated.
+    /// @dev	Fails if timelock has not been expired yet.
+    /// @param  module The module address to add.
+    function executeAddModule(address module) external;
+
+    /// @notice Removes address `module` as module.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev	Fails if removing of module has not been initiated.
+    /// @dev	Fails if timelock has not been expired yet.
+    /// @param  module The module address to remove.
+    function executeRemoveModule(address module) external;
+
+    /// @notice Cancels an initiated update for a module. Can be adding or removing a module
+    ///         from the {Orchestrator_v1}.
+    /// @dev    Function access controlled by authorizer.
+    /// @dev	Fails if module update has not been initiated.
+    /// @param  module The module address to remove.
+    function cancelModuleUpdate(address module) external;
 }

@@ -159,6 +159,7 @@ interface IPP_Streaming_v2 is IPaymentProcessor_v2 {
 
     /// @notice Deletes all payments related to a paymentReceiver & leaves currently streaming tokens in the
     ///         {IERC20PaymentClientBase_v2}.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	this function calls `_removePayment` which goes through all the payment orders for a `paymentReceiver`.
     ///         For the payment orders that are completely streamed, their details are deleted in the
     ///         `_claimForSpecificStrea` function and for others it is deleted in the `_removePayment` function only,
@@ -172,6 +173,7 @@ interface IPP_Streaming_v2 is IPaymentProcessor_v2 {
 
     /// @notice Deletes a specific payment with id = streamId for a paymentReceiver & leaves currently streaming
     ///         tokens in the {IERC20PaymentClientBase_v2}.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	the detail of the wallet that is being removed is either deleted in the `_claimForSpecificStream`
     ///         or later down in this function itself depending on the timestamp of when this function was called.
     /// @param  client The {IERC20PaymentClientBase_v2} instance address from which we will remove the payment.
@@ -182,6 +184,15 @@ interface IPP_Streaming_v2 is IPaymentProcessor_v2 {
         address paymentReceiver,
         uint streamId
     ) external;
+
+    /// @notice Sets the default start time, cliff and end times for new
+    ///         payment orders.
+    /// @dev    Function access controlled by authorizer.
+    /// @param  newStart_ The new default start time.
+    /// @param  newCliff_ The new default cliff duration.
+    /// @param  newEnd_ The new default end time.
+    function setStreamingDefaults(uint newStart_, uint newCliff_, uint newEnd_)
+        external;
 
     /// @notice Getter for the start timestamp of a particular payment order with id = streamId associated
     ///         with a particular paymentReceiver.

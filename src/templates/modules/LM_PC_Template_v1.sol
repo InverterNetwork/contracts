@@ -36,24 +36,30 @@ import {ERC165Upgradeable} from
  *
  *          Key components:
  *          - Inherits from ERC20PaymentClientBase_v2
- *          - Uses DEPOSIT_ADMIN_ROLE for authorized payment processing
+ *          - Uses permissioned modifier for authorized payment processing
  *          - Tracks user deposits in _depositedAmounts mapping
  *          - Enforces maximum deposit limit of 100 ether
  *          - Processes payments through Orchestrator's payment processor
  *          - Makes use of payment order flags
  *
- * @custom:setup    This module requires the following MANDATORY setup steps:
+ * @custom:setup    This module has the following OPTIONAL setup steps:
  *
- *                  1. Configure DEPOSIT_ADMIN_ROLE:
+ *                  1. Configure a role for authorized deposit processing:
  *                     - Purpose: Implements access control for processing user
- *                               deposits. Only authorized admins can process
+ *                               deposits. Only permissioned role holders can process
  *                               deposits into payment orders.
- *                     - How:     The OrchestratorAdmin must:
- *                               1. Retrieve the deposit admin role identifier
- *                               2. Grant the role to designated admins
- *                     - Example: module.grantModuleRole(
- *                                 module.DEPOSIT_ADMIN_ROLE(),
- *                                 adminAddress
+ *                     - How:     The DefaultAdmin must:
+ *                               1. Create a role for the designated admins
+ *                                  2. Look up the target function selector
+ *                               3. Add access permission to the role
+ *                     - Example: uint roleId = authorizer.createRole(
+ *                                 "DEPOSIT_ADMIN",
+ *                                 authorizer.getAdminRole(),
+ *                                 address[<initialMemberAddress>]);
+ *                               authorizer.addAccessPermission(
+ *                                 address(module),
+ *                                 ILM_PC_Template_v1.processDeposit.selector,
+ *                                 roleId
  *                               );
  *
  * @custom:security-contact security@inverter.network
@@ -91,9 +97,6 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
 
     /// @notice The maximum deposit amount.
     uint internal constant MAX_DEPOSIT_AMOUNT = 100 ether;
-
-    /// @notice The role that allows processing deposits
-    bytes32 internal constant DEPOSIT_ADMIN_ROLE = "DEPOSIT_ADMIN";
 
     /// @notice The payment processor flag for the start timestamp.
     uint8 internal constant FLAG_START = 1;
@@ -174,11 +177,6 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     }
 
     /// @inheritdoc ILM_PC_Template_v1
-    function getDepositAdminRole() external pure returns (bytes32) {
-        return DEPOSIT_ADMIN_ROLE;
-    }
-
-    /// @inheritdoc ILM_PC_Template_v1
     function getMaxDepositAmount() external pure returns (uint) {
         return MAX_DEPOSIT_AMOUNT;
     }
@@ -205,7 +203,7 @@ contract LM_PC_Template_v1 is ILM_PC_Template_v1, ERC20PaymentClientBase_v2 {
     /// @inheritdoc ILM_PC_Template_v1
     function processDeposit(address user_, uint start_, uint cliff_, uint end_)
         external
-        onlyModuleRole(DEPOSIT_ADMIN_ROLE)
+        permissioned
     {
         uint amount = _depositedAmounts[user_];
 

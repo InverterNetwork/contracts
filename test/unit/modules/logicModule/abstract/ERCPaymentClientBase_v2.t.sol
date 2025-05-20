@@ -75,7 +75,7 @@ contract ERC20PaymentClientBaseV2Test is ModuleTest {
 
     function testReinitFails() public override {}
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             paymentClient.supportsInterface(
                 type(IERC20PaymentClientBase_v2).interfaceId

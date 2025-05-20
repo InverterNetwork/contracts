@@ -7,6 +7,7 @@ import {
     IOrchestratorFactory_v1,
     IOrchestrator_v1
 } from "test/e2e/E2ETest.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
 
 // SuT
 import {
@@ -93,6 +94,9 @@ contract BountyManagerE2E is E2ETest {
         FM_DepositVault_v1 fundingManager =
             FM_DepositVault_v1(address(orchestrator.fundingManager()));
 
+        AUT_Roles_v1 authorizer =
+            AUT_Roles_v1(address(orchestrator.authorizer()));
+
         LM_PC_Bounties_v2 bountyManager;
 
         address[] memory modulesList = orchestrator.listModules();
@@ -107,10 +111,65 @@ contract BountyManagerE2E is E2ETest {
             }
         }
 
-        // we authorize the deployer of the orchestrator as the bounty admin
-        bountyManager.grantModuleRole(
-            bountyManager.BOUNTY_ISSUER_ROLE(), address(this)
+        // =========
+        // Setting up Roles
+
+        // In the upcoming section we will use different permissioned functions
+        // For which we need to create roles, add function access and assign the roles
+        // to the different actors
+
+        // The main functions that we will use are:
+        // - addBounty
+        // - addClaim
+        // - verifyClaim
+        // For demonstration purposes we will set up the roles in reverse order
+
+        // verifyClaim
+        // for this function we will set up the VERIFIER role
+        // First we define the Members of the role in an array
+        // Verifiers approve claim
+
+        address verifier1 = makeAddr("verifier 1");
+
+        {
+            address[] memory roleMembers = new address[](1);
+            roleMembers[0] = verifier1;
+
+            // Then we select the target contract and function selectors
+            address[] memory targets = new address[](1);
+            targets[0] = address(bountyManager);
+
+            bytes4[][] memory selectors = new bytes4[][](1);
+            selectors[0] = new bytes4[](1);
+            selectors[0][0] = bountyManager.verifyClaim.selector;
+
+            // Create role, adapt permissions and set members
+            orchestrator.authorizer().createRoleAndAddAccessPermissions(
+                "VERIFIER",
+                authorizer.getAdminRole(),
+                roleMembers,
+                targets,
+                selectors
+            );
+        }
+
+        // addClaim
+        // Instead of a assigning a role to this function we will make it public
+        // so that anyone can call it
+
+        authorizer.addAccessPermission(
+            address(bountyManager),
+            bountyManager.addClaim.selector,
+            authorizer.PUBLIC_ROLE()
         );
+
+        // addBounty
+        // addBounty allows the caller to create a new bounty
+        // This could be a high level admin function so we will only allow the workflow admin to call it
+        // As the initial admin of the workflow already has access to all permissioned functions
+        // we wont set up anything for the access to work
+        // The initial admin in this case is this contract itself, so we dont need to prank the calls
+
         // Funders deposit funds
 
         // IMPORTANT
@@ -151,11 +210,6 @@ contract BountyManagerE2E is E2ETest {
         ILM_PC_Bounties_v2.Contributor memory contrib2 =
             ILM_PC_Bounties_v2.Contributor(address(0xb0b), 150e18);
 
-        // auth.setIsAuthorized(address(0xA11CE), true);
-        bountyManager.grantModuleRole(
-            bountyManager.CLAIMANT_ROLE(), address(0xA11CE)
-        );
-
         ILM_PC_Bounties_v2.Contributor[] memory contribs =
             new ILM_PC_Bounties_v2.Contributor[](2);
         contribs[0] = contrib1;
@@ -165,13 +219,6 @@ contract BountyManagerE2E is E2ETest {
 
         vm.prank(address(0xA11CE));
         uint claimId = bountyManager.addClaim(bountyId, contribs, claimDetails);
-
-        // Verifiers approve claim
-
-        address verifier1 = makeAddr("verifier 1");
-
-        // auth.setIsAuthorized(verifier1, true);
-        bountyManager.grantModuleRole(bountyManager.VERIFIER_ROLE(), verifier1);
 
         vm.prank(verifier1);
         bountyManager.verifyClaim(claimId, contribs);

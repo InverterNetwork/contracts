@@ -6,7 +6,7 @@ import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 
 interface IModule_v1 {
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Structs
 
     /// @notice The module's metadata.
@@ -23,34 +23,11 @@ interface IModule_v1 {
         string title;
     }
 
-    //--------------------------------------------------------------------------
-    // Events
-
-    /// @notice Module has been initialized.
-    /// @param  parentOrchestrator The address of the {Orchestrator_v1} the module is linked to.
-    /// @param  metadata The metadata of the module.
-    event ModuleInitialized(
-        address indexed parentOrchestrator, Metadata metadata
-    );
-
-    /// @notice Event emitted when protocol fee has been transferred to the treasury.
-    /// @param  token The token received as protocol fee.
-    /// @param  treasury The protocol treasury address receiving the token fee amount.
-    /// @param  feeAmount The fee amount transferred to the treasury.
-    event ProtocolFeeTransferred(
-        address indexed token, address indexed treasury, uint feeAmount
-    );
-
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Errors
 
     /// @notice Function is only callable by authorized caller.
-    /// @param  role The role that is required.
-    /// @param  caller The address that is required to have the role.
-    error Module__CallerNotAuthorized(bytes32 role, address caller);
-
-    /// @notice Function is only callable by the {Orchestrator_v1}.
-    error Module__OnlyCallableByOrchestrator();
+    error Module__CallerNotPermissioned();
 
     /// @notice Function is only callable by a {IERC20PaymentClientBase_v2}.
     error Module__OnlyCallableByPaymentClient();
@@ -68,8 +45,29 @@ interface IModule_v1 {
     /// @dev	Invalid Address.
     error Module__InvalidAddress();
 
-    //--------------------------------------------------------------------------
-    // Functions
+    /// @dev	The given function is no longer supported.
+    error Module__FunctionDeprecated();
+
+    // ========================================================================
+    // Events
+
+    /// @notice Module has been initialized.
+    /// @param  parentOrchestrator The address of the {Orchestrator_v1} the module is linked to.
+    /// @param  metadata The metadata of the module.
+    event ModuleInitialized(
+        address indexed parentOrchestrator, Metadata metadata
+    );
+
+    /// @notice Event emitted when protocol fee has been transferred to the treasury.
+    /// @param  token The token received as protocol fee.
+    /// @param  treasury The protocol treasury address receiving the token fee amount.
+    /// @param  feeAmount The fee amount transferred to the treasury.
+    event ProtocolFeeTransferred(
+        address indexed token, address indexed treasury, uint feeAmount
+    );
+
+    // ========================================================================
+    // Initialization
 
     /// @notice The module's initializer function.
     /// @dev	CAN be overridden by downstream contract.
@@ -83,6 +81,12 @@ interface IModule_v1 {
         Metadata memory metadata,
         bytes memory configData
     ) external;
+
+    // ========================================================================
+    // Public Getter Functions
+
+    // ------------------------------------------------------------------------
+    // Getter - Module State
 
     /// @notice Returns the module's identifier.
     /// @dev	The identifier is defined as the keccak256 hash of the module's
@@ -107,26 +111,4 @@ interface IModule_v1 {
     /// @notice Returns the module's {Orchestrator_v1} interface, {IOrchestrator_v1}.
     /// @return The module's {Orchestrator_1}.
     function orchestrator() external view returns (IOrchestrator_v1);
-
-    /// @notice Grants a module role to a target address.
-    /// @param  role The role to grant.
-    /// @param  target The target address to grant the role to.
-    function grantModuleRole(bytes32 role, address target) external;
-
-    /// @notice Grants a module role to multiple target addresses.
-    /// @param  role The role to grant.
-    /// @param  targets The target addresses to grant the role to.
-    function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external;
-
-    /// @notice Revokes a module role from a target address.
-    /// @param  role The role to revoke.
-    /// @param  target The target address to revoke the role from.
-    function revokeModuleRole(bytes32 role, address target) external;
-
-    /// @notice Revokes a module role from multiple target addresses.
-    /// @param  role The role to revoke.
-    /// @param  targets The target addresses to revoke the role from.
-    function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external;
 }

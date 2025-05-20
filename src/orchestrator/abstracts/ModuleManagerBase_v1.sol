@@ -53,14 +53,6 @@ abstract contract ModuleManagerBase_v1 is
     //--------------------------------------------------------------------------
     // Modifiers
 
-    /// @dev    Modifier to guarantee function is only callable by authorized address.
-    modifier __ModuleManager_onlyAuthorized() {
-        if (!__ModuleManager_isAuthorized(_msgSender())) {
-            revert ModuleManagerBase__CallerNotAuthorized();
-        }
-        _;
-    }
-
     /// @dev    Modifier to guarantee that the caller is a module.
     modifier onlyModule() {
         if (!isModule(_msgSender())) {
@@ -232,15 +224,13 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // onlyOrchestratorAdmin Functions
+    // Internal Functions
 
     /// @notice Cancels an initiated update for a module.
-    /// @dev	Only callable by authorized address.
     /// @dev	Fails if module update has not been initiated.
     /// @param  module The module address to remove.
     function _cancelModuleUpdate(address module)
         internal
-        __ModuleManager_onlyAuthorized
         updatingModuleAlreadyStarted(module)
     {
         moduleAddressToTimelock[module].timelockActive = false;
@@ -248,13 +238,11 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     /// @notice Initiates adding of a module to the {Orchestrator_v1} on a timelock.
-    /// @dev	Only callable by authorized address.
     /// @dev	Fails of adding module exeeds max modules limit.
     /// @dev	Fails if address invalid or address already added as module.
     /// @param  module The module address to add.
     function _initiateAddModuleWithTimelock(address module)
         internal
-        __ModuleManager_onlyAuthorized
         isNotModule(module)
         validModule(module)
     {
@@ -262,25 +250,21 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     /// @notice Initiates removing of a module from the {Orchestrator_v1} on a timelock.
-    /// @dev	Only callable by authorized address.
     /// @dev	Fails if address not added as module.
     /// @param  module The module address to remove.
     function _initiateRemoveModuleWithTimelock(address module)
         internal
-        __ModuleManager_onlyAuthorized
         isModule_(module)
     {
         _startModuleUpdateTimelock(module);
     }
 
     /// @notice Executes adding of a module to the {Orchestrator_v1}.
-    /// @dev	Only callable by authorized address.
     /// @dev	Fails if adding of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
     /// @param  module The module address to add.
     function _executeAddModule(address module)
         internal
-        __ModuleManager_onlyAuthorized
         updatingModuleAlreadyStarted(module)
         timelockExpired(module)
     {
@@ -291,13 +275,11 @@ abstract contract ModuleManagerBase_v1 is
     }
 
     /// @notice Executes removing of a module from the {Orchestrator_v1}.
-    /// @dev	Only callable by authorized address.
     /// @dev	Fails if removing of module has not been initiated.
     /// @dev	Fails if timelock has not been expired yet.
     /// @param  module The module address to remove.
     function _executeRemoveModule(address module)
         internal
-        __ModuleManager_onlyAuthorized
         updatingModuleAlreadyStarted(module)
         timelockExpired(module)
     {
@@ -306,9 +288,6 @@ abstract contract ModuleManagerBase_v1 is
 
         _commitRemoveModule(module);
     }
-
-    //--------------------------------------------------------------------------
-    // Private Functions
 
     /// @dev	Expects `module` to be valid module address.
     /// @dev	Expects `module` to not be enabled module.
@@ -393,12 +372,13 @@ abstract contract ModuleManagerBase_v1 is
         );
     }
 
+    //--------------------------------------------------------------------------
     // IERC2771ContextUpgradeable
+
+    /// @inheritdoc IModuleManagerBase_v1
     // @dev Because we want to expose the isTrustedForwarder function from the ERC2771ContextUpgradeable
     //      Contract in the IOrchestrator_v1 we have to override it here as the original openzeppelin version
     //      doesnt contain a interface that we could use to expose it.
-
-    /// @inheritdoc IModuleManagerBase_v1
     function isTrustedForwarder(address forwarder)
         public
         view

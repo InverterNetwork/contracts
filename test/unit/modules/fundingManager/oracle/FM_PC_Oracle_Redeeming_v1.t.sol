@@ -127,14 +127,8 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         // set oracle address in FM
         fundingManager.setOracleAddress(address(oracle));
 
-        // Grant whitelist role to test contract
-        fundingManager.grantModuleRole(
-            fundingManager.getWhitelistRole(), address(this)
-        );
-        // Grant queue executor role to test contract
-        fundingManager.grantModuleRole(
-            fundingManager.getQueueExecutorRole(), address(this)
-        );
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
 
         // Open buy and sell
         fundingManager.openBuy();
@@ -218,7 +212,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
                 ├── Then it should return true for supported interfaces
                 └── Then it should return false for unsupported interfaces
     */
-    function testSupportsInterface_worksGivenDifferentInterfaces() public {
+    function testSupportsInterface() public override(ModuleTest) {
         // Test - Verify supported interfaces
         assertTrue(
             fundingManager.supportsInterface(
@@ -305,71 +299,6 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
             functionReturnValue,
             expectedNetCollateralRedeemAmount,
             "Net collateral redeem amount is not correct"
-        );
-    }
-
-    /* Test: Function getWhitelistRole()
-        └── Given we want to get the whitelist role
-            └── When the function getWhitelistRole() is called
-                └── Then it should return the correct whitelist role identifier
-    */
-    function testGetWhitelistRole_worksGivenWhitelistRoleRetrieved() public {
-        // Test - Verify whitelist role
-        bytes32 expectedRole = bytes32("WHITELIST_ROLE");
-        assertEq(
-            fundingManager.getWhitelistRole(),
-            expectedRole,
-            "Incorrect whitelist role identifier"
-        );
-    }
-
-    /* Test: Function: getWhitelistRoleAdmin()
-        └── Given we want to get the whitelist role admin
-            └── When the function getWhitelistRoleAdmin() is called
-                └── Then it should return the correct whitelist role admin identifier
-    */
-    function testGetWhitelistRoleAdmin_worksGivenWhitelistRoleAdminRetrieved()
-        public
-    {
-        // Test - Verify whitelist role admin
-        bytes32 expectedRole = bytes32("WHITELIST_ROLE_ADMIN");
-        assertEq(
-            fundingManager.getWhitelistRoleAdmin(),
-            expectedRole,
-            "Incorrect whitelist role admin identifier"
-        );
-    }
-
-    /* Test: Function getQueueExecutorRole()
-        └── Given we want to get the queue executor role
-            └── When the function getQueueExecutorRole() is called
-                └── Then it should return the correct queue executor role identifier
-    */
-    function testGetQueueExecutorRole_worksGivenQueueExecutorRoleRetrieved()
-        public
-    {
-        // Test - Verify queue executor role
-        bytes32 expectedRole = bytes32("QUEUE_EXECUTOR_ROLE");
-        assertEq(
-            fundingManager.getQueueExecutorRole(),
-            expectedRole,
-            "Incorrect queue executor role identifier"
-        );
-    }
-
-    /* Test: Function getQueueExecutorRoleAdmin()
-        └── Given we want to get the queue executor role admin
-            └── When the function getQueueExecutorRoleAdmin() is called
-                └── Then it should return the correct queue executor role admin identifier
-    */
-    function testGetQueueExecutorRoleAdmin_worksGivenQueueExecutorRoleAdminRetrieved(
-    ) public {
-        // Test - Verify queue executor role admin
-        bytes32 expectedRole = bytes32("QUEUE_EXECUTOR_ROLE_ADMIN");
-        assertEq(
-            fundingManager.getQueueExecutorRoleAdmin(),
-            expectedRole,
-            "Incorrect queue executor role admin identifier"
         );
     }
 
@@ -559,240 +488,34 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
         fundingManager.depositReserve(0);
     }
 
-    /* Test: Function buy()
-        └── Given a user with WHITELIST_ROLE and buying is open
-            └── When buy() is called with valid minAmountOut
-                └── Then it should execute successfully
-    */
-    function testBuy_worksGivenWhitelistedUser() public {
-        // Setup
-        uint amount_ = 1e18;
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, address(this), address(fundingManager)
-        );
-
-        // Setup - Calculate minimum amount out
-        uint minAmountOut_ = fundingManager.calculatePurchaseReturn(amount_);
-
-        // Test - Should not revert
-        fundingManager.buy(amount_, minAmountOut_);
-    }
-
-    /* Test: Function buy()
-        └── Given a user without WHITELIST_ROLE but buying is open
-            └── When buy() is called with valid minAmountOut
-                └── Then it should revert with Module__CallerNotAuthorized error
-    */
-    function testBuy_revertGivenNonWhitelistedUser() public {
-        // Setup
-        address nonWhitelisted_ = makeAddr("nonWhitelisted");
-        uint amount_ = 1e18;
-        // Get role for revert
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(fundingManager), fundingManager.getWhitelistRole()
-        );
-
-        // Test - Switch to non-whitelisted user and expect revert
-        vm.prank(nonWhitelisted_);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                nonWhitelisted_
-            )
-        );
-        fundingManager.buy(amount_, amount_);
-    }
-
     /* Test: Function buyFor()
-        └── Given a user with WHITELIST_ROLE and Third Party Operations (TPO) enabled
+        └── Given Third Party Operations (TPO) disabled
             └── When buyFor() is called
-                └── Then it should execute successfully
-    */
-    function testBuyFor_worksGivenWhitelistedUserAndTPOEnabled() public {
-        // Setup
-        address receiver_ = makeAddr("receiver");
-        uint amount_ = 1e18;
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, address(this), address(fundingManager)
-        );
-
-        fundingManager.exposed_setIsDirectOperationsOnly(false);
-
-        // Setup - Calculate minimum amount out
-        uint minAmountOut_ = fundingManager.calculatePurchaseReturn(amount_);
-
-        // Test - Should not revert
-        fundingManager.buyFor(receiver_, amount_, minAmountOut_);
-    }
-
-    /* Test: Function buyFor()
-        └── Given a user without WHITELIST_ROLE but Third Party Operations (TPO) enabled
-            └── When buyFor() is called
-                └── Then it should revert
-    */
-    function testBuyFor_revertGivenNonWhitelistedUserAndTPOEnabled() public {
-        // Setup
-        address nonWhitelisted_ = makeAddr("nonWhitelisted");
-        address receiver_ = makeAddr("receiver");
-        uint amount_ = 1e18;
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, nonWhitelisted_, address(fundingManager)
-        );
-
-        fundingManager.exposed_setIsDirectOperationsOnly(false);
-
-        // Setup - Calculate minimum amount out
-        uint minAmountOut_ = fundingManager.calculatePurchaseReturn(amount_);
-
-        // Test - Switch to non-whitelisted user and expect revert
-        vm.startPrank(nonWhitelisted_);
-        vm.expectRevert();
-        fundingManager.buyFor(receiver_, amount_, minAmountOut_);
-        vm.stopPrank();
-    }
-
-    /* Test: Function buyFor()
-        └── Given a whitelisted user but Third Party Operations (TPO) disabled
-            └── When buyFor() is called
-                └── Then it should revert
+                └── Then it should revert (Modifier in place test)
     */
     function testBuyFor_revertGivenTPODisabled() public {
-        // Setup
-        address receiver_ = makeAddr("receiver");
-        uint amount_ = 1e18;
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, address(this), address(fundingManager)
-        );
-
-        // Setup - Calculate minimum amount out
-        uint minAmountOut_ = fundingManager.calculatePurchaseReturn(amount_);
-
         // Test - Should revert as TPO is disabled
-        vm.expectRevert();
-        fundingManager.buyFor(receiver_, amount_, minAmountOut_);
-    }
-
-    /* Test: Function sell()
-        └── Given a user with WHITELIST_ROLE and selling is open
-            └── When sell() is called
-                └── Then it should execute successfully
-    */
-    function testSell_worksGivenWhitelistedUser() public {
-        // Setup
-        uint amount_ = 1e18;
-        _prepareBuyOrSellConditions(
-            address(_token), amount_, address(this), address(fundingManager)
-        );
-
-        // Setup - Calculate minimum amount out
-        uint minBuyAmountOut_ = fundingManager.calculatePurchaseReturn(amount_);
-
-        // Test - Should not revert
-        fundingManager.buy(amount_, minBuyAmountOut_);
-
-        assertEq(
-            issuanceToken.balanceOf(address(this)),
-            minBuyAmountOut_,
-            "Sender balance not decreased correctly"
-        );
-
-        uint minSellAmountOut_ =
-            fundingManager.calculateSaleReturn(minBuyAmountOut_);
-
-        // Test - Should not revert - sell the tokens we received from buying
-        fundingManager.sell(minBuyAmountOut_, minSellAmountOut_);
-
-        // Test - Verify balances
-        assertEq(issuanceToken.balanceOf(address(fundingManager)), 0);
-    }
-
-    /* Test: Function sell()
-        └── Given a user without WHITELIST_ROLE but selling is open
-            └── When sell() is called
-                └── Then it should revert (modifier in place test)
-    */
-    function testSell_revertGivenNonWhitelistedUser() public {
-        // Setup
-        address nonWhitelisted_ = makeAddr("nonWhitelisted");
-        uint amount_ = 1e18;
-        // Get role for revert
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(fundingManager), fundingManager.getWhitelistRole()
-        );
-
-        // Setup - Calculate minimum amount out
-        uint minAmountOut_ = fundingManager.calculateSaleReturn(amount_);
-
-        // Test - Switch to non-whitelisted user and expect revert
-        vm.prank(nonWhitelisted_);
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                nonWhitelisted_
-            )
+            IFM_PC_Oracle_Redeeming_v1
+                .Module__FM_PC_ExternalPrice_Redeeming_ThirdPartyOperationsDisabled
+                .selector
         );
-        fundingManager.sell(amount_, minAmountOut_);
-    }
-    /* Test: Function sellTo()
-        └── Given selling is open
-            └── And Third Party Operations (TPO) enabled
-                └── And the caller has WHITELIST_ROLE
-                    └── When sellTo() is called
-                        └── Then it should execute successfully
-    */
-
-    function testSellTo_worksGivenWhitelistedUser() public {
-        // Setup
-        address receiver_ = makeAddr("receiver");
-        uint amount_ = 1e18;
-        _prepareBuyOrSellConditions(
-            address(issuanceToken),
-            amount_,
-            address(this),
-            address(fundingManager)
-        );
-        fundingManager.exposed_setIsDirectOperationsOnly(false);
-
-        uint minSellAmountOut_ = fundingManager.calculateSaleReturn(amount_);
-
-        // Test - Should not revert - sell the tokens we received from buying
-        fundingManager.sellTo(receiver_, amount_, minSellAmountOut_);
-
-        // Test - Verify balances
-        assertEq(issuanceToken.balanceOf(address(fundingManager)), 0);
+        fundingManager.buyFor(address(0), 0, 0);
     }
 
     /* Test: Function sellTo()
-        └── Given selling is open
-            └── And Third Party Operations (TPO) enabled
-                └── And the caller has no WHITELIST_ROLE
-                    └── When sellTo() is called
-                        └── Then it should revert (modifier in place test)
+        └── Given Third Party Operations (TPO) disabled
+            └── When sellTo() is called
+                └── Then it should revert (Modifier in place test)
     */
-    function testSellTo_revertGivenNonWhitelistedUser() public {
-        // Setup
-        address nonWhitelisted_ = makeAddr("nonWhitelisted");
-        address receiver_ = makeAddr("receiver");
-        uint amount_ = 1e18;
-        // Get role for revert
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(fundingManager), fundingManager.getWhitelistRole()
-        );
-        // Enable TPO
-        fundingManager.exposed_setIsDirectOperationsOnly(false);
-
-        // Test - Switch to non-whitelisted user and expect revert
-        vm.prank(nonWhitelisted_);
+    function testSellTo_revertGivenTPODisabled() public {
+        // Test - Should revert as TPO is disabled
         vm.expectRevert(
-            abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                nonWhitelisted_
-            )
+            IFM_PC_Oracle_Redeeming_v1
+                .Module__FM_PC_ExternalPrice_Redeeming_ThirdPartyOperationsDisabled
+                .selector
         );
-        fundingManager.sellTo(receiver_, amount_, amount_);
+        fundingManager.sellTo(address(0), 0, 0);
     }
 
     /* Test: Function transferOrchestratorToken()
@@ -939,10 +662,28 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function setProjectTreasury()
-        ├── Given the project treasury is a valid address
-        │   └── When the function setProjectTreasury() is called
-        │       └── Then it should set the project treasury correctly
+        ├── Given: Caller is not permissioned
+        |   └── When the function setProjectTreasury() is called
+        |       └── Then it should revert (modifier in place test)
+        ├── Given: Caller is permissioned
+        ├── And: the project treasury is a valid address
+            └── When the function setProjectTreasury() is called
+                └── Then it should set the project treasury correctly
     */
+    function testSetProjectTreasury_modifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        fundingManager.setProjectTreasury(address(0));
+    }
+
     function testSetProjectTreasury_worksGivenValidAddress(
         address projectTreasury_
     ) public {
@@ -957,13 +698,33 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function setOracleAddress()
-        ├── Given the oracle supports the IOraclePrice_v1 interface
-        │   └── When the function _setOracleAddress() is called
-        │       └── Then it should set the oracle address correctly
-        └── Given the oracle does not support the IOraclePrice_v1 interface
-            └── When the function _setOracleAddress() is called
+        ├── Given: Caller is not permissioned
+        |   └── When the function setOracleAddress() is called
+        |       └── Then it should revert (modifier in place test)
+        ├── Given: Caller is permissioned
+        ├── And: the oracle supports the IOraclePrice_v1 interface
+        |    └── When the function setOracleAddress() is called
+        |        └── Then it should set the oracle address correctly
+        ├── Given: Caller is permissioned
+        ├── And: the oracle does not support the IOraclePrice_v1 interface
+            └── When the function setOracleAddress() is called
                 └── Then it should revert
     */
+
+    function testSetOracleAddress_modifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        fundingManager.setOracleAddress(address(0));
+    }
+
     function testSetOracleAddress_worksGivenValidOracle(address _oracle)
         public
     {
@@ -984,10 +745,29 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function setIsDirectOperationsOnly()
-        └── Given a valid value
+        ├── Given: Caller is not permissioned
+        |   └── When the function setIsDirectOperationsOnly() is called
+        |       └── Then it should revert (modifier in place test)
+        ├── Given: Caller is permissioned
+        └── And: Called with a valid value
             └── When the function exposed_setIsDirectOperationsOnly() is called
                 └── Then the value should be set correctly
     */
+
+    function testSetIsDirectOperationsOnly_modifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        fundingManager.setIsDirectOperationsOnly(false);
+    }
+
     function testSetIsDirectOperationsOnly_worksGivenValidValue(
         bool _isDirectOperationsOnly
     ) public {
@@ -1003,34 +783,26 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function executeRedemptionQueue()
-        └── Given caller does not have QUEUE_EXECUTOR_ROLE
+        └── Given caller is not permissioned
             └── When executeRedemptionQueue() is called
                 └── Then it should revert (modifier in place test)
     */
-    function testExecuteRedemptionQueue_revertGivenCallerDoesNotHaveQueueExecutorRole(
-    ) public {
-        // Setup
-        address nonExecutorRole = makeAddr("nonExecutorRole");
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(fundingManager), fundingManager.getQueueExecutorRole()
-        );
+    function testExecuteRedemptionQueue_modifierInPlace() public {
+        // permissioned
 
-        // Test - Switch to non-executor role user and expect revert
-        vm.prank(nonExecutorRole);
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                nonExecutorRole
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-
-        // Test
+        vm.prank(address(0xB0B));
         fundingManager.executeRedemptionQueue();
     }
 
     /* Test: Function executeRedemptionQueue()
-        ├── Given caller has QUEUE_EXECUTOR_ROLE
+        ├── Given caller is permissioned
         └── And the Payment Processor does not have the correct interface
                 └── When executeRedemptionQueue() is called
                     └── Then it should revert
@@ -1053,7 +825,7 @@ contract FM_PC_ExternalPrice_Redeeming_v1_Test is ModuleTest {
     }
 
     /* Test: Function executeRedemptionQueue()
-        ├── Given caller has QUEUE_EXECUTOR_ROLE
+        ├── Given caller is permissioned
         ├── And there are redemption orders in the queue
         └── And the payment processor has the correct interface
             └── When executeRedemptionQueue() is called

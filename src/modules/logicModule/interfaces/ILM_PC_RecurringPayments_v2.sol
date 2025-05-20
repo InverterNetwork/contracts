@@ -127,6 +127,7 @@ interface ILM_PC_RecurringPayments_v2 {
     // Mutating Functions
 
     /// @notice Adds a recurring payment to the manager.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	a new id is created for each Payment.
     /// @param  amount Amount of tokens send to the recipient address.
     /// @param  startEpoch Epoch in which the payment starts. Use getEpochFromTimestamp() or
@@ -140,6 +141,7 @@ interface ILM_PC_RecurringPayments_v2 {
     ) external returns (uint id);
 
     /// @notice Removes a recurring Payment.
+    /// @dev    Function access controlled by authorizer.
     /// @param  prevId Id of the previous recurring payment in the payment list.
     /// @param  id Id of the recurring payment that is to be removed.
     function removeRecurringPayment(uint prevId, uint id) external;

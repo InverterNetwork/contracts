@@ -48,42 +48,22 @@ import {LinkedIdList} from "src/modules/lib/LinkedIdList.sol";
  *                  - FAILED: The order has failed due to the transfer failing
  *                    (blacklisted address).
  *
- * @custom:setup   This module requires the following MANDATORY setup steps:
+ * @custom:setup   OPTIONAL setup steps for enhanced administration:
  *
  *                 1. Configure Queue Operators:
  *                    - Purpose: Queue operators are authorized to cancel payment
  *                               orders in the queue, and claim collateral for
  *                               failed payments.
- *                    - How:     The OrchestratorAdmin (or
- *                               QUEUE_OPERATOR_ROLE_ADMIN if configured) must:
- *                               1. Retrieve the queue operator role identifier.
- *                               2. Grant the role to desired addresses.
- *                    - Example: module.grantModuleRole(
- *                                module.getQueueOperatorRole(),
- *                                operatorAddress
- *                               );
- *
- *                 OPTIONAL setup steps for enhanced administration:
- *
- *                 1. Custom Queue Operator Admin:
- *                    - Purpose: Enables delegation of queue operator management
- *                               to a dedicated admin role instead of relying on
- *                               the OrchestratorAdmin. This allows for more
- *                               granular access control and operational
- *                               flexibility.
  *                    - How:     The OrchestratorAdmin must:
- *                               1. Generate the role IDs for both roles.
- *                               2. Transfer admin rights through the Authorizer.
- *                    - Example: authorizer.transferAdminRole(
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getQueueOperatorRole()
- *                               ),
- *                               authorizer.generateRoleId(
- *                                 moduleAddress,
- *                                 module.getQueueOperatorRoleAdmin()
- *                                )
- *                               );
+ *                                1. Create a Queue operator role
+ *                                2. Add access permission for the
+ *                                   claimPreviouslyUnclaimableToTreasury() and
+ *                                   cancelPaymentOrderThroughQueueId()
+ *                                   functions to the Queue operator role.
+ *                                3. Grant the role to desired addresses.
+ *                    - Example: authorizer.createRole();
+ *                               authorizer.addAccessPermission();
+ *                               authorizer.grantRole();
  *
  * @custom:security-contact security@inverter.network
  *                          In case of any concerns or findings, please refer to
@@ -124,17 +104,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
 
     /// @notice    Flag position in the flags byte.
     uint8 internal constant FLAG_ORDER_ID = 0;
-
-    /// @notice Role identifier for queue operations.
-    /// @dev    This role cancels payments in the queue.
-    bytes32 internal constant QUEUE_OPERATOR_ROLE = "QUEUE_OPERATOR_ROLE";
-
-    /// @notice Role identifier for the admin authorized to assign the queue
-    ///         operator role.
-    /// @dev    This role should be set as the role admin for the
-    ///         QUEUE_OPERATOR_ROLE within the Authorizer module.
-    bytes32 internal constant QUEUE_OPERATOR_ROLE_ADMIN =
-        "QUEUE_OPERATOR_ROLE_ADMIN";
 
     /// @notice BPS value.
     uint internal constant BPS = 10_000;
@@ -311,26 +280,6 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         size_ = _queue[client_].length();
     }
 
-    /// @inheritdoc IPP_Queue_v1
-    function getQueueOperatorRole()
-        external
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_OPERATOR_ROLE;
-    }
-
-    /// @inheritdoc IPP_Queue_v1
-    function getQueueOperatorRoleAdmin()
-        external
-        pure
-        virtual
-        returns (bytes32 role_)
-    {
-        return QUEUE_OPERATOR_ROLE_ADMIN;
-    }
-
     /// @inheritdoc IPaymentProcessor_v2
     function unclaimable(
         address client_,
@@ -355,16 +304,13 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function setCanceledOrdersTreasury(address treasury_)
         external
         virtual
-        onlyOrchestratorAdmin
+        permissioned
     {
         _setCanceledOrdersTreasury(treasury_);
     }
 
     /// @inheritdoc IPP_Queue_v1
-    function setFailedOrdersTreasury(address treasury_)
-        external
-        onlyOrchestratorAdmin
-    {
+    function setFailedOrdersTreasury(address treasury_) external permissioned {
         _setFailedOrdersTreasury(treasury_);
     }
 
@@ -417,7 +363,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
         address client_,
         address token_,
         address receiver_
-    ) external virtual onlyModuleRole(QUEUE_OPERATOR_ROLE) {
+    ) external virtual permissioned {
         if (unclaimable(client_, token_, receiver_) == 0) {
             revert Module__PaymentProcessor__NothingToClaim(client_, receiver_);
         }
@@ -443,12 +389,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function cancelPaymentOrderThroughQueueId(
         uint orderId_,
         IERC20PaymentClientBase_v2 client_
-    )
-        external
-        virtual
-        onlyModuleRole(QUEUE_OPERATOR_ROLE)
-        returns (bool success_)
-    {
+    ) external virtual permissioned returns (bool success_) {
         // Validate that the order exists for the given queue ID and client.
         if (!_orderExists(orderId_, client_)) {
             revert Module__PP_Queue_InvalidOrderId(address(client_), orderId_);

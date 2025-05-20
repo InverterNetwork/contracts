@@ -45,22 +45,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
     address admin_address = makeAddr("alice");
     address non_admin_address = makeAddr("bob");
 
-    event BuyingEnabled();
-    event BuyingDisabled();
-    event BuyFeeUpdated(uint newBuyFee, uint oldBuyFee);
-    event TokensBought(
-        address indexed receiver,
-        uint depositAmount,
-        uint receivedAmount,
-        address buyer
-    );
-    event IssuanceTokenSet(address indexed token, uint8 decimals);
-
-    event ProtocolFeeMinted(
-        address indexed token, address indexed treasury, uint feeAmount
-    );
-    event ProjectCollateralFeeWithdrawn(address receiver, uint amount);
-
     function setUp() public {
         // Deploy contracts
         address impl = address(new BondingCurveBaseV1Mock());
@@ -76,7 +60,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
         issuanceToken.setMinter(address(this), true);
         _setUpOrchestrator(bondingCurveFundingManager);
 
-        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
+        // Every caller has permission for every permissioned function
+        _authorizer.setAllAuthorized(true);
 
         // Set max fee of feeManager to 100% for testing purposes
         vm.prank(address(governor));
@@ -90,7 +75,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         );
     }
 
-    function testSupportsInterface() public {
+    function testSupportsInterface() public override(ModuleTest) {
         assertTrue(
             bondingCurveFundingManager.supportsInterface(
                 type(IBondingCurveBase_v1).interfaceId
@@ -202,7 +187,105 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.stopPrank();
     }
 
-    /* Test buy and _buyOrder function
+    /*
+    Test: buyFor Modifier Checks
+    ├── Given: buyer is not permissioned
+    │   └── When: buyFor is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is not enabled
+    │   └── When: buyFor is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is enabled
+    └── And: receiver is invalid
+        └── When: buyFor is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testBuyFor_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+
+        // Open up Buy again
+        bondingCurveFundingManager.openBuy();
+
+        // validReceiver
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IBondingCurveBase_v1
+                    .Module__BondingCurveBase__InvalidRecipient
+                    .selector
+            )
+        );
+        bondingCurveFundingManager.buyFor(address(0), 0, 0);
+    }
+
+    /*
+    Test: buy Modifier Checks
+    ├── Given: buyer is not permissioned
+    │   └── When: buy is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: buyer is permissioned
+    ├── And: buying is not enabled
+        └── When: buy is called
+            └── Then: it should revert (modifier in position check)
+    */
+
+    function testBuy_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.buy(0, 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // buyingIsEnabled
+
+        // Close buy to check for
+        bondingCurveFundingManager.closeBuy();
+
+        vm.expectRevert(
+            IBondingCurveBase_v1
+                .Module__BondingCurveBase__BuyingFunctionaltiesClosed
+                .selector
+        );
+        bondingCurveFundingManager.buy(0, 0);
+    }
+
+    /* Test _buyOrder function
         ├── when the deposit amount is 0
         │       └── it should revert 
         └── when the deposit amount is not 0
@@ -267,7 +350,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, amount, buyer);
+        emit IBondingCurveBase_v1.TokensBought(buyer, amount, amount, buyer);
 
         // Execution
         vm.prank(buyer);
@@ -369,7 +452,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit TokensBought(buyer, amount, finalAmount, buyer); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
+        emit IBondingCurveBase_v1.TokensBought(
+            buyer, amount, finalAmount, buyer
+        ); // since the fee gets taken before interacting with the bonding curve, we expect the event to already have the fee substracted
 
         // Execution
         vm.prank(buyer);
@@ -509,7 +594,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit ProtocolFeeMinted(address(issuanceToken), treasury, _feeAmount);
+        emit IBondingCurveBase_v1.ProtocolFeeMinted(
+            address(issuanceToken), treasury, _feeAmount
+        );
         // Function call
         bondingCurveFundingManager.call_processProtocolFeeViaMinting(
             treasury, _feeAmount
@@ -756,8 +843,8 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test openBuy and _openBuy function
-        ├── when caller is not the Orchestrator_v1 admin
-        │      └── it should revert (tested in base Module modifier tests)
+        ├── when caller is not permissioned
+        │      └── it should revert (modifier in position)
         └── when caller is the Orchestrator_v1 admin
                └── when buy functionality is already open
                 │      └── it should stay as is
@@ -766,18 +853,33 @@ contract BondingCurveBaseV1Test is ModuleTest {
                         └── it should open the buy functionality
                         └── it should emit an event
     */
-    function testOpenBuy_Idempotence() public callerIsOrchestratorAdmin {
+
+    function testOpenBuy_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.openBuy();
+    }
+
+    function testOpenBuy_Idempotence() public {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit BuyingEnabled();
+        emit IBondingCurveBase_v1.BuyingEnabled();
 
         bondingCurveFundingManager.openBuy();
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
     }
 
-    function testOpenBuy() public callerIsOrchestratorAdmin {
+    function testOpenBuy() public {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         bondingCurveFundingManager.closeBuy();
@@ -785,7 +887,7 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit BuyingEnabled();
+        emit IBondingCurveBase_v1.BuyingEnabled();
 
         bondingCurveFundingManager.openBuy();
 
@@ -793,9 +895,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test closeBuy and _closeBuy function
-        ├── when caller is not the Orchestrator_v1 admin
-        │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
+        ├── when caller is not permissioned
+        │      └── it should revert (modifier in position check)
+        └── when caller is permissioned
                └── when buy functionality is already closed
                 │      └── it should stay as is
                 │      └── it should emit an event
@@ -803,30 +905,41 @@ contract BondingCurveBaseV1Test is ModuleTest {
                         ├── it should close the buy functionality
                         └── it should emit an event
     */
-    function testCloseBuy_FailsIfAlreadyClosed()
-        public
-        callerIsOrchestratorAdmin
-    {
+    function testCloseBuy_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.closeBuy();
+    }
+
+    function testCloseBuy_FailsIfAlreadyClosed() public {
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit BuyingDisabled();
+        emit IBondingCurveBase_v1.BuyingDisabled();
 
         bondingCurveFundingManager.closeBuy();
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit BuyingDisabled();
+        emit IBondingCurveBase_v1.BuyingDisabled();
 
         bondingCurveFundingManager.closeBuy();
 
         assertEq(bondingCurveFundingManager.buyIsOpen(), false);
     }
 
-    function testCloseBuy() public callerIsOrchestratorAdmin {
+    function testCloseBuy() public {
         assertEq(bondingCurveFundingManager.buyIsOpen(), true);
 
         vm.expectEmit(address(bondingCurveFundingManager));
-        emit BuyingDisabled();
+        emit IBondingCurveBase_v1.BuyingDisabled();
 
         bondingCurveFundingManager.closeBuy();
 
@@ -834,9 +947,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
     }
 
     /* Test setBuyFee and _setBuyFee function
-        ├── when caller is not the Orchestrator_v1 admin
-        │      └── it should revert (tested in base Module tests)
-        └── when caller is the Orchestrator_v1 admin
+        ├── when caller is not permissioned
+        │      └── it should revert (modifier in postion)
+        └── when caller is permissioned
                └── when fee is over 100% 
                 │      └── it should revert
                 ├── when fee is  100% 
@@ -845,10 +958,21 @@ contract BondingCurveBaseV1Test is ModuleTest {
                         ├── it should set the new fee
                         └── it should emit an event
     */
-    function testSetBuyFee_FailsIfFee100PercentOrMore(uint _fee)
-        public
-        callerIsOrchestratorAdmin
-    {
+    function testSetBuyFee_ModifierInPositionChecks() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.setBuyFee(0);
+    }
+
+    function testSetBuyFee_FailsIfFee100PercentOrMore(uint _fee) public {
         vm.assume(_fee > bondingCurveFundingManager.call_BPS());
         vm.expectRevert(
             IBondingCurveBase_v1
@@ -858,13 +982,13 @@ contract BondingCurveBaseV1Test is ModuleTest {
         bondingCurveFundingManager.setBuyFee(_fee);
     }
 
-    function testSetBuyFee(uint newFee) public callerIsOrchestratorAdmin {
+    function testSetBuyFee(uint newFee) public {
         vm.assume(newFee < bondingCurveFundingManager.call_BPS());
 
         vm.expectEmit(
             true, true, false, false, address(bondingCurveFundingManager)
         );
-        emit BuyFeeUpdated(newFee, BUY_FEE);
+        emit IBondingCurveBase_v1.BuyFeeUpdated(newFee, BUY_FEE);
 
         bondingCurveFundingManager.setBuyFee(newFee);
 
@@ -900,7 +1024,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit IssuanceTokenSet(address(newIssuanceToken), _newDecimals);
+        emit IBondingCurveBase_v1.IssuanceTokenSet(
+            address(newIssuanceToken), _newDecimals
+        );
         bondingCurveFundingManager.call_setIssuanceToken(
             address(newIssuanceToken)
         );
@@ -1025,35 +1151,40 @@ contract BondingCurveBaseV1Test is ModuleTest {
         assertEq(internalFunctionReturnValue, functionReturnValue);
     }
 
-    /*    Test withdrawProjectCollateralFee function
-            └── Given the receiver is address zero or equal to bonding curve address
-                └── When the function withdrawProjectCollateralFee function gets called
-                    └── Then it should revert with invalid receiver
+    /*
+    Test: withdrawProjectCollateralFee modifier in postion
+    ├── Given: buyer is not permissioned
+    │   └── When: withdrawProjectCollateralFee is called
+    │       └── Then: it should revert (modifier in position check)
+    ├── Given: the receiver is address zero or equal to bonding curve address
+    └── And: buyer is permissioned
+        └── When: withdrawProjectCollateralFee is called
+            └── Then: it should revert (modifier in position check)
     */
 
-    function testWithdrawProjectCollateralFee_revertGivenInvalidReceiver(
-        uint _amount
-    ) public {
-        address receiver = address(0);
+    function testWithdrawProjectCollateralFee_ModifierInPostion() public {
+        // permissioned
 
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IModule_v1.Module__CallerNotPermissioned.selector
+            )
+        );
+        vm.prank(address(0xB0B));
+        bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
+
+        // Turn on all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(true);
+
+        // validReceiver
         vm.expectRevert(
             IBondingCurveBase_v1
                 .Module__BondingCurveBase__InvalidRecipient
                 .selector
         );
-        bondingCurveFundingManager.withdrawProjectCollateralFee(
-            receiver, _amount
-        );
-
-        receiver = address(bondingCurveFundingManager);
-        vm.expectRevert(
-            IBondingCurveBase_v1
-                .Module__BondingCurveBase__InvalidRecipient
-                .selector
-        );
-        bondingCurveFundingManager.withdrawProjectCollateralFee(
-            receiver, _amount
-        );
+        bondingCurveFundingManager.withdrawProjectCollateralFee(address(0), 0);
     }
 
     /*    Test internal _withdrawProjectCollateralFee function
@@ -1115,7 +1246,9 @@ contract BondingCurveBaseV1Test is ModuleTest {
         vm.expectEmit(
             true, true, true, true, address(bondingCurveFundingManager)
         );
-        emit ProjectCollateralFeeWithdrawn(receiver, _amount);
+        emit IBondingCurveBase_v1.ProjectCollateralFeeWithdrawn(
+            receiver, _amount
+        );
         // Execute function
         bondingCurveFundingManager.call_withdrawProjectCollateralFee(
             receiver, _amount
@@ -1207,13 +1340,6 @@ contract BondingCurveBaseV1Test is ModuleTest {
 
     //--------------------------------------------------------------------------
     // Helper functions
-
-    // Modifier to ensure the caller has the admin role
-    modifier callerIsOrchestratorAdmin() {
-        _authorizer.grantRole(_authorizer.getAdminRole(), admin_address);
-        vm.startPrank(admin_address);
-        _;
-    }
 
     // Helper function that mints enough collateral tokens to a buyer and approves the bonding curve to spend them
     function _prepareBuyConditions(address buyer, uint amount) internal {

@@ -64,7 +64,7 @@ abstract contract Module_v1 is
             || super.supportsInterface(interfaceId);
     }
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Storage
     //
     // Variables are prefixed with `__Module_`.
@@ -82,19 +82,15 @@ abstract contract Module_v1 is
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Modifiers
     //
     // Note that the modifiers declared here are available in dowstream
     // contracts too. To not make unnecessary modifiers available, this contract
     // inlines argument validations not needed in downstream contracts.
 
-    /// @dev    Modifier to guarantee function is only callable by addresses
-    ///         authorized via {Orchestrator_v1}.
-    modifier onlyOrchestratorAdmin() {
-        _checkRoleModifier(
-            __Module_orchestrator.authorizer().getAdminRole(), _msgSender()
-        );
+    modifier permissioned() {
+        _checkAuthorization(_msgSender(), _msgData());
         _;
     }
 
@@ -105,38 +101,6 @@ abstract contract Module_v1 is
         _;
     }
 
-    /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
-    modifier onlyModuleRole(bytes32 role) {
-        _checkRoleModifier(
-            __Module_orchestrator.authorizer().generateRoleId(
-                address(this), role
-            ),
-            _msgSender()
-        );
-        _;
-    }
-
-    /// @dev    Modifier to guarantee function is only callable by addresses that hold a specific module-assigned role.
-    modifier onlyModuleRoleAdmin(bytes32 role) {
-        bytes32 moduleRole = __Module_orchestrator.authorizer().generateRoleId(
-            address(this), role
-        );
-        _checkRoleModifier(
-            __Module_orchestrator.authorizer().getRoleAdmin(moduleRole),
-            _msgSender()
-        );
-        _;
-    }
-
-    /// @dev    Modifier to guarantee function is only callable by the {Orchestrator_v1}.
-    /// @dev	onlyOrchestrator functions MUST only access the module's storage, i.e.
-    ///         `__Module_` variables.
-    /// @dev	Note to use function prefix `__Module_`.
-    modifier onlyOrchestrator() {
-        _onlyOrchestratorModifier();
-        _;
-    }
-
     /// @dev	Checks if the given Address is valid.
     /// @param  to The address to check.
     modifier validAddress(address to) {
@@ -144,7 +108,7 @@ abstract contract Module_v1 is
         _;
     }
 
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Initialization
 
     constructor() ERC2771ContextUpgradeable(address(0)) {
@@ -182,8 +146,11 @@ abstract contract Module_v1 is
         emit ModuleInitialized(address(orchestrator_), metadata);
     }
 
-    //--------------------------------------------------------------------------
-    // Public View Functions
+    // ========================================================================
+    // Public Getter Functions
+
+    // ------------------------------------------------------------------------
+    // Getter - Module State
 
     /// @inheritdoc IModule_v1
     function identifier() public view returns (bytes32) {
@@ -215,46 +182,44 @@ abstract contract Module_v1 is
     }
 
     //--------------------------------------------------------------------------
-    // Role Management
+    // Getter - ERC2771 Context Upgradeable Overrides
 
-    /// @inheritdoc IModule_v1
-    function grantModuleRole(bytes32 role, address target)
-        external
-        onlyModuleRoleAdmin(role)
+    /// @notice Checks if the provided address is the trusted forwarder.
+    /// @param  forwarder The contract address to be verified.
+    /// @return bool Is the given address the trusted forwarder.
+    /// @dev	We imitate here the EIP2771 Standard to enable metatransactions
+    ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
+    ///         move this to the orchestrator.
+    function isTrustedForwarder(address forwarder)
+        public
+        view
+        virtual
+        override(ERC2771ContextUpgradeable)
+        returns (bool)
     {
-        __Module_orchestrator.authorizer().grantRoleFromModule(role, target);
+        return __Module_orchestrator.isTrustedForwarder(forwarder);
     }
 
-    /// @inheritdoc IModule_v1
-    function grantModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external
-        onlyModuleRoleAdmin(role)
+    /// @notice Returns the trusted forwarder.
+    /// @return address The trusted forwarder.
+    /// @dev	We imitate here the EIP2771 Standard to enable metatransactions.
+    ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
+    ///         move this to the orchestrator.
+    function trustedForwarder()
+        public
+        view
+        virtual
+        override(ERC2771ContextUpgradeable)
+        returns (address)
     {
-        __Module_orchestrator.authorizer().grantRoleFromModuleBatched(
-            role, targets
-        );
+        return __Module_orchestrator.trustedForwarder();
     }
 
-    /// @inheritdoc IModule_v1
-    function revokeModuleRole(bytes32 role, address target)
-        external
-        onlyModuleRoleAdmin(role)
-    {
-        __Module_orchestrator.authorizer().revokeRoleFromModule(role, target);
-    }
-
-    /// @inheritdoc IModule_v1
-    function revokeModuleRoleBatched(bytes32 role, address[] calldata targets)
-        external
-        onlyModuleRoleAdmin(role)
-    {
-        __Module_orchestrator.authorizer().revokeRoleFromModuleBatched(
-            role, targets
-        );
-    }
-
-    //--------------------------------------------------------------------------
+    // ========================================================================
     // Internal Functions
+
+    // ------------------------------------------------------------------------
+    // Internal - Fees
 
     /// @notice Returns the collateral fee for the specified workflow module function and the according treasury
     ///         address of this workflow.
@@ -296,21 +261,28 @@ abstract contract Module_v1 is
         );
     }
 
-    /// @dev	Checks if the caller has the specified role.
-    /// @param  role The role to check.
-    /// @param  addr The address to check.
-    function _checkRoleModifier(bytes32 role, address addr) internal view {
-        if (!__Module_orchestrator.authorizer().checkForRole(role, addr)) {
-            revert Module__CallerNotAuthorized(role, addr);
+    // ------------------------------------------------------------------------
+    // Internal - Authorization
+
+    /// @notice Checks if the caller can call the function that implements the locked modifier.
+    /// @param  caller_ The address of the caller.
+    /// @param  data_ The data of the call.
+    function _checkAuthorization(address caller_, bytes calldata data_)
+        internal
+        view
+    {
+        // If caller cannot call the function, revert.
+        if (
+            !__Module_orchestrator.authorizer().hasPermission(
+                caller_, address(this), bytes4(data_[0:4])
+            )
+        ) {
+            revert Module__CallerNotPermissioned();
         }
     }
 
-    /// @dev	Checks if the caller is the orchestrator.
-    function _onlyOrchestratorModifier() internal view {
-        if (_msgSender() != address(__Module_orchestrator)) {
-            revert Module__OnlyCallableByOrchestrator();
-        }
-    }
+    // ------------------------------------------------------------------------
+    // Internal - Modifiers
 
     /// @dev	Checks if the given address is an valid address.
     /// @param  to The address to check.
@@ -333,39 +305,5 @@ abstract contract Module_v1 is
                         )
                 )
         ) revert Module__OnlyCallableByPaymentClient();
-    }
-
-    //--------------------------------------------------------------------------
-    // ERC2771 Context Upgradeable
-
-    /// @notice Checks if the provided address is the trusted forwarder.
-    /// @param  forwarder The contract address to be verified.
-    /// @return bool Is the given address the trusted forwarder.
-    /// @dev	We imitate here the EIP2771 Standard to enable metatransactions
-    ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
-    ///         move this to the orchestrator.
-    function isTrustedForwarder(address forwarder)
-        public
-        view
-        virtual
-        override(ERC2771ContextUpgradeable)
-        returns (bool)
-    {
-        return __Module_orchestrator.isTrustedForwarder(forwarder);
-    }
-
-    /// @notice Returns the trusted forwarder.
-    /// @return address The trusted forwarder.
-    /// @dev	We imitate here the EIP2771 Standard to enable metatransactions.
-    ///         As it currently stands we dont want to feed the forwarder address to each module individually and we decided to
-    ///         move this to the orchestrator.
-    function trustedForwarder()
-        public
-        view
-        virtual
-        override(ERC2771ContextUpgradeable)
-        returns (address)
-    {
-        return __Module_orchestrator.trustedForwarder();
     }
 }

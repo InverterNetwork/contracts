@@ -12,6 +12,7 @@ interface ILM_PC_PaymentRouter_v2 {
     // Mutating Functions
 
     /// @notice Adds a new Payment Order.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if an argument invalid.
     /// @param  recipient The address that will receive the payment.
     /// @param  paymentToken The token in which to pay.
@@ -30,6 +31,7 @@ interface ILM_PC_PaymentRouter_v2 {
 
     /// @notice Adds multiple Payment Orders in one batch. These PaymentOrders will share start,
     ///         cliff and end timestamps.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if an argument invalid. The number of orders to be added in one batch is capped at 255.
     /// @param  numOfOrders The number of orders to add.
     /// @param  recipients The addresses that will receive the payments.

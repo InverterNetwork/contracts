@@ -188,6 +188,7 @@ interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
     // Bounty Mutating Functions
 
     /// @notice Adds a new Bounty.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if an argument invalid.
     /// @param  minimumPayoutAmount The minimum amount of tokens the Bounty will pay out upon being claimed.
     /// @param  maximumPayoutAmount The maximum amount of tokens the Bounty will pay out upon being claimed.
@@ -200,6 +201,7 @@ interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
     ) external returns (uint);
 
     /// @notice Adds a new array of Bounties.
+    /// @dev    Function access controlled by authorizer.
     /// @dev    Reverts if an argument invalid.
     /// @param  minimumPayoutAmounts The array of minimum amount of tokens the Bounty will pay out upon being claimed
     /// @param  maximumPayoutAmounts The array of maximum amount of tokens the Bounty will pay out upon being claimed
@@ -212,18 +214,21 @@ interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
     ) external returns (uint[] memory ids);
 
     /// @notice Updates a Bounty's informations.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if an argument invalid.
     /// @param  bountyId The id of the Bounty that will be updated.
     /// @param  details The Bounty's details.
     function updateBounty(uint bountyId, bytes calldata details) external;
 
     /// @notice Locks the Bounty so it cant be claimed.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Only callable by authorized addresses.
     /// @dev	Reverts if id invalid.
     /// @param  bountyId The id of the Bounty that will be locked.
     function lockBounty(uint bountyId) external;
 
     /// @notice Adds a new Claim.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if an argument invalid.
     /// @param  bountyId The id of the bounty this claim belongs to.
     /// @param  contributors The contributor information for the Claim.
@@ -236,6 +241,7 @@ interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
     ) external returns (uint);
 
     /// @notice Updates a Claim's contributor informations.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if an argument invalid.
     /// @param  claimId The id of the Claim that will be updated.
     /// @param  contributors The contributor information for the Claim.
@@ -245,13 +251,14 @@ interface ILM_PC_Bounties_v2 is IERC20PaymentClientBase_v2 {
     ) external;
 
     /// @notice Updates a Claim Details.
+    /// @dev    Function only callable by claim contributors
     /// @param  claimId The id of the Claim that will be updated.
     /// @param  details The Claim's details.
     function updateClaimDetails(uint claimId, bytes calldata details)
         external;
 
     /// @notice Completes a Bounty by verifying a claim.
-    /// @dev	Only callable by authorized addresses.
+    /// @dev    Function access controlled by authorizer.
     /// @dev	Reverts if id invalid.
     /// @dev	contributors should be copied out of the given Claim. The parameter is used to prevent front running.
     /// @param  claimId The id of the Claim that wants to claim the Bounty.
