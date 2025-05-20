@@ -37,6 +37,8 @@ import {
     Initializable
 } from "@oz-up/access/Ownable2StepUpgradeable.sol";
 
+import {Create2} from "@oz/utils/Create2.sol";
+
 /**
  * @title   Inverter Orchestrator Factory
  *
@@ -242,6 +244,22 @@ contract OrchestratorFactory_v1 is
     /// @inheritdoc IOrchestratorFactory_v1
     function getOrchestratorIDCounter() external view returns (uint) {
         return _orchestratorIdCounter;
+    }
+
+    /// @notice Deploys an external contract using the CREATE2 opcode.
+    /// @dev    Any further calls to the contract that serve its initialization
+    ///         can be provided via the calls array and will be executed after.
+    /// @param  code The creation code of the contract.
+    /// @param  calls Additional calls to be made to the deployed contract.
+    function deployExternalContract(bytes calldata code, bytes[] calldata calls)
+        external
+        returns (address deploymentAddress)
+    {
+        deploymentAddress = Create2.deploy(0, _createSalt(), code);
+        for (uint i; i < calls.length; ++i) {
+            (bool success,) = deploymentAddress.call(calls[i]);
+            require(success, "External contract deployment failed");
+        }
     }
 
     //--------------------------------------------------------------------------
