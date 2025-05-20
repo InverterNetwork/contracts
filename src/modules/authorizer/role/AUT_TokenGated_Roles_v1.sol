@@ -78,20 +78,18 @@ interface TokenInterface {
  *                    achieve this. Without going into too much detail, this
  *                    is the main part that is needed to understand the basic
  *                    mechanism:
- *                    In the contract the token gating is done by instead of
- *                    saving the members of the role directly in the members
- *                    property of the role, the contract saves the token
- *                    address that will gate the role in the property. That way
- *                    the token address can be looked up and the threshold
- *                    amount compared to the token balance of incoming users.
- *                    Example: We want to adapt a role so that it can only be
- *                    accessed by users that hold a certain amount of token A.
- *                    So we make the role token gated and set a threshold of
- *                    how many tokens a address needs to hold to be able to
- *                    access the role. The moment we use the grantRole function
- *                    to add the address of token A to the members property of
- *                    the role, the role will only be accessible by users that
- *                    hold the threshold amount of token A.
+ *                    In the contract, token gating is implemented by storing
+ *                    the token address in the role’s members property, instead
+ *                    of directly listing user addresses. This setup allows the
+ *                    contract to check the token balance of a user against a
+ *                    defined threshold when access is requested.
+ *                    Example: We want to restrict a role to users who hold a
+ *                    certain amount of Token A. Therefore, we configure the
+ *                    role to be token-gated and set a required token amount
+ *                    the user needs to hold as threshold. When we then call
+ *                    'grantRole' with the address of Token A, the role becomes
+ *                    accessible only to users whose wallet holds at least the
+ *                    specified amount of that token.
  *
  *                  - Making a role token gated:
  *                    Making a role token gated is done by calling the
