@@ -1,43 +1,50 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import 'forge-std/Test.sol';
+import "forge-std/Test.sol";
 
 // Factories
-import {ModuleFactory_v1} from 'src/factories/ModuleFactory_v1.sol';
-import {IOrchestratorFactory_v1} from 'src/factories/interfaces/IOrchestratorFactory_v1.sol';
+import {ModuleFactory_v1} from "src/factories/ModuleFactory_v1.sol";
+import {IOrchestratorFactory_v1} from
+    "src/factories/interfaces/IOrchestratorFactory_v1.sol";
 
 // Governance
-import {Governor_v1} from '@ex/governance/Governor_v1.sol';
+import {Governor_v1} from "@ex/governance/Governor_v1.sol";
 
 // Modules
-import {IModule_v1} from 'src/modules/base/IModule_v1.sol';
-import {FM_Rebasing_v1} from '@fm/rebasing/FM_Rebasing_v1.sol';
-import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol';
-import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from '@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol';
-import {BancorFormula} from '@fm/bondingCurve/formulas/BancorFormula.sol';
-import {PP_Simple_v1} from 'src/modules/paymentProcessor/PP_Simple_v1.sol';
-import {PP_Streaming_v1} from 'src/modules/paymentProcessor/PP_Streaming_v1.sol';
-import {LM_PC_Bounties_v1} from '@lm/LM_PC_Bounties_v1.sol';
-import {LM_PC_RecurringPayments_v1} from '@lm/LM_PC_RecurringPayments_v1.sol';
-import {LM_PC_Staking_v1} from '@lm/LM_PC_Staking_v1.sol';
-import {LM_PC_KPIRewarder_v1} from '@lm/LM_PC_KPIRewarder_v1.sol';
-import {AUT_Roles_v1} from '@aut/role/AUT_Roles_v1.sol';
-import {AUT_TokenGated_Roles_v1} from '@aut/role/AUT_TokenGated_Roles_v1.sol';
-import {AUT_EXT_VotingRoles_v1} from 'src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol';
-import {LM_PC_PaymentRouter_v1} from '@lm/LM_PC_PaymentRouter_v1.sol';
+import {IModule_v1} from "src/modules/base/IModule_v1.sol";
+import {FM_Rebasing_v1} from "@fm/rebasing/FM_Rebasing_v1.sol";
+import {FM_BC_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1} from
+    "@fm/bondingCurve/FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1.sol";
+import {BancorFormula} from "@fm/bondingCurve/formulas/BancorFormula.sol";
+import {PP_Simple_v1} from "src/modules/paymentProcessor/PP_Simple_v1.sol";
+import {PP_Streaming_v1} from "src/modules/paymentProcessor/PP_Streaming_v1.sol";
+import {LM_PC_Bounties_v1} from "@lm/LM_PC_Bounties_v1.sol";
+import {LM_PC_RecurringPayments_v1} from "@lm/LM_PC_RecurringPayments_v1.sol";
+import {LM_PC_Staking_v1} from "@lm/LM_PC_Staking_v1.sol";
+import {LM_PC_KPIRewarder_v1} from "@lm/LM_PC_KPIRewarder_v1.sol";
+import {AUT_Roles_v1} from "@aut/role/AUT_Roles_v1.sol";
+import {AUT_TokenGated_Roles_v1} from "@aut/role/AUT_TokenGated_Roles_v1.sol";
+import {AUT_EXT_VotingRoles_v1} from
+    "src/modules/authorizer/extensions/AUT_EXT_VotingRoles_v1.sol";
+import {LM_PC_PaymentRouter_v1} from "@lm/LM_PC_PaymentRouter_v1.sol";
 
 // Beacon
-import {InverterBeacon_v1, IInverterBeacon_v1} from 'src/proxies/InverterBeacon_v1.sol';
+import {
+    InverterBeacon_v1,
+    IInverterBeacon_v1
+} from "src/proxies/InverterBeacon_v1.sol";
 
 contract E2EModuleRegistry is Test {
     // General Storage and QOL-constants
     ModuleFactory_v1 moduleFactory;
     Governor_v1 gov;
 
-    address communityMultisig = makeAddr('communityMultisig');
-    address teamMultisig = makeAddr('teamMultisig');
-    address treasury = makeAddr('treasury');
+    address communityMultisig = makeAddr("communityMultisig");
+    address teamMultisig = makeAddr("teamMultisig");
+    address treasury = makeAddr("treasury");
 
     address public DEFAULT_BEACON_OWNER = address(0x3BEAC0);
 
@@ -75,14 +82,9 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 rebasingFundingManagerBeacon;
 
-    IModule_v1.Metadata rebasingFundingManagerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/funding-manager',
-            'FM_Rebasing_v1'
-        );
+    IModule_v1.Metadata rebasingFundingManagerMetadata = IModule_v1.Metadata(
+        1, 0, 0, "https://github.com/inverter/funding-manager", "FM_Rebasing_v1"
+    );
 
     /*
     IOrchestratorFactory_v1.ModuleConfig rebasingFundingManagerFactoryConfig =
@@ -119,30 +121,34 @@ contract E2EModuleRegistry is Test {
 
     BancorFormula formula = new BancorFormula();
 
-    FM_BC_Bancor_Redeeming_VirtualSupply_v1 bancorVirtualSupplyBondingCurveFundingManagerImpl;
+    FM_BC_Bancor_Redeeming_VirtualSupply_v1
+        bancorVirtualSupplyBondingCurveFundingManagerImpl;
 
     InverterBeacon_v1 bancorVirtualSupplyBondingCurveFundingManagerBeacon;
 
     IModule_v1.Metadata bancorVirtualSupplyBondingCurveFundingManagerMetadata =
+    IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/bonding-curve-funding-manager",
+        "FM_BC_Bancor_Redeeming_VirtualSupply_v1"
+    );
+
+    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl;
+
+    InverterBeacon_v1
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon;
+
+    IModule_v1.Metadata
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata =
         IModule_v1.Metadata(
             1,
             0,
             0,
-            'https://github.com/inverter/bonding-curve-funding-manager',
-            'FM_BC_Bancor_Redeeming_VirtualSupply_v1'
-        );
-
-    FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1 restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl;
-
-    InverterBeacon_v1 restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon;
-
-    IModule_v1.Metadata restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/bonding-curve-funding-manager',
-            'FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1'
+            "https://github.com/inverter/bonding-curve-funding-manager",
+            "FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1"
         );
 
     /*
@@ -180,7 +186,8 @@ contract E2EModuleRegistry is Test {
 
     function setUpBancorVirtualSupplyBondingCurveFundingManager() internal {
         // Deploy module implementations.
-        bancorVirtualSupplyBondingCurveFundingManagerImpl = new FM_BC_Bancor_Redeeming_VirtualSupply_v1();
+        bancorVirtualSupplyBondingCurveFundingManagerImpl =
+            new FM_BC_Bancor_Redeeming_VirtualSupply_v1();
 
         // Deploy module beacons.
         bancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
@@ -201,16 +208,15 @@ contract E2EModuleRegistry is Test {
             )
         );
 
-        restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl = new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1();
+        restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl =
+            new FM_BC_Restricted_Bancor_Redeeming_VirtualSupply_v1();
 
         restrictedBancorVirtualSupplyBondingCurveFundingManagerBeacon = new InverterBeacon_v1(
             moduleFactory.reverter(),
             DEFAULT_BEACON_OWNER,
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
                 .majorVersion,
-            address(
-                restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl
-            ),
+            address(restrictedBancorVirtualSupplyBondingCurveFundingManagerImpl),
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
                 .minorVersion,
             restrictedBancorVirtualSupplyBondingCurveFundingManagerMetadata
@@ -235,14 +241,9 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 roleAuthorizerBeacon;
 
-    IModule_v1.Metadata roleAuthorizerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/roleAuthorizer',
-            'AUT_Roles_v1'
-        );
+    IModule_v1.Metadata roleAuthorizerMetadata = IModule_v1.Metadata(
+        1, 0, 0, "https://github.com/inverter/roleAuthorizer", "AUT_Roles_v1"
+    );
 
     /* 
     // Note that AUT_Roles_v1 owner and manager are the same
@@ -269,8 +270,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            roleAuthorizerMetadata,
-            IInverterBeacon_v1(roleAuthorizerBeacon)
+            roleAuthorizerMetadata, IInverterBeacon_v1(roleAuthorizerBeacon)
         );
     }
 
@@ -280,14 +280,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 tokenRoleAuthorizerBeacon;
 
-    IModule_v1.Metadata tokenRoleAuthorizerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/tokenRoleAuthorizer',
-            'AUT_TokenGated_Roles_v1'
-        );
+    IModule_v1.Metadata tokenRoleAuthorizerMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/tokenRoleAuthorizer",
+        "AUT_TokenGated_Roles_v1"
+    );
 
     /* 
     // Note that AUT_Roles_v1 owner and manager are the same
@@ -330,14 +329,9 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 simplePaymentProcessorBeacon;
 
-    IModule_v1.Metadata simplePaymentProcessorMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/payment-processor',
-            'PP_Simple_v1'
-        );
+    IModule_v1.Metadata simplePaymentProcessorMetadata = IModule_v1.Metadata(
+        1, 0, 0, "https://github.com/inverter/payment-processor", "PP_Simple_v1"
+    );
 
     /*
      IOrchestratorFactory_v1.ModuleConfig simplePaymentProcessorFactoryConfig =
@@ -374,14 +368,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 streamingPaymentProcessorBeacon;
 
-    IModule_v1.Metadata streamingPaymentProcessorMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/streaming-payment-processor',
-            'PP_Streaming_v1'
-        );
+    IModule_v1.Metadata streamingPaymentProcessorMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/streaming-payment-processor",
+        "PP_Streaming_v1"
+    );
 
     /*
      IOrchestratorFactory_v1.ModuleConfig streamingPaymentProcessorFactoryConfig =
@@ -422,14 +415,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 recurringPaymentManagerBeacon;
 
-    IModule_v1.Metadata recurringPaymentManagerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/recurring-payment-manager',
-            'LM_PC_RecurringPayments_v1'
-        );
+    IModule_v1.Metadata recurringPaymentManagerMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/recurring-payment-manager",
+        "LM_PC_RecurringPayments_v1"
+    );
     /*
     IOrchestratorFactory_v1.ModuleConfig recurringPaymentManagerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
@@ -466,14 +458,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 bountyManagerBeacon;
 
-    IModule_v1.Metadata bountyManagerMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/bounty-manager',
-            'LM_PC_Bounties_v1'
-        );
+    IModule_v1.Metadata bountyManagerMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/bounty-manager",
+        "LM_PC_Bounties_v1"
+    );
     /*
      IOrchestratorFactory_v1.ModuleConfig bountyManagerFactoryConfig =
     IOrchestratorFactory_v1.ModuleConfig(
@@ -500,8 +491,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            bountyManagerMetadata,
-            IInverterBeacon_v1(bountyManagerBeacon)
+            bountyManagerMetadata, IInverterBeacon_v1(bountyManagerBeacon)
         );
     }
 
@@ -510,14 +500,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 paymentRouterBeacon;
 
-    IModule_v1.Metadata public paymentRouterMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/InverterNetwork/contracts',
-            'LM_PC_PaymentRouter_v1'
-        );
+    IModule_v1.Metadata public paymentRouterMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_PaymentRouter_v1"
+    );
 
     /*
      IOrchestratorFactory_v1.ModuleConfig paymentRouterFactoryConfig =
@@ -545,8 +534,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            paymentRouterMetadata,
-            IInverterBeacon_v1(paymentRouterBeacon)
+            paymentRouterMetadata, IInverterBeacon_v1(paymentRouterBeacon)
         );
     }
 
@@ -556,14 +544,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 LM_PC_Staking_v1Beacon;
 
-    IModule_v1.Metadata LM_PC_Staking_v1Metadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/InverterNetwork/contracts',
-            'LM_PC_Staking_v1'
-        );
+    IModule_v1.Metadata LM_PC_Staking_v1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_Staking_v1"
+    );
 
     /*
      IOrchestratorFactory_v1.ModuleConfig LM_PC_Staking_v1FactoryConfig =
@@ -590,8 +577,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            LM_PC_Staking_v1Metadata,
-            IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
+            LM_PC_Staking_v1Metadata, IInverterBeacon_v1(LM_PC_Staking_v1Beacon)
         );
     }
 
@@ -601,14 +587,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 LM_PC_KPIRewarder_v1Beacon;
 
-    IModule_v1.Metadata LM_PC_KPIRewarder_v1Metadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/KPI-Rewarder',
-            'LM_PC_KPIRewarder_v1'
-        );
+    IModule_v1.Metadata LM_PC_KPIRewarder_v1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/KPI-Rewarder",
+        "LM_PC_KPIRewarder_v1"
+    );
 
     /*
      IOrchestratorFactory_v1.ModuleConfig LM_PC_KPIRewarder_v1FactoryConfig =
@@ -649,14 +634,13 @@ contract E2EModuleRegistry is Test {
 
     InverterBeacon_v1 votingRolesBeacon;
 
-    IModule_v1.Metadata votingRolesMetadata =
-        IModule_v1.Metadata(
-            1,
-            0,
-            0,
-            'https://github.com/inverter/single-vote-governor',
-            'AUT_EXT_VotingRoles_v1'
-        );
+    IModule_v1.Metadata votingRolesMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/inverter/single-vote-governor",
+        "AUT_EXT_VotingRoles_v1"
+    );
 
     /*    
     address[] initialVoters =
@@ -686,8 +670,7 @@ contract E2EModuleRegistry is Test {
         // Register modules at moduleFactory.
         vm.prank(teamMultisig);
         gov.registerMetadataInModuleFactory(
-            votingRolesMetadata,
-            IInverterBeacon_v1(votingRolesBeacon)
+            votingRolesMetadata, IInverterBeacon_v1(votingRolesBeacon)
         );
     }
 }
