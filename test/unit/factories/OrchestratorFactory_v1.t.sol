@@ -370,8 +370,10 @@ contract OrchestratorFactoryV1Test is Test {
         calls[0] = mintCall;
         calls[1] = transferCall;
 
-        vm.expectEmit(true, false, false, false);
+        vm.expectEmit(true, true, true, true);
         emit IERC20.Transfer(address(0), address(factory), 100);
+
+        vm.expectEmit(true, true, true, true);
         emit IERC20.Transfer(address(factory), address(transferTarget), 100);
 
         address deployedAddress =
