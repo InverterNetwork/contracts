@@ -803,7 +803,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
             └── Then: The Admin should be burned
     */
 
-    function testburnRoleAdmin_OnlyRoleAdmin(
+    function testBurnRoleAdmin_OnlyRoleAdmin(
         uint seed_,
         bytes32 roleId_,
         bytes32 roleAdmin_
@@ -837,7 +837,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.burnRoleAdmin(roleId_);
     }
 
-    function testburnRoleAdmin_ModifierInPositionChecks() public {
+    function testBurnRoleAdmin_ModifierInPositionChecks() public {
         //idExists(roleId_)
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -848,7 +848,7 @@ contract AUT_Roles_v1_Test is ModuleTest {
         _authSuT.burnRoleAdmin(bytes32(uint(2)));
     }
 
-    function testburnRoleAdmin_idExists(bytes32 roleId_, bytes32 adminRoleId_)
+    function testBurnRoleAdmin_idExists(bytes32 roleId_, bytes32 adminRoleId_)
         public
     {
         // make sure that roleAdmin was created before roleId
