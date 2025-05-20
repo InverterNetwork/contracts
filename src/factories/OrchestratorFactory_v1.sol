@@ -246,11 +246,7 @@ contract OrchestratorFactory_v1 is
         return _orchestratorIdCounter;
     }
 
-    /// @notice Deploys an external contract using the CREATE2 opcode.
-    /// @dev    Any further calls to the contract that serve its initialization
-    ///         can be provided via the calls array and will be executed after.
-    /// @param  code The creation code of the contract.
-    /// @param  calls Additional calls to be made to the deployed contract.
+    /// @inheritdoc IOrchestratorFactory_v1
     function deployExternalContract(bytes calldata code, bytes[] calldata calls)
         external
         returns (address deploymentAddress)
