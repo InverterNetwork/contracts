@@ -1,5 +1,63 @@
 # Comments authorizer Update
 
+# Presentation
+
+- Go through typical usecase (E2E)
+- Go through all functions (Aut_Roles_v1)
+- All permissioned from the start
+  - Buy and sell restricted until functions called
+  - Stake unstake
+- Oneclick Deployment Templates
+
+  - Needs the address of the authorizer
+    - Predetermined
+    - Call After Deployment
+  - Template for each module
+    - Calling createRoleAndAddAccessPermissions for each role
+      - Contains:
+        - Role Name
+        - Admin Role (probably has to be default admin)
+        - Members
+        - Targets
+        - Function Selectors
+
+- Planning
+  - Predetermined Address factory
+  - Multicall
+  - Role Template Setup for SDK
+    - Concepts / Setup
+  - Issuance Token Setup issue
+    - Tag: Pablo
+
+# Audit Kickoff
+
+- Communication to omega to kickstart?
+  - Who is responsible for the auditor handling in general?
+    - Nobody -> ask Pablo
+  - Contract hours that we can use?
+    - Contracts can be taken from month to month
+    - Expectation they will say something if they are not available
+  - Channels of Communication?
+    - Telegram -> Only Ping
+    - Slack -> Main communication
+  - Asking for Availability?
+    - Just go for it
+    - If Audit Report (not standard security review) is needed -> Marvin K do we need that?
+  - How to present the branch?
+    - create new Feature branch
+  - Deadlines
+    - Can communicate
+    - Try if they work with this.
+  - Setting Scope
+    - Asking for contracts that need to be explicitly reviewed -> Marvin K
+    - Linking documentation for main contracts in there
+
+Hey ben ,
+We are currently in the end steps of developing a new version of our authorization system.
+In this context we will need a Audit Report from you guys.
+i wanted to ask how your availibitly looks lime in the next few weeks.
+Greetings Felix (I am the project lead on this)
+
 # Onchain Roles setup Questions
 
 - Find concept for proper role setup
