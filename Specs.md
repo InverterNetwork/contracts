@@ -769,12 +769,17 @@ Feature: Reserve Invariance Check for Curve Reconfiguration
 
 **High Level:**
 
-- lets users lock issuance tokens in return for collateral token loans
-- calculates collateral amount that is available for borrowing based on state of DBC using `DiscreteCurveMathLib.calculateReserveForSupply` (likely via a DBC FM helper function) on:
-  - segments config
-  - supply
-  - borrowed amount
-- getting back the issuance tokens requires user to pay back loan
+- Lets users lock issuance tokens in the Lending Facility (LF) in return for collateral token loans.
+- The LF interacts with the District Bonding Curve Funding Manager (DBC FM) to source and return collateral tokens for these loans.
+  - For loan disbursement, the LF authorizes and initiates a transfer of collateral tokens from the DBC FM to the borrower, typically by calling a function like `DBCFM.transferOrchestratorToken(borrowerAddress, loanAmount)`. The LF must have appropriate permissions to do so.
+  - For loan repayment, the LF receives collateral from the borrower and transfers it back to the DBC FM.
+  - **Crucially, these collateral transfers for loan operations DO NOT alter the DBC FM's `virtualCollateralSupply` or `virtualIssuanceSupply`. These virtual supplies are exclusively managed by mint/redeem operations on the bonding curve and by the `configureCurve` function.**
+- The LF determines the total pool of collateral available for lending based on the DBC FM's state, specifically using the **Borrow Capacity (BC)** (defined in section 6.3.2).
+  - BC is `DBCFM.virtualIssuanceSupply * P_floor` (where `P_floor` is the initial price of the DBCFM's first segment). This BC represents the system-wide theoretical maximum value that could be lent if all issuance tokens were valued at `P_floor` for individual borrowing power.
+  - The LF applies a configurable **Borrowable Quota (BQ)** (a percentage) to BC to establish the `MaxSystemLoans = BC * BQ`. This is the policy limit for total outstanding loans.
+  - The LF manages loan requests against this `MaxSystemLoans` limit and individual user borrowing limits (which are also based on `UserLockedTokens * P_floor`).
+  - Loan disbursements rely on the DBC FM having sufficient _actual_ (liquid) collateral tokens at the moment of transfer; a transfer request will fail if the DBC FM's actual balance is insufficient.
+- Getting back the locked issuance tokens requires the user to pay back the loan in full.
 
 ### 6.3.1. Access Control
 
@@ -802,7 +807,7 @@ While the total borrowable capacity is determined by the state of the DBC (suppl
 
 Glossary:
 
-- Borrow Capacity (BC): the (absolute) total amount that is theoretically borrowable; determined by supply & segments config (via `DiscreteCurveMathLib.calculateReserveForSupply`)
+- Borrow Capacity (BC): The system-wide theoretical maximum amount of collateral that can be lent out. It is calculated as: `virtualIssuanceSupply * P_floor`, where `P_floor` is the price defined by the initial price of the first segment (e.g., `segments[0].initialPriceOfSegment`) of the DBC FM's current configuration.
 - Borrowable Quota (BQ): the percentage relative to BC that determines how much can actually be borrowed; configurable
 - Currently Borrowed Amount (CBA): the (absolute) total amount of outstanding loans
 - Current Borrow Quota (CBQ): the percentage of the BC that is currently borrowed
@@ -846,32 +851,37 @@ Feature: Editing the Origination Fee
 ```gherkin
 Feature: Borrowing collateral tokens against issuance tokens
 
-    Scenario: Valid loan request
-        Given the user holds issuance tokens
-        And the BQ is not yet reached
-        And issuing the new loan would not go against Borrowable Quota or Individual Borrow Limit
-        When the user attempts to take out a loan against their issuance tokens
+    Scenario: Valid loan request with upfront fee deduction
+        Given the user holds issuance tokens and requests a `requestedLoanAmount`
+        And the LF is configured with an `OriginationFeeRate`
+        And the BQ is not yet reached for the `requestedLoanAmount`
+        And the `requestedLoanAmount` does not exceed the Individual Borrow Limit
+        When the user attempts to take out the loan
         Then the SC locks the user's issuance tokens
-        And sends the origination fee from the FM to the fee manager
-        And sends the collateral token amount (loan volume) from the FM to the user
+        And the LF calculates `originationFee = requestedLoanAmount * OriginationFeeRate`
+        And the LF calculates `netAmountToUser = requestedLoanAmount - originationFee`
+        And the LF instructs the DBC FM to transfer `originationFee` to the Fee Manager
+        And the LF instructs the DBC FM to transfer `netAmountToUser` to the user
+        And the user's outstanding loan principal is recorded as `requestedLoanAmount`.
 
-    Scenario: Valid loan request
+    Scenario: Valid loan request (Breaching Limits - Kept for consistency, but details might change based on above)
         Given the user holds issuance tokens
-        And the BQ is not yet reached
-        And issuing the new loan breaches Borrowable Quota or Individual Borrow Limit
+        And the BQ is not yet reached // This condition might need rephrasing based on how limits are checked against requested vs. net amounts
+        And issuing the new loan breaches Borrowable Quota or Individual Borrow Limit // This check should be against requestedLoanAmount
         When the user attempts to take out a loan against their issuance tokens
         Then the SC reverts
 
 Feature: Repaying
     Scenario: Repaying a loan
-        Given the user has previously taken a loan against their issuance tokens
-        When they repay the loan voluma plus origination fee
-        The SC unlocks and transfers the user's issuance tokens
+        Given the user has an outstanding loan with `loanPrincipalOwed` (which was the original `requestedLoanAmount`)
+        When the user repays `loanPrincipalOwed` of collateral tokens to the Lending Facility
+        Then the LF receives the collateral and transfers it back to the DBC FM
+        And the SC unlocks and transfers the user's locked issuance tokens back to the user.
 ```
 
 #### Additional Info
 
-The Borrow Capacity is determined by the price of the first segment (= floor segment) and the current issuance supply.
+The system-wide Borrow Capacity (BC) is determined by multiplying the DBC FM's current `virtualIssuanceSupply` by the floor price (`P_floor`), which is the initial price of the first segment in the DBC FM's active segment configuration (i.e., `segments[0].initialPriceOfSegment`). An individual user's borrowing power for a specific loan is then `UserLockedIssuanceTokens * P_floor`, subject to the overall Borrowable Quota and Individual Borrow Limit.
 
 <img src="./assets/DBC_borrowable_amount.png" width="400" alt="Discrete Bonding Curve Visualization"/>
 
