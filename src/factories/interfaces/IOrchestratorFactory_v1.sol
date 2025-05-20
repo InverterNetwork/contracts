@@ -88,6 +88,15 @@ interface IOrchestratorFactory_v1 {
         ModuleConfig[] memory moduleConfigs
     ) external returns (IOrchestrator_v1);
 
+    /// @notice Deploys an external contract using the CREATE2 opcode.
+    /// @dev    Any further calls to the contract that serve its initialization
+    ///         can be provided via the calls array and will be executed after.
+    /// @param  code The creation code of the contract.
+    /// @param  calls Additional calls to be made to the deployed contract.
+    function deployExternalContract(bytes calldata code, bytes[] calldata calls)
+        external
+        returns (address deploymentAddress);
+
     /// @notice Returns the {IOrchestrator_v1} {IInverterBeacon_v1} address.
     /// @return OrchestratorImplementationBeacon The {IInverterBeacon_v1} of the {Orchestrator_v1} Implementation.
     function beacon() external view returns (IInverterBeacon_v1);
