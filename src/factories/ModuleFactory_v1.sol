@@ -112,8 +112,10 @@ contract ModuleFactory_v1 is
     /// @dev	moduleProxy => {IOrchestrator_v1}.
     mapping(address => address) private _orchestratorOfProxy;
 
-    /// @dev	Maps a users address to a nonce used for the create2-based deployment.
-    mapping(address => uint) private _deploymentNonces;
+    /// @dev	Maps the hash of the callers address and the corresponding
+    ///         orchestrator address to a nonce used for the create2-based
+    ///         deployment.
+    mapping(bytes32 => uint) private _deploymentNonces;
 
     /// @dev	Storage gap for future upgrades.
     uint[50] private __gap;
@@ -209,16 +211,19 @@ contract ModuleFactory_v1 is
         if (workflowConfig.independentUpdates) {
             // Use an InverterTransparentUpgradeableProxy as a proxy
             proxy = address(
-                new InverterTransparentUpgradeableProxy_v1{salt: _createSalt()}(
-                    beacon, workflowConfig.independentUpdateAdmin, bytes("")
-                )
+                new InverterTransparentUpgradeableProxy_v1{
+                    salt: _createSalt(address(orchestrator))
+                }(beacon, workflowConfig.independentUpdateAdmin, bytes(""))
             );
         }
         // If not then
         else {
             // Instead use the Beacon Structure Proxy
-            proxy =
-                address(new InverterBeaconProxy_v1{salt: _createSalt()}(beacon));
+            proxy = address(
+                new InverterBeaconProxy_v1{
+                    salt: _createSalt(address(orchestrator))
+                }(beacon)
+            );
         }
 
         _orchestratorOfProxy[proxy] = address(orchestrator);
@@ -286,12 +291,15 @@ contract ModuleFactory_v1 is
         emit MetadataRegistered(metadata, beacon);
     }
 
-    /// @dev	Internal function to generate a salt for the create2-based deployment flow.
-    ///         This salt is the hash of (msgSender, nonce), where the
-    ///         nonce is an increasing number for each user.
-    function _createSalt() internal returns (bytes32) {
+    /// @dev	Internal function to generate a salt for the create2-based
+    ///         deployment flow. This salt is defined as
+    ///         `hash(hash(msgSender, orchestrator), nonce)`
+    ///         where the nonce is an increasing number for each orchestrator.
+    function _createSalt(address orchestrator) internal returns (bytes32) {
+        bytes32 callerHash =
+            keccak256(abi.encodePacked(_msgSender(), orchestrator));
         return keccak256(
-            abi.encodePacked(_msgSender(), _deploymentNonces[_msgSender()]++)
+            abi.encodePacked(callerHash, _deploymentNonces[callerHash]++)
         );
     }
 
