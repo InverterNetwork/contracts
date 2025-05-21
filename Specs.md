@@ -33,43 +33,39 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM["
-        <strong>FM_BC_Discrete_Redeeming</strong>
-        - establishes discrete price/supply relationship"]
+    FM_BC_DBC["
+        <strong>FM_BC_DBC</strong>
+        - Manages issuance token <br> minting/redeeming
+        - Stores and manages curve<br>segments configuration
+        - Allows for reconfiguration <br> w/ invariance check
+        - Holds/manages collateral<br>token reserve"]
 
     AUT["
         <strong>AUT_Roles</strong>
-        - manages access to permissioned functions"]
-
-    PP["
-        <strong>PP_Streaming</strong>
-        - handles token distribution with unlock"]
+        - Enforces role-based access<br>control for admin functions"]
 
     %% Logic Modules
-    LM_PC_FP["
-        <strong>LM_PC_Funding_Pot</strong>
-        - access control
-        - async payment-mint-distribute logic"]
-
     LM_PC_CF["
         <strong>LM_PC_Credit_Facility</strong>
-        - invariance checks on loan requests
-        - takes staked issuance tokens"]
-
-    LM_PC_EL["
-        <strong>LM_PC_Elevator</strong>
-        - invariance checks on elevation requests
-        - takes collateral tokens"]
+        - Manages user loans against<br>staked issuance tokens
+        - Enforces loan limits<br>(system & individual)
+        - Interacts with FM_BC_DBC for<br>collateral transfers
+        - Liaises with DFC for<br>origination fee calculation"]
 
     %% Auxiliary
-    AUX_1["
-        <strong>Discrete Formula</strong>
-        - establishes discrete price supply relationship"]
+    DCML["
+        <strong>DiscreteCurveMathLib</strong>
+        - Provides pure functions for<br>DBC calculations (purchase/<br>sale returns, reserves)"]
 
+    DFC["
+        <strong>DynamicFeeCalculator</strong>
+        - Calculates dynamic fees for<br>mint, redeem, &<br>loan origination
+        - Fee logic is configurable<br>by Admin"]
 
 
     %% Actors
     User(("User"))
+    Admin(("Admin"))
 
     %% Legend Definition
     %% ----------------
@@ -77,35 +73,30 @@ flowchart TD
         direction LR
         Existing["Already existing"]
         Todo["TODO"]
-        Prog["In progress"]
     end
 
     %% Styling
     %% -------
     classDef ex fill:#FFE4B5
     classDef todo fill:#E6DCFD
-    classDef prog fill:#F2F4C8
-    class Existing,AUT,PP ex
-    class Todo,FM,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
-    class Prog,LM_PC_FP prog
+    class Existing,AUT ex
+    class Todo,FM_BC_DBC,LM_PC_CF,DCML,DFC todo
 
     %% Relationships
     %% ------------
     %% User Actions
-    User <--> |claims presale tokens| PP
-    User <--> |triggers elevation| LM_PC_EL
-    User <--> |contributes| LM_PC_FP
     User <--> |takes loan| LM_PC_CF
-    User <--> |mints/redeems| FM
+    Admin --> |configures curve /<br>triggers rebalancing| FM_BC_DBC
+    User <--> |mints/redeems| FM_BC_DBC
+    Admin --> |configures fees| DFC
 
     %% Module Interactions
+    FM_BC_DBC --> DCML
+    LM_PC_CF --> DCML
+    LM_PC_CF <--> |requests collateral| FM_BC_DBC
 
-
-    FM --> AUX_1
-    LM_PC_FP --> |cliff unlock| PP
-    LM_PC_FP <--> |minting| FM
-    LM_PC_CF <--> |requests collateral| FM
-    LM_PC_EL --> |transfer collateral/<br>edit curve state| FM
+    FM_BC_DBC <--> |gets issuance/redemption<br>fee| DFC
+    LM_PC_CF <--> |gets origination fee| DFC
 ```
 
 # 5. Functional Requirements
@@ -158,7 +149,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM["<strong>FM_BC_Discrete_Redeeming</strong>"]
+    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
     LM_PC_FP["<strong>LM_PC_Funding_Pot</strong>"]
     PP["<strong>PP_Streaming</strong>"]
     AUT["<strong>AUT_Roles</strong>"]
@@ -181,18 +172,18 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
+    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
     class Prog,LM_PC_FP prog
 
     %% Relationships
     %% ------------
     %% User Actions
-    User <--> |mints/redeems| FM
+    User <--> |mints/redeems| FM_BC_DBC
     User --> |contributes<br>collateral tokens| LM_PC_FP
-    User <--> |claims presale tokens| PP
+    User --> |claims presale tokens| PP
     LM_PC_FP --> |vests issuance<br>tokens| PP
-    LM_PC_FP <--> |mints issuance<br>tokens| FM
-    AUT --> | checks permission | FM
+    LM_PC_FP <--> |mints issuance<br>tokens| FM_BC_DBC
+    AUT --> | checks permission | FM_BC_DBC
 ```
 
 ## 5.2. The issuance token follows a discrete price-supply relationship (after pre-sale)
@@ -214,7 +205,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM["<strong>FM_BC_Discrete_Redeeming</strong>"]
+    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
 
     %% Actors
     User(("End User"))
@@ -234,12 +225,12 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
+    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1 todo
 
     %% Relationships
     %% ------------
     %% User Actions
-    User <--> |mints & redeems| FM
+    User <--> |mints & redeems| FM_BC_DBC
 ```
 
 ## 5.3. The floor price rises over time
@@ -276,7 +267,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM["<strong>FM_BC_Discrete_Redeeming</strong>"]
+    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
     LM_PC_EL["<strong>LM_PC_Shift</strong><br>4 invariance checks"]
     AUT["<strong>AUT_Roles</strong>"]
 
@@ -298,15 +289,15 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
+    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
 
     %% Relationships
     %% ------------
     %% User Actions
     User --> |1 triggers elevation<br>mechanism| LM_PC_EL
     AUT --> |2 checks permission| LM_PC_EL
-    LM_PC_EL <--> |3 retrieves curve<br>state| FM
-    LM_PC_EL --> |5 changes<br>curve state| FM
+    LM_PC_EL <--> |3 retrieves curve<br>state| FM_BC_DBC
+    LM_PC_EL --> |5 changes<br>curve state| FM_BC_DBC
 ```
 
 ### 5.3.2. Revenue Injection
@@ -316,14 +307,6 @@ flowchart TD
 - by injecting collateral tokens into the FM it is possible to automatically raise the price floor segment(s) of the DBC
 - **Note:** This is achieved by an authorized entity calling the `DBCFM.configureCurve(Segment[] memory newSegments, int256 collateralChangeAmount)` function (defined in section 6.1.4) with a positive `collateralChangeAmount` (the amount of revenue/collateral injected) and `newSegments` reflecting the desired floor price increase.
 
-TODO: move to specs
-
-- The floor price step increases (vertical);
-- The slope of the curve remains the same (same slope);
-- The spot price remains the same (vertical);
-- The floor price tier equivalent width (x axis, denominated in native token supply) is the amount either increases when absorbing the next non floor price tier or remians the same;
-- The total integral area for the premium liquidity could either remain the same if it does not absorb the first non floor price tier or decrease in case it absorbs the first non floor price tier;
-
 #### Workflow Context
 
 ```mermaid
@@ -332,7 +315,7 @@ flowchart TD
     %% Node Definitions
     %% ---------------
     %% Core Modules
-    FM["<strong>FM_BC_Discrete_Redeeming</strong>"]
+    FM_BC_DBC["<strong>FM_BC_DBC</strong>"]
     LM_PC_EL["<strong>LM_PC_Elevator</strong><br>4 invariance checks"]
     AUT["<strong>AUT_Roles</strong>"]
 
@@ -354,15 +337,15 @@ flowchart TD
     classDef todo fill:#E6DCFD
     classDef prog fill:#F2F4C8
     class Existing,AUT,PP ex
-    class Todo,FM,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
+    class Todo,FM_BC_DBC,LM_PC_FP,LM_PC_CF,LM_PC_EL,AUX_1,AUX_2 todo
 
     %% Relationships
     %% ------------
     %% User Actions
     User --> |1 transfers<br>collateral tokens| LM_PC_EL
     AUT --> |2 checks permission| LM_PC_EL
-    LM_PC_EL <--> |3 retrieves curve<br>state| FM
-    LM_PC_EL --> |5 sends tokens<br> & changes curve state| FM
+    LM_PC_EL <--> |3 retrieves curve<br>state| FM_BC_DBC
+    LM_PC_EL --> |5 sends tokens<br> & changes curve state| FM_BC_DBC
 ```
 
 ## 5.4 Users can borrow against their Issuance Tokens
@@ -373,16 +356,8 @@ As an issuance token holder, I want to be able to borrow against my issuance tok
 
 ### Acceptance Criteria
 
-- Issuance token holders can borrow collateral tokens from the FM against their deposited issuance tokens where the total amount of "borrowable" collateral tokens is determined by floor price and issuance supply
-
-TODO: move to Specs
-=> Example: Alice has 100 issuance tokens, current issuance token price is $2. If the floor price is $1, then Alice has $100 of borrowing power with the $200 of issuance tokens she owns;
-=>
-
-- Borrowing incurs a fee
-- the LM allows the total borrowable capital to include all the include which is within the floor price region is not exclusive to the floor price region. E.g. Floor price = $1, Spot Price = $2, Floor price supply = 100M $HOUSE, Spot price supply = 150M $HOUSE. This means up to 150M $HOUSE could be deposited to borrow for liquidity instead of being capped by the floor price supply of 100M $HOUSE. The whole region of the curve can be borrowed at the floor price.
-
-TODO: move details to specs
+- Issuance token holders can borrow collateral tokens from the FM against their deposited issuance tokens
+- Borrowing incurs an origination fee (which is dynamic in nature, see 5.5.)
 
 ### Workflow Context
 
@@ -390,7 +365,7 @@ TODO: module overview diagram
 
 ## 5.5 Dynamic Fees
 
-Fees are adjusted baed on onchain KPIs and system state to optimize for systems goals and minimize risks.
+Fees are adjusted based on onchain KPIs and system state to optimize for systems goals and minimize risks.
 
 ### 5.5.1. Issuance & Redemption Fee
 
@@ -401,26 +376,6 @@ As House, I want to dampen and capture value from excessive issuance and redempt
 #### Acceptance Criteria
 
 - issuance and redemption fees are reactive to the difference between floor price and current price
-
-TODO: move stuff to specs
-
-- The FM calculates the real through the base fee and a proportionally to the premium rate as following
-
-$$
-\begin{cases}
-issuanceFee = Z,   premiumRate < A\\
-issuanceFee = Z + (premiumRate-A)*m, premiumRate \ge A
-\end{cases}
-$$
-
-$$
-\begin{cases}
-redemptionFee = Z,   premiumRate > A\\
-redemptionFee = Z + (A-premiumRate)*m, premiumRate \le A
-\end{cases}
-$$
-
-- The FM takes a fee on mints.
 
 #### Workflow Context
 
@@ -435,24 +390,6 @@ As House I want to incentivize borrowing at low utilization rates as well as dis
 #### Acceptance Criteria
 
 - borrowing fees are reactive to the utilization rate
-
-TODO: move to specs
-
-- After the pre-sale, the LF establishes a fee for borrows
-- The LF calculates the real through the base fee and a proportionally to the rate of floor liquidity as following:
-
-$$
-\begin{cases}
-borrowFee = Z,   floorLiquidityRate < A\\
-borrowFee = Z + (floorLiquidityRate-A)*m, floorLiquidityRate \ge A
-\end{cases}
-$$
-
-Where:
-
-$$
-floorLiquidityRate = \frac{Available Floor Liquidity}{Floor Liquidity Cap}
-$$
 
 #### Workflow Context
 
@@ -500,10 +437,6 @@ TODO: module overview diagram
   - This allows a Segment to be a flat horizontal line (if price increase per step is 0) or a uniformly sloping line.
 - The number and specifics of these Segments are configurable (= segments configuration).
 
-TODO: move to LM
-
-- given the module's segments configuration, the module can return the associated amount of collateral for a given issuance supply
-
 <img src="./assets/DBC_segments_steps.png" width="400" alt="Discrete Bonding Curve Visualization"/>
 
 ### 6.1.1. Access control
@@ -533,6 +466,7 @@ This section details the initial setup of the District Bonding Curve Funding Man
 During its `init` process, the DBC FM requires:
 
 - Its core `Segment[] memory segments` configuration to be provided, typically via `configData`. This array defines the entire initial structure of the bonding curve. The specific parameters for this initial configuration are determined and provided by the deploying entity based on the desired initial market dynamics.
+- The address of the active `DynamicFeeCalculator` contract to be used for calculating minting and redemption fees.
 - To initialize its internal `virtualIssuanceSupply` (if inheriting from `VirtualIssuanceSupplyBase_v1`). This should be set to the `totalSupply()` of the associated ERC20 issuance token contract at the time of initialization. This `virtualIssuanceSupply` then serves as the reference for all bonding curve calculations performed via `DiscreteCurveMathLib`.
 
 At the heart of the curve configuration are the curve's sub-segments.
@@ -563,29 +497,18 @@ Feature: Setup and Initialization of DBC FM
 ```
 
 ```gherkin
-Feature: Editing
+Feature: Editing DBC Configuration
 
-  Scenario Outline: Editing a DBC
+  Scenario Outline: Editing general DBC configuration parameters
     Given the user has <authorization_status>
-    When the user attempts to edit configuration parameters
+    When the user attempts to edit general configuration parameters (e.g., segment details, but not DFC address here)
     Then the SC should "<expected_outcome>"
 
     Examples:
         | authorization_status | expected_outcome                               |
         | -------------------- | -----------------------------------------------|
-        | DBC Manager role     | store the new config           |
+        | DBC Manager role     | store the new config values                    |
         | no DBC Manager role  | revert                                         |
-```
-
-#### Parameters
-
-| Parameter              | Description                                                                                                                                                                                                        | Mandatory (for init) | Notes                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | ------------------------------------------------------------------------- |
-| Segment Configs        | Describes the curve segments. Stored as an array of structs, where each struct defines a segment with parameters like: `initialPriceOfSegment`, `priceIncreasePerStep`, `supplyPerStep`, `numberOfStepsInSegment`. | Yes                  | Initial configuration is crucial. Post-deployment edits by DBC Manager.   |
-| Fee Calculator Address | Address of the active Dynamic Fee Calculator contract.                                                                                                                                                             | Yes                  | Must be set for the DBC FM to calculate dynamic fees. Updatable by admin. |
-
-```gherkin
-Feature: Updating Fee Calculator Address in DBC FM
 
   Scenario Outline: Setting the Fee Calculator address in DBC FM
     Given the user is "<authorization_status>"
@@ -597,6 +520,13 @@ Feature: Updating Fee Calculator Address in DBC FM
         | orchestrator admin     | update the Fee Calculator address in DBC FM         |
         | not orchestrator admin | revert                                                |
 ```
+
+#### Configuration Parameters
+
+| Parameter              | Description                                                                                                                                                                                                        | Mandatory (for init) | Notes                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- | ------------------------------------------------------------------------- |
+| Segment Configs        | Describes the curve segments. Stored as an array of structs, where each struct defines a segment with parameters like: `initialPriceOfSegment`, `priceIncreasePerStep`, `supplyPerStep`, `numberOfStepsInSegment`. | Yes                  | Initial configuration is crucial. Post-deployment edits by DBC Manager.   |
+| Fee Calculator Address | Address of the active Dynamic Fee Calculator contract.                                                                                                                                                             | Yes                  | Must be set for the DBC FM to calculate dynamic fees. Updatable by admin. |
 
 ### 6.1.3. Minting & Redeeming
 
@@ -620,6 +550,24 @@ Feature: Minting & Redeeming
         | --|---- | ---------------------------|---|
         | minting| collateral token | exceeds | transfers collateral token amount into DBC and mints tokens to user |
         |redeeming| issuance token| exceeds| burns issuance token amount from user and transfers collateral token amount to user|
+```
+
+```gherkin
+Feature: DBC FM using Fee Calculator
+
+    Scenario: Minting operation with dynamic fee
+        Given the DBC FM is configured with a valid Dynamic Fee Calculator address
+        When a user initiates a mint operation on the DBC FM
+        Then the DBC FM calls the Dynamic Fee Calculator with relevant context (e.g., premiumRate, amount, operationType="mint")
+        And the Dynamic Fee Calculator returns the calculated fee
+        And the DBC FM uses this fee to adjust the minting outcome and direct the fee to the Fee Manager
+
+    Scenario: Redeeming operation with dynamic fee
+        Given the DBC FM is configured with a valid Dynamic Fee Calculator address
+        When a user initiates a redeem operation on the DBC FM
+        Then the DBC FM calls the Dynamic Fee Calculator with relevant context (e.g., premiumRate, amount, operationType="redeem")
+        And the Dynamic Fee Calculator returns the calculated fee
+        And the DBC FM uses this fee to adjust the redeeming outcome and direct the fee to the Fee Manager
 ```
 
 #### Noteworthy cases
@@ -813,49 +761,27 @@ Glossary:
 - Current Borrow Quota (CBQ): the percentage of the BC that is currently borrowed
 
 ```gherkin
-Background:
-    Given the user holds lending facility manager role
-
-Feature: Editing the Borrowable Quota
-    Scenario: New BQ is higher than CBQ
-        Given the new target BQ is higher than the CBQ
-        When the user submits the new target BQ
-        Then the SC stores the new BQ
-
-    Scenario: New BQ is lower than CBQ
-        Given the new target BQ is lower than the CBQ
-        When the user submits the new target BQ
-        Then the SC reverts
-
 Feature: Editing the Individual Borrow Limit
     Scenario:
         When the user changes the individual borrow limit
         Then the SC stores the new individual borrow limit
 
-Feature: Editing Borrowing Fee Parameters
+Feature: Configuring Fee Calculator Address in LF
     Background:
         Given the user holds lending facility manager role
 
-    Scenario Outline: Editing LF borrowing fee parameter <parameter_name>
-        When the user submits a new value for LF borrowing fee parameter <parameter_name>
-        Then the SC should store the new <parameter_name> value for the LF
+    Scenario: Setting the Fee Calculator address in LF
+        When the user attempts to set a new address for the Dynamic Fee Calculator in the LF
+        Then the SC should update the Fee Calculator address in the LF
         And an event should be emitted logging the change
-
-    Examples:
-        | parameter_name         |
-        | BorrowingFeeBase       | # Z_borrow
-        | BorrowingFeeThreshold  | # A_borrow
-        | BorrowingFeeMultiplier | # m_borrow
 
 #### Parameter overview
 
-| Parameter                | Explanation                                                                    | Notes                                                                    |
-| ------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Borrowable Quota         | Percentage of BC that can be borrowed out to users                             |                                                                          |
-| Individual Borrow Limit  | Absolute borrow limit per user                                                 | Changes to this only affect new loan requests                            |
-| BorrowingFeeBase         | Base fee component (Z_borrow) for the dynamic borrowing fee (see 5.5.3)        | Configurable by LF Manager. Affects new loan requests.                 |
-| BorrowingFeeThreshold    | `floorLiquidityRate` threshold (A_borrow) for dynamic fee (see 5.5.3)        | Configurable by LF Manager. Affects new loan requests.                 |
-| BorrowingFeeMultiplier   | Multiplier (m_borrow) for dynamic fee component (see 5.5.3)                    | Configurable by LF Manager. Affects new loan requests.                 |
+| Parameter               | Explanation                                            | Notes                                                                                  |
+| ----------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Borrowable Quota        | Percentage of BC that can be borrowed out to users     |                                                                                        |
+| Individual Borrow Limit | Absolute borrow limit per user                         | Changes to this only affect new loan requests                                          |
+| Fee Calculator Address  | Address of the active Dynamic Fee Calculator contract. | Must be set for the LF to calculate dynamic origination fees. Updatable by LF Manager. |
 ```
 
 ### 6.3.3. Borrowing / Repaying
@@ -865,14 +791,13 @@ Feature: Borrowing collateral tokens against issuance tokens
 
     Scenario: Valid loan request with dynamic upfront borrowing fee deduction
         Given the user holds issuance tokens and requests a `requestedLoanAmount`
-        And the LF is configured with `BorrowingFeeBase`, `BorrowingFeeThreshold`, and `BorrowingFeeMultiplier`
+        And the LF is configured with a valid `DynamicFeeCalculatorAddress`
         And the LF can determine the current `floorLiquidityRate` (e.g., `(BC * BQ - CBA) / (BC * BQ)`)
         And the BQ is not yet reached for the `requestedLoanAmount` (i.e., `CBA + requestedLoanAmount <= BC * BQ`)
         And the `requestedLoanAmount` does not exceed the Individual Borrow Limit
         When the user attempts to take out the loan
         Then the SC locks the user's issuance tokens
-        And the LF calculates the `dynamicBorrowingFeeRate` based on `floorLiquidityRate` and its Z, A, m parameters (as per formula in 5.5.3)
-        And the LF calculates `dynamicBorrowingFee = requestedLoanAmount * dynamicBorrowingFeeRate`
+        And the LF calls the `DynamicFeeCalculator` with relevant context (e.g., `floorLiquidityRate`, `requestedLoanAmount`, `operationType="origination"`) to get the `dynamicBorrowingFee`
         And the LF calculates `netAmountToUser = requestedLoanAmount - dynamicBorrowingFee`
         And the LF instructs the DBC FM to transfer `dynamicBorrowingFee` to the Fee Manager
         And the LF instructs the DBC FM to transfer `netAmountToUser` to the user
@@ -903,17 +828,59 @@ The system-wide Borrow Capacity (BC) is determined by multiplying the DBC FM's c
 
 **High Level:**
 
-- Calculates dynamic issuance and redemption fees for the District Bonding Curve Funding Manager (DBC FM).
-- Designed as a separate, exchangeable module to allow for future updates to fee logic without altering the DBC FM.
-- The DBC FM will make an external call to this module during minting and redeeming operations to determine the applicable fee.
+- Calculates dynamic issuance, redemption, and origination fees.
+- For Issuance/Redemption fees:
+  - Calculates dynamic issuance and redemption fees for the District Bonding Curve Funding Manager (DBC FM).
+  - Designed as a separate, exchangeable module to allow for future updates to fee logic without altering the DBC FM.
+  - The DBC FM will make an external call to this module during minting and redeeming operations to determine the applicable fee.
+- For Origination fees:
+  - Calculates dynamic origination fees for loans taken from the Lending Facility (LF).
+  - The LF will make an external call to this module when a loan is requested to determine the applicable fee.
 
-### 6.4.1. Fee Calculation Logic
+### 6.4.1. Fee Calculation Logic: Origination Fee
 
-- The core logic implements the dynamic fee formulas specified in section [5.5.1. Issuance & Redemption Fee](#551-issuance--redemption-fee).
+- The core logic implements the dynamic fee formulas specified below.
+- It takes inputs such as the `floorLiquidityRate` (e.g., calculated by LF based on system state), the type of operation (origination), and potentially the transaction amount.
+- It returns the calculated fee amount (or rate) to the LF.
+
+**Origination Fee:**
+
+$$
+\begin{cases}
+borrowFee = Z_{origination},   floorLiquidityRate < A_{origination}\\
+borrowFee = Z_{origination} + (floorLiquidityRate-A_{origination})*m_{origination}, floorLiquidityRate \ge A_{origination}
+\end{cases}
+$$
+
+Where:
+
+$$
+floorLiquidityRate = \frac{Available Floor Liquidity}{Floor Liquidity Cap}
+$$
+
+(Note: `Available Floor Liquidity` and `Floor Liquidity Cap` are determined by the Lending Facility based on DBC FM state and LF policies like BQ).
+
+### 6.4.2. Fee Calculation Logic: Issuance/Redemption Fee
+
+- The core logic implements the dynamic fee formulas specified below.
 - It takes inputs such as the `premiumRate` (or data to calculate it, like current price and floor price from the DBC FM), the type of operation (mint/redeem), and potentially the transaction amount.
 - It returns the calculated fee amount to the DBC FM.
 
-### 6.4.2. Access Control
+$$
+\begin{cases}
+issuanceFee = Z_{issue/redeem},   premiumRate < A_{issue/redeem}\\
+issuanceFee = Z_{issue/redeem} + (premiumRate-A_{issue/redeem})*m_{issue/redeem}, premiumRate \ge A_{issue/redeem}
+\end{cases}
+$$
+
+$$
+\begin{cases}
+redemptionFee = Z_{issue/redeem},   premiumRate > A_{issue/redeem}\\
+redemptionFee = Z_{issue/redeem} + (A_{issue/redeem}-premiumRate)*m_{issue/redeem}, premiumRate \le A_{issue/redeem}
+\end{cases}
+$$
+
+### 6.4.3. Access Control
 
 This feature enables an administrator (e.g., orchestrator admin or a specifically assigned "Fee Manager Admin") to configure the parameters of the fee calculation.
 
@@ -933,15 +900,18 @@ Feature: Access control for managing Fee Calculator parameters
         | not orchestrator admin    | revoke | revert                                            |
 ```
 
-### 6.4.3. Configuration Parameters
+### 6.4.4. Configuration Parameters
 
 The parameters for the fee calculation formulas are configurable by an authorized admin.
 
-| Parameter | Description                                                                   | Notes                                 |
-| --------- | ----------------------------------------------------------------------------- | ------------------------------------- |
-| `Z`       | Base fee component (as per formulas in 5.5.1)                                 | Configurable by Fee Calculator Admin. |
-| `A`       | `premiumRate` threshold for dynamic fee adjustment (as per formulas in 5.5.1) | Configurable by Fee Calculator Admin. |
-| `m`       | Multiplier for dynamic fee component (as per formulas in 5.5.1)               | Configurable by Fee Calculator Admin. |
+| Parameter        | Description                                                                                       | Notes                                 |
+| ---------------- | ------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `Z_issue/redeem` | Base fee component for issuance/redemption fees (as per formulas in 6.4.2)                        | Configurable by Fee Calculator Admin. |
+| `A_issue/redeem` | `premiumRate` threshold for dynamic issuance/redemption fee adjustment (as per formulas in 6.4.2) | Configurable by Fee Calculator Admin. |
+| `m_issue/redeem` | Multiplier for dynamic issuance/redemption fee component (as per formulas in 6.4.2)               | Configurable by Fee Calculator Admin. |
+| `Z_origination`  | Base fee component for origination fees (as per formula in 6.4.1)                                 | Configurable by Fee Calculator Admin. |
+| `A_origination`  | `floorLiquidityRate` threshold for dynamic origination fee adjustment (as per formula in 6.4.1)   | Configurable by Fee Calculator Admin. |
+| `m_origination`  | Multiplier for dynamic origination fee component (as per formula in 6.4.1)                        | Configurable by Fee Calculator Admin. |
 
 #### Gherkin Scenarios for Configuration
 
@@ -956,31 +926,11 @@ Feature: Editing Fee Calculator Parameters
         And an event should be emitted logging the change
 
     Examples:
-        | parameter_name |
-        | Z              |
-        | A              |
-        | m              |
-```
-
-### 6.4.4. Interaction with DBC Funding Manager
-
-- The District Bonding Curve Funding Manager (DBC FM) will hold an address to the currently active Dynamic Fee Calculator contract.
-- This address should be updatable by an authorized admin (e.g., orchestrator admin) to allow for new fee models to be deployed and used.
-
-```gherkin
-Feature: DBC FM using Fee Calculator
-
-    Scenario: Minting operation with dynamic fee
-        Given the DBC FM is configured with a valid Dynamic Fee Calculator address
-        When a user initiates a mint operation on the DBC FM
-        Then the DBC FM calls the Dynamic Fee Calculator with relevant context (e.g., premiumRate, amount)
-        And the Dynamic Fee Calculator returns the calculated fee
-        And the DBC FM uses this fee to adjust the minting outcome and direct the fee to the Fee Manager
-
-    Scenario: Redeeming operation with dynamic fee
-        Given the DBC FM is configured with a valid Dynamic Fee Calculator address
-        When a user initiates a redeem operation on the DBC FM
-        Then the DBC FM calls the Dynamic Fee Calculator with relevant context (e.g., premiumRate, amount)
-        And the Dynamic Fee Calculator returns the calculated fee
-        And the DBC FM uses this fee to adjust the redeeming outcome and direct the fee to the Fee Manager
+        | parameter_name   |
+        | Z_issue/redeem   |
+        | A_issue/redeem   |
+        | m_issue/redeem   |
+        | Z_origination    |
+        | A_origination    |
+        | m_origination    |
 ```
