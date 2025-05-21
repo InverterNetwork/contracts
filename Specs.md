@@ -438,13 +438,13 @@ As House I want to incentivize borrowing at low utilization rates as well as dis
 
 TODO: move to specs
 
-- After the pre-sale, the FM establishes a fee for borrows
-- The FM calculates the real through the base fee and a proportionally to the rate of floor liquidity as following:
+- After the pre-sale, the LF establishes a fee for borrows
+- The LF calculates the real through the base fee and a proportionally to the rate of floor liquidity as following:
 
 $$
 \begin{cases}
 borrowFee = Z,   floorLiquidityRate < A\\
-redemptionFee = Z + (floorLiquidityRate-A)*m, premiumRate \le A
+borrowFee = Z + (floorLiquidityRate-A)*m, floorLiquidityRate \ge A
 \end{cases}
 $$
 
@@ -775,9 +775,9 @@ Feature: Reserve Invariance Check for Curve Reconfiguration
   - For loan repayment, the LF receives collateral from the borrower and transfers it back to the DBC FM.
   - **Crucially, these collateral transfers for loan operations DO NOT alter the DBC FM's `virtualCollateralSupply` or `virtualIssuanceSupply`. These virtual supplies are exclusively managed by mint/redeem operations on the bonding curve and by the `configureCurve` function.**
 - The LF determines the total pool of collateral available for lending based on the DBC FM's state, specifically using the **Borrow Capacity (BC)** (defined in section 6.3.2).
-  - BC is `DBCFM.virtualIssuanceSupply * P_floor` (where `P_floor` is the initial price of the DBCFM's first segment). This BC represents the system-wide theoretical maximum value that could be lent if all issuance tokens were valued at `P_floor` for individual borrowing power.
+  - BC is `DBCFM.virtualIssuanceSupply * P_floor` (where `P_floor` is the initial price of the DBCFM's first segment, i.e., `segments[0].initialPriceOfSegment`). This BC represents the system-wide theoretical maximum value that could be lent if all issuance tokens were valued at `P_floor` for individual borrowing power. A core assumption is that `P_floor` will only ever increase or remain the same due to curve reconfigurations; it will not decrease. This means a loan's collateralization (based on `P_floor` at origination) is not at risk from `P_floor` changes.
   - The LF applies a configurable **Borrowable Quota (BQ)** (a percentage) to BC to establish the `MaxSystemLoans = BC * BQ`. This is the policy limit for total outstanding loans.
-  - The LF manages loan requests against this `MaxSystemLoans` limit and individual user borrowing limits (which are also based on `UserLockedTokens * P_floor`).
+  - The LF manages loan requests against this `MaxSystemLoans` limit and individual user borrowing limits (which are also based on `UserLockedTokens * P_floor` at the time of loan origination).
   - Loan disbursements rely on the DBC FM having sufficient _actual_ (liquid) collateral tokens at the moment of transfer; a transfer request will fail if the DBC FM's actual balance is insufficient.
 - Getting back the locked issuance tokens requires the user to pay back the loan in full.
 
@@ -832,39 +832,53 @@ Feature: Editing the Individual Borrow Limit
         When the user changes the individual borrow limit
         Then the SC stores the new individual borrow limit
 
-Feature: Editing the Origination Fee
-    Scenario:
-        When the user changes the origination fee
-        Then the SC stores the new origination fee
-```
+Feature: Editing Borrowing Fee Parameters
+    Background:
+        Given the user holds lending facility manager role
+
+    Scenario Outline: Editing LF borrowing fee parameter <parameter_name>
+        When the user submits a new value for LF borrowing fee parameter <parameter_name>
+        Then the SC should store the new <parameter_name> value for the LF
+        And an event should be emitted logging the change
+
+    Examples:
+        | parameter_name         |
+        | BorrowingFeeBase       | # Z_borrow
+        | BorrowingFeeThreshold  | # A_borrow
+        | BorrowingFeeMultiplier | # m_borrow
 
 #### Parameter overview
 
-| Parameter              | Explanation                                        | Notes                                         |
-| ---------------------- | -------------------------------------------------- | --------------------------------------------- |
-| Borrowable Quota       | Percentage of BC that can be borrowed out to users |                                               |
-| Individual Borrow Limt | Absolute borrow limit per user                     | Changes to this only affect new loan requests |
-| Origination Fee        | Relative fee that is taken at loan creation        | Changes to this only affect new loan requests |
+| Parameter                | Explanation                                                                    | Notes                                                                    |
+| ------------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Borrowable Quota         | Percentage of BC that can be borrowed out to users                             |                                                                          |
+| Individual Borrow Limit  | Absolute borrow limit per user                                                 | Changes to this only affect new loan requests                            |
+| BorrowingFeeBase         | Base fee component (Z_borrow) for the dynamic borrowing fee (see 5.5.3)        | Configurable by LF Manager. Affects new loan requests.                 |
+| BorrowingFeeThreshold    | `floorLiquidityRate` threshold (A_borrow) for dynamic fee (see 5.5.3)        | Configurable by LF Manager. Affects new loan requests.                 |
+| BorrowingFeeMultiplier   | Multiplier (m_borrow) for dynamic fee component (see 5.5.3)                    | Configurable by LF Manager. Affects new loan requests.                 |
+```
 
 ### 6.3.3. Borrowing / Repaying
 
 ```gherkin
 Feature: Borrowing collateral tokens against issuance tokens
 
-    Scenario: Valid loan request with upfront fee deduction
+    Scenario: Valid loan request with dynamic upfront borrowing fee deduction
         Given the user holds issuance tokens and requests a `requestedLoanAmount`
-        And the LF is configured with an `OriginationFeeRate`
-        And the BQ is not yet reached for the `requestedLoanAmount`
+        And the LF is configured with `BorrowingFeeBase`, `BorrowingFeeThreshold`, and `BorrowingFeeMultiplier`
+        And the LF can determine the current `floorLiquidityRate` (e.g., `(BC * BQ - CBA) / (BC * BQ)`)
+        And the BQ is not yet reached for the `requestedLoanAmount` (i.e., `CBA + requestedLoanAmount <= BC * BQ`)
         And the `requestedLoanAmount` does not exceed the Individual Borrow Limit
         When the user attempts to take out the loan
         Then the SC locks the user's issuance tokens
-        And the LF calculates `originationFee = requestedLoanAmount * OriginationFeeRate`
-        And the LF calculates `netAmountToUser = requestedLoanAmount - originationFee`
-        And the LF instructs the DBC FM to transfer `originationFee` to the Fee Manager
+        And the LF calculates the `dynamicBorrowingFeeRate` based on `floorLiquidityRate` and its Z, A, m parameters (as per formula in 5.5.3)
+        And the LF calculates `dynamicBorrowingFee = requestedLoanAmount * dynamicBorrowingFeeRate`
+        And the LF calculates `netAmountToUser = requestedLoanAmount - dynamicBorrowingFee`
+        And the LF instructs the DBC FM to transfer `dynamicBorrowingFee` to the Fee Manager
         And the LF instructs the DBC FM to transfer `netAmountToUser` to the user
         And the user's outstanding loan principal is recorded as `requestedLoanAmount`.
 
-    Scenario: Valid loan request (Breaching Limits - Kept for consistency, but details might change based on above)
+    Scenario: Loan request breaching limits is reverted
         Given the user holds issuance tokens
         And the BQ is not yet reached // This condition might need rephrasing based on how limits are checked against requested vs. net amounts
         And issuing the new loan breaches Borrowable Quota or Individual Borrow Limit // This check should be against requestedLoanAmount
@@ -881,7 +895,7 @@ Feature: Repaying
 
 #### Additional Info
 
-The system-wide Borrow Capacity (BC) is determined by multiplying the DBC FM's current `virtualIssuanceSupply` by the floor price (`P_floor`), which is the initial price of the first segment in the DBC FM's active segment configuration (i.e., `segments[0].initialPriceOfSegment`). An individual user's borrowing power for a specific loan is then `UserLockedIssuanceTokens * P_floor`, subject to the overall Borrowable Quota and Individual Borrow Limit.
+The system-wide Borrow Capacity (BC) is determined by multiplying the DBC FM's current `virtualIssuanceSupply` by the floor price (`P_floor`), which is the initial price of the first segment in the DBC FM's active segment configuration (i.e., `segments[0].initialPriceOfSegment`). An individual user's borrowing power for a specific loan is then `UserLockedIssuanceTokens * P_floor` (calculated at the time of loan origination), subject to the overall Borrowable Quota and Individual Borrow Limit. The system assumes `P_floor` will only increase or remain static over time, thus protecting existing loans from decreased collateral value due to `P_floor` adjustments. A loan liquidation mechanism is not specified as undercollateralization due to `P_floor` changes is not expected.
 
 <img src="./assets/DBC_borrowable_amount.png" width="400" alt="Discrete Bonding Curve Visualization"/>
 
