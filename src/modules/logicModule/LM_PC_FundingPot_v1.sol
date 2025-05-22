@@ -1402,7 +1402,7 @@ contract LM_PC_FundingPot_v1 is
         Round storage round = rounds[roundId_];
         uint totalContribution = roundIdToTotalContributions[roundId_];
         bool capReached =
-            round.roundCap > 0 && totalContribution == round.roundCap;
+            round.roundCap > 0 && totalContribution >= round.roundCap;
         bool timeEnded = round.roundEnd > 0 && block.timestamp >= round.roundEnd;
         return capReached || timeEnded;
     }
