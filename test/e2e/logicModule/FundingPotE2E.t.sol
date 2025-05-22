@@ -15,12 +15,11 @@ import {
     ILM_PC_FundingPot_v1
 } from "@lm/LM_PC_FundingPot_v1.sol";
 import {IERC20PaymentClientBase_v2} from
-    "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+    "test/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 import {
     FM_BC_Bancor_Redeeming_VirtualSupply_v1,
     IFM_BC_Bancor_Redeeming_VirtualSupply_v1
-} from
-    "test/modules/fundingManager/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.t.sol";
+} from "@fm/bondingCurve/FM_BC_Bancor_Redeeming_VirtualSupply_v1.sol";
 import {PP_Streaming_v2} from "src/modules/paymentProcessor/PP_Streaming_v2.sol";
 import {
     LM_PC_Bounties_v2, ILM_PC_Bounties_v2
@@ -29,7 +28,7 @@ import {
 import {FM_DepositVault_v1} from "@fm/depositVault/FM_DepositVault_v1.sol";
 import {ERC165Upgradeable} from
     "@oz-up/utils/introspection/ERC165Upgradeable.sol";
-import {ERC20Mock} from "test/utils/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "test/mocks/external/token/ERC20Mock.sol";
 import {SafeERC20} from "@oz/token/ERC20/utils/SafeERC20.sol";
 import {ERC20Issuance_v1} from "@ex/token/ERC20Issuance_v1.sol";
 
@@ -66,8 +65,10 @@ contract FundingPotE2E is E2ETest {
         //      moduleConfigurations[3:] => Additional Logic Modules
 
         issuanceToken = new ERC20Issuance_v1(
-            "Bonding Curve Token", "BCT", 18, type(uint).max - 1, address(this)
+            "Bonding Curve Token", "BCT", 18, type(uint).max - 1
         );
+
+        issuanceToken.setMinter(address(this), true);
 
         IFM_BC_Bancor_Redeeming_VirtualSupply_v1.BondingCurveProperties memory
             bc_properties = IFM_BC_Bancor_Redeeming_VirtualSupply_v1

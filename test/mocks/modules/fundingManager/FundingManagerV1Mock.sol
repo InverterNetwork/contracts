@@ -42,8 +42,9 @@ contract FundingManagerV1Mock is IFundingManager_v1, Module_v1 {
     ) public override(Module_v1) initializer {
         __Module_init(orchestrator_, metadata);
         _bondingToken = new ERC20Issuance_v1(
-            "Bonding Token", "BOND", 18, type(uint).max - 1, address(this)
+            "Bonding Token", "BOND", 18, type(uint).max - 1
         );
+        _bondingToken.setMinter(address(this), true);
     }
 
     function setToken(IERC20 newToken) public {

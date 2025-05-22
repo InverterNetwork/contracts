@@ -6,8 +6,8 @@ import {
     ModuleTest,
     IModule_v1,
     IOrchestrator_v1
-} from "test/modules/ModuleTest.sol";
-import {OZErrors} from "test/utils/errors/OZErrors.sol";
+} from "test/unit/modules/ModuleTest.sol";
+import {OZErrors} from "test/testUtilities/OZErrors.sol";
 
 // External
 import {Clones} from "@oz/proxy/Clones.sol";
@@ -17,20 +17,20 @@ import {
     IERC20PaymentClientBase_v2,
     ERC20PaymentClientBaseV2Mock,
     ERC20Mock
-} from "test/utils/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
+} from "test/mocks/modules/paymentClient/ERC20PaymentClientBaseV2Mock.sol";
 
 import {
     ERC721Mock,
     MockHookContract,
     MockFailingHookContract
-} from "test/utils/mocks/modules/logicModules/LM_PC_FundingPot_v1Mock.sol";
+} from "test/mocks/modules/logicModule/LM_PC_FundingPot_v1Mock.sol";
 
 import {IBondingCurveBase_v1} from
     "@fm/bondingCurve/interfaces/IBondingCurveBase_v1.sol";
 
 // System under Test (SuT)
 import {LM_PC_FundingPot_v1_Exposed} from
-    "test/modules/logicModule/LM_PC_FundingPot_v1_Exposed.sol";
+    "test/unit/modules/logicModule/LM_PC_FundingPot_v1_Exposed.sol";
 import {ILM_PC_FundingPot_v1} from
     "src/modules/logicModule/interfaces/ILM_PC_FundingPot_v1.sol";
 
