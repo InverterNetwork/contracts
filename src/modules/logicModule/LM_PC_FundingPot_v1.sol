@@ -1036,8 +1036,7 @@ contract LM_PC_FundingPot_v1 is
         }
 
         // --- Personal Cap Check ---
-        // Skip personal cap check if adjustedAmount is already 0
-        if (adjustedAmount > 0) {
+        {
             uint userPreviousContribution =
                 roundIdToUserToContribution[roundId_][user_];
 
