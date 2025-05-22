@@ -1829,7 +1829,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
                 && accessCriteriaEnumNew >= 0 && accessCriteriaEnumNew <= 4
         );
         uint8 accessCriteriaId = 1;
-        
+
         _helper_setupRoundWithAccessCriteria(accessCriteriaId);
         uint32 roundId = fundingPot.getRoundCount();
 
