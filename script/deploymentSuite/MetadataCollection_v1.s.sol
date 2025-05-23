@@ -150,6 +150,16 @@ contract MetadataCollection_v1 {
         "FM_DepositVault_v1"
     );
 
+    // OracleRedeemingFundingManager
+    IModule_v1.Metadata public oracleRedeemingFundingManagerMetadata =
+    IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "FM_PC_Oracle_Redeeming_v1"
+    );
+
     // Funding Manager - Extensions
 
     // FM_EXT_TokenVault_v1
@@ -163,6 +173,15 @@ contract MetadataCollection_v1 {
 
     // ------------------------------------------------------------------------
     // Logic Module
+
+    // Oracle_Permissioned
+    IModule_v1.Metadata public oraclePermissionedMetadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_Oracle_Permissioned_v1"
+    );
 
     // Bounties
     IModule_v1.Metadata public bountiesMetadata = IModule_v1.Metadata(
@@ -211,6 +230,22 @@ contract MetadataCollection_v1 {
 
     // ------------------------------------------------------------------------
     // Payment Processor
+
+    // QueueManualExecutionPaymentProcessor
+    IModule_v1.Metadata public queueManualExecutionPaymentProcessorMetadata =
+    IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "PP_Queue_ManualExecution_v1"
+    );
+
+    // QueuePaymentProcessor
+    IModule_v1.Metadata public queuePaymentProcessorMetadata = IModule_v1
+        .Metadata(
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Queue_v1"
+    );
 
     // SimplePaymentProcessor
     IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
