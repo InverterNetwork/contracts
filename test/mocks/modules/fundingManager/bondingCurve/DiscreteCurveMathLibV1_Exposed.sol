@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: LGPL-3.0-only
+pragma solidity ^0.8.19;
+
+import {
+    DiscreteCurveMathLib_v1
+} from "@fm/bondingCurve/libraries/DiscreteCurveMathLib_v1.sol";
+import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
+
+contract DiscreteCurveMathLibV1_Exposed {
+    function createSegmentPublic(
+        uint256 _initialPrice,
+        uint256 _priceIncrease,
+        uint256 _supplyPerStep,
+        uint256 _numberOfSteps
+    ) public pure returns (PackedSegment) {
+        return DiscreteCurveMathLib_v1.createSegment(
+            _initialPrice,
+            _priceIncrease,
+            _supplyPerStep,
+            _numberOfSteps
+        );
+    }
+
+    // If we need to test other internal functions from DiscreteCurveMathLib_v1 later,
+    // they can be exposed here as well.
+}
