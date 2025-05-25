@@ -44,4 +44,28 @@ contract DiscreteCurveMathLibV1_Exposed {
     ) public pure returns (uint256 totalReserve) {
         return DiscreteCurveMathLib_v1.calculateReserveForSupply(segments, targetSupply);
     }
+
+    function calculatePurchaseReturnPublic(
+        PackedSegment[] memory segments,
+        uint256 collateralAmountIn,
+        uint256 currentTotalIssuanceSupply
+    ) public pure returns (uint256 issuanceAmountOut, uint256 collateralAmountSpent) {
+        return DiscreteCurveMathLib_v1.calculatePurchaseReturn(
+            segments,
+            collateralAmountIn,
+            currentTotalIssuanceSupply
+        );
+    }
+
+    function calculateSaleReturnPublic(
+        PackedSegment[] memory segments,
+        uint256 issuanceAmountIn,
+        uint256 currentTotalIssuanceSupply
+    ) public pure returns (uint256 collateralAmountOut, uint256 issuanceAmountBurned) {
+        return DiscreteCurveMathLib_v1.calculateSaleReturn(
+            segments,
+            issuanceAmountIn,
+            currentTotalIssuanceSupply
+        );
+    }
 }

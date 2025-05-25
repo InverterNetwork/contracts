@@ -455,103 +455,135 @@ library DiscreteCurveMathLib_v1 {
         uint256 totalCollateralSpent = 0;
         uint256 remainingCollateral = collateralAmountIn;
 
-        // Determine the correct starting price and step for the purchase using getCurrentPriceAndStep
         (
-            uint256 priceAtPurchaseStart, 
-            uint256 stepAtPurchaseStart, 
+            uint256 priceAtPurchaseStart,
+            uint256 stepAtPurchaseStart,
             uint256 segmentAtPurchaseStart
         ) = getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
 
         for (uint256 i = segmentAtPurchaseStart; i < segments.length; ++i) {
             if (remainingCollateral == 0) {
-                break; // No more collateral to spend.
+                break; 
             }
 
-            (uint256 pInitialSeg, uint256 pIncreaseSeg, uint256 sPerStepSeg, uint256 nStepsSeg) = segments[i].unpack();
-
-            if (sPerStepSeg == 0) continue; // Should not happen with validation
-
-            uint256 currentSegmentStartStep;
-            uint256 priceAtCurrentSegmentStartStep;
+            uint256 currentSegmentStartStepForHelper;
+            uint256 priceAtCurrentSegmentStartStepForHelper;
+            PackedSegment currentSegment = segments[i];
 
             if (i == segmentAtPurchaseStart) {
-                currentSegmentStartStep = stepAtPurchaseStart;
-                priceAtCurrentSegmentStartStep = priceAtPurchaseStart;
+                currentSegmentStartStepForHelper = stepAtPurchaseStart;
+                priceAtCurrentSegmentStartStepForHelper = priceAtPurchaseStart;
             } else {
-                currentSegmentStartStep = 0; // Starting from the beginning of this new segment
-                priceAtCurrentSegmentStartStep = pInitialSeg;
+                currentSegmentStartStepForHelper = 0;
+                priceAtCurrentSegmentStartStepForHelper = currentSegment.initialPrice();
+            }
+            
+            if (currentSegmentStartStepForHelper >= currentSegment.numberOfSteps()) {
+                continue; 
             }
 
-            if (currentSegmentStartStep >= nStepsSeg) {
-                continue; // This segment is already fully utilized or starting beyond its steps.
-            }
-
-            uint256 stepsAvailableInSeg = nStepsSeg - currentSegmentStartStep;
-            uint256 issuanceBoughtThisSegment = 0;
-            uint256 collateralSpentThisSegment = 0;
-
-            if (pIncreaseSeg == 0) { // Flat Segment Logic
-                if (priceAtCurrentSegmentStartStep == 0) { // Free mint segment
-                    uint256 issuanceFromFlatFreeSegment = stepsAvailableInSeg * sPerStepSeg;
-                    // No collateral spent for free mints
-                    issuanceBoughtThisSegment = issuanceFromFlatFreeSegment;
-                    // collateralSpentThisSegment remains 0
-                } else {
-                    uint256 maxIssuanceFromRemFlatSegment = stepsAvailableInSeg * sPerStepSeg;
-                    uint256 costToBuyRemFlatSegment = (maxIssuanceFromRemFlatSegment * priceAtCurrentSegmentStartStep) / SCALING_FACTOR;
-
-                    if (remainingCollateral >= costToBuyRemFlatSegment) {
-                        issuanceBoughtThisSegment = maxIssuanceFromRemFlatSegment;
-                        collateralSpentThisSegment = costToBuyRemFlatSegment;
-                    } else {
-                        // Partial purchase: how many sPerStepSeg units can be bought
-                        issuanceBoughtThisSegment = (remainingCollateral * SCALING_FACTOR) / priceAtCurrentSegmentStartStep;
-                        // Align to sPerStep boundaries (floor division)
-                        issuanceBoughtThisSegment = (issuanceBoughtThisSegment / sPerStepSeg) * sPerStepSeg; 
-                        collateralSpentThisSegment = (issuanceBoughtThisSegment * priceAtCurrentSegmentStartStep) / SCALING_FACTOR;
-                    }
-                }
-            } else { // Sloped Segment Logic - Binary Search
-                uint256 low = 0; // Min steps to buy
-                uint256 high = stepsAvailableInSeg; // Max steps available
-                uint256 best_n_steps_affordable = 0;
-                uint256 cost_for_best_n_steps = 0;
-
-                // Binary search for the maximum number of WHOLE steps affordable
-                while (low <= high) {
-                    uint256 mid_n = low + (high - low) / 2;
-                    if (mid_n == 0) { // Cost is 0 for 0 steps, move low to 1 if high is not 0
-                        if (high == 0) break; // if high is also 0, then 0 steps is the only option
-                        low = 1; // ensure we test at least 1 step if possible
-                        continue;
-                    }
-
-                    // Cost formula: (sPerStep * mid_n * (2*P_start + (mid_n-1)*P_increase)) / (2 * SCALING_FACTOR)
-                    uint256 termVal = (2 * priceAtCurrentSegmentStartStep) + (mid_n - 1) * pIncreaseSeg;
-                    uint256 cost_for_mid_n = (sPerStepSeg * mid_n * termVal) / (2 * SCALING_FACTOR);
-                    
-                    if (cost_for_mid_n <= remainingCollateral) {
-                        best_n_steps_affordable = mid_n;
-                        cost_for_best_n_steps = cost_for_mid_n;
-                        low = mid_n + 1; // Try to afford more steps
-                    } else {
-                        high = mid_n - 1; // Too expensive
-                    }
-                }
-                issuanceBoughtThisSegment = best_n_steps_affordable * sPerStepSeg;
-                collateralSpentThisSegment = cost_for_best_n_steps;
-            }
+            (uint256 issuanceBoughtThisSegment, uint256 collateralSpentThisSegment) =
+                _calculatePurchaseForSingleSegment(
+                    currentSegment,
+                    remainingCollateral,
+                    currentSegmentStartStepForHelper,
+                    priceAtCurrentSegmentStartStepForHelper
+                );
 
             totalIssuanceAmountOut += issuanceBoughtThisSegment;
             totalCollateralSpent += collateralSpentThisSegment;
             remainingCollateral -= collateralSpentThisSegment;
-
-            // The loop will naturally break if remainingCollateral is 0 or if all segments are processed.
         }
-        // The problem statement does not specify handling for "partial final step" beyond binary search for whole steps.
-        // Any remainingCollateral not spent is implicitly returned to the user by them not spending it.
         return (totalIssuanceAmountOut, totalCollateralSpent);
     }
+
+    /**
+     * @notice Helper function to calculate purchase return for a single segment.
+     * @dev Contains logic for flat and sloped segments, including binary search.
+     *      This function is designed to reduce stack depth in `calculatePurchaseReturn`.
+     * @param segment The PackedSegment to process.
+     * @param remainingCollateralIn The amount of collateral available for this segment.
+     * @param segmentInitialStep The starting step index within this segment for the current purchase.
+     * @param priceAtSegmentInitialStep The price at the `segmentInitialStep`.
+     * @return issuanceOut The issuance tokens bought from this segment.
+     * @return collateralSpent The collateral spent for this segment.
+     */
+    function _calculatePurchaseForSingleSegment(
+        PackedSegment segment,
+        uint256 remainingCollateralIn,
+        uint256 segmentInitialStep,
+        uint256 priceAtSegmentInitialStep
+    ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
+        uint256 sPerStepSeg = segment.supplyPerStep();
+        if (sPerStepSeg == 0) return (0, 0); // Should be caught by create, but defensive
+
+        // uint256 pInitialSeg = segment.initialPrice(); // Removed: priceAtSegmentInitialStep is used as the base for calculations
+        uint256 pIncreaseSeg = segment.priceIncrease();
+        uint256 nStepsSeg = segment.numberOfSteps();
+
+        // `priceAtSegmentInitialStep` is the price of `segmentInitialStep`
+        // `segmentInitialStep` is 0-indexed for the steps *within this segment* that are being considered for purchase.
+
+        if (segmentInitialStep >= nStepsSeg) { // Should have been caught before calling
+            return (0,0);
+        }
+
+        uint256 stepsAvailableToPurchaseInSeg = nStepsSeg - segmentInitialStep;
+        
+        if (pIncreaseSeg == 0) { // Flat Segment Logic
+            if (priceAtSegmentInitialStep == 0) { // Free mint segment
+                issuanceOut = stepsAvailableToPurchaseInSeg * sPerStepSeg;
+                // collateralSpent remains 0
+            } else {
+                uint256 maxIssuanceFromRemFlatSegment = stepsAvailableToPurchaseInSeg * sPerStepSeg;
+                uint256 costToBuyRemFlatSegment = (maxIssuanceFromRemFlatSegment * priceAtSegmentInitialStep) / SCALING_FACTOR;
+
+                if (remainingCollateralIn >= costToBuyRemFlatSegment) {
+                    issuanceOut = maxIssuanceFromRemFlatSegment;
+                    collateralSpent = costToBuyRemFlatSegment;
+                } else {
+                    issuanceOut = (remainingCollateralIn * SCALING_FACTOR) / priceAtSegmentInitialStep;
+                    issuanceOut = (issuanceOut / sPerStepSeg) * sPerStepSeg; 
+                    collateralSpent = (issuanceOut * priceAtSegmentInitialStep) / SCALING_FACTOR;
+                }
+            }
+        } else { // Sloped Segment Logic - Binary Search
+            uint256 low = 0; 
+            uint256 high = stepsAvailableToPurchaseInSeg; 
+            uint256 best_n_steps_affordable = 0;
+            uint256 cost_for_best_n_steps = 0;
+
+            while (low <= high) {
+                uint256 mid_n_steps_to_buy = low + (high - low) / 2; // Number of steps *to buy* from segmentInitialStep onwards
+                if (mid_n_steps_to_buy == 0) { 
+                    if (high == 0) break; 
+                    low = 1; 
+                    continue;
+                }
+
+                // Cost formula for `mid_n_steps_to_buy` steps, starting at `priceAtSegmentInitialStep`
+                // Price of 1st step to buy: priceAtSegmentInitialStep
+                // Price of k-th step to buy: priceAtSegmentInitialStep + (k-1)*pIncreaseSeg
+                // Cost for `mid_n_steps_to_buy` steps, where the first step is at `priceAtSegmentInitialStep`
+                // and price increases by `pIncreaseSeg` for each subsequent step.
+                // Formula: (sPerStep * num_steps * (2*P_start_of_series + (num_steps-1)*P_increase_per_step)) / (2 * SCALING_FACTOR)
+                // mid_n_steps_to_buy is guaranteed to be > 0 here due to the check earlier in the loop.
+                uint256 term_sum_prices = (2 * priceAtSegmentInitialStep) + (mid_n_steps_to_buy - 1) * pIncreaseSeg;
+                uint256 cost_for_mid_n = (sPerStepSeg * mid_n_steps_to_buy * term_sum_prices) / (2 * SCALING_FACTOR);
+                
+                if (cost_for_mid_n <= remainingCollateralIn) {
+                    best_n_steps_affordable = mid_n_steps_to_buy;
+                    cost_for_best_n_steps = cost_for_mid_n;
+                    low = mid_n_steps_to_buy + 1; 
+                } else {
+                    high = mid_n_steps_to_buy - 1; 
+                }
+            }
+            issuanceOut = best_n_steps_affordable * sPerStepSeg;
+            collateralSpent = cost_for_best_n_steps;
+        }
+    }
+
 
     /**
      * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
