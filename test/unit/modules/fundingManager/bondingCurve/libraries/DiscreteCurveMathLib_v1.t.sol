@@ -627,4 +627,156 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(collateralOut, expectedCollateralOut, "Sloped partial sell: collateralOut mismatch");
         assertEq(issuanceBurned, expectedIssuanceBurned, "Sloped partial sell: issuanceBurned mismatch");
     }
+
+    // --- Additional calculateReserveForSupply tests ---
+
+    function test_CalculateReserveForSupply_MultiSegment_FullCurve() public {
+        PackedSegment[] memory segments = new PackedSegment[](2);
+
+        // Segment 0: Sloped
+        uint256 initialPrice0 = 1 ether;
+        uint256 priceIncrease0 = 0.1 ether;
+        uint256 supplyPerStep0 = 10 ether;
+        uint256 numberOfSteps0 = 2; // Capacity 20 ether. Cost: (10*1.0) + (10*1.1) = 10 + 11 = 21 ether
+        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
+        uint256 costSeg0 = ((10 ether * (initialPrice0 + 0 * priceIncrease0)) + (10 ether * (initialPrice0 + 1 * priceIncrease0))) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+
+
+        // Segment 1: Flat
+        // Price of last step in seg0 is 1.0 + 1*0.1 = 1.1. Next segment starts at a new price.
+        uint256 initialPrice1 = 1.5 ether; // Arbitrary start price for next segment
+        uint256 priceIncrease1 = 0; // Flat
+        uint256 supplyPerStep1 = 5 ether;
+        uint256 numberOfSteps1 = 3; // Capacity 15 ether. Cost: 15 * 1.5 = 22.5 ether
+        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
+        uint256 costSeg1 = (15 ether * initialPrice1) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+
+        uint256 totalCurveSupply = (supplyPerStep0 * numberOfSteps0) + (supplyPerStep1 * numberOfSteps1); // 20 + 15 = 35 ether
+        uint256 expectedTotalReserve = costSeg0 + costSeg1; // 21 + 22.5 = 43.5 ether
+
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, totalCurveSupply);
+        assertEq(actualReserve, expectedTotalReserve, "Reserve for full multi-segment curve mismatch");
+    }
+
+    function test_CalculateReserveForSupply_MultiSegment_PartialFillLaterSegment() public {
+        PackedSegment[] memory segments = new PackedSegment[](2);
+
+        // Segment 0: Sloped
+        uint256 initialPrice0 = 1 ether;
+        uint256 priceIncrease0 = 0.1 ether;
+        uint256 supplyPerStep0 = 10 ether;
+        uint256 numberOfSteps0 = 2; // Capacity 20 ether. Cost: 21 ether
+        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
+        uint256 costSeg0Full = ((10 ether * (initialPrice0 + 0 * priceIncrease0)) + (10 ether * (initialPrice0 + 1 * priceIncrease0))) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+
+        // Segment 1: Flat
+        uint256 initialPrice1 = 1.5 ether;
+        uint256 priceIncrease1 = 0; // Flat
+        uint256 supplyPerStep1 = 5 ether;
+        uint256 numberOfSteps1 = 4; // Capacity 20 ether.
+        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
+
+        // Target supply: 20 (from seg0) + 10 (from seg1, i.e., 2 steps of seg1) = 30 ether
+        uint256 targetSupply = (supplyPerStep0 * numberOfSteps0) + (2 * supplyPerStep1); // 20 + 10 = 30 ether
+
+        // Cost for the partial fill of segment 1: 2 steps * 5 supply/step * 1.5 price/token = 15 ether
+        uint256 costPartialSeg1 = (2 * supplyPerStep1 * initialPrice1) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        
+        uint256 expectedTotalReserve = costSeg0Full + costPartialSeg1; // 21 + 15 = 36 ether
+
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupply);
+        assertEq(actualReserve, expectedTotalReserve, "Reserve for multi-segment partial fill mismatch");
+    }
+
+    function test_CalculateReserveForSupply_TargetSupplyBeyondCurveCapacity() public {
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        uint256 initialPrice = 1 ether;
+        uint256 priceIncrease = 0.1 ether;
+        uint256 supplyPerStep = 10 ether;
+        uint256 numberOfSteps = 3; // Total capacity 30 ether
+        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice, priceIncrease, supplyPerStep, numberOfSteps);
+
+        // Reserve for full segment:
+        // Step 0 (price 1.0): 10 * 1.0 = 10
+        // Step 1 (price 1.1): 10 * 1.1 = 11
+        // Step 2 (price 1.2): 10 * 1.2 = 12
+        // Total = 10 + 11 + 12 = 33 ether
+        uint256 reserveForFullSegment = 0;
+        reserveForFullSegment += (supplyPerStep * (initialPrice + 0 * priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        reserveForFullSegment += (supplyPerStep * (initialPrice + 1 * priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        reserveForFullSegment += (supplyPerStep * (initialPrice + 2 * priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        
+        uint256 totalCurveCapacity = supplyPerStep * numberOfSteps; // 30 ether
+        uint256 targetSupplyBeyondCapacity = totalCurveCapacity + 100 ether; // e.g., 130 ether
+
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupplyBeyondCapacity);
+        
+        // The function should return the reserve for the maximum supply the curve can offer.
+        assertEq(actualReserve, reserveForFullSegment, "Reserve beyond capacity should be reserve for full curve");
+    }
+
+    // TODO: Implement test
+    // function test_CalculateReserveForSupply_MixedFlatAndSlopedSegments() public {
+    // }
+
+    function test_CalculateReserveForSupply_FreeToStartThenSlopedSegment() public {
+        PackedSegment[] memory segments = new PackedSegment[](2);
+
+        // Segment 0: Free mint
+        uint256 supplyPerStep0 = 50 ether;
+        uint256 numberOfSteps0 = 1; // Capacity 50 ether. Cost: 0
+        segments[0] = DiscreteCurveMathLib_v1.createSegment(0, 0, supplyPerStep0, numberOfSteps0);
+
+        // Segment 1: Sloped
+        uint256 initialPrice1 = 0.2 ether;
+        uint256 priceIncrease1 = 0.05 ether;
+        uint256 supplyPerStep1 = 10 ether;
+        uint256 numberOfSteps1 = 3; // Capacity 30 ether.
+                                    // Cost: (10*0.2) + (10*0.25) + (10*0.3) = 2 + 2.5 + 3 = 7.5 ether
+        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
+        
+        // Target supply: Full free segment (50) + 2 steps of sloped segment (20) = 70 ether
+        uint256 targetSupply = (supplyPerStep0 * numberOfSteps0) + (2 * supplyPerStep1); // 50 + 20 = 70 ether
+        
+        uint256 costPartialSeg1 = 0;
+        costPartialSeg1 += (supplyPerStep1 * (initialPrice1 + 0 * priceIncrease1)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 * 0.2 = 2
+        costPartialSeg1 += (supplyPerStep1 * (initialPrice1 + 1 * priceIncrease1)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 * 0.25 = 2.5
+        // Total for partial seg1 = 2 + 2.5 = 4.5 ether
+
+        uint256 expectedTotalReserve = 0 + costPartialSeg1; // 0 + 4.5 = 4.5 ether
+
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupply);
+        assertEq(actualReserve, expectedTotalReserve, "Reserve for free then sloped segments mismatch");
+    }
+
+
+    function test_CalculatePurchaseReturn_Edge_CollateralForExactlyOneStep_Sloped() public {
+        // TODO: Implement test
+    }
+
+    function test_CalculatePurchaseReturn_Edge_CollateralLessThanOneStep_Flat() public {
+        // TODO: Implement test
+    }
+
+    function test_CalculatePurchaseReturn_Edge_CollateralLessThanOneStep_Sloped() public {
+        // TODO: Implement test
+    }
+
+    function test_CalculatePurchaseReturn_Edge_CollateralToBuyoutCurve() public {
+        // TODO: Implement test
+    }
+
+    // --- calculatePurchaseReturn current supply variation tests ---
+
+    function test_CalculatePurchaseReturn_StartMidStep_Sloped() public {
+        // TODO: Implement test
+    }
+
+    function test_CalculatePurchaseReturn_StartEndOfStep_Sloped() public {
+        // TODO: Implement test
+    }
+
+    function test_CalculatePurchaseReturn_StartEndOfSegment_MultiSegment() public {
+        // TODO: Implement test
+    }
 }
