@@ -291,20 +291,24 @@ library DiscreteCurveMathLib_v1 {
         // Handle boundary case: If currentTotalIssuanceSupply exactly filled a step,
         // the "current price" for the *next* action (like a purchase) should be the price of the next step.
         if (currentTotalIssuanceSupply > 0) { // Only adjust if some supply already exists
-            PackedSegment currentSegment = segments[segmentIndex]; // Changed 'storage' to value type
+            PackedSegment currentSegment = segments[segmentIndex]; 
             uint256 sPerStep = currentSegment.supplyPerStep();
             uint256 nSteps = currentSegment.numberOfSteps();
             
-            // Calculate supply at the beginning of the current segment
-            uint256 supplyAtStartOfCurrentSegment = currentPos.supplyCoveredUpToThisPosition - (sPerStep * (stepIndex + 1));
-            // If currentTotalIssuanceSupply is a multiple of sPerStep relative to the start of its segment,
-            // it means it exactly completes a step.
-            if (sPerStep > 0 && (currentTotalIssuanceSupply - supplyAtStartOfCurrentSegment) % sPerStep == 0) {
-                // It's the end of 'stepIndex'. We need the price/details for the next step.
-                if (stepIndex < nSteps - 1) {
+            // Check if currentTotalIssuanceSupply exactly completes the step identified by currentPos
+            uint256 cumulativeSupplyBeforeThisSegment = 0;
+            for (uint k = 0; k < segmentIndex; ++k) {
+                cumulativeSupplyBeforeThisSegment += segments[k].numberOfSteps() * segments[k].supplyPerStep();
+            }
+            uint256 supplyAtEndOfCurrentStepAsPerPos = cumulativeSupplyBeforeThisSegment + (currentPos.stepIndexWithinSegment + 1) * sPerStep;
+
+            if (sPerStep > 0 && currentTotalIssuanceSupply == supplyAtEndOfCurrentStepAsPerPos) {
+                // It's the end of 'currentPos.stepIndexWithinSegment'. We need the price/details for the next step.
+                if (currentPos.stepIndexWithinSegment < nSteps - 1) {
                     // More steps in the current segment
-                    price = currentPos.priceAtCurrentStep + currentSegment.priceIncrease();
-                    stepIndex = stepIndex + 1;
+                    price = currentPos.priceAtCurrentStep + currentSegment.priceIncrease(); // Price of next step in current segment
+                    stepIndex = currentPos.stepIndexWithinSegment + 1;
+                    // segmentIndex remains currentPos.segmentIndex
                 } else {
                     // Last step of the current segment
                     if (segmentIndex < segments.length - 1) {

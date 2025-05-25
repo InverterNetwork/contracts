@@ -23,4 +23,25 @@ contract DiscreteCurveMathLibV1_Exposed {
 
     // If we need to test other internal functions from DiscreteCurveMathLib_v1 later,
     // they can be exposed here as well.
+
+    function findPositionForSupplyPublic(
+        PackedSegment[] memory segments,
+        uint256 targetTotalIssuanceSupply
+    ) public pure returns (DiscreteCurveMathLib_v1.CurvePosition memory pos) {
+        return DiscreteCurveMathLib_v1._findPositionForSupply(segments, targetTotalIssuanceSupply);
+    }
+
+    function getCurrentPriceAndStepPublic(
+        PackedSegment[] memory segments,
+        uint256 currentTotalIssuanceSupply
+    ) public pure returns (uint256 price, uint256 stepIndex, uint256 segmentIndex) {
+        return DiscreteCurveMathLib_v1.getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
+    }
+
+    function calculateReserveForSupplyPublic(
+        PackedSegment[] memory segments,
+        uint256 targetSupply
+    ) public pure returns (uint256 totalReserve) {
+        return DiscreteCurveMathLib_v1.calculateReserveForSupply(segments, targetSupply);
+    }
 }
