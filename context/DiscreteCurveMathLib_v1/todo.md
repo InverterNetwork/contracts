@@ -18,8 +18,6 @@ if (pos.stepIndexWithinSegment >= stepsInSegment && stepsInSegment > 0) {
 
 **Fix**: Remove this clamping and handle segment boundaries properly by advancing to the next segment when exactly at a boundary.
 
-### 2. **Integer Division Truncation in Reserve Calculations**
-
 ```solidity
 uint256 sumOfPrices = nStepsToProcessThisSeg * (firstTermPrice + lastTermPrice) / 2;
 collateralForPortion = (sPerStep * sumOfPrices) / SCALING_FACTOR;

@@ -286,66 +286,26 @@ library DiscreteCurveMathLib_v1 {
         PackedSegment[] memory segments,
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 price, uint256 stepIndex, uint256 segmentIndex) {
-        CurvePosition memory currentPos = _findPositionForSupply(segments, currentTotalIssuanceSupply);
+        CurvePosition memory pos = _findPositionForSupply(segments, currentTotalIssuanceSupply);
 
         // Validate that currentTotalIssuanceSupply is within curve bounds.
-        // _findPositionForSupply sets supplyCoveredUpToThisPosition to the max supply of the curve
-        // if targetTotalIssuanceSupply is beyond the curve.
-        // If currentTotalIssuanceSupply is 0, currentPos.supplyCoveredUpToThisPosition will be 0.
-        if (currentTotalIssuanceSupply > 0 && currentTotalIssuanceSupply > currentPos.supplyCoveredUpToThisPosition) {
+        // _findPositionForSupply sets pos.supplyCoveredUpToThisPosition to the maximum supply
+        // of the curve if targetTotalIssuanceSupply is beyond the curve's capacity.
+        // If currentTotalIssuanceSupply is 0, pos.supplyCoveredUpToThisPosition will also be 0.
+        // Thus, (0 > 0) is false, no revert.
+        // If currentTotalIssuanceSupply > 0 and within capacity, pos.supplyCoveredUpToThisPosition == currentTotalIssuanceSupply.
+        // Thus, (X > X) is false, no revert.
+        // If currentTotalIssuanceSupply > 0 and beyond capacity, pos.supplyCoveredUpToThisPosition is max capacity.
+        // Thus, (currentTotalIssuanceSupply > max_capacity) is true, causing a revert.
+        if (currentTotalIssuanceSupply > pos.supplyCoveredUpToThisPosition) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity();
         }
         
-        // If currentTotalIssuanceSupply is exactly 0, _findPositionForSupply correctly returns
-        // segment 0, step 0, and its initial price. This is the "current" state.
-        // The "next purchase" logic applies if we are about to mint the first token.
-
-        price = currentPos.priceAtCurrentStep;
-        stepIndex = currentPos.stepIndexWithinSegment;
-        segmentIndex = currentPos.segmentIndex;
-
-        // Handle boundary case: If currentTotalIssuanceSupply exactly filled a step,
-        // the "current price" for the *next* action (like a purchase) should be the price of the next step.
-        if (currentTotalIssuanceSupply > 0) { // Only adjust if some supply already exists
-            PackedSegment currentSegment = segments[segmentIndex]; 
-            uint256 sPerStep = currentSegment.supplyPerStep();
-            uint256 nSteps = currentSegment.numberOfSteps();
-            
-            // Check if currentTotalIssuanceSupply exactly completes the step identified by currentPos
-            uint256 cumulativeSupplyBeforeThisSegment = _getCumulativeSupplyBeforeSegment(segments, segmentIndex);
-            uint256 supplyAtEndOfCurrentStepAsPerPos = cumulativeSupplyBeforeThisSegment + (currentPos.stepIndexWithinSegment + 1) * sPerStep;
-
-            if (sPerStep > 0 && currentTotalIssuanceSupply == supplyAtEndOfCurrentStepAsPerPos) {
-                // It's the end of 'currentPos.stepIndexWithinSegment'. We need the price/details for the next step.
-                if (currentPos.stepIndexWithinSegment < nSteps - 1) {
-                    // More steps in the current segment
-                    price = currentPos.priceAtCurrentStep + currentSegment.priceIncrease(); // Price of next step in current segment
-                    stepIndex = currentPos.stepIndexWithinSegment + 1;
-                    // segmentIndex remains currentPos.segmentIndex
-                } else {
-                    // Last step of the current segment
-                    if (segmentIndex < segments.length - 1) {
-                        // More segments available
-                        segmentIndex = segmentIndex + 1;
-                        stepIndex = 0;
-                        price = segments[segmentIndex].initialPrice();
-                    } else {
-                        // Last step of the last segment. No "next" step to advance to.
-                        // The price and step remain as the final step's details.
-                        // This indicates the curve is at max capacity for new pricing tiers.
-                    }
-                }
-            }
-        } else if (segments.length > 0) { 
-            // currentTotalIssuanceSupply is 0. The "current" price is the initial price of the first segment.
-            // If a purchase is made, it will be at this price.
-            // The _findPositionForSupply already sets this up correctly.
-            // No adjustment needed here for currentTotalIssuanceSupply == 0 based on the "next purchase" rule,
-            // as the price returned by _findPositionForSupply IS the price for the first purchase.
-        }
-
-
-        return (price, stepIndex, segmentIndex);
+        // Since _findPositionForSupply (after its own fix for Issue 1) now correctly handles
+        // segment boundaries by pointing to the start of the next segment (or the last step of the
+        // last segment if at max capacity), and returns the price/step for that position,
+        // we can directly use its output. The complex adjustment logic previously here is no longer needed.
+        return (pos.priceAtCurrentStep, pos.stepIndexWithinSegment, pos.segmentIndex);
     }
 
     // --- Core Calculation Functions ---
