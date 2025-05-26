@@ -471,6 +471,34 @@ library DiscreteCurveMathLib_v1 {
     }
 
     /**
+     * @notice Helper function to calculate the issuance and collateral for full steps in a non-free flat segment.
+     * @param _budget The collateral budget available.
+     * @param _priceAtSegmentInitialStep The price for each step in this flat segment.
+     * @param _sPerStepSeg The supply per step in this segment.
+     * @param _stepsAvailableToPurchaseInSeg The number of steps available for purchase in this segment.
+     * @return issuanceOut The total issuance from full steps.
+     * @return collateralSpent The total collateral spent for these full steps.
+     */
+    function _calculateFullStepsForFlatSegment(
+        uint256 _budget,
+        uint256 _priceAtSegmentInitialStep,
+        uint256 _sPerStepSeg,
+        uint256 _stepsAvailableToPurchaseInSeg
+    ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
+        // Calculate full steps for flat segment
+        // _priceAtSegmentInitialStep is guaranteed non-zero when this function is called.
+        uint256 maxFullStepsIssuanceByBudget = (_budget * SCALING_FACTOR) / _priceAtSegmentInitialStep;
+        uint256 numFullStepsAffordable = maxFullStepsIssuanceByBudget / _sPerStepSeg;
+
+        if (numFullStepsAffordable > _stepsAvailableToPurchaseInSeg) {
+            numFullStepsAffordable = _stepsAvailableToPurchaseInSeg;
+        }
+        issuanceOut = numFullStepsAffordable * _sPerStepSeg;
+        collateralSpent = (issuanceOut * _priceAtSegmentInitialStep) / SCALING_FACTOR;
+        return (issuanceOut, collateralSpent);
+    }
+
+    /**
      * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
      * @dev Iterates step-by-step to find affordable steps. More gas-efficient for small number of steps.
      * @param segment The PackedSegment to process.
@@ -536,135 +564,157 @@ library DiscreteCurveMathLib_v1 {
         uint256 priceAtSegmentInitialStep
     ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
         uint256 sPerStepSeg = segment.supplyPerStep();
-        if (sPerStepSeg == 0) return (0, 0); // Should be caught by create, but defensive
+        if (sPerStepSeg == 0) return (0, 0); // Guard: No supply per step
 
-        // uint256 pInitialSeg = segment.initialPrice(); // Removed: priceAtSegmentInitialStep is used as the base for calculations
         uint256 pIncreaseSeg = segment.priceIncrease();
         uint256 nStepsSeg = segment.numberOfSteps();
 
-        // `priceAtSegmentInitialStep` is the price of `segmentInitialStep`
-        // `segmentInitialStep` is 0-indexed for the steps *within this segment* that are being considered for purchase.
-
-        if (segmentInitialStep >= nStepsSeg) { // Should have been caught before calling
+        // Guard: segmentInitialStep is out of bounds for the segment
+        if (segmentInitialStep >= nStepsSeg) { 
             return (0,0);
         }
 
         uint256 stepsAvailableToPurchaseInSeg = nStepsSeg - segmentInitialStep;
-        
+        // issuanceOut and collateralSpent are implicitly initialized to 0 as return variables.
+
+        uint256 remainingBudgetForPartial;
+        uint256 priceForPartialStep;
+        uint256 maxIssuancePossibleInSegmentAfterFullSteps; // Max supply that can be bought as partial after full steps
+
         if (pIncreaseSeg == 0) { // Flat Segment Logic
-            if (priceAtSegmentInitialStep == 0) { // Free mint segment
+            if (priceAtSegmentInitialStep == 0) { // Entirely free mint part of the segment
                 issuanceOut = stepsAvailableToPurchaseInSeg * sPerStepSeg;
-                // collateralSpent remains 0
-            } else {
-                // Calculate full steps first
-                uint256 numFullStepsAffordable;
-                if (priceAtSegmentInitialStep == 0) { // Should be caught by free mint logic above
-                    numFullStepsAffordable = stepsAvailableToPurchaseInSeg;
-                    collateralSpent = 0;
-                } else {
-                    uint256 maxFullStepsIssuance = (remainingCollateralIn * SCALING_FACTOR) / priceAtSegmentInitialStep;
-                    numFullStepsAffordable = maxFullStepsIssuance / sPerStepSeg;
+                // collateralSpent is implicitly 0 as a return variable
+                return (issuanceOut, 0); // Early return for free mint
+            } else { // Non-free flat part
+                // Calculate full steps for flat segment
+                (issuanceOut, collateralSpent) = _calculateFullStepsForFlatSegment(
+                    remainingCollateralIn,
+                    priceAtSegmentInitialStep,
+                    sPerStepSeg,
+                    stepsAvailableToPurchaseInSeg
+                );
 
-                    if (numFullStepsAffordable > stepsAvailableToPurchaseInSeg) {
-                        numFullStepsAffordable = stepsAvailableToPurchaseInSeg;
-                    }
-                    issuanceOut = numFullStepsAffordable * sPerStepSeg;
-                    collateralSpent = (issuanceOut * priceAtSegmentInitialStep) / SCALING_FACTOR;
-                }
-                
-                // Partial step purchase logic for flat segments
-                uint256 remainingBudgetAfterFullSteps = remainingCollateralIn - collateralSpent;
-                if (numFullStepsAffordable < stepsAvailableToPurchaseInSeg && remainingBudgetAfterFullSteps > 0 && priceAtSegmentInitialStep > 0) {
-                    uint256 partialIssuance = (remainingBudgetAfterFullSteps * SCALING_FACTOR) / priceAtSegmentInitialStep;
-                    
-                    // Cap partialIssuance at sPerStepSeg
-                    if (partialIssuance > sPerStepSeg) {
-                        partialIssuance = sPerStepSeg;
-                    }
-                    
-                    // Ensure partialIssuance does not exceed remaining supply in the step if it's less than sPerStepSeg
-                    uint256 supplyLeftInNextStepSlot = sPerStepSeg; // For flat, effectively always a full sPerStepSeg available for partial
-                    if (partialIssuance > supplyLeftInNextStepSlot) {
-                         partialIssuance = supplyLeftInNextStepSlot;
-                    }
+                // Determine parameters for partial purchase
+                remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
+                priceForPartialStep = priceAtSegmentInitialStep;
+                maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
+                uint256 numFullStepsBought = issuanceOut / sPerStepSeg; // Recalculate based on actual issuance
 
-                    uint256 partialCost = (partialIssuance * priceAtSegmentInitialStep) / SCALING_FACTOR;
-
-                    // Ensure we don't overspend the remaining budget due to rounding
-                    if (partialCost > remainingBudgetAfterFullSteps) {
-                        partialCost = remainingBudgetAfterFullSteps; // Spend exactly what's left
-                        partialIssuance = (partialCost * SCALING_FACTOR) / priceAtSegmentInitialStep; // Recalculate issuance based on exact cost
-                    }
-
-                    issuanceOut += partialIssuance;
-                    collateralSpent += partialCost;
+                // Check if a partial purchase is viable and should be attempted
+                if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetForPartial > 0 && maxIssuancePossibleInSegmentAfterFullSteps > 0) {
+                    (uint256 pIssuance, uint256 pCost) = _calculatePartialPurchaseAmount(
+                        remainingBudgetForPartial,
+                        priceForPartialStep, // This is priceAtSegmentInitialStep for flat segments
+                        sPerStepSeg, // Max for one partial step slot
+                        maxIssuancePossibleInSegmentAfterFullSteps
+                    );
+                    issuanceOut += pIssuance;
+                    collateralSpent += pCost;
                 }
             }
         } else { // Sloped Segment Logic
-            // `segmentInitialStep` is the 0-indexed step *within this segment* to start purchasing from.
-            // `priceAtSegmentInitialStep` is the price of that `segmentInitialStep`.
-            // `remainingCollateralIn` is the budget.
-            
-            // Calculate full steps using existing linear search
+            // Calculate full steps using linear search
             (uint256 fullStepIssuance, uint256 fullStepCollateralSpent) = _linearSearchSloped(
                 segment,
                 remainingCollateralIn, // Pass the full budget for this segment
-                segmentInitialStep,
-                priceAtSegmentInitialStep
+                segmentInitialStep,    // Starting step within this segment
+                priceAtSegmentInitialStep // Price at that starting step
             );
 
             issuanceOut = fullStepIssuance;
             collateralSpent = fullStepCollateralSpent;
+            
+            uint256 numFullStepsBought = fullStepIssuance / sPerStepSeg; // How many full steps were actually bought
+            
+            // Determine parameters for partial purchase
+            remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
+            priceForPartialStep = priceAtSegmentInitialStep + (numFullStepsBought * pIncreaseSeg);
+            maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
 
-            uint256 numFullStepsBought = fullStepIssuance / sPerStepSeg; // Number of full steps successfully purchased
-
-            // Partial step purchase logic for sloped segments
-            uint256 remainingBudgetAfterFullSlopedSteps = remainingCollateralIn - fullStepCollateralSpent;
-            // Check if more steps are available in segment than what were bought as full steps
-            // stepsAvailableToPurchaseInSeg is total steps from start. numFullStepsBought is relative to that start.
-            if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetAfterFullSlopedSteps > 0) {
-                uint256 nextStepPrice = priceAtSegmentInitialStep + (numFullStepsBought * pIncreaseSeg);
-
-                if (nextStepPrice > 0) { // Avoid division by zero
-                    uint256 partialIssuance = (remainingBudgetAfterFullSlopedSteps * SCALING_FACTOR) / nextStepPrice;
-
-                    // Cap partialIssuance at sPerStepSeg
-                    if (partialIssuance > sPerStepSeg) {
-                        partialIssuance = sPerStepSeg;
-                    }
-                    
-                    // Ensure partialIssuance does not exceed remaining supply in the step if it's less than sPerStepSeg
-                    // For sloped, the next step always offers up to sPerStepSeg
-                     uint256 supplyLeftInNextStepSlot = sPerStepSeg;
-                     if (partialIssuance > supplyLeftInNextStepSlot) {
-                         partialIssuance = supplyLeftInNextStepSlot;
-                     }
-
-                    uint256 partialCost = (partialIssuance * nextStepPrice) / SCALING_FACTOR;
-                    
-                    // Ensure we don't overspend the remaining budget due to rounding
-                    if (partialCost > remainingBudgetAfterFullSlopedSteps) {
-                        partialCost = remainingBudgetAfterFullSlopedSteps; // Spend exactly what's left
-                        partialIssuance = (partialCost * SCALING_FACTOR) / nextStepPrice; // Recalculate issuance
-                    }
-                    
-                    // Ensure total issuance from this segment (full + partial) does not exceed available supply
-                    if (issuanceOut + partialIssuance > stepsAvailableToPurchaseInSeg * sPerStepSeg) {
-                        partialIssuance = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
-                        partialCost = (partialIssuance * nextStepPrice) / SCALING_FACTOR; 
-                        // Re-check cost if issuance was capped due to segment limit
-                        if (partialCost > remainingBudgetAfterFullSlopedSteps) {
-                             partialCost = remainingBudgetAfterFullSlopedSteps;
-                             partialIssuance = (partialCost * SCALING_FACTOR) / nextStepPrice;
-                        }
-                    }
-
-
-                    issuanceOut += partialIssuance;
-                    collateralSpent += partialCost;
-                }
+            // Check if a partial purchase is viable and should be attempted
+            // numFullStepsBought is relative to segmentInitialStep. stepsAvailableToPurchaseInSeg is total steps from segmentInitialStep.
+            if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetForPartial > 0 && maxIssuancePossibleInSegmentAfterFullSteps > 0) {
+                // Note: _calculatePartialPurchaseAmount handles if priceForPartialStep is 0 (free mint)
+                (uint256 pIssuance, uint256 pCost) = _calculatePartialPurchaseAmount(
+                    remainingBudgetForPartial,
+                    priceForPartialStep,
+                    sPerStepSeg, // Max for one partial step slot
+                    maxIssuancePossibleInSegmentAfterFullSteps
+                );
+                issuanceOut += pIssuance;
+                collateralSpent += pCost;
             }
         }
+        // Implicitly returns issuanceOut, collateralSpent
+    }
+
+    /**
+     * @notice Calculates the amount of partial issuance and its cost given budget and various constraints.
+     * @param _budget The remaining collateral available for this partial purchase.
+     * @param _priceForPartialStep The price at which this partial issuance is to be bought.
+     * @param _supplyPerFullStep The maximum issuance normally available in one full step (sPerStep).
+     * @param _maxIssuanceAllowedOverall The maximum total partial issuance allowed by remaining segment capacity.
+     * @return partialIssuance_ The amount of tokens to be issued for the partial purchase.
+     * @return partialCost_ The collateral cost for the partialIssuance_.
+     */
+    function _calculatePartialPurchaseAmount(
+        uint256 _budget,
+        uint256 _priceForPartialStep,
+        uint256 _supplyPerFullStep, // Typically sPerStep from the segment
+        uint256 _maxIssuanceAllowedOverall // e.g., (total steps left * sPerStep) - full steps already bought
+    ) private pure returns (uint256 partialIssuance_, uint256 partialCost_) {
+        // Handle zero price (free mint) or zero budget scenarios first
+        if (_budget == 0) {
+            return (0, 0);
+        }
+        if (_priceForPartialStep == 0) {
+            // For free mints, take up to _supplyPerFullStep, further capped by _maxIssuanceAllowedOverall
+            partialIssuance_ = _supplyPerFullStep < _maxIssuanceAllowedOverall ? _supplyPerFullStep : _maxIssuanceAllowedOverall;
+            // No cost for free mints
+            partialCost_ = 0;
+            return (partialIssuance_, partialCost_);
+        }
+
+        // 1. Calculate issuance strictly based on budget
+        uint256 issuanceFromBudget = (_budget * SCALING_FACTOR) / _priceForPartialStep;
+
+        // 2. Determine effective issuance: apply caps sequentially
+        // Start with budget-limited issuance
+        partialIssuance_ = issuanceFromBudget;
+
+        // Cap by what a single (partial) step slot offers (_supplyPerFullStep)
+        if (partialIssuance_ > _supplyPerFullStep) {
+            partialIssuance_ = _supplyPerFullStep;
+        }
+
+        // Cap by the overall maximum issuance allowed for this partial purchase in the segment
+        if (partialIssuance_ > _maxIssuanceAllowedOverall) {
+            partialIssuance_ = _maxIssuanceAllowedOverall;
+        }
+        // Now partialIssuance_ is min(issuanceFromBudget, _supplyPerFullStep, _maxIssuanceAllowedOverall)
+
+        // 3. Calculate cost for this determined partialIssuance_
+        partialCost_ = (partialIssuance_ * _priceForPartialStep) / SCALING_FACTOR;
+
+        // 4. Final budget adherence: If the calculated cost (after capping issuance)
+        //    is still greater than the budget. This ensures we never spend more than _budget.
+        if (partialCost_ > _budget) {
+            partialCost_ = _budget;
+            // Recalculate issuance based on spending the exact budget
+            // (_priceForPartialStep is non-zero here due to earlier check)
+            partialIssuance_ = (partialCost_ * SCALING_FACTOR) / _priceForPartialStep;
+        }
+
+        // Assertions to ensure invariants hold
+        assert(partialCost_ <= _budget); // Cost should not exceed budget
+        assert(partialIssuance_ <= _maxIssuanceAllowedOverall); // Issuance should not exceed overall segment allowance
+        // If _priceForPartialStep > 0, then partialIssuance_ is also capped by _supplyPerFullStep due to the logic above.
+        // If _priceForPartialStep == 0 (free mint), partialIssuance_ is min(_supplyPerFullStep, _maxIssuanceAllowedOverall).
+        // So, this assertion should hold in both cases.
+        assert(partialIssuance_ <= _supplyPerFullStep); 
+
+        return (partialIssuance_, partialCost_);
     }
 
 
