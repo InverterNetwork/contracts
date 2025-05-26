@@ -5,7 +5,7 @@ import {Test, console2} from "forge-std/Test.sol";
 import {
     DiscreteCurveMathLib_v1,
     PackedSegmentLib
-} from "@fm/bondingCurve/libraries/DiscreteCurveMathLib_v1.sol";
+} from "@fm/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
 import {IDiscreteCurveMathLib_v1} from "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
 import {DiscreteCurveMathLibV1_Exposed} from "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";

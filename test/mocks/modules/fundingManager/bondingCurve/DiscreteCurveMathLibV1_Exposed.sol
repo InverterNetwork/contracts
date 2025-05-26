@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import {
     DiscreteCurveMathLib_v1
-} from "@fm/bondingCurve/libraries/DiscreteCurveMathLib_v1.sol";
+} from "@fm/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
 
 contract DiscreteCurveMathLibV1_Exposed {
