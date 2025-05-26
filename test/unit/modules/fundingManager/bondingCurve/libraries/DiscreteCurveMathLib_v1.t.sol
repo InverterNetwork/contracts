@@ -657,19 +657,110 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
 
     function test_CalculatePurchaseReturn_Edge_CollateralForExactlyOneStep_Sloped() public {
-        // TODO: Implement test
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = defaultSegments[0]; // Sloped segment from default setup
+
+        uint256 currentSupply = 0 ether;
+        // Cost of the first step of defaultSegments[0]
+        // initialPrice = 1 ether, supplyPerStep = 10 ether
+        uint256 costFirstStep = (defaultSeg0_supplyPerStep * defaultSeg0_initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 ether
+        uint256 collateralIn = costFirstStep;
+
+        uint256 expectedIssuanceOut = defaultSeg0_supplyPerStep; // 10 ether
+        uint256 expectedCollateralSpent = costFirstStep; // 10 ether
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            segments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Issuance for exactly one sloped step mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Collateral for exactly one sloped step mismatch");
     }
 
     function test_CalculatePurchaseReturn_Edge_CollateralLessThanOneStep_Flat() public {
-        // TODO: Implement test
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        uint256 flatPrice = 2 ether;
+        uint256 flatSupplyPerStep = 10 ether;
+        uint256 flatNumSteps = 1;
+        segments[0] = DiscreteCurveMathLib_v1.createSegment(flatPrice, 0, flatSupplyPerStep, flatNumSteps);
+
+        uint256 currentSupply = 0 ether;
+        uint256 costOneStep = (flatSupplyPerStep * flatPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
+        uint256 collateralIn = costOneStep - 1 wei; // 19.99... ether, less than enough for one step
+
+        // Based on current flat segment logic in _calculatePurchaseForSingleSegment,
+        // which rounds down issuance to the nearest multiple of supplyPerStep.
+        uint256 expectedIssuanceOut = 0; 
+        uint256 expectedCollateralSpent = 0;
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            segments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Issuance for less than one flat step mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Collateral for less than one flat step mismatch");
     }
 
     function test_CalculatePurchaseReturn_Edge_CollateralLessThanOneStep_Sloped() public {
-        // TODO: Implement test
+        PackedSegment[] memory segments = new PackedSegment[](1);
+        segments[0] = defaultSegments[0]; // Sloped segment from default setup
+
+        uint256 currentSupply = 0 ether;
+        // Cost of the first step of defaultSegments[0] is 10 ether
+        uint256 costFirstStep = (defaultSeg0_supplyPerStep * defaultSeg0_initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        uint256 collateralIn = costFirstStep - 1 wei; // Just less than enough for the first step
+
+        // Binary search in _calculatePurchaseForSingleSegment should find 0 affordable steps.
+        uint256 expectedIssuanceOut = 0;
+        uint256 expectedCollateralSpent = 0;
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            segments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Issuance for less than one sloped step mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Collateral for less than one sloped step mismatch");
     }
 
     function test_CalculatePurchaseReturn_Edge_CollateralToBuyoutCurve() public {
-        // TODO: Implement test
+        // Uses defaultSegments which has total capacity of defaultCurve_totalCapacity (70 ether)
+        // and total reserve of defaultCurve_totalReserve (94 ether)
+        uint256 currentSupply = 0 ether;
+        
+        // Test with exact collateral to buy out the curve
+        uint256 collateralInExact = defaultCurve_totalReserve; 
+        uint256 expectedIssuanceOutExact = defaultCurve_totalCapacity;
+        uint256 expectedCollateralSpentExact = defaultCurve_totalReserve;
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            collateralInExact,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOutExact, "Issuance for curve buyout (exact collateral) mismatch");
+        assertEq(collateralSpent, expectedCollateralSpentExact, "Collateral for curve buyout (exact collateral) mismatch");
+
+        // Test with slightly more collateral than needed to buy out the curve
+        uint256 collateralInMore = defaultCurve_totalReserve + 100 ether;
+        // Expected behavior: still only buys out the curve capacity and spends the required reserve.
+        uint256 expectedIssuanceOutMore = defaultCurve_totalCapacity;
+        uint256 expectedCollateralSpentMore = defaultCurve_totalReserve;
+        
+        (issuanceOut, collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            collateralInMore,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOutMore, "Issuance for curve buyout (more collateral) mismatch");
+        assertEq(collateralSpent, expectedCollateralSpentMore, "Collateral for curve buyout (more collateral) mismatch");
     }
 
     // --- calculatePurchaseReturn current supply variation tests ---
