@@ -16,8 +16,73 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     DiscreteCurveMathLibV1_Exposed internal exposedLib;
 
+    // Default curve configuration
+    PackedSegment[] internal defaultSegments;
+    
+    // Parameters for default curve segments (for clarity in setUp and tests)
+    uint256 internal defaultSeg0_initialPrice;
+    uint256 internal defaultSeg0_priceIncrease;
+    uint256 internal defaultSeg0_supplyPerStep;
+    uint256 internal defaultSeg0_numberOfSteps;
+    uint256 internal defaultSeg0_capacity;
+    uint256 internal defaultSeg0_reserve;
+
+
+    uint256 internal defaultSeg1_initialPrice;
+    uint256 internal defaultSeg1_priceIncrease;
+    uint256 internal defaultSeg1_supplyPerStep;
+    uint256 internal defaultSeg1_numberOfSteps;
+    uint256 internal defaultSeg1_capacity;
+    uint256 internal defaultSeg1_reserve;
+
+    uint256 internal defaultCurve_totalCapacity;
+    uint256 internal defaultCurve_totalReserve;
+
+
     function setUp() public virtual {
         exposedLib = new DiscreteCurveMathLibV1_Exposed();
+
+        // Initialize default curve parameters
+        // Segment 0 (Sloped)
+        defaultSeg0_initialPrice = 1 ether;
+        defaultSeg0_priceIncrease = 0.1 ether;
+        defaultSeg0_supplyPerStep = 10 ether;
+        defaultSeg0_numberOfSteps = 3; // Prices: 1.0, 1.1, 1.2
+        defaultSeg0_capacity = defaultSeg0_supplyPerStep * defaultSeg0_numberOfSteps; // 30 ether
+        defaultSeg0_reserve = 0;
+        defaultSeg0_reserve += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 0 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10
+        defaultSeg0_reserve += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 1 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 11
+        defaultSeg0_reserve += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 2 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 12
+        // Total reserve for seg0 = 10 + 11 + 12 = 33 ether
+
+        // Segment 1 (Sloped)
+        defaultSeg1_initialPrice = 1.5 ether; 
+        defaultSeg1_priceIncrease = 0.05 ether;
+        defaultSeg1_supplyPerStep = 20 ether;
+        defaultSeg1_numberOfSteps = 2; // Prices: 1.5, 1.55
+        defaultSeg1_capacity = defaultSeg1_supplyPerStep * defaultSeg1_numberOfSteps; // 40 ether
+        defaultSeg1_reserve = 0;
+        defaultSeg1_reserve += (defaultSeg1_supplyPerStep * (defaultSeg1_initialPrice + 0 * defaultSeg1_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 30
+        defaultSeg1_reserve += (defaultSeg1_supplyPerStep * (defaultSeg1_initialPrice + 1 * defaultSeg1_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 31
+        // Total reserve for seg1 = 30 + 31 = 61 ether
+
+        defaultCurve_totalCapacity = defaultSeg0_capacity + defaultSeg1_capacity; // 30 + 40 = 70 ether
+        defaultCurve_totalReserve = defaultSeg0_reserve + defaultSeg1_reserve; // 33 + 61 = 94 ether
+
+        // Create default segments array
+        defaultSegments = new PackedSegment[](2);
+        defaultSegments[0] = DiscreteCurveMathLib_v1.createSegment(
+            defaultSeg0_initialPrice,
+            defaultSeg0_priceIncrease,
+            defaultSeg0_supplyPerStep,
+            defaultSeg0_numberOfSteps
+        );
+        defaultSegments[1] = DiscreteCurveMathLib_v1.createSegment(
+            defaultSeg1_initialPrice,
+            defaultSeg1_priceIncrease,
+            defaultSeg1_supplyPerStep,
+            defaultSeg1_numberOfSteps
+        );
     }
 
     function test_PackAndUnpackSegment() public {
@@ -176,90 +241,51 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     }
 
     function test_FindPositionForSupply_MultiSegment_Spanning() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
+        // Uses the `defaultSegments` initialized in setUp()
+        // Default Seg0: initialPrice 1, increase 0.1, supplyPerStep 10, steps 3. Capacity 30.
+        // Default Seg1: initialPrice 1.5, increase 0.05, supplyPerStep 20, steps 2. Capacity 40.
 
-        // Segment 0
-        uint256 initialPrice0 = 1 ether;
-        uint256 priceIncrease0 = 0.1 ether;
-        uint256 supplyPerStep0 = 10 ether;
-        uint256 numberOfSteps0 = 2; // Total supply in segment 0 = 20 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
+        // Target supply: 40 ether
+        // Segment 0 (default) provides 30 ether (10*3).
+        // Remaining needed: 40 - 30 = 10 ether from Segment 1.
+        // Segment 1 (default): supplyPerStep = 20 ether.
+        //   Step 0 of seg1 covers supply 0-20 (total 30-50 for the curve). Price 1.5 ether.
+        //   Target 10 ether from Segment 1 falls into its step 0.
+        uint256 targetSupply = defaultSeg0_capacity + 10 ether; // 30 + 10 = 40 ether
 
-        // Segment 1
-        uint256 initialPrice1 = 1.2 ether; // Price after segment 0 (1 + 2*0.1 = 1.2, or price of step index 1 is 1.1)
-                                          // Price of step 0 is 1.0, price of step 1 is 1.1. Max supply is 20.
-                                          // Next segment starts at 1.2
-        uint256 priceIncrease1 = 0.05 ether;
-        uint256 supplyPerStep1 = 5 ether;
-        uint256 numberOfSteps1 = 3; // Total supply in segment 1 = 15 ether
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
-
-        // Target supply: 28 ether
-        // Segment 0 provides 20 ether.
-        // Remaining needed: 28 - 20 = 8 ether from Segment 1.
-        // Segment 1, step 0 (supply 5 ether, total 20+5=25), price 1.2 ether
-        // Segment 1, step 1 (supply 5 ether, total 25+5=30), price 1.25 ether. Target 28 falls here.
-        uint256 targetSupply = 28 ether;
-
-        DiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib.findPositionForSupplyPublic(segments, targetSupply);
+        DiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib.findPositionForSupplyPublic(defaultSegments, targetSupply);
 
         assertEq(pos.segmentIndex, 1, "Segment index mismatch");
-        // Supply from seg0 = 20. Supply needed from seg1 = 8.
-        // Step 0 of seg1 covers supply 0-5 (total 20-25).
-        // Step 1 of seg1 covers supply 5-10 (total 25-30).
-        // 8 supply needed from seg1 falls into step 1 (0-indexed).
-        // supplyNeededFromThisSegment (seg1) = 8. stepIndex = 8 / 5 = 1.
-        assertEq(pos.stepIndexWithinSegment, 1, "Step index mismatch for segment 1");
+        // Supply from seg0 = 30. Supply needed from seg1 = 10.
+        // Step 0 of seg1 covers supply 0-20 (relative to seg1 start).
+        // 10 supply needed from seg1 falls into step 0 (0-indexed).
+        // supplyNeededFromThisSegment (seg1) = 10. stepIndex = 10 / 20 (defaultSeg1_supplyPerStep) = 0.
+        assertEq(pos.stepIndexWithinSegment, 0, "Step index mismatch for segment 1");
         
-        uint256 expectedPrice = initialPrice1 + (1 * priceIncrease1); // Price at step 1 of segment 1
+        uint256 expectedPrice = defaultSeg1_initialPrice + (0 * defaultSeg1_priceIncrease); // Price at step 0 of segment 1
         assertEq(pos.priceAtCurrentStep, expectedPrice, "Price mismatch for segment 1");
         assertEq(pos.supplyCoveredUpToThisPosition, targetSupply, "Supply covered mismatch");
     }
 
     function test_FindPositionForSupply_TargetBeyondCapacity() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
+        // Uses defaultSegments
+        // defaultCurve_totalCapacity = 70 ether
+        uint256 targetSupply = defaultCurve_totalCapacity + 10 ether; // Beyond capacity (70 + 10 = 80)
 
-        // Segment 0
-        uint256 initialPrice0 = 1 ether;
-        uint256 priceIncrease0 = 0.1 ether;
-        uint256 supplyPerStep0 = 10 ether;
-        uint256 numberOfSteps0 = 2; // Total supply in segment 0 = 20 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
+        DiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib.findPositionForSupplyPublic(defaultSegments, targetSupply);
 
-        // Segment 1
-        uint256 initialPrice1 = 1.2 ether;
-        uint256 priceIncrease1 = 0.05 ether;
-        uint256 supplyPerStep1 = 5 ether;
-        uint256 numberOfSteps1 = 3; // Total supply in segment 1 = 15 ether
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
+        assertEq(pos.segmentIndex, 1, "Segment index should be last segment (1)");
+        assertEq(pos.stepIndexWithinSegment, defaultSeg1_numberOfSteps - 1, "Step index should be last step of last segment");
         
-        // Total curve capacity = 20 (seg0) + 15 (seg1) = 35 ether.
-        uint256 totalCurveCapacity = (supplyPerStep0 * numberOfSteps0) + (supplyPerStep1 * numberOfSteps1);
-        uint256 targetSupply = 40 ether; // Beyond capacity
-
-        DiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib.findPositionForSupplyPublic(segments, targetSupply);
-
-        assertEq(pos.segmentIndex, 1, "Segment index should be last segment");
-        assertEq(pos.stepIndexWithinSegment, numberOfSteps1 - 1, "Step index should be last step of last segment");
-        
-        uint256 expectedPriceAtEndOfCurve = initialPrice1 + ((numberOfSteps1 - 1) * priceIncrease1);
+        uint256 expectedPriceAtEndOfCurve = defaultSeg1_initialPrice + ((defaultSeg1_numberOfSteps - 1) * defaultSeg1_priceIncrease);
         assertEq(pos.priceAtCurrentStep, expectedPriceAtEndOfCurve, "Price should be at end of last segment");
-        assertEq(pos.supplyCoveredUpToThisPosition, totalCurveCapacity, "Supply covered should be total curve capacity");
+        assertEq(pos.supplyCoveredUpToThisPosition, defaultCurve_totalCapacity, "Supply covered should be total curve capacity");
     }
 
     function test_FindPositionForSupply_TargetSupplyZero() public {
+        // Using only the first segment of defaultSegments for simplicity
         PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5;
-
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
-            initialPrice,
-            priceIncrease,
-            supplyPerStep,
-            numberOfSteps
-        );
+        segments[0] = defaultSegments[0];
 
         uint256 targetSupply = 0 ether;
 
@@ -267,7 +293,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         assertEq(pos.segmentIndex, 0, "Segment index should be 0 for target supply 0");
         assertEq(pos.stepIndexWithinSegment, 0, "Step index should be 0 for target supply 0");
-        assertEq(pos.priceAtCurrentStep, initialPrice, "Price should be initial price of first segment for target supply 0");
+        assertEq(pos.priceAtCurrentStep, defaultSeg0_initialPrice, "Price should be initial price of first segment for target supply 0");
         assertEq(pos.supplyCoveredUpToThisPosition, 0, "Supply covered should be 0 for target supply 0");
     }
 
@@ -295,136 +321,74 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // --- Tests for getCurrentPriceAndStep ---
 
     function test_GetCurrentPriceAndStep_SupplyZero() public {
-        PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5;
-
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
-            initialPrice,
-            priceIncrease,
-            supplyPerStep,
-            numberOfSteps
-        );
-
+        // Using defaultSegments
         uint256 currentSupply = 0 ether;
-        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
+        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(defaultSegments, currentSupply);
 
         assertEq(segmentIdx, 0, "Segment index should be 0 for current supply 0");
         assertEq(stepIdx, 0, "Step index should be 0 for current supply 0");
-        assertEq(price, initialPrice, "Price should be initial price of first segment for current supply 0");
+        assertEq(price, defaultSeg0_initialPrice, "Price should be initial price of first segment for current supply 0");
     }
 
     function test_GetCurrentPriceAndStep_WithinStep_NotBoundary() public {
-        PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5; // Segment capacity 50 ether
-
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
-            initialPrice,
-            priceIncrease,
-            supplyPerStep,
-            numberOfSteps
-        );
-
-        // Current supply is 15 ether.
+        // Using defaultSegments
+        // Default Seg0: initialPrice 1, increase 0.1, supplyPerStep 10, steps 3.
         // Step 0: 0-10 supply, price 1.0
-        // Step 1: 10-20 supply, price 1.1. 15 ether falls in this step.
-        uint256 currentSupply = 15 ether;
-        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
+        // Step 1: 10-20 supply, price 1.1.
+        uint256 currentSupply = 15 ether; // Falls in step 1 of segment 0
+        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(defaultSegments, currentSupply);
 
         assertEq(segmentIdx, 0, "Segment index mismatch");
-        assertEq(stepIdx, 1, "Step index mismatch - should be step 1"); // _findPositionForSupply gives stepIndex 1 for supply 15
-        uint256 expectedPrice = initialPrice + (1 * priceIncrease); // Price of step 1
+        assertEq(stepIdx, 1, "Step index mismatch - should be step 1"); 
+        uint256 expectedPrice = defaultSeg0_initialPrice + (1 * defaultSeg0_priceIncrease); // Price of step 1
         assertEq(price, expectedPrice, "Price mismatch - should be price of step 1");
     }
 
     function test_GetCurrentPriceAndStep_EndOfStep_NotEndOfSegment() public {
-        PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5; // Segment capacity 50 ether
-
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
-            initialPrice,
-            priceIncrease,
-            supplyPerStep,
-            numberOfSteps
-        );
-
-        // Current supply is 10 ether, exactly at the end of step 0.
-        // Price should be for step 1.
-        uint256 currentSupply = 10 ether;
-        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
+        // Using defaultSegments
+        // Default Seg0: initialPrice 1, increase 0.1, supplyPerStep 10, steps 3.
+        // Current supply is 10 ether, exactly at the end of step 0 of segment 0.
+        // Price should be for step 1 of segment 0.
+        uint256 currentSupply = defaultSeg0_supplyPerStep; // 10 ether
+        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(defaultSegments, currentSupply);
 
         assertEq(segmentIdx, 0, "Segment index mismatch");
         assertEq(stepIdx, 1, "Step index should advance to 1"); 
-        uint256 expectedPrice = initialPrice + (1 * priceIncrease); // Price of step 1
+        uint256 expectedPrice = defaultSeg0_initialPrice + (1 * defaultSeg0_priceIncrease); // Price of step 1 (1.1)
         assertEq(price, expectedPrice, "Price should be for step 1");
     }
 
     function test_GetCurrentPriceAndStep_EndOfSegment_NotLastSegment() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
-
-        // Segment 0
-        uint256 initialPrice0 = 1 ether;
-        uint256 priceIncrease0 = 0.1 ether;
-        uint256 supplyPerStep0 = 10 ether;
-        uint256 numberOfSteps0 = 2; // Total supply in segment 0 = 20 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
-
-        // Segment 1
-        uint256 initialPrice1 = 1.2 ether;
-        uint256 priceIncrease1 = 0.05 ether;
-        uint256 supplyPerStep1 = 5 ether;
-        uint256 numberOfSteps1 = 3; 
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
-
-        // Current supply is 20 ether, exactly at the end of segment 0.
+        // Using defaultSegments
+        // Current supply is 30 ether, exactly at the end of segment 0 (defaultSeg0_capacity).
         // Price/step should be for the start of segment 1.
-        uint256 currentSupply = 20 ether; 
-        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
+        uint256 currentSupply = defaultSeg0_capacity; 
+        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(defaultSegments, currentSupply);
 
         assertEq(segmentIdx, 1, "Segment index should advance to 1");
         assertEq(stepIdx, 0, "Step index should be 0 of segment 1"); 
-        assertEq(price, initialPrice1, "Price should be initial price of segment 1");
+        assertEq(price, defaultSeg1_initialPrice, "Price should be initial price of segment 1");
     }
 
     function test_GetCurrentPriceAndStep_EndOfLastSegment() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
-        // Segment 0
-        uint256 initialPrice0 = 1 ether;
-        uint256 priceIncrease0 = 0.1 ether;
-        uint256 supplyPerStep0 = 10 ether;
-        uint256 numberOfSteps0 = 2; // Capacity 20
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
-        // Segment 1
-        uint256 initialPrice1 = 1.2 ether;
-        uint256 priceIncrease1 = 0.05 ether;
-        uint256 supplyPerStep1 = 5 ether;
-        uint256 numberOfSteps1 = 3; // Capacity 15
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
-        
-        uint256 totalCurveCapacity = (supplyPerStep0 * numberOfSteps0) + (supplyPerStep1 * numberOfSteps1); // 35 ether
-        uint256 currentSupply = totalCurveCapacity;
+        // Using defaultSegments
+        // Current supply is total capacity of the curve (70 ether).
+        uint256 currentSupply = defaultCurve_totalCapacity;
 
-        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
+        (uint256 price, uint256 stepIdx, uint256 segmentIdx) = exposedLib.getCurrentPriceAndStepPublic(defaultSegments, currentSupply);
 
         assertEq(segmentIdx, 1, "Segment index should be last segment (1)");
-        assertEq(stepIdx, numberOfSteps1 - 1, "Step index should be last step of last segment"); // step 2
-        uint256 expectedPrice = initialPrice1 + ((numberOfSteps1 - 1) * priceIncrease1); // 1.2 + 2*0.05 = 1.3
+        assertEq(stepIdx, defaultSeg1_numberOfSteps - 1, "Step index should be last step of last segment");
+        uint256 expectedPrice = defaultSeg1_initialPrice + ((defaultSeg1_numberOfSteps - 1) * defaultSeg1_priceIncrease);
         assertEq(price, expectedPrice, "Price should be price of last step of last segment");
     }
 
     function test_GetCurrentPriceAndStep_SupplyBeyondCapacity_Reverts() public {
+        // Using a single segment for simplicity, but based on defaultSeg0
         PackedSegment[] memory segments = new PackedSegment[](1);
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(1 ether, 0, 10 ether, 2); // Capacity 20
+        segments[0] = defaultSegments[0]; // Capacity 30 ether
         
-        uint256 currentSupply = 25 ether; // Beyond capacity
+        uint256 currentSupply = defaultSeg0_capacity + 5 ether; // Beyond capacity of this single segment array
 
         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity.selector);
         exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
@@ -442,10 +406,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // --- Tests for calculateReserveForSupply ---
 
     function test_CalculateReserveForSupply_TargetSupplyZero() public {
-        PackedSegment[] memory segments = new PackedSegment[](1);
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(1 ether, 0.1 ether, 10 ether, 5);
-        
-        uint256 reserve = exposedLib.calculateReserveForSupplyPublic(segments, 0);
+        // Using defaultSegments
+        uint256 reserve = exposedLib.calculateReserveForSupplyPublic(defaultSegments, 0);
         assertEq(reserve, 0, "Reserve for 0 supply should be 0");
     }
 
@@ -468,24 +430,20 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     }
 
     function test_CalculateReserveForSupply_SingleSlopedSegment_Partial() public {
+        // Using only the first segment of defaultSegments (which is sloped)
         PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether; 
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5; // Total capacity 50 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice, priceIncrease, supplyPerStep, numberOfSteps);
+        segments[0] = defaultSegments[0]; // initialPrice 1, increase 0.1, supplyPerStep 10, steps 3
 
-        // Target 2 steps (20 ether supply)
+        // Target 2 steps (20 ether supply) from defaultSeg0
         // Step 0: price 1.0, supply 10. Cost = 10 * 1.0 = 10
         // Step 1: price 1.1, supply 10. Cost = 10 * 1.1 = 11
         // Total reserve = (10 + 11) = 21 ether (scaled)
-        uint256 targetSupply = 20 ether; 
+        uint256 targetSupply = 2 * defaultSeg0_supplyPerStep; // 20 ether 
         
-        // Manual calculation:
-        // Cost step 0: (10 ether * 1.0 ether) / 1e18 = 10 ether
-        // Cost step 1: (10 ether * 1.1 ether) / 1e18 = 11 ether
-        // Total = 21 ether
-        uint256 expectedReserve = ((10 ether * (initialPrice + 0 * priceIncrease)) + (10 ether * (initialPrice + 1 * priceIncrease))) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        uint256 expectedReserve = 0;
+        expectedReserve += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 0 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        expectedReserve += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 1 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        // expectedReserve = 10 + 11 = 21 ether
 
         uint256 reserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupply);
         assertEq(reserve, expectedReserve, "Reserve for sloped segment partial fill mismatch");
@@ -561,21 +519,21 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
 
     function test_CalculatePurchaseReturn_SingleSlopedSegment_AffordMultipleFullSteps() public {
+        // Using only the first segment of defaultSegments (sloped)
         PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5; // Total capacity 50 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice, priceIncrease, supplyPerStep, numberOfSteps);
+        segments[0] = defaultSegments[0]; // initialPrice 1, increase 0.1, supplyPerStep 10, steps 3
 
         uint256 currentSupply = 0 ether;
-        // Cost step 0 (price 1.0): 10 ether supply * 1.0 price = 10 ether collateral
-        // Cost step 1 (price 1.1): 10 ether supply * 1.1 price = 11 ether collateral
-        // Total cost for 2 steps (20 ether supply) = 10 + 11 = 21 ether collateral
-        uint256 collateralIn = 25 ether; // Enough for 2 steps, with 4 ether remaining
+        // Cost step 0 (price 1.0): 10 supply * 1.0 price = 10 collateral
+        // Cost step 1 (price 1.1): 10 supply * 1.1 price = 11 collateral
+        // Total cost for 2 steps (20 supply) = 10 + 11 = 21 collateral
+        uint256 collateralIn = 25 ether; // Enough for 2 steps (cost 21), with 4 ether remaining
 
-        uint256 expectedIssuanceOut = 20 ether; // 2 full steps
-        uint256 expectedCollateralSpent = 21 ether;
+        uint256 expectedIssuanceOut = 2 * defaultSeg0_supplyPerStep; // 20 ether (2 full steps)
+        uint256 expectedCollateralSpent = 0;
+        expectedCollateralSpent += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 0 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        expectedCollateralSpent += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 1 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        // expectedCollateralSpent = 10 + 11 = 21 ether
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,
@@ -590,33 +548,29 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // --- Tests for calculateSaleReturn ---
 
     function test_CalculateSaleReturn_SingleSlopedSegment_PartialSell() public {
+        // Using only the first segment of defaultSegments (sloped)
         PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 5; // Total capacity 50 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice, priceIncrease, supplyPerStep, numberOfSteps);
+        segments[0] = defaultSegments[0]; // initialPrice 1, increase 0.1, supplyPerStep 10, steps 3
 
-        // Current supply is 30 ether (3 steps minted)
-        // Reserve for 30 supply:
-        // Step 0 (price 1.0): 10 ether coll
-        // Step 1 (price 1.1): 11 ether coll
-        // Step 2 (price 1.2): 12 ether coll
-        // Total reserve for 30 supply = 10 + 11 + 12 = 33 ether
-        uint256 currentSupply = 30 ether;
+        // Current supply is 30 ether (3 steps minted from defaultSeg0)
+        uint256 currentSupply = defaultSeg0_capacity; // 30 ether
+        // Reserve for 30 supply (defaultSeg0_reserve) = 33 ether
         
-        // Selling 10 ether issuance (the tokens from the last minted step, step 2)
-        uint256 issuanceToSell = 10 ether;
+        // Selling 10 ether issuance (the tokens from the last minted step, step 2 of defaultSeg0)
+        uint256 issuanceToSell = defaultSeg0_supplyPerStep; // 10 ether
 
         // Expected: final supply after sale = 20 ether
-        // Reserve for 20 supply (steps 0 and 1):
-        // Step 0 (price 1.0): 10 ether coll
-        // Step 1 (price 1.1): 11 ether coll
+        // Reserve for 20 supply (first 2 steps of defaultSeg0):
+        // Step 0 (price 1.0): 10 coll
+        // Step 1 (price 1.1): 11 coll
         // Total reserve for 20 supply = 10 + 11 = 21 ether
+        uint256 reserveFor20Supply = 0;
+        reserveFor20Supply += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 0 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        reserveFor20Supply += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 1 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        
         // Collateral out = Reserve(30) - Reserve(20) = 33 - 21 = 12 ether
-
-        uint256 expectedCollateralOut = 12 ether;
-        uint256 expectedIssuanceBurned = 10 ether;
+        uint256 expectedCollateralOut = defaultSeg0_reserve - reserveFor20Supply;
+        uint256 expectedIssuanceBurned = issuanceToSell;
 
         (uint256 collateralOut, uint256 issuanceBurned) = exposedLib.calculateSaleReturnPublic(
             segments,
@@ -631,88 +585,40 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // --- Additional calculateReserveForSupply tests ---
 
     function test_CalculateReserveForSupply_MultiSegment_FullCurve() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
-
-        // Segment 0: Sloped
-        uint256 initialPrice0 = 1 ether;
-        uint256 priceIncrease0 = 0.1 ether;
-        uint256 supplyPerStep0 = 10 ether;
-        uint256 numberOfSteps0 = 2; // Capacity 20 ether. Cost: (10*1.0) + (10*1.1) = 10 + 11 = 21 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
-        uint256 costSeg0 = ((10 ether * (initialPrice0 + 0 * priceIncrease0)) + (10 ether * (initialPrice0 + 1 * priceIncrease0))) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-
-
-        // Segment 1: Flat
-        // Price of last step in seg0 is 1.0 + 1*0.1 = 1.1. Next segment starts at a new price.
-        uint256 initialPrice1 = 1.5 ether; // Arbitrary start price for next segment
-        uint256 priceIncrease1 = 0; // Flat
-        uint256 supplyPerStep1 = 5 ether;
-        uint256 numberOfSteps1 = 3; // Capacity 15 ether. Cost: 15 * 1.5 = 22.5 ether
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
-        uint256 costSeg1 = (15 ether * initialPrice1) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-
-        uint256 totalCurveSupply = (supplyPerStep0 * numberOfSteps0) + (supplyPerStep1 * numberOfSteps1); // 20 + 15 = 35 ether
-        uint256 expectedTotalReserve = costSeg0 + costSeg1; // 21 + 22.5 = 43.5 ether
-
-        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, totalCurveSupply);
-        assertEq(actualReserve, expectedTotalReserve, "Reserve for full multi-segment curve mismatch");
+        // Using defaultSegments
+        // defaultCurve_totalCapacity = 70 ether
+        // defaultCurve_totalReserve = 94 ether
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(defaultSegments, defaultCurve_totalCapacity);
+        assertEq(actualReserve, defaultCurve_totalReserve, "Reserve for full multi-segment curve mismatch");
     }
 
     function test_CalculateReserveForSupply_MultiSegment_PartialFillLaterSegment() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
+        // Using defaultSegments
+        // Default Seg0: capacity 30, reserve 33
+        // Default Seg1: initialPrice 1.5, increase 0.05, supplyPerStep 20, steps 2.
+        // Target supply: Full seg0 (30) + 1 step of seg1 (20) = 50 ether
+        uint256 targetSupply = defaultSeg0_capacity + defaultSeg1_supplyPerStep; // 30 + 20 = 50 ether
 
-        // Segment 0: Sloped
-        uint256 initialPrice0 = 1 ether;
-        uint256 priceIncrease0 = 0.1 ether;
-        uint256 supplyPerStep0 = 10 ether;
-        uint256 numberOfSteps0 = 2; // Capacity 20 ether. Cost: 21 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice0, priceIncrease0, supplyPerStep0, numberOfSteps0);
-        uint256 costSeg0Full = ((10 ether * (initialPrice0 + 0 * priceIncrease0)) + (10 ether * (initialPrice0 + 1 * priceIncrease0))) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-
-        // Segment 1: Flat
-        uint256 initialPrice1 = 1.5 ether;
-        uint256 priceIncrease1 = 0; // Flat
-        uint256 supplyPerStep1 = 5 ether;
-        uint256 numberOfSteps1 = 4; // Capacity 20 ether.
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
-
-        // Target supply: 20 (from seg0) + 10 (from seg1, i.e., 2 steps of seg1) = 30 ether
-        uint256 targetSupply = (supplyPerStep0 * numberOfSteps0) + (2 * supplyPerStep1); // 20 + 10 = 30 ether
-
-        // Cost for the partial fill of segment 1: 2 steps * 5 supply/step * 1.5 price/token = 15 ether
-        uint256 costPartialSeg1 = (2 * supplyPerStep1 * initialPrice1) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+        // Cost for the first step of segment 1:
+        // 20 supply * (1.5 price + 0 * 0.05 increase) = 30 ether collateral
+        uint256 costFirstStepSeg1 = (defaultSeg1_supplyPerStep * (defaultSeg1_initialPrice + 0 * defaultSeg1_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
         
-        uint256 expectedTotalReserve = costSeg0Full + costPartialSeg1; // 21 + 15 = 36 ether
+        uint256 expectedTotalReserve = defaultSeg0_reserve + costFirstStepSeg1; // 33 + 30 = 63 ether
 
-        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupply);
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(defaultSegments, targetSupply);
         assertEq(actualReserve, expectedTotalReserve, "Reserve for multi-segment partial fill mismatch");
     }
 
     function test_CalculateReserveForSupply_TargetSupplyBeyondCurveCapacity() public {
-        PackedSegment[] memory segments = new PackedSegment[](1);
-        uint256 initialPrice = 1 ether;
-        uint256 priceIncrease = 0.1 ether;
-        uint256 supplyPerStep = 10 ether;
-        uint256 numberOfSteps = 3; // Total capacity 30 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(initialPrice, priceIncrease, supplyPerStep, numberOfSteps);
+        // Using defaultSegments
+        // defaultCurve_totalCapacity = 70 ether
+        // defaultCurve_totalReserve = 94 ether
+        uint256 targetSupplyBeyondCapacity = defaultCurve_totalCapacity + 100 ether;
 
-        // Reserve for full segment:
-        // Step 0 (price 1.0): 10 * 1.0 = 10
-        // Step 1 (price 1.1): 10 * 1.1 = 11
-        // Step 2 (price 1.2): 10 * 1.2 = 12
-        // Total = 10 + 11 + 12 = 33 ether
-        uint256 reserveForFullSegment = 0;
-        reserveForFullSegment += (supplyPerStep * (initialPrice + 0 * priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-        reserveForFullSegment += (supplyPerStep * (initialPrice + 1 * priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-        reserveForFullSegment += (supplyPerStep * (initialPrice + 2 * priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-        
-        uint256 totalCurveCapacity = supplyPerStep * numberOfSteps; // 30 ether
-        uint256 targetSupplyBeyondCapacity = totalCurveCapacity + 100 ether; // e.g., 130 ether
-
-        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupplyBeyondCapacity);
+        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(defaultSegments, targetSupplyBeyondCapacity);
         
         // The function should return the reserve for the maximum supply the curve can offer.
-        assertEq(actualReserve, reserveForFullSegment, "Reserve beyond capacity should be reserve for full curve");
+        assertEq(actualReserve, defaultCurve_totalReserve, "Reserve beyond capacity should be reserve for full curve");
     }
 
     // TODO: Implement test
