@@ -198,13 +198,10 @@ Determines segment, step, and price for `targetTotalIssuanceSupply` via linear s
       - **If affordable:** Purchase entire remainder, update accumulators.
       - **Else:** Partial purchase: `issuanceBought = (remainingCollateral * SCALING_FACTOR) / priceAtEffectiveStartStep;` Cap at step supply. Update and break.
     - **Sloped Segment Logic (pIncrease > 0):**
-      - **Binary search for `best_n_steps`** within available steps:
-        - Inputs: `remainingCollateral`, `priceAtEffectiveStartStep`, `pIncrease`, `sPerStep`, `stepsAvailableInSeg`.
-        - Binary search loop: Calculate cost using Formula A for `mid_n` steps.
-        - `cost = (sPerStep * mid_n * (2*priceAtEffectiveStartStep + (mid_n > 0 ? (mid_n-1)*pIncrease : 0))) / (2 * SCALING_FACTOR);`
-        - Update `best_n_steps` and `cost_for_best_n_steps` based on affordability.
-      - Update accumulators with complete steps purchased.
-      - **Handle Partial Final Step:** Following established pattern with proper scaling.
+      - The function calls the internal helper `_linearSearchSloped` to determine the number of affordable steps.
+      - `_linearSearchSloped` iterates through available steps, calculating the cost of each step based on `priceAtEffectiveStartStep` and `pIncrease`, and accumulating the total cost and issuance until the `remainingCollateral` is insufficient for the next step or all available steps are purchased.
+      - The results from `_linearSearchSloped` (issuance bought and collateral spent for that segment) are used to update the total accumulators.
+      - Partial final steps are not explicitly handled by `_linearSearchSloped` as it only purchases full steps it can afford. The main loop in `calculatePurchaseReturn` continues to the next segment if budget remains.
 4.  **Return:** `(totalIssuanceAmountOut, totalCollateralSpent)`
 
 ## VII. `calculateSaleReturn` Function

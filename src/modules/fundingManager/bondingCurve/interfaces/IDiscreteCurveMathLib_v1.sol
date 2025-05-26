@@ -96,4 +96,37 @@ interface IDiscreteCurveMathLib_v1 {
      * @param segmentIndex The index of the created segment in the curve's segment array.
      */
     event DiscreteCurveMathLib__SegmentCreated(PackedSegment indexed segment, uint256 indexed segmentIndex);
+
+    // --- Functions ---
+
+    function getCurrentPriceAndStep(
+        PackedSegment[] memory segments,
+        uint256 currentTotalIssuanceSupply
+    ) external pure returns (uint256 price, uint256 stepIndex, uint256 segmentIndex);
+
+    function calculateReserveForSupply(
+        PackedSegment[] memory segments,
+        uint256 targetSupply
+    ) external pure returns (uint256 totalReserve);
+
+    function calculatePurchaseReturn(
+        PackedSegment[] memory segments,
+        uint256 collateralAmountIn,
+        uint256 currentTotalIssuanceSupply
+    ) external pure returns (uint256 issuanceAmountOut, uint256 collateralAmountSpent);
+
+    function calculateSaleReturn(
+        PackedSegment[] memory segments,
+        uint256 issuanceAmountIn,
+        uint256 currentTotalIssuanceSupply
+    ) external pure returns (uint256 collateralAmountOut, uint256 issuanceAmountBurned);
+
+    function createSegment(
+        uint256 initialPrice,
+        uint256 priceIncrease,
+        uint256 supplyPerStep,
+        uint256 numberOfSteps
+    ) external pure returns (PackedSegment);
+
+    function validateSegmentArray(PackedSegment[] memory segments) external pure;
 }
