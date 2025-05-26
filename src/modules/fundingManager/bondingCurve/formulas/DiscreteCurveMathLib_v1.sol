@@ -73,29 +73,6 @@ library DiscreteCurveMathLib_v1 {
     }
 
     /**
-     * @notice Calculates the cumulative supply of all segments before a given segment index.
-     * @dev Helper function for gas optimization.
-     * @param segments Array of PackedSegment configurations for the curve.
-     * @param segmentIndex The index of the segment *after* which cumulative supply is counted.
-     * @return cumulative The total supply from segments 0 to segmentIndex-1.
-     */
-    function _getCumulativeSupplyBeforeSegment(
-        PackedSegment[] memory segments,
-        uint256 segmentIndex
-    ) private pure returns (uint256 cumulative) {
-        // cumulative is initialized to 0 by default
-        for (uint256 segmentIndexLoop = 0; segmentIndexLoop < segmentIndex; ++segmentIndexLoop) {
-            // Ensure segmentIndexLoop is within bounds, though loop condition should handle this.
-            // This check is more for robustness if segmentIndex could be out of range from an external call,
-            // but as a private helper called internally with validated segmentIndex, it's less critical.
-            // if (segmentIndexLoop >= segments.length) break; // Should not happen with correct usage
-            (,, uint256 supplyPerStep, uint256 numberOfStepsInSegment) = segments[segmentIndexLoop].unpack(); // Batch unpack
-            cumulative += numberOfStepsInSegment * supplyPerStep;
-        }
-        return cumulative;
-    }
-
-    /**
      * @notice Finds the segment, step, price, and cumulative supply for a given target total issuance supply.
      * @dev Iterates linearly through segments.
      * @param segments Array of PackedSegment configurations for the curve.
