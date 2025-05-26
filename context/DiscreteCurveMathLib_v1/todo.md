@@ -1,9 +1,5 @@
 ## 🟡 **MEDIUM SEVERITY ISSUES**
 
-### 8. **Inconsistent Error Handling**
-
-Some functions revert on invalid states while others return (0,0). This inconsistency could lead to silent failures.
-
 ### 9. **Missing Input Validation**
 
 Functions don't validate that `currentTotalIssuanceSupply` is reasonable relative to the segments provided.

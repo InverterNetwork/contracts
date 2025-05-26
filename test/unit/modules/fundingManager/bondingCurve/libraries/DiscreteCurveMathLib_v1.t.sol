@@ -451,6 +451,15 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Tests for calculatePurchaseReturn ---
 
+    function testRevert_CalculatePurchaseReturn_ZeroCollateralInput() public {
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput.selector);
+        exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            0, // Zero collateral
+            0 // currentTotalIssuanceSupply
+        );
+    }
+
     function test_CalculatePurchaseReturn_SingleFlatSegment_PartialBuy_AffordSome() public {
         PackedSegment[] memory segments = new PackedSegment[](1);
         uint256 initialPrice = 2 ether;
@@ -550,6 +559,15 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     }
 
     // --- Tests for calculateSaleReturn ---
+
+    function testRevert_CalculateSaleReturn_ZeroIssuanceInput() public {
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput.selector);
+        exposedLib.calculateSaleReturnPublic(
+            defaultSegments,
+            0, // Zero issuanceAmountIn
+            defaultSeg0_capacity // currentTotalIssuanceSupply
+        );
+    }
 
     function test_CalculateSaleReturn_SingleSlopedSegment_PartialSell() public {
         // Using only the first segment of defaultSegments (sloped)

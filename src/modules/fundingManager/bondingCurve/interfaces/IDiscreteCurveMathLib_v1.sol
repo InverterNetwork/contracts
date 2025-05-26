@@ -87,6 +87,18 @@ interface IDiscreteCurveMathLib_v1 {
      */
     error DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity();
 
+    /**
+     * @notice Reverted when a purchase or sale operation is attempted with zero collateral or issuance tokens respectively.
+     */
+    error DiscreteCurveMathLib__ZeroCollateralInput();
+    error DiscreteCurveMathLib__ZeroIssuanceInput();
+
+    /**
+     * @notice Reverted when _calculatePurchaseForSingleSegment is called with a segmentInitialStep
+     * that is out of bounds for the segment's number of steps.
+     */
+    error DiscreteCurveMathLib__InvalidSegmentInitialStep();
+
     // --- Events ---
 
     /**

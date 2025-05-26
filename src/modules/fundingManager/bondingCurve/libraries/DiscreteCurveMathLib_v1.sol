@@ -416,7 +416,7 @@ library DiscreteCurveMathLib_v1 {
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 issuanceAmountOut, uint256 collateralAmountSpent) {
         if (collateralAmountIn == 0) {
-            return (0, 0);
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput();
         }
         if (segments.length == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
@@ -569,7 +569,7 @@ library DiscreteCurveMathLib_v1 {
 
         // Guard: segmentInitialStep is out of bounds for the segment
         if (segmentInitialStep >= nStepsSeg) { 
-            return (0,0);
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidSegmentInitialStep();
         }
 
         uint256 stepsAvailableToPurchaseInSeg = nStepsSeg - segmentInitialStep;
@@ -663,9 +663,8 @@ library DiscreteCurveMathLib_v1 {
         uint256 _maxIssuanceAllowedOverall // e.g., (total steps left * sPerStep) - full steps already bought
     ) private pure returns (uint256 partialIssuance_, uint256 partialCost_) {
         // Handle zero price (free mint) or zero budget scenarios first
-        if (_budget == 0) {
-            return (0, 0);
-        }
+        // Note: The _budget == 0 case is guarded by the caller (_calculatePurchaseForSingleSegment),
+        // which only calls this function if remainingBudgetForPartial > 0.
         if (_priceForPartialStep == 0) {
             // For free mints, take up to _supplyPerFullStep, further capped by _maxIssuanceAllowedOverall
             partialIssuance_ = _supplyPerFullStep < _maxIssuanceAllowedOverall ? _supplyPerFullStep : _maxIssuanceAllowedOverall;
@@ -731,19 +730,15 @@ library DiscreteCurveMathLib_v1 {
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 collateralAmountOut, uint256 issuanceAmountBurned) {
         if (issuanceAmountIn == 0) {
-            return (0, 0);
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput();
         }
+        // Note: The case of issuanceAmountIn > 0 and currentTotalIssuanceSupply == 0
+        // will lead to issuanceAmountBurned == 0, which is handled below by returning (0,0).
+        // Thus, a specific check for segments.length == 0 when currentTotalIssuanceSupply == 0
+        // to return (0,0) is not strictly needed here if we always revert for NoSegmentsConfigured
+        // when an actual operation is implied (i.e., issuanceAmountIn > 0).
         if (segments.length == 0) {
-            // Cannot sell if there's no curve defined, implies no supply to sell or no reserve.
-            // Or, if currentTotalIssuanceSupply is also 0, then 0 collateral makes sense.
-            // If currentTotalIssuanceSupply > 0 but no segments, it's an inconsistent state.
-            // Reverting seems safer if currentTotalIssuanceSupply > 0.
-            // However, if currentTotalIssuanceSupply is 0, then issuanceAmountIn (capped) will be 0.
-            if (currentTotalIssuanceSupply > 0) {
-                 revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
-            } else {
-                return (0,0); // Selling 0 from 0 supply.
-            }
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
 
         issuanceAmountBurned = issuanceAmountIn > currentTotalIssuanceSupply ? currentTotalIssuanceSupply : issuanceAmountIn;
