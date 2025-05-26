@@ -222,46 +222,40 @@ library DiscreteCurveMathLib_v1 {
         // pos members are initialized to 0 by default
 
         for (uint256 i = 0; i < segments.length; ++i) {
-            // Using individual accessors as per instruction example, can be batch unpacked too.
-            uint256 initialPrice = segments[i].initialPrice();
-            uint256 priceIncrease = segments[i].priceIncrease();
-            uint256 supplyPerStep = segments[i].supplyPerStep();
-            uint256 stepsInSegment = segments[i].numberOfSteps();
-
-            // This check should ideally be done during segment validation/creation
-            // but can be an assertion here if segments are externally provided without prior validation.
-            // For now, assuming supplyPerStep > 0 due to PackedSegmentLib.create validation.
-            // if (supplyPerStep == 0) { revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroSupplyPerStep(); }
-
+            (uint256 initialPrice, uint256 priceIncrease, uint256 supplyPerStep, uint256 stepsInSegment) = segments[i].unpack();
 
             uint256 supplyInCurrentSegment = stepsInSegment * supplyPerStep;
+            uint256 endOfCurrentSegmentSupply = cumulativeSupply + supplyInCurrentSegment;
 
-            if (targetTotalIssuanceSupply <= cumulativeSupply + supplyInCurrentSegment) {
-                // Target supply is within this segment or at its start
+            if (targetTotalIssuanceSupply < endOfCurrentSegmentSupply) {
+                // Case 1: Target supply is strictly WITHIN the current segment.
                 pos.segmentIndex = i;
                 uint256 supplyNeededFromThisSegment = targetTotalIssuanceSupply - cumulativeSupply;
-
-                if (supplyPerStep == 0) { // Should be caught by create, but defensive
-                     // If supplyPerStep is 0, and supplyNeeded is >0, it's an impossible state unless stepsInSegment is also 0.
-                     // If supplyNeeded is 0, then stepIndex is 0.
-                    pos.stepIndexWithinSegment = 0;
-                } else {
-                    pos.stepIndexWithinSegment = supplyNeededFromThisSegment / supplyPerStep; // Floor division
-                }
-                
-                // Ensure stepIndexWithinSegment does not exceed the actual steps in the segment
-                // This can happen if targetTotalIssuanceSupply is exactly at the boundary and supplyNeededFromThisSegment / supplyPerStep
-                // results in stepsInSegment (e.g. 100 / 10 = 10, if stepsInSegment is 10, stepIndex is 9)
-                if (pos.stepIndexWithinSegment >= stepsInSegment && stepsInSegment > 0) {
-                    pos.stepIndexWithinSegment = stepsInSegment - 1; // Max step index is N-1
-                }
-
-
+                // supplyPerStep is guaranteed > 0 by PackedSegmentLib.create
+                pos.stepIndexWithinSegment = supplyNeededFromThisSegment / supplyPerStep; 
                 pos.priceAtCurrentStep = initialPrice + (pos.stepIndexWithinSegment * priceIncrease);
                 pos.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
                 return pos;
+            } else if (targetTotalIssuanceSupply == endOfCurrentSegmentSupply) {
+                // Case 2: Target supply is EXACTLY AT THE END of the current segment.
+                pos.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
+                if (i + 1 < segments.length) {
+                    // There is a next segment. Position is start of next segment.
+                    pos.segmentIndex = i + 1;
+                    pos.stepIndexWithinSegment = 0;
+                    pos.priceAtCurrentStep = segments[i + 1].initialPrice(); // Price is initial of next segment
+                } else {
+                    // This is the last segment. Position is the last step of this current (last) segment.
+                    pos.segmentIndex = i;
+                    // stepsInSegment is guaranteed > 0 by PackedSegmentLib.create
+                    pos.stepIndexWithinSegment = stepsInSegment - 1; 
+                    pos.priceAtCurrentStep = initialPrice + (pos.stepIndexWithinSegment * priceIncrease);
+                }
+                return pos;
             } else {
-                cumulativeSupply += supplyInCurrentSegment;
+                // Case 3: Target supply is BEYOND the current segment.
+                // Continue to the next segment.
+                cumulativeSupply = endOfCurrentSegmentSupply;
             }
         }
 
