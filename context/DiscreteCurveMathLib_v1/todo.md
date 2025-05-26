@@ -24,27 +24,6 @@ function _getCumulativeSupplyBeforeSegment(
 }
 ```
 
-### Edge Case: Partial Step Purchases
-
-Your current implementation only handles complete steps. Consider adding partial step support:
-
-```solidity
-if (best_n_steps_affordable < stepsAvailableToPurchaseInSeg && remainingCollateralIn > cost_for_best_n_steps) {
-    uint256 remainingBudget = remainingCollateralIn - cost_for_best_n_steps;
-    uint256 nextStepPrice = priceAtSegmentInitialStep + best_n_steps_affordable * pIncreaseSeg;
-
-    if (nextStepPrice > 0) {
-        uint256 partialIssuance = (remainingBudget * SCALING_FACTOR) / nextStepPrice;
-        partialIssuance = partialIssuance > sPerStepSeg ? sPerStepSeg : partialIssuance;
-
-        uint256 partialCost = (partialIssuance * nextStepPrice) / SCALING_FACTOR;
-
-        issuanceOut += partialIssuance;
-        collateralSpent += partialCost;
-    }
-}
-```
-
 ### Potential Overflow in Arithmetic Series
 
 ```solidity
