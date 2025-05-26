@@ -1,9 +1,3 @@
-## 🟡 **MEDIUM SEVERITY ISSUES**
-
-### 9. **Missing Input Validation**
-
-Functions don't validate that `currentTotalIssuanceSupply` is reasonable relative to the segments provided.
-
 ## 🟢 **LOW SEVERITY & SUGGESTIONS**
 
 ### 10. **Code Organization Issues**

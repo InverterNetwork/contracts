@@ -178,6 +178,39 @@ library DiscreteCurveMathLib_v1 {
     // --- Internal Helper Functions ---
 
     /**
+     * @notice Validates that the provided currentTotalIssuanceSupply is consistent with the segment configuration.
+     * @dev Reverts if segments are empty and supply > 0, or if supply exceeds total capacity of all segments.
+     * @param segments Array of PackedSegment configurations for the curve.
+     * @param currentTotalIssuanceSupply The current total issuance supply to validate.
+     */
+    function _validateSupplyAgainstSegments(
+        PackedSegment[] memory segments,
+        uint256 currentTotalIssuanceSupply
+    ) internal pure {
+        if (segments.length == 0) {
+            if (currentTotalIssuanceSupply > 0) {
+                // It's invalid to have a supply if no segments are defined to back it.
+                revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
+            }
+            // If segments.length == 0 and currentTotalIssuanceSupply == 0, it's a valid initial state.
+            return;
+        }
+
+        uint256 totalCurveCapacity = 0;
+        for (uint256 i = 0; i < segments.length; ++i) {
+            // Note: supplyPerStep and numberOfSteps are validated > 0 by PackedSegmentLib.create
+            totalCurveCapacity += segments[i].numberOfSteps() * segments[i].supplyPerStep();
+        }
+
+        if (currentTotalIssuanceSupply > totalCurveCapacity) {
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity(
+                currentTotalIssuanceSupply,
+                totalCurveCapacity
+            );
+        }
+    }
+
+    /**
      * @notice Calculates the cumulative supply of all segments before a given segment index.
      * @dev Helper function for gas optimization.
      * @param segments Array of PackedSegment configurations for the curve.
@@ -415,13 +448,20 @@ library DiscreteCurveMathLib_v1 {
         uint256 collateralAmountIn,
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 issuanceAmountOut, uint256 collateralAmountSpent) {
+        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
+
         if (collateralAmountIn == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput();
         }
-        if (segments.length == 0) {
+        // Note: segments.length == 0 case is handled by _validateSupplyAgainstSegments if currentTotalIssuanceSupply > 0.
+        // If currentTotalIssuanceSupply is 0, and segments.length is 0, _validateSupplyAgainstSegments returns.
+        // However, getCurrentPriceAndStep would then revert due to NoSegmentsConfigured if called.
+        // For safety and explicitness, keeping the direct check here if collateralAmountIn > 0.
+        if (segments.length == 0) { // This implies currentTotalIssuanceSupply must be 0 from validation above.
+             // If collateralAmountIn > 0, but no segments, cannot purchase.
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-
+        
         uint256 totalIssuanceAmountOut = 0;
         uint256 totalCollateralSpent = 0;
         uint256 remainingCollateral = collateralAmountIn;
@@ -729,17 +769,23 @@ library DiscreteCurveMathLib_v1 {
         uint256 issuanceAmountIn,
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 collateralAmountOut, uint256 issuanceAmountBurned) {
+        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
+
         if (issuanceAmountIn == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput();
         }
-        // Note: The case of issuanceAmountIn > 0 and currentTotalIssuanceSupply == 0
-        // will lead to issuanceAmountBurned == 0, which is handled below by returning (0,0).
-        // Thus, a specific check for segments.length == 0 when currentTotalIssuanceSupply == 0
-        // to return (0,0) is not strictly needed here if we always revert for NoSegmentsConfigured
-        // when an actual operation is implied (i.e., issuanceAmountIn > 0).
-        if (segments.length == 0) {
-            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
+        
+        // Note: segments.length == 0 case is handled by _validateSupplyAgainstSegments if currentTotalIssuanceSupply > 0.
+        // If currentTotalIssuanceSupply is 0 (and segments.length is 0), _validateSupplyAgainstSegments returns.
+        // Then issuanceAmountBurned will be 0 (as currentTotalIssuanceSupply is 0), and (0,0) will be returned.
+        // If segments.length == 0 but currentTotalIssuanceSupply > 0, _validateSupplyAgainstSegments would have reverted.
+        // If segments.length > 0, proceed.
+        if (segments.length == 0) { // This implies currentTotalIssuanceSupply must be 0.
+            // Selling from 0 supply on an unconfigured curve. issuanceAmountBurned will be 0.
+            // The check below `if (issuanceAmountBurned == 0)` handles returning (0,0).
+            // No explicit revert here as _validateSupplyAgainstSegments covers invalid states.
         }
+
 
         issuanceAmountBurned = issuanceAmountIn > currentTotalIssuanceSupply ? currentTotalIssuanceSupply : issuanceAmountIn;
 

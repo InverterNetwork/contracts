@@ -99,6 +99,13 @@ interface IDiscreteCurveMathLib_v1 {
      */
     error DiscreteCurveMathLib__InvalidSegmentInitialStep();
 
+    /**
+     * @notice Reverted when a provided currentTotalIssuanceSupply exceeds the total capacity of all configured segments.
+     * @param providedSupply The currentTotalIssuanceSupply that was provided.
+     * @param maxCapacity The calculated maximum capacity of the curve based on its segments.
+     */
+    error DiscreteCurveMathLib__SupplyExceedsCurveCapacity(uint256 providedSupply, uint256 maxCapacity);
+
     // --- Events ---
 
     /**

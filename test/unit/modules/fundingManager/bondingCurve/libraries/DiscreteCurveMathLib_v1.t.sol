@@ -451,6 +451,44 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Tests for calculatePurchaseReturn ---
 
+    function testRevert_CalculatePurchaseReturn_SupplyExceedsCapacity() public {
+        uint256 supplyOverCapacity = defaultCurve_totalCapacity + 1 ether;
+        bytes memory expectedRevertData = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
+            supplyOverCapacity,
+            defaultCurve_totalCapacity
+        );
+        vm.expectRevert(expectedRevertData);
+        exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            1 ether, // collateralAmountIn
+            supplyOverCapacity // currentTotalIssuanceSupply
+        );
+    }
+
+    function testRevert_CalculatePurchaseReturn_NoSegments_SupplyPositive() public {
+        PackedSegment[] memory noSegments = new PackedSegment[](0);
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured.selector);
+        exposedLib.calculatePurchaseReturnPublic(
+            noSegments,
+            1 ether, // collateralAmountIn
+            1 ether  // currentTotalIssuanceSupply > 0
+        );
+    }
+    
+    function testPass_CalculatePurchaseReturn_NoSegments_SupplyZero() public {
+        // This should pass the _validateSupplyAgainstSegments check,
+        // but then revert later in calculatePurchaseReturn when getCurrentPriceAndStep is called with no segments.
+        PackedSegment[] memory noSegments = new PackedSegment[](0);
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured.selector);
+         exposedLib.calculatePurchaseReturnPublic(
+            noSegments,
+            1 ether, // collateralAmountIn
+            0 // currentTotalIssuanceSupply
+        );
+    }
+
+
     function testRevert_CalculatePurchaseReturn_ZeroCollateralInput() public {
         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput.selector);
         exposedLib.calculatePurchaseReturnPublic(
@@ -559,6 +597,64 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     }
 
     // --- Tests for calculateSaleReturn ---
+
+    function testRevert_CalculateSaleReturn_SupplyExceedsCapacity() public {
+        uint256 supplyOverCapacity = defaultCurve_totalCapacity + 1 ether;
+        bytes memory expectedRevertData = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
+            supplyOverCapacity,
+            defaultCurve_totalCapacity
+        );
+        vm.expectRevert(expectedRevertData);
+        exposedLib.calculateSaleReturnPublic(
+            defaultSegments,
+            1 ether, // issuanceAmountIn
+            supplyOverCapacity // currentTotalIssuanceSupply
+        );
+    }
+
+    function testRevert_CalculateSaleReturn_NoSegments_SupplyPositive() public {
+        PackedSegment[] memory noSegments = new PackedSegment[](0);
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured.selector);
+        exposedLib.calculateSaleReturnPublic(
+            noSegments,
+            1 ether, // issuanceAmountIn
+            1 ether  // currentTotalIssuanceSupply > 0
+        );
+    }
+
+    function testPass_CalculateSaleReturn_NoSegments_SupplyZero_IssuanceZero() public {
+        // This specific case (selling 0 from 0 supply on an unconfigured curve)
+        // is handled by the ZeroIssuanceInput revert, which takes precedence.
+        // If ZeroIssuanceInput was not there, _validateSupplyAgainstSegments would pass (0 supply, 0 segments is fine),
+        // then segments.length == 0 check in calculateSaleReturn would be met,
+        // then issuanceAmountBurned would be 0, returning (0,0).
+        PackedSegment[] memory noSegments = new PackedSegment[](0);
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput.selector);
+        exposedLib.calculateSaleReturnPublic(
+            noSegments,
+            0, // issuanceAmountIn = 0
+            0  // currentTotalIssuanceSupply = 0
+        );
+    }
+
+    function testPass_CalculateSaleReturn_NoSegments_SupplyZero_IssuancePositive() public {
+        // Selling 1 from 0 supply on an unconfigured curve.
+        // _validateSupplyAgainstSegments passes (0 supply, 0 segments).
+        // ZeroIssuanceInput is not hit.
+        // segments.length == 0 is true.
+        // issuanceAmountBurned becomes 0 (min(1, 0)).
+        // Returns (0,0). This is correct.
+        PackedSegment[] memory noSegments = new PackedSegment[](0);
+        (uint256 collateralOut, uint256 burned) = exposedLib.calculateSaleReturnPublic(
+            noSegments,
+            1 ether, // issuanceAmountIn > 0
+            0       // currentTotalIssuanceSupply = 0
+        );
+        assertEq(collateralOut, 0, "Collateral out should be 0");
+        assertEq(burned, 0, "Issuance burned should be 0");
+    }
+
 
     function testRevert_CalculateSaleReturn_ZeroIssuanceInput() public {
         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput.selector);
