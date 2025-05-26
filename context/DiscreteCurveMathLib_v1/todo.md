@@ -1,22 +1,4 @@
-## 🟠 **HIGH SEVERITY ISSUES**
-
-### 6. **Missing Overflow Protection**
-
-```solidity
-uint256 stepCost = (sPerStep * currentPrice) / SCALING_FACTOR;
-```
-
-Several multiplication operations lack overflow protection, particularly dangerous with the large bit sizes allowed (72 bits for prices, 96 bits for supply).
-
 ## 🟡 **MEDIUM SEVERITY ISSUES**
-
-### 7. **Unreachable Code in Defensive Checks**
-
-```solidity
-if (supplyPerStep == 0) { // Should be caught by create, but defensive
-```
-
-Since `PackedSegmentLib.create` already validates this, these checks are dead code that adds gas cost without benefit.
 
 ### 8. **Inconsistent Error Handling**
 

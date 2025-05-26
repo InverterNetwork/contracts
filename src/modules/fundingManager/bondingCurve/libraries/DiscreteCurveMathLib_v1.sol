@@ -222,6 +222,7 @@ library DiscreteCurveMathLib_v1 {
         // pos members are initialized to 0 by default
 
         for (uint256 i = 0; i < segments.length; ++i) {
+            // Note: supplyPerStep within the segment is guaranteed > 0 by PackedSegmentLib.create validation.
             (uint256 initialPrice, uint256 priceIncrease, uint256 supplyPerStep, uint256 stepsInSegment) = segments[i].unpack();
 
             uint256 supplyInCurrentSegment = stepsInSegment * supplyPerStep;
@@ -345,10 +346,7 @@ library DiscreteCurveMathLib_v1 {
                 uint256 sPerStep,
                 uint256 nSteps
             ) = segments[i].unpack();
-
-            if (sPerStep == 0) { // Should be caught by create, but defensive
-                continue; // Skip segments with no supply per step
-            }
+            // Note: sPerStep is guaranteed > 0 by PackedSegmentLib.create validation.
 
             uint256 supplyRemainingInTarget = targetSupply - cumulativeSupplyProcessed;
             
@@ -564,7 +562,7 @@ library DiscreteCurveMathLib_v1 {
         uint256 priceAtSegmentInitialStep
     ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
         uint256 sPerStepSeg = segment.supplyPerStep();
-        if (sPerStepSeg == 0) return (0, 0); // Guard: No supply per step
+        // Note: sPerStepSeg is guaranteed > 0 by PackedSegmentLib.create validation.
 
         uint256 pIncreaseSeg = segment.priceIncrease();
         uint256 nStepsSeg = segment.numberOfSteps();
@@ -810,15 +808,13 @@ library DiscreteCurveMathLib_v1 {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
 
+        // Note: Individual segment's supplyPerStep > 0 and numberOfSteps > 0 
+        // are guaranteed by PackedSegmentLib.create validation.
+        // This function primarily validates array-level properties.
         for (uint256 i = 0; i < segments.length; ++i) {
-            // Basic check: supplyPerStep must be > 0.
-            // This is already enforced by PackedSegmentLib.create, so this is a redundant check
-            // if segments are always created via PackedSegmentLib.create.
-            // However, it's a good safeguard if segments could be sourced elsewhere (though unlikely with PackedSegment type).
-            if (segments[i].supplyPerStep() == 0) {
-                revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroSupplyPerStep();
-            }
-            // Could add other checks like ensuring numberOfSteps > 0, also covered by create.
+            // The check for segments[i].supplyPerStep() == 0 was removed as it's redundant.
+            // Similarly, numberOfSteps > 0 is also guaranteed by PackedSegmentLib.create.
+            // If other per-segment validations were needed here (that aren't covered by create), they could be added.
         }
     }
 }
