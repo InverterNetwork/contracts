@@ -766,14 +766,80 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // --- calculatePurchaseReturn current supply variation tests ---
 
     function test_CalculatePurchaseReturn_StartMidStep_Sloped() public {
-        // TODO: Implement test
+        uint256 currentSupply = 5 ether; // Mid-step 0 of defaultSegments[0]
+        
+        // getCurrentPriceAndStep(defaultSegments, 5 ether) will yield:
+        // priceAtPurchaseStart = 1.0 ether (price of step 0 of defaultSeg0)
+        // stepAtPurchaseStart = 0 (index of step 0 of defaultSeg0)
+        // segmentAtPurchaseStart = 0 (index of defaultSeg0)
+
+        // Collateral to buy one full step (step 0 of segment 0, price 1.0)
+        // Note: calculatePurchaseReturn's internal _calculatePurchaseForSingleSegment will attempt to buy
+        // full steps from the identified startStep (step 0 of seg0 in this case).
+        uint256 collateralIn = (defaultSeg0_supplyPerStep * defaultSeg0_initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 ether
+
+        // Expected: Buys 1 full step (step 0 of segment 0)
+        uint256 expectedIssuanceOut = defaultSeg0_supplyPerStep; // 10 ether
+        uint256 expectedCollateralSpent = collateralIn; // 10 ether
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Issuance mid-step mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Collateral mid-step mismatch");
     }
 
     function test_CalculatePurchaseReturn_StartEndOfStep_Sloped() public {
-        // TODO: Implement test
+        uint256 currentSupply = defaultSeg0_supplyPerStep; // 10 ether, end of step 0 of defaultSegments[0]
+        
+        // getCurrentPriceAndStep(defaultSegments, 10 ether) will yield:
+        // priceAtPurchaseStart = 1.1 ether (price of step 1 of defaultSeg0)
+        // stepAtPurchaseStart = 1 (index of step 1 of defaultSeg0)
+        // segmentAtPurchaseStart = 0 (index of defaultSeg0)
+
+        // Collateral to buy one full step (which will be step 1 of segment 0, price 1.1)
+        uint256 priceOfStep1Seg0 = defaultSeg0_initialPrice + defaultSeg0_priceIncrease;
+        uint256 collateralIn = (defaultSeg0_supplyPerStep * priceOfStep1Seg0) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 11 ether
+
+        // Expected: Buys 1 full step (step 1 of segment 0)
+        uint256 expectedIssuanceOut = defaultSeg0_supplyPerStep; // 10 ether (supply of step 1)
+        uint256 expectedCollateralSpent = collateralIn; // 11 ether
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Issuance end-of-step mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Collateral end-of-step mismatch");
     }
 
     function test_CalculatePurchaseReturn_StartEndOfSegment_MultiSegment() public {
-        // TODO: Implement test
+        uint256 currentSupply = defaultSeg0_capacity; // 30 ether, end of segment 0
+        
+        // getCurrentPriceAndStep(defaultSegments, 30 ether) will yield:
+        // priceAtPurchaseStart = 1.5 ether (initial price of segment 1)
+        // stepAtPurchaseStart = 0 (index of step 0 in segment 1)
+        // segmentAtPurchaseStart = 1 (index of segment 1)
+
+        // Collateral to buy one full step from segment 1 (step 0 of seg1, price 1.5)
+        uint256 collateralIn = (defaultSeg1_supplyPerStep * defaultSeg1_initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 30 ether
+
+        // Expected: Buys 1 full step (step 0 of segment 1)
+        uint256 expectedIssuanceOut = defaultSeg1_supplyPerStep; // 20 ether (supply of step 0 of seg1)
+        uint256 expectedCollateralSpent = collateralIn; // 30 ether
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Issuance end-of-segment mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Collateral end-of-segment mismatch");
     }
 }
