@@ -1,17 +1,5 @@
 ## 🟢 **LOW SEVERITY & SUGGESTIONS**
 
-### 10. **Code Organization Issues**
-
-- `PackedSegmentLib` is defined within the same file but could be separate
-- Some functions are overly complex and could be broken down
-- Inconsistent commenting style
-
-### 11. **Gas Optimization Opportunities**
-
-- Redundant unpacking operations
-- Multiple array length checks
-- Unnecessary storage of intermediate values
-
 ### 12. **Unclear Variable Naming**
 
 Variables like `pos`, `termVal`, and abbreviated names reduce readability.

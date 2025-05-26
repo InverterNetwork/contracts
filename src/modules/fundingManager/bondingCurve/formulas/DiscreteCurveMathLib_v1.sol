@@ -47,7 +47,8 @@ library DiscreteCurveMathLib_v1 {
         PackedSegment[] memory segments,
         uint256 currentTotalIssuanceSupply
     ) internal pure {
-        if (segments.length == 0) {
+        uint256 segLen = segments.length; // Cache length
+        if (segLen == 0) {
             if (currentTotalIssuanceSupply > 0) {
                 // It's invalid to have a supply if no segments are defined to back it.
                 revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
@@ -57,9 +58,10 @@ library DiscreteCurveMathLib_v1 {
         }
 
         uint256 totalCurveCapacity = 0;
-        for (uint256 i = 0; i < segments.length; ++i) {
+        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
             // Note: supplyPerStep and numberOfSteps are validated > 0 by PackedSegmentLib.create
-            totalCurveCapacity += segments[i].numberOfSteps() * segments[i].supplyPerStep();
+            (,, uint256 sPerStep, uint256 nSteps) = segments[i].unpack(); // Batch unpack
+            totalCurveCapacity += nSteps * sPerStep;
         }
 
         if (currentTotalIssuanceSupply > totalCurveCapacity) {
@@ -87,7 +89,8 @@ library DiscreteCurveMathLib_v1 {
             // This check is more for robustness if segmentIndex could be out of range from an external call,
             // but as a private helper called internally with validated segmentIndex, it's less critical.
             // if (i >= segments.length) break; // Should not happen with correct usage
-            cumulative += segments[i].numberOfSteps() * segments[i].supplyPerStep();
+            (,, uint256 sPerStep, uint256 nSteps) = segments[i].unpack(); // Batch unpack
+            cumulative += nSteps * sPerStep;
         }
         return cumulative;
     }
@@ -103,10 +106,11 @@ library DiscreteCurveMathLib_v1 {
         PackedSegment[] memory segments,
         uint256 targetTotalIssuanceSupply
     ) internal pure returns (CurvePosition memory pos) {
-        if (segments.length == 0) {
+        uint256 segLen = segments.length; // Cache length
+        if (segLen == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-        if (segments.length > MAX_SEGMENTS) {
+        if (segLen > MAX_SEGMENTS) {
             // This check is also in validateSegmentArray, but good for internal consistency
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
@@ -114,7 +118,7 @@ library DiscreteCurveMathLib_v1 {
         uint256 cumulativeSupply = 0;
         // pos members are initialized to 0 by default
 
-        for (uint256 i = 0; i < segments.length; ++i) {
+        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
             // Note: supplyPerStep within the segment is guaranteed > 0 by PackedSegmentLib.create validation.
             (uint256 initialPrice, uint256 priceIncrease, uint256 supplyPerStep, uint256 stepsInSegment) = segments[i].unpack();
 
@@ -133,11 +137,13 @@ library DiscreteCurveMathLib_v1 {
             } else if (targetTotalIssuanceSupply == endOfCurrentSegmentSupply) {
                 // Case 2: Target supply is EXACTLY AT THE END of the current segment.
                 pos.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
-                if (i + 1 < segments.length) {
+                if (i + 1 < segLen) { // Use cached length
                     // There is a next segment. Position is start of next segment.
                     pos.segmentIndex = i + 1;
                     pos.stepIndexWithinSegment = 0;
-                    pos.priceAtCurrentStep = segments[i + 1].initialPrice(); // Price is initial of next segment
+                    // Unpack segments[i+1] to get its initialPrice
+                    (uint256 nextInitialPrice,,,) = segments[i + 1].unpack();
+                    pos.priceAtCurrentStep = nextInitialPrice; // Price is initial of next segment
                 } else {
                     // This is the last segment. Position is the last step of this current (last) segment.
                     pos.segmentIndex = i;
@@ -154,11 +160,12 @@ library DiscreteCurveMathLib_v1 {
         }
 
         // Target supply is beyond all configured segments
-        pos.segmentIndex = segments.length - 1; // Indicates the last segment
+        pos.segmentIndex = segLen - 1; // Indicates the last segment, use cached length
         // pos.stepIndexWithinSegment will be the last step of the last segment
-        PackedSegment lastSegment = segments[segments.length - 1];
-        pos.stepIndexWithinSegment = lastSegment.numberOfSteps() > 0 ? lastSegment.numberOfSteps() - 1 : 0;
-        pos.priceAtCurrentStep = lastSegment.initialPrice() + (pos.stepIndexWithinSegment * lastSegment.priceIncrease());
+        // Unpack the last segment once
+        (uint256 lastInitialPrice, uint256 lastPriceIncrease,, uint256 lastNumberOfSteps) = segments[segLen - 1].unpack();
+        pos.stepIndexWithinSegment = lastNumberOfSteps > 0 ? lastNumberOfSteps - 1 : 0;
+        pos.priceAtCurrentStep = lastInitialPrice + (pos.stepIndexWithinSegment * lastPriceIncrease);
         pos.supplyCoveredUpToThisPosition = cumulativeSupply; // Total supply covered by all segments
         // The caller should check if pos.supplyCoveredUpToThisPosition < targetTotalIssuanceSupply
         // to understand if the target was fully met.
@@ -218,7 +225,8 @@ library DiscreteCurveMathLib_v1 {
         if (targetSupply == 0) {
             return 0;
         }
-        if (segments.length == 0) {
+        uint256 segLen = segments.length; // Cache length
+        if (segLen == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
         // No MAX_SEGMENTS check here as _findPositionForSupply would have caught it if it was an issue for positioning,
@@ -227,7 +235,7 @@ library DiscreteCurveMathLib_v1 {
         uint256 cumulativeSupplyProcessed = 0;
         // totalReserve is initialized to 0 by default
 
-        for (uint256 i = 0; i < segments.length; ++i) {
+        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
             if (cumulativeSupplyProcessed >= targetSupply) {
                 break; // All target supply has been accounted for.
             }
@@ -317,7 +325,8 @@ library DiscreteCurveMathLib_v1 {
         // If currentTotalIssuanceSupply is 0, and segments.length is 0, _validateSupplyAgainstSegments returns.
         // However, getCurrentPriceAndStep would then revert due to NoSegmentsConfigured if called.
         // For safety and explicitness, keeping the direct check here if collateralAmountIn > 0.
-        if (segments.length == 0) { // This implies currentTotalIssuanceSupply must be 0 from validation above.
+        uint256 segLen = segments.length; // Cache length
+        if (segLen == 0) { // This implies currentTotalIssuanceSupply must be 0 from validation above.
              // If collateralAmountIn > 0, but no segments, cannot purchase.
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
@@ -332,7 +341,7 @@ library DiscreteCurveMathLib_v1 {
             uint256 segmentAtPurchaseStart
         ) = getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
 
-        for (uint256 i = segmentAtPurchaseStart; i < segments.length; ++i) {
+        for (uint256 i = segmentAtPurchaseStart; i < segLen; ++i) { // Use cached length
             if (remainingCollateral == 0) {
                 break; 
             }
@@ -340,16 +349,19 @@ library DiscreteCurveMathLib_v1 {
             uint256 currentSegmentStartStepForHelper;
             uint256 priceAtCurrentSegmentStartStepForHelper;
             PackedSegment currentSegment = segments[i];
+            // Unpack currentSegment once here
+            (uint256 csInitialPrice,,, uint256 csNumberOfSteps) = currentSegment.unpack();
+
 
             if (i == segmentAtPurchaseStart) {
                 currentSegmentStartStepForHelper = stepAtPurchaseStart;
                 priceAtCurrentSegmentStartStepForHelper = priceAtPurchaseStart;
             } else {
                 currentSegmentStartStepForHelper = 0;
-                priceAtCurrentSegmentStartStepForHelper = currentSegment.initialPrice();
+                priceAtCurrentSegmentStartStepForHelper = csInitialPrice; // Use unpacked value
             }
             
-            if (currentSegmentStartStepForHelper >= currentSegment.numberOfSteps()) {
+            if (currentSegmentStartStepForHelper >= csNumberOfSteps) { // Use unpacked value
                 continue; 
             }
 
@@ -412,12 +424,10 @@ library DiscreteCurveMathLib_v1 {
         uint256 startStep, // This is the step index *within the current segment* where the purchase attempt begins
         uint256 startPrice // This is the price at `startStep`
     ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
-        uint256 sPerStep = segment.supplyPerStep();
-        uint256 priceIncrease = segment.priceIncrease();
+        (, uint256 priceIncrease, uint256 sPerStep, uint256 numberOfStepsInSegment) = segment.unpack();
         
         // Calculate the maximum number of steps that can possibly be purchased in this segment 
         // from the given startStep.
-        uint256 numberOfStepsInSegment = segment.numberOfSteps();
         if (startStep >= numberOfStepsInSegment) { // Should not happen if called correctly
             return (0, 0);
         }
@@ -461,11 +471,10 @@ library DiscreteCurveMathLib_v1 {
         uint256 segmentInitialStep,
         uint256 priceAtSegmentInitialStep
     ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
-        uint256 sPerStepSeg = segment.supplyPerStep();
-        // Note: sPerStepSeg is guaranteed > 0 by PackedSegmentLib.create validation.
+        // Unpack segment details once at the beginning
+        (, uint256 pIncreaseSeg, uint256 sPerStepSeg, uint256 nStepsSeg) = segment.unpack();
 
-        uint256 pIncreaseSeg = segment.priceIncrease();
-        uint256 nStepsSeg = segment.numberOfSteps();
+        // Note: sPerStepSeg is guaranteed > 0 by PackedSegmentLib.create validation.
 
         // Guard: segmentInitialStep is out of bounds for the segment
         if (segmentInitialStep >= nStepsSeg) { 
@@ -474,10 +483,6 @@ library DiscreteCurveMathLib_v1 {
 
         uint256 stepsAvailableToPurchaseInSeg = nStepsSeg - segmentInitialStep;
         // issuanceOut and collateralSpent are implicitly initialized to 0 as return variables.
-
-        uint256 remainingBudgetForPartial;
-        uint256 priceForPartialStep;
-        uint256 maxIssuancePossibleInSegmentAfterFullSteps; // Max supply that can be bought as partial after full steps
 
         if (pIncreaseSeg == 0) { // Flat Segment Logic
             if (priceAtSegmentInitialStep == 0) { // Entirely free mint part of the segment
@@ -493,18 +498,19 @@ library DiscreteCurveMathLib_v1 {
                     stepsAvailableToPurchaseInSeg
                 );
 
-                // Determine parameters for partial purchase
-                remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
-                priceForPartialStep = priceAtSegmentInitialStep;
-                maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
-                uint256 numFullStepsBought = issuanceOut / sPerStepSeg; // Recalculate based on actual issuance
+                // Determine parameters for partial purchase (declare just-in-time)
+                uint256 remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
+                // For flat segments, priceForPartialStep is the same as priceAtSegmentInitialStep
+                // uint256 priceForPartialStep = priceAtSegmentInitialStep; // Not strictly needed as var, can pass directly
+                uint256 maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
+                uint256 numFullStepsBought = issuanceOut / sPerStepSeg; 
 
                 // Check if a partial purchase is viable and should be attempted
                 if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetForPartial > 0 && maxIssuancePossibleInSegmentAfterFullSteps > 0) {
                     (uint256 pIssuance, uint256 pCost) = _calculatePartialPurchaseAmount(
                         remainingBudgetForPartial,
-                        priceForPartialStep, // This is priceAtSegmentInitialStep for flat segments
-                        sPerStepSeg, // Max for one partial step slot
+                        priceAtSegmentInitialStep, // Pass directly
+                        sPerStepSeg, 
                         maxIssuancePossibleInSegmentAfterFullSteps
                     );
                     issuanceOut += pIssuance;
@@ -514,21 +520,21 @@ library DiscreteCurveMathLib_v1 {
         } else { // Sloped Segment Logic
             // Calculate full steps using linear search
             (uint256 fullStepIssuance, uint256 fullStepCollateralSpent) = _linearSearchSloped(
-                segment,
-                remainingCollateralIn, // Pass the full budget for this segment
-                segmentInitialStep,    // Starting step within this segment
-                priceAtSegmentInitialStep // Price at that starting step
+                segment, // segment is already unpacked in _linearSearchSloped
+                remainingCollateralIn, 
+                segmentInitialStep,    
+                priceAtSegmentInitialStep 
             );
 
             issuanceOut = fullStepIssuance;
             collateralSpent = fullStepCollateralSpent;
             
-            uint256 numFullStepsBought = fullStepIssuance / sPerStepSeg; // How many full steps were actually bought
+            uint256 numFullStepsBought = fullStepIssuance / sPerStepSeg; 
             
-            // Determine parameters for partial purchase
-            remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
-            priceForPartialStep = priceAtSegmentInitialStep + (numFullStepsBought * pIncreaseSeg);
-            maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
+            // Determine parameters for partial purchase (declare just-in-time)
+            uint256 remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
+            uint256 priceForPartialStep = priceAtSegmentInitialStep + (numFullStepsBought * pIncreaseSeg);
+            uint256 maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
 
             // Check if a partial purchase is viable and should be attempted
             // numFullStepsBought is relative to segmentInitialStep. stepsAvailableToPurchaseInSeg is total steps from segmentInitialStep.
@@ -640,7 +646,8 @@ library DiscreteCurveMathLib_v1 {
         // Then issuanceAmountBurned will be 0 (as currentTotalIssuanceSupply is 0), and (0,0) will be returned.
         // If segments.length == 0 but currentTotalIssuanceSupply > 0, _validateSupplyAgainstSegments would have reverted.
         // If segments.length > 0, proceed.
-        if (segments.length == 0) { // This implies currentTotalIssuanceSupply must be 0.
+        uint256 segLen = segments.length; // Cache length
+        if (segLen == 0) { // This implies currentTotalIssuanceSupply must be 0.
             // Selling from 0 supply on an unconfigured curve. issuanceAmountBurned will be 0.
             // The check below `if (issuanceAmountBurned == 0)` handles returning (0,0).
             // No explicit revert here as _validateSupplyAgainstSegments covers invalid states.
@@ -702,17 +709,18 @@ library DiscreteCurveMathLib_v1 {
      * @param segments Array of PackedSegment configurations to validate.
      */
     function validateSegmentArray(PackedSegment[] memory segments) internal pure {
-        if (segments.length == 0) {
+        uint256 segLen = segments.length; // Cache length
+        if (segLen == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-        if (segments.length > MAX_SEGMENTS) {
+        if (segLen > MAX_SEGMENTS) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
 
         // Note: Individual segment's supplyPerStep > 0 and numberOfSteps > 0 
         // are guaranteed by PackedSegmentLib.create validation.
         // This function primarily validates array-level properties.
-        for (uint256 i = 0; i < segments.length; ++i) {
+        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
             // The check for segments[i].supplyPerStep() == 0 was removed as it's redundant.
             // Similarly, numberOfSteps > 0 is also guaranteed by PackedSegmentLib.create.
             // If other per-segment validations were needed here (that aren't covered by create), they could be added.
