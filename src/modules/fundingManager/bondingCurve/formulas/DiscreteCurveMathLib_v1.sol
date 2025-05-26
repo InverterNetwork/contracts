@@ -47,8 +47,8 @@ library DiscreteCurveMathLib_v1 {
         PackedSegment[] memory segments,
         uint256 currentTotalIssuanceSupply
     ) internal pure {
-        uint256 segLen = segments.length; // Cache length
-        if (segLen == 0) {
+        uint256 numSegments = segments.length; // Cache length
+        if (numSegments == 0) {
             if (currentTotalIssuanceSupply > 0) {
                 // It's invalid to have a supply if no segments are defined to back it.
                 revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
@@ -58,10 +58,10 @@ library DiscreteCurveMathLib_v1 {
         }
 
         uint256 totalCurveCapacity = 0;
-        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
+        for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Use cached length
             // Note: supplyPerStep and numberOfSteps are validated > 0 by PackedSegmentLib.create
-            (,, uint256 sPerStep, uint256 nSteps) = segments[i].unpack(); // Batch unpack
-            totalCurveCapacity += nSteps * sPerStep;
+            (,, uint256 supplyPerStep, uint256 numberOfStepsInSegment) = segments[segmentIndex].unpack(); // Batch unpack
+            totalCurveCapacity += numberOfStepsInSegment * supplyPerStep;
         }
 
         if (currentTotalIssuanceSupply > totalCurveCapacity) {
@@ -84,13 +84,13 @@ library DiscreteCurveMathLib_v1 {
         uint256 segmentIndex
     ) private pure returns (uint256 cumulative) {
         // cumulative is initialized to 0 by default
-        for (uint256 i = 0; i < segmentIndex; ++i) {
-            // Ensure i is within bounds, though loop condition should handle this.
+        for (uint256 segmentIndexLoop = 0; segmentIndexLoop < segmentIndex; ++segmentIndexLoop) {
+            // Ensure segmentIndexLoop is within bounds, though loop condition should handle this.
             // This check is more for robustness if segmentIndex could be out of range from an external call,
             // but as a private helper called internally with validated segmentIndex, it's less critical.
-            // if (i >= segments.length) break; // Should not happen with correct usage
-            (,, uint256 sPerStep, uint256 nSteps) = segments[i].unpack(); // Batch unpack
-            cumulative += nSteps * sPerStep;
+            // if (segmentIndexLoop >= segments.length) break; // Should not happen with correct usage
+            (,, uint256 supplyPerStep, uint256 numberOfStepsInSegment) = segments[segmentIndexLoop].unpack(); // Batch unpack
+            cumulative += numberOfStepsInSegment * supplyPerStep;
         }
         return cumulative;
     }
@@ -100,58 +100,63 @@ library DiscreteCurveMathLib_v1 {
      * @dev Iterates linearly through segments.
      * @param segments Array of PackedSegment configurations for the curve.
      * @param targetTotalIssuanceSupply The total supply for which to find the position.
-     * @return pos A CurvePosition struct detailing the location on the curve.
+     * @return targetPosition A CurvePosition struct detailing the location on the curve.
      */
     function _findPositionForSupply(
         PackedSegment[] memory segments,
         uint256 targetTotalIssuanceSupply
-    ) internal pure returns (CurvePosition memory pos) {
-        uint256 segLen = segments.length; // Cache length
-        if (segLen == 0) {
+    ) internal pure returns (CurvePosition memory targetPosition) {
+        uint256 numSegments = segments.length; // Cache length
+        if (numSegments == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-        if (segLen > MAX_SEGMENTS) {
+        if (numSegments > MAX_SEGMENTS) {
             // This check is also in validateSegmentArray, but good for internal consistency
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
 
         uint256 cumulativeSupply = 0;
-        // pos members are initialized to 0 by default
+        // targetPosition members are initialized to 0 by default
 
-        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
+        for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Use cached length
             // Note: supplyPerStep within the segment is guaranteed > 0 by PackedSegmentLib.create validation.
-            (uint256 initialPrice, uint256 priceIncrease, uint256 supplyPerStep, uint256 stepsInSegment) = segments[i].unpack();
+            (
+                uint256 initialPrice,
+                uint256 priceIncreasePerStep,
+                uint256 supplyPerStep,
+                uint256 totalStepsInSegment
+            ) = segments[segmentIndex].unpack();
 
-            uint256 supplyInCurrentSegment = stepsInSegment * supplyPerStep;
+            uint256 supplyInCurrentSegment = totalStepsInSegment * supplyPerStep;
             uint256 endOfCurrentSegmentSupply = cumulativeSupply + supplyInCurrentSegment;
 
             if (targetTotalIssuanceSupply < endOfCurrentSegmentSupply) {
                 // Case 1: Target supply is strictly WITHIN the current segment.
-                pos.segmentIndex = i;
+                targetPosition.segmentIndex = segmentIndex;
                 uint256 supplyNeededFromThisSegment = targetTotalIssuanceSupply - cumulativeSupply;
                 // supplyPerStep is guaranteed > 0 by PackedSegmentLib.create
-                pos.stepIndexWithinSegment = supplyNeededFromThisSegment / supplyPerStep; 
-                pos.priceAtCurrentStep = initialPrice + (pos.stepIndexWithinSegment * priceIncrease);
-                pos.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
-                return pos;
+                targetPosition.stepIndexWithinSegment = supplyNeededFromThisSegment / supplyPerStep; 
+                targetPosition.priceAtCurrentStep = initialPrice + (targetPosition.stepIndexWithinSegment * priceIncreasePerStep);
+                targetPosition.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
+                return targetPosition;
             } else if (targetTotalIssuanceSupply == endOfCurrentSegmentSupply) {
                 // Case 2: Target supply is EXACTLY AT THE END of the current segment.
-                pos.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
-                if (i + 1 < segLen) { // Use cached length
+                targetPosition.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
+                if (segmentIndex + 1 < numSegments) { // Use cached length
                     // There is a next segment. Position is start of next segment.
-                    pos.segmentIndex = i + 1;
-                    pos.stepIndexWithinSegment = 0;
-                    // Unpack segments[i+1] to get its initialPrice
-                    (uint256 nextInitialPrice,,,) = segments[i + 1].unpack();
-                    pos.priceAtCurrentStep = nextInitialPrice; // Price is initial of next segment
+                    targetPosition.segmentIndex = segmentIndex + 1;
+                    targetPosition.stepIndexWithinSegment = 0;
+                    // Unpack segments[segmentIndex+1] to get its initialPrice
+                    (uint256 nextInitialPrice,,,) = segments[segmentIndex + 1].unpack();
+                    targetPosition.priceAtCurrentStep = nextInitialPrice; // Price is initial of next segment
                 } else {
                     // This is the last segment. Position is the last step of this current (last) segment.
-                    pos.segmentIndex = i;
-                    // stepsInSegment is guaranteed > 0 by PackedSegmentLib.create
-                    pos.stepIndexWithinSegment = stepsInSegment - 1; 
-                    pos.priceAtCurrentStep = initialPrice + (pos.stepIndexWithinSegment * priceIncrease);
+                    targetPosition.segmentIndex = segmentIndex;
+                    // totalStepsInSegment is guaranteed > 0 by PackedSegmentLib.create
+                    targetPosition.stepIndexWithinSegment = totalStepsInSegment - 1; 
+                    targetPosition.priceAtCurrentStep = initialPrice + (targetPosition.stepIndexWithinSegment * priceIncreasePerStep);
                 }
-                return pos;
+                return targetPosition;
             } else {
                 // Case 3: Target supply is BEYOND the current segment.
                 // Continue to the next segment.
@@ -160,16 +165,20 @@ library DiscreteCurveMathLib_v1 {
         }
 
         // Target supply is beyond all configured segments
-        pos.segmentIndex = segLen - 1; // Indicates the last segment, use cached length
-        // pos.stepIndexWithinSegment will be the last step of the last segment
+        targetPosition.segmentIndex = numSegments - 1; // Indicates the last segment, use cached length
+        // targetPosition.stepIndexWithinSegment will be the last step of the last segment
         // Unpack the last segment once
-        (uint256 lastInitialPrice, uint256 lastPriceIncrease,, uint256 lastNumberOfSteps) = segments[segLen - 1].unpack();
-        pos.stepIndexWithinSegment = lastNumberOfSteps > 0 ? lastNumberOfSteps - 1 : 0;
-        pos.priceAtCurrentStep = lastInitialPrice + (pos.stepIndexWithinSegment * lastPriceIncrease);
-        pos.supplyCoveredUpToThisPosition = cumulativeSupply; // Total supply covered by all segments
-        // The caller should check if pos.supplyCoveredUpToThisPosition < targetTotalIssuanceSupply
+        (
+            uint256 lastSegmentInitialPrice, 
+            uint256 lastSegmentPriceIncreasePerStep,, 
+            uint256 lastSegmentTotalSteps
+        ) = segments[numSegments - 1].unpack();
+        targetPosition.stepIndexWithinSegment = lastSegmentTotalSteps > 0 ? lastSegmentTotalSteps - 1 : 0;
+        targetPosition.priceAtCurrentStep = lastSegmentInitialPrice + (targetPosition.stepIndexWithinSegment * lastSegmentPriceIncreasePerStep);
+        targetPosition.supplyCoveredUpToThisPosition = cumulativeSupply; // Total supply covered by all segments
+        // The caller should check if targetPosition.supplyCoveredUpToThisPosition < targetTotalIssuanceSupply
         // to understand if the target was fully met.
-        return pos;
+        return targetPosition;
     }
 
     // Functions from sections IV-VIII will be added in subsequent steps.
@@ -187,18 +196,18 @@ library DiscreteCurveMathLib_v1 {
         PackedSegment[] memory segments,
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 price, uint256 stepIndex, uint256 segmentIndex) {
-        CurvePosition memory pos = _findPositionForSupply(segments, currentTotalIssuanceSupply);
+        CurvePosition memory targetPosition = _findPositionForSupply(segments, currentTotalIssuanceSupply);
 
         // Validate that currentTotalIssuanceSupply is within curve bounds.
-        // _findPositionForSupply sets pos.supplyCoveredUpToThisPosition to the maximum supply
+        // _findPositionForSupply sets targetPosition.supplyCoveredUpToThisPosition to the maximum supply
         // of the curve if targetTotalIssuanceSupply is beyond the curve's capacity.
-        // If currentTotalIssuanceSupply is 0, pos.supplyCoveredUpToThisPosition will also be 0.
+        // If currentTotalIssuanceSupply is 0, targetPosition.supplyCoveredUpToThisPosition will also be 0.
         // Thus, (0 > 0) is false, no revert.
-        // If currentTotalIssuanceSupply > 0 and within capacity, pos.supplyCoveredUpToThisPosition == currentTotalIssuanceSupply.
+        // If currentTotalIssuanceSupply > 0 and within capacity, targetPosition.supplyCoveredUpToThisPosition == currentTotalIssuanceSupply.
         // Thus, (X > X) is false, no revert.
-        // If currentTotalIssuanceSupply > 0 and beyond capacity, pos.supplyCoveredUpToThisPosition is max capacity.
+        // If currentTotalIssuanceSupply > 0 and beyond capacity, targetPosition.supplyCoveredUpToThisPosition is max capacity.
         // Thus, (currentTotalIssuanceSupply > max_capacity) is true, causing a revert.
-        if (currentTotalIssuanceSupply > pos.supplyCoveredUpToThisPosition) {
+        if (currentTotalIssuanceSupply > targetPosition.supplyCoveredUpToThisPosition) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity();
         }
         
@@ -206,7 +215,7 @@ library DiscreteCurveMathLib_v1 {
         // segment boundaries by pointing to the start of the next segment (or the last step of the
         // last segment if at max capacity), and returns the price/step for that position,
         // we can directly use its output. The complex adjustment logic previously here is no longer needed.
-        return (pos.priceAtCurrentStep, pos.stepIndexWithinSegment, pos.segmentIndex);
+        return (targetPosition.priceAtCurrentStep, targetPosition.stepIndexWithinSegment, targetPosition.segmentIndex);
     }
 
     // --- Core Calculation Functions ---
@@ -225,8 +234,8 @@ library DiscreteCurveMathLib_v1 {
         if (targetSupply == 0) {
             return 0;
         }
-        uint256 segLen = segments.length; // Cache length
-        if (segLen == 0) {
+        uint256 numSegments = segments.length; // Cache length
+        if (numSegments == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
         // No MAX_SEGMENTS check here as _findPositionForSupply would have caught it if it was an issue for positioning,
@@ -235,60 +244,58 @@ library DiscreteCurveMathLib_v1 {
         uint256 cumulativeSupplyProcessed = 0;
         // totalReserve is initialized to 0 by default
 
-        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
+        for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Use cached length
             if (cumulativeSupplyProcessed >= targetSupply) {
                 break; // All target supply has been accounted for.
             }
 
             // Unpack segment data - using batch unpack as per instruction suggestion for this case
             (
-                uint256 pInitial,
-                uint256 pIncrease,
-                uint256 sPerStep,
-                uint256 nSteps
-            ) = segments[i].unpack();
-            // Note: sPerStep is guaranteed > 0 by PackedSegmentLib.create validation.
+                uint256 initialPrice,
+                uint256 priceIncreasePerStep,
+                uint256 supplyPerStep,
+                uint256 totalStepsInSegment
+            ) = segments[segmentIndex].unpack();
+            // Note: supplyPerStep is guaranteed > 0 by PackedSegmentLib.create validation.
 
             uint256 supplyRemainingInTarget = targetSupply - cumulativeSupplyProcessed;
             
             // Calculate how many steps from *this* segment are needed to cover supplyRemainingInTarget
             // Ceiling division: (numerator + denominator - 1) / denominator
-            uint256 nStepsToProcessThisSeg = (supplyRemainingInTarget + sPerStep - 1) / sPerStep;
+            uint256 stepsToProcessInSegment = (supplyRemainingInTarget + supplyPerStep - 1) / supplyPerStep;
 
             // Cap at the segment's actual available steps
-            if (nStepsToProcessThisSeg > nSteps) {
-                nStepsToProcessThisSeg = nSteps;
+            if (stepsToProcessInSegment > totalStepsInSegment) {
+                stepsToProcessInSegment = totalStepsInSegment;
             }
 
             uint256 collateralForPortion;
-            if (pIncrease == 0) {
+            if (priceIncreasePerStep == 0) {
                 // Flat segment
-                collateralForPortion = (nStepsToProcessThisSeg * sPerStep * pInitial) / SCALING_FACTOR;
+                collateralForPortion = (stepsToProcessInSegment * supplyPerStep * initialPrice) / SCALING_FACTOR;
             } else {
                 // Sloped segment: sum of an arithmetic series
                 // S_n = n/2 * (2a + (n-1)d)
-                // Here, n = nStepsToProcessThisSeg, a = pInitial, d = pIncrease
-                // Each term (price) is multiplied by sPerStep and divided by SCALING_FACTOR.
-                // Collateral = sPerStep/SCALING_FACTOR * Sum_{k=0}^{n-1} (pInitial + k*pIncrease)
-                // Collateral = sPerStep/SCALING_FACTOR * (n*pInitial + pIncrease * n*(n-1)/2)
-                // Collateral = (sPerStep * n * (2*pInitial + (n-1)*pIncrease)) / (2 * SCALING_FACTOR)
-                // where n is nStepsToProcessThisSeg.
-                // termVal = (2 * pInitial) + (nStepsToProcessThisSeg > 0 ? (nStepsToProcessThisSeg - 1) * pIncrease : 0)
-                // collateralForPortion = (sPerStep * nStepsToProcessThisSeg * termVal) / (2 * SCALING_FACTOR)
-
-                if (nStepsToProcessThisSeg == 0) {
+                // Here, n = stepsToProcessInSegment, a = initialPrice, d = priceIncreasePerStep
+                // Each term (price) is multiplied by supplyPerStep and divided by SCALING_FACTOR.
+                // Collateral = supplyPerStep/SCALING_FACTOR * Sum_{k=0}^{n-1} (initialPrice + k*priceIncreasePerStep)
+                // Collateral = supplyPerStep/SCALING_FACTOR * (n*initialPrice + priceIncreasePerStep * n*(n-1)/2)
+                // Collateral = (supplyPerStep * n * (2*initialPrice + (n-1)*priceIncreasePerStep)) / (2 * SCALING_FACTOR)
+                // where n is stepsToProcessInSegment.
+                
+                if (stepsToProcessInSegment == 0) {
                     collateralForPortion = 0;
                 } else {
-                    uint256 firstTermPrice = pInitial;
-                    uint256 lastTermPrice = pInitial + (nStepsToProcessThisSeg - 1) * pIncrease;
+                    uint256 firstStepPrice = initialPrice;
+                    uint256 lastStepPrice = initialPrice + (stepsToProcessInSegment - 1) * priceIncreasePerStep;
                     // Sum of arithmetic series = num_terms * (first_term + last_term) / 2
-                    uint256 sumOfPrices = nStepsToProcessThisSeg * (firstTermPrice + lastTermPrice) / 2;
-                    collateralForPortion = (sPerStep * sumOfPrices) / SCALING_FACTOR;
+                    uint256 totalPriceForAllStepsInPortion = stepsToProcessInSegment * (firstStepPrice + lastStepPrice) / 2;
+                    collateralForPortion = (supplyPerStep * totalPriceForAllStepsInPortion) / SCALING_FACTOR;
                 }
             }
 
             totalReserve += collateralForPortion;
-            cumulativeSupplyProcessed += nStepsToProcessThisSeg * sPerStep;
+            cumulativeSupplyProcessed += stepsToProcessInSegment * supplyPerStep;
         }
         
         // If targetSupply was greater than the total capacity of the curve,
@@ -306,318 +313,275 @@ library DiscreteCurveMathLib_v1 {
      * @dev Iterates through segments starting from the current supply's position,
      *      calculating affordable steps in each segment. Uses binary search for sloped segments.
      * @param segments Array of PackedSegment configurations for the curve.
-     * @param collateralAmountIn The amount of collateral being provided for purchase.
+     * @param collateralToSpendProvided The amount of collateral being provided for purchase.
      * @param currentTotalIssuanceSupply The current total supply before this purchase.
-     * @return issuanceAmountOut The total amount of issuance tokens minted.
-     * @return collateralAmountSpent The actual amount of collateral spent.
+     * @return tokensToMint The total amount of issuance tokens minted.
+     * @return collateralSpentByPurchaser The actual amount of collateral spent.
      */
     function calculatePurchaseReturn(
         PackedSegment[] memory segments,
-        uint256 collateralAmountIn,
+        uint256 collateralToSpendProvided, // Renamed from collateralAmountIn
         uint256 currentTotalIssuanceSupply
-    ) internal pure returns (uint256 issuanceAmountOut, uint256 collateralAmountSpent) {
+    ) internal pure returns (uint256 tokensToMint, uint256 collateralSpentByPurchaser) { // Renamed return values
         _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
 
-        if (collateralAmountIn == 0) {
+        if (collateralToSpendProvided == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput();
         }
-        // Note: segments.length == 0 case is handled by _validateSupplyAgainstSegments if currentTotalIssuanceSupply > 0.
-        // If currentTotalIssuanceSupply is 0, and segments.length is 0, _validateSupplyAgainstSegments returns.
-        // However, getCurrentPriceAndStep would then revert due to NoSegmentsConfigured if called.
-        // For safety and explicitness, keeping the direct check here if collateralAmountIn > 0.
-        uint256 segLen = segments.length; // Cache length
-        if (segLen == 0) { // This implies currentTotalIssuanceSupply must be 0 from validation above.
-             // If collateralAmountIn > 0, but no segments, cannot purchase.
+        
+        uint256 numSegments = segments.length; // Renamed from segLen
+        if (numSegments == 0) { 
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
         
-        uint256 totalIssuanceAmountOut = 0;
-        uint256 totalCollateralSpent = 0;
-        uint256 remainingCollateral = collateralAmountIn;
+        // tokensToMint and collateralSpentByPurchaser are initialized to 0 by default as return variables
+        uint256 budgetRemaining = collateralToSpendProvided; // Renamed from remainingCollateral
 
         (
             uint256 priceAtPurchaseStart,
             uint256 stepAtPurchaseStart,
-            uint256 segmentAtPurchaseStart
+            uint256 segmentIndexAtPurchaseStart // Renamed from segmentAtPurchaseStart
         ) = getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
 
-        for (uint256 i = segmentAtPurchaseStart; i < segLen; ++i) { // Use cached length
-            if (remainingCollateral == 0) {
+        for (uint256 currentSegmentIndex = segmentIndexAtPurchaseStart; currentSegmentIndex < numSegments; ++currentSegmentIndex) { // Renamed i to currentSegmentIndex
+            if (budgetRemaining == 0) {
                 break; 
             }
 
-            uint256 currentSegmentStartStepForHelper;
-            uint256 priceAtCurrentSegmentStartStepForHelper;
-            PackedSegment currentSegment = segments[i];
-            // Unpack currentSegment once here
-            (uint256 csInitialPrice,,, uint256 csNumberOfSteps) = currentSegment.unpack();
+            uint256 startStepInCurrentSegment; // Renamed from currentSegmentStartStepForHelper
+            uint256 priceAtStartStepInCurrentSegment; // Renamed from priceAtCurrentSegmentStartStepForHelper
+            PackedSegment currentSegment = segments[currentSegmentIndex];
+            
+            (uint256 currentSegmentInitialPrice,,, uint256 currentSegmentTotalSteps) = currentSegment.unpack(); // Renamed cs variables
 
 
-            if (i == segmentAtPurchaseStart) {
-                currentSegmentStartStepForHelper = stepAtPurchaseStart;
-                priceAtCurrentSegmentStartStepForHelper = priceAtPurchaseStart;
+            if (currentSegmentIndex == segmentIndexAtPurchaseStart) {
+                startStepInCurrentSegment = stepAtPurchaseStart;
+                priceAtStartStepInCurrentSegment = priceAtPurchaseStart;
             } else {
-                currentSegmentStartStepForHelper = 0;
-                priceAtCurrentSegmentStartStepForHelper = csInitialPrice; // Use unpacked value
+                startStepInCurrentSegment = 0;
+                priceAtStartStepInCurrentSegment = currentSegmentInitialPrice; 
             }
             
-            if (currentSegmentStartStepForHelper >= csNumberOfSteps) { // Use unpacked value
+            if (startStepInCurrentSegment >= currentSegmentTotalSteps) { 
                 continue; 
             }
 
-            (uint256 issuanceBoughtThisSegment, uint256 collateralSpentThisSegment) =
+            (uint256 tokensMintedInSegment, uint256 collateralSpentInSegment) = // Renamed issuanceBoughtThisSegment, collateralSpentThisSegment
                 _calculatePurchaseForSingleSegment(
                     currentSegment,
-                    remainingCollateral,
-                    currentSegmentStartStepForHelper,
-                    priceAtCurrentSegmentStartStepForHelper
+                    budgetRemaining,
+                    startStepInCurrentSegment,
+                    priceAtStartStepInCurrentSegment
                 );
 
-            totalIssuanceAmountOut += issuanceBoughtThisSegment;
-            totalCollateralSpent += collateralSpentThisSegment;
-            remainingCollateral -= collateralSpentThisSegment;
+            tokensToMint += tokensMintedInSegment;
+            collateralSpentByPurchaser += collateralSpentInSegment;
+            budgetRemaining -= collateralSpentInSegment;
         }
-        return (totalIssuanceAmountOut, totalCollateralSpent);
+        return (tokensToMint, collateralSpentByPurchaser);
     }
 
     /**
      * @notice Helper function to calculate the issuance and collateral for full steps in a non-free flat segment.
-     * @param _budget The collateral budget available.
-     * @param _priceAtSegmentInitialStep The price for each step in this flat segment.
-     * @param _sPerStepSeg The supply per step in this segment.
-     * @param _stepsAvailableToPurchaseInSeg The number of steps available for purchase in this segment.
-     * @return issuanceOut The total issuance from full steps.
+     * @param availableBudget The collateral budget available.
+     * @param pricePerStepInFlatSegment The price for each step in this flat segment.
+     * @param supplyPerStepInSegment The supply per step in this segment.
+     * @param stepsAvailableToPurchase The number of steps available for purchase in this segment.
+     * @return tokensMinted The total issuance from full steps.
      * @return collateralSpent The total collateral spent for these full steps.
      */
     function _calculateFullStepsForFlatSegment(
-        uint256 _budget,
-        uint256 _priceAtSegmentInitialStep,
-        uint256 _sPerStepSeg,
-        uint256 _stepsAvailableToPurchaseInSeg
-    ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
+        uint256 availableBudget, // Renamed from _budget
+        uint256 pricePerStepInFlatSegment, // Renamed from _priceAtSegmentInitialStep
+        uint256 supplyPerStepInSegment, // Renamed from _sPerStepSeg
+        uint256 stepsAvailableToPurchase // Renamed from _stepsAvailableToPurchaseInSeg
+    ) private pure returns (uint256 tokensMinted, uint256 collateralSpent) { // Renamed issuanceOut
         // Calculate full steps for flat segment
-        // _priceAtSegmentInitialStep is guaranteed non-zero when this function is called.
-        uint256 maxFullStepsIssuanceByBudget = (_budget * SCALING_FACTOR) / _priceAtSegmentInitialStep;
-        uint256 numFullStepsAffordable = maxFullStepsIssuanceByBudget / _sPerStepSeg;
+        // pricePerStepInFlatSegment is guaranteed non-zero when this function is called.
+        uint256 maxTokensMintableWithBudget = (availableBudget * SCALING_FACTOR) / pricePerStepInFlatSegment;
+        uint256 numFullStepsAffordable = maxTokensMintableWithBudget / supplyPerStepInSegment;
 
-        if (numFullStepsAffordable > _stepsAvailableToPurchaseInSeg) {
-            numFullStepsAffordable = _stepsAvailableToPurchaseInSeg;
+        if (numFullStepsAffordable > stepsAvailableToPurchase) {
+            numFullStepsAffordable = stepsAvailableToPurchase;
         }
-        issuanceOut = numFullStepsAffordable * _sPerStepSeg;
-        collateralSpent = (issuanceOut * _priceAtSegmentInitialStep) / SCALING_FACTOR;
-        return (issuanceOut, collateralSpent);
+        tokensMinted = numFullStepsAffordable * supplyPerStepInSegment;
+        collateralSpent = (tokensMinted * pricePerStepInFlatSegment) / SCALING_FACTOR;
+        return (tokensMinted, collateralSpent);
     }
 
     /**
      * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
      * @dev Iterates step-by-step to find affordable steps. More gas-efficient for small number of steps.
      * @param segment The PackedSegment to process.
-     * @param budget The amount of collateral available for this segment.
-     * @param startStep The starting step index within this segment for the current purchase (0-indexed within the segment's own steps).
-     * @param startPrice The price at the `startStep`.
-     * @return issuanceOut The issuance tokens bought from this segment.
-     * @return collateralSpent The collateral spent for this segment.
+     * @param totalBudget The amount of collateral available for this segment.
+     * @param purchaseStartStepInSegment The starting step index within this segment for the current purchase (0-indexed).
+     * @param priceAtPurchaseStartStep The price at the `purchaseStartStepInSegment`.
+     * @return tokensPurchased The issuance tokens bought from this segment.
+     * @return totalCollateralSpent The collateral spent for this segment.
      */
     function _linearSearchSloped(
         PackedSegment segment,
-        uint256 budget,
-        uint256 startStep, // This is the step index *within the current segment* where the purchase attempt begins
-        uint256 startPrice // This is the price at `startStep`
-    ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
-        (, uint256 priceIncrease, uint256 sPerStep, uint256 numberOfStepsInSegment) = segment.unpack();
+        uint256 totalBudget, // Renamed from budget
+        uint256 purchaseStartStepInSegment, // Renamed from startStep
+        uint256 priceAtPurchaseStartStep // Renamed from startPrice
+    ) private pure returns (uint256 tokensPurchased, uint256 totalCollateralSpent) { // Renamed issuanceOut, collateralSpent
+        (, uint256 priceIncreasePerStep, uint256 supplyPerStep, uint256 totalStepsInSegment) = segment.unpack(); // Renamed variables
         
-        // Calculate the maximum number of steps that can possibly be purchased in this segment 
-        // from the given startStep.
-        if (startStep >= numberOfStepsInSegment) { // Should not happen if called correctly
+        if (purchaseStartStepInSegment >= totalStepsInSegment) { 
             return (0, 0);
         }
-        uint256 maxStepsAvailableToPurchase = numberOfStepsInSegment - startStep;
+        uint256 maxStepsPurchasableInSegment = totalStepsInSegment - purchaseStartStepInSegment; // Renamed
 
-        uint256 currentPrice = startPrice;
-        uint256 stepsCovered = 0;
-        // collateralSpent is already a return variable, can use it directly.
+        uint256 priceForCurrentStep = priceAtPurchaseStartStep; // Renamed
+        uint256 stepsSuccessfullyPurchased = 0; // Renamed
+        // totalCollateralSpent is already a return variable, can use it directly.
 
-        // Iterate while there are steps available and budget allows
-        while (stepsCovered < maxStepsAvailableToPurchase) {
-            uint256 stepCost = (sPerStep * currentPrice) / SCALING_FACTOR;
+        while (stepsSuccessfullyPurchased < maxStepsPurchasableInSegment) {
+            uint256 costForCurrentStep = (supplyPerStep * priceForCurrentStep) / SCALING_FACTOR; // Renamed
 
-            if (collateralSpent + stepCost <= budget) {
-                collateralSpent += stepCost;
-                stepsCovered++;
-                currentPrice += priceIncrease; // Price for the *next* step
+            if (totalCollateralSpent + costForCurrentStep <= totalBudget) {
+                totalCollateralSpent += costForCurrentStep;
+                stepsSuccessfullyPurchased++;
+                priceForCurrentStep += priceIncreasePerStep; 
             } else {
-                break; // Cannot afford the current step at currentPrice
+                break; 
             }
         }
 
-        issuanceOut = stepsCovered * sPerStep;
-        return (issuanceOut, collateralSpent);
+        tokensPurchased = stepsSuccessfullyPurchased * supplyPerStep;
+        return (tokensPurchased, totalCollateralSpent);
     }
 
     /**
      * @notice Helper function to calculate purchase return for a single segment.
      * @dev Contains logic for flat segments and uses linear search for sloped segments.
-     *      This function is designed to reduce stack depth in `calculatePurchaseReturn`.
      * @param segment The PackedSegment to process.
-     * @param remainingCollateralIn The amount of collateral available for this segment.
-     * @param segmentInitialStep The starting step index within this segment for the current purchase.
-     * @param priceAtSegmentInitialStep The price at the `segmentInitialStep`.
-     * @return issuanceOut The issuance tokens bought from this segment.
-     * @return collateralSpent The collateral spent for this segment.
+     * @param budgetForSegment The amount of collateral available for this segment.
+     * @param purchaseStartStepInSegment The starting step index within this segment for the current purchase.
+     * @param priceAtPurchaseStartStep The price at the `purchaseStartStepInSegment`.
+     * @return tokensToIssue The issuance tokens bought from this segment.
+     * @return collateralToSpend The collateral spent for this segment.
      */
     function _calculatePurchaseForSingleSegment(
         PackedSegment segment,
-        uint256 remainingCollateralIn,
-        uint256 segmentInitialStep,
-        uint256 priceAtSegmentInitialStep
-    ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
+        uint256 budgetForSegment, // Renamed from remainingCollateralIn
+        uint256 purchaseStartStepInSegment, // Renamed from segmentInitialStep
+        uint256 priceAtPurchaseStartStep // Renamed from priceAtSegmentInitialStep
+    ) private pure returns (uint256 tokensToIssue, uint256 collateralToSpend) { // Renamed return values
         // Unpack segment details once at the beginning
-        (, uint256 pIncreaseSeg, uint256 sPerStepSeg, uint256 nStepsSeg) = segment.unpack();
+        (, uint256 priceIncreasePerStep, uint256 supplyPerStep, uint256 totalStepsInSegment) = segment.unpack(); // Renamed
 
-        // Note: sPerStepSeg is guaranteed > 0 by PackedSegmentLib.create validation.
-
-        // Guard: segmentInitialStep is out of bounds for the segment
-        if (segmentInitialStep >= nStepsSeg) { 
+        if (purchaseStartStepInSegment >= totalStepsInSegment) { 
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidSegmentInitialStep();
         }
 
-        uint256 stepsAvailableToPurchaseInSeg = nStepsSeg - segmentInitialStep;
-        // issuanceOut and collateralSpent are implicitly initialized to 0 as return variables.
+        uint256 remainingStepsInSegment = totalStepsInSegment - purchaseStartStepInSegment; // Renamed
+        // tokensToIssue and collateralToSpend are implicitly initialized to 0 as return variables.
 
-        if (pIncreaseSeg == 0) { // Flat Segment Logic
-            if (priceAtSegmentInitialStep == 0) { // Entirely free mint part of the segment
-                issuanceOut = stepsAvailableToPurchaseInSeg * sPerStepSeg;
-                // collateralSpent is implicitly 0 as a return variable
-                return (issuanceOut, 0); // Early return for free mint
+        if (priceIncreasePerStep == 0) { // Flat Segment Logic
+            if (priceAtPurchaseStartStep == 0) { // Entirely free mint part of the segment
+                tokensToIssue = remainingStepsInSegment * supplyPerStep;
+                // collateralToSpend is implicitly 0
+                return (tokensToIssue, 0); 
             } else { // Non-free flat part
-                // Calculate full steps for flat segment
-                (issuanceOut, collateralSpent) = _calculateFullStepsForFlatSegment(
-                    remainingCollateralIn,
-                    priceAtSegmentInitialStep,
-                    sPerStepSeg,
-                    stepsAvailableToPurchaseInSeg
+                (tokensToIssue, collateralToSpend) = _calculateFullStepsForFlatSegment(
+                    budgetForSegment,
+                    priceAtPurchaseStartStep,
+                    supplyPerStep,
+                    remainingStepsInSegment
                 );
 
-                // Determine parameters for partial purchase (declare just-in-time)
-                uint256 remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
-                // For flat segments, priceForPartialStep is the same as priceAtSegmentInitialStep
-                // uint256 priceForPartialStep = priceAtSegmentInitialStep; // Not strictly needed as var, can pass directly
-                uint256 maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
-                uint256 numFullStepsBought = issuanceOut / sPerStepSeg; 
+                uint256 budgetRemainingForPartialPurchase = budgetForSegment - collateralToSpend; // Renamed
+                uint256 maxPartialIssuanceFromSegment = (remainingStepsInSegment * supplyPerStep) - tokensToIssue; // Renamed
+                uint256 numFullStepsPurchased = tokensToIssue / supplyPerStep; 
 
-                // Check if a partial purchase is viable and should be attempted
-                if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetForPartial > 0 && maxIssuancePossibleInSegmentAfterFullSteps > 0) {
-                    (uint256 pIssuance, uint256 pCost) = _calculatePartialPurchaseAmount(
-                        remainingBudgetForPartial,
-                        priceAtSegmentInitialStep, // Pass directly
-                        sPerStepSeg, 
-                        maxIssuancePossibleInSegmentAfterFullSteps
+                if (numFullStepsPurchased < remainingStepsInSegment && budgetRemainingForPartialPurchase > 0 && maxPartialIssuanceFromSegment > 0) {
+                    (uint256 partialTokensIssued, uint256 partialCollateralSpent) = _calculatePartialPurchaseAmount( // Renamed
+                        budgetRemainingForPartialPurchase,
+                        priceAtPurchaseStartStep, 
+                        supplyPerStep, 
+                        maxPartialIssuanceFromSegment
                     );
-                    issuanceOut += pIssuance;
-                    collateralSpent += pCost;
+                    tokensToIssue += partialTokensIssued;
+                    collateralToSpend += partialCollateralSpent;
                 }
             }
         } else { // Sloped Segment Logic
-            // Calculate full steps using linear search
-            (uint256 fullStepIssuance, uint256 fullStepCollateralSpent) = _linearSearchSloped(
-                segment, // segment is already unpacked in _linearSearchSloped
-                remainingCollateralIn, 
-                segmentInitialStep,    
-                priceAtSegmentInitialStep 
+            (uint256 fullStepTokensIssued, uint256 fullStepCollateralSpent) = _linearSearchSloped( // Renamed
+                segment, 
+                budgetForSegment, 
+                purchaseStartStepInSegment,    
+                priceAtPurchaseStartStep 
             );
 
-            issuanceOut = fullStepIssuance;
-            collateralSpent = fullStepCollateralSpent;
+            tokensToIssue = fullStepTokensIssued;
+            collateralToSpend = fullStepCollateralSpent;
             
-            uint256 numFullStepsBought = fullStepIssuance / sPerStepSeg; 
+            uint256 numFullStepsPurchased = fullStepTokensIssued / supplyPerStep; 
             
-            // Determine parameters for partial purchase (declare just-in-time)
-            uint256 remainingBudgetForPartial = remainingCollateralIn - collateralSpent;
-            uint256 priceForPartialStep = priceAtSegmentInitialStep + (numFullStepsBought * pIncreaseSeg);
-            uint256 maxIssuancePossibleInSegmentAfterFullSteps = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
+            uint256 budgetRemainingForPartialPurchase = budgetForSegment - collateralToSpend; // Renamed
+            uint256 priceForNextPartialStep = priceAtPurchaseStartStep + (numFullStepsPurchased * priceIncreasePerStep); // Renamed
+            uint256 maxPartialIssuanceFromSegment = (remainingStepsInSegment * supplyPerStep) - tokensToIssue; // Renamed
 
-            // Check if a partial purchase is viable and should be attempted
-            // numFullStepsBought is relative to segmentInitialStep. stepsAvailableToPurchaseInSeg is total steps from segmentInitialStep.
-            if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetForPartial > 0 && maxIssuancePossibleInSegmentAfterFullSteps > 0) {
-                // Note: _calculatePartialPurchaseAmount handles if priceForPartialStep is 0 (free mint)
-                (uint256 pIssuance, uint256 pCost) = _calculatePartialPurchaseAmount(
-                    remainingBudgetForPartial,
-                    priceForPartialStep,
-                    sPerStepSeg, // Max for one partial step slot
-                    maxIssuancePossibleInSegmentAfterFullSteps
+            if (numFullStepsPurchased < remainingStepsInSegment && budgetRemainingForPartialPurchase > 0 && maxPartialIssuanceFromSegment > 0) {
+                (uint256 partialTokensIssued, uint256 partialCollateralSpent) = _calculatePartialPurchaseAmount( // Renamed
+                    budgetRemainingForPartialPurchase,
+                    priceForNextPartialStep,
+                    supplyPerStep, 
+                    maxPartialIssuanceFromSegment
                 );
-                issuanceOut += pIssuance;
-                collateralSpent += pCost;
+                tokensToIssue += partialTokensIssued;
+                collateralToSpend += partialCollateralSpent;
             }
         }
-        // Implicitly returns issuanceOut, collateralSpent
     }
 
     /**
      * @notice Calculates the amount of partial issuance and its cost given budget and various constraints.
-     * @param _budget The remaining collateral available for this partial purchase.
-     * @param _priceForPartialStep The price at which this partial issuance is to be bought.
-     * @param _supplyPerFullStep The maximum issuance normally available in one full step (sPerStep).
-     * @param _maxIssuanceAllowedOverall The maximum total partial issuance allowed by remaining segment capacity.
-     * @return partialIssuance_ The amount of tokens to be issued for the partial purchase.
-     * @return partialCost_ The collateral cost for the partialIssuance_.
+     * @param availableBudget The remaining collateral available for this partial purchase.
+     * @param pricePerTokenForPartialPurchase The price at which this partial issuance is to be bought.
+     * @param maxTokensPerIndividualStep The maximum issuance normally available in one full step (supplyPerStep).
+     * @param maxTokensRemainingInSegment The maximum total partial issuance allowed by remaining segment capacity.
+     * @return tokensToIssue The amount of tokens to be issued for the partial purchase.
+     * @return collateralToSpend The collateral cost for the tokensToIssue.
      */
     function _calculatePartialPurchaseAmount(
-        uint256 _budget,
-        uint256 _priceForPartialStep,
-        uint256 _supplyPerFullStep, // Typically sPerStep from the segment
-        uint256 _maxIssuanceAllowedOverall // e.g., (total steps left * sPerStep) - full steps already bought
-    ) private pure returns (uint256 partialIssuance_, uint256 partialCost_) {
-        // Handle zero price (free mint) or zero budget scenarios first
-        // Note: The _budget == 0 case is guarded by the caller (_calculatePurchaseForSingleSegment),
-        // which only calls this function if remainingBudgetForPartial > 0.
-        if (_priceForPartialStep == 0) {
-            // For free mints, take up to _supplyPerFullStep, further capped by _maxIssuanceAllowedOverall
-            partialIssuance_ = _supplyPerFullStep < _maxIssuanceAllowedOverall ? _supplyPerFullStep : _maxIssuanceAllowedOverall;
-            // No cost for free mints
-            partialCost_ = 0;
-            return (partialIssuance_, partialCost_);
+        uint256 availableBudget, // Renamed from _budget
+        uint256 pricePerTokenForPartialPurchase, // Renamed from _priceForPartialStep
+        uint256 maxTokensPerIndividualStep, // Renamed from _supplyPerFullStep
+        uint256 maxTokensRemainingInSegment // Renamed from _maxIssuanceAllowedOverall
+    ) private pure returns (uint256 tokensToIssue, uint256 collateralToSpend) { // Renamed return values
+        if (pricePerTokenForPartialPurchase == 0) {
+            tokensToIssue = maxTokensPerIndividualStep < maxTokensRemainingInSegment ? maxTokensPerIndividualStep : maxTokensRemainingInSegment;
+            collateralToSpend = 0;
+            return (tokensToIssue, collateralToSpend);
         }
 
-        // 1. Calculate issuance strictly based on budget
-        uint256 issuanceFromBudget = (_budget * SCALING_FACTOR) / _priceForPartialStep;
+        uint256 tokensIssuableWithBudget = (availableBudget * SCALING_FACTOR) / pricePerTokenForPartialPurchase;
 
-        // 2. Determine effective issuance: apply caps sequentially
-        // Start with budget-limited issuance
-        partialIssuance_ = issuanceFromBudget;
+        tokensToIssue = tokensIssuableWithBudget;
 
-        // Cap by what a single (partial) step slot offers (_supplyPerFullStep)
-        if (partialIssuance_ > _supplyPerFullStep) {
-            partialIssuance_ = _supplyPerFullStep;
+        if (tokensToIssue > maxTokensPerIndividualStep) {
+            tokensToIssue = maxTokensPerIndividualStep;
         }
 
-        // Cap by the overall maximum issuance allowed for this partial purchase in the segment
-        if (partialIssuance_ > _maxIssuanceAllowedOverall) {
-            partialIssuance_ = _maxIssuanceAllowedOverall;
+        if (tokensToIssue > maxTokensRemainingInSegment) {
+            tokensToIssue = maxTokensRemainingInSegment;
         }
-        // Now partialIssuance_ is min(issuanceFromBudget, _supplyPerFullStep, _maxIssuanceAllowedOverall)
+        
+        collateralToSpend = (tokensToIssue * pricePerTokenForPartialPurchase) / SCALING_FACTOR;
 
-        // 3. Calculate cost for this determined partialIssuance_
-        partialCost_ = (partialIssuance_ * _priceForPartialStep) / SCALING_FACTOR;
-
-        // 4. Final budget adherence: If the calculated cost (after capping issuance)
-        //    is still greater than the budget. This ensures we never spend more than _budget.
-        if (partialCost_ > _budget) {
-            partialCost_ = _budget;
-            // Recalculate issuance based on spending the exact budget
-            // (_priceForPartialStep is non-zero here due to earlier check)
-            partialIssuance_ = (partialCost_ * SCALING_FACTOR) / _priceForPartialStep;
+        if (collateralToSpend > availableBudget) {
+            collateralToSpend = availableBudget;
+            tokensToIssue = (collateralToSpend * SCALING_FACTOR) / pricePerTokenForPartialPurchase;
         }
 
-        // Assertions to ensure invariants hold
-        assert(partialCost_ <= _budget); // Cost should not exceed budget
-        assert(partialIssuance_ <= _maxIssuanceAllowedOverall); // Issuance should not exceed overall segment allowance
-        // If _priceForPartialStep > 0, then partialIssuance_ is also capped by _supplyPerFullStep due to the logic above.
-        // If _priceForPartialStep == 0 (free mint), partialIssuance_ is min(_supplyPerFullStep, _maxIssuanceAllowedOverall).
-        // So, this assertion should hold in both cases.
-        assert(partialIssuance_ <= _supplyPerFullStep); 
+        assert(collateralToSpend <= availableBudget); 
+        assert(tokensToIssue <= maxTokensRemainingInSegment); 
+        assert(tokensToIssue <= maxTokensPerIndividualStep); 
 
-        return (partialIssuance_, partialCost_);
+        return (tokensToIssue, collateralToSpend);
     }
 
 
@@ -625,59 +589,47 @@ library DiscreteCurveMathLib_v1 {
      * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
      * @dev Uses the difference in reserve at current supply and supply after sale.
      * @param segments Array of PackedSegment configurations for the curve.
-     * @param issuanceAmountIn The amount of issuance tokens being sold.
+     * @param tokensToSell The amount of issuance tokens being sold.
      * @param currentTotalIssuanceSupply The current total supply before this sale.
-     * @return collateralAmountOut The total amount of collateral returned to the seller.
-     * @return issuanceAmountBurned The actual amount of issuance tokens burned (capped at current supply).
+     * @return collateralToReturn The total amount of collateral returned to the seller.
+     * @return tokensToBurn The actual amount of issuance tokens burned (capped at current supply).
      */
     function calculateSaleReturn(
         PackedSegment[] memory segments,
-        uint256 issuanceAmountIn,
+        uint256 tokensToSell, // Renamed from issuanceAmountIn
         uint256 currentTotalIssuanceSupply
-    ) internal pure returns (uint256 collateralAmountOut, uint256 issuanceAmountBurned) {
+    ) internal pure returns (uint256 collateralToReturn, uint256 tokensToBurn) { // Renamed return values
         _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
 
-        if (issuanceAmountIn == 0) {
+        if (tokensToSell == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput();
         }
         
-        // Note: segments.length == 0 case is handled by _validateSupplyAgainstSegments if currentTotalIssuanceSupply > 0.
-        // If currentTotalIssuanceSupply is 0 (and segments.length is 0), _validateSupplyAgainstSegments returns.
-        // Then issuanceAmountBurned will be 0 (as currentTotalIssuanceSupply is 0), and (0,0) will be returned.
-        // If segments.length == 0 but currentTotalIssuanceSupply > 0, _validateSupplyAgainstSegments would have reverted.
-        // If segments.length > 0, proceed.
-        uint256 segLen = segments.length; // Cache length
-        if (segLen == 0) { // This implies currentTotalIssuanceSupply must be 0.
-            // Selling from 0 supply on an unconfigured curve. issuanceAmountBurned will be 0.
-            // The check below `if (issuanceAmountBurned == 0)` handles returning (0,0).
-            // No explicit revert here as _validateSupplyAgainstSegments covers invalid states.
+        uint256 numSegments = segments.length; // Renamed from segLen
+        if (numSegments == 0) { 
+            // This implies currentTotalIssuanceSupply must be 0.
+            // Selling from 0 supply on an unconfigured curve. tokensToBurn will be 0.
         }
 
+        tokensToBurn = tokensToSell > currentTotalIssuanceSupply ? currentTotalIssuanceSupply : tokensToSell;
 
-        issuanceAmountBurned = issuanceAmountIn > currentTotalIssuanceSupply ? currentTotalIssuanceSupply : issuanceAmountIn;
-
-        if (issuanceAmountBurned == 0) { // Possible if issuanceAmountIn > 0 but currentTotalIssuanceSupply is 0
+        if (tokensToBurn == 0) { 
             return (0, 0);
         }
 
-        uint256 finalSupplyAfterSale = currentTotalIssuanceSupply - issuanceAmountBurned;
+        uint256 finalSupplyAfterSale = currentTotalIssuanceSupply - tokensToBurn;
 
         uint256 collateralAtCurrentSupply = calculateReserveForSupply(segments, currentTotalIssuanceSupply);
         uint256 collateralAtFinalSupply = calculateReserveForSupply(segments, finalSupplyAfterSale);
 
         if (collateralAtCurrentSupply < collateralAtFinalSupply) {
             // This should not happen with a correctly defined bonding curve (prices are non-negative).
-            // It would imply that reducing supply *increases* the reserve.
-            // Consider reverting or handling as an internal error. For now, assume valid curve.
-            // This could be an assertion `assert(collateralAtCurrentSupply >= collateralAtFinalSupply)`.
-            // For robustness, can return 0 or revert. Reverting might be too strict if it's due to dust.
-            // Returning 0 collateral if this unexpected state occurs.
-            return (0, issuanceAmountBurned); // Or revert with a specific error.
+            return (0, tokensToBurn); 
         }
 
-        collateralAmountOut = collateralAtCurrentSupply - collateralAtFinalSupply;
+        collateralToReturn = collateralAtCurrentSupply - collateralAtFinalSupply;
 
-        return (collateralAmountOut, issuanceAmountBurned);
+        return (collateralToReturn, tokensToBurn);
     }
 
     // --- Public API Convenience Functions (as per plan, though internal) ---
@@ -709,19 +661,19 @@ library DiscreteCurveMathLib_v1 {
      * @param segments Array of PackedSegment configurations to validate.
      */
     function validateSegmentArray(PackedSegment[] memory segments) internal pure {
-        uint256 segLen = segments.length; // Cache length
-        if (segLen == 0) {
+        uint256 numSegments = segments.length; // Renamed from segLen
+        if (numSegments == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-        if (segLen > MAX_SEGMENTS) {
+        if (numSegments > MAX_SEGMENTS) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
 
         // Note: Individual segment's supplyPerStep > 0 and numberOfSteps > 0 
         // are guaranteed by PackedSegmentLib.create validation.
         // This function primarily validates array-level properties.
-        for (uint256 i = 0; i < segLen; ++i) { // Use cached length
-            // The check for segments[i].supplyPerStep() == 0 was removed as it's redundant.
+        for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Renamed i to segmentIndex
+            // The check for segments[segmentIndex].supplyPerStep() == 0 was removed as it's redundant.
             // Similarly, numberOfSteps > 0 is also guaranteed by PackedSegmentLib.create.
             // If other per-segment validations were needed here (that aren't covered by create), they could be added.
         }
