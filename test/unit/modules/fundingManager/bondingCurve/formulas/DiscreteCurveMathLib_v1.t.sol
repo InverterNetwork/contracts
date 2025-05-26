@@ -893,4 +893,40 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(issuanceOut, expectedIssuanceOut, "Spanning segments, partial end: issuanceOut mismatch");
         assertEq(collateralSpent, expectedCollateralSpent, "Spanning segments, partial end: collateralSpent mismatch");
     }
+
+    // --- Tests for _linearSearchSloped direct revert ---
+
+    function test_LinearSearchSloped_InvalidStartStep_Reverts() public {
+        // Setup a simple segment
+        PackedSegment segment = DiscreteCurveMathLib_v1.createSegment(
+            1 ether, // initialPrice
+            0.1 ether, // priceIncrease
+            10 ether, // supplyPerStep
+            3  // numberOfSteps
+        );
+        // totalStepsInSegment is 3 for this segment.
+
+        uint256 totalBudget = 100 ether; // Arbitrary budget, won't be used due to revert
+        uint256 priceAtPurchaseStartStep = 1 ether; // Arbitrary, won't be used
+
+        // Case 1: purchaseStartStepInSegment == totalStepsInSegment
+        uint256 invalidStartStep1 = 3; 
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidSegmentInitialStep.selector);
+        exposedLib.linearSearchSlopedPublic(
+            segment,
+            totalBudget,
+            invalidStartStep1,
+            priceAtPurchaseStartStep
+        );
+
+        // Case 2: purchaseStartStepInSegment > totalStepsInSegment
+        uint256 invalidStartStep2 = 4;
+         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidSegmentInitialStep.selector);
+        exposedLib.linearSearchSlopedPublic(
+            segment,
+            totalBudget,
+            invalidStartStep2,
+            priceAtPurchaseStartStep
+        );
+    }
 }

@@ -425,11 +425,11 @@ library DiscreteCurveMathLib_v1 {
         uint256 totalBudget, // Renamed from budget
         uint256 purchaseStartStepInSegment, // Renamed from startStep
         uint256 priceAtPurchaseStartStep // Renamed from startPrice
-    ) private pure returns (uint256 tokensPurchased, uint256 totalCollateralSpent) { // Renamed issuanceOut, collateralSpent
+    ) internal pure returns (uint256 tokensPurchased, uint256 totalCollateralSpent) { // Renamed issuanceOut, collateralSpent
         (, uint256 priceIncreasePerStep, uint256 supplyPerStep, uint256 totalStepsInSegment) = segment.unpack(); // Renamed variables
         
         if (purchaseStartStepInSegment >= totalStepsInSegment) { 
-            return (0, 0);
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidSegmentInitialStep();
         }
         uint256 maxStepsPurchasableInSegment = totalStepsInSegment - purchaseStartStepInSegment; // Renamed
 
