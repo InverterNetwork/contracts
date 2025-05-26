@@ -851,4 +851,32 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(issuanceOut, expectedIssuanceOut, "Issuance end-of-segment mismatch");
         assertEq(collateralSpent, expectedCollateralSpent, "Collateral end-of-segment mismatch");
     }
+
+    function test_CalculatePurchaseReturn_SpanningSegments_EndsWithPartialInSecondSegment() public {
+        // Objective: Buy out segment 0 completely, then buy a partial amount of the first step in segment 1.
+        uint256 currentSupply = 0 ether;
+
+        // Collateral needed for segment 0 is defaultSeg0_reserve (33 ether)
+        // For segment 1:
+        //   Price of first step = defaultSeg1_initialPrice (1.5 ether)
+        //   Supply per step in seg1 = defaultSeg1_supplyPerStep (20 ether)
+        //   Let's target buying 5 ether issuance from segment 1's first step.
+        uint256 partialIssuanceInSeg1 = 5 ether;
+        uint256 costForPartialInSeg1 = (partialIssuanceInSeg1 * defaultSeg1_initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // (5 * 1.5) = 7.5 ether
+
+        uint256 collateralIn = defaultSeg0_reserve + costForPartialInSeg1; // 33 + 7.5 = 40.5 ether
+
+        uint256 expectedIssuanceOut = defaultSeg0_capacity + partialIssuanceInSeg1; // 30 + 5 = 35 ether
+        // Due to how partial purchases are calculated, the spent collateral should exactly match collateralIn if it's utilized fully.
+        uint256 expectedCollateralSpent = collateralIn; 
+
+        (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
+            defaultSegments,
+            collateralIn,
+            currentSupply
+        );
+
+        assertEq(issuanceOut, expectedIssuanceOut, "Spanning segments, partial end: issuanceOut mismatch");
+        assertEq(collateralSpent, expectedCollateralSpent, "Spanning segments, partial end: collateralSpent mismatch");
+    }
 }

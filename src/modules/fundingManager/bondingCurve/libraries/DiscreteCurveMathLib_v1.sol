@@ -583,7 +583,6 @@ library DiscreteCurveMathLib_v1 {
                 issuanceOut = stepsAvailableToPurchaseInSeg * sPerStepSeg;
                 // collateralSpent remains 0
             } else {
-                uint256 maxIssuanceFromRemFlatSegment = stepsAvailableToPurchaseInSeg * sPerStepSeg;
                 // Calculate full steps first
                 uint256 numFullStepsAffordable;
                 if (priceAtSegmentInitialStep == 0) { // Should be caught by free mint logic above
