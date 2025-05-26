@@ -498,8 +498,56 @@ library DiscreteCurveMathLib_v1 {
     }
 
     /**
+     * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
+     * @dev Iterates step-by-step to find affordable steps. More gas-efficient for small number of steps.
+     * @param segment The PackedSegment to process.
+     * @param budget The amount of collateral available for this segment.
+     * @param startStep The starting step index within this segment for the current purchase (0-indexed within the segment's own steps).
+     * @param startPrice The price at the `startStep`.
+     * @return issuanceOut The issuance tokens bought from this segment.
+     * @return collateralSpent The collateral spent for this segment.
+     */
+    function _linearSearchSloped(
+        PackedSegment segment,
+        uint256 budget,
+        uint256 startStep, // This is the step index *within the current segment* where the purchase attempt begins
+        uint256 startPrice // This is the price at `startStep`
+    ) private pure returns (uint256 issuanceOut, uint256 collateralSpent) {
+        uint256 sPerStep = segment.supplyPerStep();
+        uint256 priceIncrease = segment.priceIncrease();
+        
+        // Calculate the maximum number of steps that can possibly be purchased in this segment 
+        // from the given startStep.
+        uint256 numberOfStepsInSegment = segment.numberOfSteps();
+        if (startStep >= numberOfStepsInSegment) { // Should not happen if called correctly
+            return (0, 0);
+        }
+        uint256 maxStepsAvailableToPurchase = numberOfStepsInSegment - startStep;
+
+        uint256 currentPrice = startPrice;
+        uint256 stepsCovered = 0;
+        // collateralSpent is already a return variable, can use it directly.
+
+        // Iterate while there are steps available and budget allows
+        while (stepsCovered < maxStepsAvailableToPurchase) {
+            uint256 stepCost = (sPerStep * currentPrice) / SCALING_FACTOR;
+
+            if (collateralSpent + stepCost <= budget) {
+                collateralSpent += stepCost;
+                stepsCovered++;
+                currentPrice += priceIncrease; // Price for the *next* step
+            } else {
+                break; // Cannot afford the current step at currentPrice
+            }
+        }
+
+        issuanceOut = stepsCovered * sPerStep;
+        return (issuanceOut, collateralSpent);
+    }
+
+    /**
      * @notice Helper function to calculate purchase return for a single segment.
-     * @dev Contains logic for flat and sloped segments, including binary search.
+     * @dev Contains logic for flat segments and uses linear search for sloped segments.
      *      This function is designed to reduce stack depth in `calculatePurchaseReturn`.
      * @param segment The PackedSegment to process.
      * @param remainingCollateralIn The amount of collateral available for this segment.
@@ -547,40 +595,16 @@ library DiscreteCurveMathLib_v1 {
                     collateralSpent = (issuanceOut * priceAtSegmentInitialStep) / SCALING_FACTOR;
                 }
             }
-        } else { // Sloped Segment Logic - Binary Search
-            uint256 low = 0; 
-            uint256 high = stepsAvailableToPurchaseInSeg; 
-            uint256 best_n_steps_affordable = 0;
-            uint256 cost_for_best_n_steps = 0;
-
-            while (low <= high) {
-                uint256 mid_n_steps_to_buy = low + (high - low) / 2; // Number of steps *to buy* from segmentInitialStep onwards
-                if (mid_n_steps_to_buy == 0) { 
-                    if (high == 0) break; 
-                    low = 1; 
-                    continue;
-                }
-
-                // Cost formula for `mid_n_steps_to_buy` steps, starting at `priceAtSegmentInitialStep`
-                // Price of 1st step to buy: priceAtSegmentInitialStep
-                // Price of k-th step to buy: priceAtSegmentInitialStep + (k-1)*pIncreaseSeg
-                // Cost for `mid_n_steps_to_buy` steps, where the first step is at `priceAtSegmentInitialStep`
-                // and price increases by `pIncreaseSeg` for each subsequent step.
-                // Formula: (sPerStep * num_steps * (2*P_start_of_series + (num_steps-1)*P_increase_per_step)) / (2 * SCALING_FACTOR)
-                // mid_n_steps_to_buy is guaranteed to be > 0 here due to the check earlier in the loop.
-                uint256 term_sum_prices = (2 * priceAtSegmentInitialStep) + (mid_n_steps_to_buy - 1) * pIncreaseSeg;
-                uint256 cost_for_mid_n = (sPerStepSeg * mid_n_steps_to_buy * term_sum_prices) / (2 * SCALING_FACTOR);
-                
-                if (cost_for_mid_n <= remainingCollateralIn) {
-                    best_n_steps_affordable = mid_n_steps_to_buy;
-                    cost_for_best_n_steps = cost_for_mid_n;
-                    low = mid_n_steps_to_buy + 1; 
-                } else {
-                    high = mid_n_steps_to_buy - 1; 
-                }
-            }
-            issuanceOut = best_n_steps_affordable * sPerStepSeg;
-            collateralSpent = cost_for_best_n_steps;
+        } else { // Sloped Segment Logic - Linear Search
+            // `segmentInitialStep` is the 0-indexed step *within this segment* to start purchasing from.
+            // `priceAtSegmentInitialStep` is the price of that `segmentInitialStep`.
+            // `remainingCollateralIn` is the budget.
+            (issuanceOut, collateralSpent) = _linearSearchSloped(
+                segment,
+                remainingCollateralIn,
+                segmentInitialStep,
+                priceAtSegmentInitialStep
+            );
         }
     }
 
