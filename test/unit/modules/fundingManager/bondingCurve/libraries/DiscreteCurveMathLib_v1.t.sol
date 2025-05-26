@@ -462,9 +462,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint256 currentSupply = 0 ether;
         uint256 collateralIn = 45 ether; // Enough for 2 steps (40 ether cost), but not 3 (60 ether cost)
 
-        // Expected: buy 2 steps = 20 ether issuance, cost = 20 * 2 = 40 ether
-        uint256 expectedIssuanceOut = 20 ether;
-        uint256 expectedCollateralSpent = 40 ether;
+        // New logic: 2 full steps (20 issuance, 40 cost) + partial step (2.5 issuance, 5 cost)
+        uint256 expectedIssuanceOut = 22500000000000000000; // 22.5 ether
+        uint256 expectedCollateralSpent = 45000000000000000000; // 45 ether
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,
@@ -503,9 +503,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // If collateralIn = 50 ether, it can buy 2 full steps (20 issuance) for 40 ether.
         // The binary search for sloped segments handles full steps. Flat segment logic is simpler.
         // The logic is: maxIssuance = collateral / price. Then round down to nearest multiple of supplyPerStep.
-        // (50 / 2) = 25. (25 / 10) * 10 = 20.
-        uint256 expectedIssuanceOut = 20 ether; 
-        uint256 expectedCollateralSpent = (expectedIssuanceOut * initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 40 ether
+        // New logic: 2 full steps (20 issuance, 40 cost) + partial step (5 issuance, 10 cost)
+        uint256 expectedIssuanceOut = 25000000000000000000; // 25 ether
+        uint256 expectedCollateralSpent = 50000000000000000000; // 50 ether
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,
@@ -529,11 +529,15 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Total cost for 2 steps (20 supply) = 10 + 11 = 21 collateral
         uint256 collateralIn = 25 ether; // Enough for 2 steps (cost 21), with 4 ether remaining
 
-        uint256 expectedIssuanceOut = 2 * defaultSeg0_supplyPerStep; // 20 ether (2 full steps)
-        uint256 expectedCollateralSpent = 0;
-        expectedCollateralSpent += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 0 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-        expectedCollateralSpent += (defaultSeg0_supplyPerStep * (defaultSeg0_initialPrice + 1 * defaultSeg0_priceIncrease)) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
-        // expectedCollateralSpent = 10 + 11 = 21 ether
+        // New logic: 2 full steps (20 issuance, 21 cost)
+        // Remaining budget = 25 - 21 = 4 ether.
+        // Next step price (step 2 of seg0) = 1 + (2 * 0.1) = 1.2 ether.
+        // Partial issuance = (4 * 1e18) / 1.2e18 = 3.333... ether.
+        // Partial cost = (3.333... * 1.2) / 1 = 4 ether.
+        // Total issuance = 20 + 3.333... = 23.333... ether.
+        // Total cost = 21 + 3.999... = 24.999... ether.
+        uint256 expectedIssuanceOut = 23333333333333333333; // 23.333... ether
+        uint256 expectedCollateralSpent = 24999999999999999999; // 24.999... ether
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,
@@ -690,10 +694,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint256 costOneStep = (flatSupplyPerStep * flatPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
         uint256 collateralIn = costOneStep - 1 wei; // 19.99... ether, less than enough for one step
 
-        // Based on current flat segment logic in _calculatePurchaseForSingleSegment,
-        // which rounds down issuance to the nearest multiple of supplyPerStep.
-        uint256 expectedIssuanceOut = 0; 
-        uint256 expectedCollateralSpent = 0;
+        // With partial purchases, it should buy what it can.
+        // collateralIn = 19999999999999999999. flatPrice = 2e18.
+        // issuanceOut = (collateralIn * SCALING_FACTOR) / flatPrice = 9999999999999999999.
+        // collateralSpent = (issuanceOut * flatPrice) / SCALING_FACTOR = 19999999999999999998.
+        uint256 expectedIssuanceOut = 9999999999999999999; 
+        uint256 expectedCollateralSpent = 19999999999999999998;
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,
@@ -714,9 +720,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint256 costFirstStep = (defaultSeg0_supplyPerStep * defaultSeg0_initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
         uint256 collateralIn = costFirstStep - 1 wei; // Just less than enough for the first step
 
-        // Binary search in _calculatePurchaseForSingleSegment should find 0 affordable steps.
-        uint256 expectedIssuanceOut = 0;
-        uint256 expectedCollateralSpent = 0;
+        // With partial purchases.
+        // collateralIn = 9999999999999999999. initialPrice (nextStepPrice) = 1e18.
+        // issuanceOut = (collateralIn * SCALING_FACTOR) / initialPrice = 9999999999999999999.
+        // collateralSpent = (issuanceOut * initialPrice) / SCALING_FACTOR = 9999999999999999999.
+        uint256 expectedIssuanceOut = 9999999999999999999;
+        uint256 expectedCollateralSpent = 9999999999999999999;
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,

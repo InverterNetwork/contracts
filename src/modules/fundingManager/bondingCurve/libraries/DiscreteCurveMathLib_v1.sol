@@ -584,27 +584,114 @@ library DiscreteCurveMathLib_v1 {
                 // collateralSpent remains 0
             } else {
                 uint256 maxIssuanceFromRemFlatSegment = stepsAvailableToPurchaseInSeg * sPerStepSeg;
-                uint256 costToBuyRemFlatSegment = (maxIssuanceFromRemFlatSegment * priceAtSegmentInitialStep) / SCALING_FACTOR;
-
-                if (remainingCollateralIn >= costToBuyRemFlatSegment) {
-                    issuanceOut = maxIssuanceFromRemFlatSegment;
-                    collateralSpent = costToBuyRemFlatSegment;
+                // Calculate full steps first
+                uint256 numFullStepsAffordable;
+                if (priceAtSegmentInitialStep == 0) { // Should be caught by free mint logic above
+                    numFullStepsAffordable = stepsAvailableToPurchaseInSeg;
+                    collateralSpent = 0;
                 } else {
-                    issuanceOut = (remainingCollateralIn * SCALING_FACTOR) / priceAtSegmentInitialStep;
-                    issuanceOut = (issuanceOut / sPerStepSeg) * sPerStepSeg; 
+                    uint256 maxFullStepsIssuance = (remainingCollateralIn * SCALING_FACTOR) / priceAtSegmentInitialStep;
+                    numFullStepsAffordable = maxFullStepsIssuance / sPerStepSeg;
+
+                    if (numFullStepsAffordable > stepsAvailableToPurchaseInSeg) {
+                        numFullStepsAffordable = stepsAvailableToPurchaseInSeg;
+                    }
+                    issuanceOut = numFullStepsAffordable * sPerStepSeg;
                     collateralSpent = (issuanceOut * priceAtSegmentInitialStep) / SCALING_FACTOR;
                 }
+                
+                // Partial step purchase logic for flat segments
+                uint256 remainingBudgetAfterFullSteps = remainingCollateralIn - collateralSpent;
+                if (numFullStepsAffordable < stepsAvailableToPurchaseInSeg && remainingBudgetAfterFullSteps > 0 && priceAtSegmentInitialStep > 0) {
+                    uint256 partialIssuance = (remainingBudgetAfterFullSteps * SCALING_FACTOR) / priceAtSegmentInitialStep;
+                    
+                    // Cap partialIssuance at sPerStepSeg
+                    if (partialIssuance > sPerStepSeg) {
+                        partialIssuance = sPerStepSeg;
+                    }
+                    
+                    // Ensure partialIssuance does not exceed remaining supply in the step if it's less than sPerStepSeg
+                    uint256 supplyLeftInNextStepSlot = sPerStepSeg; // For flat, effectively always a full sPerStepSeg available for partial
+                    if (partialIssuance > supplyLeftInNextStepSlot) {
+                         partialIssuance = supplyLeftInNextStepSlot;
+                    }
+
+                    uint256 partialCost = (partialIssuance * priceAtSegmentInitialStep) / SCALING_FACTOR;
+
+                    // Ensure we don't overspend the remaining budget due to rounding
+                    if (partialCost > remainingBudgetAfterFullSteps) {
+                        partialCost = remainingBudgetAfterFullSteps; // Spend exactly what's left
+                        partialIssuance = (partialCost * SCALING_FACTOR) / priceAtSegmentInitialStep; // Recalculate issuance based on exact cost
+                    }
+
+                    issuanceOut += partialIssuance;
+                    collateralSpent += partialCost;
+                }
             }
-        } else { // Sloped Segment Logic - Linear Search
+        } else { // Sloped Segment Logic
             // `segmentInitialStep` is the 0-indexed step *within this segment* to start purchasing from.
             // `priceAtSegmentInitialStep` is the price of that `segmentInitialStep`.
             // `remainingCollateralIn` is the budget.
-            (issuanceOut, collateralSpent) = _linearSearchSloped(
+            
+            // Calculate full steps using existing linear search
+            (uint256 fullStepIssuance, uint256 fullStepCollateralSpent) = _linearSearchSloped(
                 segment,
-                remainingCollateralIn,
+                remainingCollateralIn, // Pass the full budget for this segment
                 segmentInitialStep,
                 priceAtSegmentInitialStep
             );
+
+            issuanceOut = fullStepIssuance;
+            collateralSpent = fullStepCollateralSpent;
+
+            uint256 numFullStepsBought = fullStepIssuance / sPerStepSeg; // Number of full steps successfully purchased
+
+            // Partial step purchase logic for sloped segments
+            uint256 remainingBudgetAfterFullSlopedSteps = remainingCollateralIn - fullStepCollateralSpent;
+            // Check if more steps are available in segment than what were bought as full steps
+            // stepsAvailableToPurchaseInSeg is total steps from start. numFullStepsBought is relative to that start.
+            if (numFullStepsBought < stepsAvailableToPurchaseInSeg && remainingBudgetAfterFullSlopedSteps > 0) {
+                uint256 nextStepPrice = priceAtSegmentInitialStep + (numFullStepsBought * pIncreaseSeg);
+
+                if (nextStepPrice > 0) { // Avoid division by zero
+                    uint256 partialIssuance = (remainingBudgetAfterFullSlopedSteps * SCALING_FACTOR) / nextStepPrice;
+
+                    // Cap partialIssuance at sPerStepSeg
+                    if (partialIssuance > sPerStepSeg) {
+                        partialIssuance = sPerStepSeg;
+                    }
+                    
+                    // Ensure partialIssuance does not exceed remaining supply in the step if it's less than sPerStepSeg
+                    // For sloped, the next step always offers up to sPerStepSeg
+                     uint256 supplyLeftInNextStepSlot = sPerStepSeg;
+                     if (partialIssuance > supplyLeftInNextStepSlot) {
+                         partialIssuance = supplyLeftInNextStepSlot;
+                     }
+
+                    uint256 partialCost = (partialIssuance * nextStepPrice) / SCALING_FACTOR;
+                    
+                    // Ensure we don't overspend the remaining budget due to rounding
+                    if (partialCost > remainingBudgetAfterFullSlopedSteps) {
+                        partialCost = remainingBudgetAfterFullSlopedSteps; // Spend exactly what's left
+                        partialIssuance = (partialCost * SCALING_FACTOR) / nextStepPrice; // Recalculate issuance
+                    }
+                    
+                    // Ensure total issuance from this segment (full + partial) does not exceed available supply
+                    if (issuanceOut + partialIssuance > stepsAvailableToPurchaseInSeg * sPerStepSeg) {
+                        partialIssuance = (stepsAvailableToPurchaseInSeg * sPerStepSeg) - issuanceOut;
+                        partialCost = (partialIssuance * nextStepPrice) / SCALING_FACTOR; 
+                        // Re-check cost if issuance was capped due to segment limit
+                        if (partialCost > remainingBudgetAfterFullSlopedSteps) {
+                             partialCost = remainingBudgetAfterFullSlopedSteps;
+                             partialIssuance = (partialCost * SCALING_FACTOR) / nextStepPrice;
+                        }
+                    }
+
+
+                    issuanceOut += partialIssuance;
+                    collateralSpent += partialCost;
+                }
+            }
         }
     }
 

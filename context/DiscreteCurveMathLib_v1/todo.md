@@ -29,7 +29,6 @@ function _getCumulativeSupplyBeforeSegment(
 Your current implementation only handles complete steps. Consider adding partial step support:
 
 ```solidity
-// After binary search for complete steps:
 if (best_n_steps_affordable < stepsAvailableToPurchaseInSeg && remainingCollateralIn > cost_for_best_n_steps) {
     uint256 remainingBudget = remainingCollateralIn - cost_for_best_n_steps;
     uint256 nextStepPrice = priceAtSegmentInitialStep + best_n_steps_affordable * pIncreaseSeg;
