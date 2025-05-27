@@ -130,9 +130,6 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         );
         console2.log(" Deploy Factory Contracts");
 
-        // Run pre deployment hook for the module factory
-        preDeploymentHook_moduleFactory(forwarder);
-
         (moduleFactoryBeacon, moduleFactory) = proxyAndBeaconDeployer
             .deployBeaconAndSetupProxy(
             moduleFactoryMetadata.title,
@@ -460,13 +457,6 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         // Verify that the Module Factory is permissioned, and not the Testnet version
         verifyModuleFactoryPermissions();
     }
-
-    // Hook that is being called before the module factory is deployed,
-    // to allow for custom deployments of it for testnets.
-    function preDeploymentHook_moduleFactory(address transactionForwarder)
-        public
-        virtual
-    {}
 
     // Function to verify whether the module factory is permissioned or not.
     function verifyModuleFactoryPermissions() public virtual {

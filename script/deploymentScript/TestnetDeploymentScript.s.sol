@@ -94,13 +94,14 @@ contract TestnetDeploymentScript is DeploymentScript {
         super.run();
     }
 
-    function preDeploymentHook_moduleFactory(address transactionForwarder)
-        public
+    function createModuleFactorySingleton(address transactionForwarder)
+        internal
         override
     {
         // Replace the implementation of the ModuleFactory with its
         // testnet version.
-        impl_fac_ModuleFactory_v1 = deployWithCreate2(
+        impl_fac_ModuleFactory_v1 = deployAndLogWithCreate2(
+            "Testnet_ModuleFactory_v1",
             abi.encodePacked(
                 vm.getCode(
                     "Testnet_ModuleFactory_v1.sol:Testnet_ModuleFactory_v1"
