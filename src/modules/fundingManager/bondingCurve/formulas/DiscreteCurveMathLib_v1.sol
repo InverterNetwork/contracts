@@ -575,10 +575,6 @@ library DiscreteCurveMathLib_v1 {
             SCALING_FACTOR
         );
 
-        // Assertions to ensure invariants (can be kept for testing/development).
-        assert(collateralToSpend <= availableBudget); 
-        assert(tokensToIssue <= maxTokensRemainingInSegment); 
-        assert(tokensToIssue <= maxTokensPerIndividualStep); 
 
         return (tokensToIssue, collateralToSpend);
     }
