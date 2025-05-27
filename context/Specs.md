@@ -537,7 +537,7 @@ Feature: Minting & Redeeming
 
     Scenario Outline: Minting & redeeming from the DBC
         Given the DBC has been initialized correctly
-        And <action> is activateds
+        And <action> is activated
         When the user provides the <token> `amountIn`
         And has approved that amount to the DBC
         And provides the minAmountOut
@@ -672,7 +672,10 @@ To centralize all complex mathematical logic associated with the discrete, segme
 The library should expose pure functions that take a segment configuration (`Segment[] memory segments`) as a primary input. These functions do not rely on or modify contract state.
 
 - `function calculatePurchaseReturn(Segment[] memory segments, uint256 collateralAmountIn, uint256 currentTotalSupply) internal pure returns (uint256 issuanceAmountOut)`
-  - Calculates the amount of issuance tokens a user would receive for a given `collateralAmountIn`, based on the provided `segments` structure and the `currentTotalSupply` before the transaction.
+  - Calculates the amount of issuance tokens a user would receive for a given `collateralAmountIn`, based on the provided `segments` structure and the `currentTotalSupply` before the transaction. For sloped segments, this function iterates through steps linearly (`_linearSearchSloped`). This approach was chosen because:
+    - The maximum number of segments is limited (currently 10).
+    - While individual segments can have many steps, typical purchase transactions are expected to traverse a relatively small number of these steps.
+    - For such scenarios, a linear search can be more gas-efficient than a binary search due to lower computational overhead per step.
 - `function calculateSalesReturn(Segment[] memory segments, uint256 issuanceAmountIn, uint256 currentTotalSupply) internal pure returns (uint256 collateralAmountOut)`
   - Calculates the amount of collateral a user would receive for redeeming a given `issuanceAmountIn`, based on the provided `segments` and `currentTotalSupply`.
 - `function calculateReserveForSupply(Segment[] memory segments, uint256 targetSupply) internal pure returns (uint256 collateralReserve)`

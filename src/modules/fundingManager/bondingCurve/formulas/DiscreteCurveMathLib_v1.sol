@@ -130,22 +130,6 @@ library DiscreteCurveMathLib_v1 {
                     // For "next price" semantic, this is the step whose price will be quoted.
                     position.stepIndexWithinSegment = supplyIntoThisSegment / supplyPerStep;
                     
-                    // If exactly at the end of a step (but not end of segment moving to next),
-                    // and that step is not the last step of the segment, this correctly gives price of current step.
-                    // The _findPositionForSupply is used by getCurrentPriceAndStep which expects the price for the *next* unit.
-                    // If targetSupply = 0, stepIndex = 0, price = initialPrice. Correct.
-                    // If targetSupply = 1 (and supplyPerStep > 1), stepIndex = 0, price = initialPrice. Correct.
-                    // If targetSupply = supplyPerStep, stepIndex = 1. Price is initialPrice + 1*increase. This is price of 2nd step.
-                    // This seems to align with "price for next unit" if targetSupply is current supply.
-                    // Let's re-verify the logic for `stepIndexWithinSegment` for "next price":
-                    // If current supply is X, we want price for X+1.
-                    // If targetSupply is the *current supply*, then `supplyIntoThisSegment / supplyPerStep` gives the
-                    // index of the step that *would be filled next* or is *currently being filled*.
-                    // Example: supplyPerStep=10. currentSupply=0. supplyInto=0. stepIndex=0. price=initialPrice. (Correct for token 1)
-                    // currentSupply=9. supplyInto=9. stepIndex=0. price=initialPrice. (Correct for token 10)
-                    // currentSupply=10. supplyInto=10. stepIndex=1. price=initialPrice+1*increase. (Correct for token 11)
-                    // This logic seems correct for "price of the step that targetSupply falls into or starts".
-                    
                     // If at the end of the *last* segment, stepIndex needs to be the last step.
                     if (targetSupply == segmentEndSupply && i == numSegments - 1) {
                          position.stepIndexWithinSegment = totalStepsInSegment > 0 ? totalStepsInSegment - 1 : 0;
@@ -448,7 +432,7 @@ library DiscreteCurveMathLib_v1 {
         // totalCollateralSpent is already a return variable, can use it directly.
 
         while (stepsSuccessfullyPurchased < maxStepsPurchasableInSegment) {
-            uint256 costForCurrentStep = (supplyPerStep * priceForCurrentStep) / SCALING_FACTOR; // Renamed
+            uint256 costForCurrentStep = Math.mulDiv(supplyPerStep, priceForCurrentStep, SCALING_FACTOR); // Renamed
 
             if (totalCollateralSpent + costForCurrentStep <= totalBudget) {
                 totalCollateralSpent += costForCurrentStep;
