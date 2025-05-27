@@ -47,7 +47,7 @@ library DiscreteCurveMathLib_v1 {
     function _validateSupplyAgainstSegments(
         PackedSegment[] memory segments,
         uint256 currentTotalIssuanceSupply
-    ) internal pure {
+    ) internal pure returns (uint256 totalCurveCapacity) { // Added return type
         uint256 numSegments = segments.length; // Cache length
         if (numSegments == 0) {
             if (currentTotalIssuanceSupply > 0) {
@@ -55,10 +55,10 @@ library DiscreteCurveMathLib_v1 {
                 revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
             }
             // If segments.length == 0 and currentTotalIssuanceSupply == 0, it's a valid initial state.
-            return;
+            return 0; // Return 0 capacity
         }
 
-        uint256 totalCurveCapacity = 0;
+        // totalCurveCapacity is initialized to 0 by default as a return variable
         for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Use cached length
             // Note: supplyPerStep and numberOfSteps are validated > 0 by PackedSegmentLib.create
             uint256 supplyPerStep = segments[segmentIndex].supplyPerStep();
@@ -72,92 +72,106 @@ library DiscreteCurveMathLib_v1 {
                 totalCurveCapacity
             );
         }
+        // Implicitly returns totalCurveCapacity
     }
 
     /**
      * @notice Finds the segment, step, price, and cumulative supply for a given target total issuance supply.
      * @dev Iterates linearly through segments.
      * @param segments Array of PackedSegment configurations for the curve.
-     * @param targetTotalIssuanceSupply The total supply for which to find the position.
-     * @return targetPosition A CurvePosition struct detailing the location on the curve.
+     * @param targetSupply The total supply for which to find the position.
+     * @return position A CurvePosition struct detailing the location on the curve.
      */
     function _findPositionForSupply(
         PackedSegment[] memory segments,
-        uint256 targetTotalIssuanceSupply
-    ) internal pure returns (CurvePosition memory targetPosition) {
-        uint256 numSegments = segments.length; // Cache length
+        uint256 targetSupply // Renamed from targetTotalIssuanceSupply
+    ) internal pure returns (CurvePosition memory position) {
+        uint256 numSegments = segments.length;
         if (numSegments == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-        if (numSegments > MAX_SEGMENTS) {
-            // This check is also in validateSegmentArray, but good for internal consistency
+        // Although callers like getCurrentPriceAndStep might do their own MAX_SEGMENTS check via validateSegmentArray,
+        // _findPositionForSupply can be called by other internal logic, so keeping this is safer.
+        if (numSegments > MAX_SEGMENTS) { 
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
 
         uint256 cumulativeSupply = 0;
-        // targetPosition members are initialized to 0 by default
 
-        for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Use cached length
-            // Note: supplyPerStep within the segment is guaranteed > 0 by PackedSegmentLib.create validation.
+        for (uint256 i = 0; i < numSegments; ++i) {
             (
                 uint256 initialPrice,
                 uint256 priceIncreasePerStep,
                 uint256 supplyPerStep,
                 uint256 totalStepsInSegment
-            ) = segments[segmentIndex].unpack();
+            ) = segments[i].unpack();
+            
+            uint256 segmentCapacity = totalStepsInSegment * supplyPerStep;
+            uint256 segmentEndSupply = cumulativeSupply + segmentCapacity;
+            
+            if (targetSupply <= segmentEndSupply) {
+                // Found the segment where targetSupply resides or ends.
+                position.segmentIndex = i;
+                // supplyCoveredUpToThisPosition is critical for getCurrentPriceAndStep validation.
+                // If targetSupply is within this segment (or at its end), it's covered up to targetSupply.
+                position.supplyCoveredUpToThisPosition = targetSupply; 
 
-            uint256 supplyInCurrentSegment = totalStepsInSegment * supplyPerStep;
-            uint256 endOfCurrentSegmentSupply = cumulativeSupply + supplyInCurrentSegment;
-
-            if (targetTotalIssuanceSupply < endOfCurrentSegmentSupply) {
-                // Case 1: Target supply is strictly WITHIN the current segment.
-                targetPosition.segmentIndex = segmentIndex;
-                uint256 supplyNeededFromThisSegment = targetTotalIssuanceSupply - cumulativeSupply;
-                // supplyPerStep is guaranteed > 0 by PackedSegmentLib.create
-                targetPosition.stepIndexWithinSegment = supplyNeededFromThisSegment / supplyPerStep; 
-                targetPosition.priceAtCurrentStep = initialPrice + (targetPosition.stepIndexWithinSegment * priceIncreasePerStep);
-                targetPosition.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
-                return targetPosition;
-            } else if (targetTotalIssuanceSupply == endOfCurrentSegmentSupply) {
-                // Case 2: Target supply is EXACTLY AT THE END of the current segment.
-                targetPosition.supplyCoveredUpToThisPosition = targetTotalIssuanceSupply;
-                if (segmentIndex + 1 < numSegments) { // Use cached length
-                    // There is a next segment. Position is start of next segment.
-                    targetPosition.segmentIndex = segmentIndex + 1;
-                    targetPosition.stepIndexWithinSegment = 0;
-                    // Unpack segments[segmentIndex+1] to get its initialPrice
-                    (uint256 nextInitialPrice,,,) = segments[segmentIndex + 1].unpack();
-                    targetPosition.priceAtCurrentStep = nextInitialPrice; // Price is initial of next segment
+                if (targetSupply == segmentEndSupply && i + 1 < numSegments) {
+                    // Exactly at a boundary AND there's a next segment:
+                    // Position points to the start of the next segment.
+                    position.segmentIndex = i + 1;
+                    position.stepIndexWithinSegment = 0;
+                    // Price is the initial price of the next segment.
+                    position.priceAtCurrentStep = segments[i + 1].initialPrice(); // Use direct accessor
                 } else {
-                    // This is the last segment. Position is the last step of this current (last) segment.
-                    targetPosition.segmentIndex = segmentIndex;
-                    // totalStepsInSegment is guaranteed > 0 by PackedSegmentLib.create
-                    targetPosition.stepIndexWithinSegment = totalStepsInSegment - 1; 
-                    targetPosition.priceAtCurrentStep = initialPrice + (targetPosition.stepIndexWithinSegment * priceIncreasePerStep);
+                    // Either within the current segment, or at the end of the *last* segment.
+                    uint256 supplyIntoThisSegment = targetSupply - cumulativeSupply;
+                    // stepIndex is the 0-indexed step that contains/is completed by supplyIntoThisSegment.
+                    // For "next price" semantic, this is the step whose price will be quoted.
+                    position.stepIndexWithinSegment = supplyIntoThisSegment / supplyPerStep;
+                    
+                    // If exactly at the end of a step (but not end of segment moving to next),
+                    // and that step is not the last step of the segment, this correctly gives price of current step.
+                    // The _findPositionForSupply is used by getCurrentPriceAndStep which expects the price for the *next* unit.
+                    // If targetSupply = 0, stepIndex = 0, price = initialPrice. Correct.
+                    // If targetSupply = 1 (and supplyPerStep > 1), stepIndex = 0, price = initialPrice. Correct.
+                    // If targetSupply = supplyPerStep, stepIndex = 1. Price is initialPrice + 1*increase. This is price of 2nd step.
+                    // This seems to align with "price for next unit" if targetSupply is current supply.
+                    // Let's re-verify the logic for `stepIndexWithinSegment` for "next price":
+                    // If current supply is X, we want price for X+1.
+                    // If targetSupply is the *current supply*, then `supplyIntoThisSegment / supplyPerStep` gives the
+                    // index of the step that *would be filled next* or is *currently being filled*.
+                    // Example: supplyPerStep=10. currentSupply=0. supplyInto=0. stepIndex=0. price=initialPrice. (Correct for token 1)
+                    // currentSupply=9. supplyInto=9. stepIndex=0. price=initialPrice. (Correct for token 10)
+                    // currentSupply=10. supplyInto=10. stepIndex=1. price=initialPrice+1*increase. (Correct for token 11)
+                    // This logic seems correct for "price of the step that targetSupply falls into or starts".
+                    
+                    // If at the end of the *last* segment, stepIndex needs to be the last step.
+                    if (targetSupply == segmentEndSupply && i == numSegments - 1) {
+                         position.stepIndexWithinSegment = totalStepsInSegment > 0 ? totalStepsInSegment - 1 : 0;
+                    }
+                    position.priceAtCurrentStep = initialPrice + (position.stepIndexWithinSegment * priceIncreasePerStep);
                 }
-                return targetPosition;
-            } else {
-                // Case 3: Target supply is BEYOND the current segment.
-                // Continue to the next segment.
-                cumulativeSupply = endOfCurrentSegmentSupply;
+                return position;
             }
+            cumulativeSupply = segmentEndSupply;
         }
 
-        // Target supply is beyond all configured segments
-        targetPosition.segmentIndex = numSegments - 1; // Indicates the last segment, use cached length
-        // targetPosition.stepIndexWithinSegment will be the last step of the last segment
-        // Unpack the last segment once
+        // Fallback: targetSupply is greater than total capacity of all segments.
+        // This should be caught by _validateSupplyAgainstSegments in public-facing functions.
+        // If reached, position to the end of the last segment.
+        position.segmentIndex = numSegments - 1;
         (
-            uint256 lastSegmentInitialPrice, 
-            uint256 lastSegmentPriceIncreasePerStep,, 
-            uint256 lastSegmentTotalSteps
+            uint256 lastSegInitialPrice,
+            uint256 lastSegPriceIncreasePerStep,,
+            uint256 lastSegTotalSteps
         ) = segments[numSegments - 1].unpack();
-        targetPosition.stepIndexWithinSegment = lastSegmentTotalSteps > 0 ? lastSegmentTotalSteps - 1 : 0;
-        targetPosition.priceAtCurrentStep = lastSegmentInitialPrice + (targetPosition.stepIndexWithinSegment * lastSegmentPriceIncreasePerStep);
-        targetPosition.supplyCoveredUpToThisPosition = cumulativeSupply; // Total supply covered by all segments
-        // The caller should check if targetPosition.supplyCoveredUpToThisPosition < targetTotalIssuanceSupply
-        // to understand if the target was fully met.
-        return targetPosition;
+        
+        position.stepIndexWithinSegment = lastSegTotalSteps > 0 ? lastSegTotalSteps - 1 : 0;
+        position.priceAtCurrentStep = lastSegInitialPrice + (position.stepIndexWithinSegment * lastSegPriceIncreasePerStep);
+        // supplyCoveredUpToThisPosition is the total capacity of the curve.
+        position.supplyCoveredUpToThisPosition = cumulativeSupply; 
+        return position;
     }
 
     // Functions from sections IV-VIII will be added in subsequent steps.
@@ -175,26 +189,27 @@ library DiscreteCurveMathLib_v1 {
         PackedSegment[] memory segments,
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 price, uint256 stepIndex, uint256 segmentIndex) {
-        CurvePosition memory targetPosition = _findPositionForSupply(segments, currentTotalIssuanceSupply);
+        // Perform validation first. This will revert if currentTotalIssuanceSupply > totalCurveCapacity.
+        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
+        // Note: The returned totalCurveCapacity is not explicitly used here as _findPositionForSupply
+        // will correctly determine the position based on the now-validated currentTotalIssuanceSupply.
 
-        // Validate that currentTotalIssuanceSupply is within curve bounds.
-        // _findPositionForSupply sets targetPosition.supplyCoveredUpToThisPosition to the maximum supply
-        // of the curve if targetTotalIssuanceSupply is beyond the curve's capacity.
-        // If currentTotalIssuanceSupply is 0, targetPosition.supplyCoveredUpToThisPosition will also be 0.
-        // Thus, (0 > 0) is false, no revert.
-        // If currentTotalIssuanceSupply > 0 and within capacity, targetPosition.supplyCoveredUpToThisPosition == currentTotalIssuanceSupply.
-        // Thus, (X > X) is false, no revert.
-        // If currentTotalIssuanceSupply > 0 and beyond capacity, targetPosition.supplyCoveredUpToThisPosition is max capacity.
-        // Thus, (currentTotalIssuanceSupply > max_capacity) is true, causing a revert.
-        if (currentTotalIssuanceSupply > targetPosition.supplyCoveredUpToThisPosition) {
-            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity();
-        }
+        // _findPositionForSupply can now assume currentTotalIssuanceSupply is valid (within or at capacity).
+        CurvePosition memory posDetails = _findPositionForSupply(segments, currentTotalIssuanceSupply);
         
-        // Since _findPositionForSupply (after its own fix for Issue 1) now correctly handles
+        // The previous explicit check:
+        // if (currentTotalIssuanceSupply > posDetails.supplyCoveredUpToThisPosition) {
+        //     revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity();
+        // }
+        // is now covered by the _validateSupplyAgainstSegments call above.
+        // _findPositionForSupply ensures posDetails.supplyCoveredUpToThisPosition is either currentTotalIssuanceSupply
+        // or the total curve capacity if currentTotalIssuanceSupply was at the very end.
+
+        // Since _findPositionForSupply now correctly handles
         // segment boundaries by pointing to the start of the next segment (or the last step of the
         // last segment if at max capacity), and returns the price/step for that position,
         // we can directly use its output. The complex adjustment logic previously here is no longer needed.
-        return (targetPosition.priceAtCurrentStep, targetPosition.stepIndexWithinSegment, targetPosition.segmentIndex);
+        return (posDetails.priceAtCurrentStep, posDetails.stepIndexWithinSegment, posDetails.segmentIndex);
     }
 
     // --- Core Calculation Functions ---
@@ -220,7 +235,9 @@ library DiscreteCurveMathLib_v1 {
         if (numSegments > MAX_SEGMENTS) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
         }
-        _validateSupplyAgainstSegments(segments, targetSupply);
+        _validateSupplyAgainstSegments(segments, targetSupply); // Validation occurs, returned capacity not stored if unused
+        // The loop condition `cumulativeSupplyProcessed >= targetSupply` and `targetSupply <= totalCurveCapacity` (from validation)
+        // should be sufficient.
 
         uint256 cumulativeSupplyProcessed = 0;
         // totalReserve is initialized to 0 by default
@@ -312,7 +329,9 @@ library DiscreteCurveMathLib_v1 {
         uint256 collateralToSpendProvided, // Renamed from collateralAmountIn
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 tokensToMint, uint256 collateralSpentByPurchaser) { // Renamed return values
-        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
+        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply); // Validation occurs
+        // If totalCurveCapacity is needed later, _validateSupplyAgainstSegments can be called again,
+        // or a separate _getTotalCapacity function could be used if this becomes a frequent pattern.
 
         if (collateralToSpendProvided == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput();
@@ -387,7 +406,9 @@ library DiscreteCurveMathLib_v1 {
         uint256 stepsAvailableToPurchase // Renamed from _stepsAvailableToPurchaseInSeg
     ) private pure returns (uint256 tokensMinted, uint256 collateralSpent) { // Renamed issuanceOut
         // Calculate full steps for flat segment
-        // pricePerStepInFlatSegment is guaranteed non-zero when this function is called.
+        // The caller (_calculatePurchaseForSingleSegment) ensures priceAtPurchaseStartStep (which becomes pricePerStepInFlatSegment) is non-zero.
+        // Adding an explicit check here for defense-in-depth.
+        require(pricePerStepInFlatSegment > 0, "Price cannot be zero for non-free flat segment step calculation");
         uint256 maxTokensMintableWithBudget = Math.mulDiv(availableBudget, SCALING_FACTOR, pricePerStepInFlatSegment);
         uint256 numFullStepsAffordable = maxTokensMintableWithBudget / supplyPerStepInSegment;
 
@@ -605,7 +626,8 @@ library DiscreteCurveMathLib_v1 {
         uint256 tokensToSell, // Renamed from issuanceAmountIn
         uint256 currentTotalIssuanceSupply
     ) internal pure returns (uint256 collateralToReturn, uint256 tokensToBurn) { // Renamed return values
-        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply);
+        _validateSupplyAgainstSegments(segments, currentTotalIssuanceSupply); // Validation occurs
+        // If totalCurveCapacity is needed later, _validateSupplyAgainstSegments can be called again.
 
         if (tokensToSell == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput();
@@ -677,11 +699,7 @@ library DiscreteCurveMathLib_v1 {
 
         // Note: Individual segment's supplyPerStep > 0 and numberOfSteps > 0 
         // are guaranteed by PackedSegmentLib.create validation.
-        // This function primarily validates array-level properties.
-        for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Renamed i to segmentIndex
-            // The check for segments[segmentIndex].supplyPerStep() == 0 was removed as it's redundant.
-            // Similarly, numberOfSteps > 0 is also guaranteed by PackedSegmentLib.create.
-            // If other per-segment validations were needed here (that aren't covered by create), they could be added.
-        }
+        // This function primarily validates array-level properties like non-empty array and MAX_SEGMENTS.
+        // The loop below was empty and has been removed.
     }
 }

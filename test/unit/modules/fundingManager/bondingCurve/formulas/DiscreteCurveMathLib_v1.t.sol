@@ -375,10 +375,18 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Using a single segment for simplicity, but based on defaultSeg0
         PackedSegment[] memory segments = new PackedSegment[](1);
         segments[0] = defaultSegments[0]; // Capacity 30 ether
+        uint256 singleSegmentCapacity = defaultSeg0_capacity; // Use a local variable for clarity
         
-        uint256 currentSupply = defaultSeg0_capacity + 5 ether; // Beyond capacity of this single segment array
+        uint256 currentSupply = singleSegmentCapacity + 5 ether; // Beyond capacity of this single segment array
 
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity.selector);
+        // This will now be caught by _validateSupplyAgainstSegments called at the start of getCurrentPriceAndStep
+        // The error should be DiscreteCurveMathLib__SupplyExceedsCurveCapacity
+        bytes memory expectedError = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
+            currentSupply,
+            singleSegmentCapacity // This should be the actual capacity of the 'segments' array passed
+        );
+        vm.expectRevert(expectedError);
         exposedLib.getCurrentPriceAndStepPublic(segments, currentSupply);
     }
 
