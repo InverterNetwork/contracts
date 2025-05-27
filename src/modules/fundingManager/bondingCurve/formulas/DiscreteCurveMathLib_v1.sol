@@ -271,12 +271,11 @@ library DiscreteCurveMathLib_v1 {
                     uint256 lastStepPrice = initialPrice + (stepsToProcessInSegment - 1) * priceIncreasePerStep;
                     uint256 sumOfPrices = firstStepPrice + lastStepPrice;
                     uint256 totalPriceForAllStepsInPortion;
-                    if (sumOfPrices == 0) { // If prices are zero, total is zero
+                    if (sumOfPrices == 0 || stepsToProcessInSegment == 0) { 
                         totalPriceForAllStepsInPortion = 0;
-                    } else if (stepsToProcessInSegment % 2 == 0) {
-                        totalPriceForAllStepsInPortion = (stepsToProcessInSegment / 2) * sumOfPrices;
                     } else {
-                        totalPriceForAllStepsInPortion = stepsToProcessInSegment * (sumOfPrices / 2);
+                        // Use Math.mulDiv to prevent precision loss for odd stepsToProcessInSegment
+                        totalPriceForAllStepsInPortion = Math.mulDiv(stepsToProcessInSegment, sumOfPrices, 2);
                     }
                     collateralForPortion = Math.mulDiv(supplyPerStep, totalPriceForAllStepsInPortion, SCALING_FACTOR);
                 }
@@ -286,12 +285,14 @@ library DiscreteCurveMathLib_v1 {
             cumulativeSupplyProcessed += stepsToProcessInSegment * supplyPerStep;
         }
         
-        // If targetSupply was greater than the total capacity of the curve,
-        // cumulativeSupplyProcessed will be less than targetSupply.
-        // The function returns the reserve for the supply that *could* be covered.
-        // A check can be added by the caller if needed.
-        // For example: if (cumulativeSupplyProcessed < targetSupply) { revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TargetSupplyBeyondCurveCapacity(); }
-        // However, the function is "calculateReserveForSupply", so it calculates for what's available up to targetSupply.
+        // Note: The case where targetSupply > totalCurveCapacity is handled by the
+        // _validateSupplyAgainstSegments check at the beginning of this function,
+        // which will cause a revert. Therefore, this function will only proceed
+        // if targetSupply is within the curve's defined capacity.
+        // If, for some other reason, cumulativeSupplyProcessed < targetSupply at this point
+        // (e.g. an issue with loop logic or segment data), it implies an internal inconsistency
+        // as the initial validation should have caught out-of-bounds targetSupply.
+        // The function calculates reserve for the portion of targetSupply covered by the loop.
 
         return totalReserve;
     }
