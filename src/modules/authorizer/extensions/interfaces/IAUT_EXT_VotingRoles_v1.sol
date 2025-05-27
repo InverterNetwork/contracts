@@ -11,8 +11,6 @@ interface IAUT_EXT_VotingRoles_v1 {
     /// @param  action The action data to execute on the target contract.
     /// @param  startTimestamp The timestamp at which the motion starts.
     /// @param  endTimestamp The timestamp at which the motion ends.
-    /// @param  requiredThreshold The required threshold of votes to pass the
-    ///         motion.
     /// @param  forVotes The number of votes in favor of the motion.
     /// @param  againstVotes The number of votes against the motion.
     /// @param  abstainVotes The number of votes abstaining from the motion.
@@ -25,7 +23,6 @@ interface IAUT_EXT_VotingRoles_v1 {
         bytes action;
         uint startTimestamp;
         uint endTimestamp;
-        uint requiredThreshold;
         uint forVotes;
         uint againstVotes;
         uint abstainVotes;

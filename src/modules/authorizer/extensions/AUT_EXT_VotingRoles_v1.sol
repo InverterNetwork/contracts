@@ -6,7 +6,7 @@ import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IOrchestrator_v1} from
     "src/orchestrator/interfaces/IOrchestrator_v1.sol";
 import {IAUT_EXT_VotingRoles_v1} from
-    "src/modules/authorizer/role/interfaces/IAUT_EXT_VotingRoles_v1.sol";
+    "src/modules/authorizer/extensions/interfaces/IAUT_EXT_VotingRoles_v1.sol";
 
 // Internal Dependencies
 import {ERC165Upgradeable, Module_v1} from "src/modules/base/Module_v1.sol";
