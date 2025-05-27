@@ -791,7 +791,7 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   └── When user attempts to set access criteria
     │       └── Then it should revert
     │
-    ├── Given AccessCriteriaId is greater than MAX_ACCESS_CRITERIA_ID
+    ├── Given AccessCriteriaId is greater than MAX_ACCESS_CRITERIA_TYPE
     │   └── When user attempts to set access criteria
     │       └── Then it should revert
     │
