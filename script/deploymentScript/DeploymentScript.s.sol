@@ -468,6 +468,7 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         virtual
     {}
 
+    // Function to verify whether the module factory is permissioned or not.
     function verifyModuleFactoryPermissions() public virtual {
         (IInverterBeacon_v1 testBeacon,) = ModuleFactory_v1(moduleFactory)
             .getBeaconAndId(initialMetadataRegistration[0]);
