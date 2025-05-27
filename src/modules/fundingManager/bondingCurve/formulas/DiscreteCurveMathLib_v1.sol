@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import {IDiscreteCurveMathLib_v1} from "../interfaces/IDiscreteCurveMathLib_v1.sol";
 import {PackedSegmentLib} from "../libraries/PackedSegmentLib.sol";
 import {PackedSegment} from "../types/PackedSegment_v1.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title DiscreteCurveMathLib_v1
@@ -60,7 +61,8 @@ library DiscreteCurveMathLib_v1 {
         uint256 totalCurveCapacity = 0;
         for (uint256 segmentIndex = 0; segmentIndex < numSegments; ++segmentIndex) { // Use cached length
             // Note: supplyPerStep and numberOfSteps are validated > 0 by PackedSegmentLib.create
-            (,, uint256 supplyPerStep, uint256 numberOfStepsInSegment) = segments[segmentIndex].unpack(); // Batch unpack
+            uint256 supplyPerStep = segments[segmentIndex].supplyPerStep();
+            uint256 numberOfStepsInSegment = segments[segmentIndex].numberOfSteps();
             totalCurveCapacity += numberOfStepsInSegment * supplyPerStep;
         }
 
@@ -215,8 +217,10 @@ library DiscreteCurveMathLib_v1 {
         if (numSegments == 0) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured();
         }
-        // No MAX_SEGMENTS check here as _findPositionForSupply would have caught it if it was an issue for positioning,
-        // and this function just iterates. If segments array is too long, it's a deployment/config issue.
+        if (numSegments > MAX_SEGMENTS) {
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__TooManySegments();
+        }
+        _validateSupplyAgainstSegments(segments, targetSupply);
 
         uint256 cumulativeSupplyProcessed = 0;
         // totalReserve is initialized to 0 by default
@@ -265,9 +269,16 @@ library DiscreteCurveMathLib_v1 {
                 } else {
                     uint256 firstStepPrice = initialPrice;
                     uint256 lastStepPrice = initialPrice + (stepsToProcessInSegment - 1) * priceIncreasePerStep;
-                    // Sum of arithmetic series = num_terms * (first_term + last_term) / 2
-                    uint256 totalPriceForAllStepsInPortion = stepsToProcessInSegment * (firstStepPrice + lastStepPrice) / 2;
-                    collateralForPortion = (supplyPerStep * totalPriceForAllStepsInPortion) / SCALING_FACTOR;
+                    uint256 sumOfPrices = firstStepPrice + lastStepPrice;
+                    uint256 totalPriceForAllStepsInPortion;
+                    if (sumOfPrices == 0) { // If prices are zero, total is zero
+                        totalPriceForAllStepsInPortion = 0;
+                    } else if (stepsToProcessInSegment % 2 == 0) {
+                        totalPriceForAllStepsInPortion = (stepsToProcessInSegment / 2) * sumOfPrices;
+                    } else {
+                        totalPriceForAllStepsInPortion = stepsToProcessInSegment * (sumOfPrices / 2);
+                    }
+                    collateralForPortion = Math.mulDiv(supplyPerStep, totalPriceForAllStepsInPortion, SCALING_FACTOR);
                 }
             }
 
@@ -376,14 +387,14 @@ library DiscreteCurveMathLib_v1 {
     ) private pure returns (uint256 tokensMinted, uint256 collateralSpent) { // Renamed issuanceOut
         // Calculate full steps for flat segment
         // pricePerStepInFlatSegment is guaranteed non-zero when this function is called.
-        uint256 maxTokensMintableWithBudget = (availableBudget * SCALING_FACTOR) / pricePerStepInFlatSegment;
+        uint256 maxTokensMintableWithBudget = Math.mulDiv(availableBudget, SCALING_FACTOR, pricePerStepInFlatSegment);
         uint256 numFullStepsAffordable = maxTokensMintableWithBudget / supplyPerStepInSegment;
 
         if (numFullStepsAffordable > stepsAvailableToPurchase) {
             numFullStepsAffordable = stepsAvailableToPurchase;
         }
         tokensMinted = numFullStepsAffordable * supplyPerStepInSegment;
-        collateralSpent = (tokensMinted * pricePerStepInFlatSegment) / SCALING_FACTOR;
+        collateralSpent = Math.mulDiv(tokensMinted, pricePerStepInFlatSegment, SCALING_FACTOR);
         return (tokensMinted, collateralSpent);
     }
 
@@ -535,7 +546,7 @@ library DiscreteCurveMathLib_v1 {
             return (tokensToIssue, collateralToSpend);
         }
 
-        uint256 tokensIssuableWithBudget = (availableBudget * SCALING_FACTOR) / pricePerTokenForPartialPurchase;
+        uint256 tokensIssuableWithBudget = Math.mulDiv(availableBudget, SCALING_FACTOR, pricePerTokenForPartialPurchase);
 
         tokensToIssue = tokensIssuableWithBudget;
 
@@ -547,11 +558,11 @@ library DiscreteCurveMathLib_v1 {
             tokensToIssue = maxTokensRemainingInSegment;
         }
         
-        collateralToSpend = (tokensToIssue * pricePerTokenForPartialPurchase) / SCALING_FACTOR;
+        collateralToSpend = Math.mulDiv(tokensToIssue, pricePerTokenForPartialPurchase, SCALING_FACTOR);
 
         if (collateralToSpend > availableBudget) {
             collateralToSpend = availableBudget;
-            tokensToIssue = (collateralToSpend * SCALING_FACTOR) / pricePerTokenForPartialPurchase;
+            tokensToIssue = Math.mulDiv(collateralToSpend, SCALING_FACTOR, pricePerTokenForPartialPurchase);
         }
 
         assert(collateralToSpend <= availableBudget); 

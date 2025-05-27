@@ -8,10 +8,10 @@ pragma solidity ^0.8.19;
  * The data is packed into a bytes32 value to optimize gas costs for storage.
  *
  * Layout (256 bits total):
- * - numberOfSteps (16 bits): Maximum 65,535 steps.
- * - supplyPerStep (96 bits): Maximum ~7.9e28 (assuming 18 decimals for tokens).
- * - priceIncreasePerStep (72 bits): Maximum ~4.722e21 (assuming 18 decimals for price).
  * - initialPriceOfSegment (72 bits): Maximum ~4.722e21 (assuming 18 decimals for price).
+ * - priceIncreasePerStep (72 bits): Maximum ~4.722e21 (assuming 18 decimals for price).
+ * - supplyPerStep (96 bits): Maximum ~7.9e28 (assuming 18 decimals for tokens).
+ * - numberOfSteps (16 bits): Maximum 65,535 steps.
  *
  * Offsets:
  * - initialPriceOfSegment: 0

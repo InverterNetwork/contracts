@@ -631,12 +631,16 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Using defaultSegments
         // defaultCurve_totalCapacity = 70 ether
         // defaultCurve_totalReserve = 94 ether
-        uint256 targetSupplyBeyondCapacity = defaultCurve_totalCapacity + 100 ether;
+        uint256 targetSupplyBeyondCapacity = defaultCurve_totalCapacity + 100 ether; // e.g., 70e18 + 100e18 = 170e18
 
-        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(defaultSegments, targetSupplyBeyondCapacity);
-        
-        // The function should return the reserve for the maximum supply the curve can offer.
-        assertEq(actualReserve, defaultCurve_totalReserve, "Reserve beyond capacity should be reserve for full curve");
+        // Expect revert because targetSupplyBeyondCapacity > defaultCurve_totalCapacity
+        bytes memory expectedError = abi.encodeWithSelector(
+            IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
+            targetSupplyBeyondCapacity,
+            defaultCurve_totalCapacity 
+        );
+        vm.expectRevert(expectedError);
+        exposedLib.calculateReserveForSupplyPublic(defaultSegments, targetSupplyBeyondCapacity);
     }
 
     // TODO: Implement test
