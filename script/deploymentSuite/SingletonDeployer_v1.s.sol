@@ -313,22 +313,15 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
         string memory implementationName,
         bytes memory creationCode
     ) internal returns (address implementation) {
-        implementation = deployWithCreate2(creationCode);
-
-        console2.log(
-            "\t%s Implementation: %s", implementationName, implementation
-        );
-    }
-
-    function deployWithCreate2(bytes memory creationCode)
-        internal
-        returns (address implementation)
-    {
         vm.startBroadcast(deployerPrivateKey);
         {
             implementation =
                 factory.deployWithCreate2(factorySalt, creationCode);
         }
         vm.stopBroadcast();
+
+        console2.log(
+            "\t%s Implementation: %s", implementationName, implementation
+        );
     }
 }
