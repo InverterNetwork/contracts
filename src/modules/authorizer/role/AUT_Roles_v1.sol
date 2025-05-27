@@ -487,10 +487,6 @@ contract AUT_Roles_v1 is
         onlyRole(getRoleAdmin(roleId_))
         idExists(roleId_)
     {
-        // If Role Admin is burned do nothing.
-        if (getRoleAdmin(roleId_) == BURN_ADMIN_ROLE) {
-            return;
-        }
         // Burn admin from the role.
         _setRoleAdmin(roleId_, BURN_ADMIN_ROLE);
         emit RoleAdminBurned(roleId_);
