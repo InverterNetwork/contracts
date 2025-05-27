@@ -23,7 +23,7 @@ import {
     IInverterBeacon_v1
 } from "src/proxies/InverterBeacon_v1.sol";
 import {Orchestrator_v1} from "src/orchestrator/Orchestrator_v1.sol";
-import {Module_v1} from "src/modules/base/Module_v1.sol";
+import {Module_v1, IModule_v1} from "src/modules/base/Module_v1.sol";
 import {Ownable} from "@oz/access/Ownable.sol";
 import {EIP712} from "@oz/utils/cryptography/EIP712.sol";
 
@@ -456,6 +456,9 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
                 "Deployment failed - Module Beacon not initialized correctly, Reverter is not correct."
             );
         }
+
+        // Verify that the Module Factory is permissioned, and not the Testnet version
+        verifyModuleFactoryPermissions();
     }
 
     // Hook that is being called before the module factory is deployed,
@@ -464,6 +467,37 @@ contract DeploymentScript is ModuleBeaconDeployer_v1 {
         public
         virtual
     {}
+
+    function verifyModuleFactoryPermissions() public virtual {
+        (IInverterBeacon_v1 testBeacon,) = ModuleFactory_v1(moduleFactory)
+            .getBeaconAndId(initialMetadataRegistration[0]);
+
+        IModule_v1.Metadata memory testMetadata = IModule_v1.Metadata(
+            type(uint).max,
+            type(uint).max,
+            type(uint).max,
+            "Test_Module_Name",
+            "https://github.com/Test/test"
+        );
+
+        // We do not actually want to send this transaction, just simulate it,
+        // which is why there is no startBroadcast() here.
+        try ModuleFactory_v1(moduleFactory).registerMetadata(
+            testMetadata, testBeacon
+        ) {
+            revert("Deployment failed - Module Factory not permissioned.");
+        } catch (bytes memory reason) {
+            require(
+                keccak256(reason)
+                    == keccak256(
+                        abi.encodeWithSignature(
+                            "OwnableUnauthorizedAccount(address)", address(this)
+                        )
+                    ),
+                "Deployment failed - Module Factory not permissioned."
+            );
+        }
+    }
 
     modifier verifyRequiredParameters() {
         require(
