@@ -189,6 +189,22 @@ contract ModuleBeaconDeployer_v1 is
             )
         );
 
+        // OracleRedeemingFundingManager
+        initialMetadataRegistration.push(oracleRedeemingFundingManagerMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    oracleRedeemingFundingManagerMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_FM_PC_Oracle_Redeeming_v1,
+                    oracleRedeemingFundingManagerMetadata.majorVersion,
+                    oracleRedeemingFundingManagerMetadata.minorVersion,
+                    oracleRedeemingFundingManagerMetadata.patchVersion
+                )
+            )
+        );
+
         // Funding Managers - Extensions
 
         // TokenVault
@@ -209,6 +225,22 @@ contract ModuleBeaconDeployer_v1 is
 
         //--------------------------------------------------------------------------
         // Logic Modules
+
+        // Oracle_Permissioned
+        initialMetadataRegistration.push(oraclePermissionedMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    oraclePermissionedMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_LM_PC_Oracle_Permissioned_v1,
+                    oraclePermissionedMetadata.majorVersion,
+                    oraclePermissionedMetadata.minorVersion,
+                    oraclePermissionedMetadata.patchVersion
+                )
+            )
+        );
 
         // Bounties
         initialMetadataRegistration.push(bountiesMetadata);
@@ -292,6 +324,40 @@ contract ModuleBeaconDeployer_v1 is
 
         //--------------------------------------------------------------------------
         // Payment Processors
+
+        // QueueManualExecutionPaymentProcessor
+        initialMetadataRegistration.push(
+            queueManualExecutionPaymentProcessorMetadata
+        );
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    queueManualExecutionPaymentProcessorMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_PP_Queue_ManualExecution_v1,
+                    queueManualExecutionPaymentProcessorMetadata.majorVersion,
+                    queueManualExecutionPaymentProcessorMetadata.minorVersion,
+                    queueManualExecutionPaymentProcessorMetadata.patchVersion
+                )
+            )
+        );
+
+        // QueuePaymentProcessor
+        initialMetadataRegistration.push(queuePaymentProcessorMetadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    queuePaymentProcessorMetadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_PP_Queue_v1,
+                    queuePaymentProcessorMetadata.majorVersion,
+                    queuePaymentProcessorMetadata.minorVersion,
+                    queuePaymentProcessorMetadata.patchVersion
+                )
+            )
+        );
 
         // SimplePaymentProcessor
         initialMetadataRegistration.push(simplePaymentProcessorMetadata);
