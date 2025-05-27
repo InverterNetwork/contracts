@@ -8,6 +8,8 @@ import {DeploymentScript} from "script/deploymentScript/DeploymentScript.s.sol";
 
 // Contracts
 import {DeterministicFactory_v1} from "@df/DeterministicFactory_v1.sol";
+import {Testnet_ModuleFactory_v1} from
+    "script/testnetContracts/Testnet_ModuleFactory_v1.sol";
 
 // Interfaces
 import {IERC20} from "@oz/token/ERC20/IERC20.sol";
@@ -88,5 +90,21 @@ contract TestnetDeploymentScript is DeploymentScript {
         proxyAndBeaconDeployer.setFactory(deterministicFactory);
 
         super.run();
+    }
+
+    function preDeploymentHook_moduleFactory(address transactionForwarder)
+        public
+        override
+    {
+        // Replace the implementation of the ModuleFactory with its
+        // testnet version.
+        impl_fac_ModuleFactory_v1 = deployWithCreate2(
+            abi.encodePacked(
+                vm.getCode(
+                    "Testnet_ModuleFactory_v1.sol:Testnet_ModuleFactory_v1"
+                ),
+                abi.encode(impl_ext_InverterReverter_v1, transactionForwarder)
+            )
+        );
     }
 }
