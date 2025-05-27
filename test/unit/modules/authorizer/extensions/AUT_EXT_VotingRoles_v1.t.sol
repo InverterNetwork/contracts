@@ -264,7 +264,6 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
         _bufMotion.action = _act;
         _bufMotion.startTimestamp = _start;
         _bufMotion.endTimestamp = _end;
-        _bufMotion.requiredThreshold = _threshold;
         _bufMotion.forVotes = _for;
         _bufMotion.againstVotes = _against;
         _bufMotion.abstainVotes = _abstain;
@@ -462,7 +461,7 @@ contract AUT_EXT_VotingRoles_v1Test is ModuleTest {
             assertEq(_motion.action, _msg);
             assertEq(_motion.startTimestamp, block.timestamp);
             assertEq(_motion.endTimestamp, (block.timestamp + DEFAULT_DURATION));
-            assertEq(_motion.requiredThreshold, DEFAULT_QUORUM);
+            assertEq(_votingRoles.getThreshold(), DEFAULT_QUORUM);
             assertEq(_motion.forVotes, 0);
             assertEq(_motion.againstVotes, 0);
             assertEq(_motion.abstainVotes, 0);
