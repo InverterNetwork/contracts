@@ -541,30 +541,41 @@ library DiscreteCurveMathLib_v1 {
         uint256 maxTokensRemainingInSegment // Renamed from _maxIssuanceAllowedOverall
     ) private pure returns (uint256 tokensToIssue, uint256 collateralToSpend) { // Renamed return values
         if (pricePerTokenForPartialPurchase == 0) {
-            tokensToIssue = maxTokensPerIndividualStep < maxTokensRemainingInSegment ? maxTokensPerIndividualStep : maxTokensRemainingInSegment;
+            // For free mints, issue the minimum of what's available in the step or segment.
+            if (maxTokensPerIndividualStep < maxTokensRemainingInSegment) {
+                tokensToIssue = maxTokensPerIndividualStep;
+            } else {
+                tokensToIssue = maxTokensRemainingInSegment;
+            }
             collateralToSpend = 0;
             return (tokensToIssue, collateralToSpend);
         }
 
-        uint256 tokensIssuableWithBudget = Math.mulDiv(availableBudget, SCALING_FACTOR, pricePerTokenForPartialPurchase);
-
-        tokensToIssue = tokensIssuableWithBudget;
-
-        if (tokensToIssue > maxTokensPerIndividualStep) {
-            tokensToIssue = maxTokensPerIndividualStep;
-        }
-
-        if (tokensToIssue > maxTokensRemainingInSegment) {
-            tokensToIssue = maxTokensRemainingInSegment;
-        }
+        // Calculate the maximum tokens that can be afforded with the available budget.
+        uint256 maxAffordableTokens = Math.mulDiv(
+            availableBudget,
+            SCALING_FACTOR,
+            pricePerTokenForPartialPurchase
+        );
         
-        collateralToSpend = Math.mulDiv(tokensToIssue, pricePerTokenForPartialPurchase, SCALING_FACTOR);
+        // Determine the actual tokens to issue by taking the minimum of three constraints:
+        // 1. What the budget can afford.
+        // 2. The maximum tokens available in an individual step.
+        // 3. The maximum tokens remaining in the current segment.
+        tokensToIssue = _min3(
+            maxAffordableTokens,
+            maxTokensPerIndividualStep,
+            maxTokensRemainingInSegment
+        );
+        
+        // Calculate the collateral to spend for the determined tokensToIssue.
+        collateralToSpend = Math.mulDiv(
+            tokensToIssue,
+            pricePerTokenForPartialPurchase,
+            SCALING_FACTOR
+        );
 
-        if (collateralToSpend > availableBudget) {
-            collateralToSpend = availableBudget;
-            tokensToIssue = Math.mulDiv(collateralToSpend, SCALING_FACTOR, pricePerTokenForPartialPurchase);
-        }
-
+        // Assertions to ensure invariants (can be kept for testing/development).
         assert(collateralToSpend <= availableBudget); 
         assert(tokensToIssue <= maxTokensRemainingInSegment); 
         assert(tokensToIssue <= maxTokensPerIndividualStep); 
@@ -572,6 +583,16 @@ library DiscreteCurveMathLib_v1 {
         return (tokensToIssue, collateralToSpend);
     }
 
+    /**
+     * @dev Helper function to find the minimum of three uint256 values.
+     */
+    function _min3(uint256 a, uint256 b, uint256 c) private pure returns (uint256) {
+        if (a < b) {
+            return a < c ? a : c;
+        } else {
+            return b < c ? b : c;
+        }
+    }
 
     /**
      * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
