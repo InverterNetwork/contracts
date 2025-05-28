@@ -38,6 +38,32 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     uint256 internal defaultCurve_totalCapacity;
     uint256 internal defaultCurve_totalReserve;
 
+    // Default Bonding Curve Visualization (Price vs. Supply)
+    // Based on defaultSegments initialized in setUp():
+    // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3  (Prices: 1.0, 1.1, 1.2)
+    // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55)
+    //
+    //     Price (ether)
+    //       ^
+    //     1.55|                   +------+ (Supply: 70)
+    //         |                   |      |
+    //     1.50|           +-------+      | (Supply: 50)
+    //         |           |              |
+    //         |           |              |
+    //     1.20|       +---+              | (Supply: 30)
+    //         |       |                  |
+    //     1.10|   +---+                  | (Supply: 20)
+    //         |   |                      |
+    //     1.00|---+                      | (Supply: 10)
+    //         +---+---+---+------+-------+--> Supply (ether)
+    //         0   10  20  30     50     70
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 1.00 (Segment 0, Step 0)
+    //          Supply 10-20:  Price 1.10 (Segment 0, Step 1)
+    //          Supply 20-30:  Price 1.20 (Segment 0, Step 2)
+    //          Supply 30-50:  Price 1.50 (Segment 1, Step 0)
+    //          Supply 50-70:  Price 1.55 (Segment 1, Step 1)
 
     function setUp() public virtual {
         exposedLib = new DiscreteCurveMathLibV1_Exposed();
@@ -363,6 +389,26 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(reserve, 0, "Reserve for 0 supply should be 0");
     }
 
+    // Test: Calculate reserve for targetSupply = 30 on a single flat segment.
+    // Curve: P_init=2.0, P_inc=0, S_step=10, N_steps=5 (Capacity 50)
+    // Point T marks the targetSupply for which reserve is calculated.
+    //
+    //     Price (ether)
+    //       ^
+    //     2.0 |---+---+---T---+---+  (Price 2.0 for all steps)
+    //         +---+---+---+---+---+--> Supply (ether)
+    //         0  10  20  30  40  50
+    //                     ^
+    //                     T (targetSupply = 30)
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 2.00
+    //          Supply 10-20:  Price 2.00
+    //          Supply 20-30:  Price 2.00
+    //          Supply 30-40:  Price 2.00
+    //          Supply 40-50:  Price 2.00
+
+
     function test_CalculateReserveForSupply_SingleFlatSegment_Partial() public {
         PackedSegment[] memory segments = new PackedSegment[](1);
         uint256 initialPrice = 2 ether;
@@ -380,6 +426,27 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint256 reserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupply);
         assertEq(reserve, expectedReserve, "Reserve for flat segment partial fill mismatch");
     }
+
+    // Test: Calculate reserve for targetSupply = 20 on a single sloped segment (defaultSeg0).
+    // Curve: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Capacity 30)
+    // Point T marks the targetSupply for which reserve is calculated.
+    //
+    //     Price (ether)
+    //       ^
+    //     1.20|       +---+ (Supply: 30, Price: 1.20)
+    //         |       |    
+    //     1.10|   +---T     (Supply: 20, Price: 1.10)
+    //         |   |    
+    //     1.00|---+         (Supply: 10, Price: 1.00)
+    //         +---+---+---+--> Supply (ether)
+    //         0  10  20  30
+    //                 ^
+    //                 T (targetSupply = 20)
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 1.00
+    //          Supply 10-20:  Price 1.10
+    //          Supply 20-30:  Price 1.20
 
     function test_CalculateReserveForSupply_SingleSlopedSegment_Partial() public {
         // Using only the first segment of defaultSegments (which is sloped)
@@ -402,6 +469,35 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     }
 
     // --- Tests for calculatePurchaseReturn ---
+
+    // Test: Reverts when currentTotalIssuanceSupply > curve capacity.
+    // Curve: defaultSegments (Capacity C = 70)
+    // Point S (currentTotalIssuanceSupply = 71) is beyond C.
+    //
+    //     Price (ether)
+    //       ^
+    //     1.55|                   +------+ C (Capacity)
+    //         |                   |      |
+    //     1.50|           +-------+      |
+    //         |           |              |
+    //         |           |              |
+    //     1.20|       +---+              |
+    //         |       |                  |
+    //     1.10|   +---+                  |
+    //         |   |                      |
+    //     1.00|---+                      |
+    //         +---+---+---+------+-------+--> Supply (ether)
+    //         0  10  20  30     50     70 71
+    //                                    ^  ^
+    //                                    C  S (currentSupply > C)
+    //
+    //          Step Prices (defaultSegments):
+    //          Supply  0-10:  Price 1.00
+    //          Supply 10-20:  Price 1.10
+    //          Supply 20-30:  Price 1.20
+    //          Supply 30-50:  Price 1.50
+    //          Supply 50-70:  Price 1.55
+
 
     function testRevert_CalculatePurchaseReturn_SupplyExceedsCapacity() public {
         uint256 supplyOverCapacity = defaultCurve_totalCapacity + 1 ether;
@@ -450,6 +546,25 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
+    // Test: Purchase on a single flat segment, affording a partial amount.
+    // Curve: P_init=2.0, P_inc=0, S_step=10, N_steps=5 (Capacity 50)
+    // Start Supply (S) = 0. Collateral In = 45.
+    // Expected Issuance Out = 22.5. End Supply (E) = 0 + 22.5 = 22.5.
+    //
+    //     Price (ether)
+    //       ^
+    //     2.0 |S--+---+-E-+---+---+  (Price 2.0 for all steps)
+    //         +---+---+---+---+---+--> Supply (ether)
+    //         0  10  20  30  40  50
+    //         ^          ^
+    //         S          E (22.5)
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 2.00
+    //          Supply 10-20:  Price 2.00
+    //          Supply 20-30:  Price 2.00 (Purchase ends in this step)
+    //          Supply 30-40:  Price 2.00
+    //          Supply 40-50:  Price 2.00
     function test_CalculatePurchaseReturn_SingleFlatSegment_PartialBuy_AffordSome() public {
         PackedSegment[] memory segments = new PackedSegment[](1);
         uint256 initialPrice = 2 ether;
@@ -475,6 +590,25 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(collateralSpent, expectedCollateralSpent, "Flat partial buy: collateralSpent mismatch");
     }
 
+    // Test: Purchase on a single flat segment, affording all in a partial step.
+    // Curve: P_init=2.0, P_inc=0, S_step=10, N_steps=5 (Capacity 50)
+    // Start Supply (S) = 0. Collateral In = 50.
+    // Expected Issuance Out = 25. End Supply (E) = 0 + 25 = 25.
+    //
+    //     Price (ether)
+    //       ^
+    //     2.0 |S--+---+-E-+---+---+  (Price 2.0 for all steps)
+    //         +---+---+---+---+---+--> Supply (ether)
+    //         0  10  20  30  40  50
+    //         ^          ^
+    //         S          E (25)
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 2.00
+    //          Supply 10-20:  Price 2.00
+    //          Supply 20-30:  Price 2.00 (Purchase ends in this step)
+    //          Supply 30-40:  Price 2.00
+    //          Supply 40-50:  Price 2.00
     function test_CalculatePurchaseReturn_SingleFlatSegment_PartialBuy_AffordAllInStep() public {
         PackedSegment[] memory segments = new PackedSegment[](1);
         uint256 initialPrice = 2 ether;
@@ -516,7 +650,27 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(collateralSpent, expectedCollateralSpent, "Flat partial buy (exact for steps): collateralSpent mismatch");
     }
 
-
+    // Test: Purchase on a single sloped segment, affording multiple full steps and a partial final step.
+    // Curve: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Capacity 30, defaultSeg0)
+    // Start Supply (S) = 0. Collateral In = 25.
+    // Expected Issuance Out = 23.333... End Supply (E) = 23.333...
+    //
+    //     Price (ether)
+    //       ^
+    //     1.20|       +-E-+ (Supply: 30, Price: 1.20)
+    //         |       |   |
+    //     1.10|   +---+   | (Supply: 20, Price: 1.10)
+    //         |   |       |
+    //     1.00|S--+       | (Supply: 10, Price: 1.00)
+    //         +---+---+---+--> Supply (ether)
+    //         0  10  20  30
+    //         ^        ^
+    //         S        E (23.33...)
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 1.00 (Step 0)
+    //          Supply 10-20:  Price 1.10 (Step 1)
+    //          Supply 20-30:  Price 1.20 (Step 2 - purchase ends in this step)
     function test_CalculatePurchaseReturn_SingleSlopedSegment_AffordMultipleFullSteps() public {
         // Using only the first segment of defaultSegments (sloped)
         PackedSegment[] memory segments = new PackedSegment[](1);
@@ -551,6 +705,33 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Tests for calculateSaleReturn ---
 
+    // Test: Reverts when currentTotalIssuanceSupply > curve capacity for a sale.
+    // Curve: defaultSegments (Capacity C = 70)
+    // Point S (currentTotalIssuanceSupply = 71) is beyond C.
+    //
+    //     Price (ether)
+    //       ^
+    //     1.55|                   +------+ C (Capacity)
+    //         |                   |      |
+    //     1.50|           +-------+      |
+    //         |           |              |
+    //         |           |              |
+    //     1.20|       +---+              |
+    //         |       |                  |
+    //     1.10|   +---+                  |
+    //         |   |                      |
+    //     1.00|---+                      |
+    //         +---+---+---+------+-------+--> Supply (ether)
+    //         0  10  20  30     50     70 71
+    //                                    ^  ^
+    //                                    C  S (currentSupply > C)
+    //
+    //          Step Prices (defaultSegments):
+    //          Supply  0-10:  Price 1.00
+    //          Supply 10-20:  Price 1.10
+    //          Supply 20-30:  Price 1.20
+    //          Supply 30-50:  Price 1.50
+    //          Supply 50-70:  Price 1.55
     function testRevert_CalculateSaleReturn_SupplyExceedsCapacity() public {
         uint256 supplyOverCapacity = defaultCurve_totalCapacity + 1 ether;
         bytes memory expectedRevertData = abi.encodeWithSelector(
@@ -566,6 +747,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
+    // Test: Reverts when trying to calculate sale return with no segments configured
+    // and currentTotalIssuanceSupply > 0.
+    // Visualization is not applicable as there are no curve segments.
     function testRevert_CalculateSaleReturn_NoSegments_SupplyPositive() public {
         PackedSegment[] memory noSegments = new PackedSegment[](0);
         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__NoSegmentsConfigured.selector);
@@ -576,6 +760,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
+    // Test: Correctly handles selling 0 from 0 supply on an unconfigured (no segments) curve.
+    // Expected to revert due to ZeroIssuanceInput, which takes precedence over no-segment logic here.
+    // Visualization is not applicable as there are no curve segments.
     function testPass_CalculateSaleReturn_NoSegments_SupplyZero_IssuanceZero() public {
         // This specific case (selling 0 from 0 supply on an unconfigured curve)
         // is handled by the ZeroIssuanceInput revert, which takes precedence.
@@ -591,6 +778,9 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
+    // Test: Correctly handles selling a positive amount from 0 supply on an unconfigured (no segments) curve.
+    // Expected to return 0 collateral and 0 burned, as there's nothing to sell.
+    // Visualization is not applicable as there are no curve segments.
     function testPass_CalculateSaleReturn_NoSegments_SupplyZero_IssuancePositive() public {
         // Selling 1 from 0 supply on an unconfigured curve.
         // _validateSupplyAgainstSegments passes (0 supply, 0 segments).
@@ -608,7 +798,33 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         assertEq(burned, 0, "Issuance burned should be 0");
     }
 
-
+    // Test: Reverts when issuanceAmountIn is zero for a sale.
+    // Curve: defaultSegments
+    // Current Supply (S) = 30. Attempting to sell 0 from this point.
+    //
+    //     Price (ether)
+    //       ^
+    //     1.55|                   +------+ (Supply: 70)
+    //         |                   |      |
+    //     1.50|           +-------+      | (Supply: 50)
+    //         |           |              |
+    //         |           |              |
+    //     1.20|       +---S              | (Supply: 30, Price: 1.20)
+    //         |       |                  |
+    //     1.10|   +---+                  | (Supply: 20, Price: 1.10)
+    //         |   |                      |
+    //     1.00|---+                      | (Supply: 10, Price: 1.00)
+    //         +---+---+---+------+-------+--> Supply (ether)
+    //         0  10  20  30     50     70
+    //                     ^
+    //                     S (currentSupply = 30, selling 0)
+    //
+    //          Step Prices (defaultSegments):
+    //          Supply  0-10:  Price 1.00
+    //          Supply 10-20:  Price 1.10
+    //          Supply 20-30:  Price 1.20
+    //          Supply 30-50:  Price 1.50
+    //          Supply 50-70:  Price 1.55
     function testRevert_CalculateSaleReturn_ZeroIssuanceInput() public {
         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroIssuanceInput.selector);
         exposedLib.calculateSaleReturnPublic(
@@ -618,6 +834,27 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
+    // Test: Partial sale on a single sloped segment (defaultSeg0).
+    // Curve: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3 (Capacity 30)
+    // Start Supply (S) = 30. Issuance to Sell = 10.
+    // Expected Issuance Burned = 10. End Supply (E) = 30 - 10 = 20.
+    //
+    //     Price (ether)
+    //       ^
+    //     1.20|       +---S (Supply: 30, Price: 1.20)
+    //         |       |   |
+    //     1.10|   +---E   + (Supply: 20, Price: 1.10)
+    //         |   |   |   |
+    //     1.00|---+   |   | (Supply: 10, Price: 1.00)
+    //         +---+---+---+--> Supply (ether)
+    //         0  10  20  30
+    //                 ^   ^
+    //                 E   S
+    //
+    //          Step Prices:
+    //          Supply  0-10:  Price 1.00 (Step 0)
+    //          Supply 10-20:  Price 1.10 (Step 1 - sale ends here)
+    //          Supply 20-30:  Price 1.20 (Step 2 - sale starts here)
     function test_CalculateSaleReturn_SingleSlopedSegment_PartialSell() public {
         // Using only the first segment of defaultSegments (sloped)
         PackedSegment[] memory segments = new PackedSegment[](1);
