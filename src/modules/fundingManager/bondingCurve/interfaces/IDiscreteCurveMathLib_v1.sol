@@ -68,7 +68,22 @@ interface IDiscreteCurveMathLib_v1 {
     /**
      * @notice Reverted when a segment is configured with zero initial price and zero price increase.
      */
-    error DiscreteCurveMathLib__SegmentHasNoPrice();
+    error DiscreteCurveMathLib__SegmentHasNoPrice(); // Existing error, may need review if it overlaps with SegmentIsFree
+
+    /**
+     * @notice Reverted when an attempt is made to configure a segment that is entirely free
+     * (i.e., initialPrice is 0 and priceIncreasePerStep is 0).
+     */
+    error DiscreteCurveMathLib__SegmentIsFree();
+
+    /**
+     * @notice Reverted when the price progression between segments is invalid.
+     * Specifically, if the initial price of a segment is less than the final price of the preceding segment.
+     * @param segmentIndex The index of the first segment in the pair being compared (the one that ends).
+     * @param previousSegmentFinalPrice The calculated final price of segment `segmentIndex`.
+     * @param nextSegmentInitialPrice The initial price of segment `segmentIndex + 1`.
+     */
+    error DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousSegmentFinalPrice, uint256 nextSegmentInitialPrice);
 
     /**
      * @notice Reverted when an operation (e.g., purchase) cannot be fulfilled due to

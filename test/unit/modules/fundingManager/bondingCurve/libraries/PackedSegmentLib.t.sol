@@ -114,4 +114,21 @@ contract PackedSegmentLib_Test is Test {
             tooLargeSteps
         );
     }
+
+    function test_CreateSegment_FreeSegment_Reverts() public {
+        // Test that creating a segment with initialPrice = 0 and priceIncrease = 0 reverts.
+        // Other parameters should be valid.
+        uint256 initialPrice = 0;
+        uint256 priceIncrease = 0;
+        uint256 supplyPerStep = 10e18; // Valid supply
+        uint256 numberOfSteps = 10;    // Valid number of steps
+
+        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree.selector);
+        exposedLib.createSegmentPublic(
+            initialPrice,
+            priceIncrease,
+            supplyPerStep,
+            numberOfSteps
+        );
+    }
 }

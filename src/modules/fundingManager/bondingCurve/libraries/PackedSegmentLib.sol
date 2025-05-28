@@ -63,11 +63,11 @@ library PackedSegmentLib {
         if (_numberOfSteps == 0 || _numberOfSteps > STEPS_MASK) {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidNumberOfSteps();
         }
-        // Additional check from my analysis: ensure segment has some value if it's not free
-        if (_initialPrice == 0 && _priceIncrease == 0 && _supplyPerStep > 0 && _numberOfSteps > 0) {
-            // This is a free mint segment, which can be valid.
-            // If we want to disallow segments that are entirely free AND have no price increase,
-            // an additional check could be added here. For now, assuming free mints are allowed.
+        // Disallow segments that are entirely free (both initial price and price increase are zero).
+        // This corresponds to MEDIUM-2 enhancement.
+        if (_initialPrice == 0 && _priceIncrease == 0) {
+            // Note: DiscreteCurveMathLib__SegmentIsFree error needs to be defined in IDiscreteCurveMathLib_v1.sol
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree();
         }
 
 

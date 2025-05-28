@@ -696,8 +696,52 @@ library DiscreteCurveMathLib_v1 {
 
         // Note: Individual segment's supplyPerStep > 0 and numberOfSteps > 0 
         // are guaranteed by PackedSegmentLib.create validation.
-        // This function primarily validates array-level properties like non-empty array and MAX_SEGMENTS.
-        // The loop below was empty and has been removed.
+        // Also, segments with initialPrice == 0 AND priceIncreasePerStep == 0 are disallowed by PackedSegmentLib.create.
+        // This function primarily validates array-level properties and inter-segment price progression.
+        
+        // Check for non-decreasing price progression between segments.
+        // The initial price of segment i+1 must be >= final price of segment i.
+        for (uint256 i = 0; i < numSegments - 1; ++i) {
+            PackedSegment currentSegment = segments[i];
+            PackedSegment nextSegment = segments[i+1];
+
+            uint256 currentInitialPrice = currentSegment.initialPrice();
+            uint256 currentPriceIncrease = currentSegment.priceIncrease();
+            uint256 currentNumberOfSteps = currentSegment.numberOfSteps();
+
+            // Final price of the current segment.
+            // If numberOfSteps is 1, final price is initialPrice.
+            // Otherwise, it's initialPrice + (numberOfSteps - 1) * priceIncrease.
+            uint256 finalPriceCurrentSegment;
+            if (currentNumberOfSteps == 0) { 
+                // This case should be prevented by PackedSegmentLib.create's check for numberOfSteps > 0.
+                // If somehow reached, treat as an invalid state or handle as per specific requirements.
+                // For safety, assume it implies an issue, though create() should prevent it.
+                // As a defensive measure, one might revert or assign a value that ensures progression check logic.
+                // However, relying on create() validation is typical.
+                // If steps is 0, let's consider its "final price" to be its initial price to avoid underflow with (steps-1).
+                finalPriceCurrentSegment = currentInitialPrice;
+            } else if (currentNumberOfSteps == 1) {
+                finalPriceCurrentSegment = currentInitialPrice;
+            } else {
+                finalPriceCurrentSegment = currentInitialPrice + (currentNumberOfSteps - 1) * currentPriceIncrease;
+                // Check for overflow in final price calculation, though bit limits on components make this unlikely
+                // to overflow uint256 unless priceIncrease is extremely large.
+                // Max initialPrice ~2^72, max (steps-1)*priceIncrease ~ (2^16)*(2^72) ~ 2^88. Sum ~2^88. Fits uint256.
+            }
+
+
+            uint256 initialPriceNextSegment = nextSegment.initialPrice();
+
+            if (initialPriceNextSegment < finalPriceCurrentSegment) {
+                // Note: DiscreteCurveMathLib__InvalidPriceProgression error needs to be defined in IDiscreteCurveMathLib_v1.sol
+                revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPriceProgression(
+                    i,
+                    finalPriceCurrentSegment,
+                    initialPriceNextSegment
+                );
+            }
+        }
     }
 
     // --- Custom Math Helpers for Rounding ---

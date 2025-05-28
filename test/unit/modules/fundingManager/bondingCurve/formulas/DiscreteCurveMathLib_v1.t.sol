@@ -218,50 +218,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.findPositionForSupplyPublic(segments, targetSupply);
     }
 
-    function test_FindPosition_Transition_FreeToSloped() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
-
-        // Segment 0: Free mint
-        uint256 freeSupplyPerStep = 10 ether;
-        uint256 freeNumberOfSteps = 1;
-        uint256 freeCapacity = freeSupplyPerStep * freeNumberOfSteps;
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(0, 0, freeSupplyPerStep, freeNumberOfSteps);
-
-        // Segment 1: Sloped, paid
-        uint256 slopedInitialPrice = 0.5 ether;
-        uint256 slopedPriceIncrease = 0.05 ether;
-        uint256 slopedSupplyPerStep = 5 ether;
-        uint256 slopedNumberOfSteps = 2;
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(
-            slopedInitialPrice,
-            slopedPriceIncrease,
-            slopedSupplyPerStep,
-            slopedNumberOfSteps
-        );
-
-        // Scenario 1: Target supply exactly at the end of the free segment
-        uint256 targetSupplyAtBoundary = freeCapacity;
-        DiscreteCurveMathLib_v1.CurvePosition memory posBoundary = exposedLib.findPositionForSupplyPublic(segments, targetSupplyAtBoundary);
-
-        // Expected: Position should be at the start of the next (sloped) segment
-        assertEq(posBoundary.segmentIndex, 1, "Boundary: Segment index should be 1 (start of sloped)");
-        assertEq(posBoundary.stepIndexWithinSegment, 0, "Boundary: Step index should be 0 of sloped segment");
-        assertEq(posBoundary.priceAtCurrentStep, slopedInitialPrice, "Boundary: Price should be initial price of sloped segment");
-        assertEq(posBoundary.supplyCoveredUpToThisPosition, targetSupplyAtBoundary, "Boundary: Supply covered mismatch");
-
-        // Scenario 2: Target supply one unit into the sloped segment
-        uint256 targetSupplyIntoSloped = freeCapacity + 1; // 1 wei into the sloped segment
-        DiscreteCurveMathLib_v1.CurvePosition memory posIntoSloped = exposedLib.findPositionForSupplyPublic(segments, targetSupplyIntoSloped);
-        
-        // Expected: Position should be within the first step of the sloped segment
-        assertEq(posIntoSloped.segmentIndex, 1, "Into Sloped: Segment index should be 1");
-        // supplyNeededFromThisSegment (sloped) = 1. stepIndex = 1 / 5e18 = 0.
-        assertEq(posIntoSloped.stepIndexWithinSegment, 0, "Into Sloped: Step index should be 0 of sloped segment");
-        uint256 expectedPriceIntoSloped = slopedInitialPrice + (0 * slopedPriceIncrease);
-        assertEq(posIntoSloped.priceAtCurrentStep, expectedPriceIntoSloped, "Into Sloped: Price mismatch for sloped segment");
-        assertEq(posIntoSloped.supplyCoveredUpToThisPosition, targetSupplyIntoSloped, "Into Sloped: Supply covered mismatch");
-    }
-
     function test_FindPosition_Transition_FlatToSloped() public {
         PackedSegment[] memory segments = new PackedSegment[](2);
 
@@ -743,36 +699,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // TODO: Implement test
     // function test_CalculateReserveForSupply_MixedFlatAndSlopedSegments() public {
     // }
-
-    function test_CalculateReserveForSupply_FreeToStartThenSlopedSegment() public {
-        PackedSegment[] memory segments = new PackedSegment[](2);
-
-        // Segment 0: Free mint
-        uint256 supplyPerStep0 = 50 ether;
-        uint256 numberOfSteps0 = 1; // Capacity 50 ether. Cost: 0
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(0, 0, supplyPerStep0, numberOfSteps0);
-
-        // Segment 1: Sloped
-        uint256 initialPrice1 = 0.2 ether;
-        uint256 priceIncrease1 = 0.05 ether;
-        uint256 supplyPerStep1 = 10 ether;
-        uint256 numberOfSteps1 = 3; // Capacity 30 ether.
-                                    // Cost: (10*0.2) + (10*0.25) + (10*0.3) = 2 + 2.5 + 3 = 7.5 ether
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(initialPrice1, priceIncrease1, supplyPerStep1, numberOfSteps1);
-        
-        // Target supply: Full free segment (50) + 2 steps of sloped segment (20) = 70 ether
-        uint256 targetSupply = (supplyPerStep0 * numberOfSteps0) + (2 * supplyPerStep1); // 50 + 20 = 70 ether
-        
-        uint256 costPartialSeg1 = 0;
-        costPartialSeg1 += (supplyPerStep1 * (initialPrice1 + 0 * priceIncrease1)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 * 0.2 = 2
-        costPartialSeg1 += (supplyPerStep1 * (initialPrice1 + 1 * priceIncrease1)) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 * 0.25 = 2.5
-        // Total for partial seg1 = 2 + 2.5 = 4.5 ether
-
-        uint256 expectedTotalReserve = 0 + costPartialSeg1; // 0 + 4.5 = 4.5 ether
-
-        uint256 actualReserve = exposedLib.calculateReserveForSupplyPublic(segments, targetSupply);
-        assertEq(actualReserve, expectedTotalReserve, "Reserve for free then sloped segments mismatch");
-    }
 
 
     function test_CalculatePurchaseReturn_Edge_CollateralForExactlyOneStep_Sloped() public {

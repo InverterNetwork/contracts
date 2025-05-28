@@ -35,6 +35,23 @@ The core design decision for `DiscreteCurveMathLib_v1` is the use of **type-safe
   - An `unpack` function to retrieve all parameters at once.
     The `PackedSegment` type itself (being `bytes32`) ensures type safety, preventing accidental mixing with other `bytes32` values that do not represent curve segments.
 
+### Segment Validation Rules
+
+To ensure economic sensibility and robustness, `DiscreteCurveMathLib_v1` and its helper `PackedSegmentLib` enforce specific validation rules for segment configurations:
+
+1.  **No Free Segments (`PackedSegmentLib.create`)**:
+    Segments that are entirely "free" – meaning their `initialPrice` is 0 AND their `priceIncreasePerStep` is also 0 – are disallowed. Attempting to create such a segment will cause `PackedSegmentLib.create()` to revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree()`. This prevents scenarios where tokens could be minted indefinitely at no cost from a segment that never increases in price.
+
+2.  **Non-Decreasing Price Progression (`DiscreteCurveMathLib_v1.validateSegmentArray`)**:
+    When an array of segments is validated using `DiscreteCurveMathLib_v1.validateSegmentArray()`, the library checks for logical price progression between consecutive segments. Specifically, the `initialPrice` of any segment `N+1` must be greater than or equal to the calculated final price of the preceding segment `N`. The final price of segment `N` is determined as `segments[N].initialPrice() + (segments[N].numberOfSteps() - 1) * segments[N].priceIncreasePerStep()`.
+    If this condition is violated (i.e., if a subsequent segment starts at a lower price than where the previous one ended), `validateSegmentArray()` will revert with the error `IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousSegmentFinalPrice, uint256 nextSegmentInitialPrice)`.
+    This rule ensures a generally non-decreasing (or strictly increasing, if price increases are positive) price curve across the entire set of segments.
+
+3.  **No Price Decrease Within Sloped Segments**:
+    The `priceIncreasePerStep` parameter for a segment is a `uint256`. This inherently means that for any single sloped segment (where `priceIncreasePerStep > 0`), the price per step will only increase or stay the same (if `priceIncreasePerStep` was 0, but such segments are now handled by the "No Free Segments" rule if `initialPrice` is also 0, or they are flat segments if `initialPrice > 0`). Direct price decreases _within_ a single segment are not possible due to the unsigned nature of this parameter.
+
+_Note: The custom errors `DiscreteCurveMathLib__SegmentIsFree` and `DiscreteCurveMathLib__InvalidPriceProgression` must be defined in the `IDiscreteCurveMathLib_v1.sol` interface file for the contracts to compile and function correctly._
+
 ### Efficient Calculation Methods
 
 To further optimize gas for on-chain computations:
