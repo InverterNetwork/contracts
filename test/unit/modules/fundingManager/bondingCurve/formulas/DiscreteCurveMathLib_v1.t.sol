@@ -575,12 +575,13 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // New logic: 2 full steps (20 issuance, 21 cost)
         // Remaining budget = 25 - 21 = 4 ether.
         // Next step price (step 2 of seg0) = 1 + (2 * 0.1) = 1.2 ether.
-        // Partial issuance = (4 * 1e18) / 1.2e18 = 3.333... ether.
-        // Partial cost = (3.333... * 1.2) / 1 = 4 ether.
-        // Total issuance = 20 + 3.333... = 23.333... ether.
-        // Total cost = 21 + 3.999... = 24.999... ether.
+        // Partial issuance: budget 4e18, price 1.2e18. maxAffordableTokens = Math.mulDiv(4e18, 1e18, 1.2e18) = 3.333...e18.
+        //   tokensToIssue (partial) = 3333333333333333333.
+        // Partial cost: _mulDivUp(tokensToIssue_partial, 1.2e18, 1e18) = _mulDivUp(3.333...e18, 1.2e18, 1e18) = 4e18.
+        // Total issuance = 20e18 (full) + 3.333...e18 (partial) = 23.333...e18.
+        // Total cost = 21e18 (full) + 4e18 (partial, rounded up) = 25e18.
         uint256 expectedIssuanceOut = 23333333333333333333; // 23.333... ether
-        uint256 expectedCollateralSpent = 24999999999999999999; // 24.999... ether
+        uint256 expectedCollateralSpent = 25000000000000000000; // 25 ether
 
         (uint256 issuanceOut, uint256 collateralSpent) = exposedLib.calculatePurchaseReturnPublic(
             segments,

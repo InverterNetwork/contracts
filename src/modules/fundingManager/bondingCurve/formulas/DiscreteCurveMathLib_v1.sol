@@ -16,6 +16,7 @@ library DiscreteCurveMathLib_v1 {
     // --- Constants ---
     uint256 public constant SCALING_FACTOR = 1e18;
     uint256 public constant MAX_SEGMENTS = 10;
+    uint256 private constant MAX_LINEAR_SEARCH_STEPS = 200; // Max iterations for _linearSearchSloped
 
     // --- Structs ---
 
@@ -254,7 +255,14 @@ library DiscreteCurveMathLib_v1 {
             uint256 collateralForPortion;
             if (priceIncreasePerStep == 0) {
                 // Flat segment
-                collateralForPortion = (stepsToProcessInSegment * supplyPerStep * initialPrice) / SCALING_FACTOR;
+                // Use mulDivUp for conservative reserve calculation (favors protocol)
+                if (initialPrice == 0) { // Free portion
+                    collateralForPortion = 0;
+                } else {
+                    collateralForPortion = _mulDivUp(
+                        stepsToProcessInSegment * supplyPerStep, initialPrice, SCALING_FACTOR
+                    );
+                }
             } else {
                 // Sloped segment: sum of an arithmetic series
                 // S_n = n/2 * (2a + (n-1)d)
@@ -275,10 +283,11 @@ library DiscreteCurveMathLib_v1 {
                     if (sumOfPrices == 0 || stepsToProcessInSegment == 0) { 
                         totalPriceForAllStepsInPortion = 0;
                     } else {
-                        // Use Math.mulDiv to prevent precision loss for odd stepsToProcessInSegment
+                        // n * sumOfPrices is always even, so Math.mulDiv is exact.
                         totalPriceForAllStepsInPortion = Math.mulDiv(stepsToProcessInSegment, sumOfPrices, 2);
                     }
-                    collateralForPortion = Math.mulDiv(supplyPerStep, totalPriceForAllStepsInPortion, SCALING_FACTOR);
+                    // Use mulDivUp for conservative reserve calculation (favors protocol)
+                    collateralForPortion = _mulDivUp(supplyPerStep, totalPriceForAllStepsInPortion, SCALING_FACTOR);
                 }
             }
 
@@ -400,7 +409,8 @@ library DiscreteCurveMathLib_v1 {
             numFullStepsAffordable = stepsAvailableToPurchase;
         }
         tokensMinted = numFullStepsAffordable * supplyPerStepInSegment;
-        collateralSpent = Math.mulDiv(tokensMinted, pricePerStepInFlatSegment, SCALING_FACTOR);
+        // collateralSpent should be rounded up to favor the protocol
+        collateralSpent = _mulDivUp(tokensMinted, pricePerStepInFlatSegment, SCALING_FACTOR);
         return (tokensMinted, collateralSpent);
     }
 
@@ -431,8 +441,10 @@ library DiscreteCurveMathLib_v1 {
         uint256 stepsSuccessfullyPurchased = 0; // Renamed
         // totalCollateralSpent is already a return variable, can use it directly.
 
-        while (stepsSuccessfullyPurchased < maxStepsPurchasableInSegment) {
-            uint256 costForCurrentStep = Math.mulDiv(supplyPerStep, priceForCurrentStep, SCALING_FACTOR); // Renamed
+        // Loop capped by MAX_LINEAR_SEARCH_STEPS to prevent excessive gas usage (HIGH-1)
+        while (stepsSuccessfullyPurchased < maxStepsPurchasableInSegment && stepsSuccessfullyPurchased < MAX_LINEAR_SEARCH_STEPS) {
+            // costForCurrentStep should be rounded up to favor the protocol
+            uint256 costForCurrentStep = _mulDivUp(supplyPerStep, priceForCurrentStep, SCALING_FACTOR); // Renamed
 
             if (totalCollateralSpent + costForCurrentStep <= totalBudget) {
                 totalCollateralSpent += costForCurrentStep;
@@ -575,7 +587,8 @@ library DiscreteCurveMathLib_v1 {
         );
         
         // Calculate the collateral to spend for the determined tokensToIssue.
-        collateralToSpend = Math.mulDiv(
+        // collateralToSpend should be rounded up to favor the protocol
+        collateralToSpend = _mulDivUp(
             tokensToIssue,
             pricePerTokenForPartialPurchase,
             SCALING_FACTOR
@@ -685,5 +698,46 @@ library DiscreteCurveMathLib_v1 {
         // are guaranteed by PackedSegmentLib.create validation.
         // This function primarily validates array-level properties like non-empty array and MAX_SEGMENTS.
         // The loop below was empty and has been removed.
+    }
+
+    // --- Custom Math Helpers for Rounding ---
+
+    /**
+     * @dev Calculates (a * b) % modulus.
+     * @notice Solidity 0.8.x's default behavior for `(a * b) % modulus` computes the product `a * b`
+     * using full 256x256 bit precision before applying the modulus, preventing overflow of `a * b`
+     * from affecting the result of the modulo operation itself (as long as modulus is not zero).
+     * @param a The first operand.
+     * @param b The second operand.
+     * @param modulus The modulus.
+     * @return (a * b) % modulus.
+     */
+    function _mulmod(uint256 a, uint256 b, uint256 modulus) private pure returns (uint256) {
+        require(modulus > 0, "DiscreteCurveMathLib_v1: modulus cannot be zero in _mulmod");
+        return (a * b) % modulus;
+    }
+
+    /**
+     * @dev Calculates (a * b) / denominator, rounding up.
+     * @param a The first operand for multiplication.
+     * @param b The second operand for multiplication.
+     * @param denominator The denominator for division.
+     * @return result ceil((a * b) / denominator).
+     */
+    function _mulDivUp(uint256 a, uint256 b, uint256 denominator) private pure returns (uint256 result) {
+        require(denominator > 0, "DiscreteCurveMathLib_v1: division by zero in _mulDivUp");
+        result = Math.mulDiv(a, b, denominator); // Standard OpenZeppelin Math.mulDiv rounds down (floor division)
+        
+        // If there's any remainder from (a * b) / denominator, we need to add 1 to round up.
+        // A remainder exists if (a * b) % denominator is not 0.
+        // We use the local _mulmod function which safely computes (a * b) % denominator.
+        if (_mulmod(a, b, denominator) > 0) {
+            // Before incrementing, check if 'result' is already at max_uint256 to prevent overflow.
+            // This scenario (overflowing after adding 1 due to rounding) is extremely unlikely if a, b, denominator
+            // are such that mulDiv itself doesn't revert, but it's a good safety check.
+            require(result < type(uint256).max, "DiscreteCurveMathLib_v1: _mulDivUp overflow on increment");
+            result++;
+        }
+        return result;
     }
 }
