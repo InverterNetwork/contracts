@@ -18,10 +18,10 @@ interface IDiscreteCurveMathLib_v1 {
      * @param numberOfStepsInSegment The total number of discrete steps in this segment.
      */
     struct SegmentConfig {
-        uint256 initialPriceOfSegment;
-        uint256 priceIncreasePerStep;
-        uint256 supplyPerStep;
-        uint256 numberOfStepsInSegment;
+        uint initialPriceOfSegment;
+        uint priceIncreasePerStep;
+        uint supplyPerStep;
+        uint numberOfStepsInSegment;
     }
 
     // --- Errors ---
@@ -64,7 +64,7 @@ interface IDiscreteCurveMathLib_v1 {
      * @notice Reverted when a segment is configured with zero supply per step.
      */
     error DiscreteCurveMathLib__ZeroSupplyPerStep();
-    
+
     /**
      * @notice Reverted when a segment is configured with zero initial price and zero price increase.
      */
@@ -83,7 +83,11 @@ interface IDiscreteCurveMathLib_v1 {
      * @param previousSegmentFinalPrice The calculated final price of segment `segmentIndex`.
      * @param nextSegmentInitialPrice The initial price of segment `segmentIndex + 1`.
      */
-    error DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousSegmentFinalPrice, uint256 nextSegmentInitialPrice);
+    error DiscreteCurveMathLib__InvalidPriceProgression(
+        uint segmentIndex,
+        uint previousSegmentFinalPrice,
+        uint nextSegmentInitialPrice
+    );
 
     /**
      * @notice Reverted when an operation (e.g., purchase) cannot be fulfilled due to
@@ -119,7 +123,9 @@ interface IDiscreteCurveMathLib_v1 {
      * @param providedSupply The currentTotalIssuanceSupply that was provided.
      * @param maxCapacity The calculated maximum capacity of the curve based on its segments.
      */
-    error DiscreteCurveMathLib__SupplyExceedsCurveCapacity(uint256 providedSupply, uint256 maxCapacity);
+    error DiscreteCurveMathLib__SupplyExceedsCurveCapacity(
+        uint providedSupply, uint maxCapacity
+    );
 
     // --- Events ---
 
@@ -129,38 +135,48 @@ interface IDiscreteCurveMathLib_v1 {
      * @param segment The packed data of the created segment.
      * @param segmentIndex The index of the created segment in the curve's segment array.
      */
-    event DiscreteCurveMathLib__SegmentCreated(PackedSegment indexed segment, uint256 indexed segmentIndex);
+    event DiscreteCurveMathLib__SegmentCreated(
+        PackedSegment indexed segment, uint indexed segmentIndex
+    );
 
     // --- Functions ---
 
     function getCurrentPriceAndStep(
         PackedSegment[] memory segments,
-        uint256 currentTotalIssuanceSupply
-    ) external pure returns (uint256 price, uint256 stepIndex, uint256 segmentIndex);
+        uint currentTotalIssuanceSupply
+    ) external pure returns (uint price, uint stepIndex, uint segmentIndex);
 
     function calculateReserveForSupply(
         PackedSegment[] memory segments,
-        uint256 targetSupply
-    ) external pure returns (uint256 totalReserve);
+        uint targetSupply
+    ) external pure returns (uint totalReserve);
 
     function calculatePurchaseReturn(
         PackedSegment[] memory segments,
-        uint256 collateralAmountIn,
-        uint256 currentTotalIssuanceSupply
-    ) external pure returns (uint256 issuanceAmountOut, uint256 collateralAmountSpent);
+        uint collateralAmountIn,
+        uint currentTotalIssuanceSupply
+    )
+        external
+        pure
+        returns (uint issuanceAmountOut, uint collateralAmountSpent);
 
     function calculateSaleReturn(
         PackedSegment[] memory segments,
-        uint256 issuanceAmountIn,
-        uint256 currentTotalIssuanceSupply
-    ) external pure returns (uint256 collateralAmountOut, uint256 issuanceAmountBurned);
+        uint issuanceAmountIn,
+        uint currentTotalIssuanceSupply
+    )
+        external
+        pure
+        returns (uint collateralAmountOut, uint issuanceAmountBurned);
 
     function createSegment(
-        uint256 initialPrice,
-        uint256 priceIncrease,
-        uint256 supplyPerStep,
-        uint256 numberOfSteps
+        uint initialPrice,
+        uint priceIncrease,
+        uint supplyPerStep,
+        uint numberOfSteps
     ) external pure returns (PackedSegment);
 
-    function validateSegmentArray(PackedSegment[] memory segments) external pure;
+    function validateSegmentArray(PackedSegment[] memory segments)
+        external
+        pure;
 }

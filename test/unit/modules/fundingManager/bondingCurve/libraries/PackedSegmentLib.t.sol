@@ -4,12 +4,15 @@ pragma solidity 0.8.23;
 import {Test, console2} from "forge-std/Test.sol";
 import {PackedSegmentLib} from "@fm/bondingCurve/libraries/PackedSegmentLib.sol";
 import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
-import {IDiscreteCurveMathLib_v1} from "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
+import {IDiscreteCurveMathLib_v1} from
+    "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
 // DiscreteCurveMathLib_v1 is imported because test_PackAndUnpackSegment uses its createSegment function.
-import {DiscreteCurveMathLib_v1} from "@fm/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
+import {DiscreteCurveMathLib_v1} from
+    "@fm/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 // DiscreteCurveMathLibV1_Exposed is imported because the revert tests use its public createSegmentPublic,
 // which internally calls PackedSegmentLib.create.
-import {DiscreteCurveMathLibV1_Exposed} from "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
+import {DiscreteCurveMathLibV1_Exposed} from
+    "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
 
 contract PackedSegmentLib_Test is Test {
     using PackedSegmentLib for PackedSegment;
@@ -21,10 +24,10 @@ contract PackedSegmentLib_Test is Test {
     }
 
     function test_PackAndUnpackSegment() public {
-        uint256 expectedInitialPrice = 1 * 1e18; 
-        uint256 expectedPriceIncrease = 0.1 ether; 
-        uint256 expectedSupplyPerStep = 100 * 1e18; 
-        uint256 expectedNumberOfSteps = 50;
+        uint expectedInitialPrice = 1 * 1e18;
+        uint expectedPriceIncrease = 0.1 ether;
+        uint expectedSupplyPerStep = 100 * 1e18;
+        uint expectedNumberOfSteps = 50;
 
         PackedSegment segment = DiscreteCurveMathLib_v1.createSegment(
             expectedInitialPrice,
@@ -33,102 +36,129 @@ contract PackedSegmentLib_Test is Test {
             expectedNumberOfSteps
         );
 
-        assertEq(segment.initialPrice(), expectedInitialPrice, "PackedSegment: initialPrice mismatch");
-        assertEq(segment.priceIncrease(), expectedPriceIncrease, "PackedSegment: priceIncrease mismatch");
-        assertEq(segment.supplyPerStep(), expectedSupplyPerStep, "PackedSegment: supplyPerStep mismatch");
-        assertEq(segment.numberOfSteps(), expectedNumberOfSteps, "PackedSegment: numberOfSteps mismatch");
+        assertEq(
+            segment.initialPrice(),
+            expectedInitialPrice,
+            "PackedSegment: initialPrice mismatch"
+        );
+        assertEq(
+            segment.priceIncrease(),
+            expectedPriceIncrease,
+            "PackedSegment: priceIncrease mismatch"
+        );
+        assertEq(
+            segment.supplyPerStep(),
+            expectedSupplyPerStep,
+            "PackedSegment: supplyPerStep mismatch"
+        );
+        assertEq(
+            segment.numberOfSteps(),
+            expectedNumberOfSteps,
+            "PackedSegment: numberOfSteps mismatch"
+        );
 
         (
-            uint256 actualInitialPrice,
-            uint256 actualPriceIncrease,
-            uint256 actualSupplyPerStep,
-            uint256 actualNumberOfSteps
+            uint actualInitialPrice,
+            uint actualPriceIncrease,
+            uint actualSupplyPerStep,
+            uint actualNumberOfSteps
         ) = segment.unpack();
 
-        assertEq(actualInitialPrice, expectedInitialPrice, "PackedSegment.unpack: initialPrice mismatch");
-        assertEq(actualPriceIncrease, expectedPriceIncrease, "PackedSegment.unpack: priceIncrease mismatch");
-        assertEq(actualSupplyPerStep, expectedSupplyPerStep, "PackedSegment.unpack: supplyPerStep mismatch");
-        assertEq(actualNumberOfSteps, expectedNumberOfSteps, "PackedSegment.unpack: numberOfSteps mismatch");
+        assertEq(
+            actualInitialPrice,
+            expectedInitialPrice,
+            "PackedSegment.unpack: initialPrice mismatch"
+        );
+        assertEq(
+            actualPriceIncrease,
+            expectedPriceIncrease,
+            "PackedSegment.unpack: priceIncrease mismatch"
+        );
+        assertEq(
+            actualSupplyPerStep,
+            expectedSupplyPerStep,
+            "PackedSegment.unpack: supplyPerStep mismatch"
+        );
+        assertEq(
+            actualNumberOfSteps,
+            expectedNumberOfSteps,
+            "PackedSegment.unpack: numberOfSteps mismatch"
+        );
     }
 
     function test_CreateSegment_InitialPriceTooLarge_Reverts() public {
-        uint256 tooLargePrice = (1 << 72); 
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InitialPriceTooLarge.selector);
-        exposedLib.createSegmentPublic(
-            tooLargePrice,
-            0.1 ether,
-            100e18,
-            50
+        uint tooLargePrice = (1 << 72);
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InitialPriceTooLarge
+                .selector
         );
+        exposedLib.createSegmentPublic(tooLargePrice, 0.1 ether, 100e18, 50);
     }
 
     function test_CreateSegment_PriceIncreaseTooLarge_Reverts() public {
-        uint256 tooLargeIncrease = (1 << 72); 
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__PriceIncreaseTooLarge.selector);
-        exposedLib.createSegmentPublic(
-            1e18,
-            tooLargeIncrease,
-            100e18,
-            50
+        uint tooLargeIncrease = (1 << 72);
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__PriceIncreaseTooLarge
+                .selector
         );
+        exposedLib.createSegmentPublic(1e18, tooLargeIncrease, 100e18, 50);
     }
 
     function test_CreateSegment_SupplyPerStepZero_Reverts() public {
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroSupplyPerStep.selector);
-        exposedLib.createSegmentPublic(
-            1e18,
-            0.1 ether,
-            0, 
-            50
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__ZeroSupplyPerStep
+                .selector
         );
+        exposedLib.createSegmentPublic(1e18, 0.1 ether, 0, 50);
     }
 
     function test_CreateSegment_SupplyPerStepTooLarge_Reverts() public {
-        uint256 tooLargeSupply = (1 << 96); 
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyPerStepTooLarge.selector);
-        exposedLib.createSegmentPublic(
-            1e18,
-            0.1 ether,
-            tooLargeSupply,
-            50
+        uint tooLargeSupply = (1 << 96);
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__SupplyPerStepTooLarge
+                .selector
         );
+        exposedLib.createSegmentPublic(1e18, 0.1 ether, tooLargeSupply, 50);
     }
-    
+
     function test_CreateSegment_NumberOfStepsZero_Reverts() public {
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidNumberOfSteps.selector);
-        exposedLib.createSegmentPublic(
-            1e18,
-            0.1 ether,
-            100e18,
-            0 
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidNumberOfSteps
+                .selector
         );
+        exposedLib.createSegmentPublic(1e18, 0.1 ether, 100e18, 0);
     }
 
     function test_CreateSegment_NumberOfStepsTooLarge_Reverts() public {
-        uint256 tooLargeSteps = (1 << 16); 
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidNumberOfSteps.selector);
-        exposedLib.createSegmentPublic(
-            1e18,
-            0.1 ether,
-            100e18,
-            tooLargeSteps
+        uint tooLargeSteps = (1 << 16);
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidNumberOfSteps
+                .selector
         );
+        exposedLib.createSegmentPublic(1e18, 0.1 ether, 100e18, tooLargeSteps);
     }
 
     function test_CreateSegment_FreeSegment_Reverts() public {
         // Test that creating a segment with initialPrice = 0 and priceIncrease = 0 reverts.
         // Other parameters should be valid.
-        uint256 initialPrice = 0;
-        uint256 priceIncrease = 0;
-        uint256 supplyPerStep = 10e18; // Valid supply
-        uint256 numberOfSteps = 10;    // Valid number of steps
+        uint initialPrice = 0;
+        uint priceIncrease = 0;
+        uint supplyPerStep = 10e18; // Valid supply
+        uint numberOfSteps = 10; // Valid number of steps
 
-        vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree.selector);
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__SegmentIsFree
+                .selector
+        );
         exposedLib.createSegmentPublic(
-            initialPrice,
-            priceIncrease,
-            supplyPerStep,
-            numberOfSteps
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
     }
 }
