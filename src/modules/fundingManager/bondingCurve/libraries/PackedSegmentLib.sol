@@ -64,7 +64,6 @@ library PackedSegmentLib {
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InvalidNumberOfSteps();
         }
         // Disallow segments that are entirely free (both initial price and price increase are zero).
-        // This corresponds to MEDIUM-2 enhancement.
         if (_initialPrice == 0 && _priceIncrease == 0) {
             // Note: DiscreteCurveMathLib__SegmentIsFree error needs to be defined in IDiscreteCurveMathLib_v1.sol
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree();

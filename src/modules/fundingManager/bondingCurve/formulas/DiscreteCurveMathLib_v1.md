@@ -60,6 +60,53 @@ To further optimize gas for on-chain computations:
 - **Linear Search for Purchases on Sloped Segments:** When calculating purchase returns on a sloped segment, the internal helper function `_calculatePurchaseForSingleSegment` (called by `calculatePurchaseReturn`) employs a linear search algorithm (`_linearSearchSloped`). This approach iterates step-by-step to determine the maximum number of full steps a user can afford with their input collateral. For scenarios where users typically purchase a small number of steps, linear search can be more gas-efficient than binary search due to lower overhead per calculation, despite a potentially higher number of iterations for very large purchases.
 - **Optimized Sale Calculation:** The `calculateSaleReturn` function determines the collateral out by calculating the total reserve locked in the curve before and after the sale, then taking the difference. This approach (`R(S_current) - R(S_final)`) is generally more efficient than iterating backward through curve steps.
 
+### Limitations of Packed Storage and Low-Priced Collateral
+
+While `PackedSegment` offers significant gas savings, its fixed bit allocation for price and supply parameters introduces limitations, particularly when dealing with collateral tokens that have a very low price per unit but maintain a high decimal precision (e.g., 18 decimals).
+
+**The Core Issue:**
+The `initialPrice` and `priceIncrease` fields currently use 72 bits each.
+
+- Maximum value: `2^72 - 1` (approx. `4.722 x 10^21`) wei.
+- For a standard 18-decimal token, this translates to a maximum representable price of approx. `4,722,366.48` tokens.
+
+**Impact of Low-Priced Collateral:**
+If a collateral token is worth, for example, **$0.000001** (one micro-dollar) and has 18 decimals:
+
+- The maximum dollar value that can be represented for `initialPrice` or `priceIncrease` is `4,722,366.48 tokens * $0.000001/token = ~$4.72`.
+  This means a bonding curve segment could not have an initial step price or a price increment (if denominated in such a collateral token) that represents more than ~$4.72 worth of that token.
+
+**Example: Extremely Low-Priced Token**
+Consider a hypothetical 18-decimal token worth **$0.0000000001** (one-tenth of a nano-dollar).
+
+- To represent $1.00 worth of this token, one would need `1 / $0.0000000001 = 10,000,000,000` tokens.
+- In wei (18 decimals): `10,000,000,000 * 1e18 = 1e28` wei.
+  This value (`1e28` wei) significantly exceeds the `2^72 - 1` (approx. `4.7e21`) wei capacity of the 72-bit price fields, leading to an overflow if one tried to set a price step equivalent to $1.00 of this token.
+
+**Potential Solutions and Workarounds:**
+
+1.  **Collateral Token Choice & Decimal Precision:**
+
+    - Using collateral tokens with fewer decimals (e.g., 6 or 8, like many stablecoins) significantly increases the nominal range.
+    - Protocols can restrict collateral to tokens that fit reasonably within the existing bit allocation.
+
+2.  **Price Scaling Factor:**
+
+    - The bonding curve logic (in the consuming contract) could implement an additional scaling factor for prices. For example, a `PRICE_SCALING_FACTOR` of `1e12` could be used. A packed price of `1` would then represent an actual price of `1 * 1e12`. This allows storing scaled-down values in `PackedSegment` while representing larger actual prices.
+
+3.  **Alternative Bit Allocation in `PackedSegment`:**
+
+    - A future version of the library or a different packing scheme could allocate more bits to price fields (e.g., 96 bits) at the expense of bits for supply or by using more than one `bytes32` slot per segment if necessary. For instance, allocating 96 bits for price would allow values up to `2^96 - 1` (approx. `7.9e28` wei), accommodating even extremely low-priced 18-decimal tokens.
+
+4.  **Protocol-Level Policies:**
+    - **Collateral Whitelisting:** Enforce requirements on collateral tokens, such as minimum price or maximum effective decimals, to ensure compatibility.
+    - **Dynamic Configuration:** Allow curve deployers to specify bit allocations or scaling factors per curve instance, though this adds complexity.
+
+**Assessment for Current `DiscreteCurveMathLib_v1`:**
+The current 72-bit allocation for prices is a deliberate trade-off favoring gas efficiency and is generally sufficient for many common use cases, especially with typical collateral like ETH, wBTC, or stablecoins (USDC, USDT, DAI) which have prices or decimal counts that fit well. For protocols like House Protocol, which are likely to use established stablecoins, the existing 72-bit precision for prices should provide ample headroom.
+
+The library is well-suited for its primary intended applications. If support for extremely micro-cap tokens with high decimal precision becomes a strict requirement, deploying a new version of the library with adjusted bit allocations or incorporating an explicit price scaling mechanism in the consuming contract would be the recommended approaches.
+
 ### Internal Functions and Composability
 
 Most functions in the library are `internal pure`, designed to be called by other smart contracts (typically Funding Managers). This makes the library a set of reusable mathematical tools rather than a standalone stateful contract. The `using PackedSegmentLib for PackedSegment;` directive enables convenient syntax for accessing segment data (e.g., `mySegment.initialPrice()`).
