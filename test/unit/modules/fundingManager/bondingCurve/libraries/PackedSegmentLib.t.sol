@@ -93,7 +93,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__InitialPriceTooLarge
                 .selector
         );
-        exposedLib.createSegmentPublic(tooLargePrice, 0.1 ether, 100e18, 50);
+        exposedLib.exposed_createSegment(tooLargePrice, 0.1 ether, 100e18, 50);
     }
 
     function test_CreateSegment_PriceIncreaseTooLarge_Reverts() public {
@@ -103,7 +103,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__PriceIncreaseTooLarge
                 .selector
         );
-        exposedLib.createSegmentPublic(1e18, tooLargeIncrease, 100e18, 50);
+        exposedLib.exposed_createSegment(1e18, tooLargeIncrease, 100e18, 50);
     }
 
     function test_CreateSegment_SupplyPerStepZero_Reverts() public {
@@ -112,7 +112,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__ZeroSupplyPerStep
                 .selector
         );
-        exposedLib.createSegmentPublic(1e18, 0.1 ether, 0, 50);
+        exposedLib.exposed_createSegment(1e18, 0.1 ether, 0, 50);
     }
 
     function test_CreateSegment_SupplyPerStepTooLarge_Reverts() public {
@@ -122,7 +122,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__SupplyPerStepTooLarge
                 .selector
         );
-        exposedLib.createSegmentPublic(1e18, 0.1 ether, tooLargeSupply, 50);
+        exposedLib.exposed_createSegment(1e18, 0.1 ether, tooLargeSupply, 50);
     }
 
     function test_CreateSegment_NumberOfStepsZero_Reverts() public {
@@ -131,7 +131,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__InvalidNumberOfSteps
                 .selector
         );
-        exposedLib.createSegmentPublic(1e18, 0.1 ether, 100e18, 0);
+        exposedLib.exposed_createSegment(1e18, 0.1 ether, 100e18, 0);
     }
 
     function test_CreateSegment_NumberOfStepsTooLarge_Reverts() public {
@@ -141,7 +141,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__InvalidNumberOfSteps
                 .selector
         );
-        exposedLib.createSegmentPublic(1e18, 0.1 ether, 100e18, tooLargeSteps);
+        exposedLib.exposed_createSegment(1e18, 0.1 ether, 100e18, tooLargeSteps);
     }
 
     function test_CreateSegment_FreeSegment_Reverts() public {
@@ -157,7 +157,7 @@ contract PackedSegmentLib_Test is Test {
                 .DiscreteCurveMathLib__SegmentIsFree
                 .selector
         );
-        exposedLib.createSegmentPublic(
+        exposedLib.exposed_createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
     }

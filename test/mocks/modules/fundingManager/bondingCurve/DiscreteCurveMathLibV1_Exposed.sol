@@ -8,7 +8,7 @@ import {DiscreteCurveMathLib_v1} from
 import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
 
 contract DiscreteCurveMathLibV1_Exposed {
-    function createSegmentPublic(
+    function exposed_createSegment(
         uint initialPrice_,
         uint priceIncrease_,
         uint supplyPerStep_,
@@ -22,7 +22,7 @@ contract DiscreteCurveMathLibV1_Exposed {
     // If we need to test other internal functions from DiscreteCurveMathLib_v1 later,
     // they can be exposed here as well.
 
-    function findPositionForSupplyPublic(
+    function exposed_findPositionForSupply(
         PackedSegment[] memory segments_,
         uint targetTotalIssuanceSupply_
     ) public pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos_) {
@@ -31,7 +31,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         );
     }
 
-    function getCurrentPriceAndStepPublic(
+    function exposed_getCurrentPriceAndStep(
         PackedSegment[] memory segments_,
         uint currentTotalIssuanceSupply_
     ) public pure returns (uint price_, uint stepIndex_, uint segmentIndex_) {
@@ -40,7 +40,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         );
     }
 
-    function calculateReserveForSupplyPublic(
+    function exposed_calculateReserveForSupply(
         PackedSegment[] memory segments_,
         uint targetSupply_
     ) public pure returns (uint totalReserve_) {
@@ -49,7 +49,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         );
     }
 
-    function calculatePurchaseReturnPublic(
+    function exposed_calculatePurchaseReturn(
         PackedSegment[] memory segments_,
         uint collateralAmountIn_,
         uint currentTotalIssuanceSupply_
@@ -63,7 +63,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         );
     }
 
-    function calculateSaleReturnPublic(
+    function exposed_calculateSaleReturn(
         PackedSegment[] memory segments_,
         uint issuanceAmountIn_,
         uint currentTotalIssuanceSupply_
@@ -77,7 +77,7 @@ contract DiscreteCurveMathLibV1_Exposed {
         );
     }
 
-    function linearSearchSlopedPublic(
+    function exposed_linearSearchSloped(
         PackedSegment segment_,
         uint totalBudget_,
         uint purchaseStartStepInSegment_,
@@ -89,5 +89,12 @@ contract DiscreteCurveMathLibV1_Exposed {
             purchaseStartStepInSegment_,
             priceAtPurchaseStartStep_
         );
+    }
+
+    function exposed_validateSegmentArray(PackedSegment[] memory segments_)
+        public
+        pure
+    {
+        DiscreteCurveMathLib_v1._validateSegmentArray(segments_);
     }
 }
