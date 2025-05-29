@@ -2223,4 +2223,82 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             );
         }
     }
+    // --- Fuzz tests for _getCurrentPriceAndStep ---
+
+    function testFuzz_GetCurrentPriceAndStep_Properties(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl,
+        uint currentSupplyRatio // Ratio from 0 to 100 to determine currentSupply based on total capacity
+    ) public {
+        // Bound inputs for segment generation
+        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
+        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e20); 
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e18); 
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1e15, 1e22); 
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 1000); 
+
+        (
+            PackedSegment[] memory segments, 
+            uint totalCurveCapacity
+        ) = _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz, initialPriceTpl, priceIncreaseTpl, supplyPerStepTpl, numberOfStepsTpl
+        );
+
+        if (segments.length == 0) { 
+            return;
+        }
+        
+        uint currentTotalIssuanceSupply;
+        if (totalCurveCapacity == 0) {
+            // If capacity is 0, only test with supply 0. currentSupplyRatio is ignored.
+            currentTotalIssuanceSupply = 0;
+             // If currentSupplyRatio was >0, we might want to skip, but _findPositionForSupply handles 0 capacity, 0 supply.
+            if (currentSupplyRatio > 0) return; // Avoid division by zero if totalCurveCapacity is 0 but ratio isn't.
+        } else {
+            currentSupplyRatio = bound(currentSupplyRatio, 0, 100); // 0% to 100% of capacity
+            currentTotalIssuanceSupply = (totalCurveCapacity * currentSupplyRatio) / 100;
+            if (currentSupplyRatio == 100) { 
+                currentTotalIssuanceSupply = totalCurveCapacity;
+            }
+            if (currentTotalIssuanceSupply > totalCurveCapacity) { // Ensure it doesn't exceed due to rounding
+                currentTotalIssuanceSupply = totalCurveCapacity;
+            }
+        }
+        
+        // Call _getCurrentPriceAndStep
+        (uint price, uint stepIdx, uint segmentIdx) = 
+            exposedLib.exposed_getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
+
+        // Call _findPositionForSupply for comparison
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos = 
+            exposedLib.exposed_findPositionForSupply(segments, currentTotalIssuanceSupply);
+
+        // Assertions
+        assertTrue(segmentIdx < segments.length, "GCPS: Segment index out of bounds");
+        PackedSegment currentSegmentFromGet = segments[segmentIdx]; // Renamed to avoid clash
+        uint currentSegNumStepsFromGet = currentSegmentFromGet._numberOfSteps();
+
+        if (currentSegNumStepsFromGet > 0) {
+            assertTrue(stepIdx < currentSegNumStepsFromGet, "GCPS: Step index out of bounds for segment");
+        } else {
+            assertEq(stepIdx, 0, "GCPS: Step index should be 0 for zero-step segment");
+        }
+
+        uint expectedPriceAtStep = currentSegmentFromGet._initialPrice() + stepIdx * currentSegmentFromGet._priceIncrease();
+        assertEq(price, expectedPriceAtStep, "GCPS: Price mismatch based on its own step/segment");
+        
+        // Consistency with _findPositionForSupply
+        assertEq(segmentIdx, pos.segmentIndex, "GCPS: Segment index mismatch with findPosition");
+        assertEq(stepIdx, pos.stepIndexWithinSegment, "GCPS: Step index mismatch with findPosition");
+        assertEq(price, pos.priceAtCurrentStep, "GCPS: Price mismatch with findPosition");
+
+        if (currentTotalIssuanceSupply == 0 && segments.length > 0) { // Added segments.length > 0 for safety
+            assertEq(segmentIdx, 0, "GCPS: Seg idx for supply 0");
+            assertEq(stepIdx, 0, "GCPS: Step idx for supply 0");
+            assertEq(price, segments[0]._initialPrice(), "GCPS: Price for supply 0");
+        }
+    }
 }
