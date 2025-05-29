@@ -142,7 +142,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         uint targetSupply = 25 ether; // Target 25 tokens
 
-        DiscreteCurveMathLib_v1.CurvePosition memory pos =
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos =
             exposedLib.findPositionForSupplyPublic(segments, targetSupply);
 
         assertEq(pos.segmentIndex, 0, "Segment index mismatch");
@@ -172,7 +172,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         uint targetSupply = 20 ether; // Exactly fills the segment
 
-        DiscreteCurveMathLib_v1.CurvePosition memory pos =
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos =
             exposedLib.findPositionForSupplyPublic(segments, targetSupply);
 
         assertEq(pos.segmentIndex, 0, "Segment index mismatch");
@@ -201,7 +201,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         //   Target 10 ether from Segment 1 falls into its step 0.
         uint targetSupply = defaultSeg0_capacity + 10 ether; // 30 + 10 = 40 ether
 
-        DiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
             .findPositionForSupplyPublic(defaultSegments, targetSupply);
 
         assertEq(pos.segmentIndex, 1, "Segment index mismatch");
@@ -232,7 +232,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // defaultCurve_totalCapacity = 70 ether
         uint targetSupply = defaultCurve_totalCapacity + 10 ether; // Beyond capacity (70 + 10 = 80)
 
-        DiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
             .findPositionForSupplyPublic(defaultSegments, targetSupply);
 
         assertEq(
@@ -265,7 +265,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         uint targetSupply = 0 ether;
 
-        DiscreteCurveMathLib_v1.CurvePosition memory pos =
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos =
             exposedLib.findPositionForSupplyPublic(segments, targetSupply);
 
         assertEq(
@@ -344,7 +344,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         // Scenario 1: Target supply exactly at the end of the flat segment
         uint targetSupplyAtBoundary = flatCapacity;
-        DiscreteCurveMathLib_v1.CurvePosition memory posBoundary = exposedLib
+        IDiscreteCurveMathLib_v1.CurvePosition memory posBoundary = exposedLib
             .findPositionForSupplyPublic(segments, targetSupplyAtBoundary);
 
         // Expected: Position should be at the start of the next (sloped) segment
@@ -371,7 +371,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         // Scenario 2: Target supply one unit into the sloped segment
         uint targetSupplyIntoSloped = flatCapacity + 1; // 1 wei into the sloped segment
-        DiscreteCurveMathLib_v1.CurvePosition memory posIntoSloped = exposedLib
+        IDiscreteCurveMathLib_v1.CurvePosition memory posIntoSloped = exposedLib
             .findPositionForSupplyPublic(segments, targetSupplyIntoSloped);
 
         // Expected: Position should be within the first step of the sloped segment

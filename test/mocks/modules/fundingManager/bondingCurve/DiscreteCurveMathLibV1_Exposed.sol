@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.19;
 
+import {IDiscreteCurveMathLib_v1} from
+    "@fm/bondingCurve/interfaces/IDiscreteCurveMathLib_v1.sol";
 import {DiscreteCurveMathLib_v1} from
     "@fm/bondingCurve/formulas/DiscreteCurveMathLib_v1.sol";
 import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
@@ -23,7 +25,7 @@ contract DiscreteCurveMathLibV1_Exposed {
     function findPositionForSupplyPublic(
         PackedSegment[] memory segments,
         uint targetTotalIssuanceSupply
-    ) public pure returns (DiscreteCurveMathLib_v1.CurvePosition memory pos) {
+    ) public pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos) {
         return DiscreteCurveMathLib_v1._findPositionForSupply(
             segments, targetTotalIssuanceSupply
         );

@@ -14,29 +14,14 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  * It provides functions to calculate prices, reserves, and purchase/sale returns.
  */
 library DiscreteCurveMathLib_v1 {
+    // Enable clean syntax for PackedSegment instances: e.g., segment.initialPrice()
+    using PackedSegmentLib for PackedSegment;
+
     // --- Constants ---
     uint public constant SCALING_FACTOR = 1e18;
     uint public constant MAX_SEGMENTS = 10;
     uint private constant MAX_LINEAR_SEARCH_STEPS = 200; // Max iterations for _linearSearchSloped
 
-    // --- Structs ---
-
-    /**
-     * @notice Helper struct to represent a specific position on the bonding curve.
-     * @param segmentIndex The index of the segment where the position lies.
-     * @param stepIndexWithinSegment The index of the step within that segment.
-     * @param priceAtCurrentStep The price at this specific step.
-     * @param supplyCoveredUpToThisPosition The total supply minted up to and including this position.
-     */
-    struct CurvePosition {
-        uint segmentIndex;
-        uint stepIndexWithinSegment;
-        uint priceAtCurrentStep;
-        uint supplyCoveredUpToThisPosition;
-    }
-
-    // Enable clean syntax for PackedSegment instances: e.g., segment.initialPrice()
-    using PackedSegmentLib for PackedSegment;
 
     // --- Internal Helper Functions ---
 
@@ -93,7 +78,7 @@ library DiscreteCurveMathLib_v1 {
     function _findPositionForSupply(
         PackedSegment[] memory segments,
         uint targetSupply // Renamed from targetTotalIssuanceSupply
-    ) internal pure returns (CurvePosition memory position) {
+    ) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory position) {
         uint numSegments = segments.length;
         if (numSegments == 0) {
             revert
@@ -199,7 +184,7 @@ library DiscreteCurveMathLib_v1 {
         // will correctly determine the position based on the now-validated currentTotalIssuanceSupply.
 
         // _findPositionForSupply can now assume currentTotalIssuanceSupply is valid (within or at capacity).
-        CurvePosition memory posDetails =
+        IDiscreteCurveMathLib_v1.CurvePosition memory posDetails =
             _findPositionForSupply(segments, currentTotalIssuanceSupply);
 
         // The previous explicit check:
