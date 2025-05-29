@@ -10,7 +10,7 @@ import {PackedSegment} from "../types/PackedSegment_v1.sol";
  */
 interface IDiscreteCurveMathLib_v1 {
     // --- Structs ---
-    
+
     /**
      * @notice Helper struct to represent a specific position on the bonding curve.
      * @param segmentIndex The index of the segment where the position lies.

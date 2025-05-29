@@ -23,7 +23,6 @@ library DiscreteCurveMathLib_v1 {
     uint public constant MAX_SEGMENTS = 10;
     uint private constant MAX_LINEAR_SEARCH_STEPS = 200; // Max iterations for _linearSearchSloped
 
-
     // =========================================================================
     // Internal Helper Functions
 
@@ -51,12 +50,16 @@ library DiscreteCurveMathLib_v1 {
         }
 
         // totalCurveCapacity_ is initialized to 0 by default as a return variable
-        for (uint segmentIndex_ = 0; segmentIndex_ < numSegments_; ++segmentIndex_)
-        {
+        for (
+            uint segmentIndex_ = 0;
+            segmentIndex_ < numSegments_;
+            ++segmentIndex_
+        ) {
             // Use cached length
             // Note: supplyPerStep and numberOfSteps are validated > 0 by PackedSegmentLib.create
             uint supplyPerStep_ = segments_[segmentIndex_]._supplyPerStep();
-            uint numberOfStepsInSegment_ = segments_[segmentIndex_]._numberOfSteps();
+            uint numberOfStepsInSegment_ =
+                segments_[segmentIndex_]._numberOfSteps();
             totalCurveCapacity_ += numberOfStepsInSegment_ * supplyPerStep_;
         }
 
@@ -80,7 +83,11 @@ library DiscreteCurveMathLib_v1 {
     function _findPositionForSupply(
         PackedSegment[] memory segments_,
         uint targetSupply_ // Renamed from targetTotalIssuanceSupply
-    ) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_) {
+    )
+        internal
+        pure
+        returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_)
+    {
         uint numSegments_ = segments_.length;
         if (numSegments_ == 0) {
             revert
@@ -115,16 +122,19 @@ library DiscreteCurveMathLib_v1 {
                 // If targetSupply_ is within this segment (or at its end), it's covered up to targetSupply_.
                 position_.supplyCoveredUpToThisPosition = targetSupply_;
 
-                if (targetSupply_ == segmentEndSupply_ && i_ + 1 < numSegments_) {
+                if (targetSupply_ == segmentEndSupply_ && i_ + 1 < numSegments_)
+                {
                     // Exactly at a boundary AND there's a next segment:
                     // Position points to the start of the next segment.
                     position_.segmentIndex = i_ + 1;
                     position_.stepIndexWithinSegment = 0;
                     // Price is the initial price of the next segment.
-                    position_.priceAtCurrentStep = segments_[i_ + 1]._initialPrice(); // Use direct accessor
+                    position_.priceAtCurrentStep =
+                        segments_[i_ + 1]._initialPrice(); // Use direct accessor
                 } else {
                     // Either within the current segment, or at the end of the *last* segment.
-                    uint supplyIntoThisSegment_ = targetSupply_ - cumulativeSupply_;
+                    uint supplyIntoThisSegment_ =
+                        targetSupply_ - cumulativeSupply_;
                     // stepIndex is the 0-indexed step that contains/is completed by supplyIntoThisSegment_.
                     // For "next price" semantic, this is the step whose price will be quoted.
                     position_.stepIndexWithinSegment =
@@ -132,7 +142,8 @@ library DiscreteCurveMathLib_v1 {
 
                     // If at the end of the *last* segment, stepIndex needs to be the last step.
                     if (
-                        targetSupply_ == segmentEndSupply_ && i_ == numSegments_ - 1
+                        targetSupply_ == segmentEndSupply_
+                            && i_ == numSegments_ - 1
                     ) {
                         position_.stepIndexWithinSegment = totalStepsInSegment_
                             > 0 ? totalStepsInSegment_ - 1 : 0;
@@ -179,7 +190,11 @@ library DiscreteCurveMathLib_v1 {
     function _getCurrentPriceAndStep(
         PackedSegment[] memory segments_,
         uint currentTotalIssuanceSupply_
-    ) internal pure returns (uint price_, uint stepIndex_, uint segmentIndex_) {
+    )
+        internal
+        pure
+        returns (uint price_, uint stepIndex_, uint segmentIndex_)
+    {
         // Perform validation first. This will revert if currentTotalIssuanceSupply_ > totalCurveCapacity.
         _validateSupplyAgainstSegments(segments_, currentTotalIssuanceSupply_);
         // Note: The returned totalCurveCapacity_ is not explicitly used here as _findPositionForSupply
@@ -243,8 +258,11 @@ library DiscreteCurveMathLib_v1 {
         uint cumulativeSupplyProcessed_ = 0;
         // totalReserve_ is initialized to 0 by default
 
-        for (uint segmentIndex_ = 0; segmentIndex_ < numSegments_; ++segmentIndex_)
-        {
+        for (
+            uint segmentIndex_ = 0;
+            segmentIndex_ < numSegments_;
+            ++segmentIndex_
+        ) {
             // Use cached length
             if (cumulativeSupplyProcessed_ >= targetSupply_) {
                 break; // All target supply has been accounted for.
@@ -308,8 +326,9 @@ library DiscreteCurveMathLib_v1 {
                         totalPriceForAllStepsInPortion_ = 0;
                     } else {
                         // n * sumOfPrices_ is always even, so Math.mulDiv is exact.
-                        totalPriceForAllStepsInPortion_ =
-                            Math.mulDiv(stepsToProcessInSegment_, sumOfPrices_, 2);
+                        totalPriceForAllStepsInPortion_ = Math.mulDiv(
+                            stepsToProcessInSegment_, sumOfPrices_, 2
+                        );
                     }
                     // Use _mulDivUp for conservative reserve calculation (favors protocol)
                     collateralForPortion_ = _mulDivUp(
@@ -321,7 +340,8 @@ library DiscreteCurveMathLib_v1 {
             }
 
             totalReserve_ += collateralForPortion_;
-            cumulativeSupplyProcessed_ += stepsToProcessInSegment_ * supplyPerStep_;
+            cumulativeSupplyProcessed_ +=
+                stepsToProcessInSegment_ * supplyPerStep_;
         }
 
         // Note: The case where targetSupply_ > totalCurveCapacity_ is handled by the
@@ -396,8 +416,8 @@ library DiscreteCurveMathLib_v1 {
             uint priceAtStartStepInCurrentSegment_; // Renamed from priceAtCurrentSegmentStartStepForHelper
             PackedSegment currentSegment_ = segments_[currentSegmentIndex_];
 
-            (uint currentSegmentInitialPrice_, , , uint currentSegmentTotalSteps_) =
-                currentSegment_._unpack(); // Renamed cs variables
+            (uint currentSegmentInitialPrice_,,, uint currentSegmentTotalSteps_)
+            = currentSegment_._unpack(); // Renamed cs variables
 
             if (currentSegmentIndex_ == segmentIndexAtPurchaseStart_) {
                 startStepInCurrentSegment_ = stepAtPurchaseStart_;
@@ -480,7 +500,11 @@ library DiscreteCurveMathLib_v1 {
         uint totalBudget_, // Renamed from budget
         uint purchaseStartStepInSegment_, // Renamed from startStep
         uint priceAtPurchaseStartStep_ // Renamed from startPrice
-    ) internal pure returns (uint tokensPurchased_, uint totalCollateralSpent_) {
+    )
+        internal
+        pure
+        returns (uint tokensPurchased_, uint totalCollateralSpent_)
+    {
         // Renamed issuanceOut, collateralSpent_
         (
             ,
@@ -749,7 +773,8 @@ library DiscreteCurveMathLib_v1 {
             return (0, tokensToBurn_);
         }
 
-        collateralToReturn_ = collateralAtCurrentSupply_ - collateralAtFinalSupply_;
+        collateralToReturn_ =
+            collateralAtCurrentSupply_ - collateralAtFinalSupply_;
 
         return (collateralToReturn_, tokensToBurn_);
     }

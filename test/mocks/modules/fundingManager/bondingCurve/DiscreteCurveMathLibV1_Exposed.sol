@@ -25,7 +25,11 @@ contract DiscreteCurveMathLibV1_Exposed {
     function exposed_findPositionForSupply(
         PackedSegment[] memory segments_,
         uint targetTotalIssuanceSupply_
-    ) public pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos_) {
+    )
+        public
+        pure
+        returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos_)
+    {
         return DiscreteCurveMathLib_v1._findPositionForSupply(
             segments_, targetTotalIssuanceSupply_
         );

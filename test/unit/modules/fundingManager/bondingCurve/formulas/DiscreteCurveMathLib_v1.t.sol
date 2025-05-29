@@ -16,6 +16,12 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     // Allow using PackedSegmentLib functions directly on PackedSegment type
     using PackedSegmentLib for PackedSegment;
 
+    // Bit masks for fuzzed parameters, derived from PackedSegmentLib
+    uint internal constant INITIAL_PRICE_MASK = (1 << 72) - 1;
+    uint internal constant PRICE_INCREASE_MASK = (1 << 72) - 1;
+    uint internal constant SUPPLY_PER_STEP_MASK = (1 << 96) - 1;
+    uint internal constant NUMBER_OF_STEPS_MASK = (1 << 16) - 1;
+
     DiscreteCurveMathLibV1_Exposed internal exposedLib;
 
     // Default curve configuration
@@ -1013,7 +1019,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // issuanceAmountBurned becomes 0 (min(1, 0)).
         // Returns (0,0). This is correct.
         PackedSegment[] memory noSegments = new PackedSegment[](0);
-        (uint collateralOut, uint burned) = exposedLib.exposed_calculateSaleReturn(
+        (uint collateralOut, uint burned) = exposedLib
+            .exposed_calculateSaleReturn(
             noSegments,
             1 ether, // issuanceAmountIn > 0
             0 // currentTotalIssuanceSupply = 0
@@ -1533,11 +1540,23 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Test for _createSegment ---
 
-    function test_CreateSegment_Basic() public {
-        uint initialPrice = 1 ether;
-        uint priceIncrease = 0.1 ether;
-        uint supplyPerStep = 10 ether;
-        uint numberOfSteps = 5;
+    function testFuzz_CreateSegment_ValidProperties(
+        uint initialPrice,
+        uint priceIncrease,
+        uint supplyPerStep,
+        uint numberOfSteps
+    ) public {
+        // Constrain inputs to valid ranges based on bitmasks and logic
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK);
+
+        vm.assume(supplyPerStep > 0); // Must be positive
+        vm.assume(numberOfSteps > 0); // Must be positive
+
+        // Not a free segment
+        vm.assume(!(initialPrice == 0 && priceIncrease == 0));
 
         PackedSegment segment = exposedLib.exposed_createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
@@ -1551,36 +1570,189 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         ) = segment._unpack();
 
         assertEq(
-            actualInitialPrice, initialPrice, "CreateSegment: Initial price mismatch"
+            actualInitialPrice,
+            initialPrice,
+            "Fuzz Valid CreateSegment: Initial price mismatch"
         );
         assertEq(
             actualPriceIncrease,
             priceIncrease,
-            "CreateSegment: Price increase mismatch"
+            "Fuzz Valid CreateSegment: Price increase mismatch"
         );
         assertEq(
             actualSupplyPerStep,
             supplyPerStep,
-            "CreateSegment: Supply per step mismatch"
+            "Fuzz Valid CreateSegment: Supply per step mismatch"
         );
         assertEq(
             actualNumberOfSteps,
             numberOfSteps,
-            "CreateSegment: Number of steps mismatch"
+            "Fuzz Valid CreateSegment: Number of steps mismatch"
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_InitialPriceTooLarge(
+        uint priceIncrease,
+        uint supplyPerStep,
+        uint numberOfSteps
+    ) public {
+        uint initialPrice = INITIAL_PRICE_MASK + 1; // Exceeds mask
+
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
+        // Ensure this specific revert is not masked by "free segment" if priceIncrease is also 0
+        vm.assume(!(initialPrice == 0 && priceIncrease == 0));
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InitialPriceTooLarge
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_PriceIncreaseTooLarge(
+        uint initialPrice,
+        uint supplyPerStep,
+        uint numberOfSteps
+    ) public {
+        uint priceIncrease = PRICE_INCREASE_MASK + 1; // Exceeds mask
+
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
+        vm.assume(!(initialPrice == 0 && priceIncrease == 0));
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__PriceIncreaseTooLarge
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_SupplyPerStepTooLarge(
+        uint initialPrice,
+        uint priceIncrease,
+        uint numberOfSteps
+    ) public {
+        uint supplyPerStep = SUPPLY_PER_STEP_MASK + 1; // Exceeds mask
+
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
+        vm.assume(!(initialPrice == 0 && priceIncrease == 0));
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__SupplyPerStepTooLarge
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_NumberOfStepsTooLarge(
+        uint initialPrice,
+        uint priceIncrease,
+        uint supplyPerStep
+    ) public {
+        uint numberOfSteps = NUMBER_OF_STEPS_MASK + 1; // Exceeds mask
+
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
+        vm.assume(!(initialPrice == 0 && priceIncrease == 0));
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidNumberOfSteps
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_ZeroSupplyPerStep(
+        uint initialPrice,
+        uint priceIncrease,
+        uint numberOfSteps
+    ) public {
+        uint supplyPerStep = 0;
+
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
+        // No need to check for free segment here as ZeroSupplyPerStep should take precedence or be orthogonal
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__ZeroSupplyPerStep
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_ZeroNumberOfSteps(
+        uint initialPrice,
+        uint priceIncrease,
+        uint supplyPerStep
+    ) public {
+        uint numberOfSteps = 0;
+
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidNumberOfSteps
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function testFuzz_CreateSegment_Revert_FreeSegment(
+        uint supplyPerStep,
+        uint numberOfSteps
+    ) public {
+        uint initialPrice = 0;
+        uint priceIncrease = 0;
+
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__SegmentIsFree
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
     }
 
     // --- Tests for _validateSegmentArray ---
 
-    function test_ValidateSegmentArray_Pass_SingleSegment() public {
+    function test_ValidateSegmentArray_Pass_SingleSegment() public view {
         PackedSegment[] memory segments = new PackedSegment[](1);
         segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 5);
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
-    function test_ValidateSegmentArray_Pass_MultipleValidSegments_CorrectProgression()
-        public
-    {
+    function test_ValidateSegmentArray_Pass_MultipleValidSegments_CorrectProgression(
+    ) public view {
         // Uses defaultSegments which are set up with correct progression
         exposedLib.exposed_validateSegmentArray(defaultSegments); // Should not revert
     }
@@ -1595,13 +1767,32 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
-    function test_ValidateSegmentArray_Revert_TooManySegments() public {
+    function testFuzz_ValidateSegmentArray_Revert_TooManySegments(
+        uint initialPrice,
+        uint priceIncrease,
+        uint supplyPerStep,
+        uint numberOfSteps // Changed from uint16 to uint256 for direct use with masks
+    ) public {
+        // Constrain individual segment parameters to be valid to avoid unrelated reverts
+        vm.assume(initialPrice <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncrease <= PRICE_INCREASE_MASK);
+        vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
+        vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
+        vm.assume(!(initialPrice == 0 && priceIncrease == 0)); // Not a free segment
+
+        PackedSegment validSegmentTemplate = exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+
+        uint numSegmentsToCreate = DiscreteCurveMathLib_v1.MAX_SEGMENTS + 1;
         PackedSegment[] memory segments =
-            new PackedSegment[](DiscreteCurveMathLib_v1.MAX_SEGMENTS + 1);
-        for (uint i = 0; i < segments.length; ++i) {
-            // Fill with minimal valid segments
-            segments[i] = exposedLib.exposed_createSegment(1, 0, 1, 1);
+            new PackedSegment[](numSegmentsToCreate);
+        for (uint i = 0; i < numSegmentsToCreate; ++i) {
+            // Fill with the same valid segment template.
+            // Price progression is not the focus here, only the count.
+            segments[i] = validSegmentTemplate;
         }
+
         vm.expectRevert(
             IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__TooManySegments
@@ -1610,74 +1801,426 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
-    function test_ValidateSegmentArray_Revert_InvalidPriceProgression()
-        public
-    {
-        PackedSegment[] memory segments = new PackedSegment[](2);
-        // Segment 0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Final price = 1.0 + (3-1)*0.1 = 1.2
-        segments[0] = exposedLib.exposed_createSegment(
-            1 ether, 0.1 ether, 10 ether, 3
-        );
-        // Segment 1: P_init=1.1 (which is < 1.2), P_inc=0.05, S_step=20, N_steps=2
-        segments[1] = exposedLib.exposed_createSegment(
-            1.1 ether, 0.05 ether, 20 ether, 2
-        );
+    function testFuzz_ValidateSegmentArray_Revert_InvalidPriceProgression(
+        uint ip0,
+        uint pi0,
+        uint ss0,
+        uint ns0, // Segment 0 params
+        uint ip1,
+        uint pi1,
+        uint ss1,
+        uint ns1 // Segment 1 params
+    ) public {
+        // Constrain segment 0 params to be valid
+        vm.assume(ip0 <= INITIAL_PRICE_MASK);
+        vm.assume(pi0 <= PRICE_INCREASE_MASK);
+        vm.assume(ss0 <= SUPPLY_PER_STEP_MASK && ss0 > 0);
+        vm.assume(ns0 <= NUMBER_OF_STEPS_MASK && ns0 > 0);
+        vm.assume(!(ip0 == 0 && pi0 == 0)); // Not free
 
-        uint expectedFinalPriceCurrentSegment = 1 ether + (2 * 0.1 ether); // 1.2 ether
-        uint expectedInitialPriceNextSegment = 1.1 ether;
+        // Constrain segment 1 params to be individually valid
+        vm.assume(ip1 <= INITIAL_PRICE_MASK);
+        vm.assume(pi1 <= PRICE_INCREASE_MASK);
+        vm.assume(ss1 <= SUPPLY_PER_STEP_MASK && ss1 > 0);
+        vm.assume(ns1 <= NUMBER_OF_STEPS_MASK && ns1 > 0);
+        vm.assume(!(ip1 == 0 && pi1 == 0)); // Not free
+
+        PackedSegment segment0 =
+            exposedLib.exposed_createSegment(ip0, pi0, ss0, ns0);
+
+        uint finalPriceSeg0;
+        if (ns0 == 0) {
+            // Should be caught by assume(ns0 > 0) but defensive
+            finalPriceSeg0 = ip0;
+        } else {
+            finalPriceSeg0 = ip0 + (ns0 - 1) * pi0;
+        }
+
+        // Ensure ip1 is strictly less than finalPriceSeg0 for invalid progression
+        // Also ensure finalPriceSeg0 is large enough for ip1 to be smaller (and ip1 is valid)
+        vm.assume(finalPriceSeg0 > ip1 && finalPriceSeg0 > 0); // Ensures ip1 < finalPriceSeg0 is possible and meaningful
+
+        PackedSegment segment1 =
+            exposedLib.exposed_createSegment(ip1, pi1, ss1, ns1);
+
+        PackedSegment[] memory segments = new PackedSegment[](2);
+        segments[0] = segment0;
+        segments[1] = segment1;
 
         bytes memory expectedError = abi.encodeWithSelector(
             IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__InvalidPriceProgression
                 .selector,
-            0, // segment index i_
-            expectedFinalPriceCurrentSegment,
-            expectedInitialPriceNextSegment
+            0, // segment index i_ (always 0 for a 2-segment array check)
+            finalPriceSeg0, // previousFinal
+            ip1 // nextInitial
         );
         vm.expectRevert(expectedError);
         exposedLib.exposed_validateSegmentArray(segments);
     }
 
+    function testFuzz_ValidateSegmentArray_Pass_ValidProperties(
+        uint8 numSegmentsToFuzz, // Max 255, but we'll cap at MAX_SEGMENTS
+        uint initialPriceTpl, // Template parameters
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl
+    ) public view {
+        vm.assume(
+            numSegmentsToFuzz >= 1
+                && numSegmentsToFuzz <= DiscreteCurveMathLib_v1.MAX_SEGMENTS
+        );
+
+        // Constrain template segment parameters to be valid
+        vm.assume(initialPriceTpl <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncreaseTpl <= PRICE_INCREASE_MASK);
+        vm.assume(
+            supplyPerStepTpl <= SUPPLY_PER_STEP_MASK && supplyPerStepTpl > 0
+        );
+        vm.assume(
+            numberOfStepsTpl <= NUMBER_OF_STEPS_MASK && numberOfStepsTpl > 0
+        );
+        // Ensure template is not free, unless it's the only segment and we allow non-free single segments
+        // For simplicity, let's ensure template is not free if initialPriceTpl is 0
+        if (initialPriceTpl == 0) {
+            vm.assume(priceIncreaseTpl > 0);
+        }
+
+        PackedSegment[] memory segments = new PackedSegment[](numSegmentsToFuzz);
+        uint lastFinalPrice = 0;
+
+        for (uint8 i = 0; i < numSegmentsToFuzz; ++i) {
+            // Create segments with a simple valid progression
+            // Ensure initial price is at least the last final price and also not too large itself.
+            uint currentInitialPrice = initialPriceTpl + i * 1e10; // Increment to ensure progression and uniqueness
+            vm.assume(currentInitialPrice <= INITIAL_PRICE_MASK);
+            if (i > 0) {
+                vm.assume(currentInitialPrice >= lastFinalPrice);
+            }
+            // Ensure the segment itself is not free
+            vm.assume(!(currentInitialPrice == 0 && priceIncreaseTpl == 0));
+
+            segments[i] = exposedLib.exposed_createSegment(
+                currentInitialPrice,
+                priceIncreaseTpl,
+                supplyPerStepTpl,
+                numberOfStepsTpl
+            );
+
+            if (numberOfStepsTpl == 0) {
+                // Should be caught by assume but defensive
+                lastFinalPrice = currentInitialPrice;
+            } else {
+                lastFinalPrice = currentInitialPrice
+                    + (numberOfStepsTpl - 1) * priceIncreaseTpl;
+            }
+        }
+        exposedLib.exposed_validateSegmentArray(segments); // Should not revert
+    }
+
     function test_ValidateSegmentArray_Pass_PriceProgression_ExactMatch()
         public
+        view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         // Segment 0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3. Final price = 1.2
-        segments[0] = exposedLib.exposed_createSegment(
-            1 ether, 0.1 ether, 10 ether, 3
-        );
+        segments[0] =
+            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 3);
         // Segment 1: P_init=1.2 (exact match), P_inc=0.05, S_step=20, N_steps=2
-        segments[1] = exposedLib.exposed_createSegment(
-            1.2 ether, 0.05 ether, 20 ether, 2
-        );
+        segments[1] =
+            exposedLib.exposed_createSegment(1.2 ether, 0.05 ether, 20 ether, 2);
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
     function test_ValidateSegmentArray_Pass_PriceProgression_FlatThenSloped()
         public
+        view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         // Segment 0: Flat. P_init=1.0, P_inc=0, N_steps=2. Final price = 1.0
         segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 2);
         // Segment 1: Sloped. P_init=1.0 (match), P_inc=0.1, N_steps=2.
-        segments[1] = exposedLib.exposed_createSegment(
-            1 ether, 0.1 ether, 10 ether, 2
-        );
+        segments[1] =
+            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2);
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
     function test_ValidateSegmentArray_Pass_PriceProgression_SlopedThenFlat()
         public
+        view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
         // Segment 0: Sloped. P_init=1.0, P_inc=0.1, N_steps=2. Final price = 1.0 + (2-1)*0.1 = 1.1
-        segments[0] = exposedLib.exposed_createSegment(
-            1 ether, 0.1 ether, 10 ether, 2
-        );
+        segments[0] =
+            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2);
         // Segment 1: Flat. P_init=1.1 (match), P_inc=0, N_steps=2.
-        segments[1] = exposedLib.exposed_createSegment(
-            1.1 ether, 0, 10 ether, 2
-        );
+        segments[1] =
+            exposedLib.exposed_createSegment(1.1 ether, 0, 10 ether, 2);
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
+    }
+
+    // --- Fuzz tests for _findPositionForSupply ---
+
+    function _generateFuzzedValidSegmentsAndCapacity(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl
+    )
+        internal
+        view
+        returns (PackedSegment[] memory segments, uint totalCurveCapacity)
+    {
+        vm.assume(
+            numSegmentsToFuzz >= 1
+                && numSegmentsToFuzz <= DiscreteCurveMathLib_v1.MAX_SEGMENTS
+        );
+
+        // Constrain template segment parameters for individual validity
+        vm.assume(initialPriceTpl <= INITIAL_PRICE_MASK);
+        vm.assume(priceIncreaseTpl <= PRICE_INCREASE_MASK);
+        vm.assume(
+            supplyPerStepTpl <= SUPPLY_PER_STEP_MASK && supplyPerStepTpl > 0
+        );
+        vm.assume(
+            numberOfStepsTpl <= NUMBER_OF_STEPS_MASK && numberOfStepsTpl > 0
+        );
+        if (initialPriceTpl == 0) {
+            vm.assume(priceIncreaseTpl > 0); // Avoid free template if it's the base
+        }
+
+        segments = new PackedSegment[](numSegmentsToFuzz);
+        uint lastSegFinalPrice = 0; // Final price of the previously added segment (i-1)
+        // totalCurveCapacity is a named return, initialized to 0
+
+        for (uint8 i = 0; i < numSegmentsToFuzz; ++i) {
+            uint currentSegInitialPrice;
+            if (i == 0) {
+                currentSegInitialPrice = initialPriceTpl;
+            } else {
+                // For subsequent segments, ensure initial price is >= last segment's final price
+                // and also <= INITIAL_PRICE_MASK.
+                // This implies lastSegFinalPrice must have been <= INITIAL_PRICE_MASK.
+                vm.assume(lastSegFinalPrice <= INITIAL_PRICE_MASK);
+                currentSegInitialPrice = lastSegFinalPrice;
+            }
+            // Ensure the current segment about to be created is not free
+            // Use priceIncreaseTpl as all segments share this template parameter here.
+            vm.assume(currentSegInitialPrice > 0 || priceIncreaseTpl > 0);
+
+            segments[i] = exposedLib.exposed_createSegment(
+                currentSegInitialPrice,
+                priceIncreaseTpl,
+                supplyPerStepTpl,
+                numberOfStepsTpl
+            );
+
+            totalCurveCapacity +=
+                segments[i]._supplyPerStep() * segments[i]._numberOfSteps();
+
+            // Calculate the final price of this current segment for the next iteration's progression check
+            uint currentSegPriceRange;
+            if (numberOfStepsTpl > 0) {
+                // numberOfStepsTpl is assumed > 0
+                uint term = numberOfStepsTpl - 1;
+                if (priceIncreaseTpl > 0 && term > 0) {
+                    // Check for overflow before multiplication
+                    if (PRICE_INCREASE_MASK / priceIncreaseTpl < term) {
+                        vm.assume(false);
+                    } // term * pi would overflow
+                }
+                currentSegPriceRange = term * priceIncreaseTpl;
+            } else {
+                // Should not be reached due to assume(numberOfStepsTpl > 0)
+                currentSegPriceRange = 0;
+            }
+
+            if (currentSegInitialPrice > type(uint).max - currentSegPriceRange)
+            {
+                // Check for overflow before addition
+                vm.assume(false);
+            }
+            lastSegFinalPrice = currentSegInitialPrice + currentSegPriceRange;
+        }
+
+        // After generating all segments, validate the entire array.
+        // This ensures the progression logic within the loop (currentInitialPrice >= lastSegFinalPrice)
+        // combined with individual segment validity, results in a valid curve.
+        exposedLib.exposed_validateSegmentArray(segments);
+        return (segments, totalCurveCapacity);
+    }
+
+    function testFuzz_FindPositionForSupply_WithinOrAtCapacity(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl,
+        uint targetSupplyRatio // Ratio from 0 to 100
+    ) public {
+        // Bound inputs to valid ranges instead of using assume
+        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, 10)); // Ensure valid segment count
+        targetSupplyRatio = bound(targetSupplyRatio, 0, 100); // Ensure valid ratio
+
+        // Bound template values to reasonable ranges that are likely to pass validation
+        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e20); // 0.001 to 100 tokens at 1e18 scale
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e18); // 0 to 1 token increase
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1e15, 1e22); // Reasonable supply range
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 1000); // Reasonable step count
+
+        // Generate segments - this should now be much more likely to succeed
+        (PackedSegment[] memory segments, uint totalCurveCapacity) =
+        _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz,
+            initialPriceTpl,
+            priceIncreaseTpl,
+            supplyPerStepTpl,
+            numberOfStepsTpl
+        );
+
+        // Skip test if generation failed (instead of using assume)
+        if (segments.length == 0 || totalCurveCapacity == 0) {
+            return;
+        }
+
+        // Calculate target supply deterministically
+        uint targetSupply;
+        if (targetSupplyRatio == 100) {
+            targetSupply = totalCurveCapacity;
+        } else {
+            targetSupply = (totalCurveCapacity * targetSupplyRatio) / 100;
+        }
+
+        // Ensure we don't exceed capacity due to rounding
+        if (targetSupply > totalCurveCapacity) {
+            targetSupply = totalCurveCapacity;
+        }
+
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos =
+            exposedLib.exposed_findPositionForSupply(segments, targetSupply);
+
+        // Assertions
+        assertTrue(
+            pos.segmentIndex < segments.length, "W: Seg idx out of bounds"
+        );
+        PackedSegment currentSegment = segments[pos.segmentIndex];
+        uint currentSegNumSteps = currentSegment._numberOfSteps();
+
+        if (currentSegNumSteps > 0) {
+            assertTrue(
+                pos.stepIndexWithinSegment < currentSegNumSteps,
+                "W: Step idx out of bounds"
+            );
+        } else {
+            assertEq(
+                pos.stepIndexWithinSegment,
+                0,
+                "W: Step idx non-zero for 0-step seg"
+            );
+        }
+
+        uint expectedPrice = currentSegment._initialPrice()
+            + pos.stepIndexWithinSegment * currentSegment._priceIncrease();
+        assertEq(pos.priceAtCurrentStep, expectedPrice, "W: Price mismatch");
+        assertEq(
+            pos.supplyCoveredUpToThisPosition,
+            targetSupply,
+            "W: Supply covered mismatch"
+        );
+
+        if (targetSupply == 0) {
+            assertEq(pos.segmentIndex, 0, "W: Seg idx for supply 0");
+            assertEq(pos.stepIndexWithinSegment, 0, "W: Step idx for supply 0");
+            assertEq(
+                pos.priceAtCurrentStep,
+                segments[0]._initialPrice(),
+                "W: Price for supply 0"
+            );
+        }
+    }
+
+    function testFuzz_FindPositionForSupply_BeyondCapacity(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl,
+        uint targetSupplyRatioOffset // Ratio from 1 to 50 (to add to 100)
+    ) public {
+        // Bound inputs to valid ranges instead of using assume
+        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, 10)); // Ensure valid segment count
+        targetSupplyRatioOffset = bound(targetSupplyRatioOffset, 1, 50); // Ensure valid offset ratio
+
+        // Bound template values to reasonable ranges that are likely to pass validation
+        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e20); // 0.001 to 100 tokens at 1e18 scale
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e18); // 0 to 1 token increase
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1e15, 1e22); // Reasonable supply range
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 1000); // Reasonable step count
+
+        // Generate segments - this should now be much more likely to succeed
+        (PackedSegment[] memory segments, uint totalCurveCapacity) =
+        _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz,
+            initialPriceTpl,
+            priceIncreaseTpl,
+            supplyPerStepTpl,
+            numberOfStepsTpl
+        );
+
+        // Skip test if generation failed or capacity is 0
+        if (segments.length == 0 || totalCurveCapacity == 0) {
+            return;
+        }
+
+        // Calculate target supply deterministically - always beyond capacity
+        uint targetSupply = totalCurveCapacity
+            + (totalCurveCapacity * targetSupplyRatioOffset / 100);
+
+        // Ensure it's strictly beyond capacity (handle edge case where calculation might equal capacity)
+        if (targetSupply <= totalCurveCapacity) {
+            targetSupply = totalCurveCapacity + 1;
+        }
+
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos =
+            exposedLib.exposed_findPositionForSupply(segments, targetSupply);
+
+        // Assertions
+        assertTrue(
+            pos.segmentIndex < segments.length, "B: Seg idx out of bounds"
+        );
+        assertEq(
+            pos.supplyCoveredUpToThisPosition,
+            totalCurveCapacity,
+            "B: Supply covered mismatch"
+        );
+        assertEq(pos.segmentIndex, segments.length - 1, "B: Seg idx not last");
+
+        PackedSegment lastSeg = segments[segments.length - 1];
+        if (lastSeg._numberOfSteps() > 0) {
+            assertEq(
+                pos.stepIndexWithinSegment,
+                lastSeg._numberOfSteps() - 1,
+                "B: Step idx not last"
+            );
+            assertEq(
+                pos.priceAtCurrentStep,
+                lastSeg._initialPrice()
+                    + (lastSeg._numberOfSteps() - 1) * lastSeg._priceIncrease(),
+                "B: Price mismatch at end"
+            );
+        } else {
+            // Last segment has 0 steps (should be caught by createSegment constraints ideally)
+            assertEq(
+                pos.stepIndexWithinSegment,
+                0,
+                "B: Step idx not 0 for 0-step last seg"
+            );
+            assertEq(
+                pos.priceAtCurrentStep,
+                lastSeg._initialPrice(),
+                "B: Price mismatch for 0-step last seg"
+            );
+        }
     }
 }

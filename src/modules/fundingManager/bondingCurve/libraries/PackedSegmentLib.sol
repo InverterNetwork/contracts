@@ -131,7 +131,8 @@ library PackedSegmentLib {
         pure
         returns (uint supply_)
     {
-        return (uint(PackedSegment.unwrap(self_)) >> SUPPLY_OFFSET) & SUPPLY_MASK;
+        return
+            (uint(PackedSegment.unwrap(self_)) >> SUPPLY_OFFSET) & SUPPLY_MASK;
     }
 
     /**
