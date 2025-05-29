@@ -9,13 +9,13 @@ import {PackedSegment} from "@fm/bondingCurve/types/PackedSegment_v1.sol";
 
 contract DiscreteCurveMathLibV1_Exposed {
     function createSegmentPublic(
-        uint _initialPrice,
-        uint _priceIncrease,
-        uint _supplyPerStep,
-        uint _numberOfSteps
+        uint initialPrice_,
+        uint priceIncrease_,
+        uint supplyPerStep_,
+        uint numberOfSteps_
     ) public pure returns (PackedSegment) {
-        return DiscreteCurveMathLib_v1.createSegment(
-            _initialPrice, _priceIncrease, _supplyPerStep, _numberOfSteps
+        return DiscreteCurveMathLib_v1._createSegment(
+            initialPrice_, priceIncrease_, supplyPerStep_, numberOfSteps_
         );
     }
 
@@ -23,71 +23,71 @@ contract DiscreteCurveMathLibV1_Exposed {
     // they can be exposed here as well.
 
     function findPositionForSupplyPublic(
-        PackedSegment[] memory segments,
-        uint targetTotalIssuanceSupply
-    ) public pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos) {
+        PackedSegment[] memory segments_,
+        uint targetTotalIssuanceSupply_
+    ) public pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory pos_) {
         return DiscreteCurveMathLib_v1._findPositionForSupply(
-            segments, targetTotalIssuanceSupply
+            segments_, targetTotalIssuanceSupply_
         );
     }
 
     function getCurrentPriceAndStepPublic(
-        PackedSegment[] memory segments,
-        uint currentTotalIssuanceSupply
-    ) public pure returns (uint price, uint stepIndex, uint segmentIndex) {
-        return DiscreteCurveMathLib_v1.getCurrentPriceAndStep(
-            segments, currentTotalIssuanceSupply
+        PackedSegment[] memory segments_,
+        uint currentTotalIssuanceSupply_
+    ) public pure returns (uint price_, uint stepIndex_, uint segmentIndex_) {
+        return DiscreteCurveMathLib_v1._getCurrentPriceAndStep(
+            segments_, currentTotalIssuanceSupply_
         );
     }
 
     function calculateReserveForSupplyPublic(
-        PackedSegment[] memory segments,
-        uint targetSupply
-    ) public pure returns (uint totalReserve) {
-        return DiscreteCurveMathLib_v1.calculateReserveForSupply(
-            segments, targetSupply
+        PackedSegment[] memory segments_,
+        uint targetSupply_
+    ) public pure returns (uint totalReserve_) {
+        return DiscreteCurveMathLib_v1._calculateReserveForSupply(
+            segments_, targetSupply_
         );
     }
 
     function calculatePurchaseReturnPublic(
-        PackedSegment[] memory segments,
-        uint collateralAmountIn,
-        uint currentTotalIssuanceSupply
+        PackedSegment[] memory segments_,
+        uint collateralAmountIn_,
+        uint currentTotalIssuanceSupply_
     )
         public
         pure
-        returns (uint issuanceAmountOut, uint collateralAmountSpent)
+        returns (uint issuanceAmountOut_, uint collateralAmountSpent_)
     {
-        return DiscreteCurveMathLib_v1.calculatePurchaseReturn(
-            segments, collateralAmountIn, currentTotalIssuanceSupply
+        return DiscreteCurveMathLib_v1._calculatePurchaseReturn(
+            segments_, collateralAmountIn_, currentTotalIssuanceSupply_
         );
     }
 
     function calculateSaleReturnPublic(
-        PackedSegment[] memory segments,
-        uint issuanceAmountIn,
-        uint currentTotalIssuanceSupply
+        PackedSegment[] memory segments_,
+        uint issuanceAmountIn_,
+        uint currentTotalIssuanceSupply_
     )
         public
         pure
-        returns (uint collateralAmountOut, uint issuanceAmountBurned)
+        returns (uint collateralAmountOut_, uint issuanceAmountBurned_)
     {
-        return DiscreteCurveMathLib_v1.calculateSaleReturn(
-            segments, issuanceAmountIn, currentTotalIssuanceSupply
+        return DiscreteCurveMathLib_v1._calculateSaleReturn(
+            segments_, issuanceAmountIn_, currentTotalIssuanceSupply_
         );
     }
 
     function linearSearchSlopedPublic(
-        PackedSegment segment,
-        uint totalBudget,
-        uint purchaseStartStepInSegment,
-        uint priceAtPurchaseStartStep
-    ) public pure returns (uint tokensPurchased, uint totalCollateralSpent) {
+        PackedSegment segment_,
+        uint totalBudget_,
+        uint purchaseStartStepInSegment_,
+        uint priceAtPurchaseStartStep_
+    ) public pure returns (uint tokensPurchased_, uint totalCollateralSpent_) {
         return DiscreteCurveMathLib_v1._linearSearchSloped(
-            segment,
-            totalBudget,
-            purchaseStartStepInSegment,
-            priceAtPurchaseStartStep
+            segment_,
+            totalBudget_,
+            purchaseStartStepInSegment_,
+            priceAtPurchaseStartStep_
         );
     }
 }

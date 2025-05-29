@@ -220,7 +220,7 @@ A Funding Manager (FM) contract would use `calculatePurchaseReturn` to determine
         // PackedSegment[] memory currentSegments = _segments; // If _segments is storage array
         // For this example, assume segments are passed or constructed.
         PackedSegment[] memory segments = new PackedSegment[](1); // Example segments
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(1e18, 0.1e18, 10e18, 100);
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(1e18, 0.1e18, 10e18, 100);
 
 
         // uint256 currentTotalIssuanceSupply = _issuanceToken.totalSupply(); // Get current supply
@@ -291,7 +291,7 @@ Deployment of contracts _using_ this library would follow standard Inverter Netw
 Not applicable for the library itself. A contract using this library (e.g., a Funding Manager) would require setup steps to define its curve segments. This typically involves:
 
 1.  Preparing an array of `IDiscreteCurveMathLib_v1.SegmentConfig` structs.
-2.  Iterating through this array, calling `DiscreteCurveMathLib_v1.createSegment()` for each config to get the `PackedSegment` data.
+2.  Iterating through this array, calling `DiscreteCurveMathLib_v1._createSegment()` for each config to get the `PackedSegment` data.
 3.  Storing this `PackedSegment[]` array in its state.
 4.  Validating the array using `DiscreteCurveMathLib_v1.validateSegmentArray()`.
 

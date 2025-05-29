@@ -16,6 +16,9 @@ import {IDiscreteCurveMathLib_v1} from
  * - numberOfSteps (16 bits): Offset 240
  */
 library PackedSegmentLib {
+    // =========================================================================
+    // Constants
+
     // Bit field specifications (matching PackedSegment_v1.sol documentation)
     uint private constant INITIAL_PRICE_BITS = 72; // Max: ~4.722e21 (scaled by 1e18 -> ~$4,722)
     uint private constant PRICE_INCREASE_BITS = 72; // Max: ~4.722e21 (scaled by 1e18 -> ~$4,722)
@@ -39,120 +42,120 @@ library PackedSegmentLib {
     /**
      * @notice Creates a new PackedSegment from individual configuration parameters.
      * @dev Validates inputs against bitfield limits.
-     * @param _initialPrice The initial price for this segment.
-     * @param _priceIncrease The price increase per step for this segment.
-     * @param _supplyPerStep The supply minted per step for this segment.
-     * @param _numberOfSteps The number of steps in this segment.
-     * @return newSegment The newly created PackedSegment.
+     * @param initialPrice_ The initial price for this segment.
+     * @param priceIncrease_ The price increase per step for this segment.
+     * @param supplyPerStep_ The supply minted per step for this segment.
+     * @param numberOfSteps_ The number of steps in this segment.
+     * @return newSegment_ The newly created PackedSegment.
      */
-    function create(
-        uint _initialPrice,
-        uint _priceIncrease,
-        uint _supplyPerStep,
-        uint _numberOfSteps
-    ) internal pure returns (PackedSegment newSegment) {
-        if (_initialPrice > INITIAL_PRICE_MASK) {
+    function _create(
+        uint initialPrice_,
+        uint priceIncrease_,
+        uint supplyPerStep_,
+        uint numberOfSteps_
+    ) internal pure returns (PackedSegment newSegment_) {
+        if (initialPrice_ > INITIAL_PRICE_MASK) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__InitialPriceTooLarge();
         }
-        if (_priceIncrease > PRICE_INCREASE_MASK) {
+        if (priceIncrease_ > PRICE_INCREASE_MASK) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__PriceIncreaseTooLarge();
         }
-        if (_supplyPerStep == 0) {
+        if (supplyPerStep_ == 0) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__ZeroSupplyPerStep();
         }
-        if (_supplyPerStep > SUPPLY_MASK) {
+        if (supplyPerStep_ > SUPPLY_MASK) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__SupplyPerStepTooLarge();
         }
-        if (_numberOfSteps == 0 || _numberOfSteps > STEPS_MASK) {
+        if (numberOfSteps_ == 0 || numberOfSteps_ > STEPS_MASK) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__InvalidNumberOfSteps();
         }
         // Disallow segments that are entirely free (both initial price and price increase are zero).
-        if (_initialPrice == 0 && _priceIncrease == 0) {
+        if (initialPrice_ == 0 && priceIncrease_ == 0) {
             // Note: DiscreteCurveMathLib__SegmentIsFree error needs to be defined in IDiscreteCurveMathLib_v1.sol
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree(
             );
         }
 
-        bytes32 packed = bytes32(
-            _initialPrice | (_priceIncrease << PRICE_INCREASE_OFFSET)
-                | (_supplyPerStep << SUPPLY_OFFSET)
-                | (_numberOfSteps << STEPS_OFFSET)
+        bytes32 packed_ = bytes32(
+            initialPrice_ | (priceIncrease_ << PRICE_INCREASE_OFFSET)
+                | (supplyPerStep_ << SUPPLY_OFFSET)
+                | (numberOfSteps_ << STEPS_OFFSET)
         );
-        return PackedSegment.wrap(packed);
+        return PackedSegment.wrap(packed_);
     }
 
     /**
      * @notice Retrieves the initial price from a PackedSegment.
-     * @param self The PackedSegment.
-     * @return price The initial price.
+     * @param self_ The PackedSegment.
+     * @return price_ The initial price.
      */
-    function initialPrice(PackedSegment self)
+    function _initialPrice(PackedSegment self_)
         internal
         pure
-        returns (uint price)
+        returns (uint price_)
     {
-        return uint(PackedSegment.unwrap(self)) & INITIAL_PRICE_MASK;
+        return uint(PackedSegment.unwrap(self_)) & INITIAL_PRICE_MASK;
     }
 
     /**
      * @notice Retrieves the price increase per step from a PackedSegment.
-     * @param self The PackedSegment.
-     * @return increase The price increase per step.
+     * @param self_ The PackedSegment.
+     * @return increase_ The price increase per step.
      */
-    function priceIncrease(PackedSegment self)
+    function _priceIncrease(PackedSegment self_)
         internal
         pure
-        returns (uint increase)
+        returns (uint increase_)
     {
-        return (uint(PackedSegment.unwrap(self)) >> PRICE_INCREASE_OFFSET)
+        return (uint(PackedSegment.unwrap(self_)) >> PRICE_INCREASE_OFFSET)
             & PRICE_INCREASE_MASK;
     }
 
     /**
      * @notice Retrieves the supply per step from a PackedSegment.
-     * @param self The PackedSegment.
-     * @return supply The supply per step.
+     * @param self_ The PackedSegment.
+     * @return supply_ The supply per step.
      */
-    function supplyPerStep(PackedSegment self)
+    function _supplyPerStep(PackedSegment self_)
         internal
         pure
-        returns (uint supply)
+        returns (uint supply_)
     {
-        return (uint(PackedSegment.unwrap(self)) >> SUPPLY_OFFSET) & SUPPLY_MASK;
+        return (uint(PackedSegment.unwrap(self_)) >> SUPPLY_OFFSET) & SUPPLY_MASK;
     }
 
     /**
      * @notice Retrieves the number of steps from a PackedSegment.
-     * @param self The PackedSegment.
-     * @return steps The number of steps.
+     * @param self_ The PackedSegment.
+     * @return steps_ The number of steps.
      */
-    function numberOfSteps(PackedSegment self)
+    function _numberOfSteps(PackedSegment self_)
         internal
         pure
-        returns (uint steps)
+        returns (uint steps_)
     {
-        return (uint(PackedSegment.unwrap(self)) >> STEPS_OFFSET) & STEPS_MASK;
+        return (uint(PackedSegment.unwrap(self_)) >> STEPS_OFFSET) & STEPS_MASK;
     }
 
     /**
      * @notice Unpacks all data fields from a PackedSegment.
-     * @param self The PackedSegment.
+     * @param self_ The PackedSegment.
      * @return initialPrice_ The initial price.
      * @return priceIncrease_ The price increase per step.
      * @return supplyPerStep_ The supply per step.
      * @return numberOfSteps_ The number of steps.
      */
-    function unpack(PackedSegment self)
+    function _unpack(PackedSegment self_)
         internal
         pure
         returns (
@@ -162,10 +165,10 @@ library PackedSegmentLib {
             uint numberOfSteps_
         )
     {
-        uint data = uint(PackedSegment.unwrap(self));
-        initialPrice_ = data & INITIAL_PRICE_MASK; // No shift needed as it's at offset 0
-        priceIncrease_ = (data >> PRICE_INCREASE_OFFSET) & PRICE_INCREASE_MASK;
-        supplyPerStep_ = (data >> SUPPLY_OFFSET) & SUPPLY_MASK;
-        numberOfSteps_ = (data >> STEPS_OFFSET) & STEPS_MASK;
+        uint data_ = uint(PackedSegment.unwrap(self_));
+        initialPrice_ = data_ & INITIAL_PRICE_MASK; // No shift needed as it's at offset 0
+        priceIncrease_ = (data_ >> PRICE_INCREASE_OFFSET) & PRICE_INCREASE_MASK;
+        supplyPerStep_ = (data_ >> SUPPLY_OFFSET) & SUPPLY_MASK;
+        numberOfSteps_ = (data_ >> STEPS_OFFSET) & STEPS_MASK;
     }
 }

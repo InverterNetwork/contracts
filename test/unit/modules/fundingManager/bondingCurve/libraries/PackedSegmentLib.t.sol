@@ -29,7 +29,7 @@ contract PackedSegmentLib_Test is Test {
         uint expectedSupplyPerStep = 100 * 1e18;
         uint expectedNumberOfSteps = 50;
 
-        PackedSegment segment = DiscreteCurveMathLib_v1.createSegment(
+        PackedSegment segment = DiscreteCurveMathLib_v1._createSegment(
             expectedInitialPrice,
             expectedPriceIncrease,
             expectedSupplyPerStep,
@@ -37,22 +37,22 @@ contract PackedSegmentLib_Test is Test {
         );
 
         assertEq(
-            segment.initialPrice(),
+            segment._initialPrice(),
             expectedInitialPrice,
             "PackedSegment: initialPrice mismatch"
         );
         assertEq(
-            segment.priceIncrease(),
+            segment._priceIncrease(),
             expectedPriceIncrease,
             "PackedSegment: priceIncrease mismatch"
         );
         assertEq(
-            segment.supplyPerStep(),
+            segment._supplyPerStep(),
             expectedSupplyPerStep,
             "PackedSegment: supplyPerStep mismatch"
         );
         assertEq(
-            segment.numberOfSteps(),
+            segment._numberOfSteps(),
             expectedNumberOfSteps,
             "PackedSegment: numberOfSteps mismatch"
         );
@@ -62,27 +62,27 @@ contract PackedSegmentLib_Test is Test {
             uint actualPriceIncrease,
             uint actualSupplyPerStep,
             uint actualNumberOfSteps
-        ) = segment.unpack();
+        ) = segment._unpack();
 
         assertEq(
             actualInitialPrice,
             expectedInitialPrice,
-            "PackedSegment.unpack: initialPrice mismatch"
+            "Packedsegment._unpack: initialPrice mismatch"
         );
         assertEq(
             actualPriceIncrease,
             expectedPriceIncrease,
-            "PackedSegment.unpack: priceIncrease mismatch"
+            "Packedsegment._unpack: priceIncrease mismatch"
         );
         assertEq(
             actualSupplyPerStep,
             expectedSupplyPerStep,
-            "PackedSegment.unpack: supplyPerStep mismatch"
+            "Packedsegment._unpack: supplyPerStep mismatch"
         );
         assertEq(
             actualNumberOfSteps,
             expectedNumberOfSteps,
-            "PackedSegment.unpack: numberOfSteps mismatch"
+            "Packedsegment._unpack: numberOfSteps mismatch"
         );
     }
 

@@ -115,13 +115,13 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         // Create default segments array
         defaultSegments = new PackedSegment[](2);
-        defaultSegments[0] = DiscreteCurveMathLib_v1.createSegment(
+        defaultSegments[0] = DiscreteCurveMathLib_v1._createSegment(
             defaultSeg0_initialPrice,
             defaultSeg0_priceIncrease,
             defaultSeg0_supplyPerStep,
             defaultSeg0_numberOfSteps
         );
-        defaultSegments[1] = DiscreteCurveMathLib_v1.createSegment(
+        defaultSegments[1] = DiscreteCurveMathLib_v1._createSegment(
             defaultSeg1_initialPrice,
             defaultSeg1_priceIncrease,
             defaultSeg1_supplyPerStep,
@@ -136,7 +136,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint supplyPerStep = 10 ether; // 10 tokens with 18 decimals
         uint numberOfSteps = 5; // Total supply in segment = 50 tokens
 
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
@@ -166,7 +166,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint supplyPerStep = 10 ether;
         uint numberOfSteps = 2; // Total supply in segment = 20 tokens
 
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
@@ -306,7 +306,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             new PackedSegment[](DiscreteCurveMathLib_v1.MAX_SEGMENTS + 1);
         // Fill with dummy segments, actual content doesn't matter for this check
         for (uint i = 0; i < segments.length; ++i) {
-            segments[i] = DiscreteCurveMathLib_v1.createSegment(1, 0, 1, 1);
+            segments[i] = DiscreteCurveMathLib_v1._createSegment(1, 0, 1, 1);
         }
         uint targetSupply = 10 ether;
 
@@ -326,7 +326,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint flatSupplyPerStep = 15 ether;
         uint flatNumberOfSteps = 1;
         uint flatCapacity = flatSupplyPerStep * flatNumberOfSteps;
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             flatInitialPrice, 0, flatSupplyPerStep, flatNumberOfSteps
         );
 
@@ -335,7 +335,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint slopedPriceIncrease = 0.1 ether;
         uint slopedSupplyPerStep = 8 ether;
         uint slopedNumberOfSteps = 3;
-        segments[1] = DiscreteCurveMathLib_v1.createSegment(
+        segments[1] = DiscreteCurveMathLib_v1._createSegment(
             slopedInitialPrice,
             slopedPriceIncrease,
             slopedSupplyPerStep,
@@ -565,7 +565,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint priceIncrease = 0; // Flat segment
         uint supplyPerStep = 10 ether;
         uint numberOfSteps = 5; // Total capacity 50 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
@@ -759,7 +759,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint priceIncrease = 0; // Flat segment
         uint supplyPerStep = 10 ether;
         uint numberOfSteps = 5; // Total capacity 50 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
@@ -811,7 +811,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint priceIncrease = 0; // Flat segment
         uint supplyPerStep = 10 ether;
         uint numberOfSteps = 5; // Total capacity 50 ether
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
@@ -1238,7 +1238,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint flatPrice = 2 ether;
         uint flatSupplyPerStep = 10 ether;
         uint flatNumSteps = 1;
-        segments[0] = DiscreteCurveMathLib_v1.createSegment(
+        segments[0] = DiscreteCurveMathLib_v1._createSegment(
             flatPrice, 0, flatSupplyPerStep, flatNumSteps
         );
 
@@ -1497,7 +1497,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_LinearSearchSloped_InvalidStartStep_Reverts() public {
         // Setup a simple segment
-        PackedSegment segment = DiscreteCurveMathLib_v1.createSegment(
+        PackedSegment segment = DiscreteCurveMathLib_v1._createSegment(
             1 ether, // initialPrice
             0.1 ether, // priceIncrease
             10 ether, // supplyPerStep
