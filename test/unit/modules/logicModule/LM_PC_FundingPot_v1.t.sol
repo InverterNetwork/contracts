@@ -4679,10 +4679,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   └── When user attempts to create payment orders in batch
     │       └── Then it should revert with Module__LM_PC_FundingPot__RoundNotClosed
     │
-    ├── Given start index is greater than the number of contributors
-    │   └── When user attempts to create payment orders in batch
-    │       └── Then it should revert with Module__LM_PC_FundingPot__InvalidBatchParameters
-    │
     ├── Given batch size is zero
     │   └── When user attempts to create payment orders in batch
     │       └── Then it should revert with Module__LM_PC_FundingPot__InvalidBatchParameters
@@ -4691,6 +4687,10 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
     │   └── Given the round is configured with autoClosure
     │   └── When user attempts to create payment orders in batch
     │       └── Then it should revert with Module__CallerNotAuthorized
+    │
+    ├── Given start index is greater than the number of contributors
+    │   └── When user attempts to create payment orders in batch
+    │       └── Then it should not revert and create payment orders
     │
     ├── Given a closed round with autoClosure
     │   └── When user attempts to create payment orders in batch
@@ -4734,21 +4734,6 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
     }
 
-    function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsGreaterThanContributorCount(
-    ) public {
-        testCloseRound_worksWithMultipleContributors();
-        uint32 roundId = fundingPot.getRoundCount();
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ILM_PC_FundingPot_v1
-                    .Module__LM_PC_FundingPot__InvalidBatchParameters
-                    .selector
-            )
-        );
-        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 999);
-    }
-
     function testCreatePaymentOrdersForContributorsBatch_revertsGivenBatchSizeIsZero(
     ) public {
         testCloseRound_worksWithMultipleContributors();
@@ -4782,6 +4767,15 @@ contract LM_PC_FundingPot_v1_Test is ModuleTest {
         );
         fundingPot.createPaymentOrdersForContributorsBatch(roundId, 1);
         vm.stopPrank();
+    }
+
+    function testCreatePaymentOrdersForContributorsBatch_worksGivenBatchSizeIsGreaterThanContributorCount(
+    ) public {
+        testCloseRound_worksWithMultipleContributors();
+        uint32 roundId = fundingPot.getRoundCount();
+
+        fundingPot.createPaymentOrdersForContributorsBatch(roundId, 999);
+        assertEq(fundingPot.paymentOrders().length, 3);
     }
 
     function testCreatePaymentOrdersForContributorsBatch_worksGivenRoundIsAutoClosure(

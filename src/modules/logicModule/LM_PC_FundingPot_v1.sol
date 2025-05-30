@@ -755,8 +755,12 @@ contract LM_PC_FundingPot_v1 is
         uint contributorCount = contributors.length;
 
         // Check batch size is not zero
-        if (batchSize_ == 0 || batchSize_ > contributorCount) {
+        if (batchSize_ == 0) {
             revert Module__LM_PC_FundingPot__InvalidBatchParameters();
+        }
+        // If batch size is greater than contributor count, set batch size to contributor count
+        if (batchSize_ > contributorCount) {
+            batchSize_ = contributorCount;
         }
 
         // If autoClosure is false, only admin can process contributors
