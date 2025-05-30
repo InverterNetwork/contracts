@@ -65,16 +65,23 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
 
     // Logic Modules
     address public impl_mod_LM_PC_Oracle_Permissioned_v1;
+    address public impl_mod_LM_PC_Bounties_v1;
     address public impl_mod_LM_PC_Bounties_v2;
+    address public impl_mod_LM_PC_KPIRewarder_v1;
     address public impl_mod_LM_PC_KPIRewarder_v2;
+    address public impl_mod_LM_PC_PaymentRouter_v1;
     address public impl_mod_LM_PC_PaymentRouter_v2;
+    address public impl_mod_LM_PC_RecurringPayments_v1;
     address public impl_mod_LM_PC_RecurringPayments_v2;
+    address public impl_mod_LM_PC_Staking_v1;
     address public impl_mod_LM_PC_Staking_v2;
 
     // Payment Processors
     address public impl_mod_PP_Queue_ManualExecution_v1;
     address public impl_mod_PP_Queue_v1;
+    address public impl_mod_PP_Simple_v1;
     address public impl_mod_PP_Simple_v2;
+    address public impl_mod_PP_Streaming_v1;
     address public impl_mod_PP_Streaming_v2;
 
     // Orchestrator
@@ -244,23 +251,45 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             )
         );
 
+        impl_mod_LM_PC_Bounties_v1 = deployAndLogWithCreate2(
+            "LM_PC_Bounties_v1",
+            vm.getCode("LM_PC_Bounties_v1.sol:LM_PC_Bounties_v1")
+        );
         impl_mod_LM_PC_Bounties_v2 = deployAndLogWithCreate2(
             "LM_PC_Bounties_v2",
             vm.getCode("LM_PC_Bounties_v2.sol:LM_PC_Bounties_v2")
+        );
+        impl_mod_LM_PC_KPIRewarder_v1 = deployAndLogWithCreate2(
+            "LM_PC_KPIRewarder_v1",
+            vm.getCode("LM_PC_KPIRewarder_v1.sol:LM_PC_KPIRewarder_v1")
         );
         impl_mod_LM_PC_KPIRewarder_v2 = deployAndLogWithCreate2(
             "LM_PC_KPIRewarder_v2",
             vm.getCode("LM_PC_KPIRewarder_v2.sol:LM_PC_KPIRewarder_v2")
         );
+        impl_mod_LM_PC_PaymentRouter_v1 = deployAndLogWithCreate2(
+            "LM_PC_PaymentRouter_v1",
+            vm.getCode("LM_PC_PaymentRouter_v1.sol:LM_PC_PaymentRouter_v1")
+        );
         impl_mod_LM_PC_PaymentRouter_v2 = deployAndLogWithCreate2(
             "LM_PC_PaymentRouter_v2",
             vm.getCode("LM_PC_PaymentRouter_v2.sol:LM_PC_PaymentRouter_v2")
+        );
+        impl_mod_LM_PC_RecurringPayments_v1 = deployAndLogWithCreate2(
+            "LM_PC_RecurringPayments_v1",
+            vm.getCode(
+                "LM_PC_RecurringPayments_v1.sol:LM_PC_RecurringPayments_v1"
+            )
         );
         impl_mod_LM_PC_RecurringPayments_v2 = deployAndLogWithCreate2(
             "LM_PC_RecurringPayments_v2",
             vm.getCode(
                 "LM_PC_RecurringPayments_v2.sol:LM_PC_RecurringPayments_v2"
             )
+        );
+        impl_mod_LM_PC_Staking_v1 = deployAndLogWithCreate2(
+            "LM_PC_Staking_v1",
+            vm.getCode("LM_PC_Staking_v1.sol:LM_PC_Staking_v1")
         );
         impl_mod_LM_PC_Staking_v2 = deployAndLogWithCreate2(
             "LM_PC_Staking_v2",
@@ -280,8 +309,14 @@ contract SingletonDeployer_v1 is ProtocolConstants_v1 {
             "PP_Queue_v1", vm.getCode("PP_Queue_v1.sol:PP_Queue_v1")
         );
 
+        impl_mod_PP_Simple_v1 = deployAndLogWithCreate2(
+            "PP_Simple_v1", vm.getCode("PP_Simple_v1.sol:PP_Simple_v1")
+        );
         impl_mod_PP_Simple_v2 = deployAndLogWithCreate2(
             "PP_Simple_v2", vm.getCode("PP_Simple_v2.sol:PP_Simple_v2")
+        );
+        impl_mod_PP_Streaming_v1 = deployAndLogWithCreate2(
+            "PP_Streaming_v1", vm.getCode("PP_Streaming_v1.sol:PP_Streaming_v1")
         );
         impl_mod_PP_Streaming_v2 = deployAndLogWithCreate2(
             "PP_Streaming_v2", vm.getCode("PP_Streaming_v2.sol:PP_Streaming_v2")

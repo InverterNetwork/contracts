@@ -184,7 +184,15 @@ contract MetadataCollection_v1 {
     );
 
     // Bounties
-    IModule_v1.Metadata public bountiesMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata public bountiesV1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_Bounties_v1"
+    );
+
+    IModule_v1.Metadata public bountiesV2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -193,7 +201,15 @@ contract MetadataCollection_v1 {
     );
 
     // KPIRewarder
-    IModule_v1.Metadata public kpiRewarderMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata public kpiRewarderV1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_KPIRewarder_v1"
+    );
+
+    IModule_v1.Metadata public kpiRewarderV2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -202,7 +218,15 @@ contract MetadataCollection_v1 {
     );
 
     // PaymentRouter
-    IModule_v1.Metadata public paymentRouterMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata public paymentRouterV1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_PaymentRouter_v1"
+    );
+
+    IModule_v1.Metadata public paymentRouterV2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -211,7 +235,15 @@ contract MetadataCollection_v1 {
     );
 
     // RecurringPayments
-    IModule_v1.Metadata public recurringPaymentsMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata public recurringPaymentsV1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_RecurringPayments_v1"
+    );
+
+    IModule_v1.Metadata public recurringPaymentsV2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -220,7 +252,15 @@ contract MetadataCollection_v1 {
     );
 
     // Staking
-    IModule_v1.Metadata public stakingMetadata = IModule_v1.Metadata(
+    IModule_v1.Metadata public stakingV1Metadata = IModule_v1.Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "LM_PC_Staking_v1"
+    );
+
+    IModule_v1.Metadata public stakingV2Metadata = IModule_v1.Metadata(
         1,
         0,
         0,
@@ -248,13 +288,27 @@ contract MetadataCollection_v1 {
     );
 
     // SimplePaymentProcessor
-    IModule_v1.Metadata public simplePaymentProcessorMetadata = IModule_v1
+    IModule_v1.Metadata public simplePaymentProcessorV1Metadata = IModule_v1
+        .Metadata(
+        1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v1"
+    );
+
+    IModule_v1.Metadata public simplePaymentProcessorV2Metadata = IModule_v1
         .Metadata(
         1, 0, 0, "https://github.com/InverterNetwork/contracts", "PP_Simple_v2"
     );
 
     // StreamingPaymentProcessor
-    IModule_v1.Metadata public streamingPaymentProcessorMetadata = IModule_v1
+    IModule_v1.Metadata public streamingPaymentProcessorV1Metadata = IModule_v1
+        .Metadata(
+        1,
+        0,
+        0,
+        "https://github.com/InverterNetwork/contracts",
+        "PP_Streaming_v1"
+    );
+
+    IModule_v1.Metadata public streamingPaymentProcessorV2Metadata = IModule_v1
         .Metadata(
         1,
         0,

@@ -265,81 +265,156 @@ contract ModuleBeaconDeployer_v1 is
         );
 
         // Bounties
-        initialMetadataRegistration.push(bountiesMetadata);
+        initialMetadataRegistration.push(bountiesV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    bountiesMetadata.title,
+                    bountiesV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_LM_PC_Bounties_v1,
+                    bountiesV1Metadata.majorVersion,
+                    bountiesV1Metadata.minorVersion,
+                    bountiesV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(bountiesV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    bountiesV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_LM_PC_Bounties_v2,
-                    bountiesMetadata.majorVersion,
-                    bountiesMetadata.minorVersion,
-                    bountiesMetadata.patchVersion
+                    bountiesV2Metadata.majorVersion,
+                    bountiesV2Metadata.minorVersion,
+                    bountiesV2Metadata.patchVersion
                 )
             )
         );
 
         // KPIRewarder
-        initialMetadataRegistration.push(kpiRewarderMetadata);
+        initialMetadataRegistration.push(kpiRewarderV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    kpiRewarderMetadata.title,
+                    kpiRewarderV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_LM_PC_KPIRewarder_v1,
+                    kpiRewarderV1Metadata.majorVersion,
+                    kpiRewarderV1Metadata.minorVersion,
+                    kpiRewarderV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(kpiRewarderV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    kpiRewarderV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_LM_PC_KPIRewarder_v2,
-                    kpiRewarderMetadata.majorVersion,
-                    kpiRewarderMetadata.minorVersion,
-                    kpiRewarderMetadata.patchVersion
+                    kpiRewarderV2Metadata.majorVersion,
+                    kpiRewarderV2Metadata.minorVersion,
+                    kpiRewarderV2Metadata.patchVersion
                 )
             )
         );
 
         // PaymentRouter
-        initialMetadataRegistration.push(paymentRouterMetadata);
+        initialMetadataRegistration.push(paymentRouterV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    paymentRouterMetadata.title,
+                    paymentRouterV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_LM_PC_PaymentRouter_v1,
+                    paymentRouterV1Metadata.majorVersion,
+                    paymentRouterV1Metadata.minorVersion,
+                    paymentRouterV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(paymentRouterV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    paymentRouterV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_LM_PC_PaymentRouter_v2,
-                    paymentRouterMetadata.majorVersion,
-                    paymentRouterMetadata.minorVersion,
-                    paymentRouterMetadata.patchVersion
+                    paymentRouterV2Metadata.majorVersion,
+                    paymentRouterV2Metadata.minorVersion,
+                    paymentRouterV2Metadata.patchVersion
                 )
             )
         );
 
         // RecurringPayments
-        initialMetadataRegistration.push(recurringPaymentsMetadata);
+        initialMetadataRegistration.push(recurringPaymentsV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    recurringPaymentsMetadata.title,
+                    recurringPaymentsV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_LM_PC_RecurringPayments_v1,
+                    recurringPaymentsV1Metadata.majorVersion,
+                    recurringPaymentsV1Metadata.minorVersion,
+                    recurringPaymentsV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(recurringPaymentsV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    recurringPaymentsV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_LM_PC_RecurringPayments_v2,
-                    recurringPaymentsMetadata.majorVersion,
-                    recurringPaymentsMetadata.minorVersion,
-                    recurringPaymentsMetadata.patchVersion
+                    recurringPaymentsV2Metadata.majorVersion,
+                    recurringPaymentsV2Metadata.minorVersion,
+                    recurringPaymentsV2Metadata.patchVersion
                 )
             )
         );
 
         // Staking
-        initialMetadataRegistration.push(stakingMetadata);
+        initialMetadataRegistration.push(stakingV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    stakingMetadata.title,
+                    stakingV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_LM_PC_Staking_v1,
+                    stakingV1Metadata.majorVersion,
+                    stakingV1Metadata.minorVersion,
+                    stakingV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(stakingV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    stakingV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_LM_PC_Staking_v2,
-                    stakingMetadata.majorVersion,
-                    stakingMetadata.minorVersion,
-                    stakingMetadata.patchVersion
+                    stakingV2Metadata.majorVersion,
+                    stakingV2Metadata.minorVersion,
+                    stakingV2Metadata.patchVersion
                 )
             )
         );
@@ -382,33 +457,63 @@ contract ModuleBeaconDeployer_v1 is
         );
 
         // SimplePaymentProcessor
-        initialMetadataRegistration.push(simplePaymentProcessorMetadata);
+        initialMetadataRegistration.push(simplePaymentProcessorV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    simplePaymentProcessorMetadata.title,
+                    simplePaymentProcessorV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_PP_Simple_v1,
+                    simplePaymentProcessorV1Metadata.majorVersion,
+                    simplePaymentProcessorV1Metadata.minorVersion,
+                    simplePaymentProcessorV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(simplePaymentProcessorV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    simplePaymentProcessorV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_PP_Simple_v2,
-                    simplePaymentProcessorMetadata.majorVersion,
-                    simplePaymentProcessorMetadata.minorVersion,
-                    simplePaymentProcessorMetadata.patchVersion
+                    simplePaymentProcessorV2Metadata.majorVersion,
+                    simplePaymentProcessorV2Metadata.minorVersion,
+                    simplePaymentProcessorV2Metadata.patchVersion
                 )
             )
         );
 
         // StreamingPaymentProcessor
-        initialMetadataRegistration.push(streamingPaymentProcessorMetadata);
+        initialMetadataRegistration.push(streamingPaymentProcessorV1Metadata);
         initialBeaconRegistration.push(
             IInverterBeacon_v1(
                 proxyAndBeaconDeployer.deployInverterBeacon(
-                    streamingPaymentProcessorMetadata.title,
+                    streamingPaymentProcessorV1Metadata.title,
+                    reverter,
+                    governor,
+                    impl_mod_PP_Streaming_v1,
+                    streamingPaymentProcessorV1Metadata.majorVersion,
+                    streamingPaymentProcessorV1Metadata.minorVersion,
+                    streamingPaymentProcessorV1Metadata.patchVersion
+                )
+            )
+        );
+
+        initialMetadataRegistration.push(streamingPaymentProcessorV2Metadata);
+        initialBeaconRegistration.push(
+            IInverterBeacon_v1(
+                proxyAndBeaconDeployer.deployInverterBeacon(
+                    streamingPaymentProcessorV2Metadata.title,
                     reverter,
                     governor,
                     impl_mod_PP_Streaming_v2,
-                    streamingPaymentProcessorMetadata.majorVersion,
-                    streamingPaymentProcessorMetadata.minorVersion,
-                    streamingPaymentProcessorMetadata.patchVersion
+                    streamingPaymentProcessorV2Metadata.majorVersion,
+                    streamingPaymentProcessorV2Metadata.minorVersion,
+                    streamingPaymentProcessorV2Metadata.patchVersion
                 )
             )
         );
