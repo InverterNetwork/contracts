@@ -9,6 +9,8 @@ import {
     IAuthorizer_v1,
     IGovernor_v1
 } from "src/orchestrator/interfaces/IOrchestrator_v1.sol";
+import {IPaymentProcessor_v1} from
+    "src/modules/paymentProcessor/IPaymentProcessor_v1.sol";
 import {IModule_v1} from "src/modules/base/IModule_v1.sol";
 import {IModuleManagerBase_v1} from
     "src/orchestrator/interfaces/IModuleManagerBase_v1.sol";
@@ -370,11 +372,6 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         address _contractAddr,
         bytes4 _privilegedInterfaceId
     ) internal view {
-        // WARNING: Commented out for now as we dont want to enforce the interfaces
-        // when testing.
-        // DO NOT DEPLOY TO AN ACTUAL LIVE NETWORK.
-        return;
-
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
@@ -392,11 +389,6 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         internal
         view
     {
-        // WARNING: Commented out for now as we dont want to enforce the interfaces
-        // when testing.
-        // DO NOT DEPLOY TO AN ACTUAL LIVE NETWORK.
-        return;
-
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
@@ -405,6 +397,9 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
                 )
                 || ERC165Checker.supportsInterface(
                     _contractAddr, type(IFundingManager_v1).interfaceId
+                )
+                || ERC165Checker.supportsInterface(
+                    _contractAddr, type(IPaymentProcessor_v1).interfaceId
                 )
                 || ERC165Checker.supportsInterface(
                     _contractAddr, type(IPaymentProcessor_v2).interfaceId
