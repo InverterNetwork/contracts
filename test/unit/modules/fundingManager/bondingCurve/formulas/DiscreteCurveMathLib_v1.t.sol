@@ -2301,4 +2301,230 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             assertEq(price, segments[0]._initialPrice(), "GCPS: Price for supply 0");
         }
     }
+
+    // --- Fuzz tests for _calculateReserveForSupply ---
+
+    // function testFuzz_CalculateReserveForSupply_Properties(
+    //     uint8 numSegmentsToFuzz,
+    //     uint initialPriceTpl,
+    //     uint priceIncreaseTpl,
+    //     uint supplyPerStepTpl,
+    //     uint numberOfStepsTpl,
+    //     uint targetSupplyRatio // Ratio from 0 to 110 (0=0%, 100=100% capacity, 110=110% capacity)
+    // ) public {
+    //     // Bound inputs for segment generation
+    //     numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
+    //     initialPriceTpl = bound(initialPriceTpl, 0, INITIAL_PRICE_MASK); // Allow 0 initial price if PI > 0
+    //     priceIncreaseTpl = bound(priceIncreaseTpl, 0, PRICE_INCREASE_MASK);
+    //     supplyPerStepTpl = bound(supplyPerStepTpl, 1, SUPPLY_PER_STEP_MASK); // Must be > 0
+    //     numberOfStepsTpl = bound(numberOfStepsTpl, 1, NUMBER_OF_STEPS_MASK); // Must be > 0
+
+    //     // Ensure template is not free if initialPriceTpl is 0
+    //     if (initialPriceTpl == 0) {
+    //         vm.assume(priceIncreaseTpl > 0);
+    //     }
+
+    //     (
+    //         PackedSegment[] memory segments,
+    //         uint totalCurveCapacity
+    //     ) = _generateFuzzedValidSegmentsAndCapacity(
+    //         numSegmentsToFuzz, initialPriceTpl, priceIncreaseTpl, supplyPerStepTpl, numberOfStepsTpl
+    //     );
+
+    //     // If segment generation resulted in an empty array (e.g. due to internal vm.assume failures in helper)
+    //     // or if totalCurveCapacity is 0 (which can happen if supplyPerStep or numberOfSteps are fuzzed to 0
+    //     // despite bounding, or if numSegments is 0 - though we bound numSegmentsToFuzz >= 1),
+    //     // then we can't meaningfully proceed with ratio-based targetSupply.
+    //     if (segments.length == 0) { // Helper ensures numSegmentsToFuzz >=1, so this is defensive
+    //         return;
+    //     }
+
+    //     targetSupplyRatio = bound(targetSupplyRatio, 0, 110); // 0% to 110%
+
+    //     uint targetSupply;
+    //     if (totalCurveCapacity == 0) {
+    //         // If curve capacity is 0 (e.g. 1 segment with 0 supply/steps, though createSegment prevents this)
+    //         // only test targetSupply = 0.
+    //         if (targetSupplyRatio == 0) {
+    //             targetSupply = 0;
+    //         } else {
+    //             // Cannot test ratios against 0 capacity other than 0 itself.
+    //             return;
+    //         }
+    //     } else {
+    //         if (targetSupplyRatio == 0) {
+    //             targetSupply = 0;
+    //         } else if (targetSupplyRatio <= 100) {
+    //             targetSupply = (totalCurveCapacity * targetSupplyRatio) / 100;
+    //             // Ensure targetSupply does not exceed totalCurveCapacity due to rounding,
+    //             // especially if targetSupplyRatio is 100.
+    //             if (targetSupply > totalCurveCapacity) {
+    //                 targetSupply = totalCurveCapacity;
+    //             }
+    //         } else { // targetSupplyRatio > 100 (e.g., 101 to 110)
+    //             // Calculate supply beyond capacity. Add 1 wei to ensure it's strictly greater if ratio calculation results in equality.
+    //             targetSupply = (totalCurveCapacity * (targetSupplyRatio - 100) / 100) + totalCurveCapacity + 1;
+    //         }
+    //     }
+
+    //     if (targetSupply > totalCurveCapacity && totalCurveCapacity > 0) {
+    //         // This check is for when we intentionally set targetSupply > totalCurveCapacity
+    //         // and the curve actually has capacity.
+    //         // _validateSupplyAgainstSegments (called by _calculateReserveForSupply) should revert.
+    //         bytes memory expectedError = abi.encodeWithSelector(
+    //             IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
+    //             targetSupply,
+    //             totalCurveCapacity
+    //         );
+    //         vm.expectRevert(expectedError);
+    //         exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
+    //     } else {
+    //         // Conditions where it should not revert with SupplyExceedsCurveCapacity:
+    //         // 1. targetSupply <= totalCurveCapacity
+    //         // 2. totalCurveCapacity == 0 (and thus targetSupply must also be 0 to reach here)
+
+    //         uint reserve = exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
+
+    //         if (targetSupply == 0) {
+    //             assertEq(reserve, 0, "FCR_P: Reserve for 0 supply should be 0");
+    //         }
+
+    //         // Further property: If the curve consists of a single flat segment, and targetSupply is within its capacity
+    //         if (numSegmentsToFuzz == 1 && priceIncreaseTpl == 0 && initialPriceTpl > 0 && targetSupply <= totalCurveCapacity) {
+    //             // Calculate expected reserve for a single flat segment
+    //             // uint expectedReserve = (targetSupply * initialPriceTpl) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // Original calculation before _mulDivUp consideration
+    //             // Note: The library uses _mulDivUp for reserve calculation in flat segments if initialPrice > 0.
+    //             // So, if (targetSupply * initialPriceTpl) % SCALING_FACTOR > 0, it rounds up.
+    //             uint directCalc = (targetSupply * initialPriceTpl) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+    //             if ( (targetSupply * initialPriceTpl) % DiscreteCurveMathLib_v1.SCALING_FACTOR > 0) {
+    //                 directCalc++;
+    //             }
+    //             assertEq(reserve, directCalc, "FCR_P: Reserve for single flat segment mismatch");
+    //         }
+    //         // Add more specific assertions based on fuzzed segment properties if complex invariants can be derived.
+    //         // For now, primarily testing reverts and zero conditions.
+    //         assertTrue(true, "FCR_P: Passed without unexpected revert"); // Placeholder if no specific value check
+    //     }
+    // }
+
+    // // --- Fuzz tests for _calculatePurchaseReturn ---
+
+    // function testFuzz_CalculatePurchaseReturn_Properties(
+    //     uint8 numSegmentsToFuzz,
+    //     uint initialPriceTpl,
+    //     uint priceIncreaseTpl,
+    //     uint supplyPerStepTpl,
+    //     uint numberOfStepsTpl,
+    //     uint collateralToSpendProvidedRatio, // Ratio of totalCurveReserve, 0 to 150 (0=0, 100=totalReserve, 150=1.5*totalReserve)
+    //     uint currentSupplyRatio // Ratio of totalCurveCapacity, 0 to 100
+    // ) public {
+    //     numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
+    //     initialPriceTpl = bound(initialPriceTpl, 0, INITIAL_PRICE_MASK);
+    //     priceIncreaseTpl = bound(priceIncreaseTpl, 0, PRICE_INCREASE_MASK);
+    //     supplyPerStepTpl = bound(supplyPerStepTpl, 1, SUPPLY_PER_STEP_MASK);
+    //     numberOfStepsTpl = bound(numberOfStepsTpl, 1, NUMBER_OF_STEPS_MASK);
+
+    //     if (initialPriceTpl == 0) {
+    //         vm.assume(priceIncreaseTpl > 0);
+    //     }
+
+    //     (
+    //         PackedSegment[] memory segments,
+    //         uint totalCurveCapacity
+    //     ) = _generateFuzzedValidSegmentsAndCapacity(
+    //         numSegmentsToFuzz, initialPriceTpl, priceIncreaseTpl, supplyPerStepTpl, numberOfStepsTpl
+    //     );
+
+    //     if (segments.length == 0) {
+    //         return;
+    //     }
+
+    //     currentSupplyRatio = bound(currentSupplyRatio, 0, 100);
+    //     uint currentTotalIssuanceSupply;
+    //     if (totalCurveCapacity == 0) {
+    //         if (currentSupplyRatio > 0) return; // Cannot have supply if capacity is 0
+    //         currentTotalIssuanceSupply = 0;
+    //     } else {
+    //         currentTotalIssuanceSupply = (totalCurveCapacity * currentSupplyRatio) / 100;
+    //         if (currentTotalIssuanceSupply > totalCurveCapacity) currentTotalIssuanceSupply = totalCurveCapacity;
+    //     }
+
+    //     uint totalCurveReserve = exposedLib.exposed_calculateReserveForSupply(segments, totalCurveCapacity);
+        
+    //     collateralToSpendProvidedRatio = bound(collateralToSpendProvidedRatio, 0, 150);
+    //     uint collateralToSpendProvided;
+    //     if (totalCurveReserve == 0 && collateralToSpendProvidedRatio > 0) { 
+    //         // If total reserve is 0 (e.g. fully free curve), but trying to spend, use a nominal amount
+    //         // or handle specific free mint logic if applicable. For now, use a small non-zero amount.
+    //         collateralToSpendProvided = bound(collateralToSpendProvidedRatio, 1, 100 ether); // Use ratio as a small absolute value
+    //     } else if (totalCurveReserve == 0 && collateralToSpendProvidedRatio == 0) {
+    //         collateralToSpendProvided = 0;
+    //     } else {
+    //         collateralToSpendProvided = (totalCurveReserve * collateralToSpendProvidedRatio) / 100;
+    //          if (collateralToSpendProvidedRatio > 100 && totalCurveReserve > 0) { // Spending more than total reserve
+    //             collateralToSpendProvided = totalCurveReserve + (totalCurveReserve * (collateralToSpendProvidedRatio - 100) / 100) + 1;
+    //         }
+    //     }
+
+
+    //     if (collateralToSpendProvided == 0) {
+    //         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput.selector);
+    //         exposedLib.exposed_calculatePurchaseReturn(segments, collateralToSpendProvided, currentTotalIssuanceSupply);
+    //     } else if (currentTotalIssuanceSupply > totalCurveCapacity && totalCurveCapacity > 0) {
+    //         // This case should be caught by _validateSupplyAgainstSegments in _calculatePurchaseReturn
+    //         // Note: _generateFuzzedValidSegmentsAndCapacity ensures currentTotalIssuanceSupply <= totalCurveCapacity
+    //         // So this branch is more for logical completeness if inputs were constructed differently.
+    //         // For this test structure, currentTotalIssuanceSupply is derived from totalCurveCapacity.
+    //         // The primary test for SupplyExceeds is in its own dedicated unit/fuzz test.
+    //         // However, if totalCurveCapacity is 0, currentTotalIssuanceSupply must also be 0.
+    //         // If currentTotalIssuanceSupply > 0 and totalCurveCapacity is 0, _validateSupplyAgainstSegments will revert.
+    //         // This specific condition (currentSupply > capacity > 0) is less likely here due to setup.
+    //          bytes memory expectedError = abi.encodeWithSelector(
+    //             IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SupplyExceedsCurveCapacity.selector,
+    //             currentTotalIssuanceSupply,
+    //             totalCurveCapacity
+    //         );
+    //         vm.expectRevert(expectedError);
+    //         exposedLib.exposed_calculatePurchaseReturn(segments, collateralToSpendProvided, currentTotalIssuanceSupply);
+    //     } else {
+    //         (uint tokensToMint, uint collateralSpentByPurchaser) = exposedLib.exposed_calculatePurchaseReturn(
+    //             segments, collateralToSpendProvided, currentTotalIssuanceSupply
+    //         );
+
+    //         assertTrue(collateralSpentByPurchaser <= collateralToSpendProvided, "FCPR_P: Spent more than provided");
+
+    //         if (totalCurveCapacity > 0) { // Avoid division by zero if capacity is 0
+    //              assertTrue(tokensToMint <= (totalCurveCapacity - currentTotalIssuanceSupply), "FCPR_P: Minted more than available capacity");
+    //         } else { // totalCurveCapacity is 0
+    //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens when capacity is 0");
+    //         }
+
+
+    //         if (currentTotalIssuanceSupply == totalCurveCapacity && totalCurveCapacity > 0) {
+    //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens at full capacity");
+    //             // Collateral spent might be > 0 if it tries to buy into a non-existent next step of a 0-price segment.
+    //             // However, _calculatePurchaseForSingleSegment should handle startStepInCurrentSegment_ >= currentSegmentTotalSteps_
+    //         }
+
+    //         // If the entire curve is free (initialPrice and priceIncrease are 0 for all segments)
+    //         // This is hard to set up with _generateFuzzedValidSegmentsAndCapacity due to `assume(initialPriceTpl > 0 || priceIncreaseTpl > 0)`
+    //         // and `assume(currentSegInitialPrice > 0 || priceIncreaseTpl > 0)`.
+    //         // A dedicated test for fully free curves might be needed if that's a valid state.
+
+    //         // If collateralSpentByPurchaser is 0, tokensToMint should also be 0, unless it's a free portion.
+    //         bool isPotentiallyFree = false;
+    //         if (tokensToMint > 0 && segments.length > 0) {
+    //             (,,uint segIdxAtPurchase) = exposedLib.exposed_getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
+    //             (uint initialP, uint increaseP,,) = segments[segIdxAtPurchase]._unpack();
+    //             if (initialP == 0 && increaseP == 0) { // This segment is free
+    //                 isPotentiallyFree = true;
+    //             }
+    //         }
+
+    //         if (collateralSpentByPurchaser == 0 && !isPotentiallyFree) {
+    //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens without spending collateral on non-free segment");
+    //         }
+    //          assertTrue(true, "FCPR_P: Passed without unexpected revert");
+    //     }
+    // }
 }
