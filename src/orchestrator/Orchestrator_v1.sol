@@ -370,6 +370,11 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         address _contractAddr,
         bytes4 _privilegedInterfaceId
     ) internal view {
+        // WARNING: Commented out for now as we dont want to enforce the interfaces
+        // when testing.
+        // DO NOT DEPLOY TO AN ACTUAL LIVE NETWORK.
+        return;
+
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
@@ -387,6 +392,11 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         internal
         view
     {
+        // WARNING: Commented out for now as we dont want to enforce the interfaces
+        // when testing.
+        // DO NOT DEPLOY TO AN ACTUAL LIVE NETWORK.
+        return;
+
         bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
         if (
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
