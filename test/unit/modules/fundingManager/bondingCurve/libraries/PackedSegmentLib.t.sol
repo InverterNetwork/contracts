@@ -161,4 +161,38 @@ contract PackedSegmentLib_Test is Test {
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
     }
+
+    function test_CreateSegment_MultiStepFlat_Reverts() public {
+        // Test that creating a segment with numberOfSteps > 1 and priceIncrease = 0 reverts.
+        uint initialPrice = 1e18; // Valid price
+        uint priceIncrease = 0; // Makes it flat
+        uint supplyPerStep = 10e18; // Valid supply
+        uint numberOfSteps = 2; // Invalid for a flat segment (must be 1)
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidFlatSegment
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
+
+    function test_CreateSegment_SingleStepSloped_Reverts() public {
+        // Test that creating a segment with numberOfSteps = 1 and priceIncrease > 0 reverts.
+        uint initialPrice = 1e18; // Valid price
+        uint priceIncrease = 0.1 ether; // Makes it sloped
+        uint supplyPerStep = 10e18; // Valid supply
+        uint numberOfSteps = 1; // Invalid for a sloped segment (must be > 1)
+
+        vm.expectRevert(
+            IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidPointSegment
+                .selector
+        );
+        exposedLib.exposed_createSegment(
+            initialPrice, priceIncrease, supplyPerStep, numberOfSteps
+        );
+    }
 }

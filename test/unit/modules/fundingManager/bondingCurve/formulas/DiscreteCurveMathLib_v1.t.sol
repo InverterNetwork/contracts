@@ -570,17 +570,16 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint initialPrice = 2 ether;
         uint priceIncrease = 0; // Flat segment
         uint supplyPerStep = 10 ether;
-        uint numberOfSteps = 5; // Total capacity 50 ether
+        uint numberOfSteps = 1; // CORRECTED: True Flat segment
         segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
-        // Target 3 steps (30 ether supply)
-        uint targetSupply = 30 ether;
-        // Expected reserve: 3 steps * 10 supply/step * 2 price/token = 60 ether (scaled)
-        // (30 ether * 2 ether) / 1e18 = 60 ether
+        // Target the full capacity of the single step
+        uint targetSupply = 10 ether; // New capacity is 10 ether
+        // Expected reserve: 1 step * 10 supply/step * 2 price/token = 20 ether (scaled)
         uint expectedReserve =
-            (30 ether * initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR;
+            (10 ether * initialPrice) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // (10 * 2) = 20
 
         uint reserve =
             exposedLib.exposed_calculateReserveForSupply(segments, targetSupply);
@@ -675,25 +674,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //          Supply 30-50:  Price 1.50
     //          Supply 50-70:  Price 1.55
 
-    function testRevert_CalculatePurchaseReturn_SupplyExceedsCapacity()
-        public
-    {
-        uint supplyOverCapacity = defaultCurve_totalCapacity + 1 ether;
-        bytes memory expectedRevertData = abi.encodeWithSelector(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__SupplyExceedsCurveCapacity
-                .selector,
-            supplyOverCapacity,
-            defaultCurve_totalCapacity
-        );
-        vm.expectRevert(expectedRevertData);
-        exposedLib.exposed_calculatePurchaseReturn(
-            defaultSegments,
-            1 ether, // collateralAmountIn
-            supplyOverCapacity // currentTotalIssuanceSupply
-        );
-    }
-
     function testRevert_CalculatePurchaseReturn_NoSegments_SupplyPositive()
         public
     {
@@ -764,17 +744,17 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint initialPrice = 2 ether;
         uint priceIncrease = 0; // Flat segment
         uint supplyPerStep = 10 ether;
-        uint numberOfSteps = 5; // Total capacity 50 ether
+        uint numberOfSteps = 1; // CORRECTED: True Flat segment
         segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
         uint currentSupply = 0 ether;
-        uint collateralIn = 45 ether; // Enough for 2 steps (40 ether cost), but not 3 (60 ether cost)
-
-        // New logic: 2 full steps (20 issuance, 40 cost) + partial step (2.5 issuance, 5 cost)
-        uint expectedIssuanceOut = 22_500_000_000_000_000_000; // 22.5 ether
-        uint expectedCollateralSpent = 45_000_000_000_000_000_000; // 45 ether
+        uint collateralIn = 45 ether; 
+        // New segment: 1 step, 10 supply, price 2. Cost to buy out = 20 ether.
+        // Collateral 45 ether is more than enough.
+        uint expectedIssuanceOut = 10 ether; 
+        uint expectedCollateralSpent = (10 ether * 2 ether) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(segments, collateralIn, currentSupply);
@@ -816,33 +796,17 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint initialPrice = 2 ether;
         uint priceIncrease = 0; // Flat segment
         uint supplyPerStep = 10 ether;
-        uint numberOfSteps = 5; // Total capacity 50 ether
+        uint numberOfSteps = 1; // CORRECTED: True Flat segment
         segments[0] = DiscreteCurveMathLib_v1._createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
         );
 
         uint currentSupply = 0 ether;
-        // Collateral to buy exactly 2.5 steps (25 ether issuance) would be 50 ether.
         uint collateralIn = 50 ether;
-
-        // Expected: buy 2.5 steps = 25 ether issuance.
-        // The function buys in sPerStep increments.
-        // 50 collateral / 2 price = 25 issuance. (25/10)*10 = 20. Cost 40.
-        // The current implementation of calculatePurchaseReturn for flat segments:
-        // issuanceBoughtThisSegment = (remainingCollateral * SCALING_FACTOR) / priceAtCurrentSegmentStartStep;
-        // issuanceBoughtThisSegment = (issuanceBoughtThisSegment / sPerStepSeg) * sPerStepSeg;
-        // So, (50e18 * 1e18) / 2e18 = 25e18.
-        // (25e18 / 10e18) * 10e18 = 2 * 10e18 = 20e18.
-        // collateralSpentThisSegment = (20e18 * 2e18) / 1e18 = 40e18.
-        // This seems to be an issue with the test description vs implementation detail.
-        // The test description implies it can buy partial steps, but the code rounds down to full sPerStep.
-        // Let's adjust the expectation based on the code's logic for flat segments.
-        // If collateralIn = 50 ether, it can buy 2 full steps (20 issuance) for 40 ether.
-        // The binary search for sloped segments handles full steps. Flat segment logic is simpler.
-        // The logic is: maxIssuance = collateral / price. Then round down to nearest multiple of supplyPerStep.
-        // New logic: 2 full steps (20 issuance, 40 cost) + partial step (5 issuance, 10 cost)
-        uint expectedIssuanceOut = 25_000_000_000_000_000_000; // 25 ether
-        uint expectedCollateralSpent = 50_000_000_000_000_000_000; // 50 ether
+        // New segment: 1 step, 10 supply, price 2. Cost to buy out = 20 ether.
+        // Collateral 50 ether is more than enough.
+        uint expectedIssuanceOut = 10 ether; 
+        uint expectedCollateralSpent = (10 ether * 2 ether) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 20 ether
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(segments, collateralIn, currentSupply);
@@ -1378,9 +1342,11 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             defaultSeg0_supplyPerStep * defaultSeg0_initialPrice
         ) / DiscreteCurveMathLib_v1.SCALING_FACTOR; // 10 ether
 
-        // Expected: Buys 1 full step (step 0 of segment 0)
-        uint expectedIssuanceOut = defaultSeg0_supplyPerStep; // 10 ether
-        uint expectedCollateralSpent = collateralIn; // 10 ether
+        // Expected: Buys remaining 5e18 of step 0 (cost 5e18), remaining budget 5e18.
+        // Next step price 1.1e18. Buys 5/1.1 = 4.545...e18 tokens.
+        // Total issuance = 5e18 + 4.545...e18 = 9.545...e18
+        uint expectedIssuanceOut = 9_545_454_545_454_545_454; // 9.545... ether
+        uint expectedCollateralSpent = collateralIn; // 10 ether (budget fully spent)
 
         (uint issuanceOut, uint collateralSpent) = exposedLib
             .exposed_calculatePurchaseReturn(
@@ -1557,6 +1523,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         // Not a free segment
         vm.assume(!(initialPrice == 0 && priceIncrease == 0));
+
+        // Ensure "True Flat" or "True Sloped"
+        // numberOfSteps is already assumed > 0
+        if (numberOfSteps == 1) {
+            vm.assume(priceIncrease == 0); // True Flat: 1 step, 0 priceIncrease
+        } else { // numberOfSteps > 1
+            vm.assume(priceIncrease > 0);  // True Sloped: >1 steps, >0 priceIncrease
+        }
 
         PackedSegment segment = exposedLib.exposed_createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
@@ -1747,7 +1721,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     function test_ValidateSegmentArray_Pass_SingleSegment() public view {
         PackedSegment[] memory segments = new PackedSegment[](1);
-        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 5);
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 1); // Corrected: True Flat
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
@@ -1779,6 +1753,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         vm.assume(supplyPerStep <= SUPPLY_PER_STEP_MASK && supplyPerStep > 0);
         vm.assume(numberOfSteps <= NUMBER_OF_STEPS_MASK && numberOfSteps > 0);
         vm.assume(!(initialPrice == 0 && priceIncrease == 0)); // Not a free segment
+
+        // Ensure "True Flat" or "True Sloped" for the template
+        // numberOfSteps is already assumed > 0
+        if (numberOfSteps == 1) {
+            vm.assume(priceIncrease == 0); // True Flat: 1 step, 0 priceIncrease
+        } else { // numberOfSteps > 1
+            vm.assume(priceIncrease > 0);  // True Sloped: >1 steps, >0 priceIncrease
+        }
 
         PackedSegment validSegmentTemplate = exposedLib.exposed_createSegment(
             initialPrice, priceIncrease, supplyPerStep, numberOfSteps
@@ -1818,12 +1800,26 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         vm.assume(ns0 <= NUMBER_OF_STEPS_MASK && ns0 > 0);
         vm.assume(!(ip0 == 0 && pi0 == 0)); // Not free
 
+        // Ensure segment0 is "True Flat" or "True Sloped"
+        if (ns0 == 1) {
+            vm.assume(pi0 == 0);
+        } else { // ns0 > 1
+            vm.assume(pi0 > 0);
+        }
+
         // Constrain segment 1 params to be individually valid
         vm.assume(ip1 <= INITIAL_PRICE_MASK);
         vm.assume(pi1 <= PRICE_INCREASE_MASK);
         vm.assume(ss1 <= SUPPLY_PER_STEP_MASK && ss1 > 0);
         vm.assume(ns1 <= NUMBER_OF_STEPS_MASK && ns1 > 0);
         vm.assume(!(ip1 == 0 && pi1 == 0)); // Not free
+
+        // Ensure segment1 is "True Flat" or "True Sloped"
+        if (ns1 == 1) {
+            vm.assume(pi1 == 0);
+        } else { // ns1 > 1
+            vm.assume(pi1 > 0);
+        }
 
         PackedSegment segment0 =
             exposedLib.exposed_createSegment(ip0, pi0, ss0, ns0);
@@ -1886,6 +1882,14 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             vm.assume(priceIncreaseTpl > 0);
         }
 
+        // Ensure template parameters adhere to new "True Flat" / "True Sloped" rules
+        // numberOfStepsTpl is already assumed > 0
+        if (numberOfStepsTpl == 1) {
+            vm.assume(priceIncreaseTpl == 0); // True Flat template: 1 step, 0 priceIncrease
+        } else { // numberOfStepsTpl > 1
+            vm.assume(priceIncreaseTpl > 0);  // True Sloped template: >1 steps, >0 priceIncrease
+        }
+
         PackedSegment[] memory segments = new PackedSegment[](numSegmentsToFuzz);
         uint lastFinalPrice = 0;
 
@@ -1937,11 +1941,11 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         view
     {
         PackedSegment[] memory segments = new PackedSegment[](2);
-        // Segment 0: Flat. P_init=1.0, P_inc=0, N_steps=2. Final price = 1.0
-        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 2);
+        // Segment 0: Flat. P_init=1.0, P_inc=0, N_steps=1. Final price = 1.0
+        segments[0] = exposedLib.exposed_createSegment(1 ether, 0, 10 ether, 1); // Corrected: True Flat
         // Segment 1: Sloped. P_init=1.0 (match), P_inc=0.1, N_steps=2.
         segments[1] =
-            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2);
+            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2); // This is True Sloped
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
@@ -1952,10 +1956,10 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         PackedSegment[] memory segments = new PackedSegment[](2);
         // Segment 0: Sloped. P_init=1.0, P_inc=0.1, N_steps=2. Final price = 1.0 + (2-1)*0.1 = 1.1
         segments[0] =
-            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2);
-        // Segment 1: Flat. P_init=1.1 (match), P_inc=0, N_steps=2.
+            exposedLib.exposed_createSegment(1 ether, 0.1 ether, 10 ether, 2); // This is True Sloped
+        // Segment 1: Flat. P_init=1.1 (match), P_inc=0, N_steps=1.
         segments[1] =
-            exposedLib.exposed_createSegment(1.1 ether, 0, 10 ether, 2);
+            exposedLib.exposed_createSegment(1.1 ether, 0, 10 ether, 1); // Corrected: True Flat
         exposedLib.exposed_validateSegmentArray(segments); // Should not revert
     }
 
@@ -1988,6 +1992,13 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
         if (initialPriceTpl == 0) {
             vm.assume(priceIncreaseTpl > 0); // Avoid free template if it's the base
+        }
+
+        // Ensure template parameters adhere to new "True Flat" / "True Sloped" rules
+        if (numberOfStepsTpl == 1) {
+            vm.assume(priceIncreaseTpl == 0); // If 1 step, must be flat (True Flat)
+        } else { // numberOfStepsTpl > 1 because we assume numberOfStepsTpl > 0 earlier
+            vm.assume(priceIncreaseTpl > 0);  // If >1 steps, must be sloped (True Sloped)
         }
 
         segments = new PackedSegment[](numSegmentsToFuzz);

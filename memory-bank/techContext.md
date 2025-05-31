@@ -20,7 +20,7 @@
 
 (Content remains the same)
 
-## Technical Implementation Details - ✅ COMPLETED (but `_calculatePurchaseReturn` under refactor)
+## Technical Implementation Details - ✅ STABLE & TESTED (`_calculatePurchaseReturn` fixed, `PackedSegmentLib` validation confirmed)
 
 ### DiscreteCurveMathLib_v1 Technical Specifications
 
@@ -36,7 +36,7 @@
 
 (Content remains the same)
 
-#### Core Functions Implemented - ✅ PRODUCTION READY (`_calculatePurchaseReturn` being refactored)
+#### Core Functions Implemented - ✅ STABLE & TESTED (Reflects fixes and new validation)
 
 ```solidity
 // Primary calculation functions
@@ -44,45 +44,45 @@ function _calculatePurchaseReturn(
     PackedSegment[] memory segments_,
     uint collateralToSpendProvided_,
     uint currentTotalIssuanceSupply_
-) internal pure returns (uint tokensToMint_, uint collateralSpentByPurchaser_); // UNDER REFACTORING
+) internal pure returns (uint tokensToMint_, uint collateralSpentByPurchaser_); // STABLE & TESTED: Refactored algorithm, fixed, caller validates segments/supply capacity.
 
 function _calculateSaleReturn(
     PackedSegment[] memory segments_,
     uint tokensToSell_,
     uint currentTotalIssuanceSupply_
-) internal pure returns (uint collateralToReturn_, uint tokensToBurn_);
+) internal pure returns (uint collateralToReturn_, uint tokensToBurn_); // Stable.
 
 function _calculateReserveForSupply(
     PackedSegment[] memory segments_,
     uint targetSupply_
-) internal pure returns (uint totalReserve_);
+) internal pure returns (uint totalReserve_); // Stable.
 
 // Configuration & validation functions
-function _createSegment(
+function _createSegment( // This is a convenience function in DiscreteCurveMathLib_v1
     uint initialPrice_,
     uint priceIncrease_,
     uint supplyPerStep_,
     uint numberOfSteps_
-) internal pure returns (PackedSegment);
+) internal pure returns (PackedSegment); // Calls PackedSegmentLib._create() which now has stricter validation.
 
-function _validateSegmentArray(PackedSegment[] memory segments_) internal pure; // Utility for callers like FM_BC_DBC
+function _validateSegmentArray(PackedSegment[] memory segments_) internal pure; // Utility for callers like FM_BC_DBC. Validates array properties and price progression.
 
 // Position tracking functions
-function _getCurrentPriceAndStep(
+function _getCurrentPriceAndStep( // Still used by other functions, e.g., potentially by a UI or analytics.
     PackedSegment[] memory segments_,
     uint currentTotalIssuanceSupply_
 ) internal pure returns (uint price_, uint stepIndex_, uint segmentIndex_);
 
-function _findPositionForSupply(
+function _findPositionForSupply( // Still used by other functions.
     PackedSegment[] memory segments_,
     uint targetSupply_
 ) internal pure returns (IDiscreteCurveMathLib_v1.CurvePosition memory position_);
-// Note: _findPositionForSupply and _getCurrentPriceAndStep might be modified or made obsolete by the _calculatePurchaseReturn refactor.
+// Note: _calculatePurchaseReturn no longer uses _getCurrentPriceAndStep or _findPositionForSupply directly.
 ```
 
-### Mathematical Optimization Implementation - ✅ BENCHMARKED (Parts may change with refactor)
+### Mathematical Optimization Implementation - ✅ CONFIRMED
 
-(Content for Arithmetic Series and Linear Search Strategy remains, noting Linear Search is for original `_calculatePurchaseReturn` logic)
+(Content for Arithmetic Series remains. Linear Search Strategy was for old `_calculatePurchaseReturn` helpers; new `_calculatePurchaseReturn` uses direct iteration).
 
 ### Custom Mathematical Utilities - ✅ IMPLEMENTED
 
@@ -92,42 +92,48 @@ function _findPositionForSupply(
 
 (Content remains the same, noting Linear Search performance is for original `_calculatePurchaseReturn` logic)
 
-## Security Considerations - ✅ IMPLEMENTED (Input Validation Strategy revised)
+## Security Considerations - ✅ STABLE & TESTED (Input Validation Strategy and Economic Safety Rules confirmed)
 
-### Input Validation Strategy 🔄 (Revised for `_calculatePurchaseReturn`)
+### Input Validation Strategy ✅ (Stable & Tested)
 
-**Original Three-Layer Approach:**
+**Revised Three-Layer Approach:**
 
 ```solidity
-// Layer 1: Parameter validation at segment creation (in PackedSegmentLib._create)
-// Layer 2: Array validation for curve configuration (in DiscreteCurveMathLib_v1._validateSegmentArray)
-// Layer 3: State validation before calculations (in DiscreteCurveMathLib_v1._validateSupplyAgainstSegments)
+// Layer 1: Parameter validation at segment creation (PackedSegmentLib._create()):
+//    - Validates individual parameter ranges (price, supply, steps within bit limits).
+//    - Prevents zero supplyPerStep, zero numberOfSteps.
+//    - Prevents entirely free segments (initialPrice == 0 && priceIncrease == 0).
+//    - NEW: Enforces "True Flat" (steps=1, increase=0) and "True Sloped" (steps>1, increase>0) segments.
+//      - Reverts with DiscreteCurveMathLib__InvalidFlatSegment and DiscreteCurveMathLib__InvalidPointSegment.
+// Layer 2: Array validation for curve configuration (DiscreteCurveMathLib_v1._validateSegmentArray() by caller):
+//    - Validates segment array properties (not empty, MAX_SEGMENTS).
+//    - Validates price progression between segments.
+// Layer 3: State validation before calculations (e.g., DiscreteCurveMathLib_v1._validateSupplyAgainstSegments() by caller or other lib functions):
+//    - Validates current state (like supply) against curve capacity.
 ```
 
-**Revised Validation Model for `_calculatePurchaseReturn`**:
+**Validation for `_calculatePurchaseReturn` (Post-Refactor)**:
 
-- **`PackedSegmentLib._create`**: Continues to validate individual segment parameters (e.g., non-zero supply per step, price/increase within bit limits, no free segments). This is **Layer 1**.
-- **`DiscreteCurveMathLib_v1._validateSegmentArray`**: This function remains a utility for callers. It validates the structural integrity of the `segments_` array (e.g., price progression, `MAX_SEGMENTS`). This is **Layer 2**, but its execution is now the responsibility of the calling contract (e.g., `FM_BC_DBC` during `configureCurve`).
-- **`_calculatePurchaseReturn` (Refactored)**:
-  - **No Internal Segment Array Validation**: It will **not** call `_validateSegmentArray` or `_validateSupplyAgainstSegments` (for segment structure validation) internally. It trusts the `segments_` array is pre-validated by the caller.
-  - **Basic Input Checks**: May perform checks on its direct inputs like `collateralToSpendProvided_ > 0` or `segments_.length > 0`.
-  - It does not perform **Layer 3** (state validation like `_validateSupplyAgainstSegments` regarding the `segments_` array structure) internally; if such a check is needed before purchase, the caller should perform it.
-- **Other Library Functions**: Functions like `_calculateSaleReturn` or `_calculateReserveForSupply` currently maintain their existing validation logic, which might include calls to `_validateSegmentArray` or `_validateSupplyAgainstSegments` if appropriate for their needs. This could be harmonized later if the "caller validates segments" pattern is adopted library-wide.
+- Trusts pre-validated segment array and `currentTotalIssuanceSupply_` (caller responsibility).
+- Performs basic checks for zero collateral and empty segments array.
 
-### Economic Safety Rules - ✅ ENFORCED (Responsibility partly shifted for `_calculatePurchaseReturn`)
+**Other Library Functions**: Functions like `_calculateSaleReturn`, `_calculateReserveForSupply`, `_getCurrentPriceAndStep` still use `_validateSupplyAgainstSegments` internally as appropriate for their logic.
 
-1.  **No free segments**: Enforced by `PackedSegmentLib._create` and `_validateSegmentArray`.
+### Economic Safety Rules - ✅ CONFIRMED & TESTED (New segment rules integrated)
+
+1.  **No free segments**: Enforced by `PackedSegmentLib._create`.
 2.  **Non-decreasing progression**: Enforced by `_validateSegmentArray` (called by `FM_BC_DBC`).
-3.  **Positive step values**: Enforced by `PackedSegmentLib._create`.
-4.  **Bounded iterations**: `MAX_LINEAR_SEARCH_STEPS` (for old `_calculatePurchaseReturn` logic; new logic in refactored function will also need gas safety considerations).
+3.  **Positive step values (supplyPerStep, numberOfSteps)**: Enforced by `PackedSegmentLib._create`.
+4.  **Valid Segment Types**: "True Flat" (`steps==1, increase==0`) and "True Sloped" (`steps>1, increase>0`) enforced by `PackedSegmentLib._create`.
+5.  **Bounded iterations**: Refactored `_calculatePurchaseReturn` uses direct iteration; gas safety relies on `segments_.length` (checked by `_validateSegmentArray` via caller, implicitly by `MAX_SEGMENTS`) and number of steps within segments (checked by `PackedSegmentLib._create` via `STEPS_MASK`).
 
 ### Type Safety - ✅ IMPLEMENTED
 
 (Content remains the same)
 
-### Error Handling - ✅ COMPREHENSIVE
+### Error Handling - ✅ STABLE & TESTED (New errors integrated)
 
-(Content remains the same, noting source of errors may shift as per `systemPatterns.md`)
+(Content remains the same, noting addition of `DiscreteCurveMathLib__InvalidFlatSegment` and `DiscreteCurveMathLib__InvalidPointSegment` thrown by `PackedSegmentLib._create`, and `_calculatePurchaseReturn` now directly throws for zero collateral/no segments.)
 
 ## Integration Requirements - ✅ DEFINED (Caller validation emphasized)
 
@@ -141,22 +147,25 @@ function _findPositionForSupply(
 
 (Content remains the same)
 
-## Implementation Status Summary (Revised)
+## Implementation Status Summary (Stable)
 
-### 🔄 `DiscreteCurveMathLib_v1` (`_calculatePurchaseReturn` under refactor)
+### ✅ `DiscreteCurveMathLib_v1` (Stable, All Tests Green)
 
-- **`_calculatePurchaseReturn`**: Undergoing refactoring with new algorithm and validation strategy.
-- **Other functions**: Largely stable and production-ready.
-- **PackedSegmentLib**: Complete and production-ready.
-- **Validation Strategy**: Shifted for `_calculatePurchaseReturn`; segment array validation is now externalized to the caller.
+- **`_calculatePurchaseReturn`**: Successfully refactored and fixed. All calculation/rounding issues resolved. Validation strategy (caller validates segments/supply capacity, internal basic checks) confirmed and tested.
+- **Other functions**: Stable and production-ready.
+- **PackedSegmentLib**: `_create` function's stricter validation for "True Flat" and "True Sloped" segments is implemented and fully tested.
+- **Validation Strategy**: Confirmed and tested. `PackedSegmentLib` is stricter; `_calculatePurchaseReturn` relies on caller validation as designed.
+- **Interface**: `IDiscreteCurveMathLib_v1.sol` new error types integrated and tested.
+- **Testing**: All unit tests for `DiscreteCurveMathLib_v1` and `PackedSegmentLib` are passing.
 
-### 🔄 Integration Interfaces Defined (Caller validation is key)
+### ✅ Integration Interfaces Confirmed (Caller validation is key)
 
-(Content remains the same)
+(Content remains the same, emphasizing caller's role in validating segment array and supply capacity before calling `_calculatePurchaseReturn`).
 
-### 📋 Development Readiness (Focus on refactor)
+### ✅ Development Readiness (Ready for `FM_BC_DBC` Integration)
 
-- **Architectural patterns for refactor**: Defined in `context/refactoring.md`.
-- **Performance and Security for refactor**: To be re-assessed post-implementation.
+- **Architectural patterns for `_calculatePurchaseReturn` refactor**: Implemented, tested, and stable.
+- **Performance and Security for refactor**: Confirmed through successful testing.
+- **Next**: Proceed with `FM_BC_DBC` module implementation.
 
-**Overall Assessment**: Core library component `_calculatePurchaseReturn` is being refactored. This changes its internal validation logic, placing more responsibility on the calling contracts to ensure segment array integrity. Other parts of the library remain robust.
+**Overall Assessment**: `DiscreteCurveMathLib_v1` and `PackedSegmentLib.sol` are stable, fully tested, and production-ready. Documentation is being updated. The project is prepared for the `FM_BC_DBC` implementation phase.

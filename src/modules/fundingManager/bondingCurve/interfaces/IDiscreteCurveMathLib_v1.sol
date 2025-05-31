@@ -127,6 +127,18 @@ interface IDiscreteCurveMathLib_v1 {
         uint providedSupply, uint maxCapacity
     );
 
+    /**
+     * @notice Reverted when a flat segment (priceIncrease == 0) is defined with more than one step.
+     * Flat segments must have exactly one step.
+     */
+    error DiscreteCurveMathLib__InvalidFlatSegment();
+
+    /**
+     * @notice Reverted when a point segment (numberOfSteps == 1) is defined with a price increase.
+     * Point segments must have zero price increase (i.e., be flat).
+     */
+    error DiscreteCurveMathLib__InvalidPointSegment();
+
     // --- Events ---
 
     /**

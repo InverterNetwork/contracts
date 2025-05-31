@@ -386,39 +386,79 @@ library DiscreteCurveMathLib_v1 {
                 .DiscreteCurveMathLib__NoSegmentsConfigured();
         }
 
-        // Phase 1: Find which segment contains our starting position
-        uint segmentIndex_;
-        uint previousSegmentIssuanceSupply_;
-        {
-            uint cumulativeIssuance_ = 0;
+        // Phase 1: Find which segment and step to start purchasing from.
+        uint segmentIndex_ = 0; 
+        uint supplyCoveredByPreviousSegments_ = 0; 
+
+        if (currentTotalIssuanceSupply_ > 0) { // Only search if there's existing supply
+            uint cumulativeProcessedSupply_ = 0;
             for (uint i_ = 0; i_ < segments_.length; ++i_) {
-                uint segmentCapacity_ = segments_[i_]._supplyPerStep()
-                    * segments_[i_]._numberOfSteps();
-                if (
-                    currentTotalIssuanceSupply_
-                        <= cumulativeIssuance_ + segmentCapacity_
-                ) {
+                uint currentSegmentCapacity_ = segments_[i_]._supplyPerStep() * segments_[i_]._numberOfSteps();
+                uint endOfCurrentSegmentSupply_ = cumulativeProcessedSupply_ + currentSegmentCapacity_;
+
+                if (currentTotalIssuanceSupply_ < endOfCurrentSegmentSupply_) {
+                    // currentTotalIssuanceSupply_ is within segment i_
                     segmentIndex_ = i_;
-                    previousSegmentIssuanceSupply_ = cumulativeIssuance_;
+                    supplyCoveredByPreviousSegments_ = cumulativeProcessedSupply_;
+                    break;
+                } else if (currentTotalIssuanceSupply_ == endOfCurrentSegmentSupply_) {
+                    // currentTotalIssuanceSupply_ is exactly at the end of segment i_.
+                    // Purchase should start at the beginning of the next segment (i_ + 1), if it exists.
+                    if (i_ + 1 < segments_.length) {
+                        segmentIndex_ = i_ + 1;
+                        supplyCoveredByPreviousSegments_ = endOfCurrentSegmentSupply_;
+                    } else {
+                        // At the very end of the last segment, no more capacity to purchase.
+                        segmentIndex_ = segments_.length; // Will prevent Phase 3 loop
+                        supplyCoveredByPreviousSegments_ = endOfCurrentSegmentSupply_;
+                    }
                     break;
                 }
-                cumulativeIssuance_ += segmentCapacity_;
+                cumulativeProcessedSupply_ = endOfCurrentSegmentSupply_;
+                // If loop finishes and we are here, currentTotalIssuanceSupply_ > total capacity of all segments
+                // This case should ideally be prevented by caller validation.
+                // If it occurs, segmentIndex_ will be set to segments_.length below.
+                if (i_ == segments_.length - 1) { 
+                    segmentIndex_ = segments_.length; 
+                    supplyCoveredByPreviousSegments_ = cumulativeProcessedSupply_;
+                }
             }
         }
+        // If currentTotalIssuanceSupply_ is 0, segmentIndex_ remains 0, supplyCoveredByPreviousSegments_ remains 0.
 
         // Phase 2: Find step position and handle partial start step
         uint stepIndex_;
         uint remainingBudget_ = collateralToSpendProvided_;
+        
+        // Check if there's any segment to purchase from
+        if (segmentIndex_ >= segments_.length) {
+            // currentTotalIssuanceSupply_ is at or beyond total capacity. No purchase possible.
+            collateralSpentByPurchaser_ = 0; // No budget spent
+            // tokensToMint_ is already 0
+            return (tokensToMint_, collateralSpentByPurchaser_);
+        }
+        
         {
-            // Calculate position within current segment
-            uint segmentIssuanceSupply_ =
-                currentTotalIssuanceSupply_ - previousSegmentIssuanceSupply_;
+            // Calculate position within current segment (segmentIndex_)
+            uint segmentIssuanceSupply_ = currentTotalIssuanceSupply_ - supplyCoveredByPreviousSegments_;
+            
             uint supplyPerStep_ = segments_[segmentIndex_]._supplyPerStep();
+            // If supplyPerStep_ is 0 (should be prevented by PackedSegmentLib), handle to avoid division by zero.
+            // However, PackedSegmentLib ensures supplyPerStep_ > 0.
             stepIndex_ = segmentIssuanceSupply_ / supplyPerStep_;
-            uint currentStepIssuanceSupply_ =
-                segmentIssuanceSupply_ % supplyPerStep_;
+            uint currentStepIssuanceSupply_ = segmentIssuanceSupply_ % supplyPerStep_;
 
             // Calculate current step price and remaining capacity
+            // Ensure stepIndex_ is within bounds for the current segment before calculating stepPrice_
+            if (stepIndex_ >= segments_[segmentIndex_]._numberOfSteps() && currentStepIssuanceSupply_ == 0) {
+                // This means currentTotalIssuanceSupply_ was exactly at the end of segmentIndex_,
+                // and Phase 1 should have advanced segmentIndex_. This indicates a logic flaw if reached.
+                // For safety, or if Phase 1 didn't advance segmentIndex_ to segments_.length for end-of-curve,
+                // treat as no capacity in this segment.
+                // This path should ideally not be hit if Phase 1 is correct.
+                 // Let Phase 3 handle moving to the next segment or exiting.
+            }
+
             uint stepPrice_ = segments_[segmentIndex_]._initialPrice()
                 + (segments_[segmentIndex_]._priceIncrease() * stepIndex_);
             uint remainingStepIssuanceSupply_ =
@@ -440,8 +480,10 @@ library DiscreteCurveMathLib_v1 {
                     uint additionalIssuanceAmount_ = Math.mulDiv(
                         remainingBudget_, SCALING_FACTOR, stepPrice_
                     );
-                    tokensToMint_ += additionalIssuanceAmount_;
-                    return (tokensToMint_, collateralToSpendProvided_);
+                    tokensToMint_ += additionalIssuanceAmount_; // tokensToMint_ was 0 before this line in this specific path
+                    // Calculate actual collateral spent for this partial amount
+                    collateralSpentByPurchaser_ = _mulDivUp(additionalIssuanceAmount_, stepPrice_, SCALING_FACTOR);
+                    return (tokensToMint_, collateralSpentByPurchaser_);
                 }
             }
         }
