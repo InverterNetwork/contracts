@@ -1466,44 +1466,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         );
     }
 
-    // --- Tests for _linearSearchSloped direct revert ---
-
-    function test_LinearSearchSloped_InvalidStartStep_Reverts() public {
-        // Setup a simple segment
-        PackedSegment segment = DiscreteCurveMathLib_v1._createSegment(
-            1 ether, // initialPrice
-            0.1 ether, // priceIncrease
-            10 ether, // supplyPerStep
-            3 // numberOfSteps
-        );
-        // totalStepsInSegment is 3 for this segment.
-
-        uint totalBudget = 100 ether; // Arbitrary budget, won't be used due to revert
-        uint priceAtPurchaseStartStep = 1 ether; // Arbitrary, won't be used
-
-        // Case 1: purchaseStartStepInSegment == totalStepsInSegment
-        uint invalidStartStep1 = 3;
-        vm.expectRevert(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__InvalidSegmentInitialStep
-                .selector
-        );
-        exposedLib.exposed_linearSearchSloped(
-            segment, totalBudget, invalidStartStep1, priceAtPurchaseStartStep
-        );
-
-        // Case 2: purchaseStartStepInSegment > totalStepsInSegment
-        uint invalidStartStep2 = 4;
-        vm.expectRevert(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__InvalidSegmentInitialStep
-                .selector
-        );
-        exposedLib.exposed_linearSearchSloped(
-            segment, totalBudget, invalidStartStep2, priceAtPurchaseStartStep
-        );
-    }
-
     // --- Test for _createSegment ---
 
     function testFuzz_CreateSegment_ValidProperties(

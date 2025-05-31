@@ -74,7 +74,6 @@
 - **Packed storage**: 4 parameters → 1 storage slot (256 bits total)
 - **Variable caching**: `uint numSegments_ = segments_.length` pattern throughout
 - **Batch unpacking**: `_unpack()` for multiple parameter access
-- **Linear search bounds**: `MAX_LINEAR_SEARCH_STEPS = 200` (Note: This was for the _old_ `_calculatePurchaseReturn`'s helpers. The new refactored `_calculatePurchaseReturn` uses a direct iterative approach).
 - **Conservative rounding**: `_mulDivUp()` favors protocol in calculations (used for step costs). `Math.mulDiv` (rounds down) used for token calculations from budget.
 
 ### Error Handling Pattern ✅ (Updated for new segment errors)
@@ -145,10 +144,6 @@ uint totalReserve_ = _calculateReserveForSupply(segments_, targetSupply_);
 **New Model for `_calculatePurchaseReturn`**: Trusts pre-validated `segments_` array and `currentTotalIssuanceSupply_` relative to capacity.
 
 ## Performance Characteristics Discovered (May change for `_calculatePurchaseReturn`)
-
-### Linear Search Implementation ✅ (Original)
-
-The refactoring document for `_calculatePurchaseReturn` outlines a new iterative logic which may supersede or alter the existing `_linearSearchSloped` or its usage within `_calculatePurchaseReturn`.
 
 ### Arithmetic Series Optimization ✅ (Still applicable for other functions like `_calculateReserveForSupply`)
 

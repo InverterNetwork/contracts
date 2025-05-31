@@ -81,20 +81,6 @@ contract DiscreteCurveMathLibV1_Exposed {
         );
     }
 
-    function exposed_linearSearchSloped(
-        PackedSegment segment_,
-        uint totalBudget_,
-        uint purchaseStartStepInSegment_,
-        uint priceAtPurchaseStartStep_
-    ) public pure returns (uint tokensPurchased_, uint totalCollateralSpent_) {
-        return DiscreteCurveMathLib_v1._linearSearchSloped(
-            segment_,
-            totalBudget_,
-            purchaseStartStepInSegment_,
-            priceAtPurchaseStartStep_
-        );
-    }
-
     function exposed_validateSegmentArray(PackedSegment[] memory segments_)
         public
         pure

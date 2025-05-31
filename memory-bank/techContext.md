@@ -82,7 +82,7 @@ function _findPositionForSupply( // Still used by other functions.
 
 ### Mathematical Optimization Implementation - ✅ CONFIRMED
 
-(Content for Arithmetic Series remains. Linear Search Strategy was for old `_calculatePurchaseReturn` helpers; new `_calculatePurchaseReturn` uses direct iteration).
+(Content for Arithmetic Series remains. New `_calculatePurchaseReturn` uses direct iteration).
 
 ### Custom Mathematical Utilities - ✅ IMPLEMENTED
 
@@ -90,7 +90,7 @@ function _findPositionForSupply( // Still used by other functions.
 
 ## Performance Considerations - ✅ ANALYZED (Parts may change with refactor)
 
-(Content remains the same, noting Linear Search performance is for original `_calculatePurchaseReturn` logic)
+(Content remains the same)
 
 ## Security Considerations - ✅ STABLE & TESTED (Input Validation Strategy and Economic Safety Rules confirmed)
 
