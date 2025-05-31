@@ -39,21 +39,13 @@ library PackedSegmentLib {
     uint private constant STEPS_OFFSET =
         INITIAL_PRICE_BITS + PRICE_INCREASE_BITS + SUPPLY_BITS; // 144 + 96 = 240
 
-    /**
-     * @notice Creates a new PackedSegment from individual configuration parameters.
-     * @dev Validates inputs against bitfield limits.
-     * @param initialPrice_ The initial price for this segment.
-     * @param priceIncrease_ The price increase per step for this segment.
-     * @param supplyPerStep_ The supply minted per step for this segment.
-     * @param numberOfSteps_ The number of steps in this segment.
-     * @return newSegment_ The newly created PackedSegment.
-     */
     function _create(
         uint initialPrice_,
         uint priceIncrease_,
         uint supplyPerStep_,
         uint numberOfSteps_
     ) internal pure returns (PackedSegment newSegment_) {
+        // Existing validations...
         if (initialPrice_ > INITIAL_PRICE_MASK) {
             revert
                 IDiscreteCurveMathLib_v1
@@ -79,13 +71,30 @@ library PackedSegmentLib {
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__InvalidNumberOfSteps();
         }
-        // Disallow segments that are entirely free (both initial price and price increase are zero).
+
+        // Prevent entirely free segments (zero collateral required)
         if (initialPrice_ == 0 && priceIncrease_ == 0) {
-            // Note: DiscreteCurveMathLib__SegmentIsFree error needs to be defined in IDiscreteCurveMathLib_v1.sol
             revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__SegmentIsFree(
             );
         }
 
+        // VALIDATIONS based on design assumptions:
+
+        // 1. Prevent multi-step flat segments (mathematical model violation)
+        if (numberOfSteps_ > 1 && priceIncrease_ == 0) {
+            revert
+                IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidFlatSegment();
+        }
+
+        // 2. Prevent point segments (single step with price increase makes no sense)
+        if (numberOfSteps_ == 1 && priceIncrease_ > 0) {
+            revert
+                IDiscreteCurveMathLib_v1
+                .DiscreteCurveMathLib__InvalidPointSegment();
+        }
+
+        // Rest of function unchanged...
         bytes32 packed_ = bytes32(
             initialPrice_ | (priceIncrease_ << PRICE_INCREASE_OFFSET)
                 | (supplyPerStep_ << SUPPLY_OFFSET)

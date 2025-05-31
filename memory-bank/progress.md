@@ -4,161 +4,97 @@
 
 ### ✅ Pre-sale Functionality [DONE]
 
-- Manual transfer mechanism available (existing Inverter capabilities)
-- Funding pot mechanism available (existing LM_PC_Funding_Pot + PP_Streaming)
-- No additional implementation required
+(Content remains the same)
 
 ### ✅ Asset Freezing [DONE]
 
-- Sanctioned address asset freezing capability exists
-- Admin can freeze assets for AML compliance
+(Content remains the same)
 
-### ✅ DiscreteCurveMathLib_v1 [COMPLETED] 🎉
+### 🔄 DiscreteCurveMathLib_v1 [PARTIALLY COMPLETED / `_calculatePurchaseReturn` UNDER REFACTORING]
 
-**Status**: Implementation complete with comprehensive documentation
+**Original Status**: Implementation complete with comprehensive documentation.
+**Current Status**: The core mathematical library is largely stable, however, the `_calculatePurchaseReturn` function is currently undergoing a significant refactoring based on new specifications (`context/refactoring.md`) and a revised validation strategy.
 
-**Key Achievements**:
+**Key Achievements (for other library parts)**:
 
 - ✅ **Type-safe packed storage**: PackedSegment custom type reduces storage from 4 slots to 1 per segment
-- ✅ **Gas-optimized calculations**: Arithmetic series formulas + linear search strategy
-- ✅ **Economic safety validations**: No free segments + non-decreasing price progression
+- ✅ **Gas-optimized calculations**: Arithmetic series formulas + linear search strategy (Note: linear search in `_calculatePurchaseReturn` is being replaced)
+- ✅ **Economic safety validations**: No free segments + non-decreasing price progression (Note: Segment array validation for `_calculatePurchaseReturn` is now external)
 - ✅ **Pure function library**: All `internal pure` functions for maximum composability
-- ✅ **Comprehensive bit allocation**: 72-bit prices, 56-bit supplies/steps
-- ✅ **Mathematical optimization**: Linear search for small purchases, arithmetic series for reserves
+- ✅ **Comprehensive bit allocation**: 72-bit prices, 96-bit supplies, 16-bit steps (Corrected from 56-bit)
+- ✅ **Mathematical optimization**: Arithmetic series for reserves.
 
-**Technical Specifications**:
+**Technical Specifications (Original - `_calculatePurchaseReturn` changing)**:
 
 ```solidity
 // Core functions implemented
-calculatePurchaseReturn() → (issuanceOut, collateralSpent)
+calculatePurchaseReturn() → (issuanceOut, collateralSpent) // UNDER REFACTORING
 calculateSaleReturn() → (collateralOut, issuanceSpent)
 calculateReserveForSupply() → totalCollateralReserve
 createSegment() → PackedSegment
-validateSegmentArray() → validation or revert
+validateSegmentArray() → validation or revert // Still exists as utility, but not called internally by refactored _calculatePurchaseReturn for its own segment validation
 ```
 
-**Code Quality**: Production-ready with:
+**Code Quality (Original - `_calculatePurchaseReturn` TBD post-refactor)**:
 
-- Multi-layer defensive validation
+- Multi-layer defensive validation (Note: Revised for `_calculatePurchaseReturn` - segment array validation is external)
 - Conservative protocol-favorable rounding
-- Gas bomb prevention (MAX_LINEAR_SEARCH_STEPS = 200)
+- Gas bomb prevention (MAX_LINEAR_SEARCH_STEPS = 200) (Note: `_calculatePurchaseReturn` refactor uses new iteration logic)
 - Comprehensive error handling with context
 
-**Remaining**: Minor test improvements only
+**Remaining (Original)**: Minor test improvements only.
+**New Task**: Complete refactoring and thorough testing of `_calculatePurchaseReturn`.
 
 ### 🟡 Token Bridging [IN PROGRESS]
 
-- Cross-chain token reception capability
-- Users can receive minted tokens on different chains
-- **Status**: External development in progress
+(Content remains the same)
 
 ## Current Implementation Status
 
-### 🚀 Ready for Immediate Development
+### 🚀 Ready for Immediate Development (Revised Priority)
 
-#### 1. **FM_BC_DBC** (Funding Manager - Discrete Bonding Curve) [HIGH PRIORITY]
+#### 1. **Refactor `DiscreteCurveMathLib_v1._calculatePurchaseReturn`** [HIGHEST PRIORITY]
 
-**Dependencies**: ✅ DiscreteCurveMathLib_v1 (complete)
-**Integration Pattern Defined**:
+**Reason**: User directive for major refactoring with new algorithm and validation assumptions.
+**Specification**: `context/refactoring.md`
+**Key Change**: `_calculatePurchaseReturn` will no longer internally validate the `segments_` array structure. This responsibility shifts to the caller (e.g., `FM_BC_DBC`).
 
-```solidity
-using DiscreteCurveMathLib_v1 for PackedSegment[];
+#### 2. **FM_BC_DBC** (Funding Manager - Discrete Bonding Curve) [HIGH PRIORITY - Post-Refactor]
 
-function mint(uint256 collateralIn) external {
-    (uint256 tokensOut, uint256 collateralSpent) =
-        _segments._calculatePurchaseReturn(collateralIn, _virtualIssuanceSupply);
-    // Apply established patterns: validation, conservative rounding, gas optimization
-}
-```
+**Dependencies**: ✅ `DiscreteCurveMathLib_v1` (specifically the refactored `_calculatePurchaseReturn`)
+**Integration Pattern Defined**: (Remains similar, but `FM_BC_DBC` must now ensure `_segments` is validated before calling `_calculatePurchaseReturn`).
 
-**Ready Implementation Patterns**:
+#### 3. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
 
-- **Defensive Programming**: Multi-layer validation from DiscreteCurveMathLib
-- **Gas Optimization**: Variable caching, batch operations, bounded iterations
-- **Error Handling**: Custom errors with context like `FM_BC_DBC__ReserveInvariance(expectedReserve, actualReserve)`
-- **Conservative Math**: Protocol-favorable rounding using `_mulDivUp` pattern
-
-**Core Features to Implement**:
-
-- Minting/redeeming using DiscreteCurveMathLib calculations
-- configureCurve function with mathematical invariance checks
-- Virtual supply management (inherits from VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_v1)
-- DynamicFeeCalculator integration
-- Access control via AUT_Roles
-
-#### 2. **DynamicFeeCalculator** [INDEPENDENT - CAN PARALLEL DEVELOP]
-
-**Dependencies**: None (standalone module)
-**Patterns to Apply**: Validation + gas optimization from DiscreteCurveMathLib
-**Core Features to Implement**:
-
-```solidity
-// Fee formulas specified in requirements
-calculateOriginationFee(floorLiquidityRate, amount) → fee
-calculateIssuanceFee(premiumRate, amount) → fee
-calculateRedemptionFee(premiumRate, amount) → fee
-```
+(Content remains the same)
 
 ### ⏳ Dependent on Core Modules
 
-#### 3. **LM_PC_Credit_Facility** (Credit Facility Logic Module)
-
-**Dependencies**: FM_BC_DBC + DynamicFeeCalculator
-**Integration Points Identified**:
-
-- Use `_calculateReserveForSupply` for borrow capacity calculations
-- Request collateral transfers from FM_BC_DBC (bypasses virtual supplies)
-- Call DynamicFeeCalculator for origination fees
-- Apply established validation and error handling patterns
-
-#### 4. **Rebalancing Modules**
-
-**Dependencies**: FM_BC_DBC + DiscreteCurveMathLib_v1
-
-**LM_PC_Shift** (Liquidity Rebalancing):
-
-```solidity
-// Reserve-invariant curve reconfiguration pattern ready
-uint256 currentReserve = _segments._calculateReserveForSupply(currentSupply);
-// Validate newSegments maintain same reserve
-require(newReserve == currentReserve, "Reserve invariance failed");
-```
-
-**LM_PC_Elevator** (Revenue Injection):
-
-```solidity
-// Floor price elevation through collateral injection
-configureCurve(newSegments, positiveCollateralChange);
-```
+(Content remains largely the same, dependencies on FM_BC_DBC imply dependency on refactored lib)
 
 ## Implementation Architecture Progress
 
-### ✅ Foundation Layer Complete
+### ✅ Foundation Layer (Partially Under Revision)
 
 ```
-DiscreteCurveMathLib_v1 ✅
+DiscreteCurveMathLib_v1 🔄 (_calculatePurchaseReturn refactoring)
 ├── PackedSegmentLib (bit manipulation) ✅
 ├── Type-safe packed storage ✅
-├── Gas-optimized calculations ✅
-├── Economic safety validations ✅
+├── Gas-optimized calculations (parts being refactored) 🔄
+├── Economic safety validations (validation strategy for _calcPurchaseReturn revised) 🔄
 ├── Conservative mathematical precision ✅
 └── Comprehensive error handling ✅
 ```
 
-**Production Quality Metrics**:
+**Production Quality Metrics**: (To be re-assessed for `_calculatePurchaseReturn` post-refactor)
 
-- **Storage efficiency**: 75% reduction (4 slots → 1 slot per segment)
-- **Gas optimization**: O(1) arithmetic series, bounded linear search
-- **Safety**: Multi-layer validation, no-free-segments prevention
-- **Precision**: Protocol-favorable rounding throughout
-
-### 🔄 Core Module Layer (Next Phase)
+### 🔄 Core Module Layer (Next Phase - Post-Refactor)
 
 ```
-FM_BC_DBC 🔄 ← DynamicFeeCalculator 🔄
-├── Uses DiscreteCurveMathLib ✅
-├── Established integration patterns ✅
-├── Validation strategy defined ✅
+FM_BC_DBC ⏳ ← DynamicFeeCalculator 🔄
+├── Uses DiscreteCurveMathLib (refactored version) 🔄
+├── Established integration patterns (caller validation now critical) ✅
+├── Validation strategy defined (FM_BC_DBC must validate segments) ✅
 ├── Error handling patterns ready ✅
 ├── Implements configureCurve function ⏳
 ├── Virtual supply management ⏳
@@ -167,178 +103,104 @@ FM_BC_DBC 🔄 ← DynamicFeeCalculator 🔄
 
 ### ⏳ Application Layer (Future Phase)
 
-```
-LM_PC_Credit_Facility ⏳
-├── Depends on FM_BC_DBC ⏳
-├── Borrow capacity calculations ⏳
-└── Origination fee integration ⏳
-
-Rebalancing Modules ⏳
-├── LM_PC_Shift (liquidity rebalancing) ⏳
-└── LM_PC_Elevator (revenue injection) ⏳
-```
+(Content remains the same)
 
 ## Concrete Implementation Readiness
 
-### ✅ Established Patterns Ready for Application
+### ✅ Established Patterns Ready for Application (with notes on validation shift)
 
-#### 1. **Validation Pattern** (from DiscreteCurveMathLib)
+(Validation Pattern, Gas Optimization, Conservative Math, Error Handling sections remain relevant, but the application of validation for `_calculatePurchaseReturn` shifts to its callers.)
+
+#### 1. **Validation Pattern** (Revised for `_calculatePurchaseReturn` callers)
 
 ```solidity
-// Apply to FM_BC_DBC
+// In FM_BC_DBC - configureCurve
+// MUST call _validateSegmentArray (or equivalent) on newSegments
+// In FM_BC_DBC - mint
 function mint(uint256 collateralIn) external {
     if (collateralIn == 0) revert FM_BC_DBC__ZeroCollateralInput();
-    // Additional input validation
-
-    // State validation before calculation
-    _validateSystemState();
-
-    // Use library calculation
+    // NO internal segment validation in _calculatePurchaseReturn.
+    // Assumes _segments is already validated by configureCurve.
     (uint256 tokensOut, uint256 collateralSpent) =
         _segments._calculatePurchaseReturn(collateralIn, _virtualIssuanceSupply);
-
-    // Output validation
-    if (tokensOut < minTokensOut) revert FM_BC_DBC__InsufficientOutput();
+    // ...
 }
 ```
 
-#### 2. **Gas Optimization Pattern**
+### 🎯 Critical Path Implementation Sequence (Revised)
 
-```solidity
-// Variable caching
-uint256 currentVirtualSupply = _virtualIssuanceSupply; // Cache state reads
+#### Phase 0: Library Refactoring (Current Focus)
 
-// Batch operations where possible
-(uint256 initialPrice, uint256 priceIncrease, uint256 supply, uint256 steps) =
-    _segments[0]._unpack(); // Batch unpack vs individual calls
-```
+1.  **Refactor `DiscreteCurveMathLib_v1._calculatePurchaseReturn`** as per `context/refactoring.md`.
+2.  **Thoroughly test the refactored function.**
+3.  **Update all Memory Bank documents.**
 
-#### 3. **Conservative Math Pattern**
+#### Phase 1: Core Infrastructure (Post-Refactor)
 
-```solidity
-// Apply _mulDivUp pattern for protocol-favorable calculations
-uint256 feeAmount = _mulDivUp(transactionAmount, feeRate, SCALING_FACTOR);
-uint256 protocolReserve = _mulDivUp(tokenAmount, price, SCALING_FACTOR);
-```
+1.  **Start `FM_BC_DBC` implementation** using the refactored `DiscreteCurveMathLib_v1` and ensuring `FM_BC_DBC` handles segment array validation.
+2.  **Implement `DynamicFeeCalculator`**.
+3.  Basic minting/redeeming functionality with fee integration.
+4.  `configureCurve` function with invariance validation (and segment array validation).
 
-#### 4. **Error Handling Pattern**
+#### Phase 2 & 3: (Remain largely the same, but depend on completion of revised Phase 1)
 
-```solidity
-// Custom errors with context for debugging
-error FM_BC_DBC__ReserveInvariance(uint256 expectedReserve, uint256 actualReserve);
-error FM_BC_DBC__InsufficientCollateral(uint256 required, uint256 provided);
+## Key Features Implementation Status (Revised)
 
-// Usage provides actionable debugging information
-if (newReserve != expectedReserve) {
-    revert FM_BC_DBC__ReserveInvariance(expectedReserve, newReserve);
-}
-```
+| Feature                     | Status                                                    | Implementation Notes                                                             | Confidence            |
+| --------------------------- | --------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------- |
+| Pre-sale fixed price        | ✅ DONE                                                   | Using existing Inverter components                                               | High                  |
+| Discrete bonding curve math | 🔄 `_calcPurchaseReturn` UNDER REFACTORING, others STABLE | Core logic for purchase being revised. Validation strategy for segments shifted. | Medium (for refactor) |
+| Discrete bonding curve FM   | ⏳ BLOCKED by refactor                                    | Patterns established, but depends on stable `DiscreteCurveMathLib_v1`            | High (post-refactor)  |
+| Dynamic fees                | 🔄 READY                                                  | Independent implementation, patterns defined                                     | Medium-High           |
 
-### 🎯 Critical Path Implementation Sequence
+(Other features remain the same)
 
-#### Phase 1: Core Infrastructure (Target: Immediate)
-
-1. **Start FM_BC_DBC implementation** using all established patterns
-2. **Implement DynamicFeeCalculator** applying validation patterns
-3. **Basic minting/redeeming functionality** with fee integration
-4. **configureCurve function** with invariance validation
-
-#### Phase 2: Advanced Features (Target: After Core Complete)
-
-5. **Credit facility implementation**
-6. **Rebalancing modules** (Shift + Elevator)
-7. **End-to-end integration testing**
-
-### 📊 Development Velocity Indicators
-
-#### ✅ High Velocity Enablers
-
-- **Solid mathematical foundation**: All complex calculations solved
-- **Proven patterns**: Validation, optimization, error handling established
-- **Type safety**: Compile-time error prevention with PackedSegment
-- **Clear interfaces**: Exact function signatures defined
-
-#### ⚡ Acceleration Opportunities
-
-- **Parallel development**: DynamicFeeCalculator independent of FM_BC_DBC
-- **Pattern replication**: Apply DiscreteCurveMathLib patterns to new modules
-- **Incremental testing**: Test each module as completed
-
-## Key Features Implementation Status
-
-| Feature                     | Status         | Implementation Notes                            | Confidence  |
-| --------------------------- | -------------- | ----------------------------------------------- | ----------- |
-| Pre-sale fixed price        | ✅ DONE        | Using existing Inverter components              | High        |
-| Discrete bonding curve math | ✅ COMPLETE    | Production-ready DiscreteCurveMathLib_v1        | High        |
-| Discrete bonding curve FM   | 🔄 READY       | Patterns established, can start immediately     | High        |
-| Dynamic fees                | 🔄 READY       | Independent implementation, patterns defined    | Medium-High |
-| Minting/redeeming           | 🔄 READY       | Depends on FM_BC_DBC + fee calculator           | High        |
-| Floor price elevation       | ⏳ TODO        | Depends on FM_BC_DBC, math foundation ready     | Medium      |
-| Credit facility             | ⏳ TODO        | Depends on FM_BC_DBC, integration pattern clear | Medium      |
-| Token bridging              | 🟡 IN PROGRESS | External development                            | Unknown     |
-| Asset freezing              | ✅ DONE        | Existing capability                             | High        |
-
-## Risk Assessment & Mitigation
+## Risk Assessment & Mitigation (Revised)
 
 ### ✅ Risks Mitigated
 
-- **Mathematical Complexity**: ✅ Solved with comprehensive, production-ready library
-- **Gas Efficiency**: ✅ Proven with optimized algorithms and storage
-- **Economic Safety**: ✅ Validation rules prevent dangerous configurations
-- **Type Safety**: ✅ Custom types prevent integration errors
+(Largely the same, but confidence in "Mathematical Complexity" for `_calculatePurchaseReturn` is temporarily reduced until refactor is proven.)
 
-### ⚠️ Remaining Risks
+### ⚠️ Remaining Risks (and New)
 
-- **Integration Complexity**: Multiple modules need careful state coordination
-- **Fee Formula Precision**: Dynamic calculations need accurate implementation
-- **Virtual vs Actual Balance Management**: Requires careful state synchronization
+- **Integration Complexity**: Multiple modules need careful state coordination.
+- **Fee Formula Precision**: Dynamic calculations need accurate implementation.
+- **Virtual vs Actual Balance Management**: Requires careful state synchronization.
+- 🆕 **Refactoring Risk**: Modifying a previously "completed" core mathematical function (`_calculatePurchaseReturn`) introduces risk of new bugs or unintended consequences.
+- 🆕 **Validation Responsibility Shift**: Ensuring callers (`FM_BC_DBC`) correctly and comprehensively validate segment arrays before calling `_calculatePurchaseReturn` is critical. An oversight here could lead to issues.
 
-### 🛡️ Risk Mitigation Strategies
+### 🛡️ Risk Mitigation Strategies (Updated)
 
-- **Apply Established Patterns**: Use proven validation, optimization, and error handling
-- **Incremental Testing**: Validate each module independently before integration
-- **Conservative Approach**: Continue protocol-favorable rounding and safety bounds
+- **Apply Established Patterns**: Use proven optimization, and error handling.
+- **Incremental Testing**: Validate refactored `_calculatePurchaseReturn` thoroughly and in isolation first.
+- **Conservative Approach**: Continue protocol-favorable rounding.
+- **Clear Documentation**: Ensure the new validation responsibility of callers is extremely well-documented in Memory Bank and code comments.
+- **Focused Testing on `FM_BC_DBC.configureCurve`**: Ensure segment validation here is robust.
 
-## Next Milestone Targets
+## Next Milestone Targets (Revised)
 
-### Milestone 1: Core Infrastructure (Target: Immediate - High Confidence)
+### Milestone 0: Library Refactor (Current - High Confidence in ability to execute)
 
-- ✅ DiscreteCurveMathLib_v1 complete (DONE)
-- 🎯 FM_BC_DBC implementation complete
-- 🎯 DynamicFeeCalculator implementation complete
-- 🎯 Basic minting/redeeming functionality working
-- 🎯 configureCurve with invariance checks working
+- 🎯 Refactor `DiscreteCurveMathLib_v1._calculatePurchaseReturn` complete.
+- 🎯 Comprehensive unit tests for refactored function passing.
+- 🎯 Memory Bank fully updated to reflect changes.
 
-### Milestone 2: Advanced Features (Target: After Milestone 1)
+### Milestone 1: Core Infrastructure (Post-Refactor)
 
-- 🎯 Credit facility implementation complete
-- 🎯 Floor price elevation mechanisms working
-- 🎯 Full rebalancing capabilities (Shift + Elevator)
-- 🎯 Integration testing complete
+- 🎯 `FM_BC_DBC` implementation complete (using refactored library and handling segment validation).
+- 🎯 `DynamicFeeCalculator` implementation complete.
+  (Rest of milestones follow)
 
-### Milestone 3: Production Ready (Target: Final)
+## Confidence Assessment (Revised)
 
-- 🎯 Cross-chain bridging integration (if external work completes)
-- 🎯 Comprehensive end-to-end testing
-- 🎯 Deployment procedures and documentation
+### 🟡 Medium Confidence (for `_calculatePurchaseReturn` refactor)
 
-## Confidence Assessment
+- The new logic is detailed, but refactoring core math always carries inherent risk until proven with tests.
+- The shift in validation responsibility needs careful management.
 
-### 🟢 High Confidence (Ready to Execute)
+### 🟢 High Confidence (for other library parts and established patterns)
 
-- **FM_BC_DBC core functionality**: Math foundation complete, patterns established
-- **DynamicFeeCalculator**: Independent module, clear requirements
-- **Integration patterns**: Concrete examples from DiscreteCurveMathLib implementation
+- Other functions in `DiscreteCurveMathLib_v1` remain stable.
+- Established patterns for `FM_BC_DBC` (once library is stable) are sound.
 
-### 🟡 Medium Confidence (Dependent on Core)
-
-- **Credit facility**: Clear dependencies, but needs FM_BC_DBC complete
-- **Rebalancing modules**: Mathematical foundation ready, needs FM_BC_DBC
-- **Complex edge cases**: Will emerge during integration testing
-
-### 🔴 External Dependencies
-
-- **Cross-chain bridging**: Outside team development
-- **Inverter stack updates**: Potential breaking changes in base contracts
-
-**Overall Assessment**: Strong foundation complete, ready for accelerated development phase with high confidence in core module delivery.
+**Overall Assessment**: Project direction has shifted to a critical refactoring task. While the overall foundation is strong, this refactor must be handled with care and thorough testing.

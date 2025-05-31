@@ -358,8 +358,8 @@ library DiscreteCurveMathLib_v1 {
 
     /**
      * @notice Calculates the amount of issuance tokens received for a given collateral input.
-     * @dev Iterates through segments_ starting from the current supply's position,
-     *      calculating affordable steps in each segment. Uses binary search for sloped segments_.
+     * @dev Iterates through segments starting from the current supply's position.
+     *      Assumes segments are pre-validated by caller.
      * @param segments_ Array of PackedSegment configurations for the curve.
      * @param collateralToSpendProvided_ The amount of collateral being provided for purchase.
      * @param currentTotalIssuanceSupply_ The current total supply before this purchase.
@@ -368,81 +368,121 @@ library DiscreteCurveMathLib_v1 {
      */
     function _calculatePurchaseReturn(
         PackedSegment[] memory segments_,
-        uint collateralToSpendProvided_, // Renamed from collateralAmountIn
+        uint collateralToSpendProvided_,
         uint currentTotalIssuanceSupply_
     )
         internal
         pure
         returns (uint tokensToMint_, uint collateralSpentByPurchaser_)
     {
-        // Renamed return values
-        _validateSupplyAgainstSegments(segments_, currentTotalIssuanceSupply_); // Validation occurs
-        // If totalCurveCapacity_ is needed later, _validateSupplyAgainstSegments can be called again,
-        // or a separate _getTotalCapacity function could be used if this becomes a frequent pattern.
-
         if (collateralToSpendProvided_ == 0) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__ZeroCollateralInput();
         }
-
-        uint numSegments_ = segments_.length; // Renamed from segLen
-        if (numSegments_ == 0) {
+        if (segments_.length == 0) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__NoSegmentsConfigured();
         }
 
-        // tokensToMint_ and collateralSpentByPurchaser_ are initialized to 0 by default as return variables
-        uint budgetRemaining_ = collateralToSpendProvided_; // Renamed from remainingCollateral
-
-        (
-            uint priceAtPurchaseStart_,
-            uint stepAtPurchaseStart_,
-            uint segmentIndexAtPurchaseStart_ // Renamed from segmentAtPurchaseStart
-        ) = _getCurrentPriceAndStep(segments_, currentTotalIssuanceSupply_);
-
-        for (
-            uint currentSegmentIndex_ = segmentIndexAtPurchaseStart_;
-            currentSegmentIndex_ < numSegments_;
-            ++currentSegmentIndex_
-        ) {
-            // Renamed i to currentSegmentIndex_
-            if (budgetRemaining_ == 0) {
-                break;
+        // Phase 1: Find which segment contains our starting position
+        uint segmentIndex_;
+        uint previousSegmentIssuanceSupply_;
+        {
+            uint cumulativeIssuance_ = 0;
+            for (uint i_ = 0; i_ < segments_.length; ++i_) {
+                uint segmentCapacity_ = segments_[i_]._supplyPerStep()
+                    * segments_[i_]._numberOfSteps();
+                if (
+                    currentTotalIssuanceSupply_
+                        <= cumulativeIssuance_ + segmentCapacity_
+                ) {
+                    segmentIndex_ = i_;
+                    previousSegmentIssuanceSupply_ = cumulativeIssuance_;
+                    break;
+                }
+                cumulativeIssuance_ += segmentCapacity_;
             }
+        }
 
-            uint startStepInCurrentSegment_; // Renamed from currentSegmentStartStepForHelper
-            uint priceAtStartStepInCurrentSegment_; // Renamed from priceAtCurrentSegmentStartStepForHelper
-            PackedSegment currentSegment_ = segments_[currentSegmentIndex_];
+        // Phase 2: Find step position and handle partial start step
+        uint stepIndex_;
+        uint remainingBudget_ = collateralToSpendProvided_;
+        {
+            // Calculate position within current segment
+            uint segmentIssuanceSupply_ =
+                currentTotalIssuanceSupply_ - previousSegmentIssuanceSupply_;
+            uint supplyPerStep_ = segments_[segmentIndex_]._supplyPerStep();
+            stepIndex_ = segmentIssuanceSupply_ / supplyPerStep_;
+            uint currentStepIssuanceSupply_ =
+                segmentIssuanceSupply_ % supplyPerStep_;
 
-            (uint currentSegmentInitialPrice_,,, uint currentSegmentTotalSteps_)
-            = currentSegment_._unpack(); // Renamed cs variables
+            // Calculate current step price and remaining capacity
+            uint stepPrice_ = segments_[segmentIndex_]._initialPrice()
+                + (segments_[segmentIndex_]._priceIncrease() * stepIndex_);
+            uint remainingStepIssuanceSupply_ =
+                supplyPerStep_ - currentStepIssuanceSupply_;
 
-            if (currentSegmentIndex_ == segmentIndexAtPurchaseStart_) {
-                startStepInCurrentSegment_ = stepAtPurchaseStart_;
-                priceAtStartStepInCurrentSegment_ = priceAtPurchaseStart_;
-            } else {
-                startStepInCurrentSegment_ = 0;
-                priceAtStartStepInCurrentSegment_ = currentSegmentInitialPrice_;
+            // Try to complete current step if partially filled
+            if (remainingStepIssuanceSupply_ > 0) {
+                uint remainingStepCollateralCapacity_ = _mulDivUp(
+                    remainingStepIssuanceSupply_, stepPrice_, SCALING_FACTOR
+                );
+
+                if (remainingBudget_ >= remainingStepCollateralCapacity_) {
+                    // Complete the step and move to next
+                    remainingBudget_ -= remainingStepCollateralCapacity_;
+                    tokensToMint_ += remainingStepIssuanceSupply_;
+                    stepIndex_++;
+                } else {
+                    // Partial fill and exit
+                    uint additionalIssuanceAmount_ = Math.mulDiv(
+                        remainingBudget_, SCALING_FACTOR, stepPrice_
+                    );
+                    tokensToMint_ += additionalIssuanceAmount_;
+                    return (tokensToMint_, collateralToSpendProvided_);
+                }
             }
+        }
 
-            if (startStepInCurrentSegment_ >= currentSegmentTotalSteps_) {
+        // Phase 3: Purchase through remaining steps until budget exhausted
+        while (remainingBudget_ > 0 && segmentIndex_ < segments_.length) {
+            uint numberOfSteps_ = segments_[segmentIndex_]._numberOfSteps();
+
+            // Move to next segment if current one is exhausted
+            if (stepIndex_ >= numberOfSteps_) {
+                segmentIndex_++;
+                stepIndex_ = 0;
                 continue;
             }
 
-            (uint tokensMintedInSegment_, uint collateralSpentInSegment_) = // Renamed issuanceBoughtThisSegment, collateralSpentThisSegment
-            _calculatePurchaseForSingleSegment(
-                currentSegment_,
-                budgetRemaining_,
-                startStepInCurrentSegment_,
-                priceAtStartStepInCurrentSegment_
-            );
+            // Cache segment parameters
+            uint initialPrice_ = segments_[segmentIndex_]._initialPrice();
+            uint priceIncrease_ = segments_[segmentIndex_]._priceIncrease();
+            uint supplyPerStep_ = segments_[segmentIndex_]._supplyPerStep();
 
-            tokensToMint_ += tokensMintedInSegment_;
-            collateralSpentByPurchaser_ += collateralSpentInSegment_;
-            budgetRemaining_ -= collateralSpentInSegment_;
+            // Calculate step price (works for both flat and sloped segments)
+            uint stepPrice_ = initialPrice_ + (priceIncrease_ * stepIndex_);
+            uint stepCollateralCapacity_ =
+                _mulDivUp(supplyPerStep_, stepPrice_, SCALING_FACTOR);
+
+            if (remainingBudget_ >= stepCollateralCapacity_) {
+                // Purchase full step
+                remainingBudget_ -= stepCollateralCapacity_;
+                tokensToMint_ += supplyPerStep_;
+                stepIndex_++;
+            } else {
+                // Partial step purchase and exit
+                uint partialIssuance_ =
+                    Math.mulDiv(remainingBudget_, SCALING_FACTOR, stepPrice_);
+                tokensToMint_ += partialIssuance_;
+                remainingBudget_ = 0;
+            }
         }
+
+        collateralSpentByPurchaser_ =
+            collateralToSpendProvided_ - remainingBudget_;
         return (tokensToMint_, collateralSpentByPurchaser_);
     }
 

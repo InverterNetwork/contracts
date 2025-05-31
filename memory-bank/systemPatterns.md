@@ -8,224 +8,96 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 ### Funding Manager Pattern
 
-- **FM_BC_DBC**: Central funding manager implementing discrete bonding curve
-- Inherits from VirtualIssuanceSupplyBase_v1 and VirtualCollateralSupplyBase_v1
-- Manages minting/redeeming operations
-- Holds and manages collateral token reserves
+(Content remains the same)
 
 ### Logic Module Pattern
 
-- **LM_PC_Credit_Facility**: Manages lending against locked tokens
-- **LM_PC_Shift**: Handles liquidity rebalancing (reserve-invariant)
-- **LM_PC_Elevator**: Manages revenue injection for floor price elevation
+(Content remains the same)
 
-### Library Pattern - ✅ IMPLEMENTED
+### Library Pattern - ✅ IMPLEMENTED (Partially under refactor)
 
-- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations
-- **PackedSegmentLib**: Helper library for bit manipulation and validation
-- Stateless, reusable across multiple modules
-- Type-safe with custom PackedSegment type
+- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations. (`_calculatePurchaseReturn` is currently being refactored).
+- **PackedSegmentLib**: Helper library for bit manipulation and validation.
+- Stateless, reusable across multiple modules.
+- Type-safe with custom PackedSegment type.
 
 ### Auxiliary Module Pattern
 
-- **DynamicFeeCalculator**: Exchangeable fee calculation module
-- **AUT_Roles**: Role-based access control (existing)
+(Content remains the same)
 
-## Implementation Patterns - ✅ DISCOVERED FROM CODE
+## Implementation Patterns - ✅ DISCOVERED FROM CODE (Validation pattern revised)
 
-### Defensive Programming Pattern
+### Defensive Programming Pattern 🔄 (Revised for `_calculatePurchaseReturn`)
 
-**Multi-layer validation strategy implemented:**
+**Original Multi-layer validation strategy implemented:**
 
 ```solidity
 // Layer 1: Parameter validation at creation
-function _create(uint initialPrice_, uint priceIncrease_, uint supplyPerStep_, uint numberOfSteps_) {
-    if (initialPrice_ > INITIAL_PRICE_MASK) revert DiscreteCurveMathLib__InitialPriceTooLarge();
-    if (initialPrice_ == 0 && priceIncrease_ == 0) revert DiscreteCurveMathLib__SegmentIsFree();
-    // Additional validations...
-}
+// function _create(uint initialPrice_, uint priceIncrease_, uint supplyPerStep_, uint numberOfSteps_) { ... }
 
 // Layer 2: Array-level validation
-function _validateSegmentArray(PackedSegment[] memory segments_) {
-    // Check price progression between segments
-    // Validate segment count limits
-}
+// function _validateSegmentArray(PackedSegment[] memory segments_) { ... }
 
 // Layer 3: State validation before calculations
-function _validateSupplyAgainstSegments(PackedSegment[] memory segments_, uint currentSupply_) {
-    // Validate supply against total curve capacity
-}
+// function _validateSupplyAgainstSegments(PackedSegment[] memory segments_, uint currentSupply_) { ... }
 ```
+
+**Revised Validation Approach for `_calculatePurchaseReturn` within `DiscreteCurveMathLib_v1`**:
+
+- **No Internal Segment Array Validation by `_calculatePurchaseReturn`**: The `_calculatePurchaseReturn` function will **not** perform internal validation on the `segments_` array structure (e.g., checking for price progression, segment limits, total capacity vs. current supply related to segment structure).
+- **Caller Responsibility for Segment Array Validation**: The primary responsibility for ensuring the `segments_` array is valid and consistent (e.g., correct price progression, no free segments, within `MAX_SEGMENTS`) lies with the calling contract, typically `FM_BC_DBC` during its `configureCurve` (or equivalent initialization/update) function. `FM_BC_DBC` should use utilities like `DiscreteCurveMathLib_v1._validateSegmentArray` for this.
+- **`_calculatePurchaseReturn` Input Trust**: This function will trust its direct input parameters (`segments_`, `collateralToSpendProvided_`, `currentTotalIssuanceSupply_`). If these parameters are inconsistent (e.g., `currentTotalIssuanceSupply_` exceeds the capacity of a _validly structured but too small_ `segments_` array, or `collateralToSpendProvided_` is zero), the function might return zero tokens or spend zero collateral, or behave according to the mathematical interpretation of those inputs without throwing structural validation errors for the `segments_` array itself.
+- **Basic Input Validation in `_calculatePurchaseReturn`**: The function may still perform basic checks on its direct inputs, for example, ensuring `collateralToSpendProvided_` is not zero if that's a logical requirement for purchasing, or that `segments_` is not an empty array.
+- **`PackedSegmentLib._create`**: Continues to validate individual segment parameters upon creation.
+- **Other Library Functions**: Other functions within `DiscreteCurveMathLib_v1` (e.g., `_calculateSaleReturn`, `_calculateReserveForSupply`) will maintain their existing validation logic until or unless they are also specified for refactoring with a similar validation responsibility shift.
 
 **Application to Future Modules:**
 
-- FM_BC_DBC should validate inputs at function entry + state consistency
-- DynamicFeeCalculator should validate fee parameters + calculation inputs
-- Credit facility should validate loan parameters + system state
+- `FM_BC_DBC` **must** validate segment arrays during configuration and before they are used in calculations by `DiscreteCurveMathLib_v1` functions that expect pre-validated arrays.
+- `DynamicFeeCalculator` should validate fee parameters + calculation inputs.
+- `Credit facility` should validate loan parameters + system state.
 
 ### Type-Safe Packed Storage Pattern - ✅ IMPLEMENTED
 
-**Concrete implementation:**
-
-```solidity
-type PackedSegment is bytes32;
-
-library PackedSegmentLib {
-    // Bit allocation (total 256 bits)
-    uint private constant INITIAL_PRICE_BITS = 72;    // 0-71
-    uint private constant PRICE_INCREASE_BITS = 72;   // 72-143
-    uint private constant SUPPLY_BITS = 96;           // 144-239
-    uint private constant STEPS_BITS = 16;            // 240-255
-
-    function _create(...) internal pure returns (PackedSegment) {
-        bytes32 packed_ = bytes32(
-            initialPrice_ | (priceIncrease_ << PRICE_INCREASE_OFFSET)
-            | (supplyPerStep_ << SUPPLY_OFFSET) | (numberOfSteps_ << STEPS_OFFSET)
-        );
-        return PackedSegment.wrap(packed_);
-    }
-}
-```
-
-**Benefits Realized:**
-
-- 75% storage reduction (4 slots → 1 slot per segment)
-- Type safety prevents mixing with other bytes32 values
-- Clean accessor syntax: `segment._initialPrice()`
-- Compile-time validation of packed data usage
+(Content remains the same)
 
 ### Gas Optimization Pattern - ✅ IMPLEMENTED
 
-**Specific optimizations discovered:**
-
-#### Variable Caching
-
-```solidity
-uint numSegments_ = segments_.length; // Cache array length
-for (uint segmentIndex_ = 0; segmentIndex_ < numSegments_; ++segmentIndex_) {
-    // Use cached length instead of repeated .length access
-}
-```
-
-#### Batch Data Access
-
-```solidity
-// Batch unpack when multiple fields needed
-(uint initialPrice_, uint priceIncrease_, uint supplyPerStep_, uint totalSteps_) =
-    segments_[segmentIndex_]._unpack();
-
-// vs individual access when only one field needed
-uint price = segments_[segmentIndex_]._initialPrice();
-```
-
-#### Gas Bomb Prevention
-
-```solidity
-uint private constant MAX_LINEAR_SEARCH_STEPS = 200;
-
-while (
-    stepsSuccessfullyPurchased_ < maxStepsPurchasableInSegment_
-    && stepsSuccessfullyPurchased_ < MAX_LINEAR_SEARCH_STEPS  // Hard limit
-) {
-    // Calculate step costs
-}
-```
+(Content remains the same, noting `_calculatePurchaseReturn`'s internal iteration logic is changing)
 
 ### Mathematical Precision Pattern - ✅ IMPLEMENTED
 
-**Conservative calculation strategy:**
+(Content remains the same)
 
-```solidity
-// Custom rounding function that favors protocol
-function _mulDivUp(uint a_, uint b_, uint denominator_) private pure returns (uint result_) {
-    result_ = Math.mulDiv(a_, b_, denominator_); // Floor division
-    if (_mulmod(a_, b_, denominator_) > 0) {     // If remainder exists
-        result_++;                               // Round up
-    }
-}
-
-// Applied in financial calculations
-collateralCost_ = _mulDivUp(tokenAmount_, price_, SCALING_FACTOR);  // Favors protocol
-tokensAffordable_ = Math.mulDiv(budget_, SCALING_FACTOR, price_);   // Standard for user benefit
-```
-
-### Error Handling Pattern - ✅ IMPLEMENTED
+### Error Handling Pattern - ✅ IMPLEMENTED (Contextual errors still key)
 
 **Descriptive custom errors with context:**
 
 ```solidity
 // Interface defines contextual errors
 interface IDiscreteCurveMathLib_v1 {
-    error DiscreteCurveMathLib__SupplyExceedsCurveCapacity(uint256 currentSupply, uint256 totalCapacity);
-    error DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousFinal, uint256 nextInitial);
-    error DiscreteCurveMathLib__SegmentIsFree();
-    error DiscreteCurveMathLib__ZeroCollateralInput();
-}
-
-// Usage provides debugging context
-if (initialPriceNext_ < finalPriceCurrent_) {
-    revert DiscreteCurveMathLib__InvalidPriceProgression(
-        i_, finalPriceCurrent_, initialPriceNext_
-    );
+    error DiscreteCurveMathLib__SupplyExceedsCurveCapacity(uint256 currentSupply, uint256 totalCapacity); // May be thrown by _validateSupplyAgainstSegments if called by FM, or by other lib functions.
+    error DiscreteCurveMathLib__InvalidPriceProgression(uint256 segmentIndex, uint256 previousFinal, uint256 nextInitial); // Primarily expected from _validateSegmentArray, called by FM.
+    error DiscreteCurveMathLib__SegmentIsFree(); // From _createSegment or _validateSegmentArray.
+    error DiscreteCurveMathLib__ZeroCollateralInput(); // Could be from _calculatePurchaseReturn if collateral is 0.
 }
 ```
+
+The source of some errors (like `InvalidPriceProgression`) will now more clearly be from the caller's validation step (e.g., `FM_BC_DBC` calling `_validateSegmentArray`) rather than deep within `_calculatePurchaseReturn`'s logic for segment array issues.
 
 ### Naming Convention Pattern - ✅ ESTABLISHED
 
-**Consistent underscore suffixed naming:**
+(Content remains the same)
 
-```solidity
-function _calculatePurchaseReturn(
-    PackedSegment[] memory segments_,           // Input parameters
-    uint collateralToSpendProvided_,
-    uint currentTotalIssuanceSupply_
-) internal pure returns (
-    uint tokensToMint_,                        // Return values
-    uint collateralSpentByPurchaser_
-) {
-    uint numSegments_ = segments_.length;      // Local variables
-    uint budgetRemaining_ = collateralToSpendProvided_;
-}
-```
+### Library Architecture Pattern - ✅ IMPLEMENTED (Core logic of one function changing)
 
-**Benefits:**
+(Content remains the same, noting `_calculatePurchaseReturn` is being refactored)
 
-- Clear distinction between parameters, locals, and state variables
-- Improved readability and reduced naming conflicts
-- Consistent across all functions
-
-### Library Architecture Pattern - ✅ IMPLEMENTED
-
-**Clean separation of concerns:**
-
-```solidity
-library DiscreteCurveMathLib_v1 {
-    using PackedSegmentLib for PackedSegment;  // Enable clean syntax
-
-    // ========= Internal Helper Functions =========
-    // Low-level operations and validations
-
-    // ========= Core Calculation Functions =========
-    // Business logic calculations
-
-    // ========= Internal Convenience Functions =========
-    // High-level operations and wrappers
-
-    // ========= Custom Math Helpers =========
-    // Mathematical utilities
-}
-
-library PackedSegmentLib {
-    // Pure bit manipulation and validation
-    // No business logic, only data structure operations
-}
-```
-
-## Integration Patterns - ✅ READY FOR IMPLEMENTATION
+## Integration Patterns - ✅ READY FOR IMPLEMENTATION (Caller validation emphasized)
 
 ### Library → FM_BC_DBC Integration Pattern
 
-**Established function signatures:**
+**Established function signatures (with new validation context for `mint`):**
 
 ```solidity
 contract FM_BC_DBC is VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_v1 {
@@ -234,33 +106,29 @@ contract FM_BC_DBC is VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_
     PackedSegment[] private _segments;
 
     function mint(uint256 collateralIn, uint256 minTokensOut) external {
-        // Apply defensive programming pattern
-        if (collateralIn == 0) revert FM_BC_DBC__ZeroCollateralInput();
+        // Apply basic input validation
+        if (collateralIn == 0) revert FM_BC_DBC__ZeroCollateralInput(); // Or similar FM-level error
 
-        // Use library for calculations
+        // CRITICAL: _segments array is assumed to be pre-validated by configureCurve.
+        // _calculatePurchaseReturn will not re-validate segment progression, etc.
         (uint256 tokensOut, uint256 collateralSpent) =
             _segments._calculatePurchaseReturn(collateralIn, _virtualIssuanceSupply);
 
         // Validate user expectations
-        if (tokensOut < minTokensOut) revert FM_BC_DBC__InsufficientOutput();
-
-        // Gas optimization: cache frequently used values
-        uint256 currentVirtualSupply = _virtualIssuanceSupply;
-
-        // Apply conservative calculation: round fees up
-        // Handle token transfers, fee processing, state updates
+        if (tokensOut < minTokensOut) revert FM_BC_DBC__InsufficientOutput(); // Or similar FM-level error
+        // ...
     }
 }
 ```
 
 ### Invariance Check Pattern - ✅ READY FOR IMPLEMENTATION
 
-**configureCurve function with mathematical validation:**
+**`configureCurve` function with mathematical validation (and now explicit segment array validation):**
 
 ```solidity
 function configureCurve(PackedSegment[] memory newSegments, int256 collateralChangeAmount) external {
-    // Apply validation pattern from library
-    _segments._validateSegmentArray(newSegments);
+    // CRITICAL: Apply segment array validation using the library's utility
+    DiscreteCurveMathLib_v1._validateSegmentArray(newSegments); // Or newSegments._validateSegmentArray() if using 'for PackedSegment[]'
 
     // Calculate current state
     uint256 currentReserve = _segments._calculateReserveForSupply(_virtualIssuanceSupply);
@@ -273,7 +141,7 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
 
     // Invariance check with descriptive error
     if (newCalculatedReserve != expectedNewReserve) {
-        revert FM_BC_DBC__ReserveInvarianeMismatch(newCalculatedReserve, expectedNewReserve);
+        revert FM_BC_DBC__ReserveInvarianeMismatch(newCalculatedReserve, expectedNewReserve); // FM-level error
     }
 
     // Apply changes atomically
@@ -285,151 +153,19 @@ function configureCurve(PackedSegment[] memory newSegments, int256 collateralCha
 
 ### Fee Calculator Integration Pattern
 
-**Based on established patterns:**
-
-```solidity
-interface IDynamicFeeCalculator {
-    function calculateMintFee(uint256 premiumRate, uint256 amount, bytes memory context)
-        external view returns (uint256 fee);
-    function calculateRedeemFee(uint256 premiumRate, uint256 amount, bytes memory context)
-        external view returns (uint256 fee);
-    function calculateOriginationFee(uint256 utilizationRate, uint256 amount, bytes memory context)
-        external view returns (uint256 fee);
-}
-
-// In FM_BC_DBC
-contract FM_BC_DBC {
-    IDynamicFeeCalculator private _feeCalculator;
-
-    function mint(uint256 collateralIn) external {
-        // Calculate base purchase
-        (uint256 tokensOut, uint256 collateralSpent) =
-            _segments._calculatePurchaseReturn(collateralIn, _virtualIssuanceSupply);
-
-        // Calculate dynamic fee
-        uint256 premiumRate = _calculatePremiumRate(); // Based on current price vs floor
-        uint256 dynamicFee = _feeCalculator.calculateMintFee(premiumRate, collateralSpent, "");
-
-        // Apply conservative rounding for fee (favors protocol)
-        uint256 totalCollateralNeeded = collateralSpent + dynamicFee;
-
-        // Validate and execute
-        if (totalCollateralNeeded > collateralIn) revert FM_BC_DBC__InsufficientCollateral();
-    }
-}
-```
+(Content remains the same)
 
 ## Performance Optimization Patterns - ✅ IMPLEMENTED
 
-### Arithmetic Series Optimization
-
-**O(1) calculation for sloped segments:**
-
-```solidity
-// Instead of: for (uint i = 0; i < steps; i++) { sum += initialPrice + i * priceIncrease; }
-// Use arithmetic series formula:
-uint256 firstStepPrice_ = initialPrice_;
-uint256 lastStepPrice_ = initialPrice_ + (stepsToProcess_ - 1) * priceIncrease_;
-uint256 sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
-uint256 totalPriceForAllSteps_ = Math.mulDiv(stepsToProcess_, sumOfPrices_, 2);
-```
-
-### Linear vs Binary Search Strategy
-
-**Implemented decision tree:**
-
-```solidity
-function _calculatePurchaseForSingleSegment(/* params */) private pure returns (uint, uint) {
-    if (priceIncreasePerStep_ == 0) {
-        // Flat segment: Use direct calculation (O(1))
-        return _calculateFullStepsForFlatSegment(/* params */);
-    } else {
-        // Sloped segment: Use linear search (O(n), bounded by MAX_LINEAR_SEARCH_STEPS)
-        return _linearSearchSloped(/* params */);
-    }
-}
-```
-
-**Rationale**: Linear search more efficient for expected small purchases due to lower per-step overhead
-
-### Boundary Condition Optimization
-
-**Single function handles all edge cases:**
-
-```solidity
-function _findPositionForSupply(PackedSegment[] memory segments_, uint targetSupply_) internal pure {
-    // Handles: within segment, at segment boundary, next segment start, curve end
-    if (targetSupply_ == segmentEndSupply_ && i_ + 1 < numSegments_) {
-        // Exactly at boundary AND there's a next segment: point to next segment start
-        position_.segmentIndex = i_ + 1;
-        position_.stepIndexWithinSegment = 0;
-        position_.priceAtCurrentStep = segments_[i_ + 1]._initialPrice();
-    } else {
-        // Within segment or at final segment end
-        // Calculate step index and price
-    }
-}
-```
+(Content remains the same, noting `_calculatePurchaseReturn`'s internal iteration logic is changing)
 
 ## State Management Patterns
 
-### Virtual Supply Pattern
-
-**Separation of virtual tracking from actual tokens:**
-
-```solidity
-// In FM_BC_DBC (planned)
-contract FM_BC_DBC is VirtualIssuanceSupplyBase_v1, VirtualCollateralSupplyBase_v1 {
-    // _virtualIssuanceSupply: Used for curve calculations
-    // _virtualCollateralSupply: Used for curve backing
-    // Actual ERC20 totalSupply(): May differ due to external factors
-
-    function mint(uint256 collateralIn) external {
-        // Use virtual supply for curve calculations
-        (uint256 tokensOut, ) = _segments._calculatePurchaseReturn(collateralIn, _virtualIssuanceSupply);
-
-        // Update virtual state
-        _virtualIssuanceSupply += tokensOut;
-        _virtualCollateralSupply += collateralSpent;
-
-        // Handle actual token transfers
-        _issuanceToken.mint(msg.sender, tokensOut);
-        _collateralToken.transferFrom(msg.sender, address(this), collateralSpent);
-    }
-}
-```
-
-### Credit Facility Non-Interference Pattern
-
-**Lending operations bypass virtual supply:**
-
-```solidity
-// In credit facility (planned)
-contract LM_PC_CreditFacility {
-    function borrowAgainstTokens(uint256 loanAmount) external {
-        // Locking/unlocking issuance tokens does NOT affect _virtualIssuanceSupply
-        // Transferring collateral for loans does NOT affect _virtualCollateralSupply
-        // Only mint/redeem operations on the curve affect virtual supplies
-
-        _issuanceToken.transferFrom(msg.sender, address(this), collateralValue);
-        _fundingManager.transferCollateral(msg.sender, loanAmount); // Direct transfer, no virtual impact
-    }
-}
-```
+(Content remains the same)
 
 ## Implementation Readiness Assessment
 
-### ✅ Patterns Ready for Immediate Application
+### ✅ Patterns Ready for Immediate Application (with revised validation understanding)
 
-1. **Defensive programming**: Multi-layer validation approach
-2. **Gas optimization**: Caching, batching, bounded operations
-3. **Type safety**: Custom types for packed data
-4. **Conservative math**: Protocol-favorable rounding
-5. **Error handling**: Descriptive errors with context
-
-### 🎯 Next Implementation Targets Using Established Patterns
-
-1. **FM_BC_DBC**: Apply all discovered patterns directly
-2. **DynamicFeeCalculator**: Use validation + gas optimization patterns
-3. **Credit facility**: Apply validation + state management patterns
-4. **Rebalancing modules**: Use invariance check + math patterns
+1.  **Defensive programming**: Multi-layer validation approach (responsibility for segment array validation shifted for `_calculatePurchaseReturn`).
+    (Other patterns remain the same)

@@ -2234,71 +2234,104 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         uint currentSupplyRatio // Ratio from 0 to 100 to determine currentSupply based on total capacity
     ) public {
         // Bound inputs for segment generation
-        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS));
-        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e20); 
-        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e18); 
-        supplyPerStepTpl = bound(supplyPerStepTpl, 1e15, 1e22); 
-        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 1000); 
+        numSegmentsToFuzz = uint8(
+            bound(numSegmentsToFuzz, 1, DiscreteCurveMathLib_v1.MAX_SEGMENTS)
+        );
+        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e20);
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e18);
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1e15, 1e22);
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 1000);
 
-        (
-            PackedSegment[] memory segments, 
-            uint totalCurveCapacity
-        ) = _generateFuzzedValidSegmentsAndCapacity(
-            numSegmentsToFuzz, initialPriceTpl, priceIncreaseTpl, supplyPerStepTpl, numberOfStepsTpl
+        (PackedSegment[] memory segments, uint totalCurveCapacity) =
+        _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz,
+            initialPriceTpl,
+            priceIncreaseTpl,
+            supplyPerStepTpl,
+            numberOfStepsTpl
         );
 
-        if (segments.length == 0) { 
+        if (segments.length == 0) {
             return;
         }
-        
+
         uint currentTotalIssuanceSupply;
         if (totalCurveCapacity == 0) {
             // If capacity is 0, only test with supply 0. currentSupplyRatio is ignored.
             currentTotalIssuanceSupply = 0;
-             // If currentSupplyRatio was >0, we might want to skip, but _findPositionForSupply handles 0 capacity, 0 supply.
+            // If currentSupplyRatio was >0, we might want to skip, but _findPositionForSupply handles 0 capacity, 0 supply.
             if (currentSupplyRatio > 0) return; // Avoid division by zero if totalCurveCapacity is 0 but ratio isn't.
         } else {
             currentSupplyRatio = bound(currentSupplyRatio, 0, 100); // 0% to 100% of capacity
-            currentTotalIssuanceSupply = (totalCurveCapacity * currentSupplyRatio) / 100;
-            if (currentSupplyRatio == 100) { 
+            currentTotalIssuanceSupply =
+                (totalCurveCapacity * currentSupplyRatio) / 100;
+            if (currentSupplyRatio == 100) {
                 currentTotalIssuanceSupply = totalCurveCapacity;
             }
-            if (currentTotalIssuanceSupply > totalCurveCapacity) { // Ensure it doesn't exceed due to rounding
+            if (currentTotalIssuanceSupply > totalCurveCapacity) {
+                // Ensure it doesn't exceed due to rounding
                 currentTotalIssuanceSupply = totalCurveCapacity;
             }
         }
-        
+
         // Call _getCurrentPriceAndStep
-        (uint price, uint stepIdx, uint segmentIdx) = 
-            exposedLib.exposed_getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
+        (uint price, uint stepIdx, uint segmentIdx) = exposedLib
+            .exposed_getCurrentPriceAndStep(segments, currentTotalIssuanceSupply);
 
         // Call _findPositionForSupply for comparison
-        IDiscreteCurveMathLib_v1.CurvePosition memory pos = 
-            exposedLib.exposed_findPositionForSupply(segments, currentTotalIssuanceSupply);
+        IDiscreteCurveMathLib_v1.CurvePosition memory pos = exposedLib
+            .exposed_findPositionForSupply(segments, currentTotalIssuanceSupply);
 
         // Assertions
-        assertTrue(segmentIdx < segments.length, "GCPS: Segment index out of bounds");
+        assertTrue(
+            segmentIdx < segments.length, "GCPS: Segment index out of bounds"
+        );
         PackedSegment currentSegmentFromGet = segments[segmentIdx]; // Renamed to avoid clash
         uint currentSegNumStepsFromGet = currentSegmentFromGet._numberOfSteps();
 
         if (currentSegNumStepsFromGet > 0) {
-            assertTrue(stepIdx < currentSegNumStepsFromGet, "GCPS: Step index out of bounds for segment");
+            assertTrue(
+                stepIdx < currentSegNumStepsFromGet,
+                "GCPS: Step index out of bounds for segment"
+            );
         } else {
-            assertEq(stepIdx, 0, "GCPS: Step index should be 0 for zero-step segment");
+            assertEq(
+                stepIdx, 0, "GCPS: Step index should be 0 for zero-step segment"
+            );
         }
 
-        uint expectedPriceAtStep = currentSegmentFromGet._initialPrice() + stepIdx * currentSegmentFromGet._priceIncrease();
-        assertEq(price, expectedPriceAtStep, "GCPS: Price mismatch based on its own step/segment");
-        
-        // Consistency with _findPositionForSupply
-        assertEq(segmentIdx, pos.segmentIndex, "GCPS: Segment index mismatch with findPosition");
-        assertEq(stepIdx, pos.stepIndexWithinSegment, "GCPS: Step index mismatch with findPosition");
-        assertEq(price, pos.priceAtCurrentStep, "GCPS: Price mismatch with findPosition");
+        uint expectedPriceAtStep = currentSegmentFromGet._initialPrice()
+            + stepIdx * currentSegmentFromGet._priceIncrease();
+        assertEq(
+            price,
+            expectedPriceAtStep,
+            "GCPS: Price mismatch based on its own step/segment"
+        );
 
-        if (currentTotalIssuanceSupply == 0 && segments.length > 0) { // Added segments.length > 0 for safety
+        // Consistency with _findPositionForSupply
+        assertEq(
+            segmentIdx,
+            pos.segmentIndex,
+            "GCPS: Segment index mismatch with findPosition"
+        );
+        assertEq(
+            stepIdx,
+            pos.stepIndexWithinSegment,
+            "GCPS: Step index mismatch with findPosition"
+        );
+        assertEq(
+            price,
+            pos.priceAtCurrentStep,
+            "GCPS: Price mismatch with findPosition"
+        );
+
+        if (currentTotalIssuanceSupply == 0 && segments.length > 0) {
+            // Added segments.length > 0 for safety
             assertEq(segmentIdx, 0, "GCPS: Seg idx for supply 0");
             assertEq(stepIdx, 0, "GCPS: Step idx for supply 0");
-            assertEq(price, segments[0]._initialPrice(), "GCPS: Price for supply 0");
+            assertEq(
+                price, segments[0]._initialPrice(), "GCPS: Price for supply 0"
+            );
         }
     }
 
@@ -2450,10 +2483,10 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //     }
 
     //     uint totalCurveReserve = exposedLib.exposed_calculateReserveForSupply(segments, totalCurveCapacity);
-        
+
     //     collateralToSpendProvidedRatio = bound(collateralToSpendProvidedRatio, 0, 150);
     //     uint collateralToSpendProvided;
-    //     if (totalCurveReserve == 0 && collateralToSpendProvidedRatio > 0) { 
+    //     if (totalCurveReserve == 0 && collateralToSpendProvidedRatio > 0) {
     //         // If total reserve is 0 (e.g. fully free curve), but trying to spend, use a nominal amount
     //         // or handle specific free mint logic if applicable. For now, use a small non-zero amount.
     //         collateralToSpendProvided = bound(collateralToSpendProvidedRatio, 1, 100 ether); // Use ratio as a small absolute value
@@ -2465,7 +2498,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //             collateralToSpendProvided = totalCurveReserve + (totalCurveReserve * (collateralToSpendProvidedRatio - 100) / 100) + 1;
     //         }
     //     }
-
 
     //     if (collateralToSpendProvided == 0) {
     //         vm.expectRevert(IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__ZeroCollateralInput.selector);
@@ -2498,7 +2530,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //         } else { // totalCurveCapacity is 0
     //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens when capacity is 0");
     //         }
-
 
     //         if (currentTotalIssuanceSupply == totalCurveCapacity && totalCurveCapacity > 0) {
     //             assertEq(tokensToMint, 0, "FCPR_P: Minted tokens at full capacity");
