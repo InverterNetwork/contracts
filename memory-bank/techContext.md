@@ -156,7 +156,7 @@ function _findPositionForSupply( // Still used by other functions.
 - **PackedSegmentLib**: `_create` function's stricter validation for "True Flat" and "True Sloped" segments is implemented and fully tested.
 - **Validation Strategy**: Confirmed and tested. `PackedSegmentLib` is stricter; `_calculatePurchaseReturn` relies on caller validation as designed.
 - **Interface**: `IDiscreteCurveMathLib_v1.sol` new error types integrated and tested.
-- **Testing**: All unit tests for `DiscreteCurveMathLib_v1` and `PackedSegmentLib` are passing.
+- **Testing**: All 65 unit tests in `DiscreteCurveMathLib_v1.t.sol` (after refactoring out `segmentsData`) and all 10 unit tests in `PackedSegmentLib.t.sol` are passing.
 
 ### ✅ Integration Interfaces Confirmed (Caller validation is key)
 
@@ -168,4 +168,4 @@ function _findPositionForSupply( // Still used by other functions.
 - **Performance and Security for refactor**: Confirmed through successful testing.
 - **Next**: Proceed with `FM_BC_DBC` module implementation.
 
-**Overall Assessment**: `DiscreteCurveMathLib_v1` and `PackedSegmentLib.sol` are stable, fully tested, and production-ready. Documentation is being updated. The project is prepared for the `FM_BC_DBC` implementation phase.
+**Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and the `DiscreteCurveMathLib_v1.t.sol` test suite are stable, fully tested, and production-ready. Documentation is being updated. The project is prepared for the `FM_BC_DBC` implementation phase.

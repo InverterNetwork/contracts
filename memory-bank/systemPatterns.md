@@ -16,7 +16,7 @@ Built on Inverter stack using modular approach with clear separation of concerns
 
 ### Library Pattern - ✅ STABLE & TESTED (Refactoring and Validation Enhanced)
 
-- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations. (`_calculatePurchaseReturn` refactored, fixed, and all tests passing; validation strategy confirmed).
+- **DiscreteCurveMathLib_v1**: Pure mathematical functions for curve calculations. (`_calculatePurchaseReturn` refactored and fixed; validation strategy confirmed. The `DiscreteCurveMathLib_v1.t.sol` test suite has been refactored (removal of `segmentsData`) and all 65 tests are passing, confirming library stability).
 - **PackedSegmentLib**: Helper library for bit manipulation and validation. (`_create` function's stricter validation for "True Flat" and "True Sloped" segments confirmed and tested).
 - Stateless, reusable across multiple modules.
 - Type-safe with custom PackedSegment type.

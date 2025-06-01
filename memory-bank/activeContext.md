@@ -2,27 +2,24 @@
 
 ## Current Work Focus
 
-**Primary**: Preparing for `FM_BC_DBC` (Funding Manager - Discrete Bonding Curve) module implementation.
-**Secondary**: Ensuring all Memory Bank documentation is up-to-date with the now stable `DiscreteCurveMathLib_v1`.
+**Primary**: Strengthening fuzz testing for `DiscreteCurveMathLib_v1.t.sol`.
+**Secondary**: Ensuring all Memory Bank documentation accurately reflects this as the next priority.
 
-**Reason for Shift**: `_calculatePurchaseReturn` has been refactored by the user. `PackedSegmentLib.sol` has new, stricter validation for segment creation. `IDiscreteCurveMathLib_v1.sol` has been updated with new error types.
+**Reason for Shift**: Previous task (renaming `defaultTestCurve` and Memory Bank updates for `DiscreteCurveMathLib_v1` stability) is complete. Next priority is enhancing test robustness through more comprehensive fuzzing.
 
 ## Recent Progress
 
-- ✅ `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` refactored by user.
-- ✅ `IDiscreteCurveMathLib_v1.sol` updated with new error types (`InvalidFlatSegment`, `InvalidPointSegment`).
-- ✅ `PackedSegmentLib.sol`'s `_create` function confirmed to contain stricter validation rules:
-  - Flat segments must have `numberOfSteps == 1`.
-  - Sloped segments must have `numberOfSteps > 1` and `priceIncrease > 0`.
-- ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` are passing, including new tests for "True Flat" and "True Sloped" segment validation.
-- ✅ `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` successfully refactored and fixed.
-- ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` are passing.
-- ✅ `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are now considered stable and fully tested.
-- ✅ Initial Memory Bank review completed (prior to this update).
+- ✅ `DiscreteCurveMathLib_v1.t.sol` refactored to remove `segmentsData` and use `packedSegmentsArray` directly.
+- ✅ All 65 tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` are passing after refactor.
+- ✅ `_calculatePurchaseReturn` in `DiscreteCurveMathLib_v1.sol` refactored by user (previous session).
+- ✅ `IDiscreteCurveMathLib_v1.sol` updated with new error types (`InvalidFlatSegment`, `InvalidPointSegment`) (previous session).
+- ✅ `PackedSegmentLib.sol`'s `_create` function confirmed to contain stricter validation rules (previous session).
+- ✅ All tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` are passing (previous session).
+- ✅ `DiscreteCurveMathLib_v1.sol` and `PackedSegmentLib.sol` are considered stable and fully tested.
 
-## Implementation Quality Assessment (DiscreteCurveMathLib_v1 - Post-Refactor of `_calculatePurchaseReturn`)
+## Implementation Quality Assessment (DiscreteCurveMathLib_v1 & Tests)
 
-**`DiscreteCurveMathLib_v1` (including refactored `_calculatePurchaseReturn`) is now stable and all tests are passing.** Core library maintains:
+**`DiscreteCurveMathLib_v1` and its test suite `DiscreteCurveMathLib_v1.t.sol` are now stable, and all tests are passing.** Core library and tests maintain:
 
 - Defensive programming patterns (validation strategy updated, see below).
 - Gas-optimized algorithms with safety bounds.
@@ -32,9 +29,10 @@
 
 ## Next Immediate Steps
 
-1.  **Complete Memory Bank Update**: Finish updating `memory-bank/progress.md`, `memory-bank/systemPatterns.md`, and `memory-bank/techContext.md` to reflect the stability of `DiscreteCurveMathLib_v1` and green test status. (This update to `activeContext.md` is the first step).
-2.  **Plan `FM_BC_DBC` Implementation**: Begin detailed planning for the `FM_BC_DBC` (Funding Manager - Discrete Bonding Curve) module.
-3.  **Start `FM_BC_DBC` Development**: Commence implementation of `FM_BC_DBC`.
+1.  **Review existing fuzz tests** in `DiscreteCurveMathLib_v1.t.sol` and identify gaps/areas for enhancement (e.g., for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, and new fuzz test for `_calculateSaleReturn`).
+2.  **Implement new/enhanced fuzz tests** for core calculation functions in `DiscreteCurveMathLib_v1.t.sol`.
+3.  **Update Memory Bank** after fuzz tests are implemented and passing.
+4.  Then, proceed to **plan `FM_BC_DBC` Implementation**.
 
 ## Implementation Insights Discovered (And Being Revised)
 
@@ -173,19 +171,24 @@ This function in `FM_BC_DBC` becomes even more critical as it's the point where 
 
 ## Testing & Validation Status ✅ (All Green)
 
-- ✅ **`_calculatePurchaseReturn`**: Successfully refactored, fixed, and all related tests are passing.
-- ✅ **`PackedSegmentLib._create`**: Stricter validation for "True Flat" and "True Sloped" segments implemented and tested.
-- ✅ **`IDiscreteCurveMathLib_v1.sol`**: New error types `InvalidFlatSegment` and `InvalidPointSegment` integrated and covered.
-- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing.
-- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`)**: All 62 tests passing.
-- 🎯 **Next**: Proceed with `FM_BC_DBC` module development.
+- ✅ **`DiscreteCurveMathLib_v1.t.sol`**: Successfully refactored to remove `segmentsData`. All 65 tests passing.
+- ✅ **`_calculatePurchaseReturn`**: Successfully refactored, fixed, and all related tests are passing (previous session).
+- ✅ **`PackedSegmentLib._create`**: Stricter validation for "True Flat" and "True Sloped" segments implemented and tested (previous session).
+- ✅ **`IDiscreteCurveMathLib_v1.sol`**: New error types `InvalidFlatSegment` and `InvalidPointSegment` integrated and covered (previous session).
+- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol`)**: All 10 tests passing (previous session).
+- ✅ **Unit Tests (`test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol`)**: All 65 tests passing (confirming stability of both lib and its tests).
+- 🎯 **Next**: Strengthen fuzz testing for `DiscreteCurveMathLib_v1.t.sol`.
 
 ## Next Development Priorities - CONFIRMED
 
-1.  **Complete Memory Bank Update**: Ensure `progress.md`, `systemPatterns.md`, and `techContext.md` accurately reflect the stable state of `DiscreteCurveMathLib_v1`. (This `activeContext.md` update is part of that).
-2.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points for the `FM_BC_DBC` module, leveraging the stable `DiscreteCurveMathLib_v1`.
-3.  **Implement `FM_BC_DBC`**: Begin coding the core logic for minting, redeeming, and curve configuration within `FM_BC_DBC`.
+1.  **Strengthen Fuzz Testing for `DiscreteCurveMathLib_v1.t.sol`**:
+    - Review existing fuzz tests and identify gaps.
+    - Implement new/enhanced fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`.
+    - Add a new fuzz test for `_calculateSaleReturn`.
+2.  **Update Memory Bank** after fuzz tests are implemented and passing.
+3.  **Plan `FM_BC_DBC` Implementation**: Outline the structure, functions, and integration points.
+4.  **Implement `FM_BC_DBC`**: Begin coding the core logic.
 
-## Code Quality Assessment: `DiscreteCurveMathLib_v1` (Stable)
+## Code Quality Assessment: `DiscreteCurveMathLib_v1` & Tests (Stable)
 
-**High-quality, production-ready code achieved.** The refactoring of `_calculatePurchaseReturn`, stricter validation in `PackedSegmentLib`, and comprehensive testing have resulted in a stable and robust math library. Logic has been simplified, and illegal states are effectively prevented or handled.
+**High-quality, production-ready code achieved for both the library and its test suite.** The refactoring of `_calculatePurchaseReturn`, stricter validation in `PackedSegmentLib`, and comprehensive, passing tests (including the refactored `DiscreteCurveMathLib_v1.t.sol`) have resulted in a stable and robust math foundation. Logic has been simplified, and illegal states are effectively prevented or handled.

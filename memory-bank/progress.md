@@ -12,14 +12,15 @@
 
 ### ✅ DiscreteCurveMathLib_v1 [STABLE & ALL TESTS GREEN]
 
-**Previous Status**: `_calculatePurchaseReturn` was undergoing refactoring and testing.
+**Previous Status**: `_calculatePurchaseReturn` was undergoing refactoring and testing. `DiscreteCurveMathLib_v1.t.sol` test suite required refactoring.
 **Current Status**:
 
-- `_calculatePurchaseReturn` function successfully refactored, fixed, and all related tests pass.
-- `PackedSegmentLib.sol`'s stricter validation for "True Flat" and "True Sloped" segments is confirmed and fully tested.
-- All unit tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` (10 tests) are passing.
-- All unit tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` (62 tests) are passing.
-- The library is now considered stable and production-ready.
+- `DiscreteCurveMathLib_v1.t.sol` refactored to remove `segmentsData`, all 65 tests passing.
+- `_calculatePurchaseReturn` function successfully refactored, fixed, and all related tests pass (previous session).
+- `PackedSegmentLib.sol`'s stricter validation for "True Flat" and "True Sloped" segments is confirmed and fully tested (previous session).
+- All unit tests in `test/unit/modules/fundingManager/bondingCurve/libraries/PackedSegmentLib.t.sol` (10 tests) are passing (previous session).
+- All unit tests in `test/unit/modules/fundingManager/bondingCurve/formulas/DiscreteCurveMathLib_v1.t.sol` (65 tests) are passing after test refactoring.
+- The library and its test suite are now considered stable and production-ready.
 
 **Key Achievements (Overall Library)**:
 
@@ -59,13 +60,13 @@ _validateSegmentArray() // Utility for callers
 
 ## Current Implementation Status
 
-### ✅ `DiscreteCurveMathLib_v1` & `PackedSegmentLib.sol` [STABLE & ALL TESTS GREEN]
+### ✅ `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol` & Tests [STABLE & ALL TESTS GREEN]
 
-**Reason**: All refactoring, fixes, and testing are complete.
-**Current Focus**: This module is stable. Focus has shifted to `FM_BC_DBC`.
-**Next Steps for this module**: None.
+**Reason**: All refactoring, fixes, and testing (including test suite refactor) are complete.
+**Current Focus**: Library and existing tests are stable. Next step is to enhance its fuzz testing coverage.
+**Next Steps for this module**: Strengthen fuzz testing for `_calculateReserveForSupply`, `_calculatePurchaseReturn`, and add fuzzing for `_calculateSaleReturn`.
 
-### 🎯 `FM_BC_DBC` (Funding Manager - Discrete Bonding Curve) [NEXT - READY FOR IMPLEMENTATION]
+### 🎯 `FM_BC_DBC` (Funding Manager - Discrete Bonding Curve) [BLOCKED - PENDING ENHANCED FUZZ TESTING]
 
 **Dependencies**: `DiscreteCurveMathLib_v1` (now stable and fully tested).
 **Integration Pattern Defined**: `FM_BC_DBC` must validate segment arrays (using `_validateSegmentArray`) and supply capacity before calling `_calculatePurchaseReturn`.
@@ -80,7 +81,7 @@ _validateSegmentArray() // Utility for callers
 
 ## Implementation Architecture Progress
 
-### ✅ Foundation Layer (Updated, Testing Ongoing)
+### ✅ Foundation Layer (Stable & Fully Tested)
 
 ```
 DiscreteCurveMathLib_v1 ✅ (Stable, all tests green)
@@ -142,15 +143,24 @@ function mint(uint256 collateralIn) external {
 3.  ✅ `IDiscreteCurveMathLib_v1.sol` errors updated.
 4.  ✅ `activeContext.md` updated.
 5.  ✅ Update remaining Memory Bank files (`progress.md`, `systemPatterns.md`, `techContext.md`).
-6.  ✅ Address all failing tests in `DiscreteCurveMathLib_v1.t.sol`.
+6.  ✅ Refactor `DiscreteCurveMathLib_v1.t.sol` (remove `segmentsData`) and ensure all 65 tests pass.
     - Update tests for new `PackedSegmentLib` rules.
     - Re-evaluate `SupplyExceedsCapacity` test.
     - Debug and fix `_calculatePurchaseReturn` calculation issues.
-7.  ✅ `DiscreteCurveMathLib_v1` is fully stable and tested.
+7.  ✅ `DiscreteCurveMathLib_v1` and its test suite are fully stable and tested.
 
-#### Phase 1: Core Infrastructure (🎯 Current Focus)
+#### Phase 0.5: Test Suite Strengthening (🎯 Current Focus)
 
-1.  Start `FM_BC_DBC` implementation using the stable `DiscreteCurveMathLib_v1`.
+1.  Enhance fuzz testing for `DiscreteCurveMathLib_v1.t.sol`.
+    - Review existing fuzz tests for `_calculateReserveForSupply`, `_calculatePurchaseReturn`.
+    - Implement new/enhanced fuzz tests for these functions.
+    - Add a new fuzz test for `_calculateSaleReturn`.
+2.  Ensure all tests, including new fuzz tests, are passing.
+3.  Update Memory Bank to reflect enhanced test coverage and confidence.
+
+#### Phase 1: Core Infrastructure (⏳ Next, after Test Strengthening)
+
+1.  Start `FM_BC_DBC` implementation using the stable and robustly tested `DiscreteCurveMathLib_v1`.
     - Ensure `FM_BC_DBC` correctly handles segment array validation (using `_validateSegmentArray`) and supply capacity validation before calling `_calculatePurchaseReturn`.
 2.  Implement `DynamicFeeCalculator`.
 3.  Basic minting/redeeming functionality with fee integration.
@@ -160,12 +170,12 @@ function mint(uint256 collateralIn) external {
 
 ## Key Features Implementation Status (Revised)
 
-| Feature                     | Status                             | Implementation Notes                                                                                                                                               | Confidence  |
-| --------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| Pre-sale fixed price        | ✅ DONE                            | Using existing Inverter components                                                                                                                                 | High        |
-| Discrete bonding curve math | ✅ STABLE & ALL TESTS GREEN        | `_calculatePurchaseReturn` refactoring complete and all calculation/rounding issues resolved. `PackedSegmentLib` stricter validation confirmed. All tests passing. | High        |
-| Discrete bonding curve FM   | 🎯 NEXT - READY FOR IMPLEMENTATION | Patterns established, `DiscreteCurveMathLib_v1` is stable.                                                                                                         | High        |
-| Dynamic fees                | 🔄 READY                           | Independent implementation, patterns defined.                                                                                                                      | Medium-High |
+| Feature                     | Status                             | Implementation Notes                                                                                                                                                 | Confidence  |
+| --------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Pre-sale fixed price        | ✅ DONE                            | Using existing Inverter components                                                                                                                                   | High        |
+| Discrete bonding curve math | ✅ STABLE & ALL TESTS GREEN        | `_calculatePurchaseReturn` refactoring complete. `PackedSegmentLib` stricter validation confirmed. `DiscreteCurveMathLib_v1.t.sol` refactored, all 65 tests passing. | High        |
+| Discrete bonding curve FM   | 🎯 NEXT - READY FOR IMPLEMENTATION | Patterns established, `DiscreteCurveMathLib_v1` and its tests are stable.                                                                                            | High        |
+| Dynamic fees                | 🔄 READY                           | Independent implementation, patterns defined.                                                                                                                        | Medium-High |
 
 (Other features remain the same)
 
@@ -180,15 +190,16 @@ function mint(uint256 collateralIn) external {
 - **Integration Complexity**: Multiple modules need careful state coordination.
 - **Fee Formula Precision**: Dynamic calculations need accurate implementation.
 - **Virtual vs Actual Balance Management**: Requires careful state synchronization.
-- **Refactoring Risk (`_calculatePurchaseReturn`)**: ✅ Mitigated. All tests passing after fixes.
+- **Refactoring Risk (`_calculatePurchaseReturn`)**: ✅ Mitigated. All tests passing after fixes (previous session).
 - **Validation Responsibility Shift**: Documented and understood. `FM_BC_DBC` design will incorporate this. (Risk remains until FM implemented and tested)
-- **Test Coverage for New Segment Rules**: ✅ Mitigated. Tests added to `PackedSegmentLib.t.sol` and fuzz tests updated in `DiscreteCurveMathLib_v1.t.sol`.
+- **Test Coverage for New Segment Rules**: ✅ Mitigated. Tests added to `PackedSegmentLib.t.sol` and fuzz tests updated in `DiscreteCurveMathLib_v1.t.sol` (previous session).
+- **Test Suite Refactoring Risk (`DiscreteCurveMathLib_v1.t.sol`)**: ✅ Mitigated. Test file refactored and all 65 tests pass.
 
 ### 🛡️ Risk Mitigation Strategies (Updated)
 
 - **Apply Established Patterns**: Use proven optimization and error handling.
-- **Incremental Testing & Focused Debugging**: Successfully applied to resolve `_calculatePurchaseReturn` test failures.
-- **Update Test Suite**: ✅ Completed. Tests adapted for new rules.
+- **Incremental Testing & Focused Debugging**: Successfully applied to resolve `_calculatePurchaseReturn` test failures and test suite refactoring.
+- **Test Suite Updated & Refactored**: ✅ Completed. Tests adapted for new rules and refactored to remove `segmentsData`. All 65 tests passing.
 - **Conservative Approach**: Continue protocol-favorable rounding where appropriate.
 - **Clear Documentation**: Ensure Memory Bank accurately reflects all changes, especially validation responsibilities.
 - **Focused Testing on `FM_BC_DBC.configureCurve`**: Crucial for segment and supply validation by the caller.
@@ -202,10 +213,14 @@ function mint(uint256 collateralIn) external {
 - ✅ `IDiscreteCurveMathLib_v1.sol` errors updated.
 - ✅ `activeContext.md` updated.
 - ✅ Update `progress.md`, `systemPatterns.md`, `techContext.md`.
-- ✅ Resolve all 13 failing tests in `DiscreteCurveMathLib_v1.t.sol`.
-- ✅ `DiscreteCurveMathLib_v1` fully stable and all relevant tests passing.
+- ✅ Refactor `DiscreteCurveMathLib_v1.t.sol` (remove `segmentsData`) and ensure all 65 tests pass.
+- ✅ `DiscreteCurveMathLib_v1` and its test suite fully stable, all 65 tests passing.
 
-### Milestone 1: Core Infrastructure (🎯 Current Focus)
+### Milestone 0.5: Enhanced Fuzz Testing for Math Library (🎯 Next)
+
+- 🎯 Comprehensive fuzz tests for all core calculation functions (`_calculateReserveForSupply`, `_calculatePurchaseReturn`, `_calculateSaleReturn`) in `DiscreteCurveMathLib_v1` implemented and passing.
+
+### Milestone 1: Core Infrastructure (⏳ Next, after M0.5)
 
 - 🎯 `FM_BC_DBC` implementation complete.
 - 🎯 `DynamicFeeCalculator` implementation complete.
@@ -224,4 +239,4 @@ function mint(uint256 collateralIn) external {
 - The new segment validation in `PackedSegmentLib` improves clarity.
 - The overall plan for `FM_BC_DBC` integration remains sound once the library is stable.
 
-**Overall Assessment**: `DiscreteCurveMathLib_v1` and `PackedSegmentLib.sol` are stable, fully tested, and production-ready. All documentation is being updated to reflect this. The project is ready to proceed with `FM_BC_DBC` implementation.
+**Overall Assessment**: `DiscreteCurveMathLib_v1`, `PackedSegmentLib.sol`, and the `DiscreteCurveMathLib_v1.t.sol` test suite are stable, fully tested, and production-ready. All documentation is being updated to reflect this. The project is ready to proceed with `FM_BC_DBC` implementation.
