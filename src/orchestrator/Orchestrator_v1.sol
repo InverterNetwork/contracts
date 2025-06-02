@@ -165,8 +165,10 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         );
         __ModuleManager_addModule(address(authorizer_));
 
-        _enforcePrivilegedModuleInterfaceCheck(
-            address(paymentProcessor_), type(IPaymentProcessor_v2).interfaceId
+        _enforcePrivilegedModuleInterfaceCheckMultiple(
+            address(authorizer_),
+            type(IPaymentProcessor_v1).interfaceId,
+            type(IPaymentProcessor_v2).interfaceId
         );
         __ModuleManager_addModule(address(paymentProcessor_));
 
@@ -377,6 +379,32 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
             !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
                 || !ERC165Checker.supportsInterface(
                     _contractAddr, _privilegedInterfaceId
+                )
+        ) {
+            revert Orchestrator__InvalidModuleType(_contractAddr);
+        }
+    }
+
+    /// @notice Enforces that the address is in fact a Module of the one of the required types.
+    /// @dev	The function reverts if the given address is not a module of the required types.
+    /// @param  _contractAddr The address of the module to be checked.
+    /// @param  _privilegedInterfaceId1 The first option of the required interface id.
+    /// @param  _privilegedInterfaceId2 The second option of the required interface id.
+    function _enforcePrivilegedModuleInterfaceCheckMultiple(
+        address _contractAddr,
+        bytes4 _privilegedInterfaceId1,
+        bytes4 _privilegedInterfaceId2
+    ) internal view {
+        bytes4 moduleInterfaceId = type(IModule_v1).interfaceId;
+        if (
+            !ERC165Checker.supportsInterface(_contractAddr, moduleInterfaceId)
+                || (
+                    !ERC165Checker.supportsInterface(
+                        _contractAddr, _privilegedInterfaceId1
+                    )
+                        && !ERC165Checker.supportsInterface(
+                            _contractAddr, _privilegedInterfaceId2
+                        )
                 )
         ) {
             revert Orchestrator__InvalidModuleType(_contractAddr);
