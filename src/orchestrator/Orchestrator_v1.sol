@@ -166,7 +166,7 @@ contract Orchestrator_v1 is IOrchestrator_v1, ModuleManagerBase_v1 {
         __ModuleManager_addModule(address(authorizer_));
 
         _enforcePrivilegedModuleInterfaceCheckMultiple(
-            address(authorizer_),
+            address(paymentProcessor_),
             type(IPaymentProcessor_v1).interfaceId,
             type(IPaymentProcessor_v2).interfaceId
         );
