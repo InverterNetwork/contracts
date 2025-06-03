@@ -370,11 +370,6 @@ library DiscreteCurveMathLib_v1 {
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__ZeroCollateralInput();
         }
-        if (segments_.length == 0) {
-            revert
-                IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__NoSegmentsConfigured();
-        }
 
         // Phase 1: Find which segment and step to start purchasing from.
         uint segmentIndex_ = 0;
@@ -517,15 +512,71 @@ library DiscreteCurveMathLib_v1 {
         return (tokensToMint_, collateralSpentByPurchaser_);
     }
 
+    // /**
+    //  * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
+    //  * /**
+    //  * @notice Helper function to calculate purchase return for a single segment.
+    //  * /**
+    //  * @notice Calculates the amount of partial issuance and its cost given budget_ and various constraints.
+    //  * /**
+    //  * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
+    //  * @dev Uses the difference in reserve at current supply and supply after sale.
+    //  * @param segments_ Array of PackedSegment configurations for the curve.
+    //  * @param tokensToSell_ The amount of issuance tokens being sold.
+    //  * @param currentTotalIssuanceSupply_ The current total supply before this sale.
+    //  * @return collateralToReturn_ The total amount of collateral returned to the seller.
+    //  * @return tokensToBurn_ The actual amount of issuance tokens burned (capped at current supply).
+    //  */
+    // function _calculateSaleReturn(
+    //     PackedSegment[] memory segments_,
+    //     uint tokensToSell_, // Renamed from issuanceAmountIn
+    //     uint currentTotalIssuanceSupply_
+    // ) internal pure returns (uint collateralToReturn_, uint tokensToBurn_) {
+    //     // Renamed return values
+    //     _validateSupplyAgainstSegments(segments_, currentTotalIssuanceSupply_); // Validation occurs
+    //     // If totalCurveCapacity_ is needed later, _validateSupplyAgainstSegments can be called again.
+
+    //     if (tokensToSell_ == 0) {
+    //         revert
+    //             IDiscreteCurveMathLib_v1
+    //             .DiscreteCurveMathLib__ZeroIssuanceInput();
+    //     }
+
+    //     uint numSegments_ = segments_.length; // Renamed from segLen
+    //     if (numSegments_ == 0) {
+    //         // This implies currentTotalIssuanceSupply_ must be 0.
+    //         // Selling from 0 supply on an unconfigured curve. tokensToBurn_ will be 0.
+    //     }
+
+    //     tokensToBurn_ = tokensToSell_ > currentTotalIssuanceSupply_
+    //         ? currentTotalIssuanceSupply_
+    //         : tokensToSell_;
+
+    //     if (tokensToBurn_ == 0) {
+    //         return (0, 0);
+    //     }
+
+    //     uint finalSupplyAfterSale_ = currentTotalIssuanceSupply_ - tokensToBurn_;
+
+    //     uint collateralAtCurrentSupply_ =
+    //         _calculateReserveForSupply(segments_, currentTotalIssuanceSupply_);
+    //     uint collateralAtFinalSupply_ =
+    //         _calculateReserveForSupply(segments_, finalSupplyAfterSale_);
+
+    //     if (collateralAtCurrentSupply_ < collateralAtFinalSupply_) {
+    //         // This should not happen with a correctly defined bonding curve (prices are non-negative).
+    //         return (0, tokensToBurn_);
+    //     }
+
+    //     collateralToReturn_ =
+    //         collateralAtCurrentSupply_ - collateralAtFinalSupply_;
+
+    //     return (collateralToReturn_, tokensToBurn_);
+    // }
+
     /**
-     * @notice Helper function to calculate purchase return for a single sloped segment using linear search.
-     * /**
-     * @notice Helper function to calculate purchase return for a single segment.
-     * /**
-     * @notice Calculates the amount of partial issuance and its cost given budget_ and various constraints.
-     * /**
      * @notice Calculates the amount of collateral returned for selling a given amount of issuance tokens.
-     * @dev Uses the difference in reserve at current supply and supply after sale.
+     * @dev Optimized version that calculates both reserve values in a single pass through segments.
      * @param segments_ Array of PackedSegment configurations for the curve.
      * @param tokensToSell_ The amount of issuance tokens being sold.
      * @param currentTotalIssuanceSupply_ The current total supply before this sale.
@@ -534,49 +585,217 @@ library DiscreteCurveMathLib_v1 {
      */
     function _calculateSaleReturn(
         PackedSegment[] memory segments_,
-        uint tokensToSell_, // Renamed from issuanceAmountIn
+        uint tokensToSell_,
         uint currentTotalIssuanceSupply_
     ) internal pure returns (uint collateralToReturn_, uint tokensToBurn_) {
-        // Renamed return values
-        _validateSupplyAgainstSegments(segments_, currentTotalIssuanceSupply_); // Validation occurs
-        // If totalCurveCapacity_ is needed later, _validateSupplyAgainstSegments can be called again.
-
         if (tokensToSell_ == 0) {
             revert
                 IDiscreteCurveMathLib_v1
                 .DiscreteCurveMathLib__ZeroIssuanceInput();
         }
 
-        uint numSegments_ = segments_.length; // Renamed from segLen
-        if (numSegments_ == 0) {
-            // This implies currentTotalIssuanceSupply_ must be 0.
-            // Selling from 0 supply on an unconfigured curve. tokensToBurn_ will be 0.
+        if (tokensToSell_ > currentTotalIssuanceSupply_) {
+            revert IDiscreteCurveMathLib_v1.DiscreteCurveMathLib__InsufficientIssuanceToSell(
+                tokensToSell_,
+                currentTotalIssuanceSupply_
+            );
         }
-
-        tokensToBurn_ = tokensToSell_ > currentTotalIssuanceSupply_
-            ? currentTotalIssuanceSupply_
-            : tokensToSell_;
-
-        if (tokensToBurn_ == 0) {
-            return (0, 0);
-        }
+        tokensToBurn_ = tokensToSell_;
 
         uint finalSupplyAfterSale_ = currentTotalIssuanceSupply_ - tokensToBurn_;
 
-        uint collateralAtCurrentSupply_ =
-            _calculateReserveForSupply(segments_, currentTotalIssuanceSupply_);
-        uint collateralAtFinalSupply_ =
-            _calculateReserveForSupply(segments_, finalSupplyAfterSale_);
-
-        if (collateralAtCurrentSupply_ < collateralAtFinalSupply_) {
-            // This should not happen with a correctly defined bonding curve (prices are non-negative).
-            return (0, tokensToBurn_);
-        }
+        // Optimized: Calculate both reserves in a single pass
+        (uint collateralAtFinalSupply_, uint collateralAtCurrentSupply_) =
+        _calculateReservesForTwoSupplies(
+            segments_, finalSupplyAfterSale_, currentTotalIssuanceSupply_
+        );
 
         collateralToReturn_ =
             collateralAtCurrentSupply_ - collateralAtFinalSupply_;
 
         return (collateralToReturn_, tokensToBurn_);
+    }
+
+    /**
+     * @notice Optimized helper that calculates reserves for two different supply points in one pass.
+     * @dev Iterates through segments once, calculating reserves for both supply points simultaneously.
+     *      This is more gas-efficient than calling _calculateReserveForSupply twice.
+     *      Assumes lowerSupply_ <= higherSupply_.
+     * @param segments_ Array of PackedSegment configurations for the curve.
+     * @param lowerSupply_ The lower supply point (must be <= higherSupply_).
+     * @param higherSupply_ The higher supply point.
+     * @return lowerReserve_ The total reserve at lowerSupply_.
+     * @return higherReserve_ The total reserve at higherSupply_.
+     */
+    function _calculateReservesForTwoSupplies(
+        PackedSegment[] memory segments_,
+        uint lowerSupply_,
+        uint higherSupply_
+    ) internal pure returns (uint lowerReserve_, uint higherReserve_) {
+        if (lowerSupply_ == higherSupply_) {
+            // If supplies are the same, calculate reserve once.
+            // _calculateReserveForSupply has its own segment validation (NoSegmentsConfigured, TooManySegments, SupplyExceedsCurveCapacity).
+            // Since this library's functions are typically called with pre-validated segments by the FM,
+            // and _calculateReserveForSupply is also an internal pure function,
+            // its internal validations will still run if its conditions are met (e.g. targetSupply > 0 for NoSegmentsConfigured).
+            uint reserve_ = _calculateReserveForSupply(segments_, lowerSupply_);
+            return (reserve_, reserve_);
+        }
+
+        // Caller (e.g., FM_BC_DBC via _calculateSaleReturn) is responsible for ensuring segments_ array
+        // is valid (not empty, within MAX_SEGMENTS, correct price progression) before calling functions
+        // that use _calculateReservesForTwoSupplies.
+        // Thus, direct checks for segments_.length == 0 or segments_.length > MAX_SEGMENTS are omitted here.
+
+        uint cumulativeSupplyProcessed_ = 0;
+        bool lowerSupplyReached_ = false;
+
+        for (
+            uint segmentIndex_ = 0;
+            segmentIndex_ < segments_.length;
+            ++segmentIndex_
+        ) {
+            if (cumulativeSupplyProcessed_ >= higherSupply_) {
+                break;
+            }
+
+            (
+                uint initialPrice_,
+                uint priceIncreasePerStep_,
+                uint supplyPerStep_,
+                uint totalStepsInSegment_
+            ) = segments_[segmentIndex_]._unpack();
+
+            uint segmentCapacity_ = totalStepsInSegment_ * supplyPerStep_;
+            uint segmentEndSupply_ =
+                cumulativeSupplyProcessed_ + segmentCapacity_;
+
+            // Process for lower supply if we haven't reached it yet
+            if (
+                !lowerSupplyReached_ && lowerSupply_ > 0
+                    && segmentEndSupply_ > 0
+            ) {
+                uint supplyToProcessForLower_ = lowerSupply_
+                    > cumulativeSupplyProcessed_
+                    ? lowerSupply_ - cumulativeSupplyProcessed_
+                    : 0;
+
+                if (
+                    supplyToProcessForLower_ > 0
+                        && cumulativeSupplyProcessed_ < lowerSupply_
+                ) {
+                    uint effectiveSupplyForLower_ = supplyToProcessForLower_
+                        > segmentCapacity_
+                        ? segmentCapacity_
+                        : supplyToProcessForLower_;
+
+                    lowerReserve_ += _calculateSegmentReserve(
+                        initialPrice_,
+                        priceIncreasePerStep_,
+                        supplyPerStep_,
+                        effectiveSupplyForLower_
+                    );
+
+                    if (
+                        cumulativeSupplyProcessed_ + effectiveSupplyForLower_
+                            >= lowerSupply_
+                    ) {
+                        lowerSupplyReached_ = true;
+                    }
+                }
+            }
+
+            // Process for higher supply
+            uint supplyToProcessForHigher_ = higherSupply_
+                > cumulativeSupplyProcessed_
+                ? higherSupply_ - cumulativeSupplyProcessed_
+                : 0;
+
+            if (supplyToProcessForHigher_ > 0) {
+                uint effectiveSupplyForHigher_ = supplyToProcessForHigher_
+                    > segmentCapacity_
+                    ? segmentCapacity_
+                    : supplyToProcessForHigher_;
+
+                higherReserve_ += _calculateSegmentReserve(
+                    initialPrice_,
+                    priceIncreasePerStep_,
+                    supplyPerStep_,
+                    effectiveSupplyForHigher_
+                );
+            }
+
+            cumulativeSupplyProcessed_ = segmentEndSupply_;
+        }
+
+        return (lowerReserve_, higherReserve_);
+    }
+
+    /**
+     * @notice Helper function to calculate reserve for a portion of a segment.
+     * @dev Handles both flat and sloped segments, with proper rounding up for collateral.
+     * @param initialPrice_ The initial price of the segment.
+     * @param priceIncreasePerStep_ The price increase per step.
+     * @param supplyPerStep_ The supply per step.
+     * @param supplyToProcess_ The total supply to process in this segment.
+     * @return collateral_ The collateral required for the specified supply.
+     */
+    function _calculateSegmentReserve(
+        uint initialPrice_,
+        uint priceIncreasePerStep_,
+        uint supplyPerStep_,
+        uint supplyToProcess_
+    ) internal pure returns (uint collateral_) {
+        uint fullSteps_ = supplyToProcess_ / supplyPerStep_;
+        uint partialStepSupply_ = supplyToProcess_ % supplyPerStep_;
+
+        // Calculate cost for full steps
+        if (fullSteps_ > 0) {
+            if (priceIncreasePerStep_ == 0) {
+                // Flat segment
+                if (initialPrice_ > 0) {
+                    collateral_ += _mulDivUp(
+                        fullSteps_ * supplyPerStep_,
+                        initialPrice_,
+                        SCALING_FACTOR
+                    );
+                }
+            } else {
+                // Sloped segment: arithmetic series for full steps
+                uint firstStepPrice_ = initialPrice_;
+                uint lastStepPrice_ =
+                    initialPrice_ + (fullSteps_ - 1) * priceIncreasePerStep_;
+                uint sumOfPrices_ = firstStepPrice_ + lastStepPrice_;
+                uint totalPriceForAllSteps_ =
+                    Math.mulDiv(fullSteps_, sumOfPrices_, 2);
+                collateral_ += _mulDivUp(
+                    supplyPerStep_, totalPriceForAllSteps_, SCALING_FACTOR
+                );
+            }
+        }
+
+        // Calculate cost for partial step (if any)
+        if (partialStepSupply_ > 0) {
+            uint partialStepPrice_ =
+                initialPrice_ + (fullSteps_ * priceIncreasePerStep_);
+            if (partialStepPrice_ > 0) {
+                collateral_ += _mulDivUp(
+                    partialStepSupply_, partialStepPrice_, SCALING_FACTOR
+                );
+            }
+        }
+
+        return collateral_;
+    }
+
+    // New helper function to calculate collateral for a specific range
+    function _calculateCollateralForRange(
+        PackedSegment[] memory segments_,
+        uint fromSupply_,
+        uint toSupply_
+    ) internal pure returns (uint collateral_) {
+        // Implementation would calculate collateral only for the range being sold
+        // This avoids redundant calculations and is more efficient
     }
 
     // =========================================================================

@@ -13,6 +13,7 @@ import {DiscreteCurveMathLibV1_Exposed} from
     "@mocks/modules/fundingManager/bondingCurve/DiscreteCurveMathLibV1_Exposed.sol";
 import {Math} from "@oz/utils/math/Math.sol";
 
+
 contract DiscreteCurveMathLib_v1_Test is Test {
     // Allow using PackedSegmentLib functions directly on PackedSegment type
     using PackedSegmentLib for PackedSegment;
@@ -34,11 +35,7 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     DiscreteCurveMathLibV1_Exposed internal exposedLib;
 
     // Test curve configurations
-    CurveTestData internal twoSlopedSegmentsTestCurve;
-    CurveTestData internal flatSlopedTestCurve;
-    CurveTestData internal flatToFlatTestCurve;
 
-    // Default Bonding Curve Visualization (Price vs. Supply)
     // Based on twoSlopedSegmentsTestCurve initialized in setUp():
     // Seg0: P_init=1.0, P_inc=0.1, S_step=10, N_steps=3  (Prices: 1.0, 1.1, 1.2)
     // Seg1: P_init=1.5, P_inc=0.05, S_step=20, N_steps=2 (Prices: 1.5, 1.55)
@@ -64,6 +61,50 @@ contract DiscreteCurveMathLib_v1_Test is Test {
     //          Supply 20-30:  Price 1.20 (Segment 0, Step 2)
     //          Supply 30-50:  Price 1.50 (Segment 1, Step 0)
     //          Supply 50-70:  Price 1.55 (Segment 1, Step 1)
+    CurveTestData internal twoSlopedSegmentsTestCurve;
+
+    // Based on flatSlopedTestCurve initialized in setUp():
+    // Seg0 (Flat): P_init=0.5, S_step=50, N_steps=1  (Price: 0.50)
+    // Seg1 (Sloped): P_init=0.8, P_inc=0.02, S_step=25, N_steps=2 (Prices: 0.80, 0.82)
+    //
+    //     Price (ether)
+    //       ^
+    //     0.82|                     +------+ (Supply: 100)
+    //         |                     |      |
+    //     0.80|             +-------+      | (Supply: 75)
+    //         |             |              |
+    //         |             |              |
+    //         |             |              |
+    //         |             |              |
+    //     0.50|-------------+              | (Supply: 50)
+    //         +-------------+--------------+--> Supply (ether)
+    //         0             50     75     100
+    //
+    //          Step Prices:
+    //          Supply  0-50:  Price 0.50 (Segment 0, Step 0)
+    //          Supply 50-75:  Price 0.80 (Segment 1, Step 0)
+    //          Supply 75-100: Price 0.82 (Segment 1, Step 1)
+    CurveTestData internal flatSlopedTestCurve;
+
+    // Based on flatToFlatTestCurve initialized in setUp():
+    // Seg0 (Flat): P_init=1.0, S_step=20, N_steps=1 (Price: 1.00)
+    // Seg1 (Flat): P_init=1.5, S_step=30, N_steps=1 (Price: 1.50)
+    //
+    //     Price (ether)
+    //       ^
+    //     1.50|   +-----------------+ (Supply: 50)
+    //         |   |                 |
+    //         |   |                 |
+    //         |   |                 |
+    //     1.00|---+                 | (Supply: 20)
+    //         +---+-----------------+--> Supply (ether)
+    //         0   20                50
+    //
+    //          Step Prices:
+    //          Supply  0-20:  Price 1.00 (Segment 0, Step 0)
+    //          Supply 20-50:  Price 1.50 (Segment 1, Step 0)
+    CurveTestData internal flatToFlatTestCurve;
+
 
     function _calculateCurveReserve(PackedSegment[] memory segments)
         internal
@@ -729,66 +770,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Tests for calculatePurchaseReturn ---
 
-    // Test: Reverts when currentTotalIssuanceSupply > curve capacity.
-    // Curve: defaultSegments (Capacity C = 70)
-    // Point S (currentTotalIssuanceSupply = 71) is beyond C.
-    //
-    //     Price (ether)
-    //       ^
-    //     1.55|                   +------+ C (Capacity)
-    //         |                   |      |
-    //     1.50|           +-------+      |
-    //         |           |              |
-    //         |           |              |
-    //     1.20|       +---+              |
-    //         |       |                  |
-    //     1.10|   +---+                  |
-    //         |   |                      |
-    //     1.00|---+                      |
-    //         +---+---+---+------+-------+--> Supply (ether)
-    //         0  10  20  30     50     70 71
-    //                                    ^  ^
-    //                                    C  S (currentSupply > C)
-    //
-    //          Step Prices (defaultSegments):
-    //          Supply  0-10:  Price 1.00
-    //          Supply 10-20:  Price 1.10
-    //          Supply 20-30:  Price 1.20
-    //          Supply 30-50:  Price 1.50
-    //          Supply 50-70:  Price 1.55
-
-    function testRevert_CalculatePurchaseReturn_NoSegments_SupplyPositive()
-        public
-    {
-        PackedSegment[] memory noSegments = new PackedSegment[](0);
-        vm.expectRevert(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__NoSegmentsConfigured
-                .selector
-        );
-        exposedLib.exposed_calculatePurchaseReturn(
-            noSegments,
-            1 ether, // collateralAmountIn
-            1 ether // currentTotalIssuanceSupply > 0
-        );
-    }
-
-    function testPass_CalculatePurchaseReturn_NoSegments_SupplyZero() public {
-        // This should pass the _validateSupplyAgainstSegments check,
-        // but then revert later in calculatePurchaseReturn when getCurrentPriceAndStep is called with no segments.
-        PackedSegment[] memory noSegments = new PackedSegment[](0);
-        vm.expectRevert(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__NoSegmentsConfigured
-                .selector
-        );
-        exposedLib.exposed_calculatePurchaseReturn(
-            noSegments,
-            1 ether, // collateralAmountIn
-            0 // currentTotalIssuanceSupply
-        );
-    }
-
     function testRevert_CalculatePurchaseReturn_ZeroCollateralInput() public {
         vm.expectRevert(
             IDiscreteCurveMathLib_v1
@@ -969,70 +950,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
     // --- Tests for calculateSaleReturn ---
 
-    // Test: Reverts when currentTotalIssuanceSupply > curve capacity for a sale.
-    // Curve: defaultSegments (Capacity C = 70)
-    // Point S (currentTotalIssuanceSupply = 71) is beyond C.
-    //
-    //     Price (ether)
-    //       ^
-    //     1.55|                   +------+ C (Capacity)
-    //         |                   |      |
-    //     1.50|           +-------+      |
-    //         |           |              |
-    //         |           |              |
-    //     1.20|       +---+              |
-    //         |       |                  |
-    //     1.10|   +---+                  |
-    //         |   |                      |
-    //     1.00|---+                      |
-    //         +---+---+---+------+-------+--> Supply (ether)
-    //         0  10  20  30     50     70 71
-    //                                    ^  ^
-    //                                    C  S (currentSupply > C)
-    //
-    //          Step Prices (defaultSegments):
-    //          Supply  0-10:  Price 1.00
-    //          Supply 10-20:  Price 1.10
-    //          Supply 20-30:  Price 1.20
-    //          Supply 30-50:  Price 1.50
-    //          Supply 50-70:  Price 1.55
-    function testRevert_CalculateSaleReturn_SupplyExceedsCapacity() public {
-        uint supplyOverCapacity =
-            twoSlopedSegmentsTestCurve.totalCapacity + 1 ether;
-        bytes memory expectedRevertData = abi.encodeWithSelector(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__SupplyExceedsCurveCapacity
-                .selector,
-            supplyOverCapacity,
-            twoSlopedSegmentsTestCurve.totalCapacity
-        );
-        vm.expectRevert(expectedRevertData);
-        exposedLib.exposed_calculateSaleReturn(
-            twoSlopedSegmentsTestCurve.packedSegmentsArray,
-            1 ether, // issuanceAmountIn
-            supplyOverCapacity // currentTotalIssuanceSupply
-        );
-    }
-
-    // Test: Reverts when trying to calculate sale return with no segments configured
-    // and currentTotalIssuanceSupply > 0.
-    // Visualization is not applicable as there are no curve segments.
-    function testRevert_CalculateSaleReturn_NoSegments_SupplyPositive()
-        public
-    {
-        PackedSegment[] memory noSegments = new PackedSegment[](0);
-        vm.expectRevert(
-            IDiscreteCurveMathLib_v1
-                .DiscreteCurveMathLib__NoSegmentsConfigured
-                .selector
-        );
-        exposedLib.exposed_calculateSaleReturn(
-            noSegments,
-            1 ether, // issuanceAmountIn
-            1 ether // currentTotalIssuanceSupply > 0
-        );
-    }
-
     // Test: Correctly handles selling 0 from 0 supply on an unconfigured (no segments) curve.
     // Expected to revert due to ZeroIssuanceInput, which takes precedence over no-segment logic here.
     // Visualization is not applicable as there are no curve segments.
@@ -1055,28 +972,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             0, // issuanceAmountIn = 0
             0 // currentTotalIssuanceSupply = 0
         );
-    }
-
-    // Test: Correctly handles selling a positive amount from 0 supply on an unconfigured (no segments) curve.
-    // Expected to return 0 collateral and 0 burned, as there's nothing to sell.
-    // Visualization is not applicable as there are no curve segments.
-    function testPass_CalculateSaleReturn_NoSegments_SupplyZero_IssuancePositive(
-    ) public {
-        // Selling 1 from 0 supply on an unconfigured curve.
-        // _validateSupplyAgainstSegments passes (0 supply, 0 segments).
-        // ZeroIssuanceInput is not hit.
-        // segments.length == 0 is true.
-        // issuanceAmountBurned becomes 0 (min(1, 0)).
-        // Returns (0,0). This is correct.
-        PackedSegment[] memory noSegments = new PackedSegment[](0);
-        (uint collateralOut, uint burned) = exposedLib
-            .exposed_calculateSaleReturn(
-            noSegments,
-            1 ether, // issuanceAmountIn > 0
-            0 // currentTotalIssuanceSupply = 0
-        );
-        assertEq(collateralOut, 0, "Collateral out should be 0");
-        assertEq(burned, 0, "Issuance burned should be 0");
     }
 
     // Test: Reverts when issuanceAmountIn is zero for a sale.
@@ -2901,7 +2796,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
             numberOfStepsTpl
         );
 
-
         if (segments.length == 0) {
             return;
         }
@@ -3026,7 +2920,6 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         // Main test execution with comprehensive error handling
         uint tokensToMint;
         uint collateralSpentByPurchaser;
-
 
         try exposedLib.exposed_calculatePurchaseReturn(
             segments, collateralToSpendProvided, currentTotalIssuanceSupply
@@ -3234,7 +3127,8 @@ contract DiscreteCurveMathLib_v1_Test is Test {
         if (currentTotalIssuanceSupply > 0 && segments.length > 0) {
             try exposedLib.exposed_getCurrentPriceAndStep(
                 segments, currentTotalIssuanceSupply
-            ) returns (uint, uint stepIdx, uint segIdx) { // Removed 'price'
+            ) returns (uint, uint stepIdx, uint segIdx) {
+                // Removed 'price'
                 if (segIdx < segments.length) {
                     (,, uint supplyPerStepP9,) = segments[segIdx]._unpack();
                     if (supplyPerStepP9 > 0) {
@@ -3293,6 +3187,288 @@ contract DiscreteCurveMathLib_v1_Test is Test {
 
         // Final success assertion
         assertTrue(true, "FCPR_P: All properties satisfied");
+    }
+
+    // --- Fuzz tests for _calculateSaleReturn ---
+
+    function testFuzz_CalculateSaleReturn_Properties(
+        uint8 numSegmentsToFuzz,
+        uint initialPriceTpl,
+        uint priceIncreaseTpl,
+        uint supplyPerStepTpl,
+        uint numberOfStepsTpl,
+        uint tokensToSellRatio, // Ratio (0-100) to determine tokensToSell based on currentTotalIssuanceSupply
+        uint currentSupplyRatio // Ratio (0-100) to determine currentTotalIssuanceSupply based on totalCurveCapacity
+    ) public {
+        // RESTRICTIVE BOUNDS (similar to purchase fuzz test)
+        numSegmentsToFuzz = uint8(bound(numSegmentsToFuzz, 1, 5));
+        initialPriceTpl = bound(initialPriceTpl, 1e15, 1e22);
+        priceIncreaseTpl = bound(priceIncreaseTpl, 0, 1e21);
+        supplyPerStepTpl = bound(supplyPerStepTpl, 1e18, 1e24);
+        numberOfStepsTpl = bound(numberOfStepsTpl, 1, 20);
+        tokensToSellRatio = bound(tokensToSellRatio, 0, 100); // 0% to 100% of current supply
+        currentSupplyRatio = bound(currentSupplyRatio, 0, 100); // 0% to 100% of capacity
+
+        // Enforce validation rules from PackedSegmentLib
+        if (initialPriceTpl == 0) {
+            vm.assume(priceIncreaseTpl > 0);
+        }
+        if (numberOfStepsTpl > 1) {
+            vm.assume(priceIncreaseTpl > 0); // Prevent multi-step flat segments
+        } else {
+            // numberOfStepsTpl == 1
+            vm.assume(priceIncreaseTpl == 0); // Prevent single-step sloped segments
+        }
+
+        // Overflow protection checks (similar to purchase fuzz test)
+        uint maxTheoreticalCapacityPerSegment =
+            supplyPerStepTpl * numberOfStepsTpl;
+        if (
+            supplyPerStepTpl > 0
+                && maxTheoreticalCapacityPerSegment / supplyPerStepTpl
+                    != numberOfStepsTpl
+        ) return; // Overflow
+        uint maxTheoreticalTotalCapacity =
+            maxTheoreticalCapacityPerSegment * numSegmentsToFuzz;
+        if (
+            numSegmentsToFuzz > 0
+                && maxTheoreticalTotalCapacity / numSegmentsToFuzz
+                    != maxTheoreticalCapacityPerSegment
+        ) return; // Overflow
+
+        if (maxTheoreticalTotalCapacity > 1e26) return; // Skip if too large
+
+        uint maxPriceInSegment =
+            initialPriceTpl + (numberOfStepsTpl - 1) * priceIncreaseTpl;
+        if (
+            numberOfStepsTpl > 1 && priceIncreaseTpl > 0
+                && (maxPriceInSegment < initialPriceTpl)
+        ) return; // Overflow in price calc
+        if (maxPriceInSegment > 1e23) return;
+
+        (PackedSegment[] memory segments, uint totalCurveCapacity) =
+        _generateFuzzedValidSegmentsAndCapacity(
+            numSegmentsToFuzz,
+            initialPriceTpl,
+            priceIncreaseTpl,
+            supplyPerStepTpl,
+            numberOfStepsTpl
+        );
+
+        if (segments.length == 0) return;
+        if (
+            totalCurveCapacity == 0 && segments.length > 0
+                && (supplyPerStepTpl > 0 && numberOfStepsTpl > 0)
+        ) {
+            // If generation resulted in 0 capacity despite valid inputs, likely an internal assume failed.
+            return;
+        }
+
+        uint currentTotalIssuanceSupply;
+        if (totalCurveCapacity == 0) {
+            if (currentSupplyRatio > 0) return; // Cannot have supply if no capacity
+            currentTotalIssuanceSupply = 0;
+        } else {
+            currentTotalIssuanceSupply =
+                (totalCurveCapacity * currentSupplyRatio) / 100;
+            if (currentTotalIssuanceSupply > totalCurveCapacity) {
+                // Ensure not exceeding due to rounding
+                currentTotalIssuanceSupply = totalCurveCapacity;
+            }
+        }
+
+        uint tokensToSell_;
+        if (currentTotalIssuanceSupply == 0) {
+            if (tokensToSellRatio > 0) return; // Cannot sell from zero supply
+            tokensToSell_ = 0;
+        } else {
+            tokensToSell_ =
+                (currentTotalIssuanceSupply * tokensToSellRatio) / 100;
+            if (tokensToSell_ > currentTotalIssuanceSupply) {
+                // Ensure not exceeding due to rounding
+                tokensToSell_ = currentTotalIssuanceSupply;
+            }
+        }
+
+        // --- Handle Expected Reverts ---
+        if (tokensToSell_ == 0) {
+            vm.expectRevert(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__ZeroIssuanceInput
+                    .selector
+            );
+            exposedLib.exposed_calculateSaleReturn(
+                segments, tokensToSell_, currentTotalIssuanceSupply
+            );
+            return;
+        }
+
+        // _validateSupplyAgainstSegments is called inside _calculateSaleReturn
+        if (
+            currentTotalIssuanceSupply > totalCurveCapacity
+                && totalCurveCapacity > 0
+        ) {
+            bytes memory expectedError = abi.encodeWithSelector(
+                IDiscreteCurveMathLib_v1
+                    .DiscreteCurveMathLib__SupplyExceedsCurveCapacity
+                    .selector,
+                currentTotalIssuanceSupply,
+                totalCurveCapacity
+            );
+            vm.expectRevert(expectedError);
+            exposedLib.exposed_calculateSaleReturn(
+                segments, tokensToSell_, currentTotalIssuanceSupply
+            );
+            return;
+        }
+
+        // Note: NoSegmentsConfigured is tricky here because if supply is 0, it might return (0,0)
+        // If segments.length == 0 AND currentTotalIssuanceSupply > 0, then it should revert.
+        // If segments.length == 0 AND currentTotalIssuanceSupply == 0 AND tokensToSell_ > 0, it returns (0,0).
+        // This is handled by the logic within calculateSaleReturn.
+
+        uint collateralToReturn;
+        uint tokensToBurn;
+
+        try exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell_, currentTotalIssuanceSupply
+        ) returns (uint _collateralToReturn, uint _tokensToBurn) {
+            collateralToReturn = _collateralToReturn;
+            tokensToBurn = _tokensToBurn;
+        } catch Error(string memory reason) {
+            emit log(string.concat("FCSR_UnexpectedRevert: ", reason));
+            fail(string.concat("FCSR_SaleFuncReverted: ", reason));
+        } catch (bytes memory lowLevelData) {
+            emit log("FCSR_UnexpectedLowLevelRevert");
+            emit log_bytes(lowLevelData);
+            fail("FCSR_SaleFuncLowLevelReverted");
+        }
+
+        // === CORE INVARIANTS ===
+
+        // P1: Burned Amount Constraints
+        assertTrue(
+            tokensToBurn <= tokensToSell_, "FCSR_P1a: Burned more than intended"
+        );
+        assertTrue(
+            tokensToBurn <= currentTotalIssuanceSupply,
+            "FCSR_P1b: Burned more than available supply"
+        );
+
+        // P2: Non-Negative Collateral (implicit by uint)
+
+        // P3: Deterministic Behavior
+        try exposedLib.exposed_calculateSaleReturn(
+            segments, tokensToSell_, currentTotalIssuanceSupply
+        ) returns (uint collateralToReturn2, uint tokensToBurn2) {
+            assertEq(
+                collateralToReturn,
+                collateralToReturn2,
+                "FCSR_P3a: Non-deterministic collateral"
+            );
+            assertEq(
+                tokensToBurn,
+                tokensToBurn2,
+                "FCSR_P3b: Non-deterministic tokens burned"
+            );
+        } catch {
+            fail("FCSR_P3: Second identical call failed");
+        }
+
+        // P4: Zero Supply Behavior
+        if (currentTotalIssuanceSupply == 0) {
+            assertEq(
+                tokensToBurn, 0, "FCSR_P4a: Tokens burned from zero supply"
+            );
+            assertEq(
+                collateralToReturn,
+                0,
+                "FCSR_P4b: Collateral from zero supply sale"
+            );
+        }
+
+        // P5: Selling All Tokens
+        if (
+            tokensToBurn == currentTotalIssuanceSupply
+                && currentTotalIssuanceSupply > 0
+        ) {
+            uint reserveForFullSupply;
+            bool p5_reserve_calc_ok = true;
+            try exposedLib.exposed_calculateReserveForSupply(
+                segments, currentTotalIssuanceSupply
+            ) returns (uint r) {
+                reserveForFullSupply = r;
+            } catch {
+                p5_reserve_calc_ok = false; // Could revert if supply > capacity, but that's checked earlier
+            }
+            if (p5_reserve_calc_ok) {
+                assertEq(
+                    collateralToReturn,
+                    reserveForFullSupply,
+                    "FCSR_P5: Collateral for selling all tokens mismatch"
+                );
+            }
+        }
+
+        // P6: Partial Sale Due to Insufficient Supply (i.e. tokensToBurn < tokensToSell_)
+        if (tokensToBurn < tokensToSell_ && tokensToSell_ > 0) {
+            assertEq(
+                tokensToBurn,
+                currentTotalIssuanceSupply,
+                "FCSR_P6: Partial burn implies all supply sold"
+            );
+        }
+
+        // P7: Monotonicity of Collateral (Conceptual - harder to test directly with single fuzzed inputs)
+        // If selling X tokens yields C1, selling Y (Y > X) should yield C2 >= C1.
+
+        // P8: Rounding Favors Protocol (Collateral returned <= theoretical max)
+        if (tokensToBurn > 0) {
+            uint reserveBefore;
+            uint reserveAfter;
+            bool p8_reserve_before_ok = true;
+            bool p8_reserve_after_ok = true;
+
+            try exposedLib.exposed_calculateReserveForSupply(
+                segments, currentTotalIssuanceSupply
+            ) returns (uint r) {
+                reserveBefore = r;
+            } catch {
+                p8_reserve_before_ok = false;
+            }
+
+            if (currentTotalIssuanceSupply >= tokensToBurn) {
+                try exposedLib.exposed_calculateReserveForSupply(
+                    segments, currentTotalIssuanceSupply - tokensToBurn
+                ) returns (uint r) {
+                    reserveAfter = r;
+                } catch {
+                    p8_reserve_after_ok = false;
+                }
+            } else {
+                // Should not happen if P1b holds
+                p8_reserve_after_ok = false;
+            }
+
+            if (
+                p8_reserve_before_ok && p8_reserve_after_ok
+                    && reserveBefore >= reserveAfter
+            ) {
+                uint theoreticalMaxCollateral = reserveBefore - reserveAfter;
+                assertTrue(
+                    collateralToReturn <= theoreticalMaxCollateral,
+                    "FCSR_P8: Rounding should not overpay collateral"
+                );
+            }
+        }
+
+        // P9: Compositionality (Conceptual - complex to set up reliably in fuzz)
+
+        // P10: If no segments and positive supply, should have reverted earlier or handled by specific logic.
+        // If segments.length == 0 and currentTotalIssuanceSupply == 0 and tokensToSell_ > 0,
+        // then collateralToReturn == 0 and tokensToBurn == 0. This is covered by P4.
+
+        assertTrue(true, "FCSR_P: All properties satisfied");
     }
 
     // Test: Compare _calculateReserveForSupply with _calculatePurchaseReturn

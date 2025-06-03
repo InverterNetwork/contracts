@@ -139,6 +139,13 @@ interface IDiscreteCurveMathLib_v1 {
      */
     error DiscreteCurveMathLib__InvalidPointSegment();
 
+    /**
+     * @notice Reverted when attempting to sell more tokens than are currently in supply.
+     * @param requested The amount of tokens requested to be sold.
+     * @param available The actual amount of tokens available for sale (current total issuance supply).
+     */
+    error DiscreteCurveMathLib__InsufficientIssuanceToSell(uint requested, uint available);
+
     // --- Events ---
 
     /**
