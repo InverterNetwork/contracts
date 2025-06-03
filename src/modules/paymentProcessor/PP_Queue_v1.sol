@@ -321,7 +321,7 @@ contract PP_Queue_v1 is IPP_Queue_v1, Module_v1 {
     function setMaxOrdersPerExecution(uint maxOrdersPerExecution_)
         external
         virtual
-        onlyModuleRole(QUEUE_OPERATOR_ROLE)
+        permissioned
     {
         if (maxOrdersPerExecution_ == 0) {
             revert Module__PP_Queue_ZeroAmount();

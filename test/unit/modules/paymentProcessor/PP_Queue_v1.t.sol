@@ -453,28 +453,22 @@ contract PP_Queue_v1_Test is ModuleTest {
     // Test Set Max Orders Per Execution
 
     /* Test: Function setMaxOrdersPerExecution()
-        └── Given the caller does not have the QUEUE_OPERATOR_ROLE_ADMIN role
-            └── When the function setMaxOrdersPerExecution is called
-                └── Then it should revert
+        └── Given: Caller is not permissioned
+            └── When: the function setMaxOrdersPerExecution() is called
+                └── Then: it should revert (modifier in place test)
     */
-    function testSetMaxOrdersPerExecution_revertGivenNonQueueOperator(
-        address nonQueueOperator_
-    ) public {
-        // Setup
-        vm.assume(nonQueueOperator_ != address(this));
-        bytes32 roleId = _authorizer.generateRoleId(
-            address(queue), queue.getQueueOperatorRole()
-        );
 
+    function testSetMaxOrdersPerExecution_ModifierInPlace() public {
+        // permissioned
+
+        // Turn off all adresses are permissioned to call all functions
+        _authorizer.setAllAuthorized(false);
         vm.expectRevert(
             abi.encodeWithSelector(
-                IModule_v1.Module__CallerNotAuthorized.selector,
-                roleId,
-                nonQueueOperator_
+                IModule_v1.Module__CallerNotPermissioned.selector
             )
         );
-        // Test
-        vm.prank(nonQueueOperator_);
+        vm.prank(address(0xB0B));
         queue.setMaxOrdersPerExecution(100);
     }
 
