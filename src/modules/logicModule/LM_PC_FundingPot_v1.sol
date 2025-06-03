@@ -109,7 +109,7 @@ contract LM_PC_FundingPot_v1 is
     uint8 internal constant FLAG_END = 3;
 
     /// @notice The maximum valid access criteria ID.
-    uint8 internal constant MAX_ACCESS_CRITERIA_ID = 4;
+    uint8 internal constant MAX_ACCESS_CRITERIA_TYPE = 4;
 
     // -------------------------------------------------------------------------
     // State
@@ -305,7 +305,7 @@ contract LM_PC_FundingPot_v1 is
         view
         returns (bool isEligible, uint remainingAmountAllowedToContribute)
     {
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_TYPE) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
@@ -471,7 +471,7 @@ contract LM_PC_FundingPot_v1 is
     ) external onlyModuleRole(FUNDING_POT_ADMIN_ROLE) {
         Round storage round = rounds[roundId_];
 
-        if (accessCriteriaType_ > MAX_ACCESS_CRITERIA_ID) {
+        if (accessCriteriaType_ > MAX_ACCESS_CRITERIA_TYPE) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
@@ -535,10 +535,8 @@ contract LM_PC_FundingPot_v1 is
         } else if (accessCriteriaType == AccessCriteriaType.LIST) {
             // For LIST type, update the allowed addresses
             for (uint i = 0; i < allowedAddresses_.length; i++) {
-                unchecked {
-                    round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]
-                    = true;
-                }
+                round.accessCriterias[criteriaId].allowedAddresses[allowedAddresses_[i]]
+                = true;
             }
         }
 
@@ -570,10 +568,8 @@ contract LM_PC_FundingPot_v1 is
         _validateEditRoundParameters(round);
 
         for (uint i = 0; i < addressesToRemove_.length; i++) {
-            unchecked {
-                round.accessCriterias[accessCriteriaId_].allowedAddresses[addressesToRemove_[i]]
-                = false;
-            }
+            round.accessCriterias[accessCriteriaId_].allowedAddresses[addressesToRemove_[i]]
+            = false;
         }
 
         emit AllowlistedAddressesRemoved(
@@ -659,9 +655,10 @@ contract LM_PC_FundingPot_v1 is
                 );
             }
 
+            lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
+
             // Skip if this round is before the global accumulation start round
             if (currentProcessingRoundId < globalAccumulationStartRoundId) {
-                lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
                 continue;
             }
 
@@ -672,7 +669,6 @@ contract LM_PC_FundingPot_v1 is
                     && rounds[currentProcessingRoundId].accumulationMode
                         != AccumulationMode.All
             ) {
-                lastSeenRoundId = currentProcessingRoundId; // Update lastSeenRoundId before continuing
                 continue;
             }
 
@@ -698,7 +694,6 @@ contract LM_PC_FundingPot_v1 is
                 }
                 unspentPersonalCap += unspentForThisEntry;
             }
-            lastSeenRoundId = currentProcessingRoundId; // Update after processing or skipping
         }
 
         _contributeToRoundFor(
@@ -760,8 +755,12 @@ contract LM_PC_FundingPot_v1 is
         uint contributorCount = contributors.length;
 
         // Check batch size is not zero
-        if (batchSize_ == 0 || batchSize_ > contributorCount) {
+        if (batchSize_ == 0) {
             revert Module__LM_PC_FundingPot__InvalidBatchParameters();
+        }
+        // If batch size is greater than contributor count, set batch size to contributor count
+        if (batchSize_ > contributorCount) {
+            batchSize_ = contributorCount;
         }
 
         // If autoClosure is false, only admin can process contributors
@@ -899,7 +898,7 @@ contract LM_PC_FundingPot_v1 is
             revert Module__LM_PC_FundingPot__RoundHasNotStarted();
         }
 
-        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_ID) {
+        if (accessCriteriaId_ > MAX_ACCESS_CRITERIA_TYPE) {
             revert Module__LM_PC_FundingPot__InvalidAccessCriteriaId();
         }
 
@@ -1239,7 +1238,7 @@ contract LM_PC_FundingPot_v1 is
 
             for (
                 uint8 accessCriteriaId = 1;
-                accessCriteriaId <= MAX_ACCESS_CRITERIA_ID;
+                accessCriteriaId <= MAX_ACCESS_CRITERIA_TYPE;
                 accessCriteriaId++
             ) {
                 uint contributionByAccessCriteria =
